@@ -21,7 +21,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'client_sites' => ['view', 'create', 'update'],
         'vehicles' => ['view', 'create', 'update'],
         'sedes' => ['view', 'create', 'update'],
-        'inventory' => ['view', 'manage'],
+        'inventory' => ['view', 'manage', 'receive', 'adjust', 'print_stickers', 'lookup'],
         'quotes' => ['view', 'create', 'update', 'convert'],
         'sales' => ['view', 'create', 'scan_units'],
         'certificates' => ['view', 'print', 'generate'],
@@ -62,6 +62,21 @@ class RolesAndPermissionsSeeder extends Seeder
         'communication.view', 'communication.create_event',
     ];
 
+    /**
+     * Permissions granted to the Almacen role, per Documento Maestro §84.4.
+     *
+     * @var list<string>
+     */
+    public const ALMACEN_PERMISSIONS = [
+        'dashboard.view_own',
+        'inventory.view',
+        'inventory.receive',
+        'inventory.adjust',
+        'inventory.print_stickers',
+        'inventory.lookup',
+        'sedes.view',
+    ];
+
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -75,11 +90,14 @@ class RolesAndPermissionsSeeder extends Seeder
         $vendedor = Role::findOrCreate('Vendedor', 'web');
         $vendedor->syncPermissions(self::VENDEDOR_PERMISSIONS);
 
-        // Roles de los otros 4 perfiles: se crean vacíos aquí (sin permisos
+        $almacen = Role::findOrCreate('Almacen', 'web');
+        $almacen->syncPermissions(self::ALMACEN_PERMISSIONS);
+
+        // Roles de los otros 3 perfiles: se crean vacíos aquí (sin permisos
         // asignados todavía) para que existan como destino de asignación de
         // usuarios; su matriz de permisos se completa en las fases de esos
-        // roles, no en este plan (que cubre solo Vendedor).
-        foreach (['Gerente', 'Almacen', 'TecnicoPlanta', 'TecnicoCampo'] as $role) {
+        // roles.
+        foreach (['Gerente', 'TecnicoPlanta', 'TecnicoCampo'] as $role) {
             Role::findOrCreate($role, 'web');
         }
     }

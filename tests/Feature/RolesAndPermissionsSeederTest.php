@@ -15,10 +15,22 @@ test('seeder asigna exactamente los permisos de VENDEDOR_PERMISSIONS al rol Vend
         ->and(count($actualPermissions))->toBe(count(RolesAndPermissionsSeeder::VENDEDOR_PERMISSIONS));
 });
 
-test('seeder crea los cuatro roles adicionales vacios sin permisos asignados', function () {
+test('seeder asigna exactamente los permisos de ALMACEN_PERMISSIONS al rol Almacen', function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 
-    $emptyRoles = ['Gerente', 'Almacen', 'TecnicoPlanta', 'TecnicoCampo'];
+    $almacen = Role::findByName('Almacen', 'web');
+
+    $actualPermissions = $almacen->permissions->pluck('name')->sort()->values()->all();
+    $expectedPermissions = collect(RolesAndPermissionsSeeder::ALMACEN_PERMISSIONS)->sort()->values()->all();
+
+    expect($actualPermissions)->toBe($expectedPermissions)
+        ->and(count($actualPermissions))->toBe(count(RolesAndPermissionsSeeder::ALMACEN_PERMISSIONS));
+});
+
+test('seeder crea los tres roles adicionales vacios sin permisos asignados', function () {
+    $this->seed(RolesAndPermissionsSeeder::class);
+
+    $emptyRoles = ['Gerente', 'TecnicoPlanta', 'TecnicoCampo'];
 
     foreach ($emptyRoles as $roleName) {
         $role = Role::findByName($roleName, 'web');

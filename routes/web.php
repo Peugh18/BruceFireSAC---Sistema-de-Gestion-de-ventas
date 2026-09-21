@@ -17,6 +17,7 @@ Route::prefix('{current_team}')
 
         require __DIR__.'/vendedor.php';
         require __DIR__.'/gerente.php';
+        require __DIR__.'/almacen.php';
     });
 
 Route::middleware(['auth'])->group(function () {
