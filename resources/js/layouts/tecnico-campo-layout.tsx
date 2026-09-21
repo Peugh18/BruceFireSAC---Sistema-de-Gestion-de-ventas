@@ -44,7 +44,7 @@ export default function TecnicoCampoLayout({
     const getInitials = useInitials();
     const initials = user?.name ? getInitials(user.name) : 'TC';
 
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const currentPath = page.url;
 
     const navItems: NavItem[] = [
         {

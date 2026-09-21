@@ -1,19 +1,18 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
-    CheckSquare,
-    ClipboardList,
+    AlertTriangle,
     Flame,
-    Home,
     LayoutDashboard,
     LogOut,
     PackageCheck,
-    Search,
-    User,
     type LucideIcon,
 } from 'lucide-react';
 import { ReactNode } from 'react';
 
 import { useInitials } from '@/hooks/use-initials';
+import { dashboard } from '@/routes/tecnico-planta';
+import deficiencias from '@/routes/tecnico-planta/deficiencias';
+import recepciones from '@/routes/tecnico-planta/recepciones';
 import type { Auth, Team } from '@/types';
 
 type PageProps = {
@@ -45,32 +44,26 @@ export default function TecnicoPlantaLayout({
     const getInitials = useInitials();
     const initials = user?.name ? getInitials(user.name) : 'TP';
 
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const currentPath = page.url;
 
     const navItems: NavItem[] = [
         {
             title: 'Inicio',
-            href: `/${teamSlug}/tecnico-planta/dashboard`,
+            href: dashboard.url(teamSlug),
             icon: LayoutDashboard,
             activeMatch: '/tecnico-planta/dashboard',
         },
         {
             title: 'Recepción',
-            href: `/${teamSlug}/tecnico-planta/recepcion`,
+            href: recepciones.index.url(teamSlug),
             icon: PackageCheck,
-            activeMatch: '/tecnico-planta/recepcion',
+            activeMatch: '/tecnico-planta/recepciones',
         },
         {
-            title: 'Órdenes',
-            href: `/${teamSlug}/tecnico-planta/ordenes`,
-            icon: ClipboardList,
-            activeMatch: '/tecnico-planta/ordenes',
-        },
-        {
-            title: 'Checklist',
-            href: `/${teamSlug}/tecnico-planta/checklist`,
-            icon: CheckSquare,
-            activeMatch: '/tecnico-planta/checklist',
+            title: 'Deficiencias',
+            href: deficiencias.index.url(teamSlug),
+            icon: AlertTriangle,
+            activeMatch: '/tecnico-planta/deficiencias',
         },
     ];
 

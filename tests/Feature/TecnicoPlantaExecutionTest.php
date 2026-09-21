@@ -84,7 +84,7 @@ test('consuming spare part generates real InventoryMovement in Kardex and resolv
         ->first();
 
     expect($movement)->not->toBeNull()
-        ->and($movement->tipo)->toBe('salida_venta')
+        ->and($movement->tipo)->toBe('salida_servicio')
         ->and($movement->cantidad)->toBe(-2)
         ->and($movement->observacion)->toContain('Consumo en taller')
         ->and($movement->user_id)->toBe($this->tecnicoPlanta->id);
@@ -96,6 +96,97 @@ test('consuming spare part generates real InventoryMovement in Kardex and resolv
 
     // Bitácora registrada
     expect(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'otro')->exists())->toBeTrue();
+});
+
+test('order is released from esperando_autorizacion once its last pending deficiency is resolved', function () {
+    $sede = Sede::factory()->create(['activo' => true]);
+    $client = Client::factory()->create();
+    $order = ServiceOrder::factory()->create([
+        'client_id' => $client->id,
+        'sede_id' => $sede->id,
+        'codigo' => 'OS-EJEC-0004',
+        'estado' => 'esperando_autorizacion',
+    ]);
+
+    $product = Product::factory()->create(['nombre' => 'Manguera 1.5 pulg']);
+
+    // Una deficiencia ya autorizada por Vendedor, lista para que Planta la resuelva
+    $deficiency = Deficiency::create([
+        'service_order_id' => $order->id,
+        'componente' => 'Manguera',
+        'condicion' => 'Rota',
+        'requiere_autorizacion' => true,
+        'estado' => 'autorizada',
+    ]);
+
+    // Otra deficiencia del mismo equipo que NO requiere autorizacion no debe bloquear el release
+    Deficiency::create([
+        'service_order_id' => $order->id,
+        'componente' => 'Rotulado',
+        'condicion' => 'Desgastado',
+        'requiere_autorizacion' => false,
+        'estado' => 'detectada',
+    ]);
+
+    $this->actingAs($this->tecnicoPlanta)
+        ->post(route('tecnico-planta.ejecucion.consume-spare', [
+            'current_team' => $this->team,
+            'service_order' => $order,
+            'deficiency' => $deficiency,
+        ]), [
+            'product_id' => $product->id,
+            'cantidad' => 1,
+        ])
+        ->assertRedirect();
+
+    // La orden ya no debe quedar bloqueada en esperando_autorizacion (bug real
+    // encontrado en auditoria E2E: sin esto la orden nunca podia cerrarse).
+    $order->refresh();
+    expect($order->estado)->toBe('autorizado');
+});
+
+test('order stays in esperando_autorizacion while another deficiency is still pending authorization', function () {
+    $sede = Sede::factory()->create(['activo' => true]);
+    $client = Client::factory()->create();
+    $order = ServiceOrder::factory()->create([
+        'client_id' => $client->id,
+        'sede_id' => $sede->id,
+        'codigo' => 'OS-EJEC-0005',
+        'estado' => 'esperando_autorizacion',
+    ]);
+
+    $product = Product::factory()->create(['nombre' => 'Manguera 1.5 pulg']);
+
+    $deficiencyResolved = Deficiency::create([
+        'service_order_id' => $order->id,
+        'componente' => 'Manguera',
+        'condicion' => 'Rota',
+        'requiere_autorizacion' => true,
+        'estado' => 'autorizada',
+    ]);
+
+    // Una segunda deficiencia del mismo equipo TODAVIA esperando autorizacion de Vendedor
+    Deficiency::create([
+        'service_order_id' => $order->id,
+        'componente' => 'Manómetro',
+        'condicion' => 'Roto',
+        'requiere_autorizacion' => true,
+        'estado' => 'esperando_autorizacion',
+    ]);
+
+    $this->actingAs($this->tecnicoPlanta)
+        ->post(route('tecnico-planta.ejecucion.consume-spare', [
+            'current_team' => $this->team,
+            'service_order' => $order,
+            'deficiency' => $deficiencyResolved,
+        ]), [
+            'product_id' => $product->id,
+            'cantidad' => 1,
+        ])
+        ->assertRedirect();
+
+    $order->refresh();
+    expect($order->estado)->toBe('esperando_autorizacion');
 });
 
 test('advancing order to listo_certificado automatically triggers certificates generation', function () {

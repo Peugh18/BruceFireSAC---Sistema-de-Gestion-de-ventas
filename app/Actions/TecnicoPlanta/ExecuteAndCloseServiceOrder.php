@@ -53,7 +53,7 @@ class ExecuteAndCloseServiceOrder
             $movement = InventoryMovement::create([
                 'product_id' => $product->id,
                 'sede_id' => $sedeId,
-                'tipo' => 'salida_venta',
+                'tipo' => 'salida_servicio',
                 'cantidad' => -$cantidad,
                 'referencia_type' => Deficiency::class,
                 'referencia_id' => $deficiency->id,
@@ -81,6 +81,8 @@ class ExecuteAndCloseServiceOrder
                     'inventory_movement_id' => $movement->id,
                 ],
             ]);
+
+            $this->releaseFromAuthorizationHold($serviceOrder, $user);
 
             return $movement;
         });
@@ -131,6 +133,42 @@ class ExecuteAndCloseServiceOrder
 
             return $serviceOrder->refresh();
         });
+    }
+
+    /**
+     * Saca la orden del estado `esperando_autorizacion` una vez que ya no
+     * quedan deficiencias pendientes de autorización o resolución (§17, §85).
+     * Sin esto la orden queda bloqueada para siempre: la pantalla de
+     * Ejecución no tiene ninguna acción disponible en ese estado.
+     */
+    public function releaseFromAuthorizationHold(ServiceOrder $serviceOrder, User $user): void
+    {
+        if ($serviceOrder->estado !== 'esperando_autorizacion') {
+            return;
+        }
+
+        $pendientes = $serviceOrder->deficiencies()
+            ->whereIn('estado', ['esperando_autorizacion', 'detectada'])
+            ->where('requiere_autorizacion', true)
+            ->exists();
+
+        if ($pendientes) {
+            return;
+        }
+
+        $serviceOrder->update(['estado' => 'autorizado']);
+
+        ServiceOrderEvent::create([
+            'service_order_id' => $serviceOrder->id,
+            'tipo' => 'otro',
+            'user_id' => $user->id,
+            'payload' => [
+                'accion' => 'cambio_estado_planta',
+                'estado_anterior' => 'esperando_autorizacion',
+                'estado_nuevo' => 'autorizado',
+                'motivo' => 'Todas las deficiencias que requerian autorizacion ya fueron resueltas',
+            ],
+        ]);
     }
 
     /**

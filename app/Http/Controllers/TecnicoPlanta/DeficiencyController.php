@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\TecnicoPlanta;
 
+use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Http\Controllers\Controller;
 use App\Models\Deficiency;
 use App\Models\ServiceOrder;
@@ -187,8 +188,18 @@ class DeficiencyController extends Controller
     public function resolve(
         Request $request,
         Team $current_team,
-        Deficiency $deficiency
+        Deficiency $deficiency,
+        ExecuteAndCloseServiceOrder $action
     ): RedirectResponse {
+        // Si sugiere un repuesto físico, debe resolverse desde Ejecución para
+        // generar el InventoryMovement real contra el Kardex de Almacén (§85,
+        // Fase 5) — este endpoint es solo para deficiencias sin repuesto.
+        if (filled($deficiency->repuesto_sugerido)) {
+            return back()->withErrors([
+                'resolucion' => 'Esta deficiencia sugiere un repuesto físico. Resuélvela desde la pantalla de Ejecución para descontar el stock de Almacén correctamente.',
+            ]);
+        }
+
         $validated = $request->validate([
             'resolucion' => ['required', 'string', 'max:500'],
         ]);
@@ -209,6 +220,10 @@ class DeficiencyController extends Controller
                 'resolucion' => $validated['resolucion'],
             ],
         ]);
+
+        // Si esta era la última deficiencia pendiente de autorización, la
+        // orden no debe quedar bloqueada en esperando_autorizacion (§17, §85).
+        $action->releaseFromAuthorizationHold($deficiency->serviceOrder, $request->user());
 
         return back()->with('success', 'Deficiencia marcada como resuelta.');
     }

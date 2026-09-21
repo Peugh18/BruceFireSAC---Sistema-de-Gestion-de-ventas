@@ -134,7 +134,7 @@ class StockController extends Controller
         $kardexSedeId = $request->integer('kardex_sede_id');
         $kardexFechaDesde = $request->string('kardex_fecha_desde')->toString();
         $kardexFechaHasta = $request->string('kardex_fecha_hasta')->toString();
-        $kardexTipo = $request->string('kardex_tipo')->toString(); // 'ingreso', 'salida_venta', 'ajuste', 'traslado'
+        $kardexTipo = $request->string('kardex_tipo')->toString(); // 'ingreso', 'salida_venta', 'salida_servicio', 'ajuste', 'traslado'
 
         $kardexQuery = InventoryMovement::query()
             ->with([
@@ -147,7 +147,7 @@ class StockController extends Controller
             ->when($kardexSedeId > 0, fn ($q) => $q->where('sede_id', $kardexSedeId))
             ->when($kardexFechaDesde !== '', fn ($q) => $q->whereDate('created_at', '>=', $kardexFechaDesde))
             ->when($kardexFechaHasta !== '', fn ($q) => $q->whereDate('created_at', '<=', $kardexFechaHasta))
-            ->when(in_array($kardexTipo, ['ingreso', 'salida_venta', 'ajuste', 'traslado'], true), fn ($q) => $q->where('tipo', $kardexTipo));
+            ->when(in_array($kardexTipo, ['ingreso', 'salida_venta', 'salida_servicio', 'ajuste', 'traslado'], true), fn ($q) => $q->where('tipo', $kardexTipo));
 
         // Paginación del Kardex
         $kardex = $kardexQuery

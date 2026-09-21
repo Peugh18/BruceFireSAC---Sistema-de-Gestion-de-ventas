@@ -49,7 +49,7 @@ export type StockItem = {
 export type KardexItem = {
     id: number;
     fecha: string | null;
-    tipo: 'ingreso' | 'salida_venta' | 'ajuste' | 'traslado' | string;
+    tipo: 'ingreso' | 'salida_venta' | 'salida_servicio' | 'ajuste' | 'traslado' | string;
     cantidad: number;
     producto: {
         id: number;
@@ -149,6 +149,11 @@ function getTipoMovimientoBadge(tipo: string): { label: string; className: strin
             return {
                 label: 'Venta',
                 className: 'bg-[#FBEAE9] text-[#E31E24] border-[#F5C6C5]',
+            };
+        case 'salida_servicio':
+            return {
+                label: 'Consumo Taller',
+                className: 'bg-[#F5F3FF] text-[#7C3AED] border-[#DDD6FE]',
             };
         case 'ajuste':
             return {
@@ -570,6 +575,7 @@ export default function StockIndex({
                                     <option value="todos">Todos los tipos</option>
                                     <option value="ingreso">Ingreso (Recepción)</option>
                                     <option value="salida_venta">Salida Venta</option>
+                                    <option value="salida_servicio">Consumo en Taller</option>
                                     <option value="ajuste">Ajuste de inventario</option>
                                     <option value="traslado">Traslado entre sedes</option>
                                 </select>

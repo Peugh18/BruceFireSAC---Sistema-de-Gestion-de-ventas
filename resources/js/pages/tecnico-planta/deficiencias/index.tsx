@@ -255,7 +255,17 @@ export default function DeficienciasIndex({ deficiencies, counts, filters }: Pro
                                         </div>
                                     </div>
 
-                                    {d.estado !== 'resuelta' && (
+                                    {d.estado !== 'resuelta' && d.repuesto_sugerido && (
+                                        <Link
+                                            href={`${teamPrefix}/ordenes/${d.orden_id}/ejecucion`}
+                                            className="px-2.5 py-1.5 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 text-white dark:text-neutral-900 rounded-xl text-[11px] font-bold flex items-center gap-1 flex-shrink-0"
+                                            title="Requiere repuesto: resuélvela desde Ejecución para descontar el Kardex de Almacén"
+                                        >
+                                            <PackageCheck className="w-3 h-3" />
+                                            <span>Resolver con repuesto</span>
+                                        </Link>
+                                    )}
+                                    {d.estado !== 'resuelta' && !d.repuesto_sugerido && (
                                         <button
                                             type="button"
                                             onClick={() => setResolveModalItem(d)}
