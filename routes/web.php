@@ -18,6 +18,8 @@ Route::prefix('{current_team}')
         require __DIR__.'/vendedor.php';
         require __DIR__.'/gerente.php';
         require __DIR__.'/almacen.php';
+        require __DIR__.'/tecnico-planta.php';
+        require __DIR__.'/tecnico-campo.php';
     });
 
 Route::middleware(['auth'])->group(function () {

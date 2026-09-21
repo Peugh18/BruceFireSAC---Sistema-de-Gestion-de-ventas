@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -40,7 +41,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ServiceOrderEvent> $events
  */
 #[Fillable([
-    'codigo', 'client_id', 'sede_id', 'vehicle_id', 'quote_id', 'sale_id', 'tipo_servicio',
+    'codigo', 'client_id', 'equipment_id', 'sede_id', 'vehicle_id', 'quote_id', 'sale_id', 'tipo_servicio',
     'fecha', 'tecnico_id', 'departamento_tecnico', 'prioridad', 'observaciones', 'estado',
 ])]
 class ServiceOrder extends Model
@@ -116,6 +117,33 @@ class ServiceOrder extends Model
     public function events(): HasMany
     {
         return $this->hasMany(ServiceOrderEvent::class);
+    }
+
+    public function equipment(): BelongsTo
+    {
+        return $this->belongsTo(Equipment::class);
+    }
+
+    public function equipments(): BelongsToMany
+    {
+        return $this->belongsToMany(Equipment::class, 'service_order_equipment')
+            ->withPivot(['recibido', 'observaciones'])
+            ->withTimestamps();
+    }
+
+    public function deficiencies(): HasMany
+    {
+        return $this->hasMany(Deficiency::class);
+    }
+
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(TechnicalChecklist::class);
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
     }
 
     public function coarseLabel(): string

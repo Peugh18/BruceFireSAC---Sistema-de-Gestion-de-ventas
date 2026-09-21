@@ -4749,3 +4749,111 @@ pidió explícitamente:
    agrega `products.stock_minimo` ahora (el KPI se muestra desde el
    día uno) o se pospone ese KPI puntual hasta que haga falta (el
    resto del dashboard de Almacén funciona igual sin él).
+
+------------------------------------------------------------------------
+
+# 85. PLAN — ROLES TÉCNICO DE PLANTA Y TÉCNICO DE CAMPO (planificado 2026-09-21, sin construir todavía)
+
+## 85.1 Por qué van juntos
+
+Roadmap §58 Fase 4 ("Servicios") agrupa Planta y Campo porque ambos
+ejecutan una única entidad ya existente en el backend: `ServiceOrder`
+(máquina de 13 estados, §16.2), `Deficiency` y
+`DeficiencyAuthorization`. El lado de **Vendedor ya está construido**:
+crea la orden (`Vendedor\ServiceOrderController`), ve deficiencias y
+las autoriza (`Vendedor\DeficiencyController`,
+`DeficiencyAuthorizationController`). Falta el lado que **recibe,
+ejecuta y cierra** esa orden — eso son estos dos roles. No hay
+"catálogo propio" que decidir aquí (ya se resolvió esa clase de
+problema en §84.3): ambos roles operan sobre `ServiceOrder`,
+`Deficiency`, `Equipment` y `Product` ya existentes, nunca crean tablas
+paralelas de esas entidades.
+
+## 85.2 Regla dura (repetida en el doc, no negociable)
+
+Mobile-first **obligatorio** para ambos roles (§70): la interfaz se
+diseña primero para celular, nunca se "encoge" una pantalla de
+escritorio. Cards, pasos, cámara accesible, escaneo rápido, selector
+Conforme/Observado/N/A, sin tablas horizontales. El Técnico no negocia
+precios ni emite CPE (§35.4, §35.5, §21).
+
+## 85.3 Lo que ya existe (no reconstruir)
+
+- `App\Models\ServiceOrder` con `ESTADOS` (13 pasos finos) y
+  `coarseLabel()`.
+- `App\Models\Deficiency` y `DeficiencyAuthorization`.
+- `App\Models\ServiceOrderEvent` (bitácora append-only de eventos de
+  la orden — es el mecanismo de "comunicación sin chat" de §17).
+- `Vendedor\ServiceOrderController`, `DeficiencyController`,
+  `DeficiencyAuthorizationController`, `CommunicationController`.
+- `App\Models\Equipment` (equipos del cliente, para Alta Técnica
+  Rápida §18).
+- `App\Models\Certificate`/`CertificateType` y el servicio de PDF de
+  certificados ya construido para Vendedor — hoy se dispara a mano,
+  este plan lo conecta a `listo_certificado`.
+- `App\Services\Inventory\*` y `Product`/`InventoryUnit`/
+  `InventoryMovement` de Almacén — el consumo de repuestos en una
+  reparación reutiliza esto, nunca una tabla de stock paralela.
+- Patrón de PDF con dompdf (`ComprobantePdfService`,
+  `StickerPdfService`) — el Acta de Conformidad (§23) reutiliza el
+  mismo enfoque.
+
+## 85.4 Lo que falta construir
+
+- `routes/tecnico-planta.php`, `routes/tecnico-campo.php` +
+  middleware `role:TecnicoPlanta` / `role:TecnicoCampo`.
+- Permisos: expandir `service_orders` (`view,create,manage` hoy) y
+  `deficiencies` (`view,create,authorize` hoy) a los verbos exactos
+  de §36 (`assign`, `receive`, `execute`, `close`, `resolve`), más
+  módulos nuevos según §85.6.
+- Layouts/sidebars mobile-first para ambos roles (nunca reutilizar
+  `AppLayout` genérico — recordar excluir `tecnico-planta/` y
+  `tecnico-campo/` en `app.tsx`, el mismo bug que ya se corrigió para
+  `almacen/`).
+- Checklist digital dinámico (§19), Alta Técnica Rápida (§18),
+  Recojo/Entrega con cadena de custodia (§22), Inspecciones (§24),
+  Instalaciones (§25), Acta de Conformidad (§23).
+
+## 85.5 Fases de ejecución (orden sugerido)
+
+Detalle completo en el runbook de Obsidian
+`Bruce Fire/2026-09-21 - Runbook Tecnico Planta y Campo.md` — aquí
+solo el resumen:
+
+0. Scaffolding de ambos roles (rutas, permisos, layouts/sidebars).
+1. Dashboard Técnico de Planta (colas por estado, §5.4).
+2. Recepción en Planta + Alta Técnica Rápida (§18).
+3. Checklist Técnico Digital (§19).
+4. Deficiencias desde Planta (§20) + notificación a Vendedor
+   (reutiliza `CommunicationController`/`ServiceOrderEvent`).
+5. Ejecución y cierre técnico: consumo de repuestos de Almacén,
+   transición hasta `listo_certificado`, disparo automático del
+   certificado.
+6. Dashboard Técnico de Campo (servicios de hoy, §5.5).
+7. Recojo con cadena de custodia (§22.1, §22.4).
+8. Inspecciones de Campo (§24) — reutiliza el motor de checklist de
+   la fase 3.
+9. Instalaciones (§25) — equipos instalados pueden pasar a Equipos
+   del Cliente.
+10. Entrega final + Acta de Conformidad (§22.3, §23) — cierra la
+    orden.
+
+## 85.6 Preguntas abiertas (a resolver por el agente ejecutor solo si
+bloquean una fase; si no, seguir con el valor por defecto indicado)
+
+1. ¿Un técnico puede estar asignado a Planta y Campo a la vez, o son
+   roles excluyentes por usuario? Por defecto: excluyentes (un
+   usuario tiene un solo rol técnico), como ya aplica el patrón
+   `role:X` de Vendedor/Almacén.
+2. ¿El Acta de Conformidad requiere firma digital capturada
+   (canvas táctil) o basta un checkbox de conformidad + nombre del
+   receptor? Por defecto: checkbox + nombre, como ya se hizo con la
+   conformidad de recepción en Almacén — firma digital se puede
+   añadir después sin romper el esquema.
+3. ¿La cadena de custodia (§22.4) es un modelo nuevo
+   (`ServiceOrderCustody` o similar) o se modela como eventos
+   tipados dentro de `ServiceOrderEvent` (`payload` json ya existe
+   para eso)? Por defecto: reutilizar `ServiceOrderEvent` con `tipo`
+   nuevo por cada eslabón (`recojo`, `recepcion_planta`,
+   `entrega_final`) — evita una tabla nueva para algo que ya es,
+   estructuralmente, una bitácora de eventos.

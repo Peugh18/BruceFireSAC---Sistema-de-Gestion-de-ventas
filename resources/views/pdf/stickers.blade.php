@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Stickers - Recepción {{ $reception->id }}</title>
+    <title>Stickers - {{ isset($reception) && $reception ? 'Recepción ' . $reception->id : ($serviceOrder->codigo ?? 'Equipos') }}</title>
     <style>
         @page {
             margin: 1.2cm 1.0cm;
@@ -166,7 +166,7 @@
                                             @endif
                                         </div>
                                         <div class="header-sede">
-                                            {{ $reception->sedeAlmacen->nombre ?? 'ALMACÉN' }}
+                                            {{ $reception->sedeAlmacen->nombre ?? $serviceOrder->sede?->nombre ?? 'TALLER PLANTA' }}
                                         </div>
                                     </div>
 
@@ -192,10 +192,17 @@
                                                     <span class="detail-value">{{ $sticker['anio_fabricacion'] }}</span>
                                                 </span>
                                             @endif
-                                            <span class="detail-badge">
-                                                <span class="detail-label">Recep:</span>
-                                                <span class="detail-value">#{{ $reception->id }}</span>
-                                            </span>
+                                            @if (isset($sticker['order_codigo']) && $sticker['order_codigo'])
+                                                <span class="detail-badge">
+                                                    <span class="detail-label">OS:</span>
+                                                    <span class="detail-value">{{ $sticker['order_codigo'] }}</span>
+                                                </span>
+                                            @elseif (isset($reception) && $reception)
+                                                <span class="detail-badge">
+                                                    <span class="detail-label">Recep:</span>
+                                                    <span class="detail-value">#{{ $reception->id }}</span>
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

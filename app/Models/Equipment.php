@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -27,6 +29,8 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'client_id', 'product_id', 'numero_serie', 'fecha_venta', 'ubicacion_actual',
     'estado', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica',
+    'tipo_agente', 'capacidad', 'marca', 'serie_fabricante', 'anio_fabricacion',
+    'foto_general_path', 'foto_placa_path', 'notas',
 ])]
 class Equipment extends Model
 {
@@ -52,5 +56,17 @@ class Equipment extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function serviceOrders(): BelongsToMany
+    {
+        return $this->belongsToMany(ServiceOrder::class, 'service_order_equipment')
+            ->withPivot(['recibido', 'observaciones'])
+            ->withTimestamps();
+    }
+
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(TechnicalChecklist::class);
     }
 }

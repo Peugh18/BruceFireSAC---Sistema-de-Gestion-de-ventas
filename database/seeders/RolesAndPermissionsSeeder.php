@@ -30,9 +30,10 @@ class RolesAndPermissionsSeeder extends Seeder
         'collections' => ['view', 'register_payment'],
         'cashregister' => ['open', 'close', 'view_history'],
         'alerts' => ['view'],
-        'service_orders' => ['view', 'create', 'manage'],
-        'deficiencies' => ['view', 'create', 'authorize'],
+        'service_orders' => ['view', 'create', 'manage', 'assign', 'receive', 'execute', 'close'],
+        'deficiencies' => ['view', 'create', 'authorize', 'resolve'],
         'communication' => ['view', 'create_event'],
+        'equipment' => ['view', 'create', 'update'],
         'roles_permissions' => ['manage'],
     ];
 
@@ -77,6 +78,54 @@ class RolesAndPermissionsSeeder extends Seeder
         'sedes.view',
     ];
 
+    /**
+     * Permissions granted to the TecnicoPlanta role, per Documento Maestro §36 y §85.
+     *
+     * @var list<string>
+     */
+    public const TECNICO_PLANTA_PERMISSIONS = [
+        'dashboard.view_own',
+        'service_orders.view',
+        'service_orders.receive',
+        'service_orders.execute',
+        'deficiencies.view',
+        'deficiencies.create',
+        'deficiencies.resolve',
+        'inventory.view',
+        'inventory.lookup',
+        'certificates.view',
+        'communication.view',
+        'communication.create_event',
+        'equipment.view',
+        'equipment.create',
+        'equipment.update',
+        'sedes.view',
+    ];
+
+    /**
+     * Permissions granted to the TecnicoCampo role, per Documento Maestro §36 y §85.
+     *
+     * @var list<string>
+     */
+    public const TECNICO_CAMPO_PERMISSIONS = [
+        'dashboard.view_own',
+        'service_orders.view',
+        'service_orders.receive',
+        'service_orders.execute',
+        'service_orders.close',
+        'deficiencies.view',
+        'deficiencies.create',
+        'inventory.view',
+        'inventory.lookup',
+        'certificates.view',
+        'communication.view',
+        'communication.create_event',
+        'equipment.view',
+        'equipment.create',
+        'equipment.update',
+        'sedes.view',
+    ];
+
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -93,12 +142,13 @@ class RolesAndPermissionsSeeder extends Seeder
         $almacen = Role::findOrCreate('Almacen', 'web');
         $almacen->syncPermissions(self::ALMACEN_PERMISSIONS);
 
-        // Roles de los otros 3 perfiles: se crean vacíos aquí (sin permisos
-        // asignados todavía) para que existan como destino de asignación de
-        // usuarios; su matriz de permisos se completa en las fases de esos
-        // roles.
-        foreach (['Gerente', 'TecnicoPlanta', 'TecnicoCampo'] as $role) {
-            Role::findOrCreate($role, 'web');
-        }
+        $tecnicoPlanta = Role::findOrCreate('TecnicoPlanta', 'web');
+        $tecnicoPlanta->syncPermissions(self::TECNICO_PLANTA_PERMISSIONS);
+
+        $tecnicoCampo = Role::findOrCreate('TecnicoCampo', 'web');
+        $tecnicoCampo->syncPermissions(self::TECNICO_CAMPO_PERMISSIONS);
+
+        // Gerente se completa en su fase correspondiente
+        Role::findOrCreate('Gerente', 'web');
     }
 }

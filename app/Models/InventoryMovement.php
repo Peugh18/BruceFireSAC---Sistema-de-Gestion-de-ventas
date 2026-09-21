@@ -29,7 +29,7 @@ use Illuminate\Support\Carbon;
  * @property-read Sede $sede
  * @property-read User|null $user
  */
-#[Fillable(['inventory_unit_id', 'product_id', 'sede_id', 'tipo', 'cantidad', 'user_id', 'observacion'])]
+#[Fillable(['inventory_unit_id', 'product_id', 'sede_id', 'tipo', 'cantidad', 'referencia_type', 'referencia_id', 'user_id', 'observacion'])]
 class InventoryMovement extends Model
 {
     public function inventoryUnit(): BelongsTo

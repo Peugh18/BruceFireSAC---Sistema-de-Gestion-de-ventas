@@ -23,6 +23,10 @@ void createInertiaApp({
                 // Igual que vendedor/: AlmacenLayout ya trae su propio
                 // sidebar, no debe envolverse con el AppLayout genérico.
                 return null;
+            case name.startsWith('tecnico-planta/'):
+            case name.startsWith('tecnico-campo/'):
+                // Layouts mobile-first propios: no envolver con AppLayout genérico.
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):

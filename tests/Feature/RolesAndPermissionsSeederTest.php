@@ -27,16 +27,36 @@ test('seeder asigna exactamente los permisos de ALMACEN_PERMISSIONS al rol Almac
         ->and(count($actualPermissions))->toBe(count(RolesAndPermissionsSeeder::ALMACEN_PERMISSIONS));
 });
 
-test('seeder crea los tres roles adicionales vacios sin permisos asignados', function () {
+test('seeder asigna exactamente los permisos de TECNICO_PLANTA_PERMISSIONS al rol TecnicoPlanta', function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 
-    $emptyRoles = ['Gerente', 'TecnicoPlanta', 'TecnicoCampo'];
+    $planta = Role::findByName('TecnicoPlanta', 'web');
 
-    foreach ($emptyRoles as $roleName) {
-        $role = Role::findByName($roleName, 'web');
+    $actualPermissions = $planta->permissions->pluck('name')->sort()->values()->all();
+    $expectedPermissions = collect(RolesAndPermissionsSeeder::TECNICO_PLANTA_PERMISSIONS)->sort()->values()->all();
 
-        expect($role)->not->toBeNull()
-            ->and($role->name)->toBe($roleName)
-            ->and($role->permissions)->toBeEmpty();
-    }
+    expect($actualPermissions)->toBe($expectedPermissions)
+        ->and(count($actualPermissions))->toBe(count(RolesAndPermissionsSeeder::TECNICO_PLANTA_PERMISSIONS));
+});
+
+test('seeder asigna exactamente los permisos de TECNICO_CAMPO_PERMISSIONS al rol TecnicoCampo', function () {
+    $this->seed(RolesAndPermissionsSeeder::class);
+
+    $campo = Role::findByName('TecnicoCampo', 'web');
+
+    $actualPermissions = $campo->permissions->pluck('name')->sort()->values()->all();
+    $expectedPermissions = collect(RolesAndPermissionsSeeder::TECNICO_CAMPO_PERMISSIONS)->sort()->values()->all();
+
+    expect($actualPermissions)->toBe($expectedPermissions)
+        ->and(count($actualPermissions))->toBe(count(RolesAndPermissionsSeeder::TECNICO_CAMPO_PERMISSIONS));
+});
+
+test('seeder crea el rol Gerente vacio sin permisos asignados', function () {
+    $this->seed(RolesAndPermissionsSeeder::class);
+
+    $gerente = Role::findByName('Gerente', 'web');
+
+    expect($gerente)->not->toBeNull()
+        ->and($gerente->name)->toBe('Gerente')
+        ->and($gerente->permissions)->toBeEmpty();
 });
