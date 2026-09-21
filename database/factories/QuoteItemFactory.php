@@ -2,9 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Models\CatalogItem;
+use App\Models\Product;
 use App\Models\Quote;
 use App\Models\QuoteItem;
+use App\Models\Service;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,11 +20,20 @@ class QuoteItemFactory extends Factory
 
         return [
             'quote_id' => Quote::factory(),
-            'catalog_item_id' => CatalogItem::factory(),
+            'product_id' => Product::factory(),
+            'service_id' => null,
             'cantidad' => $cantidad,
             'precio_unitario' => $precioUnitario,
             'descuento' => 0,
             'subtotal' => $cantidad * $precioUnitario,
         ];
+    }
+
+    public function forService(?Service $service = null): static
+    {
+        return $this->state(fn () => [
+            'product_id' => null,
+            'service_id' => $service?->id ?? Service::factory(),
+        ]);
     }
 }

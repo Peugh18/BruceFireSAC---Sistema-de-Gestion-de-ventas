@@ -103,6 +103,6 @@ class Quote extends Model
 
     public function tieneServicios(): bool
     {
-        return $this->items->contains(fn (QuoteItem $item) => $item->catalogItem->esServicio());
+        return $this->items->contains(fn (QuoteItem $item) => $item->esServicio());
     }
 }

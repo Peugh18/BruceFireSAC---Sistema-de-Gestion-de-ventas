@@ -60,7 +60,8 @@ class ProcessSaleItem
             ]);
         }
 
-        if ($unit->catalog_item_id !== (int) $itemData['catalog_item_id']) {
+        $expectedProductId = (int) ($itemData['product_id'] ?? 0);
+        if ($unit->product_id !== $expectedProductId) {
             throw ValidationException::withMessages([
                 'items' => 'La unidad escaneada no corresponde al producto seleccionado.',
             ]);
@@ -72,7 +73,7 @@ class ProcessSaleItem
 
         $equipment = Equipment::create([
             'client_id' => $sale->client_id,
-            'catalog_item_id' => $unit->catalog_item_id,
+            'product_id' => $unit->product_id,
             'numero_serie' => $unit->numero_serie,
             'fecha_venta' => $sale->fecha,
             'estado' => 'activo',
@@ -81,7 +82,8 @@ class ProcessSaleItem
         ]);
 
         return $sale->items()->create([
-            'catalog_item_id' => $itemData['catalog_item_id'],
+            'product_id' => $unit->product_id,
+            'service_id' => null,
             'tipo_linea' => 'unidad_nueva',
             'inventory_unit_id' => $unit->id,
             'equipment_id' => $equipment->id,
@@ -109,7 +111,8 @@ class ProcessSaleItem
         }
 
         return $sale->items()->create([
-            'catalog_item_id' => $itemData['catalog_item_id'],
+            'product_id' => null,
+            'service_id' => $itemData['service_id'] ?? null,
             'tipo_linea' => 'recarga_servicio',
             'inventory_unit_id' => null,
             'equipment_id' => $equipment->id,
@@ -124,7 +127,7 @@ class ProcessSaleItem
     {
         $movement = new InventoryMovement;
         $movement->inventory_unit_id = $unit->id;
-        $movement->catalog_item_id = $unit->catalog_item_id;
+        $movement->product_id = $unit->product_id;
         $movement->sede_id = $unit->sede_almacen_id;
         $movement->tipo = 'salida_venta';
         $movement->cantidad = 1;

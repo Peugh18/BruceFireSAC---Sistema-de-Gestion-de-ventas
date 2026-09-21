@@ -21,7 +21,7 @@ class InventoryLookupController extends Controller
             'sede_almacen_id' => ['required', 'integer', 'exists:sedes,id'],
         ]);
 
-        $unit = InventoryUnit::with('catalogItem')
+        $unit = InventoryUnit::with('product')
             ->where('numero_serie', $data['numero_serie'])
             ->first();
 
@@ -40,9 +40,9 @@ class InventoryLookupController extends Controller
         return response()->json([
             'inventory_unit_id' => $unit->id,
             'numero_serie' => $unit->numero_serie,
-            'catalog_item_id' => $unit->catalog_item_id,
-            'nombre' => $unit->catalogItem->nombre,
-            'precio_venta' => $unit->catalogItem->precio_venta,
+            'product_id' => $unit->product_id,
+            'nombre' => $unit->product->nombre,
+            'precio_venta' => $unit->product->precio_venta,
         ]);
     }
 }

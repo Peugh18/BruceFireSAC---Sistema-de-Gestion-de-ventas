@@ -2,11 +2,12 @@
 
 namespace App\Services\Billing;
 
-use App\Models\CatalogItem;
 use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Service;
 use Greenter\Model\Client\Client as GreenterClient;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
@@ -62,7 +63,7 @@ class GreenterService
             );
         }
 
-        $sale->loadMissing('client', 'items.catalogItem', 'installments');
+        $sale->loadMissing('client', 'items.product', 'items.service', 'installments');
 
         $companySetting = CompanySetting::current();
 
@@ -89,7 +90,7 @@ class GreenterService
 
         $details = $sale->items->map(fn (SaleItem $item) => $this->buildDetail($item))->values()->all();
 
-        $esServicio = $sale->items->contains(fn (SaleItem $item) => $item->catalogItem->esServicio());
+        $esServicio = $sale->items->contains(fn (SaleItem $item) => $item->esServicio());
         $detraccionCalc = $this->detraccionCalculator->calcular((float) $sale->total, $esServicio);
 
         $invoice = (new Invoice)
@@ -173,16 +174,16 @@ class GreenterService
 
     protected function buildDetail(SaleItem $item): SaleDetail
     {
-        $catalogItem = $item->catalogItem;
+        $productOrService = $item->product ?? $item->service;
         $valorVenta = (float) $item->subtotal;
         $igvLinea = round($valorVenta * 0.18, 2);
         $valorUnitario = (float) $item->precio_unitario;
 
         $detail = (new SaleDetail)
-            ->setCodProducto($catalogItem->codigo)
-            ->setUnidad($this->unidadCatalogo03($catalogItem))
+            ->setCodProducto($productOrService->codigo)
+            ->setUnidad($this->unidadCatalogo03($productOrService))
             ->setCantidad((float) $item->cantidad)
-            ->setDescripcion($catalogItem->nombre)
+            ->setDescripcion($productOrService->nombre)
             ->setMtoValorUnitario($valorUnitario)
             ->setMtoValorVenta($valorVenta)
             ->setMtoBaseIgv($valorVenta)
@@ -224,13 +225,13 @@ class GreenterService
         };
     }
 
-    protected function unidadCatalogo03(CatalogItem $catalogItem): string
+    protected function unidadCatalogo03(Product|Service $item): string
     {
-        if ($catalogItem->esServicio()) {
+        if ($item->esServicio()) {
             return 'ZZ';
         }
 
-        $clave = mb_strtolower(trim($catalogItem->unidad_medida));
+        $clave = mb_strtolower(trim($item->unidad_medida));
 
         return self::UNIDADES_SUNAT[$clave] ?? 'NIU';
     }

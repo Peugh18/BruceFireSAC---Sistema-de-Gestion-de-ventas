@@ -2,9 +2,9 @@
 
 use App\Actions\Sales\ConfirmSale;
 use App\Contracts\SunatClientInterface;
-use App\Models\CatalogItem;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\User;
@@ -47,11 +47,11 @@ function draftSaleFor(Client $client, string $comprobanteTipo = 'factura'): Sale
         'total' => 118,
     ]);
 
-    $item = CatalogItem::factory()->producto()->create(['precio_venta' => 100]);
+    $item = Product::factory()->create(['precio_venta' => 100]);
 
     SaleItem::factory()->create([
         'sale_id' => $sale->id,
-        'catalog_item_id' => $item->id,
+        'product_id' => $item->id,
         'cantidad' => 1,
         'precio_unitario' => 100,
         'descuento' => 0,

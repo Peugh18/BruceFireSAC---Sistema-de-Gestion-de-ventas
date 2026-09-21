@@ -12,7 +12,8 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $sale_id
- * @property int $catalog_item_id
+ * @property int|null $product_id
+ * @property int|null $service_id
  * @property string $tipo_linea
  * @property int|null $inventory_unit_id
  * @property int|null $equipment_id
@@ -23,12 +24,14 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Sale $sale
- * @property-read CatalogItem $catalogItem
+ * @property-read Product|null $product
+ * @property-read Service|null $service
+ * @property-read Product|Service|null $item
  * @property-read InventoryUnit|null $inventoryUnit
  * @property-read Equipment|null $equipment
  */
 #[Fillable([
-    'sale_id', 'catalog_item_id', 'tipo_linea', 'inventory_unit_id', 'equipment_id',
+    'sale_id', 'product_id', 'service_id', 'tipo_linea', 'inventory_unit_id', 'equipment_id',
     'cantidad', 'precio_unitario', 'descuento', 'subtotal',
 ])]
 class SaleItem extends Model
@@ -50,9 +53,14 @@ class SaleItem extends Model
         return $this->belongsTo(Sale::class);
     }
 
-    public function catalogItem(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(CatalogItem::class);
+        return $this->belongsTo(Product::class);
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
     }
 
     public function inventoryUnit(): BelongsTo
@@ -63,5 +71,15 @@ class SaleItem extends Model
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);
+    }
+
+    public function getItemAttribute(): Product|Service|null
+    {
+        return $this->product ?? $this->service;
+    }
+
+    public function esServicio(): bool
+    {
+        return $this->service_id !== null || $this->tipo_linea === 'recarga_servicio';
     }
 }

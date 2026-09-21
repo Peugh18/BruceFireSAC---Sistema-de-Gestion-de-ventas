@@ -4,12 +4,13 @@ use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Billing\ReserveNextCorrelativo;
 use App\Contracts\SunatClientInterface;
-use App\Models\CatalogItem;
 use App\Models\CompanySetting;
 use App\Models\DocumentSeries;
 use App\Models\ElectronicDocument;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Service;
 use App\Services\Billing\DetraccionCalculator;
 use App\Services\Billing\GreenterService;
 use App\Services\Billing\NumeroEnLetrasService;
@@ -117,10 +118,9 @@ test('emit electronic document prints the detraccion legend and bank account whe
         'igv' => 180,
         'total' => 1180,
     ]);
-    $item = CatalogItem::factory()->servicio()->create(['precio_venta' => 1000]);
-    SaleItem::factory()->create([
+    $item = Service::factory()->create(['precio_venta' => 1000]);
+    SaleItem::factory()->forService($item)->create([
         'sale_id' => $sale->id,
-        'catalog_item_id' => $item->id,
         'cantidad' => 1,
         'precio_unitario' => 1000,
         'descuento' => 0,
@@ -197,11 +197,11 @@ function saleWithItem(): Sale
         'igv' => 18,
         'total' => 118,
     ]);
-    $item = CatalogItem::factory()->producto()->create(['precio_venta' => 100]);
+    $item = Product::factory()->create(['precio_venta' => 100]);
 
     SaleItem::factory()->create([
         'sale_id' => $sale->id,
-        'catalog_item_id' => $item->id,
+        'product_id' => $item->id,
         'cantidad' => 1,
         'precio_unitario' => 100,
         'descuento' => 0,

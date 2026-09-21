@@ -38,7 +38,8 @@ type DocumentType = 'factura' | 'boleta';
 type SaleItemForm = {
     tipo_linea: LineType;
     numero_serie: string;
-    catalog_item_id: number;
+    product_id?: number;
+    service_id?: number;
     cantidad: number;
     precio_unitario: number;
     descuento: number;
@@ -64,7 +65,7 @@ type Props = { clients: ClientOption[] };
 type ScanResponse = {
     inventory_unit_id: number;
     numero_serie: string;
-    catalog_item_id: number;
+    product_id: number;
     nombre: string;
     precio_venta: number | string;
 };
@@ -220,7 +221,7 @@ export default function NuevaVenta({ clients }: Props) {
                 {
                     tipo_linea: tipoLinea,
                     numero_serie: payload.numero_serie,
-                    catalog_item_id: payload.catalog_item_id,
+                    product_id: payload.product_id,
                     cantidad: 1,
                     precio_unitario: Number(payload.precio_venta) || 0,
                     descuento: 0,

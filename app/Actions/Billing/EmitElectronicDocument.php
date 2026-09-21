@@ -38,7 +38,7 @@ class EmitElectronicDocument
 
     public function sendDocument(ElectronicDocument $document): ElectronicDocument
     {
-        $document->loadMissing('sale.client', 'sale.items.catalogItem', 'sale.installments');
+        $document->loadMissing('sale.client', 'sale.items.product', 'sale.items.service', 'sale.installments');
 
         $invoice = $this->greenterService->buildInvoice($document->sale, $document);
         $xmlSigned = $this->greenterService->sign($invoice);

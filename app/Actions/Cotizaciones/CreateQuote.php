@@ -9,7 +9,7 @@ class CreateQuote
 {
     /**
      * @param  array<string, mixed>  $data
-     * @param  list<array{catalog_item_id:int,cantidad:int,precio_unitario:float,descuento?:float}>  $items
+     * @param  list<array{product_id?:int,service_id?:int,cantidad:int,precio_unitario:float,descuento?:float}>  $items
      */
     public function handle(array $data, array $items, int $vendedorId): Quote
     {
@@ -40,7 +40,7 @@ class CreateQuote
                 $quote->items()->create($linea);
             }
 
-            return $quote->load('items.catalogItem');
+            return $quote->load('items.product', 'items.service');
         });
     }
 }

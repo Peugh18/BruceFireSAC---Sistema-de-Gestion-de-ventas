@@ -1,13 +1,14 @@
 <?php
 
 use App\Actions\Sales\CreateSale;
-use App\Models\CatalogItem;
 use App\Models\Client;
 use App\Models\Equipment;
 use App\Models\Installment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
+use App\Models\Product;
 use App\Models\Sede;
+use App\Models\Service;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Validation\ValidationException;
 
@@ -19,9 +20,9 @@ test('vender una unidad nueva descuenta stock, crea kardex, equipo y calcula tot
     $user = vendedorUser();
     $client = Client::factory()->create();
     $sede = Sede::factory()->almacen()->create();
-    $catalogItem = CatalogItem::factory()->producto()->create(['precio_venta' => 100]);
+    $product = Product::factory()->create(['precio_venta' => 100]);
     $unit = InventoryUnit::factory()->create([
-        'catalog_item_id' => $catalogItem->id,
+        'product_id' => $product->id,
         'sede_almacen_id' => $sede->id,
         'numero_serie' => 'BF-SERIE-001',
         'estado' => 'disponible',
@@ -38,7 +39,7 @@ test('vender una unidad nueva descuenta stock, crea kardex, equipo y calcula tot
         [
             'tipo_linea' => 'unidad_nueva',
             'numero_serie' => $unit->numero_serie,
-            'catalog_item_id' => $catalogItem->id,
+            'product_id' => $product->id,
             'cantidad' => 2,
             'precio_unitario' => 100,
             'descuento' => 10,
@@ -57,9 +58,9 @@ test('vender la misma unidad dos veces lanza validation exception', function () 
     $user = vendedorUser();
     $client = Client::factory()->create();
     $sede = Sede::factory()->almacen()->create();
-    $catalogItem = CatalogItem::factory()->producto()->create(['precio_venta' => 100]);
+    $product = Product::factory()->create(['precio_venta' => 100]);
     $unit = InventoryUnit::factory()->create([
-        'catalog_item_id' => $catalogItem->id,
+        'product_id' => $product->id,
         'sede_almacen_id' => $sede->id,
         'numero_serie' => 'BF-SERIE-002',
         'estado' => 'disponible',
@@ -75,7 +76,7 @@ test('vender la misma unidad dos veces lanza validation exception', function () 
     $items = [[
         'tipo_linea' => 'unidad_nueva',
         'numero_serie' => $unit->numero_serie,
-        'catalog_item_id' => $catalogItem->id,
+        'product_id' => $product->id,
         'cantidad' => 1,
         'precio_unitario' => 100,
     ]];
@@ -91,21 +92,21 @@ test('recarga de servicio no descuenta stock y requiere equipo del cliente corre
     $client = Client::factory()->create();
     $otherClient = Client::factory()->create();
     $sede = Sede::factory()->almacen()->create();
-    $service = CatalogItem::factory()->servicio()->create(['precio_venta' => 80]);
-    $product = CatalogItem::factory()->producto()->create();
+    $service = Service::factory()->create(['precio_venta' => 80]);
+    $product = Product::factory()->create();
     $unit = InventoryUnit::factory()->create([
-        'catalog_item_id' => $product->id,
+        'product_id' => $product->id,
         'sede_almacen_id' => $sede->id,
         'estado' => 'disponible',
     ]);
     $equipment = Equipment::factory()->create([
         'client_id' => $client->id,
-        'catalog_item_id' => $product->id,
+        'product_id' => $product->id,
         'numero_serie' => 'EQ-CLIENTE-001',
     ]);
     Equipment::factory()->create([
         'client_id' => $otherClient->id,
-        'catalog_item_id' => $product->id,
+        'product_id' => $product->id,
         'numero_serie' => 'EQ-OTRO-001',
     ]);
 
@@ -119,7 +120,7 @@ test('recarga de servicio no descuenta stock y requiere equipo del cliente corre
     ], [[
         'tipo_linea' => 'recarga_servicio',
         'numero_serie' => $equipment->numero_serie,
-        'catalog_item_id' => $service->id,
+        'service_id' => $service->id,
         'cantidad' => 1,
         'precio_unitario' => 80,
     ]], $user->id);
@@ -138,7 +139,7 @@ test('recarga de servicio no descuenta stock y requiere equipo del cliente corre
     ], [[
         'tipo_linea' => 'recarga_servicio',
         'numero_serie' => 'EQ-OTRO-001',
-        'catalog_item_id' => $service->id,
+        'service_id' => $service->id,
         'cantidad' => 1,
         'precio_unitario' => 80,
     ]], $user->id))->toThrow(ValidationException::class);
@@ -148,9 +149,9 @@ test('venta a credito genera una cuota con monto total y vencimiento a treinta d
     $user = vendedorUser();
     $client = Client::factory()->create();
     $sede = Sede::factory()->almacen()->create();
-    $catalogItem = CatalogItem::factory()->producto()->create(['precio_venta' => 100]);
+    $product = Product::factory()->create(['precio_venta' => 100]);
     $unit = InventoryUnit::factory()->create([
-        'catalog_item_id' => $catalogItem->id,
+        'product_id' => $product->id,
         'sede_almacen_id' => $sede->id,
         'numero_serie' => 'BF-SERIE-003',
         'estado' => 'disponible',
@@ -167,7 +168,7 @@ test('venta a credito genera una cuota con monto total y vencimiento a treinta d
     ], [[
         'tipo_linea' => 'unidad_nueva',
         'numero_serie' => $unit->numero_serie,
-        'catalog_item_id' => $catalogItem->id,
+        'product_id' => $product->id,
         'cantidad' => 1,
         'precio_unitario' => 100,
     ]], $user->id);

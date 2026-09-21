@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\CatalogItem;
 use App\Models\InventoryUnit;
+use App\Models\Product;
 use App\Models\Sede;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,7 +20,7 @@ class InventoryUnitFactory extends Factory
     public function definition(): array
     {
         return [
-            'catalog_item_id' => CatalogItem::factory()->producto(),
+            'product_id' => Product::factory(),
             'sede_almacen_id' => Sede::factory()->almacen(),
             'numero_serie' => 'BF-'.fake()->year().'-'.fake()->unique()->numerify('####'),
             'estado' => 'disponible',

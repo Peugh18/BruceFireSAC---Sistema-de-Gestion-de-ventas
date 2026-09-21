@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\CatalogItem;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,7 +16,7 @@ class EquipmentFactory extends Factory
     {
         return [
             'client_id' => Client::factory(),
-            'catalog_item_id' => CatalogItem::factory()->producto(),
+            'product_id' => Product::factory(),
             'numero_serie' => 'EQ-'.fake()->year().'-'.fake()->unique()->numerify('####'),
             'fecha_venta' => fake()->dateTimeBetween('-1 year', 'now'),
             'ubicacion_actual' => fake()->optional()->streetAddress(),

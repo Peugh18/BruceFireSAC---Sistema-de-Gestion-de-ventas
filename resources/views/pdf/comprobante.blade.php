@@ -145,11 +145,12 @@
         </thead>
         <tbody>
             @foreach($sale->items as $index => $item)
+                @php $productOrService = $item->product ?? $item->service; @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $item->catalogItem->codigo }}</td>
-                    <td>{{ $item->catalogItem->nombre }}</td>
-                    <td>{{ $item->catalogItem->unidad_medida }}</td>
+                    <td>{{ $productOrService?->codigo }}</td>
+                    <td>{{ $productOrService?->nombre }}</td>
+                    <td>{{ $productOrService?->unidad_medida }}</td>
                     <td class="num">{{ number_format((float) $item->cantidad, 2) }}</td>
                     <td class="num">{{ number_format((float) $item->precio_unitario, 2) }}</td>
                     <td class="num">{{ number_format((float) $item->descuento, 2) }}</td>

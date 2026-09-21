@@ -78,7 +78,7 @@ class SaleController extends Controller
     public function show(Team $current_team, Sale $sale): Response
     {
         return Inertia::render('vendedor/ventas/show', [
-            'sale' => $sale->load('items.catalogItem', 'client', 'payments', 'electronicDocuments'),
+            'sale' => $sale->load('items.product', 'items.service', 'client', 'payments', 'electronicDocuments'),
         ]);
     }
 

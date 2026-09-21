@@ -26,7 +26,8 @@ class StoreQuoteRequest extends FormRequest
             'observaciones' => ['nullable', 'string'],
 
             'items' => ['required', 'array', 'min:1'],
-            'items.*.catalog_item_id' => ['required', 'integer', 'exists:catalog_items,id'],
+            'items.*.product_id' => ['nullable', 'required_without:items.*.service_id', 'integer', 'exists:products,id'],
+            'items.*.service_id' => ['nullable', 'required_without:items.*.product_id', 'integer', 'exists:services,id'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
             'items.*.precio_unitario' => ['required', 'numeric', 'min:0'],
             'items.*.descuento' => ['nullable', 'numeric', 'min:0'],

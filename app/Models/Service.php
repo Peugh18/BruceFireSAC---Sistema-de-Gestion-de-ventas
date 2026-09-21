@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\CatalogItemFactory;
+use Database\Factories\ServiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,19 +14,28 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $codigo
  * @property string $nombre
- * @property string $tipo
+ * @property string|null $descripcion
  * @property string $unidad_medida
  * @property float $precio_venta
  * @property bool $aplica_igv
  * @property bool $activo
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Collection<int, InventoryUnit> $units
+ * @property-read Collection<int, QuoteItem> $quoteItems
+ * @property-read Collection<int, SaleItem> $saleItems
  */
-#[Fillable(['codigo', 'nombre', 'tipo', 'unidad_medida', 'precio_venta', 'aplica_igv', 'activo'])]
-class CatalogItem extends Model
+#[Fillable([
+    'codigo',
+    'nombre',
+    'descripcion',
+    'unidad_medida',
+    'precio_venta',
+    'aplica_igv',
+    'activo',
+])]
+class Service extends Model
 {
-    /** @use HasFactory<CatalogItemFactory> */
+    /** @use HasFactory<ServiceFactory> */
     use HasFactory;
 
     protected function casts(): array
@@ -38,13 +47,18 @@ class CatalogItem extends Model
         ];
     }
 
-    public function units(): HasMany
+    public function quoteItems(): HasMany
     {
-        return $this->hasMany(InventoryUnit::class);
+        return $this->hasMany(QuoteItem::class);
+    }
+
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
     }
 
     public function esServicio(): bool
     {
-        return $this->tipo === 'servicio';
+        return true;
     }
 }

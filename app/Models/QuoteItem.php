@@ -12,7 +12,8 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $quote_id
- * @property int $catalog_item_id
+ * @property int|null $product_id
+ * @property int|null $service_id
  * @property int $cantidad
  * @property float $precio_unitario
  * @property float $descuento
@@ -20,9 +21,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Quote $quote
- * @property-read CatalogItem $catalogItem
+ * @property-read Product|null $product
+ * @property-read Service|null $service
+ * @property-read Product|Service|null $item
  */
-#[Fillable(['quote_id', 'catalog_item_id', 'cantidad', 'precio_unitario', 'descuento', 'subtotal'])]
+#[Fillable(['quote_id', 'product_id', 'service_id', 'cantidad', 'precio_unitario', 'descuento', 'subtotal'])]
 class QuoteItem extends Model
 {
     /** @use HasFactory<QuoteItemFactory> */
@@ -42,8 +45,23 @@ class QuoteItem extends Model
         return $this->belongsTo(Quote::class);
     }
 
-    public function catalogItem(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(CatalogItem::class);
+        return $this->belongsTo(Product::class);
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function getItemAttribute(): Product|Service|null
+    {
+        return $this->product ?? $this->service;
+    }
+
+    public function esServicio(): bool
+    {
+        return $this->service_id !== null;
     }
 }

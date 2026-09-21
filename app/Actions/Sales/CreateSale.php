@@ -54,7 +54,7 @@ class CreateSale
                 ]);
             }
 
-            return $sale->load('items.catalogItem', 'items.equipment', 'items.inventoryUnit');
+            return $sale->load('items.product', 'items.service', 'items.equipment', 'items.inventoryUnit');
         });
     }
 }

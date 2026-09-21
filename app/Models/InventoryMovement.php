@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property int|null $inventory_unit_id
- * @property int $catalog_item_id
+ * @property int $product_id
  * @property int $sede_id
  * @property string $tipo
  * @property int $cantidad
@@ -25,11 +25,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read InventoryUnit|null $inventoryUnit
- * @property-read CatalogItem $catalogItem
+ * @property-read Product $product
  * @property-read Sede $sede
  * @property-read User|null $user
  */
-#[Fillable(['inventory_unit_id', 'catalog_item_id', 'sede_id', 'tipo', 'cantidad', 'user_id', 'observacion'])]
+#[Fillable(['inventory_unit_id', 'product_id', 'sede_id', 'tipo', 'cantidad', 'user_id', 'observacion'])]
 class InventoryMovement extends Model
 {
     public function inventoryUnit(): BelongsTo
@@ -37,9 +37,9 @@ class InventoryMovement extends Model
         return $this->belongsTo(InventoryUnit::class);
     }
 
-    public function catalogItem(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(CatalogItem::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function sede(): BelongsTo

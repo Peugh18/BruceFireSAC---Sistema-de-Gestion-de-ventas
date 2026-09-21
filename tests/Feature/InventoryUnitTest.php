@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\CatalogItem;
 use App\Models\InventoryUnit;
+use App\Models\Product;
 use App\Models\Sede;
 use Illuminate\Database\QueryException;
 
@@ -29,8 +29,8 @@ test('estaDisponible retorna true unicamente cuando el estado es disponible', fu
         ->and($baja->estaDisponible())->toBeFalse();
 });
 
-test('relaciones catalogItem y sedeAlmacen cargan correctamente', function () {
-    $catalogItem = CatalogItem::factory()->producto()->create([
+test('relaciones product y sedeAlmacen cargan correctamente', function () {
+    $product = Product::factory()->create([
         'nombre' => 'Extintor Acetato 6L',
     ]);
     $sede = Sede::factory()->almacen()->create([
@@ -38,13 +38,13 @@ test('relaciones catalogItem y sedeAlmacen cargan correctamente', function () {
     ]);
 
     $unit = InventoryUnit::factory()->create([
-        'catalog_item_id' => $catalogItem->id,
+        'product_id' => $product->id,
         'sede_almacen_id' => $sede->id,
     ]);
 
-    expect($unit->catalogItem)->toBeInstanceOf(CatalogItem::class)
-        ->and($unit->catalogItem->id)->toBe($catalogItem->id)
-        ->and($unit->catalogItem->nombre)->toBe('Extintor Acetato 6L')
+    expect($unit->product)->toBeInstanceOf(Product::class)
+        ->and($unit->product->id)->toBe($product->id)
+        ->and($unit->product->nombre)->toBe('Extintor Acetato 6L')
         ->and($unit->sedeAlmacen)->toBeInstanceOf(Sede::class)
         ->and($unit->sedeAlmacen->id)->toBe($sede->id)
         ->and($unit->sedeAlmacen->nombre)->toBe('Almacen Central Bruce');

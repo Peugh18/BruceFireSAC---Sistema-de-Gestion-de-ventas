@@ -17,7 +17,8 @@ type SaleItem = {
     precio_unitario?: number | string;
     descuento?: number | string;
     subtotal?: number | string;
-    catalog_item?: { nombre?: string };
+    product?: { nombre?: string };
+    service?: { nombre?: string };
 };
 
 type SalePayment = {
@@ -143,7 +144,7 @@ export default function VentasShow({ sale }: Props) {
                             <tbody>
                                 {(sale.items ?? []).map((item) => (
                                     <tr key={item.id}>
-                                        <td className="border-b border-[#F1EFEC] px-2.5 py-[13px] font-semibold">{item.catalog_item?.nombre ?? '-'}</td>
+                                        <td className="border-b border-[#F1EFEC] px-2.5 py-[13px] font-semibold">{item.product?.nombre ?? item.service?.nombre ?? '-'}</td>
                                         <td className="border-b border-[#F1EFEC] px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">{item.numero_serie ?? '-'}</td>
                                         <td className="border-b border-[#F1EFEC] px-2.5 py-[13px] capitalize">{nice(item.tipo_linea)}</td>
                                         <td className="border-b border-[#F1EFEC] px-2.5 py-[13px]">{item.cantidad ?? 1}</td>

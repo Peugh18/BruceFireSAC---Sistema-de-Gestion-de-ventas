@@ -23,11 +23,11 @@ class ComprobantePdfService
      */
     public function generate(ElectronicDocument $document, string $xmlSigned): string
     {
-        $document->loadMissing('sale.client', 'sale.vehicle', 'sale.items.catalogItem', 'sale.installments');
+        $document->loadMissing('sale.client', 'sale.vehicle', 'sale.items.product', 'sale.items.service', 'sale.installments');
         $sale = $document->sale;
         $company = CompanySetting::current();
 
-        $esServicio = $sale->items->contains(fn (SaleItem $item) => $item->catalogItem->esServicio());
+        $esServicio = $sale->items->contains(fn (SaleItem $item) => $item->esServicio());
         $detraccion = $this->detraccionCalculator->calcular((float) $sale->total, $esServicio);
 
         $pdf = Pdf::loadView('pdf.comprobante', [

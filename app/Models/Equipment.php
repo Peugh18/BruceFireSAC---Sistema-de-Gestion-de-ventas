@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $client_id
- * @property int $catalog_item_id
+ * @property int $product_id
  * @property string $numero_serie
  * @property Carbon $fecha_venta
  * @property string|null $ubicacion_actual
@@ -22,10 +22,10 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Client $client
- * @property-read CatalogItem $catalogItem
+ * @property-read Product $product
  */
 #[Fillable([
-    'client_id', 'catalog_item_id', 'numero_serie', 'fecha_venta', 'ubicacion_actual',
+    'client_id', 'product_id', 'numero_serie', 'fecha_venta', 'ubicacion_actual',
     'estado', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica',
 ])]
 class Equipment extends Model
@@ -49,8 +49,8 @@ class Equipment extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function catalogItem(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(CatalogItem::class);
+        return $this->belongsTo(Product::class);
     }
 }

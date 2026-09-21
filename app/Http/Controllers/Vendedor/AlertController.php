@@ -16,7 +16,7 @@ class AlertController extends Controller
     {
         $today = today();
         $rows = Equipment::query()
-            ->with(['client', 'catalogItem'])
+            ->with(['client', 'product'])
             ->where(fn ($query) => $query
                 ->whereNotNull('proxima_fecha_atencion')
                 ->orWhereNotNull('proxima_prueba_hidrostatica'))
@@ -68,7 +68,7 @@ class AlertController extends Controller
             'client_id' => $equipment->client_id,
             'cliente' => $equipment->client->razon_social,
             'equipment_id' => $equipment->id,
-            'equipo' => $equipment->catalogItem->nombre,
+            'equipo' => $equipment->product->nombre,
             'numero_serie' => $equipment->numero_serie,
             'fecha' => $fecha->toDateString(),
             'dias' => $dias,

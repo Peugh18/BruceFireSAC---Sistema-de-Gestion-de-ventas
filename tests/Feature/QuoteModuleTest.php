@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\CatalogItem;
 use App\Models\Client;
+use App\Models\Product;
 use App\Models\Quote;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
@@ -12,7 +12,7 @@ beforeEach(function () {
 test('vendedor creates a quote with items and totals are computed', function () {
     $user = vendedorUser();
     $client = Client::factory()->create();
-    $item = CatalogItem::factory()->producto()->create(['precio_venta' => 100]);
+    $item = Product::factory()->create(['precio_venta' => 100]);
 
     $response = $this
         ->actingAs($user)
@@ -21,7 +21,7 @@ test('vendedor creates a quote with items and totals are computed', function () 
             'fecha' => now()->toDateString(),
             'vigencia_hasta' => now()->addDays(15)->toDateString(),
             'items' => [
-                ['catalog_item_id' => $item->id, 'cantidad' => 2, 'precio_unitario' => 100],
+                ['product_id' => $item->id, 'cantidad' => 2, 'precio_unitario' => 100],
             ],
         ]);
 

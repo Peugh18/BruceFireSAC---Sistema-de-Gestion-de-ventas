@@ -2,9 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Models\CatalogItem;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Service;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,12 +21,22 @@ class SaleItemFactory extends Factory
 
         return [
             'sale_id' => Sale::factory(),
-            'catalog_item_id' => CatalogItem::factory()->producto(),
+            'product_id' => Product::factory(),
+            'service_id' => null,
             'tipo_linea' => 'unidad_nueva',
             'cantidad' => $cantidad,
             'precio_unitario' => $precioUnitario,
             'descuento' => $descuento,
             'subtotal' => ($cantidad * $precioUnitario) - $descuento,
         ];
+    }
+
+    public function forService(?Service $service = null): static
+    {
+        return $this->state(fn () => [
+            'product_id' => null,
+            'service_id' => $service?->id ?? Service::factory(),
+            'tipo_linea' => 'recarga_servicio',
+        ]);
     }
 }
