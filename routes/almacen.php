@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Almacen\DashboardController;
+use App\Http\Controllers\Almacen\StockController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas del rol Almacén. Se incluye desde routes/web.php dentro del grupo
@@ -11,4 +12,5 @@ Route::prefix('almacen')
     ->middleware('role:Almacen')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+        Route::get('stock', [StockController::class, 'index'])->name('stock.index');
     });

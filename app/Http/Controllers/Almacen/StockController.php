@@ -1,0 +1,202 @@
+<?php
+
+namespace App\Http\Controllers\Almacen;
+
+use App\Http\Controllers\Controller;
+use App\Models\InventoryMovement;
+use App\Models\InventoryUnit;
+use App\Models\Product;
+use App\Models\Sede;
+use App\Models\Service;
+use App\Models\Team;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class StockController extends Controller
+{
+    /**
+     * Módulo Stock y Kardex (Fase 3 / §84.7):
+     * Listado unificado de Producto / Servicio con existencias por sede y Kardex filtrable.
+     */
+    public function index(Team $current_team, Request $request): Response
+    {
+        $search = $request->string('search')->toString();
+        $tipo = $request->string('tipo')->toString(); // 'todos', 'producto', 'servicio'
+
+        // 1. Sedes activas de tipo almacén o mixta
+        $sedes = Sede::query()
+            ->whereIn('tipo', ['almacen', 'mixta'])
+            ->where('activo', true)
+            ->orderBy('id')
+            ->get(['id', 'nombre', 'tipo', 'ciudad']);
+
+        // 2. Conteo de unidades disponibles agrupadas por [product_id][sede_id]
+        $stockUnits = InventoryUnit::query()
+            ->where('estado', 'disponible')
+            ->selectRaw('product_id, sede_almacen_id, count(*) as total')
+            ->groupBy('product_id', 'sede_almacen_id')
+            ->get();
+
+        $stockMatrix = [];
+        foreach ($stockUnits as $unit) {
+            $stockMatrix[$unit->product_id][$unit->sede_almacen_id] = (int) $unit->total;
+        }
+
+        // 3. Obtener Productos
+        $products = collect();
+        if ($tipo === '' || $tipo === 'todos' || $tipo === 'producto') {
+            $products = Product::query()
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('codigo', 'like', "%{$search}%")
+                            ->orWhere('nombre', 'like', "%{$search}%");
+                    });
+                })
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get()
+                ->map(function (Product $product) use ($sedes, $stockMatrix) {
+                    $stockPorSede = [];
+                    $totalDisponible = 0;
+
+                    foreach ($sedes as $sede) {
+                        $qty = $stockMatrix[$product->id][$sede->id] ?? 0;
+                        $stockPorSede[$sede->id] = $qty;
+                        $totalDisponible += $qty;
+                    }
+
+                    return [
+                        'id' => $product->id,
+                        'tipo' => 'producto',
+                        'codigo' => $product->codigo,
+                        'nombre' => $product->nombre,
+                        'unidad_medida' => $product->unidad_medida,
+                        'precio_venta' => (float) $product->precio_venta,
+                        'serializado' => $product->serializado,
+                        'stock_minimo' => $product->stock_minimo,
+                        'stock_disponible_total' => $totalDisponible,
+                        'stock_por_sede' => $stockPorSede,
+                    ];
+                });
+        }
+
+        // 4. Obtener Servicios
+        $services = collect();
+        if ($tipo === '' || $tipo === 'todos' || $tipo === 'servicio') {
+            $services = Service::query()
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('codigo', 'like', "%{$search}%")
+                            ->orWhere('nombre', 'like', "%{$search}%");
+                    });
+                })
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get()
+                ->map(function (Service $service) use ($sedes) {
+                    $stockPorSede = [];
+                    foreach ($sedes as $sede) {
+                        $stockPorSede[$sede->id] = null; // Servicios no manejan stock
+                    }
+
+                    return [
+                        'id' => $service->id,
+                        'tipo' => 'servicio',
+                        'codigo' => $service->codigo,
+                        'nombre' => $service->nombre,
+                        'unidad_medida' => $service->unidad_medida,
+                        'precio_venta' => (float) $service->precio_venta,
+                        'serializado' => false,
+                        'stock_minimo' => null,
+                        'stock_disponible_total' => null,
+                        'stock_por_sede' => $stockPorSede,
+                    ];
+                });
+        }
+
+        // 5. Unir y ordenar catálogo de ítems
+        $items = $products->concat($services)->sortBy('nombre')->values()->all();
+
+        // 6. Kardex filtrable
+        $kardexProductId = $request->integer('kardex_product_id');
+        $kardexSedeId = $request->integer('kardex_sede_id');
+        $kardexFechaDesde = $request->string('kardex_fecha_desde')->toString();
+        $kardexFechaHasta = $request->string('kardex_fecha_hasta')->toString();
+        $kardexTipo = $request->string('kardex_tipo')->toString(); // 'ingreso', 'salida_venta', 'ajuste', 'traslado'
+
+        $kardexQuery = InventoryMovement::query()
+            ->with([
+                'product:id,codigo,nombre,unidad_medida,serializado',
+                'inventoryUnit:id,numero_serie,estado',
+                'sede:id,nombre',
+                'user:id,name',
+            ])
+            ->when($kardexProductId > 0, fn ($q) => $q->where('product_id', $kardexProductId))
+            ->when($kardexSedeId > 0, fn ($q) => $q->where('sede_id', $kardexSedeId))
+            ->when($kardexFechaDesde !== '', fn ($q) => $q->whereDate('created_at', '>=', $kardexFechaDesde))
+            ->when($kardexFechaHasta !== '', fn ($q) => $q->whereDate('created_at', '<=', $kardexFechaHasta))
+            ->when(in_array($kardexTipo, ['ingreso', 'salida_venta', 'ajuste', 'traslado'], true), fn ($q) => $q->where('tipo', $kardexTipo));
+
+        // Paginación del Kardex
+        $kardex = $kardexQuery
+            ->orderByDesc('id')
+            ->paginate(15, ['*'], 'kardex_page')
+            ->withQueryString()
+            ->through(function (InventoryMovement $mov) {
+                return [
+                    'id' => $mov->id,
+                    'fecha' => $mov->created_at?->toIso8601String(),
+                    'tipo' => $mov->tipo,
+                    'cantidad' => $mov->cantidad,
+                    'producto' => [
+                        'id' => $mov->product->id,
+                        'codigo' => $mov->product->codigo,
+                        'nombre' => $mov->product->nombre,
+                        'unidad_medida' => $mov->product->unidad_medida,
+                        'serializado' => $mov->product->serializado,
+                    ],
+                    'unidad_serie' => $mov->inventoryUnit?->numero_serie,
+                    'sede' => $mov->sede?->nombre,
+                    'usuario' => $mov->user?->name,
+                    'observacion' => $mov->observacion,
+                ];
+            });
+
+        // Lista de productos para el selector de filtro del Kardex
+        $productList = Product::query()
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get(['id', 'codigo', 'nombre']);
+
+        return Inertia::render('almacen/stock/index', [
+            'items' => $items,
+            'sedes' => $sedes,
+            'filters' => [
+                'search' => $search,
+                'tipo' => $tipo ?: 'todos',
+            ],
+            'kardex' => $kardex,
+            'kardex_filters' => [
+                'product_id' => $kardexProductId ?: null,
+                'sede_id' => $kardexSedeId ?: null,
+                'fecha_desde' => $kardexFechaDesde ?: null,
+                'fecha_hasta' => $kardexFechaHasta ?: null,
+                'tipo' => $kardexTipo ?: 'todos',
+            ],
+            'product_list' => $productList,
+            'kpis' => [
+                'total_productos' => Product::where('activo', true)->count(),
+                'total_servicios' => Service::where('activo', true)->count(),
+                'unidades_en_stock' => InventoryUnit::where('estado', 'disponible')->count(),
+                'bajo_minimo' => Product::where('activo', true)
+                    ->whereNotNull('stock_minimo')
+                    ->where('stock_minimo', '>', 0)
+                    ->withCount(['units as disponible' => fn ($q) => $q->where('estado', 'disponible')])
+                    ->get()
+                    ->filter(fn ($p) => $p->disponible <= $p->stock_minimo)
+                    ->count(),
+            ],
+        ]);
+    }
+}

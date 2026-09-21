@@ -11,6 +11,7 @@ import {
 
 import { useInitials } from '@/hooks/use-initials';
 import { dashboard } from '@/routes/almacen';
+import stock from '@/routes/almacen/stock';
 import type { Auth } from '@/types';
 
 type SidebarCounts = {
@@ -64,7 +65,7 @@ function buildNavGroups(teamSlug: string, counts: SidebarCounts | null | undefin
             items: [
                 {
                     title: 'Stock y Kardex',
-                    href: `/${teamSlug}/almacen/stock`,
+                    href: stock.index.url(teamSlug),
                     icon: Boxes,
                     count: counts?.bajoMinimo,
                 },
