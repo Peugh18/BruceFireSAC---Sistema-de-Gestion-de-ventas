@@ -170,13 +170,15 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
 
                     <div className="flex items-center gap-2">
                         {reception.unidades_serializadas.length > 0 && (
-                            <Link
-                                href={`/${teamSlug}/almacen/stickers`}
+                            <a
+                                href={`/${teamSlug}/almacen/recepciones/${reception.id}/stickers`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 rounded-[9px] border border-[#E4E1DC] bg-white px-3.5 py-2 text-xs font-bold text-[#201F1D] hover:bg-[#F3F1ED]"
                             >
                                 <Barcode className="size-4" />
-                                <span>Ver Stickers</span>
-                            </Link>
+                                <span>Imprimir Stickers (PDF)</span>
+                            </a>
                         )}
 
                         <Button

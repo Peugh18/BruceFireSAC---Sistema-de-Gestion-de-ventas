@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Almacen\DashboardController;
 use App\Http\Controllers\Almacen\ReceptionController;
+use App\Http\Controllers\Almacen\ReceptionStickerController;
+use App\Http\Controllers\Almacen\StockAdjustmentController;
 use App\Http\Controllers\Almacen\StockController;
+use App\Http\Controllers\Almacen\StockLookupController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas del rol Almacén. Se incluye desde routes/web.php dentro del grupo
@@ -21,4 +24,15 @@ Route::prefix('almacen')
         Route::post('recepciones', [ReceptionController::class, 'store'])->name('recepciones.store');
         Route::get('recepciones/{reception}', [ReceptionController::class, 'show'])->name('recepciones.show');
         Route::put('recepciones/{reception}', [ReceptionController::class, 'update'])->name('recepciones.update');
+
+        // Stickers de código de barras (§84.9)
+        Route::get('recepciones/{reception}/stickers', [ReceptionStickerController::class, 'show'])->name('recepciones.stickers');
+
+        // Ajustes de stock autorizados (§84.10)
+        Route::get('ajustes', [StockAdjustmentController::class, 'index'])->name('ajustes.index');
+        Route::post('ajustes', [StockAdjustmentController::class, 'store'])->name('ajustes.store');
+
+        // Consulta rápida por serie / código de barras (§84.12)
+        Route::get('consulta', [StockLookupController::class, 'index'])->name('consulta.index');
+        Route::get('consulta/buscar', [StockLookupController::class, 'search'])->name('consulta.buscar');
     });

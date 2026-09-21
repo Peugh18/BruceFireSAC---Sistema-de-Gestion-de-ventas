@@ -31,16 +31,27 @@ class StockController extends Controller
             ->orderBy('id')
             ->get(['id', 'nombre', 'tipo', 'ciudad']);
 
-        // 2. Conteo de unidades disponibles agrupadas por [product_id][sede_id]
+        // 2a. Para productos serializados: conteo de InventoryUnit en estado 'disponible'
         $stockUnits = InventoryUnit::query()
             ->where('estado', 'disponible')
-            ->selectRaw('product_id, sede_almacen_id, count(*) as total')
+            ->selectRaw('product_id, sede_almacen_id as sede_id, count(*) as total')
             ->groupBy('product_id', 'sede_almacen_id')
+            ->get();
+
+        // 2b. Para productos no serializados (repuestos / componentes a granel, §84.11): saldo de Kardex
+        $bulkMovements = InventoryMovement::query()
+            ->join('products', 'inventory_movements.product_id', '=', 'products.id')
+            ->where('products.serializado', false)
+            ->selectRaw('inventory_movements.product_id, inventory_movements.sede_id, sum(inventory_movements.cantidad) as total')
+            ->groupBy('inventory_movements.product_id', 'inventory_movements.sede_id')
             ->get();
 
         $stockMatrix = [];
         foreach ($stockUnits as $unit) {
-            $stockMatrix[$unit->product_id][$unit->sede_almacen_id] = (int) $unit->total;
+            $stockMatrix[$unit->product_id][$unit->sede_id] = (int) $unit->total;
+        }
+        foreach ($bulkMovements as $bm) {
+            $stockMatrix[$bm->product_id][$bm->sede_id] = max(0, (int) $bm->total);
         }
 
         // 3. Obtener Productos
