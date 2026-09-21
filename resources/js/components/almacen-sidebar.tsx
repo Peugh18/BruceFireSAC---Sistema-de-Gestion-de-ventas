@@ -11,6 +11,7 @@ import {
 
 import { useInitials } from '@/hooks/use-initials';
 import { dashboard } from '@/routes/almacen';
+import recepciones from '@/routes/almacen/recepciones';
 import stock from '@/routes/almacen/stock';
 import type { Auth } from '@/types';
 
@@ -71,7 +72,7 @@ function buildNavGroups(teamSlug: string, counts: SidebarCounts | null | undefin
                 },
                 {
                     title: 'Recepciones',
-                    href: `/${teamSlug}/almacen/recepciones`,
+                    href: recepciones.index.url(teamSlug),
                     icon: Truck,
                     count: counts?.recepcionesHoy,
                 },

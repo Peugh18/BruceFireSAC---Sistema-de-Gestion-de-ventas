@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Almacen\DashboardController;
+use App\Http\Controllers\Almacen\ReceptionController;
 use App\Http\Controllers\Almacen\StockController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,4 +14,11 @@ Route::prefix('almacen')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('stock', [StockController::class, 'index'])->name('stock.index');
+
+        // Recepciones de proveedor (§84.8)
+        Route::get('recepciones', [ReceptionController::class, 'index'])->name('recepciones.index');
+        Route::get('recepciones/nueva', [ReceptionController::class, 'create'])->name('recepciones.create');
+        Route::post('recepciones', [ReceptionController::class, 'store'])->name('recepciones.store');
+        Route::get('recepciones/{reception}', [ReceptionController::class, 'show'])->name('recepciones.show');
+        Route::put('recepciones/{reception}', [ReceptionController::class, 'update'])->name('recepciones.update');
     });

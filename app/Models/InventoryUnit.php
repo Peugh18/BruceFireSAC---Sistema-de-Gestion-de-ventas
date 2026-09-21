@@ -19,6 +19,8 @@ use Illuminate\Support\Carbon;
  * @property int $product_id
  * @property int $sede_almacen_id
  * @property string $numero_serie
+ * @property string|null $marca
+ * @property int|null $anio_fabricacion
  * @property string $estado
  * @property Carbon $fecha_ingreso
  * @property Carbon|null $created_at
@@ -26,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property-read Product $product
  * @property-read Sede $sedeAlmacen
  */
-#[Fillable(['product_id', 'sede_almacen_id', 'numero_serie', 'estado', 'fecha_ingreso'])]
+#[Fillable(['product_id', 'sede_almacen_id', 'numero_serie', 'marca', 'anio_fabricacion', 'estado', 'fecha_ingreso'])]
 class InventoryUnit extends Model
 {
     /** @use HasFactory<InventoryUnitFactory> */
@@ -36,6 +38,7 @@ class InventoryUnit extends Model
     {
         return [
             'fecha_ingreso' => 'date',
+            'anio_fabricacion' => 'integer',
         ];
     }
 
@@ -57,5 +60,10 @@ class InventoryUnit extends Model
     public function estaDisponible(): bool
     {
         return $this->estado === 'disponible';
+    }
+
+    public function getCodigoInternoAttribute(): string
+    {
+        return $this->numero_serie;
     }
 }
