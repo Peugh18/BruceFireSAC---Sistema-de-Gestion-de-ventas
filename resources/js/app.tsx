@@ -19,6 +19,10 @@ void createInertiaApp({
                 // VendedorLayout (sidebar propio) — no usan el AppLayout
                 // genérico, para no duplicar el sidebar.
                 return null;
+            case name.startsWith('almacen/'):
+                // Igual que vendedor/: AlmacenLayout ya trae su propio
+                // sidebar, no debe envolverse con el AppLayout genérico.
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
