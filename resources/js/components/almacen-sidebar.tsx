@@ -12,6 +12,7 @@ import {
 import { useInitials } from '@/hooks/use-initials';
 import { dashboard } from '@/routes/almacen';
 import recepciones from '@/routes/almacen/recepciones';
+import stickers from '@/routes/almacen/stickers';
 import stock from '@/routes/almacen/stock';
 import type { Auth } from '@/types';
 
@@ -78,7 +79,7 @@ function buildNavGroups(teamSlug: string, counts: SidebarCounts | null | undefin
                 },
                 {
                     title: 'Stickers de Barras',
-                    href: `/${teamSlug}/almacen/stickers`,
+                    href: stickers.index.url(teamSlug),
                     icon: Barcode,
                 },
                 {

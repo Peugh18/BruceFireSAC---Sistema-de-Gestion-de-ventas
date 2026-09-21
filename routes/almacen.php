@@ -26,6 +26,7 @@ Route::prefix('almacen')
         Route::put('recepciones/{reception}', [ReceptionController::class, 'update'])->name('recepciones.update');
 
         // Stickers de código de barras (§84.9)
+        Route::get('stickers', [ReceptionStickerController::class, 'index'])->name('stickers.index');
         Route::get('recepciones/{reception}/stickers', [ReceptionStickerController::class, 'show'])->name('recepciones.stickers');
 
         // Ajustes de stock autorizados (§84.10)

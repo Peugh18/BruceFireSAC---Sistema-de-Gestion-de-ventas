@@ -7,6 +7,7 @@ use App\Models\Reception;
 use App\Models\Sede;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -78,6 +79,84 @@ test('almacen user can generate and view inline pdf stickers for reception with 
 
     // PDF binary output starts with %PDF-
     expect($response->getContent())->toStartWith('%PDF-');
+});
+
+test('almacen user can view the stickers index listing only receptions with serialized units', function () {
+    $user = almacenUserForStickersTest();
+    $sede = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
+
+    $prodSerial = Product::factory()->create([
+        'codigo' => 'EXT-PQS-6',
+        'nombre' => 'Extintor PQS 6kg',
+        'serializado' => true,
+    ]);
+    $prodBulk = Product::factory()->create([
+        'codigo' => 'MANG-15M',
+        'nombre' => 'Manguera 1.5 pulg',
+        'serializado' => false,
+    ]);
+
+    // Recepción CON unidades serializadas: debe aparecer en el listado.
+    $receptionConStickers = Reception::create([
+        'proveedor' => 'Proveedor Extintores SAC',
+        'fecha' => today(),
+        'sede_almacen_id' => $sede->id,
+    ]);
+    $unit = InventoryUnit::create([
+        'product_id' => $prodSerial->id,
+        'sede_almacen_id' => $sede->id,
+        'numero_serie' => 'BF-EQ-000001',
+        'estado' => 'disponible',
+        'fecha_ingreso' => today(),
+    ]);
+    $movement = new InventoryMovement([
+        'inventory_unit_id' => $unit->id,
+        'product_id' => $prodSerial->id,
+        'sede_id' => $sede->id,
+        'tipo' => 'ingreso',
+        'cantidad' => 1,
+        'observacion' => 'Recepción con stickers',
+    ]);
+    $movement->referencia_type = Reception::class;
+    $movement->referencia_id = $receptionConStickers->id;
+    $movement->save();
+
+    // Recepción SIN unidades serializadas (solo a granel): NO debe aparecer.
+    $receptionSinStickers = Reception::create([
+        'proveedor' => 'Proveedor Repuestos SAC',
+        'fecha' => today(),
+        'sede_almacen_id' => $sede->id,
+    ]);
+    $bulkMovement = new InventoryMovement([
+        'inventory_unit_id' => null,
+        'product_id' => $prodBulk->id,
+        'sede_id' => $sede->id,
+        'tipo' => 'ingreso',
+        'cantidad' => 10,
+        'observacion' => 'Recepción a granel',
+    ]);
+    $bulkMovement->referencia_type = Reception::class;
+    $bulkMovement->referencia_id = $receptionSinStickers->id;
+    $bulkMovement->save();
+
+    $this->actingAs($user)
+        ->get(route('almacen.stickers.index', ['current_team' => $user->currentTeam]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('almacen/stickers/index')
+            ->has('recepciones.data', 1)
+            ->where('recepciones.data.0.id', $receptionConStickers->id)
+            ->where('recepciones.data.0.unidades_count', 1)
+        );
+});
+
+test('stickers index route requires Almacen role', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Vendedor');
+
+    $this->actingAs($user)
+        ->get(route('almacen.stickers.index', ['current_team' => $user->currentTeam]))
+        ->assertForbidden();
 });
 
 test('stickers route requires Almacen role', function () {
