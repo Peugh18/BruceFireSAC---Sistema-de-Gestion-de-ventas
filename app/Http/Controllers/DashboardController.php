@@ -38,10 +38,18 @@ class DashboardController extends Controller
                 ],
             ]);
 
-        if ($pendingInvitations->isEmpty() && $request->user()->hasRole('Vendedor')) {
-            return redirect()->route('vendedor.dashboard', [
-                'current_team' => $request->route('current_team'),
-            ]);
+        if ($pendingInvitations->isEmpty()) {
+            if ($request->user()->hasRole('Vendedor')) {
+                return redirect()->route('vendedor.dashboard', [
+                    'current_team' => $request->route('current_team'),
+                ]);
+            }
+
+            if ($request->user()->hasRole('Almacen')) {
+                return redirect()->route('almacen.dashboard', [
+                    'current_team' => $request->route('current_team'),
+                ]);
+            }
         }
 
         return Inertia::render('dashboard', [
