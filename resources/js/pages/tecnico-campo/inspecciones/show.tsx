@@ -67,26 +67,24 @@ type ServiceOrder = {
     codigo: string;
     estado: string;
     tipo_servicio?: string;
-    customer_id: number;
-    customer: {
+    client_id: number;
+    client: {
         id: number;
         razon_social: string;
-        ruc?: string;
+        numero_documento?: string;
         telefono?: string;
-        direccion?: string;
-        actividad_economica?: string;
+        direccion_fiscal?: string;
     };
-    branch?: {
+    sede?: {
         id: number;
         nombre: string;
-        direccion?: string;
     };
     equipments: Equipment[];
     deficiencies: Deficiency[];
     certificates: Array<{
         id: number;
-        numero_certificado: string;
-        type?: { nombre: string };
+        numero: string;
+        certificateType?: { nombre: string };
     }>;
 };
 
@@ -184,17 +182,12 @@ export default function InspeccionShow({
                             Cliente & Sede de Inspección
                         </span>
                         <h1 className="text-base font-black text-[#201F1D] leading-snug">
-                            {order.customer.razon_social}
+                            {order.client.razon_social}
                         </h1>
-                        {order.customer.ruc && (
+                        {order.client.numero_documento && (
                             <span className="text-xs font-mono text-[#6B6965]">
-                                RUC: {order.customer.ruc}
+                                RUC/DNI: {order.client.numero_documento}
                             </span>
-                        )}
-                        {order.customer.actividad_economica && (
-                            <p className="text-[11px] text-[#6B6965] mt-0.5">
-                                Giro: {order.customer.actividad_economica}
-                            </p>
                         )}
                     </div>
                     <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-[10px] font-black text-[#0369A1]">
@@ -208,19 +201,19 @@ export default function InspeccionShow({
                         <div>
                             <span className="font-semibold text-[#201F1D]">Dirección: </span>
                             <span className="text-[#6B6965]">
-                                {order.branch?.direccion || order.customer.direccion || 'Sede principal del cliente'}
+                                {order.client.direccion_fiscal || 'Sede principal del cliente'}
                             </span>
                         </div>
                     </div>
 
-                    {order.customer.telefono && (
+                    {order.client.telefono && (
                         <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
                                 <Phone className="size-4 text-[#16A34A] shrink-0" />
-                                <span className="font-mono text-[#201F1D]">{order.customer.telefono}</span>
+                                <span className="font-mono text-[#201F1D]">{order.client.telefono}</span>
                             </div>
                             <a
-                                href={`tel:${order.customer.telefono}`}
+                                href={`tel:${order.client.telefono}`}
                                 className="inline-flex items-center gap-1 rounded-[8px] border border-[#BBF7D0] bg-[#DCFCE7] px-2.5 py-1 text-[11px] font-bold text-[#166534] active:scale-95"
                             >
                                 <Phone className="size-3" />
@@ -484,8 +477,8 @@ export default function InspeccionShow({
                                 key={cert.id}
                                 className="flex items-center justify-between rounded-[8px] bg-white p-2.5 border border-[#BBF7D0] text-xs"
                             >
-                                <span className="font-bold text-[#201F1D]">{cert.type?.nombre || 'Certificado'}</span>
-                                <span className="font-mono text-[#166534] font-bold">{cert.numero_certificado}</span>
+                                <span className="font-bold text-[#201F1D]">{cert.certificateType?.nombre || 'Certificado'}</span>
+                                <span className="font-mono text-[#166534] font-bold">{cert.numero}</span>
                             </div>
                         ))}
                     </div>
