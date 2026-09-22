@@ -1,9 +1,10 @@
-import { Head, usePage } from '@inertiajs/react';
-import { Bell, Search } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Bell, LogOut, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { GerenteSidebar } from '@/components/gerente-sidebar';
 import { useInitials } from '@/hooks/use-initials';
+import { logout } from '@/routes';
 import type { Auth } from '@/types';
 
 type GerentePageProps = {
@@ -62,6 +63,15 @@ export default function GerenteLayout({
                         >
                             {getInitials(auth.user.name)}
                         </div>
+
+                        <Link
+                            href={logout()}
+                            as="button"
+                            className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-[#E4E1DC] bg-white text-[#6B6965] hover:bg-[#FEF2F2] hover:text-[#DC2626]"
+                            title="Cerrar sesión"
+                        >
+                            <LogOut className="size-4" strokeWidth={2} />
+                        </Link>
                     </header>
 
                     <main className="flex-1 p-[30px]">{children}</main>
