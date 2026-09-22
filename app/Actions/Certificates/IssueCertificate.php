@@ -6,6 +6,7 @@ use App\Models\Certificate;
 use App\Models\CertificateType;
 use App\Models\CertificateUnit;
 use App\Models\Client;
+use App\Services\AuditLogger;
 use App\Services\Certificates\CertificateDateCalculator;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -67,6 +68,17 @@ class IssueCertificate
                     'fecha_ultima_recarga' => ! empty($u['fecha_ultima_recarga']) ? Carbon::parse($u['fecha_ultima_recarga']) : null,
                 ]);
             }
+
+            AuditLogger::log(
+                action: 'certificado.emitido',
+                entity: $certificate,
+                newValues: [
+                    'numero' => $numero,
+                    'tipo' => $tipo->codigo,
+                    'client_id' => $client->id,
+                    'vigencia_hasta' => $certificate->fecha_vigencia_hasta,
+                ]
+            );
 
             return $certificate->load('certificateUnits');
         });

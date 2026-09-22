@@ -1,11 +1,15 @@
 import { Head, usePage } from '@inertiajs/react';
+import { Bell, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { GerenteSidebar } from '@/components/gerente-sidebar';
 import { useInitials } from '@/hooks/use-initials';
 import type { Auth } from '@/types';
 
 type GerentePageProps = {
-    auth: Auth & { roles?: string[] };
+    auth: Auth & {
+        roles?: string[];
+    };
     [key: string]: unknown;
 };
 
@@ -14,14 +18,10 @@ type GerenteLayoutProps = {
     title: string;
 };
 
-/**
- * Layout mínimo para el rol Gerente: todavía no existe un dashboard ni menú
- * lateral propio para este rol (ver Documento Maestro §77.3), así que por
- * ahora esta pantalla se abre directa sin sidebar. Cuando se construya el
- * dashboard de Gerente, este layout debe reemplazarse por uno con menú,
- * igual que VendedorLayout.
- */
-export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
+export default function GerenteLayout({
+    children,
+    title,
+}: GerenteLayoutProps) {
     const { auth } = usePage<GerentePageProps>().props;
     const getInitials = useInitials();
 
@@ -29,24 +29,43 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
         <>
             <Head title={title} />
 
-            <div className="min-h-screen bg-[#F3F1ED] text-[#201F1D]">
-                <header className="flex h-[66px] shrink-0 items-center gap-3.5 border-b border-[#E7E4DE] bg-white px-[30px]">
-                    <div className="font-['Oswald',sans-serif] text-[15px] font-semibold tracking-[0.02em] uppercase">BRUCE FIRE</div>
-                    <div className="text-xs text-[#8A8680]">
-                        Gerencia
-                        <span className="mx-1.5">›</span>
-                        <b className="font-bold text-[#201F1D]">{title}</b>
-                    </div>
-                    <div className="flex-1" />
-                    <div
-                        className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#1A1A1D] text-xs font-bold text-white"
-                        title={auth.user.name}
-                    >
-                        {getInitials(auth.user.name)}
-                    </div>
-                </header>
+            <div className="flex min-h-screen bg-[#F3F1ED] text-[#201F1D]">
+                <GerenteSidebar />
 
-                <main className="mx-auto max-w-4xl px-7 pt-[22px] pb-8">{children}</main>
+                <div className="flex min-w-0 flex-1 flex-col bg-[#F3F1ED]">
+                    <header className="flex h-[66px] shrink-0 items-center gap-3.5 border-b border-[#E7E4DE] bg-white px-[30px]">
+                        <div className="text-xs text-[#8A8680]">
+                            Gerencia
+                            <span className="mx-1.5">›</span>
+                            <b className="font-bold text-[#201F1D]">{title}</b>
+                        </div>
+
+                        <div className="flex-1" />
+
+                        <div className="flex h-[38px] w-[230px] items-center gap-2 rounded-[9px] border border-[#E4E1DC] bg-[#FAFAF8] px-3 text-[13px] text-[#8A8680]">
+                            <Search className="size-3.5 shrink-0" strokeWidth={2} />
+                            <span>Buscar en gerencia...</span>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="relative flex size-[38px] shrink-0 items-center justify-center rounded-[9px] border border-[#E4E1DC] bg-white text-[#4A4742]"
+                            aria-label="Notificaciones"
+                        >
+                            <Bell className="size-4" strokeWidth={2} />
+                            <span className="absolute top-[7px] right-[7px] size-[7px] rounded-full border-[1.5px] border-white bg-[#E31E24]" />
+                        </button>
+
+                        <div
+                            className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#1A1A1D] text-xs font-bold text-white"
+                            title={auth.user.name}
+                        >
+                            {getInitials(auth.user.name)}
+                        </div>
+                    </header>
+
+                    <main className="flex-1 p-[30px]">{children}</main>
+                </div>
             </div>
         </>
     );

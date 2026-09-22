@@ -51,12 +51,14 @@ test('seeder asigna exactamente los permisos de TECNICO_CAMPO_PERMISSIONS al rol
         ->and(count($actualPermissions))->toBe(count(RolesAndPermissionsSeeder::TECNICO_CAMPO_PERMISSIONS));
 });
 
-test('seeder crea el rol Gerente vacio sin permisos asignados', function () {
+test('seeder asigna exactamente los permisos de GERENTE_PERMISSIONS al rol Gerente', function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 
     $gerente = Role::findByName('Gerente', 'web');
 
-    expect($gerente)->not->toBeNull()
-        ->and($gerente->name)->toBe('Gerente')
-        ->and($gerente->permissions)->toBeEmpty();
+    $actualPermissions = $gerente->permissions->pluck('name')->sort()->values()->all();
+    $expectedPermissions = collect(RolesAndPermissionsSeeder::GERENTE_PERMISSIONS)->sort()->values()->all();
+
+    expect($actualPermissions)->toBe($expectedPermissions)
+        ->and(count($actualPermissions))->toBe(count(RolesAndPermissionsSeeder::GERENTE_PERMISSIONS));
 });

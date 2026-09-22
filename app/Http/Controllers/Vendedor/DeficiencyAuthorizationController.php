@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Deficiencies\StoreDeficiencyAuthorizationRequest;
 use App\Models\Deficiency;
 use App\Models\Team;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
@@ -23,6 +24,13 @@ class DeficiencyAuthorizationController extends Controller
             $deficiency->update(['estado' => 'rechazada']);
             $this->recordEvent($deficiency, $request->user()->id, false);
 
+            AuditLogger::log(
+                action: 'deficiencia.autorizacion',
+                entity: $deficiency,
+                newValues: ['resultado' => 'rechazada'],
+                userId: $request->user()->id
+            );
+
             return back();
         }
 
@@ -36,6 +44,16 @@ class DeficiencyAuthorizationController extends Controller
         ]);
         $deficiency->update(['estado' => 'autorizada']);
         $this->recordEvent($deficiency, $request->user()->id, true);
+
+        AuditLogger::log(
+            action: 'deficiencia.autorizacion',
+            entity: $deficiency,
+            newValues: [
+                'resultado' => 'autorizada',
+                'canal' => $request->string('canal')->toString(),
+            ],
+            userId: $request->user()->id
+        );
 
         return back();
     }

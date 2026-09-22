@@ -13,6 +13,7 @@ use App\Models\Sede;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -130,6 +131,14 @@ class ExecuteAndCloseServiceOrder
                     'timestamp' => now()->toIso8601String(),
                 ],
             ]);
+
+            AuditLogger::log(
+                action: 'orden.cerrada',
+                entity: $serviceOrder,
+                oldValues: ['estado' => $previousState],
+                newValues: ['estado' => $targetState],
+                userId: $user->id
+            );
 
             return $serviceOrder->refresh();
         });

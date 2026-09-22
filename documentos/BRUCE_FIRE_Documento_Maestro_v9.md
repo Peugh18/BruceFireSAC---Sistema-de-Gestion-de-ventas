@@ -4857,3 +4857,149 @@ bloquean una fase; si no, seguir con el valor por defecto indicado)
    nuevo por cada eslabón (`recojo`, `recepcion_planta`,
    `entrega_final`) — evita una tabla nueva para algo que ya es,
    estructuralmente, una bitácora de eventos.
+
+------------------------------------------------------------------------
+
+# 86. PLAN — ROL GERENTE (planificado 2026-09-21, sin construir todavía)
+
+## 86.1 Por qué es distinto de los demás roles
+
+Vendedor, Almacén, Técnico de Planta y Técnico de Campo **ejecutan**
+operación (crean, reciben, resuelven). Gerente **no ejecuta nada
+operativo** — es consulta amplia + configuración global (§35.1: "no
+necesita necesariamente administrar credenciales técnicas SUNAT").
+No hay una historia de "Gerente hace una venta"; hay una historia de
+"Gerente necesita saber, sin pedírselo a nadie, si el mes va bien".
+Por eso este plan no tiene una máquina de estados propia como
+`ServiceOrder` — es, sobre todo, lectura agregada de datos que los
+otros 4 roles ya generan, más un puñado de pantallas de administración
+que hoy no tiene nadie (CRUD de Producto/Servicio, control de caja
+consolidado, reportes, auditoría).
+
+**Decisión ya tomada implícitamente por el propio proyecto**: el rol
+"Administrador" del §35.6 (usuarios, roles, permisos, plantillas,
+configuración, auditoría) **nunca se creó como rol Spatie separado**
+— solo existen 5 roles reales:
+`Vendedor, Almacen, Gerente, TecnicoPlanta, TecnicoCampo`. Y
+Configuración de Empresa (que es territorio de "Administrador" según
+el doc) ya se construyó bajo `routes/gerente.php`. Este plan mantiene
+esa decisión: Gerente absorbe el alcance de Administrador, no se crea
+un sexto rol. Si en el futuro hace falta separar (ej. un gerente
+comercial sin acceso a usuarios/roles), la matriz de permisos
+granulares (§36) ya permite hacerlo sin tocar la arquitectura.
+
+## 86.2 Lo que ya existe (no reconstruir, no duplicar)
+
+- `App\Models\CompanySetting`, `CompanyBankAccount` +
+  `Gerente\CompanySettingController`, `CompanyBankAccountController`
+  — única pantalla que Gerente tiene hoy.
+- `App\Models\CashRegister` (turno de caja, patrón "arqueo ciego" ya
+  implementado, §77.2) + `Vendedor\CashRegisterController` — Gerente
+  solo necesita una vista de **consulta** sobre esto (historial de
+  todos los vendedores con diferencias resaltadas, tal como pide
+  §77.2 punto 4), nunca reconstruir el arqueo.
+- Todos los datos fuente que Gerente va a agregar/reportar ya existen
+  y ya se generan solos en los otros roles: `Sale`/`SalePayment`,
+  `Quote`, `ServiceOrder`/`Deficiency`, `Certificate`,
+  `ElectronicDocument` (estado SUNAT), `InventoryMovement`,
+  `Product`/`Service` (incluye `stock_minimo`, agregado en la Etapa 1
+  de Almacén pero nunca editable desde ninguna pantalla).
+- Permisos ya reservados en `RolesAndPermissionsSeeder::MODULES` sin
+  usar todavía: `dashboard.view_total` (vs. `view_own` que ya usan
+  los demás roles — la distinción ya está pensada) y
+  `roles_permissions.manage`.
+- Patrón de gráficos/tarjetas de dashboard, patrón de exportación a
+  PDF con dompdf (`ComprobantePdfService`, `StickerPdfService`,
+  `ActaConformidadPdfService`) — los reportes exportables reutilizan
+  este enfoque, no una librería nueva.
+
+## 86.3 Lo que falta
+
+- Dashboard real de Gerente (hoy `DashboardController` genérico solo
+  redirige Vendedor/Almacén a los suyos — Gerente cae a una pantalla
+  vacía del starter kit).
+- CRUD de `Product`/`Service` — **el vacío más urgente**: hoy
+  `stock_minimo` existe en la tabla pero nadie puede editarlo desde
+  ninguna pantalla, lo mismo que precios (`precio_venta`). Sin esto,
+  el KPI "bajo el mínimo" del dashboard de Almacén nunca mostrará
+  nada en producción real.
+- Reportes (§34): comerciales, inventario, servicios, equipos,
+  certificados, facturación, cobranzas — con exportación a
+  Excel/PDF "cuando aporte valor" (no todos necesitan Excel desde el
+  día uno).
+- Cobranzas consolidadas (§32): hoy Vendedor ya registra pagos
+  (`collections.register_payment`), Gerente necesita la vista
+  agregada de cartera (total por cobrar, vencido, vence esta semana,
+  cobrado este mes) cruzando todos los vendedores, no solo el propio.
+- Auditoría (§37): no existe ningún registro de acciones sensibles
+  todavía en ningún rol. Este plan agrega la tabla y el visor para
+  Gerente; conectar cada acción sensible de los otros 4 roles a este
+  log es trabajo transversal, se hace incrementalmente (ver §86.6
+  Fase 5), no de una sola vez.
+- Gestión de usuarios/roles (asignar rol a un usuario, ver quién
+  tiene qué permiso) — hoy solo existe por `php artisan tinker` o
+  seeder.
+
+**Fuera de alcance de este plan** (decisión, no olvido): las tarjetas
+y gráficos de IA del §5.1 (proyección de ventas, demanda estimada,
+riesgo de quiebre de stock, resumen ejecutivo). El propio doc maestro
+lo dice en el §59: *"IA entra cuando la base de datos ya es
+confiable"* — y el roadmap (§58) pone IA en la Fase 8, la última. El
+dashboard de Gerente se construye con las tarjetas y gráficos de
+datos reales primero; el bloque de IA queda como sección vacía o
+directamente omitido hasta que corresponda su fase.
+
+## 86.4 Módulos (orden sugerido)
+
+1. **Dashboard de Gerente** (§5.1, sin el bloque de IA) — tarjetas:
+   ventas del día/mes, facturación del mes, monto cobrado, cuentas
+   por cobrar, vencido, cotizaciones pendientes, tasa de conversión,
+   órdenes en proceso, equipos próximos a atención, stock crítico,
+   documentos SUNAT con error. Gráficos: ventas mensuales, ventas por
+   producto/servicio, servicios por tipo, cartera por estado, top
+   clientes, productos/repuestos con mayor movimiento.
+2. **CRUD de Producto/Servicio** — crear/editar/desactivar (nunca
+   eliminar si tiene historial, regla ya aplicada en Equipos §60),
+   incluye `precio_venta` y `stock_minimo`. Esto es lo que
+   desbloquea de verdad el KPI de Almacén.
+3. **Caja consolidada** — vista de solo lectura sobre `CashRegister`
+   de todos los vendedores, diferencias resaltadas (§77.2 punto 4).
+4. **Cobranzas consolidadas** (§32) — cartera agregada de todos los
+   vendedores, no solo la propia.
+5. **Reportes** (§34) — empezar por comercial e inventario (los que
+   ya tienen todo el dato fuente limpio), exportación PDF reutilizando
+   dompdf; Excel solo donde aporte valor real (ej. reporte de ventas
+   por periodo, no el dashboard).
+6. **Auditoría** (§37) — tabla + visor. Conectar las acciones más
+   sensibles primero (venta, ajuste de stock, autorización de
+   adicional, cierre de orden, emisión/anulación de certificado,
+   cambios de configuración) — no las 13 de la lista completa de una
+   sola vez.
+7. **Usuarios y roles** — listar usuarios del team, asignar/quitar
+   rol, ver permisos efectivos. Sin crear un builder visual de
+   permisos granulares — se editan por rol completo (los 5 roles ya
+   fijos), no permiso por permiso por usuario (§36: "evitar permisos
+   directos a usuarios salvo excepción justificada").
+
+## 86.5 Preguntas abiertas (valor por defecto si no bloquean)
+
+1. ¿El CRUD de Producto/Servicio lo usa *solo* Gerente, o también
+   Vendedor/Almacén pueden editar precios como se mencionó y quedó
+   pendiente en la auditoría de Almacén (§84, "eso ya vemos cómo
+   arreglar luego")? Por defecto: el CRUD (crear/desactivar producto)
+   es exclusivo de Gerente; la edición de precio en el momento de una
+   venta por Vendedor es un permiso granular aparte
+   (`sales.override_price` o similar) que se decide cuando se
+   retome ese pendiente — no bloquea construir el CRUD ahora.
+2. ¿Reportes exportan a Excel desde la Fase 5, o se pospone Excel
+   para después de tener PDF funcionando en los reportes principales?
+   Por defecto: PDF primero (reutiliza dompdf sin dependencia nueva);
+   Excel se agrega cuando un reporte concreto lo necesite de verdad
+   (ej. `maatwebsite/excel` recién ahí, no antes — evita instalar una
+   librería que después no se usa).
+3. ¿Auditoría registra automáticamente vía Eloquent observers/events,
+   o cada acción llama explícitamente a un `AuditLogger`? Por
+   defecto: llamada explícita en el punto de la acción (mismo patrón
+   que `ServiceOrderEvent::create()` ya usado en todo Planta/Campo),
+   más predecible y más fácil de auditar el propio código que
+   observers automáticos que capturan de más.

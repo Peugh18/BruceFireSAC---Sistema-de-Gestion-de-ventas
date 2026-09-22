@@ -28,12 +28,15 @@ class RolesAndPermissionsSeeder extends Seeder
         'billing' => ['view', 'resend', 'download', 'void', 'credit_note'],
         'guias_remision' => ['view', 'create'],
         'collections' => ['view', 'register_payment'],
-        'cashregister' => ['open', 'close', 'view_history'],
+        'cashregister' => ['open', 'close', 'view_history', 'view_all'],
         'alerts' => ['view'],
         'service_orders' => ['view', 'create', 'manage', 'assign', 'receive', 'execute', 'close'],
         'deficiencies' => ['view', 'create', 'authorize', 'resolve'],
         'communication' => ['view', 'create_event'],
         'equipment' => ['view', 'create', 'update'],
+        'products' => ['view', 'create', 'update', 'toggle_status'],
+        'reports' => ['view', 'export'],
+        'audit' => ['view'],
         'roles_permissions' => ['manage'],
     ];
 
@@ -126,6 +129,46 @@ class RolesAndPermissionsSeeder extends Seeder
         'sedes.view',
     ];
 
+    /**
+     * Permissions granted to the Gerente role, per Documento Maestro §35.1, §35.6, §36 y §86.
+     *
+     * @var list<string>
+     */
+    /**
+     * Los 5 roles de negocio fijos del sistema (§35.6: "Administrador"
+     * nunca se creó como rol separado — Gerente lo absorbe). No crear un
+     * sexto rol sin decisión explícita del usuario.
+     *
+     * @var list<string>
+     */
+    public const BUSINESS_ROLES = [
+        'Vendedor',
+        'Almacen',
+        'Gerente',
+        'TecnicoPlanta',
+        'TecnicoCampo',
+    ];
+
+    public const GERENTE_PERMISSIONS = [
+        'dashboard.view_total',
+        'clients.view',
+        'sedes.view',
+        'inventory.view',
+        'quotes.view',
+        'sales.view',
+        'certificates.view',
+        'billing.view',
+        'collections.view',
+        'cashregister.view_history',
+        'cashregister.view_all',
+        'service_orders.view',
+        'equipment.view',
+        'products.view', 'products.create', 'products.update', 'products.toggle_status',
+        'reports.view', 'reports.export',
+        'audit.view',
+        'roles_permissions.manage',
+    ];
+
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -148,7 +191,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $tecnicoCampo = Role::findOrCreate('TecnicoCampo', 'web');
         $tecnicoCampo->syncPermissions(self::TECNICO_CAMPO_PERMISSIONS);
 
-        // Gerente se completa en su fase correspondiente
-        Role::findOrCreate('Gerente', 'web');
+        $gerente = Role::findOrCreate('Gerente', 'web');
+        $gerente->syncPermissions(self::GERENTE_PERMISSIONS);
     }
 }

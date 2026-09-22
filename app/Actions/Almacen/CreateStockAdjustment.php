@@ -5,6 +5,7 @@ namespace App\Actions\Almacen;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 class CreateStockAdjustment
@@ -49,6 +50,19 @@ class CreateStockAdjustment
                     }
                 }
             }
+
+            AuditLogger::log(
+                action: 'stock.ajuste',
+                entity: $movement,
+                newValues: [
+                    'product_id' => $productId,
+                    'sede_id' => $sedeId,
+                    'tipo_ajuste' => $tipoAjuste,
+                    'cantidad' => $signedCantidad,
+                    'motivo' => $textoKardex,
+                ],
+                userId: $user?->id ?? auth()->id()
+            );
 
             return $movement;
         });

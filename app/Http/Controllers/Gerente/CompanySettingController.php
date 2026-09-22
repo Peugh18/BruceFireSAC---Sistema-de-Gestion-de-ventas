@@ -7,6 +7,7 @@ use App\Http\Requests\Gerente\UpdateCompanySettingRequest;
 use App\Models\CompanyBankAccount;
 use App\Models\CompanySetting;
 use App\Models\Team;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -51,7 +52,15 @@ class CompanySettingController extends Controller
             $data['logo_path'] = $request->file('logo')->store('company', 'public');
         }
 
+        $oldData = $company->only(array_keys($data));
         $company->update($data);
+
+        AuditLogger::log(
+            action: 'configuracion.empresa_actualizada',
+            entity: $company,
+            oldValues: $oldData,
+            newValues: $data
+        );
 
         return back();
     }

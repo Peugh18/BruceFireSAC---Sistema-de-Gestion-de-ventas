@@ -50,6 +50,12 @@ class DashboardController extends Controller
                     'current_team' => $request->route('current_team'),
                 ]);
             }
+
+            if ($request->user()->hasRole('Gerente')) {
+                return redirect()->route('gerente.dashboard', [
+                    'current_team' => $request->route('current_team'),
+                ]);
+            }
         }
 
         return Inertia::render('dashboard', [

@@ -3,6 +3,7 @@
 namespace App\Actions\Sales;
 
 use App\Models\Sale;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 class CreateSale
@@ -53,6 +54,17 @@ class CreateSale
                     'estado' => 'pendiente',
                 ]);
             }
+
+            AuditLogger::log(
+                action: 'venta.creada',
+                entity: $sale,
+                newValues: [
+                    'numero_interno' => $sale->numero_interno,
+                    'total' => $total,
+                    'comprobante_tipo' => $sale->comprobante_tipo,
+                ],
+                userId: $vendedorId
+            );
 
             return $sale->load('items.product', 'items.service', 'items.equipment', 'items.inventoryUnit');
         });

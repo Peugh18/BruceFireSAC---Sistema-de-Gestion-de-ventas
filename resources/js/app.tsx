@@ -27,6 +27,9 @@ void createInertiaApp({
             case name.startsWith('tecnico-campo/'):
                 // Layouts mobile-first propios: no envolver con AppLayout genérico.
                 return null;
+            case name.startsWith('gerente/'):
+                // GerenteLayout ya trae su propio sidebar de escritorio, no duplicar AppLayout.
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
