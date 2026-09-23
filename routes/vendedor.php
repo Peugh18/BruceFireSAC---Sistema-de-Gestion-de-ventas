@@ -59,6 +59,7 @@ Route::prefix('vendedor')
         Route::get('ventas/nueva', [SaleController::class, 'create'])->name('ventas.create');
         Route::post('ventas', [SaleController::class, 'store'])->name('ventas.store');
         Route::get('ventas/escanear-serie', [SaleItemScanController::class, 'resolve'])->name('ventas.escanear-serie');
+        Route::get('ventas/buscar-cliente', [SaleController::class, 'buscarCliente'])->name('ventas.buscar-cliente');
         Route::get('ventas/{sale}', [SaleController::class, 'show'])->name('ventas.show');
         Route::post('ventas/{sale}/confirmar', [SaleController::class, 'confirm'])->name('ventas.confirmar');
 

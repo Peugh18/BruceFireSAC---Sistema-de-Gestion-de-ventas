@@ -12,7 +12,7 @@ import {
     Trash2,
     Truck,
 } from 'lucide-react';
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, KeyboardEvent, useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -149,6 +149,12 @@ export default function NuevaVenta({ clients, sedes }: Props) {
     });
 
     const [clientSearch, setClientSearch] = useState('');
+    const [searchedClients, setSearchedClients] = useState<
+        ClientOption[] | null
+    >(null);
+    const [clientSearchLoading, setClientSearchLoading] = useState(false);
+    const [selectedClientData, setSelectedClientData] =
+        useState<ClientOption | null>(null);
     const [lookup, setLookup] = useState<LookupResponse | null>(null);
     const [lookupLoading, setLookupLoading] = useState(false);
     const [tipoLinea, setTipoLinea] = useState<LineType>('unidad_nueva');
@@ -156,21 +162,42 @@ export default function NuevaVenta({ clients, sedes }: Props) {
     const [scanLoading, setScanLoading] = useState(false);
     const [scanMessage, setScanMessage] = useState<string | null>(null);
 
-    const filteredClients = useMemo(() => {
-        const term = clientSearch.trim().toLowerCase();
-        if (!term) return clients;
+    // Sin búsqueda activa: se muestran los clientes recientes que ya vienen
+    // en props. Con 2+ caracteres se busca en el servidor contra toda la
+    // tabla de clientes (miles de registros reales, no solo los 10 recientes).
+    const filteredClients = searchedClients ?? clients;
 
-        return clients.filter((client) => {
-            return (
-                client.razon_social.toLowerCase().includes(term) ||
-                client.numero_documento.includes(term)
-            );
-        });
-    }, [clientSearch, clients]);
+    useEffect(() => {
+        const term = clientSearch.trim();
 
-    const selectedClient = clients.find(
-        (client) => client.id === form.data.client_id,
-    );
+        if (term.length < 2) {
+            setSearchedClients(null);
+            return;
+        }
+
+        const timeout = window.setTimeout(async () => {
+            setClientSearchLoading(true);
+            try {
+                const response = await fetch(
+                    ventas.buscarCliente.url(teamSlug, {
+                        query: { search: term },
+                    }),
+                );
+                const payload = (await response.json()) as ClientOption[];
+                setSearchedClients(payload);
+            } catch {
+                setSearchedClients([]);
+            } finally {
+                setClientSearchLoading(false);
+            }
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [clientSearch, teamSlug]);
+
+    const selectedClient =
+        selectedClientData ??
+        clients.find((client) => client.id === form.data.client_id);
 
     useEffect(() => {
         const value = clientSearch.trim();
@@ -320,7 +347,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                         placeholder="RUC, DNI o razón social..."
                                         className="h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
                                     />
-                                    {lookupLoading ? (
+                                    {lookupLoading || clientSearchLoading ? (
                                         <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
                                     ) : null}
                                 </div>
@@ -329,20 +356,24 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                 <div className="mt-2 max-h-[168px] overflow-y-auto rounded-[10px] border border-border">
                                     {filteredClients.length === 0 ? (
                                         <div className="px-3 py-4 text-[12px] text-muted-foreground">
-                                            No hay coincidencias en los clientes
-                                            recientes.
+                                            {searchedClients !== null
+                                                ? 'No se encontraron clientes con esa búsqueda.'
+                                                : 'No hay clientes recientes. Escribe para buscar.'}
                                         </div>
                                     ) : (
                                         filteredClients.map((client) => (
                                             <button
                                                 key={client.id}
                                                 type="button"
-                                                onClick={() =>
+                                                onClick={() => {
                                                     form.setData(
                                                         'client_id',
                                                         client.id,
-                                                    )
-                                                }
+                                                    );
+                                                    setSelectedClientData(
+                                                        client,
+                                                    );
+                                                }}
                                                 className={`flex w-full items-center justify-between gap-3 border-b border-border px-3 py-2.5 text-left last:border-b-0 ${form.data.client_id === client.id ? 'bg-destructive/10' : 'bg-card hover:bg-muted/40'}`}
                                             >
                                                 <span>
