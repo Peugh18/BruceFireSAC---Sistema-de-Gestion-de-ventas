@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+﻿import { router, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     Building2,
@@ -84,12 +84,15 @@ function formatCurrency(amount: number): string {
 }
 
 export default function CajasConsolidadasIndex() {
-    const { currentTeam, cajas, filters, kpis, vendedores, sedes } = usePage<PageProps>().props;
+    const { currentTeam, cajas, filters, kpis, vendedores, sedes } =
+        usePage<PageProps>().props;
 
     const [vendedorId, setVendedorId] = useState(filters.vendedor_id || '');
     const [sedeId, setSedeId] = useState(filters.sede_id || '');
     const [estado, setEstado] = useState(filters.estado || 'todos');
-    const [conDiferencia, setConDiferencia] = useState(filters.con_diferencia || false);
+    const [conDiferencia, setConDiferencia] = useState(
+        filters.con_diferencia || false,
+    );
     const [fechaDesde, setFechaDesde] = useState(filters.fecha_desde || '');
     const [fechaHasta, setFechaHasta] = useState(filters.fecha_hasta || '');
 
@@ -104,7 +107,7 @@ export default function CajasConsolidadasIndex() {
                 fecha_desde: fechaDesde || undefined,
                 fecha_hasta: fechaHasta || undefined,
             },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -115,7 +118,11 @@ export default function CajasConsolidadasIndex() {
         setConDiferencia(false);
         setFechaDesde('');
         setFechaHasta('');
-        router.get(`/${currentTeam.slug}/gerente/cajas`, {}, { preserveState: true });
+        router.get(
+            `/${currentTeam.slug}/gerente/cajas`,
+            {},
+            { preserveState: true },
+        );
     };
 
     return (
@@ -123,58 +130,73 @@ export default function CajasConsolidadasIndex() {
             <div className="space-y-6">
                 {/* Cabecera */}
                 <div>
-                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-[#201F1D] uppercase">
+                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
                         Caja Consolidada & Control de Arqueos
                     </h1>
-                    <p className="mt-1 text-sm text-[#8A8680]">
-                        Supervisión de turnos de caja de todos los vendedores, validación de diferencias y arqueos ciegos (§77.2).
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Supervisión de turnos de caja de todos los vendedores,
+                        validación de diferencias y arqueos ciegos.
                     </p>
                 </div>
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                            <span className="font-medium uppercase">Turnos Hoy</span>
+                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="font-medium uppercase">
+                                Turnos Hoy
+                            </span>
                             <Clock className="size-4 text-blue-600" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#201F1D]">
+                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
                             {kpis.turnosHoy}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-[#8A8680]">Aperturas registradas hoy</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            Aperturas registradas hoy
+                        </p>
                     </div>
 
-                    <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                            <span className="font-medium uppercase">Cajas Abiertas Ahora</span>
+                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="font-medium uppercase">
+                                Cajas Abiertas Ahora
+                            </span>
                             <Wallet className="size-4 text-emerald-600" />
                         </div>
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {kpis.turnosAbiertos}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-[#8A8680]">Puntos de cobro activos</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            Puntos de cobro activos
+                        </p>
                     </div>
 
-                    <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                            <span className="font-medium uppercase">Descuadres en el Mes</span>
+                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="font-medium uppercase">
+                                Descuadres en el Mes
+                            </span>
                             <AlertCircle className="size-4 text-amber-600" />
                         </div>
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
                             {kpis.turnosConDescuadreMes}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-[#8A8680]">Cierres con faltante o sobrante</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            Cierres con faltante o sobrante
+                        </p>
                     </div>
 
-                    <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                            <span className="font-medium uppercase">Diferencia Neta Acumulada</span>
-                            <TrendingDown className="size-4 text-[#E31E24]" />
+                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="font-medium uppercase">
+                                Diferencia Neta Acumulada
+                            </span>
+                            <TrendingDown className="size-4 text-primary" />
                         </div>
                         <div
                             className={`mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold ${
                                 kpis.totalDiferenciasMes < 0
-                                    ? 'text-[#E31E24]'
+                                    ? 'text-primary'
                                     : kpis.totalDiferenciasMes > 0
                                       ? 'text-amber-600'
                                       : 'text-emerald-700'
@@ -182,19 +204,23 @@ export default function CajasConsolidadasIndex() {
                         >
                             {formatCurrency(kpis.totalDiferenciasMes)}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-[#8A8680]">Balance neto en el mes actual</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            Balance neto en el mes actual
+                        </p>
                     </div>
                 </div>
 
                 {/* Filtros */}
-                <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs space-y-3">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 text-xs">
+                <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-xs">
+                    <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-5">
                         <div>
-                            <label className="block font-semibold text-[#4A4742]">Vendedor</label>
+                            <label className="block font-semibold text-foreground/80">
+                                Vendedor
+                            </label>
                             <select
                                 value={vendedorId}
                                 onChange={(e) => setVendedorId(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-2 text-xs focus:border-[#201F1D] focus:outline-none"
+                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs focus:border-primary focus:outline-none"
                             >
                                 <option value="">Todos los vendedores</option>
                                 {vendedores.map((v) => (
@@ -206,11 +232,13 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-[#4A4742]">Sede</label>
+                            <label className="block font-semibold text-foreground/80">
+                                Sede
+                            </label>
                             <select
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-2 text-xs focus:border-[#201F1D] focus:outline-none"
+                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs focus:border-primary focus:outline-none"
                             >
                                 <option value="">Todas las sedes</option>
                                 {sedes.map((s) => (
@@ -222,11 +250,13 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-[#4A4742]">Estado</label>
+                            <label className="block font-semibold text-foreground/80">
+                                Estado
+                            </label>
                             <select
                                 value={estado}
                                 onChange={(e) => setEstado(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-2 text-xs focus:border-[#201F1D] focus:outline-none"
+                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs focus:border-primary focus:outline-none"
                             >
                                 <option value="todos">Todos los estados</option>
                                 <option value="abierto">Solo Abiertas</option>
@@ -235,49 +265,58 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-[#4A4742]">Fecha Desde</label>
+                            <label className="block font-semibold text-foreground/80">
+                                Fecha Desde
+                            </label>
                             <input
                                 type="date"
                                 value={fechaDesde}
                                 onChange={(e) => setFechaDesde(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-1.5 text-xs focus:border-[#201F1D] focus:outline-none"
+                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
                             />
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-[#4A4742]">Fecha Hasta</label>
+                            <label className="block font-semibold text-foreground/80">
+                                Fecha Hasta
+                            </label>
                             <input
                                 type="date"
                                 value={fechaHasta}
                                 onChange={(e) => setFechaHasta(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-1.5 text-xs focus:border-[#201F1D] focus:outline-none"
+                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
                             />
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#F0EEEA]">
-                        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#4A4742]">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-2">
+                        <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-foreground/80">
                             <input
                                 type="checkbox"
                                 checked={conDiferencia}
-                                onChange={(e) => setConDiferencia(e.target.checked)}
-                                className="rounded border-[#E7E4DE] text-[#E31E24]"
+                                onChange={(e) =>
+                                    setConDiferencia(e.target.checked)
+                                }
+                                className="rounded border-border text-primary"
                             />
-                            <span>Ver solo turnos con diferencia (faltante o sobrante)</span>
+                            <span>
+                                Ver solo turnos con diferencia (faltante o
+                                sobrante)
+                            </span>
                         </label>
 
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
                                 onClick={resetFilters}
-                                className="rounded-lg border border-[#E7E4DE] bg-white px-3 py-1.5 text-xs font-semibold text-[#6B6965] hover:bg-[#F3F1ED]"
+                                className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-background"
                             >
                                 Limpiar
                             </button>
                             <button
                                 type="button"
                                 onClick={applyFilters}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-[#201F1D] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#32312F]"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-card px-4 py-1.5 text-xs font-semibold text-white hover:bg-foreground/90"
                             >
                                 <Filter className="size-3.5" />
                                 <span>Aplicar Filtros</span>
@@ -287,54 +326,80 @@ export default function CajasConsolidadasIndex() {
                 </div>
 
                 {/* Tabla de Cajas */}
-                <div className="overflow-hidden rounded-xl border border-[#E7E4DE] bg-white shadow-xs">
+                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="border-b border-[#E7E4DE] bg-[#FAFAF8] text-[11px] font-semibold text-[#8A8680] uppercase tracking-wider">
+                            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                                 <tr>
                                     <th className="px-4 py-3">Vendedor</th>
                                     <th className="px-4 py-3">Sede</th>
                                     <th className="px-4 py-3">Apertura</th>
                                     <th className="px-4 py-3">Cierre</th>
-                                    <th className="px-4 py-3 text-right">Fondo Apertura</th>
-                                    <th className="px-4 py-3 text-right">Contado Cierre</th>
-                                    <th className="px-4 py-3 text-right">Calculado Sistema</th>
-                                    <th className="px-4 py-3 text-center">Diferencia</th>
-                                    <th className="px-4 py-3 text-center">Estado</th>
+                                    <th className="px-4 py-3 text-right">
+                                        Fondo Apertura
+                                    </th>
+                                    <th className="px-4 py-3 text-right">
+                                        Contado Cierre
+                                    </th>
+                                    <th className="px-4 py-3 text-right">
+                                        Calculado Sistema
+                                    </th>
+                                    <th className="px-4 py-3 text-center">
+                                        Diferencia
+                                    </th>
+                                    <th className="px-4 py-3 text-center">
+                                        Estado
+                                    </th>
                                     <th className="px-4 py-3">Observación</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[#F3F1ED]">
+                            <tbody className="divide-y divide-border">
                                 {cajas.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={10} className="py-8 text-center text-[#8A8680]">
-                                            No se encontraron turnos de caja registrados con estos filtros.
+                                        <td
+                                            colSpan={10}
+                                            className="py-8 text-center text-muted-foreground"
+                                        >
+                                            No se encontraron turnos de caja
+                                            registrados con estos filtros.
                                         </td>
                                     </tr>
                                 ) : (
                                     cajas.data.map((c) => (
-                                        <tr key={c.id} className="hover:bg-[#FAFAF8] transition-colors">
-                                            <td className="px-4 py-3 font-semibold text-[#201F1D]">
+                                        <tr
+                                            key={c.id}
+                                            className="transition-colors hover:bg-muted/40"
+                                        >
+                                            <td className="px-4 py-3 font-semibold text-foreground">
                                                 {c.vendedor.name}
                                             </td>
-                                            <td className="px-4 py-3 text-[#6B6965]">{c.sede}</td>
-                                            <td className="px-4 py-3 font-mono text-[11px] text-[#4A4742]">
+                                            <td className="px-4 py-3 text-muted-foreground">
+                                                {c.sede}
+                                            </td>
+                                            <td className="px-4 py-3 font-mono text-[11px] text-foreground/80">
                                                 {c.fecha_apertura}
                                             </td>
-                                            <td className="px-4 py-3 font-mono text-[11px] text-[#4A4742]">
+                                            <td className="px-4 py-3 font-mono text-[11px] text-foreground/80">
                                                 {c.fecha_cierre || '—'}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono text-[#201F1D]">
-                                                {formatCurrency(c.monto_apertura)}
+                                            <td className="px-4 py-3 text-right font-mono text-foreground">
+                                                {formatCurrency(
+                                                    c.monto_apertura,
+                                                )}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono font-medium text-[#201F1D]">
+                                            <td className="px-4 py-3 text-right font-mono font-medium text-foreground">
                                                 {c.monto_contado_cierre !== null
-                                                    ? formatCurrency(c.monto_contado_cierre)
+                                                    ? formatCurrency(
+                                                          c.monto_contado_cierre,
+                                                      )
                                                     : '—'}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono text-[#6B6965]">
-                                                {c.monto_esperado_calculado !== null
-                                                    ? formatCurrency(c.monto_esperado_calculado)
+                                            <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                                                {c.monto_esperado_calculado !==
+                                                null
+                                                    ? formatCurrency(
+                                                          c.monto_esperado_calculado,
+                                                      )
                                                     : '—'}
                                             </td>
                                             <td className="px-4 py-3 text-center">
@@ -342,20 +407,27 @@ export default function CajasConsolidadasIndex() {
                                                     <span className="rounded-full bg-blue-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-blue-700">
                                                         En curso
                                                     </span>
-                                                ) : c.tipo_diferencia === 'cuadrado' ? (
+                                                ) : c.tipo_diferencia ===
+                                                  'cuadrado' ? (
                                                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-700">
                                                         <CheckCircle2 className="size-3" />
                                                         Cuadra exacto
                                                     </span>
-                                                ) : c.tipo_diferencia === 'faltante' ? (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 font-mono text-[11px] font-bold text-[#E31E24]">
+                                                ) : c.tipo_diferencia ===
+                                                  'faltante' ? (
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 font-mono text-[11px] font-bold text-primary">
                                                         <MinusCircle className="size-3" />
-                                                        {formatCurrency(c.diferencia!)}
+                                                        {formatCurrency(
+                                                            c.diferencia!,
+                                                        )}
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 font-mono text-[11px] font-bold text-amber-800">
                                                         <PlusCircle className="size-3" />
-                                                        +{formatCurrency(c.diferencia!)}
+                                                        +
+                                                        {formatCurrency(
+                                                            c.diferencia!,
+                                                        )}
                                                     </span>
                                                 )}
                                             </td>
@@ -370,7 +442,7 @@ export default function CajasConsolidadasIndex() {
                                                     {c.estado}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-[11px] text-[#6B6965] max-w-xs truncate">
+                                            <td className="max-w-xs truncate px-4 py-3 text-[11px] text-muted-foreground">
                                                 {c.observacion || '—'}
                                             </td>
                                         </tr>
@@ -382,7 +454,7 @@ export default function CajasConsolidadasIndex() {
 
                     {/* Paginación */}
                     {cajas.links && cajas.links.length > 3 && (
-                        <div className="flex items-center justify-between border-t border-[#E7E4DE] bg-[#FAFAF8] px-4 py-3 text-xs text-[#8A8680]">
+                        <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
                             <div>Total: {cajas.total} turnos registrados</div>
                             <div className="flex items-center gap-1">
                                 {cajas.links.map((link, i) => {
@@ -390,7 +462,9 @@ export default function CajasConsolidadasIndex() {
                                         return (
                                             <span
                                                 key={i}
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                                dangerouslySetInnerHTML={{
+                                                    __html: link.label,
+                                                }}
                                                 className="px-2.5 py-1 text-zinc-400"
                                             />
                                         );
@@ -399,12 +473,20 @@ export default function CajasConsolidadasIndex() {
                                         <button
                                             key={i}
                                             type="button"
-                                            onClick={() => router.get(link.url!, {}, { preserveState: true })}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                            onClick={() =>
+                                                router.get(
+                                                    link.url!,
+                                                    {},
+                                                    { preserveState: true },
+                                                )
+                                            }
+                                            dangerouslySetInnerHTML={{
+                                                __html: link.label,
+                                            }}
                                             className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                                                 link.active
-                                                    ? 'bg-[#201F1D] font-bold text-white'
-                                                    : 'text-[#4A4742] hover:bg-[#E7E4DE]'
+                                                    ? 'bg-card font-bold text-white'
+                                                    : 'text-foreground/80 hover:bg-muted/40'
                                             }`}
                                         />
                                     );

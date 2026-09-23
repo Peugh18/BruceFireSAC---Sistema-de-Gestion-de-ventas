@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+﻿import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     Building2,
@@ -118,7 +118,8 @@ export default function CobranzasIndex({
     // Dialog state
     const [openTurnoDialogOpen, setOpenTurnoDialogOpen] = useState(false);
     const [closeTurnoDialogOpen, setCloseTurnoDialogOpen] = useState(false);
-    const [selectedInstallment, setSelectedInstallment] = useState<InstallmentItem | null>(null);
+    const [selectedInstallment, setSelectedInstallment] =
+        useState<InstallmentItem | null>(null);
 
     // Form: Abrir turno de caja
     const openForm = useForm({
@@ -196,7 +197,9 @@ export default function CobranzasIndex({
     };
 
     // Totales calculados de turno actual
-    const montoApertura = turno_actual ? Number(turno_actual.monto_apertura) : 0;
+    const montoApertura = turno_actual
+        ? Number(turno_actual.monto_apertura)
+        : 0;
     const ventasEfectivo = turno_actual?.ventas_por_forma_pago?.efectivo ?? 0;
     const ventasTransferencia =
         (turno_actual?.ventas_por_forma_pago?.transferencia ?? 0) +
@@ -219,68 +222,94 @@ export default function CobranzasIndex({
                 <div className="grid gap-4 lg:grid-cols-12">
                     {/* Columna Izquierda: Panel de Arqueo de Caja (5 cols) */}
                     <div className="flex flex-col gap-4 lg:col-span-5">
-                        <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
+                        <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Wallet className="size-4 text-[#8A8680]" />
-                                    <span className="text-[13.5px] font-bold text-[#201F1D]">Arqueo de caja</span>
+                                    <Wallet className="size-4 text-muted-foreground" />
+                                    <span className="text-[13.5px] font-bold text-foreground">
+                                        Arqueo de caja
+                                    </span>
                                 </div>
                                 {turno_actual?.sede && (
-                                    <span className="text-[11px] font-semibold text-[#8A8680]">
+                                    <span className="text-[11px] font-semibold text-muted-foreground">
                                         {turno_actual.sede}
                                     </span>
                                 )}
                             </div>
 
-                            {turno_actual && turno_actual.estado === 'abierto' ? (
+                            {turno_actual &&
+                            turno_actual.estado === 'abierto' ? (
                                 <div className="mt-4 flex flex-col">
                                     {/* Estado: Turno Abierto */}
-                                    <div className="flex items-center gap-2.5 rounded-[12px] bg-[#E5F5EC] p-3.5 text-[#1E8E5A]">
+                                    <div className="flex items-center gap-2.5 rounded-[12px] bg-emerald-500/10 p-3.5 text-emerald-600 dark:text-emerald-400">
                                         <span className="relative flex size-2.5">
-                                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#1E8E5A] opacity-75" />
-                                            <span className="relative inline-flex size-2.5 rounded-full bg-[#1E8E5A]" />
+                                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-600 opacity-75" />
+                                            <span className="relative inline-flex size-2.5 rounded-full bg-emerald-600" />
                                         </span>
-                                        <span className="text-[12.5px] font-bold">Turno abierto</span>
-                                        <span className="ml-auto font-mono text-[11px] text-[#8A8680]">
+                                        <span className="text-[12.5px] font-bold">
+                                            Turno abierto
+                                        </span>
+                                        <span className="ml-auto font-mono text-[11px] text-muted-foreground">
                                             {turno_actual.fecha_apertura
-                                                ? new Date(turno_actual.fecha_apertura).toLocaleTimeString('es-PE', {
-                                                      hour: '2-digit',
-                                                      minute: '2-digit',
-                                                  })
+                                                ? new Date(
+                                                      turno_actual.fecha_apertura,
+                                                  ).toLocaleTimeString(
+                                                      'es-PE',
+                                                      {
+                                                          hour: '2-digit',
+                                                          minute: '2-digit',
+                                                      },
+                                                  )
                                                 : 'Hoy'}
                                         </span>
                                     </div>
 
                                     {/* Desglose Monetario */}
-                                    <div className="mt-4 divide-y divide-[#F1EFEC] text-[12.5px]">
+                                    <div className="mt-4 divide-y divide-border text-[12.5px]">
                                         <div className="flex items-center justify-between py-2">
-                                            <span className="text-[#8A8680]">Fondo inicial (apertura)</span>
-                                            <span className="font-semibold text-[#201F1D]">
+                                            <span className="text-muted-foreground">
+                                                Fondo inicial (apertura)
+                                            </span>
+                                            <span className="font-semibold text-foreground">
                                                 {formatCurrency(montoApertura)}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between py-2">
-                                            <span className="text-[#8A8680]">Ventas en efectivo</span>
-                                            <span className="font-semibold text-[#201F1D]">
+                                            <span className="text-muted-foreground">
+                                                Ventas en efectivo
+                                            </span>
+                                            <span className="font-semibold text-foreground">
                                                 {formatCurrency(ventasEfectivo)}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between py-2">
-                                            <span className="text-[#8A8680]">Transferencia / Depósito</span>
-                                            <span className="font-semibold text-[#201F1D]">
-                                                {formatCurrency(ventasTransferencia)}
+                                            <span className="text-muted-foreground">
+                                                Transferencia / Depósito
+                                            </span>
+                                            <span className="font-semibold text-foreground">
+                                                {formatCurrency(
+                                                    ventasTransferencia,
+                                                )}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between py-2">
-                                            <span className="text-[#8A8680]">Tarjeta / Yape / Plin</span>
-                                            <span className="font-semibold text-[#201F1D]">
-                                                {formatCurrency(ventasTarjetaYape)}
+                                            <span className="text-muted-foreground">
+                                                Tarjeta / Yape / Plin
+                                            </span>
+                                            <span className="font-semibold text-foreground">
+                                                {formatCurrency(
+                                                    ventasTarjetaYape,
+                                                )}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between pt-2.5 text-[13.5px]">
-                                            <span className="font-bold text-[#201F1D]">Efectivo esperado</span>
-                                            <span className="font-['Oswald',sans-serif] text-[18px] font-semibold text-[#1E8E5A]">
-                                                {formatCurrency(efectivoEsperado)}
+                                            <span className="font-bold text-foreground">
+                                                Efectivo esperado
+                                            </span>
+                                            <span className="font-['Oswald',sans-serif] text-[18px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                {formatCurrency(
+                                                    efectivoEsperado,
+                                                )}
                                             </span>
                                         </div>
                                     </div>
@@ -288,30 +317,35 @@ export default function CobranzasIndex({
                                     {/* Botón Cerrar Turno */}
                                     <Button
                                         type="button"
-                                        onClick={() => setCloseTurnoDialogOpen(true)}
-                                        className="mt-5 h-10 w-full rounded-[10px] bg-[#E31E24] text-[13px] font-bold text-white shadow-none transition-colors hover:bg-[#C9181D]"
+                                        onClick={() =>
+                                            setCloseTurnoDialogOpen(true)
+                                        }
+                                        className="mt-5 h-10 w-full rounded-[10px] bg-primary text-[13px] font-bold text-white shadow-none transition-colors hover:bg-primary/90"
                                     >
                                         <Lock className="mr-1.5 size-4" />
                                         <span>Cerrar turno (arqueo ciego)</span>
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="mt-4 flex flex-col items-center justify-center gap-3 rounded-[12px] border border-dashed border-[#E4E1DC] bg-[#FAFAF8] p-6 text-center">
-                                    <div className="flex size-11 items-center justify-center rounded-full bg-[#F1EFEC] text-[#8A8680]">
+                                <div className="mt-4 flex flex-col items-center justify-center gap-3 rounded-[12px] border border-dashed border-border bg-muted/40 p-6 text-center">
+                                    <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
                                         <Unlock className="size-5" />
                                     </div>
                                     <div>
-                                        <p className="text-[13px] font-bold text-[#201F1D]">
+                                        <p className="text-[13px] font-bold text-foreground">
                                             No hay un turno de caja abierto
                                         </p>
-                                        <p className="mt-1 text-[11.5px] text-[#8A8680]">
-                                            Debes abrir un turno para registrar cobros en efectivo y ventas del día.
+                                        <p className="mt-1 text-[11.5px] text-muted-foreground">
+                                            Debes abrir un turno para registrar
+                                            cobros en efectivo y ventas del día.
                                         </p>
                                     </div>
                                     <Button
                                         type="button"
-                                        onClick={() => setOpenTurnoDialogOpen(true)}
-                                        className="mt-1 rounded-[9px] bg-[#1E8E5A] px-4 text-[13px] font-bold text-white shadow-none hover:bg-[#18754A]"
+                                        onClick={() =>
+                                            setOpenTurnoDialogOpen(true)
+                                        }
+                                        className="mt-1 rounded-[9px] bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-none hover:bg-emerald-700"
                                     >
                                         <Unlock className="mr-1.5 size-3.5" />
                                         <span>Abrir turno de caja</span>
@@ -322,40 +356,61 @@ export default function CobranzasIndex({
 
                         {/* Historial de Cierres Recientes (si hay data) */}
                         {cierres && cierres.data.length > 0 && (
-                            <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
+                            <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[13px] font-bold text-[#201F1D]">Cierres recientes</span>
-                                    <span className="text-[11px] text-[#8A8680]">{cierres.total ?? cierres.data.length} cierres</span>
+                                    <span className="text-[13px] font-bold text-foreground">
+                                        Cierres recientes
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground">
+                                        {cierres.total ?? cierres.data.length}{' '}
+                                        cierres
+                                    </span>
                                 </div>
-                                <div className="mt-3 divide-y divide-[#F1EFEC] text-[12px]">
+                                <div className="mt-3 divide-y divide-border text-[12px]">
                                     {cierres.data.slice(0, 4).map((cierre) => {
                                         const dif = Number(cierre.diferencia);
                                         return (
-                                            <div key={cierre.id} className="py-2.5 first:pt-1">
-                                                <div className="flex items-center justify-between font-semibold text-[#201F1D]">
-                                                    <span>{cierre.sede || 'Sede principal'}</span>
-                                                    <span>{formatCurrency(cierre.monto_contado_cierre)}</span>
+                                            <div
+                                                key={cierre.id}
+                                                className="py-2.5 first:pt-1"
+                                            >
+                                                <div className="flex items-center justify-between font-semibold text-foreground">
+                                                    <span>
+                                                        {cierre.sede ||
+                                                            'Sede principal'}
+                                                    </span>
+                                                    <span>
+                                                        {formatCurrency(
+                                                            cierre.monto_contado_cierre,
+                                                        )}
+                                                    </span>
                                                 </div>
-                                                <div className="mt-0.5 flex items-center justify-between text-[11px] text-[#8A8680]">
+                                                <div className="mt-0.5 flex items-center justify-between text-[11px] text-muted-foreground">
                                                     <span>
                                                         {cierre.fecha_cierre
-                                                            ? new Date(cierre.fecha_cierre).toLocaleDateString('es-PE')
+                                                            ? new Date(
+                                                                  cierre.fecha_cierre,
+                                                              ).toLocaleDateString(
+                                                                  'es-PE',
+                                                              )
                                                             : '-'}
                                                     </span>
                                                     <span
                                                         className={
                                                             dif === 0
-                                                                ? 'text-[#1E8E5A]'
+                                                                ? 'text-emerald-600 dark:text-emerald-400'
                                                                 : dif > 0
-                                                                  ? 'font-bold text-[#2563EB]'
-                                                                  : 'font-bold text-[#B91C1C]'
+                                                                  ? 'font-bold text-blue-600 dark:text-blue-400'
+                                                                  : 'font-bold text-destructive'
                                                         }
                                                     >
                                                         {dif === 0
                                                             ? 'Exacto'
                                                             : dif > 0
                                                               ? `+${formatCurrency(dif)}`
-                                                              : formatCurrency(dif)}
+                                                              : formatCurrency(
+                                                                    dif,
+                                                                )}
                                                     </span>
                                                 </div>
                                             </div>
@@ -368,17 +423,18 @@ export default function CobranzasIndex({
 
                     {/* Columna Derecha: Mis Cuentas por Cobrar (7 cols) */}
                     <div className="flex flex-col lg:col-span-7">
-                        <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
+                        <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <span className="text-[13.5px] font-bold text-[#201F1D]">
+                                    <span className="text-[13.5px] font-bold text-foreground">
                                         Mis cuentas por cobrar
                                     </span>
-                                    <p className="mt-0.5 text-[11.5px] text-[#8A8680]">
-                                        Cuotas pendientes o parciales de tus clientes
+                                    <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                                        Cuotas pendientes o parciales de tus
+                                        clientes
                                     </p>
                                 </div>
-                                <Badge className="border-none bg-[#FDF1E0] text-[#B45309]">
+                                <Badge className="border-none bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                                     {installmentRows.length} cuotas
                                 </Badge>
                             </div>
@@ -386,20 +442,20 @@ export default function CobranzasIndex({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full border-collapse text-[12.5px]">
                                     <thead>
-                                        <tr className="border-b border-[#E7E4DE]">
-                                            <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                        <tr className="border-b border-border">
+                                            <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                                 Cliente
                                             </th>
-                                            <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                            <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                                 Cuota
                                             </th>
-                                            <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                            <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                                 Monto
                                             </th>
-                                            <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                            <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                                 Vencimiento
                                             </th>
-                                            <th className="px-2.5 py-2.5 text-right font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                            <th className="px-2.5 py-2.5 text-right font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                                 Acción
                                             </th>
                                         </tr>
@@ -409,51 +465,61 @@ export default function CobranzasIndex({
                                             <tr>
                                                 <td
                                                     colSpan={5}
-                                                    className="px-4 py-12 text-center text-[#8A8680]"
+                                                    className="px-4 py-12 text-center text-muted-foreground"
                                                 >
                                                     <div className="flex flex-col items-center justify-center gap-2">
-                                                        <CheckCircle2 className="size-8 text-[#1E8E5A]" />
-                                                        <p className="text-xs font-semibold text-[#201F1D]">
-                                                            No tienes cuotas pendientes de cobro
+                                                        <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
+                                                        <p className="text-xs font-semibold text-foreground">
+                                                            No tienes cuotas
+                                                            pendientes de cobro
                                                         </p>
-                                                        <p className="text-[11px] text-[#8A8680]">
-                                                            Todos los clientes de tus ventas están al día con sus pagos.
+                                                        <p className="text-[11px] text-muted-foreground">
+                                                            Todos los clientes
+                                                            de tus ventas están
+                                                            al día con sus
+                                                            pagos.
                                                         </p>
                                                     </div>
                                                 </td>
                                             </tr>
                                         ) : (
                                             installmentRows.map((inst) => {
-                                                const isVencido = inst.dias_vencido > 0;
+                                                const isVencido =
+                                                    inst.dias_vencido > 0;
 
                                                 return (
                                                     <tr
                                                         key={inst.id}
-                                                        className="border-b border-[#F1EFEC] transition-colors hover:bg-[#FAFAF8]"
+                                                        className="border-b border-border transition-colors hover:bg-muted/40"
                                                     >
                                                         <td className="px-2.5 py-3.5">
-                                                            <div className="font-bold text-[#201F1D]">
-                                                                {inst.cliente || 'Cliente'}
+                                                            <div className="font-bold text-foreground">
+                                                                {inst.cliente ||
+                                                                    'Cliente'}
                                                             </div>
-                                                            <div className="font-mono text-[10.5px] text-[#8A8680]">
-                                                                Venta: {inst.sale_numero || `#${inst.sale_id}`}
+                                                            <div className="font-mono text-[10.5px] text-muted-foreground">
+                                                                Venta:{' '}
+                                                                {inst.sale_numero ||
+                                                                    `#${inst.sale_id}`}
                                                             </div>
                                                         </td>
 
-                                                        <td className="px-2.5 py-3.5 font-mono text-xs text-[#4A4742]">
+                                                        <td className="px-2.5 py-3.5 font-mono text-xs text-foreground/80">
                                                             {inst.numero_cuota}
                                                         </td>
 
-                                                        <td className="px-2.5 py-3.5 font-bold text-[#201F1D]">
-                                                            {formatCurrency(inst.monto)}
+                                                        <td className="px-2.5 py-3.5 font-bold text-foreground">
+                                                            {formatCurrency(
+                                                                inst.monto,
+                                                            )}
                                                         </td>
 
                                                         <td className="px-2.5 py-3.5">
                                                             <Badge
                                                                 className={`rounded-full border-none px-2 py-0.5 text-[10.5px] font-bold ${
                                                                     isVencido
-                                                                        ? 'bg-[#FBE7E7] text-[#B91C1C]'
-                                                                        : 'bg-[#FDF1E0] text-[#B45309]'
+                                                                        ? 'bg-destructive/10 text-destructive border border-destructive/20'
+                                                                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                                                                 }`}
                                                             >
                                                                 {isVencido
@@ -466,8 +532,12 @@ export default function CobranzasIndex({
                                                             <Button
                                                                 type="button"
                                                                 size="sm"
-                                                                onClick={() => handleOpenPaymentDialog(inst)}
-                                                                className="h-7 rounded-[7px] bg-[#18181B] px-3 text-[11px] font-bold text-white shadow-none transition-colors hover:bg-[#27272A]"
+                                                                onClick={() =>
+                                                                    handleOpenPaymentDialog(
+                                                                        inst,
+                                                                    )
+                                                                }
+                                                                className="h-7 rounded-[7px] bg-card px-3 text-[11px] font-bold text-white shadow-none transition-colors hover:bg-foreground/90"
                                                             >
                                                                 Registrar pago
                                                             </Button>
@@ -481,73 +551,95 @@ export default function CobranzasIndex({
                             </div>
 
                             {/* Paginación si existe */}
-                            {installments?.links && installments.links.length > 3 && (
-                                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#F1EFEC] pt-3 text-[11.5px] text-[#8A8680]">
-                                    <span>
-                                        Mostrando {installments.from ?? 0}-{installments.to ?? 0} de{' '}
-                                        {installments.total ?? 0} cuotas
-                                    </span>
-                                    <div className="flex gap-1">
-                                        {installments.links.map((link, idx) =>
-                                            link.url ? (
-                                                <Link
-                                                    key={idx}
-                                                    href={link.url}
-                                                    preserveScroll
-                                                    className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
-                                                        link.active
-                                                            ? 'bg-[#18181B] font-bold text-white'
-                                                            : 'border border-[#E4E1DC] bg-white text-[#4A4742] hover:bg-[#F3F1ED]'
-                                                    }`}
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                                />
-                                            ) : (
-                                                <span
-                                                    key={idx}
-                                                    className="inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs text-[#A8A49D] opacity-60"
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                                />
-                                            ),
-                                        )}
+                            {installments?.links &&
+                                installments.links.length > 3 && (
+                                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-[11.5px] text-muted-foreground">
+                                        <span>
+                                            Mostrando {installments.from ?? 0}-
+                                            {installments.to ?? 0} de{' '}
+                                            {installments.total ?? 0} cuotas
+                                        </span>
+                                        <div className="flex gap-1">
+                                            {installments.links.map(
+                                                (link, idx) =>
+                                                    link.url ? (
+                                                        <Link
+                                                            key={idx}
+                                                            href={link.url}
+                                                            preserveScroll
+                                                            className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
+                                                                link.active
+                                                                    ? 'bg-card font-bold text-white'
+                                                                    : 'border border-border bg-card text-foreground/80 hover:bg-background'
+                                                            }`}
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: link.label,
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <span
+                                                            key={idx}
+                                                            className="inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs text-muted-foreground opacity-60"
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: link.label,
+                                                            }}
+                                                        />
+                                                    ),
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
                         </Card>
                     </div>
                 </div>
             </div>
 
             {/* Dialog: Abrir Turno de Caja */}
-            <Dialog open={openTurnoDialogOpen} onOpenChange={setOpenTurnoDialogOpen}>
-                <DialogContent className="rounded-[16px] border-[#E7E4DE] bg-white sm:max-w-md">
+            <Dialog
+                open={openTurnoDialogOpen}
+                onOpenChange={setOpenTurnoDialogOpen}
+            >
+                <DialogContent className="rounded-[16px] border-border bg-card sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-[10px] bg-[#E5F5EC] text-[#1E8E5A]">
+                            <div className="flex size-9 items-center justify-center rounded-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                                 <Unlock className="size-5" />
                             </div>
                             <div>
-                                <DialogTitle className="font-['Oswald',sans-serif] text-[18px] font-semibold text-[#201F1D]">
+                                <DialogTitle className="font-['Oswald',sans-serif] text-[18px] font-semibold text-foreground">
                                     Abrir turno de caja
                                 </DialogTitle>
-                                <DialogDescription className="text-xs text-[#8A8680]">
-                                    Indica el fondo inicial de efectivo con el que inicias el turno.
+                                <DialogDescription className="text-xs text-muted-foreground">
+                                    Indica el fondo inicial de efectivo con el
+                                    que inicias el turno.
                                 </DialogDescription>
                             </div>
                         </div>
                     </DialogHeader>
 
-                    <form onSubmit={submitOpenTurno} className="mt-3 space-y-3.5">
+                    <form
+                        onSubmit={submitOpenTurno}
+                        className="mt-3 space-y-3.5"
+                    >
                         {sedes.length > 0 && (
                             <div>
-                                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Sede</Label>
+                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                    Sede
+                                </Label>
                                 <select
                                     value={openForm.data.sede_id}
-                                    onChange={(e) => openForm.setData('sede_id', e.target.value)}
-                                    className="mt-1 h-9 w-full rounded-[8px] border border-[#E4E1DC] bg-white px-3 text-[13px] text-[#201F1D] outline-none"
+                                    onChange={(e) =>
+                                        openForm.setData(
+                                            'sede_id',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"
                                 >
                                     {sedes.map((s) => (
                                         <option key={s.id} value={s.id}>
-                                            {s.nombre} {s.tipo ? `(${s.tipo})` : ''}
+                                            {s.nombre}{' '}
+                                            {s.tipo ? `(${s.tipo})` : ''}
                                         </option>
                                     ))}
                                 </select>
@@ -555,7 +647,7 @@ export default function CobranzasIndex({
                         )}
 
                         <div>
-                            <Label className="text-[11px] font-bold text-[#4A4742] uppercase">
+                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
                                 Fondo inicial (S/)
                             </Label>
                             <Input
@@ -564,12 +656,19 @@ export default function CobranzasIndex({
                                 min="0"
                                 required
                                 value={openForm.data.monto_apertura}
-                                onChange={(e) => openForm.setData('monto_apertura', e.target.value)}
+                                onChange={(e) =>
+                                    openForm.setData(
+                                        'monto_apertura',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="0.00"
-                                className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white font-mono text-[13px]"
+                                className="mt-1 h-9 rounded-[8px] border-border bg-card font-mono text-[13px]"
                             />
                             {openForm.errors.monto_apertura && (
-                                <p className="mt-1 text-[11px] text-[#B91C1C]">{openForm.errors.monto_apertura}</p>
+                                <p className="mt-1 text-[11px] text-destructive">
+                                    {openForm.errors.monto_apertura}
+                                </p>
                             )}
                         </div>
 
@@ -578,14 +677,14 @@ export default function CobranzasIndex({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setOpenTurnoDialogOpen(false)}
-                                className="rounded-[8px] border-[#E4E1DC] text-xs font-semibold"
+                                className="rounded-[8px] border-border text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={openForm.processing}
-                                className="rounded-[8px] bg-[#1E8E5A] text-xs font-bold text-white hover:bg-[#18754A]"
+                                className="rounded-[8px] bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
                             >
                                 Confirmar apertura
                             </Button>
@@ -595,27 +694,34 @@ export default function CobranzasIndex({
             </Dialog>
 
             {/* Dialog: Cerrar Turno de Caja (Arqueo ciego) */}
-            <Dialog open={closeTurnoDialogOpen} onOpenChange={setCloseTurnoDialogOpen}>
-                <DialogContent className="rounded-[16px] border-[#E7E4DE] bg-white sm:max-w-md">
+            <Dialog
+                open={closeTurnoDialogOpen}
+                onOpenChange={setCloseTurnoDialogOpen}
+            >
+                <DialogContent className="rounded-[16px] border-border bg-card sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-[10px] bg-[#FBE7E7] text-[#B91C1C]">
+                            <div className="flex size-9 items-center justify-center rounded-[10px] bg-destructive/10 text-destructive border border-destructive/20">
                                 <Lock className="size-5" />
                             </div>
                             <div>
-                                <DialogTitle className="font-['Oswald',sans-serif] text-[18px] font-semibold text-[#201F1D]">
+                                <DialogTitle className="font-['Oswald',sans-serif] text-[18px] font-semibold text-foreground">
                                     Cerrar turno de caja
                                 </DialogTitle>
-                                <DialogDescription className="text-xs text-[#8A8680]">
-                                    Arqueo ciego: ingresa el monto total en efectivo físico que has contado.
+                                <DialogDescription className="text-xs text-muted-foreground">
+                                    Arqueo ciego: ingresa el monto total en
+                                    efectivo físico que has contado.
                                 </DialogDescription>
                             </div>
                         </div>
                     </DialogHeader>
 
-                    <form onSubmit={submitCloseTurno} className="mt-3 space-y-3.5">
+                    <form
+                        onSubmit={submitCloseTurno}
+                        className="mt-3 space-y-3.5"
+                    >
                         <div>
-                            <Label className="text-[11px] font-bold text-[#4A4742] uppercase">
+                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
                                 Monto contado en efectivo (S/) *
                             </Label>
                             <Input
@@ -624,27 +730,37 @@ export default function CobranzasIndex({
                                 min="0"
                                 required
                                 value={closeForm.data.monto_contado_cierre}
-                                onChange={(e) => closeForm.setData('monto_contado_cierre', e.target.value)}
+                                onChange={(e) =>
+                                    closeForm.setData(
+                                        'monto_contado_cierre',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="0.00"
-                                className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white font-mono text-[13px]"
+                                className="mt-1 h-9 rounded-[8px] border-border bg-card font-mono text-[13px]"
                             />
                             {closeForm.errors.monto_contado_cierre && (
-                                <p className="mt-1 text-[11px] text-[#B91C1C]">
+                                <p className="mt-1 text-[11px] text-destructive">
                                     {closeForm.errors.monto_contado_cierre}
                                 </p>
                             )}
                         </div>
 
                         <div>
-                            <Label className="text-[11px] font-bold text-[#4A4742] uppercase">
+                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
                                 Observaciones (opcional)
                             </Label>
                             <Input
                                 type="text"
                                 value={closeForm.data.observacion}
-                                onChange={(e) => closeForm.setData('observacion', e.target.value)}
+                                onChange={(e) =>
+                                    closeForm.setData(
+                                        'observacion',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Ej. Billetes deteriorados, diferencias..."
-                                className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                                className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                             />
                         </div>
 
@@ -653,14 +769,14 @@ export default function CobranzasIndex({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setCloseTurnoDialogOpen(false)}
-                                className="rounded-[8px] border-[#E4E1DC] text-xs font-semibold"
+                                className="rounded-[8px] border-border text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={closeForm.processing}
-                                className="rounded-[8px] bg-[#E31E24] text-xs font-bold text-white hover:bg-[#C9181D]"
+                                className="rounded-[8px] bg-primary text-xs font-bold text-white hover:bg-primary/90"
                             >
                                 Confirmar y cerrar turno
                             </Button>
@@ -676,68 +792,94 @@ export default function CobranzasIndex({
                     if (!open) setSelectedInstallment(null);
                 }}
             >
-                <DialogContent className="rounded-[16px] border-[#E7E4DE] bg-white sm:max-w-md">
+                <DialogContent className="rounded-[16px] border-border bg-card sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-[10px] bg-[#E9EFFD] text-[#2563EB]">
+                            <div className="flex size-9 items-center justify-center rounded-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                                 <CreditCard className="size-5" />
                             </div>
                             <div>
-                                <DialogTitle className="font-['Oswald',sans-serif] text-[18px] font-semibold text-[#201F1D]">
+                                <DialogTitle className="font-['Oswald',sans-serif] text-[18px] font-semibold text-foreground">
                                     Registrar pago de cuota
                                 </DialogTitle>
-                                <DialogDescription className="text-xs text-[#8A8680]">
-                                    {selectedInstallment?.cliente} · Cuota {selectedInstallment?.numero_cuota}
+                                <DialogDescription className="text-xs text-muted-foreground">
+                                    {selectedInstallment?.cliente} · Cuota{' '}
+                                    {selectedInstallment?.numero_cuota}
                                 </DialogDescription>
                             </div>
                         </div>
                     </DialogHeader>
 
-                    <form onSubmit={submitRegisterPayment} className="mt-3 space-y-3.5">
+                    <form
+                        onSubmit={submitRegisterPayment}
+                        className="mt-3 space-y-3.5"
+                    >
                         <div>
-                            <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Forma de pago</Label>
+                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                Forma de pago
+                            </Label>
                             <select
                                 value={paymentForm.data.forma_pago}
-                                onChange={(e) => paymentForm.setData('forma_pago', e.target.value)}
-                                className="mt-1 h-9 w-full rounded-[8px] border border-[#E4E1DC] bg-white px-3 text-[13px] text-[#201F1D] outline-none"
+                                onChange={(e) =>
+                                    paymentForm.setData(
+                                        'forma_pago',
+                                        e.target.value,
+                                    )
+                                }
+                                className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"
                             >
                                 <option value="efectivo">Efectivo</option>
-                                <option value="transferencia">Transferencia bancaria</option>
+                                <option value="transferencia">
+                                    Transferencia bancaria
+                                </option>
                                 <option value="yape">Yape</option>
                                 <option value="plin">Plin</option>
                                 <option value="pos">Tarjeta (POS)</option>
-                                <option value="deposito">Depósito bancario</option>
+                                <option value="deposito">
+                                    Depósito bancario
+                                </option>
                                 <option value="otro">Otro</option>
                             </select>
                         </div>
 
                         <div>
-                            <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Monto a pagar (S/) *</Label>
+                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                Monto a pagar (S/) *
+                            </Label>
                             <Input
                                 type="number"
                                 step="0.01"
                                 min="0.01"
                                 required
                                 value={paymentForm.data.monto}
-                                onChange={(e) => paymentForm.setData('monto', e.target.value)}
-                                className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white font-mono text-[13px]"
+                                onChange={(e) =>
+                                    paymentForm.setData('monto', e.target.value)
+                                }
+                                className="mt-1 h-9 rounded-[8px] border-border bg-card font-mono text-[13px]"
                             />
                             {paymentForm.errors.monto && (
-                                <p className="mt-1 text-[11px] text-[#B91C1C]">{paymentForm.errors.monto}</p>
+                                <p className="mt-1 text-[11px] text-destructive">
+                                    {paymentForm.errors.monto}
+                                </p>
                             )}
                         </div>
 
                         {paymentForm.data.forma_pago !== 'efectivo' && (
                             <div>
-                                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">
+                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
                                     N° Operación / Referencia
                                 </Label>
                                 <Input
                                     type="text"
                                     value={paymentForm.data.numero_operacion}
-                                    onChange={(e) => paymentForm.setData('numero_operacion', e.target.value)}
+                                    onChange={(e) =>
+                                        paymentForm.setData(
+                                            'numero_operacion',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Ej. OP-983412"
-                                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white font-mono text-[13px]"
+                                    className="mt-1 h-9 rounded-[8px] border-border bg-card font-mono text-[13px]"
                                 />
                             </div>
                         )}
@@ -747,14 +889,14 @@ export default function CobranzasIndex({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setSelectedInstallment(null)}
-                                className="rounded-[8px] border-[#E4E1DC] text-xs font-semibold"
+                                className="rounded-[8px] border-border text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={paymentForm.processing}
-                                className="rounded-[8px] bg-[#18181B] text-xs font-bold text-white hover:bg-[#27272A]"
+                                className="rounded-[8px] bg-card text-xs font-bold text-white hover:bg-foreground/90"
                             >
                                 Registrar pago
                             </Button>

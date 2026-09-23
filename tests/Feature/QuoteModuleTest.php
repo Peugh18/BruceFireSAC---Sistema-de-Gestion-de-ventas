@@ -9,6 +9,22 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
 
+test('vendedor can open the nueva cotizacion page with catalog data', function () {
+    $user = vendedorUser();
+    Client::factory()->create();
+    Product::factory()->create(['activo' => true]);
+
+    $this->actingAs($user)
+        ->get(route('vendedor.cotizaciones.create', ['current_team' => $user->currentTeam]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('vendedor/cotizaciones/nueva')
+            ->has('clients')
+            ->has('products')
+            ->has('services')
+        );
+});
+
 test('vendedor creates a quote with items and totals are computed', function () {
     $user = vendedorUser();
     $client = Client::factory()->create();

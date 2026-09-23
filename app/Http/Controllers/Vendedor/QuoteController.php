@@ -6,7 +6,10 @@ use App\Actions\Cotizaciones\CreateQuote;
 use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cotizaciones\StoreQuoteRequest;
+use App\Models\Client;
+use App\Models\Product;
 use App\Models\Quote;
+use App\Models\Service;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,14 +53,33 @@ class QuoteController extends Controller
         ]);
     }
 
+    public function create(Team $current_team): Response
+    {
+        return Inertia::render('vendedor/cotizaciones/nueva', [
+            'clients' => Client::query()
+                ->orderBy('razon_social')
+                ->get(['id', 'razon_social', 'numero_documento']),
+            'products' => Product::query()
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'precio_venta']),
+            'services' => Service::query()
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'precio_venta']),
+        ]);
+    }
+
     public function store(StoreQuoteRequest $request, CreateQuote $createQuote): RedirectResponse
     {
         $data = $request->safe()->except('items');
         $items = $request->safe()->input('items');
 
-        $createQuote->handle($data, $items, $request->user()->id);
+        $quote = $createQuote->handle($data, $items, $request->user()->id);
 
-        return back();
+        return redirect()->route('vendedor.cotizaciones.index', [
+            'current_team' => $request->route('current_team'),
+        ])->with('success', "Cotización {$quote->numero} creada correctamente.");
     }
 
     /**

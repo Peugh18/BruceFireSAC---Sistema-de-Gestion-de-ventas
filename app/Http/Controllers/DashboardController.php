@@ -56,6 +56,18 @@ class DashboardController extends Controller
                     'current_team' => $request->route('current_team'),
                 ]);
             }
+
+            if ($request->user()->hasRole('TecnicoPlanta')) {
+                return redirect()->route('tecnico-planta.dashboard', [
+                    'current_team' => $request->route('current_team'),
+                ]);
+            }
+
+            if ($request->user()->hasRole('TecnicoCampo')) {
+                return redirect()->route('tecnico-campo.dashboard', [
+                    'current_team' => $request->route('current_team'),
+                ]);
+            }
         }
 
         return Inertia::render('dashboard', [

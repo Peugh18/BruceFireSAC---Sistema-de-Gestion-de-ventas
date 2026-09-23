@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+﻿import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowLeft,
@@ -88,9 +88,14 @@ export default function InstalacionShow({
     certificateTypes,
 }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
-    const { auth, flash } = usePage<{ auth?: { user?: { name?: string } }; flash?: { success?: string; error?: string } }>().props;
+    const { auth, flash } = usePage<{
+        auth?: { user?: { name?: string } };
+        flash?: { success?: string; error?: string };
+    }>().props;
 
-    const isFinalizada = ['listo_entrega', 'entregado', 'cerrado'].includes(order.estado);
+    const isFinalizada = ['listo_entrega', 'entregado', 'cerrado'].includes(
+        order.estado,
+    );
 
     // Lista de equipos a instalar en el formulario
     const [equiposList, setEquiposList] = useState<InstalledItem[]>(
@@ -112,13 +117,14 @@ export default function InstalacionShow({
                       marca: 'Bruce Fire',
                       ubicacion_actual: '',
                   },
-              ]
+              ],
     );
 
     const form = useForm({
         area: 'Área Principal / Operaciones',
         ubicacion_instalada: '',
-        pruebas: 'Soporte fijado a 1.50m sobre nivel de piso. Verificación de manómetro y precinto de seguridad conforme NTP 350.043.',
+        pruebas:
+            'Soporte fijado a 1.50m sobre nivel de piso. Verificación de manómetro y precinto de seguridad conforme NTP 350.043.',
         foto_antes_path: '',
         foto_despues_path: '',
         observaciones: '',
@@ -151,8 +157,14 @@ export default function InstalacionShow({
         form.setData('equipos', updated);
     };
 
-    const updateEquipmentRow = (index: number, field: keyof InstalledItem, value: unknown) => {
-        const updated = equiposList.map((item, i) => (i === index ? { ...item, [field]: value } : item));
+    const updateEquipmentRow = (
+        index: number,
+        field: keyof InstalledItem,
+        value: unknown,
+    ) => {
+        const updated = equiposList.map((item, i) =>
+            i === index ? { ...item, [field]: value } : item,
+        );
         setEquiposList(updated);
         form.setData('equipos', updated);
     };
@@ -171,50 +183,54 @@ export default function InstalacionShow({
             <div className="mb-4 flex items-center justify-between">
                 <Link
                     href={`/${teamSlug}/tecnico-campo/instalaciones`}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#6B6965] hover:text-[#201F1D]"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver a instalaciones</span>
                 </Link>
-                <span className="font-mono text-xs font-black text-[#0284C7]">
+                <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
                     {order.codigo}
                 </span>
             </div>
 
             {flash?.success && (
-                <div className="mb-4 rounded-[10px] border border-[#BBF7D0] bg-[#DCFCE7] p-3 text-xs font-medium text-[#166534]">
+                <div className="mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     {flash.success}
                 </div>
             )}
 
             {/* Header Data Card (§25) */}
-            <div className="mb-5 rounded-[14px] border border-[#E4E1DC] bg-white p-4 shadow-xs">
-                <div className="flex items-start justify-between gap-2 border-b border-[#F3F1ED] pb-3 mb-3">
+            <div className="mb-5 rounded-[14px] border border-border bg-card p-4 shadow-xs">
+                <div className="mb-3 flex items-start justify-between gap-2 border-b border-border pb-3">
                     <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B6965]">
+                        <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
                             Cliente & Sede de Montaje
                         </span>
-                        <h1 className="text-base font-black text-[#201F1D] leading-snug">
+                        <h1 className="text-base leading-snug font-black text-foreground">
                             {order.client.razon_social}
                         </h1>
                         {order.client.numero_documento && (
-                            <span className="text-xs font-mono text-[#6B6965]">
+                            <span className="font-mono text-xs text-muted-foreground">
                                 RUC / DNI: {order.client.numero_documento}
                             </span>
                         )}
                     </div>
-                    <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-[10px] font-black text-[#0369A1]">
+                    <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[10px] font-black text-sky-700 dark:text-sky-400">
                         {order.estado.replace('_', ' ').toUpperCase()}
                     </span>
                 </div>
 
                 <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2">
-                        <MapPin className="size-4 text-[#0284C7] shrink-0 mt-0.5" />
+                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-600 dark:text-sky-400" />
                         <div>
-                            <span className="font-semibold text-[#201F1D]">Lugar de Instalación: </span>
-                            <span className="text-[#6B6965]">
-                                {order.sede?.direccion || order.client.direccion_fiscal || 'Sede no asignada'}
+                            <span className="font-semibold text-foreground">
+                                Lugar de Instalación:{' '}
+                            </span>
+                            <span className="text-muted-foreground">
+                                {order.sede?.direccion ||
+                                    order.client.direccion_fiscal ||
+                                    'Sede no asignada'}
                             </span>
                         </div>
                     </div>
@@ -222,12 +238,14 @@ export default function InstalacionShow({
                     {order.client.telefono && (
                         <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
-                                <Phone className="size-4 text-[#16A34A] shrink-0" />
-                                <span className="font-mono text-[#201F1D]">{order.client.telefono}</span>
+                                <Phone className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <span className="font-mono text-foreground">
+                                    {order.client.telefono}
+                                </span>
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-[#BBF7D0] bg-[#DCFCE7] px-2.5 py-1 text-[11px] font-bold text-[#166534] active:scale-95"
+                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 active:scale-95"
                             >
                                 <Phone className="size-3" />
                                 Contactar
@@ -239,19 +257,24 @@ export default function InstalacionShow({
 
             {/* Emitted Certificates if any */}
             {order.certificates && order.certificates.length > 0 && (
-                <div className="mb-5 rounded-[14px] border border-[#BBF7D0] bg-[#F0FDF4] p-4">
-                    <h3 className="text-xs font-black text-[#166534] flex items-center gap-1.5 mb-2">
-                        <FileCheck className="size-4 text-[#16A34A]" />
+                <div className="mb-5 rounded-[14px] border border-emerald-500/20 bg-emerald-500/10 p-4">
+                    <h3 className="mb-2 flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                        <FileCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
                         Certificados Emitidos
                     </h3>
                     <div className="space-y-1.5">
                         {order.certificates.map((cert) => (
                             <div
                                 key={cert.id}
-                                className="flex items-center justify-between rounded-[8px] bg-white p-2.5 border border-[#BBF7D0] text-xs"
+                                className="flex items-center justify-between rounded-[8px] border border-emerald-500/20 bg-card p-2.5 text-xs"
                             >
-                                <span className="font-bold text-[#201F1D]">{cert.certificate_type?.nombre || 'Certificado'}</span>
-                                <span className="font-mono text-[#166534] font-bold">{cert.numero}</span>
+                                <span className="font-bold text-foreground">
+                                    {cert.certificate_type?.nombre ||
+                                        'Certificado'}
+                                </span>
+                                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                    {cert.numero}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -261,75 +284,88 @@ export default function InstalacionShow({
             {/* Installation Form (§25) */}
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* 1. Datos del área y ubicación */}
-                <div className="rounded-[14px] border border-[#E4E1DC] bg-white p-4 shadow-xs space-y-3">
-                    <h2 className="text-xs font-black text-[#201F1D] uppercase tracking-wider flex items-center gap-2">
-                        <Wrench className="size-4 text-[#0284C7]" />
-                        1. Ubicación y Área de Instalación (§25)
+                <div className="space-y-3 rounded-[14px] border border-border bg-card p-4 shadow-xs">
+                    <h2 className="flex items-center gap-2 text-xs font-black tracking-wider text-foreground uppercase">
+                        <Wrench className="size-4 text-sky-600 dark:text-sky-400" />
+                        1. Ubicación y Área de Instalación
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <div>
-                            <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
-                                Área / Sección en Instalación <span className="text-red-500">*</span>
+                            <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                Área / Sección en Instalación{' '}
+                                <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
                                 disabled={isFinalizada}
                                 value={form.data.area}
-                                onChange={(e) => form.setData('area', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('area', e.target.value)
+                                }
                                 placeholder="ej. Almacén Central / Pasillo Oficinas"
-                                className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white disabled:bg-[#F3F4F6]"
+                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs disabled:bg-muted"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
-                                Punto Específico de Montaje <span className="text-red-500">*</span>
+                            <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                Punto Específico de Montaje{' '}
+                                <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
                                 disabled={isFinalizada}
                                 value={form.data.ubicacion_instalada}
-                                onChange={(e) => form.setData('ubicacion_instalada', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'ubicacion_instalada',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="ej. Columna 3 junto al extintor / Pared este a 1.50m"
-                                className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white disabled:bg-[#F3F4F6]"
+                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs disabled:bg-muted"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
-                            Pruebas y Verificación de Montaje (§25)
+                        <label className="mb-1 block text-[11px] font-bold text-foreground">
+                            Pruebas y Verificación de Montaje
                         </label>
                         <textarea
                             rows={2}
                             disabled={isFinalizada}
                             value={form.data.pruebas}
-                            onChange={(e) => form.setData('pruebas', e.target.value)}
-                            className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white disabled:bg-[#F3F4F6]"
+                            onChange={(e) =>
+                                form.setData('pruebas', e.target.value)
+                            }
+                            className="w-full rounded-[8px] border border-border bg-card p-2 text-xs disabled:bg-muted"
                         />
                     </div>
                 </div>
 
                 {/* 2. Equipos Instalados -> Pasan a Equipos del Cliente (§25) */}
-                <div className="rounded-[14px] border border-[#E4E1DC] bg-white p-4 shadow-xs space-y-3">
+                <div className="space-y-3 rounded-[14px] border border-border bg-card p-4 shadow-xs">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-xs font-black text-[#201F1D] uppercase tracking-wider flex items-center gap-2">
-                                <Flame className="size-4 text-[#EA580C]" />
-                                2. Extintores / Unidades a Instalar ({equiposList.length})
+                            <h2 className="flex items-center gap-2 text-xs font-black tracking-wider text-foreground uppercase">
+                                <Flame className="size-4 text-amber-600 dark:text-amber-400" />
+                                2. Extintores / Unidades a Instalar (
+                                {equiposList.length})
                             </h2>
-                            <p className="text-[10.5px] text-[#6B6965]">
-                                Se registran en el historial de Equipos del Cliente (Equipment) sin duplicar tablas (§25).
+                            <p className="text-[10.5px] text-muted-foreground">
+                                Se registran en el historial de Equipos del
+                                Cliente (Equipment) sin duplicar tablas.
                             </p>
                         </div>
                         {!isFinalizada && (
                             <button
                                 type="button"
                                 onClick={addEquipmentRow}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-[#0284C7] bg-[#E0F2FE] px-2.5 py-1 text-xs font-bold text-[#0284C7] active:scale-95"
+                                className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-sky-600 dark:text-sky-400 active:scale-95"
                             >
                                 <Plus className="size-3.5" />
                                 Agregar
@@ -341,90 +377,125 @@ export default function InstalacionShow({
                         {equiposList.map((item, idx) => (
                             <div
                                 key={idx}
-                                className="rounded-[10px] border border-[#E4E1DC] bg-[#FAF9F7] p-3 text-xs space-y-2 relative"
+                                className="relative space-y-2 rounded-[10px] border border-border bg-muted/40 p-3 text-xs"
                             >
-                                <div className="flex items-center justify-between border-b border-[#E4E1DC] pb-1.5">
-                                    <span className="font-bold text-[#201F1D]">
+                                <div className="flex items-center justify-between border-b border-border pb-1.5">
+                                    <span className="font-bold text-foreground">
                                         Extintor #{idx + 1}
                                     </span>
-                                    {!isFinalizada && equiposList.length > 1 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => removeEquipmentRow(idx)}
-                                            className="text-red-500 p-1 hover:bg-red-50 rounded"
-                                        >
-                                            <Trash2 className="size-3.5" />
-                                        </button>
-                                    )}
+                                    {!isFinalizada &&
+                                        equiposList.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    removeEquipmentRow(idx)
+                                                }
+                                                className="rounded p-1 text-red-500 hover:bg-red-50"
+                                            >
+                                                <Trash2 className="size-3.5" />
+                                            </button>
+                                        )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-[#6B6965] mb-0.5">
+                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
                                             Agente Extintor
                                         </label>
                                         <select
                                             disabled={isFinalizada}
                                             value={item.tipo_agente}
-                                            onChange={(e) => updateEquipmentRow(idx, 'tipo_agente', e.target.value)}
-                                            className="w-full text-xs rounded-[6px] border border-[#E4E1DC] p-1.5 bg-white"
+                                            onChange={(e) =>
+                                                updateEquipmentRow(
+                                                    idx,
+                                                    'tipo_agente',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-[6px] border border-border bg-card p-1.5 text-xs"
                                         >
                                             <option value="PQS">PQS</option>
                                             <option value="CO2">CO2</option>
                                             <option value="Agua">Agua</option>
-                                            <option value="Acetato de Potasio">Acetato K</option>
+                                            <option value="Acetato de Potasio">
+                                                Acetato K
+                                            </option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-[#6B6965] mb-0.5">
+                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
                                             Capacidad
                                         </label>
                                         <input
                                             type="text"
                                             disabled={isFinalizada}
                                             value={item.capacidad}
-                                            onChange={(e) => updateEquipmentRow(idx, 'capacidad', e.target.value)}
+                                            onChange={(e) =>
+                                                updateEquipmentRow(
+                                                    idx,
+                                                    'capacidad',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="ej. 6 kg"
-                                            className="w-full text-xs rounded-[6px] border border-[#E4E1DC] p-1.5 bg-white"
+                                            className="w-full rounded-[6px] border border-border bg-card p-1.5 text-xs"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-[#6B6965] mb-0.5">
+                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
                                             Serie Interna / Código
                                         </label>
                                         <input
                                             type="text"
                                             disabled={isFinalizada}
                                             value={item.numero_serie}
-                                            onChange={(e) => updateEquipmentRow(idx, 'numero_serie', e.target.value)}
+                                            onChange={(e) =>
+                                                updateEquipmentRow(
+                                                    idx,
+                                                    'numero_serie',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Auto-correlativo si vacío"
-                                            className="w-full text-xs rounded-[6px] border border-[#E4E1DC] p-1.5 bg-white font-mono"
+                                            className="w-full rounded-[6px] border border-border bg-card p-1.5 font-mono text-xs"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-[#6B6965] mb-0.5">
+                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
                                             Marca
                                         </label>
                                         <input
                                             type="text"
                                             disabled={isFinalizada}
                                             value={item.marca}
-                                            onChange={(e) => updateEquipmentRow(idx, 'marca', e.target.value)}
+                                            onChange={(e) =>
+                                                updateEquipmentRow(
+                                                    idx,
+                                                    'marca',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Marca"
-                                            className="w-full text-xs rounded-[6px] border border-[#E4E1DC] p-1.5 bg-white"
+                                            className="w-full rounded-[6px] border border-border bg-card p-1.5 text-xs"
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="block text-[10px] font-bold text-[#6B6965] mb-0.5">
+                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
                                             Ubicación Exacta
                                         </label>
                                         <input
                                             type="text"
                                             disabled={isFinalizada}
                                             value={item.ubicacion_actual}
-                                            onChange={(e) => updateEquipmentRow(idx, 'ubicacion_actual', e.target.value)}
+                                            onChange={(e) =>
+                                                updateEquipmentRow(
+                                                    idx,
+                                                    'ubicacion_actual',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="ej. Pared norte frente a montacargas"
-                                            className="w-full text-xs rounded-[6px] border border-[#E4E1DC] p-1.5 bg-white"
+                                            className="w-full rounded-[6px] border border-border bg-card p-1.5 text-xs"
                                         />
                                     </div>
                                 </div>
@@ -434,33 +505,46 @@ export default function InstalacionShow({
                 </div>
 
                 {/* 3. Certificado Aplicable (§25) */}
-                <div className="rounded-[14px] border border-[#E4E1DC] bg-white p-4 shadow-xs space-y-3">
-                    <h2 className="text-xs font-black text-[#201F1D] uppercase tracking-wider flex items-center gap-2">
-                        <FileCheck className="size-4 text-[#16A34A]" />
-                        3. Certificado Aplicable (§25)
+                <div className="space-y-3 rounded-[14px] border border-border bg-card p-4 shadow-xs">
+                    <h2 className="flex items-center gap-2 text-xs font-black tracking-wider text-foreground uppercase">
+                        <FileCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+                        3. Certificado Aplicable
                     </h2>
 
-                    <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#201F1D]">
+                    <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-foreground">
                         <input
                             type="checkbox"
                             disabled={isFinalizada}
                             checked={form.data.emitir_certificado}
-                            onChange={(e) => form.setData('emitir_certificado', e.target.checked)}
-                            className="size-4 rounded border-[#0284C7] text-[#0284C7]"
+                            onChange={(e) =>
+                                form.setData(
+                                    'emitir_certificado',
+                                    e.target.checked,
+                                )
+                            }
+                            className="size-4 rounded border-sky-500/20 text-sky-600 dark:text-sky-400"
                         />
-                        <span>Emitir certificado automático al registrar la instalación</span>
+                        <span>
+                            Emitir certificado automático al registrar la
+                            instalación
+                        </span>
                     </label>
 
                     {form.data.emitir_certificado && (
                         <div>
-                            <label className="block text-[10px] font-bold text-[#6B6965] mb-1">
+                            <label className="mb-1 block text-[10px] font-bold text-muted-foreground">
                                 Tipo de Certificado
                             </label>
                             <select
                                 disabled={isFinalizada}
                                 value={form.data.tipo_certificado_codigo}
-                                onChange={(e) => form.setData('tipo_certificado_codigo', e.target.value)}
-                                className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                onChange={(e) =>
+                                    form.setData(
+                                        'tipo_certificado_codigo',
+                                        e.target.value,
+                                    )
+                                }
+                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                             >
                                 {certificateTypes.map((ct) => (
                                     <option key={ct.id} value={ct.codigo}>
@@ -474,64 +558,90 @@ export default function InstalacionShow({
 
                 {/* 4. Conformidad del Cliente en Sitio (§25, §85.6.2) */}
                 {!isFinalizada && (
-                    <div className="rounded-[14px] border border-[#BAE6FD] bg-white p-4 shadow-sm space-y-3">
-                        <h2 className="text-xs font-black text-[#0369A1] uppercase tracking-wider flex items-center gap-2">
-                            <UserCheck className="size-4 text-[#0284C7]" />
-                            4. Conformidad de Instalación en Sitio (§25, §85.6.2)
+                    <div className="space-y-3 rounded-[14px] border border-sky-500/20 bg-card p-4 shadow-sm">
+                        <h2 className="flex items-center gap-2 text-xs font-black tracking-wider text-sky-700 dark:text-sky-400 uppercase">
+                            <UserCheck className="size-4 text-sky-600 dark:text-sky-400" />
+                            4. Conformidad de Instalación en Sitio
                         </h2>
 
                         <div>
-                            <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
-                                Nombre del Receptor / Encargado en Sitio <span className="text-red-500">*</span>
+                            <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                Nombre del Receptor / Encargado en Sitio{' '}
+                                <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
                                 value={form.data.conformidad_nombre}
-                                onChange={(e) => form.setData('conformidad_nombre', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'conformidad_nombre',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Nombre completo de quien recibe la instalación"
-                                className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                             />
                             {form.errors.conformidad_nombre && (
-                                <p className="text-[10px] text-red-500 mt-0.5">{form.errors.conformidad_nombre}</p>
+                                <p className="mt-0.5 text-[10px] text-red-500">
+                                    {form.errors.conformidad_nombre}
+                                </p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
+                            <label className="mb-1 block text-[11px] font-bold text-foreground">
                                 Observaciones Adicionales
                             </label>
                             <textarea
                                 rows={2}
                                 value={form.data.observaciones}
-                                onChange={(e) => form.setData('observaciones', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'observaciones',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Detalles de señalética instalada, tarjetas de control entregadas..."
-                                className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                             />
                         </div>
 
-                        <div className="rounded-[10px] border border-[#BAE6FD] bg-[#F0F9FF] p-3">
-                            <label className="flex items-start gap-2.5 cursor-pointer">
+                        <div className="rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3">
+                            <label className="flex cursor-pointer items-start gap-2.5">
                                 <input
                                     type="checkbox"
                                     required
                                     checked={form.data.conformidad_aceptada}
-                                    onChange={(e) => form.setData('conformidad_aceptada', e.target.checked)}
-                                    className="size-4 mt-0.5 rounded border-[#0284C7] text-[#0284C7]"
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'conformidad_aceptada',
+                                            e.target.checked,
+                                        )
+                                    }
+                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-600 dark:text-sky-400"
                                 />
-                                <span className="text-xs font-semibold text-[#0369A1] leading-tight">
-                                    Conformidad en sitio: El cliente valida la instalación física de los extintores y los soportes de montaje en las ubicaciones acordadas.
+                                <span className="text-xs leading-tight font-semibold text-sky-700 dark:text-sky-400">
+                                    Conformidad en sitio: El cliente valida la
+                                    instalación física de los extintores y los
+                                    soportes de montaje en las ubicaciones
+                                    acordadas.
                                 </span>
                             </label>
                             {form.errors.conformidad_aceptada && (
-                                <p className="text-[10px] text-red-500 mt-1">{form.errors.conformidad_aceptada}</p>
+                                <p className="mt-1 text-[10px] text-red-500">
+                                    {form.errors.conformidad_aceptada}
+                                </p>
                             )}
                         </div>
 
                         <button
                             type="submit"
-                            disabled={form.processing || !form.data.conformidad_aceptada}
-                            className="w-full min-h-[48px] rounded-[10px] bg-[#0284C7] text-white font-bold text-xs shadow-sm hover:bg-[#0369A1] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            disabled={
+                                form.processing ||
+                                !form.data.conformidad_aceptada
+                            }
+                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
                             <span>Registrar y Guardar Instalación Técnica</span>

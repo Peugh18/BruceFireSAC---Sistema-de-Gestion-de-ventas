@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
@@ -34,7 +34,12 @@ interface OrderItem {
     estado_coarse: string;
     vehiculo: string | null;
     equipos_count: number;
-    accion_sugerida: 'recojo' | 'entrega' | 'inspeccion' | 'instalacion' | 'ver';
+    accion_sugerida:
+        | 'recojo'
+        | 'entrega'
+        | 'inspeccion'
+        | 'instalacion'
+        | 'ver';
     observaciones: string | null;
 }
 
@@ -59,7 +64,11 @@ interface Props {
     };
 }
 
-export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) {
+export default function TecnicoCampoDashboard({
+    orders,
+    kpis,
+    filters,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
     const teamPrefix = `/${teamSlug}/tecnico-campo`;
@@ -71,7 +80,7 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
         router.get(
             `${teamPrefix}/dashboard`,
             { ...filters, search: search.trim() },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -79,7 +88,7 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
         router.get(
             `${teamPrefix}/dashboard`,
             { ...filters, tab },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -87,7 +96,7 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
         router.get(
             `${teamPrefix}/dashboard`,
             { ...filters, tipo },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -133,11 +142,11 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
                             Servicios de Campo
                         </h1>
                         <p className="text-xs text-neutral-500">
-                            Ruta diaria, recojos, entregas e inspecciones (§5.5)
+                            Ruta diaria, recojos, entregas e inspecciones
                         </p>
                     </div>
-                    <div className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-blue-200 dark:border-blue-900/60">
-                        <Calendar className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
+                        <Calendar className="h-3.5 w-3.5" />
                         <span>Hoy</span>
                     </div>
                 </div>
@@ -147,65 +156,81 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
                     <button
                         type="button"
                         onClick={() => handleStatusTab('todos')}
-                        className={`p-3.5 rounded-2xl border text-left transition-all ${
+                        className={`rounded-2xl border p-3.5 text-left transition-all ${
                             filters.tab === 'todos' || !filters.tab
-                                ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 border-neutral-900 shadow-sm'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border-neutral-200 dark:border-neutral-700'
+                                ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm dark:bg-neutral-100 dark:text-neutral-900'
+                                : 'border-neutral-200 bg-card text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
                         }`}
                     >
-                        <div className="text-[11px] font-semibold opacity-70">Total Servicios</div>
-                        <div className="text-2xl font-black mt-1">{kpis.total_servicios}</div>
+                        <div className="text-[11px] font-semibold opacity-70">
+                            Total Servicios
+                        </div>
+                        <div className="mt-1 text-2xl font-black">
+                            {kpis.total_servicios}
+                        </div>
                     </button>
 
                     <button
                         type="button"
                         onClick={() => handleStatusTab('pendientes')}
-                        className={`p-3.5 rounded-2xl border text-left transition-all ${
+                        className={`rounded-2xl border p-3.5 text-left transition-all ${
                             filters.tab === 'pendientes'
-                                ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border-neutral-200 dark:border-neutral-700'
+                                ? 'border-amber-600 bg-amber-600 text-white shadow-sm'
+                                : 'border-neutral-200 bg-card text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
                         }`}
                     >
-                        <div className="text-[11px] font-semibold text-amber-500">Pendientes</div>
-                        <div className="text-2xl font-black mt-1 text-amber-600 dark:text-amber-400">{kpis.pendientes}</div>
+                        <div className="text-[11px] font-semibold text-amber-500">
+                            Pendientes
+                        </div>
+                        <div className="mt-1 text-2xl font-black text-amber-600 dark:text-amber-400">
+                            {kpis.pendientes}
+                        </div>
                     </button>
 
                     <button
                         type="button"
                         onClick={() => handleStatusTab('en_proceso')}
-                        className={`p-3.5 rounded-2xl border text-left transition-all ${
+                        className={`rounded-2xl border p-3.5 text-left transition-all ${
                             filters.tab === 'en_proceso'
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border-neutral-200 dark:border-neutral-700'
+                                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                                : 'border-neutral-200 bg-card text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
                         }`}
                     >
-                        <div className="text-[11px] font-semibold text-blue-500">En Ruta / Proceso</div>
-                        <div className="text-2xl font-black mt-1 text-blue-600 dark:text-blue-400">{kpis.en_proceso}</div>
+                        <div className="text-[11px] font-semibold text-blue-500">
+                            En Ruta / Proceso
+                        </div>
+                        <div className="mt-1 text-2xl font-black text-blue-600 dark:text-blue-400">
+                            {kpis.en_proceso}
+                        </div>
                     </button>
 
                     <button
                         type="button"
                         onClick={() => handleStatusTab('finalizados')}
-                        className={`p-3.5 rounded-2xl border text-left transition-all ${
+                        className={`rounded-2xl border p-3.5 text-left transition-all ${
                             filters.tab === 'finalizados'
-                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border-neutral-200 dark:border-neutral-700'
+                                ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'
+                                : 'border-neutral-200 bg-card text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
                         }`}
                     >
-                        <div className="text-[11px] font-semibold text-emerald-500">Finalizados</div>
-                        <div className="text-2xl font-black mt-1 text-emerald-600 dark:text-emerald-400">{kpis.finalizados}</div>
+                        <div className="text-[11px] font-semibold text-emerald-500">
+                            Finalizados
+                        </div>
+                        <div className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                            {kpis.finalizados}
+                        </div>
                     </button>
                 </div>
 
                 {/* Service Type Pills (§5.5) */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
                     <button
                         type="button"
                         onClick={() => handleTipoFiltro('todos')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'todos' || !filters.tipo
-                                ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 shadow-xs'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700'
+                                ? 'bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900'
+                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         Todos
@@ -213,49 +238,49 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
                     <button
                         type="button"
                         onClick={() => handleTipoFiltro('recojos')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-colors ${
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'recojos'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700'
+                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
-                        <Truck className="w-3.5 h-3.5" />
+                        <Truck className="h-3.5 w-3.5" />
                         <span>Recojos</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => handleTipoFiltro('entregas')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-colors ${
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'entregas'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700'
+                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
-                        <PackageCheck className="w-3.5 h-3.5" />
+                        <PackageCheck className="h-3.5 w-3.5" />
                         <span>Entregas</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => handleTipoFiltro('inspecciones')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-colors ${
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'inspecciones'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700'
+                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
-                        <ClipboardList className="w-3.5 h-3.5" />
+                        <ClipboardList className="h-3.5 w-3.5" />
                         <span>Inspecciones</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => handleTipoFiltro('instalaciones')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-colors ${
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'instalaciones'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700'
+                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
-                        <Wrench className="w-3.5 h-3.5" />
+                        <Wrench className="h-3.5 w-3.5" />
                         <span>Instalaciones</span>
                     </button>
                 </div>
@@ -267,12 +292,12 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar cliente, dirección o código de orden..."
-                        className="w-full pl-9 pr-24 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-neutral-200 bg-card py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800"
                     />
-                    <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-3.5" />
+                    <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
                         type="submit"
-                        className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-neutral-900 dark:bg-neutral-700 text-white rounded-lg text-xs font-medium"
+                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white dark:bg-neutral-700"
                     >
                         Buscar
                     </button>
@@ -281,20 +306,22 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
                 {/* Orders Cards List */}
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
-                        <div className="p-8 text-center bg-white dark:bg-neutral-800/40 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700 space-y-2">
-                            <Truck className="w-8 h-8 text-neutral-400 mx-auto" />
+                        <div className="space-y-2 rounded-2xl border border-dashed border-neutral-200 bg-card p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
+                            <Truck className="mx-auto h-8 w-8 text-neutral-400" />
                             <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                                 No hay servicios programados en esta cola
                             </p>
                         </div>
                     ) : (
                         orders.data.map((order) => {
-                            const isFinished = order.estado === 'entregado' || order.estado === 'cerrado';
+                            const isFinished =
+                                order.estado === 'entregado' ||
+                                order.estado === 'cerrado';
 
                             return (
                                 <div
                                     key={order.id}
-                                    className="p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-3"
+                                    className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div>
@@ -302,22 +329,28 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
                                                 <span className="font-mono text-sm font-extrabold text-neutral-900 dark:text-neutral-100">
                                                     {order.codigo}
                                                 </span>
-                                                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                                                    isFinished
-                                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                                                        : order.estado === 'en_proceso'
-                                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
-                                                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                                                }`}>
-                                                    {order.estado.replace('_', ' ')}
+                                                <span
+                                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                        isFinished
+                                                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                                            : order.estado ===
+                                                                'en_proceso'
+                                                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                                                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                                    }`}
+                                                >
+                                                    {order.estado.replace(
+                                                        '_',
+                                                        ' ',
+                                                    )}
                                                 </span>
                                             </div>
-                                            <h3 className="font-semibold text-sm text-neutral-900 dark:text-neutral-100 mt-1 line-clamp-1">
+                                            <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                                                 {order.cliente}
                                             </h3>
                                         </div>
 
-                                        <span className="text-xs font-semibold text-neutral-500 whitespace-nowrap">
+                                        <span className="text-xs font-semibold whitespace-nowrap text-neutral-500 capitalize">
                                             {order.tipo_servicio}
                                         </span>
                                     </div>
@@ -326,38 +359,47 @@ export default function TecnicoCampoDashboard({ orders, kpis, filters }: Props) 
                                     <div className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
                                         {order.direccion && (
                                             <div className="flex items-start gap-1.5">
-                                                <MapPin className="w-3.5 h-3.5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                                <span className="line-clamp-2">{order.direccion}</span>
+                                                <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+                                                <span className="line-clamp-2">
+                                                    {order.direccion}
+                                                </span>
                                             </div>
                                         )}
                                         {order.telefono && (
                                             <div className="flex items-center gap-1.5">
-                                                <Phone className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                                                <a href={`tel:${order.telefono}`} className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                                                <Phone className="h-3.5 w-3.5 flex-shrink-0 text-emerald-600" />
+                                                <a
+                                                    href={`tel:${order.telefono}`}
+                                                    className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                >
                                                     {order.telefono}
                                                 </a>
                                             </div>
                                         )}
                                         {order.vehiculo && (
                                             <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
-                                                <Car className="w-3 h-3 text-neutral-400" />
-                                                <span>Vehículo: {order.vehiculo}</span>
+                                                <Car className="h-3 w-3 text-neutral-400" />
+                                                <span>
+                                                    Vehículo: {order.vehiculo}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Quick Touch Action Button */}
-                                    <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700/60 flex items-center justify-between">
+                                    <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-700/60">
                                         <span className="text-[11px] text-neutral-500">
-                                            {order.equipos_count > 0 ? `${order.equipos_count} equipo(s)` : 'Sin equipos registrados'}
+                                            {order.equipos_count > 0
+                                                ? `${order.equipos_count} equipo(s)`
+                                                : 'Sin equipos registrados'}
                                         </span>
 
                                         <Link
                                             href={getActionRoute(order)}
-                                            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform"
+                                            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-transform hover:bg-blue-700 active:scale-95"
                                         >
                                             <span>{getActionLabel(order)}</span>
-                                            <ArrowRight className="w-3.5 h-3.5" />
+                                            <ArrowRight className="h-3.5 w-3.5" />
                                         </Link>
                                     </div>
                                 </div>

@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+﻿import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowLeft,
@@ -102,10 +102,15 @@ export default function InspeccionShow({
     elementosChecklist,
 }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
-    const { auth, flash } = usePage<{ auth?: { user?: { name?: string } }; flash?: { success?: string; error?: string } }>().props;
+    const { auth, flash } = usePage<{
+        auth?: { user?: { name?: string } };
+        flash?: { success?: string; error?: string };
+    }>().props;
 
     // Estado para extintor seleccionado para evaluar checklist
-    const [evaluatingEquipmentId, setEvaluatingEquipmentId] = useState<number | null>(null);
+    const [evaluatingEquipmentId, setEvaluatingEquipmentId] = useState<
+        number | null
+    >(null);
     const [showAddEquipmentModal, setShowAddEquipmentModal] = useState(false);
 
     // Formulario para agregar extintor
@@ -128,7 +133,7 @@ export default function InspeccionShow({
                     setShowAddEquipmentModal(false);
                     addEquipmentForm.reset();
                 },
-            }
+            },
         );
     };
 
@@ -144,11 +149,16 @@ export default function InspeccionShow({
     const handleComplete = (e: React.FormEvent) => {
         e.preventDefault();
         completeForm.post(
-            `/${teamSlug}/tecnico-campo/inspecciones/${order.id}/finalizar`
+            `/${teamSlug}/tecnico-campo/inspecciones/${order.id}/finalizar`,
         );
     };
 
-    const isFinalizada = ['listo_entrega', 'en_ruta_entrega', 'entregado', 'cerrado'].includes(order.estado);
+    const isFinalizada = [
+        'listo_entrega',
+        'en_ruta_entrega',
+        'entregado',
+        'cerrado',
+    ].includes(order.estado);
 
     return (
         <TecnicoCampoLayout title={`Inspección ${order.codigo}`}>
@@ -158,50 +168,53 @@ export default function InspeccionShow({
             <div className="mb-4 flex items-center justify-between">
                 <Link
                     href={`/${teamSlug}/tecnico-campo/inspecciones`}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#6B6965] hover:text-[#201F1D]"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver al listado</span>
                 </Link>
-                <span className="font-mono text-xs font-black text-[#0284C7]">
+                <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
                     {order.codigo}
                 </span>
             </div>
 
             {flash?.success && (
-                <div className="mb-4 rounded-[10px] border border-[#BBF7D0] bg-[#DCFCE7] p-3 text-xs font-medium text-[#166534]">
+                <div className="mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     {flash.success}
                 </div>
             )}
 
             {/* Header Data Card (§24) */}
-            <div className="mb-5 rounded-[14px] border border-[#E4E1DC] bg-white p-4 shadow-xs">
-                <div className="flex items-start justify-between gap-2 border-b border-[#F3F1ED] pb-3 mb-3">
+            <div className="mb-5 rounded-[14px] border border-border bg-card p-4 shadow-xs">
+                <div className="mb-3 flex items-start justify-between gap-2 border-b border-border pb-3">
                     <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B6965]">
+                        <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
                             Cliente & Sede de Inspección
                         </span>
-                        <h1 className="text-base font-black text-[#201F1D] leading-snug">
+                        <h1 className="text-base leading-snug font-black text-foreground">
                             {order.client.razon_social}
                         </h1>
                         {order.client.numero_documento && (
-                            <span className="text-xs font-mono text-[#6B6965]">
+                            <span className="font-mono text-xs text-muted-foreground">
                                 RUC/DNI: {order.client.numero_documento}
                             </span>
                         )}
                     </div>
-                    <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-[10px] font-black text-[#0369A1]">
+                    <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[10px] font-black text-sky-700 dark:text-sky-400">
                         {order.estado.replace('_', ' ').toUpperCase()}
                     </span>
                 </div>
 
                 <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2">
-                        <MapPin className="size-4 text-[#0284C7] shrink-0 mt-0.5" />
+                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-600 dark:text-sky-400" />
                         <div>
-                            <span className="font-semibold text-[#201F1D]">Dirección: </span>
-                            <span className="text-[#6B6965]">
-                                {order.client.direccion_fiscal || 'Sede principal del cliente'}
+                            <span className="font-semibold text-foreground">
+                                Dirección:{' '}
+                            </span>
+                            <span className="text-muted-foreground">
+                                {order.client.direccion_fiscal ||
+                                    'Sede principal del cliente'}
                             </span>
                         </div>
                     </div>
@@ -209,12 +222,14 @@ export default function InspeccionShow({
                     {order.client.telefono && (
                         <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
-                                <Phone className="size-4 text-[#16A34A] shrink-0" />
-                                <span className="font-mono text-[#201F1D]">{order.client.telefono}</span>
+                                <Phone className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <span className="font-mono text-foreground">
+                                    {order.client.telefono}
+                                </span>
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-[#BBF7D0] bg-[#DCFCE7] px-2.5 py-1 text-[11px] font-bold text-[#166534] active:scale-95"
+                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 active:scale-95"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -228,19 +243,20 @@ export default function InspeccionShow({
             <div className="mb-6">
                 <div className="mb-3 flex items-center justify-between">
                     <div>
-                        <h2 className="text-sm font-black text-[#201F1D] flex items-center gap-1.5">
-                            <Flame className="size-4 text-[#EA580C]" />
-                            Extintores a Inspeccionar ({order.equipments.length})
+                        <h2 className="flex items-center gap-1.5 text-sm font-black text-foreground">
+                            <Flame className="size-4 text-amber-600 dark:text-amber-400" />
+                            Extintores a Inspeccionar ({order.equipments.length}
+                            )
                         </h2>
-                        <p className="text-[11px] text-[#6B6965]">
-                            Inspección física individual en sitio (§24).
+                        <p className="text-[11px] text-muted-foreground">
+                            Inspección física individual en sitio.
                         </p>
                     </div>
                     {!isFinalizada && (
                         <button
                             type="button"
                             onClick={() => setShowAddEquipmentModal(true)}
-                            className="inline-flex items-center gap-1 rounded-[8px] border border-[#0284C7] bg-[#E0F2FE] px-2.5 py-1.5 text-xs font-bold text-[#0284C7] active:scale-95"
+                            className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold text-sky-600 dark:text-sky-400 active:scale-95"
                         >
                             <Plus className="size-3.5" />
                             Agregar Extintor
@@ -250,35 +266,52 @@ export default function InspeccionShow({
 
                 {/* Modal for adding/linking equipment */}
                 {showAddEquipmentModal && (
-                    <div className="mb-4 rounded-[14px] border-2 border-[#0284C7] bg-white p-4 shadow-md">
-                        <div className="flex items-center justify-between mb-3 border-b border-[#F3F1ED] pb-2">
-                            <h3 className="text-xs font-black text-[#201F1D]">
+                    <div className="mb-4 rounded-[14px] border-2 border-sky-500/20 bg-card p-4 shadow-md">
+                        <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
+                            <h3 className="text-xs font-black text-foreground">
                                 Registrar Extintor en Inspección
                             </h3>
                             <button
                                 type="button"
                                 onClick={() => setShowAddEquipmentModal(false)}
-                                className="text-xs font-bold text-[#6B6965]"
+                                className="text-xs font-bold text-muted-foreground"
                             >
                                 Cancelar
                             </button>
                         </div>
 
-                        <form onSubmit={handleAddEquipment} className="space-y-3">
+                        <form
+                            onSubmit={handleAddEquipment}
+                            className="space-y-3"
+                        >
                             {customerEquipments.length > 0 && (
                                 <div>
-                                    <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
+                                    <label className="mb-1 block text-[11px] font-bold text-foreground">
                                         Seleccionar existente del cliente:
                                     </label>
                                     <select
-                                        value={addEquipmentForm.data.equipment_id}
-                                        onChange={(e) => addEquipmentForm.setData('equipment_id', e.target.value)}
-                                        className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                        value={
+                                            addEquipmentForm.data.equipment_id
+                                        }
+                                        onChange={(e) =>
+                                            addEquipmentForm.setData(
+                                                'equipment_id',
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                                     >
-                                        <option value="">-- Crear nuevo extintor en sitio --</option>
+                                        <option value="">
+                                            -- Crear nuevo extintor en sitio --
+                                        </option>
                                         {customerEquipments.map((eq) => (
                                             <option key={eq.id} value={eq.id}>
-                                                {eq.numero_serie} - {eq.tipo_agente} {eq.capacidad} ({eq.ubicacion_actual || 'Sin ubicación'})
+                                                {eq.numero_serie} -{' '}
+                                                {eq.tipo_agente} {eq.capacidad}{' '}
+                                                (
+                                                {eq.ubicacion_actual ||
+                                                    'Sin ubicación'}
+                                                )
                                             </option>
                                         ))}
                                     </select>
@@ -288,42 +321,68 @@ export default function InspeccionShow({
                             {!addEquipmentForm.data.equipment_id && (
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-[#6B6965] mb-0.5">
+                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
                                             Agente
                                         </label>
                                         <select
-                                            value={addEquipmentForm.data.tipo_agente}
-                                            onChange={(e) => addEquipmentForm.setData('tipo_agente', e.target.value)}
-                                            className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                            value={
+                                                addEquipmentForm.data
+                                                    .tipo_agente
+                                            }
+                                            onChange={(e) =>
+                                                addEquipmentForm.setData(
+                                                    'tipo_agente',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                                         >
                                             <option value="PQS">PQS</option>
                                             <option value="CO2">CO2</option>
                                             <option value="Agua">Agua</option>
-                                            <option value="Acetato de Potasio">Acetato K</option>
+                                            <option value="Acetato de Potasio">
+                                                Acetato K
+                                            </option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-[#6B6965] mb-0.5">
+                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
                                             Capacidad
                                         </label>
                                         <input
                                             type="text"
-                                            value={addEquipmentForm.data.capacidad}
-                                            onChange={(e) => addEquipmentForm.setData('capacidad', e.target.value)}
+                                            value={
+                                                addEquipmentForm.data.capacidad
+                                            }
+                                            onChange={(e) =>
+                                                addEquipmentForm.setData(
+                                                    'capacidad',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="ej. 6 kg, 10 lbs"
-                                            className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                            className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="block text-[10px] font-bold text-[#6B6965] mb-0.5">
-                                            Ubicación en Sede (Oficina, Pasillo, etc.)
+                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
+                                            Ubicación en Sede (Oficina, Pasillo,
+                                            etc.)
                                         </label>
                                         <input
                                             type="text"
-                                            value={addEquipmentForm.data.ubicacion_actual}
-                                            onChange={(e) => addEquipmentForm.setData('ubicacion_actual', e.target.value)}
+                                            value={
+                                                addEquipmentForm.data
+                                                    .ubicacion_actual
+                                            }
+                                            onChange={(e) =>
+                                                addEquipmentForm.setData(
+                                                    'ubicacion_actual',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="ej. Almacén 2do piso / Puerta Principal"
-                                            className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                            className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                                         />
                                     </div>
                                 </div>
@@ -332,7 +391,7 @@ export default function InspeccionShow({
                             <button
                                 type="submit"
                                 disabled={addEquipmentForm.processing}
-                                className="w-full min-h-[44px] rounded-[10px] bg-[#0284C7] text-white font-bold text-xs shadow-sm hover:bg-[#0369A1] transition-all"
+                                className="min-h-[44px] w-full rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700"
                             >
                                 Vincular a la Inspección
                             </button>
@@ -343,15 +402,18 @@ export default function InspeccionShow({
                 {/* List of Extinguishers as Cards */}
                 <div className="space-y-3">
                     {order.equipments.length === 0 ? (
-                        <div className="rounded-[12px] border border-dashed border-[#CBD5E1] bg-white p-6 text-center">
-                            <p className="text-xs text-[#6B6965]">
-                                No hay extintores vinculados a esta orden todavía.
+                        <div className="rounded-[12px] border border-dashed border-border bg-card p-6 text-center">
+                            <p className="text-xs text-muted-foreground">
+                                No hay extintores vinculados a esta orden
+                                todavía.
                             </p>
                             {!isFinalizada && (
                                 <button
                                     type="button"
-                                    onClick={() => setShowAddEquipmentModal(true)}
-                                    className="mt-2 text-xs font-bold text-[#0284C7] underline"
+                                    onClick={() =>
+                                        setShowAddEquipmentModal(true)
+                                    }
+                                    className="mt-2 text-xs font-bold text-sky-600 dark:text-sky-400 underline"
                                 >
                                     + Agregar primer extintor
                                 </button>
@@ -360,43 +422,49 @@ export default function InspeccionShow({
                     ) : (
                         order.equipments.map((eq) => {
                             const latestChecklist = eq.checklists?.[0];
-                            const isEvaluating = evaluatingEquipmentId === eq.id;
+                            const isEvaluating =
+                                evaluatingEquipmentId === eq.id;
 
                             return (
                                 <div
                                     key={eq.id}
-                                    className="rounded-[14px] border border-[#E4E1DC] bg-white p-4 shadow-xs"
+                                    className="rounded-[14px] border border-border bg-card p-4 shadow-xs"
                                 >
-                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="mb-2 flex items-start justify-between gap-2">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-mono text-sm font-black text-[#201F1D]">
+                                                <span className="font-mono text-sm font-black text-foreground">
                                                     {eq.numero_serie}
                                                 </span>
-                                                <span className="rounded-md bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-bold text-[#374151]">
-                                                    {eq.tipo_agente} {eq.capacidad}
+                                                <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                                                    {eq.tipo_agente}{' '}
+                                                    {eq.capacidad}
                                                 </span>
                                             </div>
-                                            <p className="text-[11px] text-[#6B6965] mt-0.5">
-                                                <span className="font-semibold text-[#201F1D]">Ubicación: </span>
-                                                {eq.ubicacion_actual || 'No asignada'}
+                                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                                <span className="font-semibold text-foreground">
+                                                    Ubicación:{' '}
+                                                </span>
+                                                {eq.ubicacion_actual ||
+                                                    'No asignada'}
                                             </p>
                                         </div>
 
                                         {latestChecklist ? (
-                                            latestChecklist.resultado_general === 'conforme' ? (
-                                                <span className="inline-flex items-center gap-1 rounded-full border border-[#BBF7D0] bg-[#DCFCE7] px-2 py-0.5 text-[10px] font-bold text-[#166534]">
+                                            latestChecklist.resultado_general ===
+                                            'conforme' ? (
+                                                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                                                     <CheckCircle2 className="size-3" />
                                                     Conforme
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 rounded-full border border-[#FECACA] bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold text-[#991B1B]">
+                                                <span className="inline-flex items-center gap-1 rounded-full border border-destructive/20 bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive">
                                                     <AlertCircle className="size-3" />
                                                     Con Observación
                                                 </span>
                                             )
                                         ) : (
-                                            <span className="rounded-full border border-[#FDE68A] bg-[#FEF3C7] px-2 py-0.5 text-[10px] font-bold text-[#92400E]">
+                                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
                                                 Pendiente
                                             </span>
                                         )}
@@ -404,14 +472,28 @@ export default function InspeccionShow({
 
                                     {/* Action button for Checklist */}
                                     {!isFinalizada && (
-                                        <div className="mt-3 border-t border-[#F3F1ED] pt-2.5">
+                                        <div className="mt-3 border-t border-border pt-2.5">
                                             <button
                                                 type="button"
-                                                onClick={() => setEvaluatingEquipmentId(isEvaluating ? null : eq.id)}
-                                                className="flex w-full items-center justify-between min-h-[40px] rounded-[8px] bg-[#FAF9F7] px-3 text-xs font-bold text-[#0284C7] hover:bg-[#F0F9FF]"
+                                                onClick={() =>
+                                                    setEvaluatingEquipmentId(
+                                                        isEvaluating
+                                                            ? null
+                                                            : eq.id,
+                                                    )
+                                                }
+                                                className="flex min-h-[40px] w-full items-center justify-between rounded-[8px] bg-muted/40 px-3 text-xs font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10"
                                             >
-                                                <span>{latestChecklist ? 'Volver a Evaluar Checklist' : 'Comenzar Checklist Técnico'}</span>
-                                                {isEvaluating ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                                                <span>
+                                                    {latestChecklist
+                                                        ? 'Volver a Evaluar Checklist'
+                                                        : 'Comenzar Checklist Técnico'}
+                                                </span>
+                                                {isEvaluating ? (
+                                                    <ChevronUp className="size-4" />
+                                                ) : (
+                                                    <ChevronDown className="size-4" />
+                                                )}
                                             </button>
                                         </div>
                                     )}
@@ -422,8 +504,12 @@ export default function InspeccionShow({
                                             orderId={order.id}
                                             equipment={eq}
                                             teamSlug={teamSlug}
-                                            elementosChecklist={elementosChecklist}
-                                            onClose={() => setEvaluatingEquipmentId(null)}
+                                            elementosChecklist={
+                                                elementosChecklist
+                                            }
+                                            onClose={() =>
+                                                setEvaluatingEquipmentId(null)
+                                            }
                                         />
                                     )}
                                 </div>
@@ -435,27 +521,32 @@ export default function InspeccionShow({
 
             {/* Deficiencies summary if any */}
             {order.deficiencies && order.deficiencies.length > 0 && (
-                <div className="mb-6 rounded-[14px] border border-[#FECACA] bg-[#FEF2F2] p-4">
-                    <h3 className="text-xs font-black text-[#991B1B] flex items-center gap-1.5 mb-2">
-                        <AlertCircle className="size-4 text-[#DC2626]" />
+                <div className="mb-6 rounded-[14px] border border-destructive/20 bg-destructive/10 p-4">
+                    <h3 className="mb-2 flex items-center gap-1.5 text-xs font-black text-destructive">
+                        <AlertCircle className="size-4 text-destructive" />
                         Deficiencias Detectadas ({order.deficiencies.length})
                     </h3>
                     <div className="space-y-2">
                         {order.deficiencies.map((def) => (
                             <div
                                 key={def.id}
-                                className="rounded-[8px] bg-white p-2.5 border border-[#FECACA] text-xs"
+                                className="rounded-[8px] border border-destructive/20 bg-card p-2.5 text-xs"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="font-bold text-[#201F1D]">{def.componente}</span>
-                                    <span className="font-mono text-[10px] text-[#6B6965]">
+                                    <span className="font-bold text-foreground">
+                                        {def.componente}
+                                    </span>
+                                    <span className="font-mono text-[10px] text-muted-foreground">
                                         {def.equipment?.numero_serie}
                                     </span>
                                 </div>
-                                <p className="text-[11px] text-[#6B6965] mt-0.5">{def.condicion}</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    {def.condicion}
+                                </p>
                                 {def.requiere_autorizacion && (
-                                    <span className="inline-block mt-1 text-[9.5px] font-bold text-[#DC2626]">
-                                        Requiere cotización/autorización comercial
+                                    <span className="mt-1 inline-block text-[9.5px] font-bold text-destructive">
+                                        Requiere cotización/autorización
+                                        comercial
                                     </span>
                                 )}
                             </div>
@@ -466,19 +557,24 @@ export default function InspeccionShow({
 
             {/* Certificates emitted if any */}
             {order.certificates && order.certificates.length > 0 && (
-                <div className="mb-6 rounded-[14px] border border-[#BBF7D0] bg-[#F0FDF4] p-4">
-                    <h3 className="text-xs font-black text-[#166534] flex items-center gap-1.5 mb-2">
-                        <FileCheck className="size-4 text-[#16A34A]" />
+                <div className="mb-6 rounded-[14px] border border-emerald-500/20 bg-emerald-500/10 p-4">
+                    <h3 className="mb-2 flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                        <FileCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
                         Certificados Emitidos
                     </h3>
                     <div className="space-y-1.5">
                         {order.certificates.map((cert) => (
                             <div
                                 key={cert.id}
-                                className="flex items-center justify-between rounded-[8px] bg-white p-2.5 border border-[#BBF7D0] text-xs"
+                                className="flex items-center justify-between rounded-[8px] border border-emerald-500/20 bg-card p-2.5 text-xs"
                             >
-                                <span className="font-bold text-[#201F1D]">{cert.certificateType?.nombre || 'Certificado'}</span>
-                                <span className="font-mono text-[#166534] font-bold">{cert.numero}</span>
+                                <span className="font-bold text-foreground">
+                                    {cert.certificateType?.nombre ||
+                                        'Certificado'}
+                                </span>
+                                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                    {cert.numero}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -487,94 +583,133 @@ export default function InspeccionShow({
 
             {/* Finalize Inspection Form (§24, §85.6.2) */}
             {!isFinalizada && (
-                <div className="rounded-[14px] border border-[#E4E1DC] bg-white p-4 shadow-sm">
-                    <h2 className="text-sm font-black text-[#201F1D] flex items-center gap-2 mb-1">
-                        <UserCheck className="size-4 text-[#0284C7]" />
+                <div className="rounded-[14px] border border-border bg-card p-4 shadow-sm">
+                    <h2 className="mb-1 flex items-center gap-2 text-sm font-black text-foreground">
+                        <UserCheck className="size-4 text-sky-600 dark:text-sky-400" />
                         Finalizar Inspección y Conformidad en Sitio
                     </h2>
-                    <p className="text-[11px] text-[#6B6965] mb-4">
-                        Cierre técnico con conformidad del cliente (§24, §85.6.2).
+                    <p className="mb-4 text-[11px] text-muted-foreground">
+                        Cierre técnico con conformidad del cliente.
                     </p>
 
                     <form onSubmit={handleComplete} className="space-y-4">
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
+                                <label className="mb-1 block text-[11px] font-bold text-foreground">
                                     Responsable Técnico
                                 </label>
                                 <input
                                     type="text"
                                     value={completeForm.data.responsable}
-                                    onChange={(e) => completeForm.setData('responsable', e.target.value)}
-                                    className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-[#FAF9F7]"
+                                    onChange={(e) =>
+                                        completeForm.setData(
+                                            'responsable',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-[8px] border border-border bg-muted/40 p-2 text-xs"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
+                                <label className="mb-1 block text-[11px] font-bold text-foreground">
                                     Cargo
                                 </label>
                                 <input
                                     type="text"
                                     value={completeForm.data.cargo}
-                                    onChange={(e) => completeForm.setData('cargo', e.target.value)}
-                                    className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-[#FAF9F7]"
+                                    onChange={(e) =>
+                                        completeForm.setData(
+                                            'cargo',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-[8px] border border-border bg-muted/40 p-2 text-xs"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
-                                Nombre del Receptor / Encargado de Sede <span className="text-red-500">*</span>
+                            <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                Nombre del Receptor / Encargado de Sede{' '}
+                                <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 required
                                 value={completeForm.data.conformidad_nombre}
-                                onChange={(e) => completeForm.setData('conformidad_nombre', e.target.value)}
+                                onChange={(e) =>
+                                    completeForm.setData(
+                                        'conformidad_nombre',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Nombre completo de quien atiende la visita"
-                                className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                             />
                             {completeForm.errors.conformidad_nombre && (
-                                <p className="text-[10px] text-red-500 mt-0.5">{completeForm.errors.conformidad_nombre}</p>
+                                <p className="mt-0.5 text-[10px] text-red-500">
+                                    {completeForm.errors.conformidad_nombre}
+                                </p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-[11px] font-bold text-[#201F1D] mb-1">
+                            <label className="mb-1 block text-[11px] font-bold text-foreground">
                                 Observaciones Generales de la Visita
                             </label>
                             <textarea
                                 rows={2}
-                                value={completeForm.data.observaciones_generales}
-                                onChange={(e) => completeForm.setData('observaciones_generales', e.target.value)}
+                                value={
+                                    completeForm.data.observaciones_generales
+                                }
+                                onChange={(e) =>
+                                    completeForm.setData(
+                                        'observaciones_generales',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Notas sobre accesibilidad, señalética, altura de montaje..."
-                                className="w-full text-xs rounded-[8px] border border-[#E4E1DC] p-2 bg-white"
+                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
                             />
                         </div>
 
                         {/* Checkbox de conformidad (§85.6.2) */}
-                        <div className="rounded-[10px] border border-[#BAE6FD] bg-[#F0F9FF] p-3">
-                            <label className="flex items-start gap-2.5 cursor-pointer">
+                        <div className="rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3">
+                            <label className="flex cursor-pointer items-start gap-2.5">
                                 <input
                                     type="checkbox"
                                     required
-                                    checked={completeForm.data.conformidad_aceptada}
-                                    onChange={(e) => completeForm.setData('conformidad_aceptada', e.target.checked)}
-                                    className="size-4 mt-0.5 rounded border-[#0284C7] text-[#0284C7] focus:ring-[#0284C7]"
+                                    checked={
+                                        completeForm.data.conformidad_aceptada
+                                    }
+                                    onChange={(e) =>
+                                        completeForm.setData(
+                                            'conformidad_aceptada',
+                                            e.target.checked,
+                                        )
+                                    }
+                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-600 dark:text-sky-400 focus:ring-[#0284C7]"
                                 />
-                                <span className="text-xs font-semibold text-[#0369A1] leading-tight">
-                                    Conformidad en sitio: El encargado del cliente valida la inspección y el inventario de extintores revisados.
+                                <span className="text-xs leading-tight font-semibold text-sky-700 dark:text-sky-400">
+                                    Conformidad en sitio: El encargado del
+                                    cliente valida la inspección y el inventario
+                                    de extintores revisados.
                                 </span>
                             </label>
                             {completeForm.errors.conformidad_aceptada && (
-                                <p className="text-[10px] text-red-500 mt-1">{completeForm.errors.conformidad_aceptada}</p>
+                                <p className="mt-1 text-[10px] text-red-500">
+                                    {completeForm.errors.conformidad_aceptada}
+                                </p>
                             )}
                         </div>
 
                         <button
                             type="submit"
-                            disabled={completeForm.processing || !completeForm.data.conformidad_aceptada}
-                            className="w-full min-h-[48px] rounded-[10px] bg-[#0284C7] text-white font-bold text-xs shadow-sm hover:bg-[#0369A1] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            disabled={
+                                completeForm.processing ||
+                                !completeForm.data.conformidad_aceptada
+                            }
+                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
                             <span>Finalizar y Guardar Inspección de Campo</span>
@@ -605,17 +740,28 @@ function InlineChecklistForm({
     const isCo2 = (equipment.tipo_agente || '').toUpperCase().includes('CO2');
 
     // Inicializar los estados de los 14 elementos
-    const initialItems = Object.keys(elementosChecklist).reduce((acc, clave) => {
-        // En CO2, manómetro no aplica automáticamente (§19)
-        const autoNoAplica = isCo2 && clave === 'manometro';
-        acc[clave] = {
-            estado: autoNoAplica ? 'no_aplica' : 'conforme',
-            condicion: '',
-            nota: '',
-            requiere_autorizacion: false,
-        };
-        return acc;
-    }, {} as Record<string, { estado: string; condicion: string; nota: string; requiere_autorizacion: boolean }>);
+    const initialItems = Object.keys(elementosChecklist).reduce(
+        (acc, clave) => {
+            // En CO2, manómetro no aplica automáticamente (§19)
+            const autoNoAplica = isCo2 && clave === 'manometro';
+            acc[clave] = {
+                estado: autoNoAplica ? 'no_aplica' : 'conforme',
+                condicion: '',
+                nota: '',
+                requiere_autorizacion: false,
+            };
+            return acc;
+        },
+        {} as Record<
+            string,
+            {
+                estado: string;
+                condicion: string;
+                nota: string;
+                requiere_autorizacion: boolean;
+            }
+        >,
+    );
 
     const checklistForm = useForm({
         items: initialItems,
@@ -648,60 +794,80 @@ function InlineChecklistForm({
             `/${teamSlug}/tecnico-campo/inspecciones/${orderId}/equipos/${equipment.id}/checklist`,
             {
                 onSuccess: () => onClose(),
-            }
+            },
         );
     };
 
     return (
-        <form onSubmit={handleSubmit} className="mt-3 rounded-[10px] border border-[#BAE6FD] bg-[#F0F9FF] p-3 space-y-3">
-            <div className="flex items-center justify-between border-b border-[#BAE6FD] pb-2">
-                <span className="text-xs font-black text-[#0369A1]">
+        <form
+            onSubmit={handleSubmit}
+            className="mt-3 space-y-3 rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3"
+        >
+            <div className="flex items-center justify-between border-b border-sky-500/20 pb-2">
+                <span className="text-xs font-black text-sky-700 dark:text-sky-400">
                     Evaluación Checklist: {equipment.numero_serie}
                 </span>
-                <button type="button" onClick={onClose} className="text-[11px] font-bold text-[#6B6965]">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="text-[11px] font-bold text-muted-foreground"
+                >
                     Cerrar
                 </button>
             </div>
 
             <div className="space-y-2">
                 {Object.entries(elementosChecklist).map(([clave, nombre]) => {
-                    const item = checklistForm.data.items[clave] || { estado: 'conforme' };
+                    const item = checklistForm.data.items[clave] || {
+                        estado: 'conforme',
+                    };
                     const isObservado = item.estado === 'observado';
 
                     return (
-                        <div key={clave} className="rounded-[8px] bg-white p-2.5 border border-[#E4E1DC]">
-                            <div className="flex items-center justify-between gap-2 mb-1.5">
-                                <span className="text-[11px] font-bold text-[#201F1D]">{nombre}</span>
+                        <div
+                            key={clave}
+                            className="rounded-[8px] border border-border bg-card p-2.5"
+                        >
+                            <div className="mb-1.5 flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-bold text-foreground">
+                                    {nombre}
+                                </span>
                                 <div className="flex items-center gap-1">
                                     <button
                                         type="button"
-                                        onClick={() => setItemEstado(clave, 'conforme')}
-                                        className={`px-2 py-1 rounded-[6px] text-[10px] font-bold min-h-[32px] transition-all ${
+                                        onClick={() =>
+                                            setItemEstado(clave, 'conforme')
+                                        }
+                                        className={`min-h-[32px] rounded-[6px] px-2 py-1 text-[10px] font-bold transition-all ${
                                             item.estado === 'conforme'
-                                                ? 'bg-[#16A34A] text-white shadow-xs'
-                                                : 'bg-[#F3F4F6] text-[#374151]'
+                                                ? 'bg-emerald-600 text-white shadow-xs'
+                                                : 'bg-muted text-muted-foreground'
                                         }`}
                                     >
                                         OK
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setItemEstado(clave, 'observado')}
-                                        className={`px-2 py-1 rounded-[6px] text-[10px] font-bold min-h-[32px] transition-all ${
+                                        onClick={() =>
+                                            setItemEstado(clave, 'observado')
+                                        }
+                                        className={`min-h-[32px] rounded-[6px] px-2 py-1 text-[10px] font-bold transition-all ${
                                             item.estado === 'observado'
-                                                ? 'bg-[#DC2626] text-white shadow-xs'
-                                                : 'bg-[#F3F4F6] text-[#374151]'
+                                                ? 'bg-destructive text-white shadow-xs'
+                                                : 'bg-muted text-muted-foreground'
                                         }`}
                                     >
                                         Obs
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setItemEstado(clave, 'no_aplica')}
-                                        className={`px-2 py-1 rounded-[6px] text-[10px] font-bold min-h-[32px] transition-all ${
+                                        onClick={() =>
+                                            setItemEstado(clave, 'no_aplica')
+                                        }
+                                        className={`min-h-[32px] rounded-[6px] px-2 py-1 text-[10px] font-bold transition-all ${
                                             item.estado === 'no_aplica'
-                                                ? 'bg-[#4B5563] text-white shadow-xs'
-                                                : 'bg-[#F3F4F6] text-[#374151]'
+                                                ? 'bg-muted-foreground text-white shadow-xs'
+                                                : 'bg-muted text-muted-foreground'
                                         }`}
                                     >
                                         N/A
@@ -711,22 +877,40 @@ function InlineChecklistForm({
 
                             {/* Detalle si está observado */}
                             {isObservado && (
-                                <div className="mt-2 space-y-1.5 border-t border-[#FEE2E2] pt-2">
+                                <div className="mt-2 space-y-1.5 border-t border-destructive/20 pt-2">
                                     <input
                                         type="text"
                                         placeholder="Descripción de la condición observada..."
                                         value={item.condicion || ''}
-                                        onChange={(e) => setItemField(clave, 'condicion', e.target.value)}
-                                        className="w-full text-xs rounded-[6px] border border-[#FECACA] p-1.5 bg-[#FEF2F2]"
+                                        onChange={(e) =>
+                                            setItemField(
+                                                clave,
+                                                'condicion',
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="w-full rounded-[6px] border border-destructive/20 bg-destructive/10 p-1.5 text-xs"
                                     />
-                                    <label className="flex items-center gap-1.5 text-[10.5px] font-semibold text-[#DC2626]">
+                                    <label className="flex items-center gap-1.5 text-[10.5px] font-semibold text-destructive">
                                         <input
                                             type="checkbox"
-                                            checked={item.requiere_autorizacion || false}
-                                            onChange={(e) => setItemField(clave, 'requiere_autorizacion', e.target.checked)}
-                                            className="size-3.5 rounded border-[#DC2626] text-[#DC2626]"
+                                            checked={
+                                                item.requiere_autorizacion ||
+                                                false
+                                            }
+                                            onChange={(e) =>
+                                                setItemField(
+                                                    clave,
+                                                    'requiere_autorizacion',
+                                                    e.target.checked,
+                                                )
+                                            }
+                                            className="size-3.5 rounded border-destructive/20 text-destructive"
                                         />
-                                        <span>Requiere cotización/autorización de cliente</span>
+                                        <span>
+                                            Requiere cotización/autorización de
+                                            cliente
+                                        </span>
                                     </label>
                                 </div>
                             )}
@@ -738,7 +922,7 @@ function InlineChecklistForm({
             <button
                 type="submit"
                 disabled={checklistForm.processing}
-                className="w-full min-h-[44px] rounded-[8px] bg-[#16A34A] text-white font-bold text-xs shadow-sm hover:bg-[#15803D]"
+                className="min-h-[44px] w-full rounded-[8px] bg-emerald-600 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
             >
                 Guardar Checklist de este Extintor
             </button>

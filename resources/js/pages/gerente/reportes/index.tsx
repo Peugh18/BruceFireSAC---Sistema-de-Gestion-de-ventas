@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+﻿import { router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Award,
@@ -74,20 +74,39 @@ function formatCurrency(amount: number): string {
 }
 
 export default function ReportesIndex() {
-    const { currentTeam, tipo, reporteComercial, reporteInventario, vendedores, sedes, filters } =
-        usePage<PageProps>().props;
+    const {
+        currentTeam,
+        tipo,
+        reporteComercial,
+        reporteInventario,
+        vendedores,
+        sedes,
+        filters,
+    } = usePage<PageProps>().props;
 
     // Filtros Comercial
-    const [fechaDesde, setFechaDesde] = useState((filters.fecha_desde as string) || '');
-    const [fechaHasta, setFechaHasta] = useState((filters.fecha_hasta as string) || '');
-    const [vendedorId, setVendedorId] = useState((filters.vendedor_id as string) || '');
+    const [fechaDesde, setFechaDesde] = useState(
+        (filters.fecha_desde as string) || '',
+    );
+    const [fechaHasta, setFechaHasta] = useState(
+        (filters.fecha_hasta as string) || '',
+    );
+    const [vendedorId, setVendedorId] = useState(
+        (filters.vendedor_id as string) || '',
+    );
 
     // Filtros Inventario
     const [sedeId, setSedeId] = useState((filters.sede_id as string) || '');
-    const [soloBajoMinimo, setSoloBajoMinimo] = useState((filters.solo_bajo_minimo as boolean) || false);
+    const [soloBajoMinimo, setSoloBajoMinimo] = useState(
+        (filters.solo_bajo_minimo as boolean) || false,
+    );
 
     const switchTipo = (newTipo: 'comercial' | 'inventario') => {
-        router.get(`/${currentTeam.slug}/gerente/reportes`, { tipo: newTipo }, { preserveState: true });
+        router.get(
+            `/${currentTeam.slug}/gerente/reportes`,
+            { tipo: newTipo },
+            { preserveState: true },
+        );
     };
 
     const applyComercialFilters = () => {
@@ -99,7 +118,7 @@ export default function ReportesIndex() {
                 fecha_hasta: fechaHasta || undefined,
                 vendedor_id: vendedorId || undefined,
             },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -111,7 +130,7 @@ export default function ReportesIndex() {
                 sede_id: sedeId || undefined,
                 solo_bajo_minimo: soloBajoMinimo ? '1' : undefined,
             },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -122,7 +141,10 @@ export default function ReportesIndex() {
             ...(vendedorId ? { vendedor_id: vendedorId } : {}),
         }).toString();
 
-        window.open(`/${currentTeam.slug}/gerente/reportes/comercial/pdf?${query}`, '_blank');
+        window.open(
+            `/${currentTeam.slug}/gerente/reportes/comercial/pdf?${query}`,
+            '_blank',
+        );
     };
 
     const handleDownloadInventarioPdf = () => {
@@ -131,7 +153,10 @@ export default function ReportesIndex() {
             ...(soloBajoMinimo ? { solo_bajo_minimo: '1' } : {}),
         }).toString();
 
-        window.open(`/${currentTeam.slug}/gerente/reportes/inventario/pdf?${query}`, '_blank');
+        window.open(
+            `/${currentTeam.slug}/gerente/reportes/inventario/pdf?${query}`,
+            '_blank',
+        );
     };
 
     return (
@@ -140,23 +165,24 @@ export default function ReportesIndex() {
                 {/* Cabecera y Selector de Reporte */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
-                        <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-[#201F1D] uppercase">
+                        <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
                             Reportes Gerenciales
                         </h1>
-                        <p className="mt-1 text-sm text-[#8A8680]">
-                            Análisis comercial, conversión de cotizaciones, valorización de inventario y rotación (§34).
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Análisis comercial, conversión de cotizaciones,
+                            valorización de inventario y rotación.
                         </p>
                     </div>
 
                     {/* Botones de Selección de Reporte */}
-                    <div className="inline-flex rounded-xl border border-[#E7E4DE] bg-white p-1 shadow-xs text-xs font-semibold">
+                    <div className="inline-flex rounded-xl border border-border bg-card p-1 text-xs font-semibold shadow-xs">
                         <button
                             type="button"
                             onClick={() => switchTipo('comercial')}
                             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 transition-colors ${
                                 tipo === 'comercial'
-                                    ? 'bg-[#201F1D] text-white'
-                                    : 'text-[#6B6965] hover:text-[#201F1D]'
+                                    ? 'bg-foreground text-background'
+                                    : 'text-muted-foreground hover:text-foreground'
                             }`}
                         >
                             <TrendingUp className="size-4" />
@@ -167,8 +193,8 @@ export default function ReportesIndex() {
                             onClick={() => switchTipo('inventario')}
                             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 transition-colors ${
                                 tipo === 'inventario'
-                                    ? 'bg-[#201F1D] text-white'
-                                    : 'text-[#6B6965] hover:text-[#201F1D]'
+                                    ? 'bg-foreground text-background'
+                                    : 'text-muted-foreground hover:text-foreground'
                             }`}
                         >
                             <Boxes className="size-4" />
@@ -181,34 +207,48 @@ export default function ReportesIndex() {
                 {tipo === 'comercial' && reporteComercial && (
                     <div className="space-y-6">
                         {/* Filtros Comercial */}
-                        <div className="flex flex-col gap-3 rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs md:flex-row md:items-end md:justify-between text-xs">
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 flex-1">
+                        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
+                            <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
                                 <div>
-                                    <label className="block font-semibold text-[#4A4742]">Fecha Desde</label>
+                                    <label className="block font-semibold text-foreground/80">
+                                        Fecha Desde
+                                    </label>
                                     <input
                                         type="date"
                                         value={fechaDesde}
-                                        onChange={(e) => setFechaDesde(e.target.value)}
-                                        className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-1.5 focus:border-[#201F1D] focus:outline-none"
+                                        onChange={(e) =>
+                                            setFechaDesde(e.target.value)
+                                        }
+                                        className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 focus:border-primary focus:outline-none"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-semibold text-[#4A4742]">Fecha Hasta</label>
+                                    <label className="block font-semibold text-foreground/80">
+                                        Fecha Hasta
+                                    </label>
                                     <input
                                         type="date"
                                         value={fechaHasta}
-                                        onChange={(e) => setFechaHasta(e.target.value)}
-                                        className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-1.5 focus:border-[#201F1D] focus:outline-none"
+                                        onChange={(e) =>
+                                            setFechaHasta(e.target.value)
+                                        }
+                                        className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 focus:border-primary focus:outline-none"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-semibold text-[#4A4742]">Vendedor</label>
+                                    <label className="block font-semibold text-foreground/80">
+                                        Vendedor
+                                    </label>
                                     <select
                                         value={vendedorId}
-                                        onChange={(e) => setVendedorId(e.target.value)}
-                                        className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-1.5 focus:border-[#201F1D] focus:outline-none"
+                                        onChange={(e) =>
+                                            setVendedorId(e.target.value)
+                                        }
+                                        className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 focus:border-primary focus:outline-none"
                                     >
-                                        <option value="">Todos los vendedores</option>
+                                        <option value="">
+                                            Todos los vendedores
+                                        </option>
                                         {vendedores.map((v) => (
                                             <option key={v.id} value={v.id}>
                                                 {v.name}
@@ -222,7 +262,7 @@ export default function ReportesIndex() {
                                 <button
                                     type="button"
                                     onClick={applyComercialFilters}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E7E4DE] bg-white px-3.5 py-1.5 font-semibold text-[#4A4742] hover:bg-[#F3F1ED]"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 font-semibold text-foreground/80 hover:bg-background"
                                 >
                                     <Filter className="size-3.5" />
                                     <span>Filtrar</span>
@@ -230,7 +270,7 @@ export default function ReportesIndex() {
                                 <button
                                     type="button"
                                     onClick={handleDownloadComercialPdf}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#E31E24] px-4 py-1.5 font-semibold text-white hover:bg-[#c9181d] shadow-xs"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 font-semibold text-white shadow-xs hover:bg-primary/90"
                                 >
                                     <Download className="size-3.5" />
                                     <span>Exportar PDF</span>
@@ -240,88 +280,127 @@ export default function ReportesIndex() {
 
                         {/* KPIs Comerciales */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                                    <span className="font-medium uppercase">Ventas Totales</span>
+                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-medium uppercase">
+                                        Ventas Totales
+                                    </span>
                                     <CircleDollarSign className="size-4 text-emerald-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#201F1D]">
-                                    {formatCurrency(reporteComercial.totalVentas)}
+                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                    {formatCurrency(
+                                        reporteComercial.totalVentas,
+                                    )}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-[#8A8680]">Monto neto sin notas anuladas</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Monto neto sin notas anuladas
+                                </p>
                             </div>
 
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                                    <span className="font-medium uppercase">Total de Operaciones</span>
+                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-medium uppercase">
+                                        Total de Operaciones
+                                    </span>
                                     <FileText className="size-4 text-blue-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#201F1D]">
+                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
                                     {reporteComercial.cantidadVentas}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-[#8A8680]">Ventas confirmadas en el período</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Ventas confirmadas en el período
+                                </p>
                             </div>
 
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                                    <span className="font-medium uppercase">Ticket Promedio</span>
+                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-medium uppercase">
+                                        Ticket Promedio
+                                    </span>
                                     <TrendingUp className="size-4 text-purple-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#201F1D]">
-                                    {formatCurrency(reporteComercial.ticketPromedio)}
+                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                    {formatCurrency(
+                                        reporteComercial.ticketPromedio,
+                                    )}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-[#8A8680]">Promedio por comprobante</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Promedio por comprobante
+                                </p>
                             </div>
 
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                                    <span className="font-medium uppercase">Conversión Cotizaciones</span>
+                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-medium uppercase">
+                                        Conversión Cotizaciones
+                                    </span>
                                     <Percent className="size-4 text-amber-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#201F1D]">
+                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
                                     {reporteComercial.tasaConversion}%
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-[#8A8680]">Efectividad de cierre comercial</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Efectividad de cierre comercial
+                                </p>
                             </div>
                         </div>
 
                         {/* Tablas de Desglose Comercial */}
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                             {/* Desglose por Vendedor */}
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-5 shadow-xs">
-                                <h3 className="font-['Oswald',sans-serif] text-base font-bold text-[#201F1D] uppercase">
+                            <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+                                <h3 className="font-['Oswald',sans-serif] text-base font-bold text-foreground uppercase">
                                     Ventas por Vendedor
                                 </h3>
-                                <p className="text-xs text-[#8A8680] mb-4">Rendimiento individual del equipo de ventas</p>
+                                <p className="mb-4 text-xs text-muted-foreground">
+                                    Rendimiento individual del equipo de ventas
+                                </p>
 
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs">
-                                        <thead className="border-b border-[#E7E4DE] bg-[#FAFAF8] text-[10px] text-[#8A8680] uppercase">
+                                        <thead className="border-b border-border bg-muted/40 text-[10px] text-muted-foreground uppercase">
                                             <tr>
-                                                <th className="px-3 py-2">Vendedor</th>
-                                                <th className="px-3 py-2 text-center">Operaciones</th>
-                                                <th className="px-3 py-2 text-right">Total Facturado</th>
+                                                <th className="px-3 py-2">
+                                                    Vendedor
+                                                </th>
+                                                <th className="px-3 py-2 text-center">
+                                                    Operaciones
+                                                </th>
+                                                <th className="px-3 py-2 text-right">
+                                                    Total Facturado
+                                                </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-[#F3F1ED]">
-                                            {reporteComercial.porVendedor.length === 0 ? (
+                                        <tbody className="divide-y divide-border">
+                                            {reporteComercial.porVendedor
+                                                .length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={3} className="py-4 text-center text-[#8A8680]">
-                                                        Sin ventas en este período.
+                                                    <td
+                                                        colSpan={3}
+                                                        className="py-4 text-center text-muted-foreground"
+                                                    >
+                                                        Sin ventas en este
+                                                        período.
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                reporteComercial.porVendedor.map((v) => (
-                                                    <tr key={v.nombre}>
-                                                        <td className="px-3 py-2.5 font-medium text-[#201F1D]">
-                                                            {v.nombre}
-                                                        </td>
-                                                        <td className="px-3 py-2.5 text-center font-mono">{v.cantidad}</td>
-                                                        <td className="px-3 py-2.5 text-right font-mono font-bold text-[#201F1D]">
-                                                            {formatCurrency(v.monto)}
-                                                        </td>
-                                                    </tr>
-                                                ))
+                                                reporteComercial.porVendedor.map(
+                                                    (v) => (
+                                                        <tr key={v.nombre}>
+                                                            <td className="px-3 py-2.5 font-medium text-foreground">
+                                                                {v.nombre}
+                                                            </td>
+                                                            <td className="px-3 py-2.5 text-center font-mono">
+                                                                {v.cantidad}
+                                                            </td>
+                                                            <td className="px-3 py-2.5 text-right font-mono font-bold text-foreground">
+                                                                {formatCurrency(
+                                                                    v.monto,
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ),
+                                                )
                                             )}
                                         </tbody>
                                     </table>
@@ -329,40 +408,61 @@ export default function ReportesIndex() {
                             </div>
 
                             {/* Top Clientes */}
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-5 shadow-xs">
-                                <h3 className="font-['Oswald',sans-serif] text-base font-bold text-[#201F1D] uppercase">
+                            <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+                                <h3 className="font-['Oswald',sans-serif] text-base font-bold text-foreground uppercase">
                                     Top Clientes
                                 </h3>
-                                <p className="text-xs text-[#8A8680] mb-4">Clientes con mayor volumen facturado</p>
+                                <p className="mb-4 text-xs text-muted-foreground">
+                                    Clientes con mayor volumen facturado
+                                </p>
 
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs">
-                                        <thead className="border-b border-[#E7E4DE] bg-[#FAFAF8] text-[10px] text-[#8A8680] uppercase">
+                                        <thead className="border-b border-border bg-muted/40 text-[10px] text-muted-foreground uppercase">
                                             <tr>
-                                                <th className="px-3 py-2">Cliente</th>
-                                                <th className="px-3 py-2 text-center">Compras</th>
-                                                <th className="px-3 py-2 text-right">Total</th>
+                                                <th className="px-3 py-2">
+                                                    Cliente
+                                                </th>
+                                                <th className="px-3 py-2 text-center">
+                                                    Compras
+                                                </th>
+                                                <th className="px-3 py-2 text-right">
+                                                    Total
+                                                </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-[#F3F1ED]">
-                                            {reporteComercial.topClientes.length === 0 ? (
+                                        <tbody className="divide-y divide-border">
+                                            {reporteComercial.topClientes
+                                                .length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={3} className="py-4 text-center text-[#8A8680]">
+                                                    <td
+                                                        colSpan={3}
+                                                        className="py-4 text-center text-muted-foreground"
+                                                    >
                                                         Sin datos de clientes.
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                reporteComercial.topClientes.map((c, i) => (
-                                                    <tr key={c.cliente}>
-                                                        <td className="px-3 py-2.5 font-medium text-[#201F1D] truncate max-w-xs">
-                                                            <b className="mr-1 text-[#E31E24]">#{i + 1}</b> {c.cliente}
-                                                        </td>
-                                                        <td className="px-3 py-2.5 text-center font-mono">{c.cantidad}</td>
-                                                        <td className="px-3 py-2.5 text-right font-mono font-bold text-[#201F1D]">
-                                                            {formatCurrency(c.total)}
-                                                        </td>
-                                                    </tr>
-                                                ))
+                                                reporteComercial.topClientes.map(
+                                                    (c, i) => (
+                                                        <tr key={c.cliente}>
+                                                            <td className="max-w-xs truncate px-3 py-2.5 font-medium text-foreground">
+                                                                <b className="mr-1 text-primary">
+                                                                    #{i + 1}
+                                                                </b>{' '}
+                                                                {c.cliente}
+                                                            </td>
+                                                            <td className="px-3 py-2.5 text-center font-mono">
+                                                                {c.cantidad}
+                                                            </td>
+                                                            <td className="px-3 py-2.5 text-right font-mono font-bold text-foreground">
+                                                                {formatCurrency(
+                                                                    c.total,
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ),
+                                                )
                                             )}
                                         </tbody>
                                     </table>
@@ -371,42 +471,61 @@ export default function ReportesIndex() {
                         </div>
 
                         {/* Top Ítems Vendidos */}
-                        <div className="rounded-xl border border-[#E7E4DE] bg-white p-5 shadow-xs">
-                            <h3 className="font-['Oswald',sans-serif] text-base font-bold text-[#201F1D] uppercase">
+                        <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+                            <h3 className="font-['Oswald',sans-serif] text-base font-bold text-foreground uppercase">
                                 Top Productos y Servicios Vendidos
                             </h3>
-                            <p className="text-xs text-[#8A8680] mb-4">Ranking de artículos con mayor recaudación</p>
+                            <p className="mb-4 text-xs text-muted-foreground">
+                                Ranking de artículos con mayor recaudación
+                            </p>
 
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-xs">
-                                    <thead className="border-b border-[#E7E4DE] bg-[#FAFAF8] text-[10px] text-[#8A8680] uppercase">
+                                    <thead className="border-b border-border bg-muted/40 text-[10px] text-muted-foreground uppercase">
                                         <tr>
-                                            <th className="px-4 py-2.5">Ítem</th>
-                                            <th className="px-4 py-2.5 text-center">Cantidad Total</th>
-                                            <th className="px-4 py-2.5 text-right">Monto Facturado</th>
+                                            <th className="px-4 py-2.5">
+                                                Ítem
+                                            </th>
+                                            <th className="px-4 py-2.5 text-center">
+                                                Cantidad Total
+                                            </th>
+                                            <th className="px-4 py-2.5 text-right">
+                                                Monto Facturado
+                                            </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#F3F1ED]">
-                                        {reporteComercial.topItems.length === 0 ? (
+                                    <tbody className="divide-y divide-border">
+                                        {reporteComercial.topItems.length ===
+                                        0 ? (
                                             <tr>
-                                                <td colSpan={3} className="py-6 text-center text-[#8A8680]">
+                                                <td
+                                                    colSpan={3}
+                                                    className="py-6 text-center text-muted-foreground"
+                                                >
                                                     Sin ítems registrados.
                                                 </td>
                                             </tr>
                                         ) : (
-                                            reporteComercial.topItems.map((item, i) => (
-                                                <tr key={item.nombre}>
-                                                    <td className="px-4 py-3 font-medium text-[#201F1D]">
-                                                        <b className="mr-2 text-[#E31E24]">#{i + 1}</b> {item.nombre}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center font-mono font-semibold text-[#4A4742]">
-                                                        {item.cantidad}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right font-mono font-bold text-[#201F1D]">
-                                                        {formatCurrency(item.monto)}
-                                                    </td>
-                                                </tr>
-                                            ))
+                                            reporteComercial.topItems.map(
+                                                (item, i) => (
+                                                    <tr key={item.nombre}>
+                                                        <td className="px-4 py-3 font-medium text-foreground">
+                                                            <b className="mr-2 text-primary">
+                                                                #{i + 1}
+                                                            </b>{' '}
+                                                            {item.nombre}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center font-mono font-semibold text-foreground/80">
+                                                            {item.cantidad}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-mono font-bold text-foreground">
+                                                            {formatCurrency(
+                                                                item.monto,
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ),
+                                            )
                                         )}
                                     </tbody>
                                 </table>
@@ -419,16 +538,22 @@ export default function ReportesIndex() {
                 {tipo === 'inventario' && reporteInventario && (
                     <div className="space-y-6">
                         {/* Filtros Inventario */}
-                        <div className="flex flex-col gap-3 rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs md:flex-row md:items-end md:justify-between text-xs">
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 flex-1 max-w-xl">
+                        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
+                            <div className="grid max-w-xl flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div>
-                                    <label className="block font-semibold text-[#4A4742]">Sede / Almacén</label>
+                                    <label className="block font-semibold text-foreground/80">
+                                        Sede / Almacén
+                                    </label>
                                     <select
                                         value={sedeId}
-                                        onChange={(e) => setSedeId(e.target.value)}
-                                        className="mt-1 w-full rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-1.5 focus:border-[#201F1D] focus:outline-none"
+                                        onChange={(e) =>
+                                            setSedeId(e.target.value)
+                                        }
+                                        className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 focus:border-primary focus:outline-none"
                                     >
-                                        <option value="">Todas las sedes</option>
+                                        <option value="">
+                                            Todas las sedes
+                                        </option>
                                         {sedes.map((s) => (
                                             <option key={s.id} value={s.id}>
                                                 {s.nombre}
@@ -438,14 +563,20 @@ export default function ReportesIndex() {
                                 </div>
 
                                 <div className="flex items-center pt-5">
-                                    <label className="flex items-center gap-2 cursor-pointer font-medium text-[#4A4742]">
+                                    <label className="flex cursor-pointer items-center gap-2 font-medium text-foreground/80">
                                         <input
                                             type="checkbox"
                                             checked={soloBajoMinimo}
-                                            onChange={(e) => setSoloBajoMinimo(e.target.checked)}
-                                            className="rounded border-[#E7E4DE] text-[#E31E24]"
+                                            onChange={(e) =>
+                                                setSoloBajoMinimo(
+                                                    e.target.checked,
+                                                )
+                                            }
+                                            className="rounded border-border text-primary"
                                         />
-                                        <span>Solo productos bajo stock mínimo</span>
+                                        <span>
+                                            Solo productos bajo stock mínimo
+                                        </span>
                                     </label>
                                 </div>
                             </div>
@@ -454,7 +585,7 @@ export default function ReportesIndex() {
                                 <button
                                     type="button"
                                     onClick={applyInventarioFilters}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E7E4DE] bg-white px-3.5 py-1.5 font-semibold text-[#4A4742] hover:bg-[#F3F1ED]"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 font-semibold text-foreground/80 hover:bg-background"
                                 >
                                     <Filter className="size-3.5" />
                                     <span>Filtrar</span>
@@ -462,7 +593,7 @@ export default function ReportesIndex() {
                                 <button
                                     type="button"
                                     onClick={handleDownloadInventarioPdf}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#E31E24] px-4 py-1.5 font-semibold text-white hover:bg-[#c9181d] shadow-xs"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 font-semibold text-white shadow-xs hover:bg-primary/90"
                                 >
                                     <Download className="size-3.5" />
                                     <span>Exportar PDF</span>
@@ -472,126 +603,188 @@ export default function ReportesIndex() {
 
                         {/* KPIs de Inventario */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                                    <span className="font-medium uppercase">Valorización Total</span>
+                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-medium uppercase">
+                                        Valorización Total
+                                    </span>
                                     <CircleDollarSign className="size-4 text-emerald-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#201F1D]">
-                                    {formatCurrency(reporteInventario.valorizacionTotal)}
+                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                    {formatCurrency(
+                                        reporteInventario.valorizacionTotal,
+                                    )}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-[#8A8680]">Stock disponible × precio venta</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Stock disponible × precio venta
+                                </p>
                             </div>
 
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                                    <span className="font-medium uppercase">Productos en Catálogo</span>
+                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-medium uppercase">
+                                        Productos en Catálogo
+                                    </span>
                                     <Layers className="size-4 text-blue-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#201F1D]">
+                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
                                     {reporteInventario.totalProductos}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-[#8A8680]">Productos activos registrados</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Productos activos registrados
+                                </p>
                             </div>
 
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                                    <span className="font-medium uppercase">Unidades Físicas</span>
+                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-medium uppercase">
+                                        Unidades Físicas
+                                    </span>
                                     <Boxes className="size-4 text-purple-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#201F1D]">
+                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
                                     {reporteInventario.totalUnidades}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-[#8A8680]">Disponibles para venta/operación</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Disponibles para venta/operación
+                                </p>
                             </div>
 
-                            <div className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-[#8A8680]">
-                                    <span className="font-medium uppercase">Bajo Stock Mínimo</span>
-                                    <AlertTriangle className="size-4 text-[#E31E24]" />
+                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span className="font-medium uppercase">
+                                        Bajo Stock Mínimo
+                                    </span>
+                                    <AlertTriangle className="size-4 text-primary" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-[#E31E24]">
+                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-primary">
                                     {reporteInventario.totalBajoMinimo}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-[#8A8680]">Requieren reposición urgente</p>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Requieren reposición urgente
+                                </p>
                             </div>
                         </div>
 
                         {/* Tabla de Existencias de Inventario */}
-                        <div className="overflow-hidden rounded-xl border border-[#E7E4DE] bg-white shadow-xs">
+                        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-xs">
-                                    <thead className="border-b border-[#E7E4DE] bg-[#FAFAF8] text-[11px] font-semibold text-[#8A8680] uppercase tracking-wider">
+                                    <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                                         <tr>
-                                            <th className="px-4 py-3">Código</th>
-                                            <th className="px-4 py-3">Producto</th>
-                                            <th className="px-4 py-3 text-center">Tipo</th>
-                                            <th className="px-4 py-3 text-center">U.M.</th>
-                                            <th className="px-4 py-3 text-right">Precio Venta</th>
-                                            <th className="px-4 py-3 text-center">Stock Mínimo</th>
-                                            <th className="px-4 py-3 text-center">Stock Actual</th>
-                                            <th className="px-4 py-3 text-right">Valorización</th>
-                                            <th className="px-4 py-3 text-center">Estado</th>
+                                            <th className="px-4 py-3">
+                                                Código
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                Producto
+                                            </th>
+                                            <th className="px-4 py-3 text-center">
+                                                Tipo
+                                            </th>
+                                            <th className="px-4 py-3 text-center">
+                                                U.M.
+                                            </th>
+                                            <th className="px-4 py-3 text-right">
+                                                Precio Venta
+                                            </th>
+                                            <th className="px-4 py-3 text-center">
+                                                Stock Mínimo
+                                            </th>
+                                            <th className="px-4 py-3 text-center">
+                                                Stock Actual
+                                            </th>
+                                            <th className="px-4 py-3 text-right">
+                                                Valorización
+                                            </th>
+                                            <th className="px-4 py-3 text-center">
+                                                Estado
+                                            </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#F3F1ED]">
-                                        {reporteInventario.productos.length === 0 ? (
+                                    <tbody className="divide-y divide-border">
+                                        {reporteInventario.productos.length ===
+                                        0 ? (
                                             <tr>
-                                                <td colSpan={9} className="py-8 text-center text-[#8A8680]">
-                                                    No se encontraron productos con los filtros seleccionados.
+                                                <td
+                                                    colSpan={9}
+                                                    className="py-8 text-center text-muted-foreground"
+                                                >
+                                                    No se encontraron productos
+                                                    con los filtros
+                                                    seleccionados.
                                                 </td>
                                             </tr>
                                         ) : (
-                                            reporteInventario.productos.map((p) => (
-                                                <tr key={p.id} className="hover:bg-[#FAFAF8] transition-colors">
-                                                    <td className="px-4 py-3 font-mono font-bold text-[#201F1D]">
-                                                        {p.codigo}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-medium text-[#201F1D]">{p.nombre}</td>
-                                                    <td className="px-4 py-3 text-center">
-                                                        <span className="rounded-md border border-[#E7E4DE] bg-[#F8F9FA] px-2 py-0.5 text-[10px] text-[#6B6965]">
-                                                            {p.serializado ? 'Serializado' : 'A Granel'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center font-mono text-[#4A4742]">
-                                                        {p.unidad_medida}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right font-mono font-semibold text-[#201F1D]">
-                                                        {formatCurrency(p.precio_venta)}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center font-mono text-[#4A4742]">
-                                                        {p.stock_minimo !== null ? p.stock_minimo : '—'}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center">
-                                                        <span
-                                                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
-                                                                p.bajo_minimo
-                                                                    ? 'bg-red-100 text-[#E31E24]'
-                                                                    : 'bg-[#F3F1ED] text-[#201F1D]'
-                                                            }`}
-                                                        >
-                                                            {p.bajo_minimo && (
-                                                                <AlertTriangle className="size-3 text-[#E31E24]" />
+                                            reporteInventario.productos.map(
+                                                (p) => (
+                                                    <tr
+                                                        key={p.id}
+                                                        className="transition-colors hover:bg-muted/40"
+                                                    >
+                                                        <td className="px-4 py-3 font-mono font-bold text-foreground">
+                                                            {p.codigo}
+                                                        </td>
+                                                        <td className="px-4 py-3 font-medium text-foreground">
+                                                            {p.nombre}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <span className="rounded-md border border-border bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground">
+                                                                {p.serializado
+                                                                    ? 'Serializado'
+                                                                    : 'A Granel'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center font-mono text-foreground/80">
+                                                            {p.unidad_medida}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-mono font-semibold text-foreground">
+                                                            {formatCurrency(
+                                                                p.precio_venta,
                                                             )}
-                                                            {p.stock_disponible}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right font-mono font-bold text-[#201F1D]">
-                                                        {formatCurrency(p.valorizacion)}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center">
-                                                        <span
-                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                                                                p.bajo_minimo
-                                                                    ? 'bg-red-100 text-[#E31E24]'
-                                                                    : 'bg-emerald-100 text-emerald-800'
-                                                            }`}
-                                                        >
-                                                            {p.bajo_minimo ? 'Bajo Mínimo' : 'Normal'}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center font-mono text-foreground/80">
+                                                            {p.stock_minimo !==
+                                                            null
+                                                                ? p.stock_minimo
+                                                                : '—'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <span
+                                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
+                                                                    p.bajo_minimo
+                                                                        ? 'bg-red-100 text-primary'
+                                                                        : 'bg-background text-foreground'
+                                                                }`}
+                                                            >
+                                                                {p.bajo_minimo && (
+                                                                    <AlertTriangle className="size-3 text-primary" />
+                                                                )}
+                                                                {
+                                                                    p.stock_disponible
+                                                                }
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-mono font-bold text-foreground">
+                                                            {formatCurrency(
+                                                                p.valorizacion,
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <span
+                                                                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                                    p.bajo_minimo
+                                                                        ? 'bg-red-100 text-primary'
+                                                                        : 'bg-emerald-100 text-emerald-800'
+                                                                }`}
+                                                            >
+                                                                {p.bajo_minimo
+                                                                    ? 'Bajo Mínimo'
+                                                                    : 'Normal'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ),
+                                            )
                                         )}
                                     </tbody>
                                 </table>

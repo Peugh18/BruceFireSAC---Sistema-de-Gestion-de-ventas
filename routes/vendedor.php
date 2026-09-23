@@ -49,6 +49,7 @@ Route::prefix('vendedor')
         Route::get('ruc-lookup', [RucLookupController::class, 'show'])->name('ruc-lookup');
 
         Route::get('cotizaciones', [QuoteController::class, 'index'])->name('cotizaciones.index');
+        Route::get('cotizaciones/nueva', [QuoteController::class, 'create'])->name('cotizaciones.create');
         Route::post('cotizaciones', [QuoteController::class, 'store'])->name('cotizaciones.store');
         Route::post('cotizaciones/{quote}/enviar', [QuoteController::class, 'send'])->name('cotizaciones.send');
         Route::post('cotizaciones/{quote}/aceptar', [QuoteController::class, 'accept'])->name('cotizaciones.accept');
@@ -74,6 +75,7 @@ Route::prefix('vendedor')
 
         Route::get('certificados', [CertificateController::class, 'index'])->name('certificados.index');
         Route::get('certificados/{certificate}', [CertificateController::class, 'show'])->name('certificados.show');
+        Route::get('certificados/{certificate}/pdf', [CertificateController::class, 'pdf'])->name('certificados.pdf');
 
         Route::get('facturacion', [BillingController::class, 'index'])->name('facturacion.index');
         Route::post('facturacion/{electronic_document}/reenviar', [BillingController::class, 'resend'])->name('facturacion.resend');

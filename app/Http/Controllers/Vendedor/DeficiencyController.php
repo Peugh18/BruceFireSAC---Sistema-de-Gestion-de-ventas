@@ -30,7 +30,12 @@ class DeficiencyController extends Controller
                 'condicion' => $deficiency->condicion,
                 'estado' => $deficiency->estado,
                 'requiere_autorizacion' => $deficiency->requiere_autorizacion,
-                'authorization' => $deficiency->authorization,
+                'authorization' => $deficiency->authorization ? [
+                    'autorizado_por' => $deficiency->authorization->autorizado_por,
+                    'canal' => $deficiency->authorization->canal,
+                    'fecha' => $deficiency->authorization->fecha?->format('d/m/Y'),
+                    'observacion' => $deficiency->authorization->observacion,
+                ] : null,
             ]);
 
         return Inertia::render('vendedor/deficiencias/index', [

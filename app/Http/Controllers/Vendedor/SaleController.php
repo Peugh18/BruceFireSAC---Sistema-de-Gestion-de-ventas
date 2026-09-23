@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\Client;
 use App\Models\Sale;
+use App\Models\Sede;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,6 +60,10 @@ class SaleController extends Controller
                 ->orderByDesc('created_at')
                 ->limit(10)
                 ->get(['id', 'razon_social', 'numero_documento']),
+            'sedes' => Sede::query()
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']),
         ]);
     }
 

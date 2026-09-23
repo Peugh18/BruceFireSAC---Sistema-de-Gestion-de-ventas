@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+﻿import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Check,
@@ -159,63 +159,63 @@ function getStatusBadgeConfig(estado: string): {
             return {
                 label: 'Borrador',
                 badgeClass:
-                    'bg-[#F1EFEC] text-[#6B6862] border border-[#E4E1DC]',
-                dotClass: 'bg-[#8A8680]',
+                    'bg-muted text-muted-foreground border border-border',
+                dotClass: 'bg-muted-foreground',
             };
         case 'emitida':
             return {
                 label: 'Emitida',
                 badgeClass:
-                    'bg-[#FDF1E0] text-[#B45309] border border-[#F9E2C6]',
-                dotClass: 'bg-[#B45309]',
+                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 border border-amber-500/20',
+                dotClass: 'bg-amber-600',
             };
         case 'enviada':
             return {
                 label: 'Pendiente',
                 badgeClass:
-                    'bg-[#FDF1E0] text-[#B45309] border border-[#F9E2C6]',
-                dotClass: 'bg-[#B45309]',
+                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 border border-amber-500/20',
+                dotClass: 'bg-amber-600',
             };
         case 'aceptada':
             return {
                 label: 'Aceptada',
                 badgeClass:
-                    'bg-[#E5F5EC] text-[#1E8E5A] border border-[#C5EBD6]',
-                dotClass: 'bg-[#1E8E5A]',
+                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border border-emerald-500/20',
+                dotClass: 'bg-emerald-600',
             };
         case 'rechazada':
             return {
                 label: 'Rechazada',
                 badgeClass:
-                    'bg-[#FBE7E7] text-[#B91C1C] border border-[#F7C8C8]',
-                dotClass: 'bg-[#B91C1C]',
+                    'bg-destructive/10 text-destructive border border-destructive/20 border border-destructive/20',
+                dotClass: 'bg-destructive',
             };
         case 'vencida':
             return {
                 label: 'Vencida',
                 badgeClass:
-                    'bg-[#FBE7E7] text-[#B91C1C] border border-[#F7C8C8]',
-                dotClass: 'bg-[#B91C1C]',
+                    'bg-destructive/10 text-destructive border border-destructive/20 border border-destructive/20',
+                dotClass: 'bg-destructive',
             };
         case 'convertida':
             return {
                 label: 'Convertida',
                 badgeClass:
-                    'bg-[#E9EFFD] text-[#2563EB] border border-[#CDE0FD]',
-                dotClass: 'bg-[#2563EB]',
+                    'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 border border-blue-500/20',
+                dotClass: 'bg-blue-600',
             };
         case 'anulada':
             return {
                 label: 'Anulada',
                 badgeClass:
-                    'bg-[#F1EFEC] text-[#8A8680] border border-[#E4E1DC]',
-                dotClass: 'bg-[#8A8680]',
+                    'bg-muted text-muted-foreground border border-border',
+                dotClass: 'bg-muted-foreground',
             };
         default:
             return {
                 label: estado || '—',
-                badgeClass: 'bg-[#F1EFEC] text-[#6B6862]',
-                dotClass: 'bg-[#8A8680]',
+                badgeClass: 'bg-muted text-muted-foreground',
+                dotClass: 'bg-muted-foreground',
             };
     }
 }
@@ -352,60 +352,60 @@ export default function CotizacionesIndex({
                 {/* KPI Cards Row */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     {/* Activas */}
-                    <div className="flex items-center gap-3.5 rounded-[14px] border border-[#E7E4DE] bg-white p-[16px_18px] shadow-xs">
-                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-[#E9EFFD] text-[#2563EB]">
+                    <div className="flex items-center gap-3.5 rounded-[14px] border border-border bg-card p-[16px_18px] shadow-xs">
+                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                             <FileText className="size-5 stroke-[2]" />
                         </div>
                         <div>
-                            <div className="text-[11px] font-semibold tracking-[0.03em] text-[#8A8680] uppercase">
+                            <div className="text-[11px] font-semibold tracking-[0.03em] text-muted-foreground uppercase">
                                 Activas
                             </div>
-                            <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-[#201F1D]">
+                            <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
                                 {kpis?.activas ?? 0}
                             </div>
                         </div>
                     </div>
 
                     {/* Por vencer (7 días) */}
-                    <div className="flex items-center gap-3.5 rounded-[14px] border border-[#E7E4DE] bg-white p-[16px_18px] shadow-xs">
-                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-[#FDF1E0] text-[#B45309]">
+                    <div className="flex items-center gap-3.5 rounded-[14px] border border-border bg-card p-[16px_18px] shadow-xs">
+                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                             <Clock className="size-5 stroke-[2]" />
                         </div>
                         <div>
-                            <div className="text-[11px] font-semibold tracking-[0.03em] text-[#8A8680] uppercase">
+                            <div className="text-[11px] font-semibold tracking-[0.03em] text-muted-foreground uppercase">
                                 Por vencer (7 días)
                             </div>
-                            <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-[#201F1D]">
+                            <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
                                 {kpis?.por_vencer ?? 0}
                             </div>
                         </div>
                     </div>
 
                     {/* Aceptadas este mes */}
-                    <div className="flex items-center gap-3.5 rounded-[14px] border border-[#E7E4DE] bg-white p-[16px_18px] shadow-xs">
-                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-[#E5F5EC] text-[#1E8E5A]">
+                    <div className="flex items-center gap-3.5 rounded-[14px] border border-border bg-card p-[16px_18px] shadow-xs">
+                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                             <CheckCircle2 className="size-5 stroke-[2]" />
                         </div>
                         <div>
-                            <div className="text-[11px] font-semibold tracking-[0.03em] text-[#8A8680] uppercase">
+                            <div className="text-[11px] font-semibold tracking-[0.03em] text-muted-foreground uppercase">
                                 Aceptadas este mes
                             </div>
-                            <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-[#201F1D]">
+                            <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
                                 {kpis?.aceptadas_este_mes ?? 0}
                             </div>
                         </div>
                     </div>
 
                     {/* Vencidas */}
-                    <div className="flex items-center gap-3.5 rounded-[14px] border border-[#E7E4DE] bg-white p-[16px_18px] shadow-xs">
-                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-[#FBE7E7] text-[#B91C1C]">
+                    <div className="flex items-center gap-3.5 rounded-[14px] border border-border bg-card p-[16px_18px] shadow-xs">
+                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] bg-destructive/10 text-destructive border border-destructive/20">
                             <AlertTriangle className="size-5 stroke-[2]" />
                         </div>
                         <div>
-                            <div className="text-[11px] font-semibold tracking-[0.03em] text-[#8A8680] uppercase">
+                            <div className="text-[11px] font-semibold tracking-[0.03em] text-muted-foreground uppercase">
                                 Vencidas
                             </div>
-                            <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-[#201F1D]">
+                            <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
                                 {kpis?.vencidas ?? 0}
                             </div>
                         </div>
@@ -413,11 +413,11 @@ export default function CotizacionesIndex({
                 </div>
 
                 {/* Main Content Card */}
-                <div className="rounded-[16px] border border-[#E7E4DE] bg-white p-5 shadow-xs">
+                <div className="rounded-[16px] border border-border bg-card p-5 shadow-xs">
                     {/* Toolbar */}
                     <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2.5">
                         {/* Status Filter Tabs */}
-                        <div className="flex rounded-[9px] bg-[#F1EFEC] p-[3px]">
+                        <div className="flex rounded-[9px] bg-muted p-[3px]">
                             {FILTER_TABS.map((tab) => {
                                 const active = isTabActive(tab.value);
                                 return (
@@ -429,8 +429,8 @@ export default function CotizacionesIndex({
                                         }
                                         className={`cursor-pointer rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
                                             active
-                                                ? 'bg-white text-[#201F1D] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                                                : 'text-[#6B6862] hover:text-[#201F1D]'
+                                                ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                                                : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                     >
                                         {tab.label}
@@ -442,11 +442,17 @@ export default function CotizacionesIndex({
                         {/* Actions Right */}
                         <div className="flex items-center gap-2">
                             <Button
-                                type="button"
-                                className="flex h-10 cursor-pointer items-center gap-1.5 rounded-[9px] bg-[#E31E24] px-4 text-[13px] font-bold text-white shadow-xs transition-colors hover:bg-[#C9191E]"
+                                asChild
+                                className="flex h-10 cursor-pointer items-center gap-1.5 rounded-[9px] bg-primary px-4 text-[13px] font-bold text-white shadow-xs transition-colors hover:bg-primary/90"
                             >
-                                <Plus className="size-3.5 stroke-[2.5]" />
-                                <span>Nueva cotización</span>
+                                <Link
+                                    href={QuoteController.create.url({
+                                        current_team: teamSlug,
+                                    })}
+                                >
+                                    <Plus className="size-3.5 stroke-[2.5]" />
+                                    <span>Nueva cotización</span>
+                                </Link>
                             </Button>
                         </div>
                     </div>
@@ -455,23 +461,23 @@ export default function CotizacionesIndex({
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-[12.5px]">
                             <thead>
-                                <tr className="border-b border-[#E7E4DE]">
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                <tr className="border-b border-border">
+                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                         Nº Cotización
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                         Cliente
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                         Monto
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                         Vigencia
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                         Estado
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-[#8A8680] uppercase">
+                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                                         Acciones
                                     </th>
                                 </tr>
@@ -481,15 +487,15 @@ export default function CotizacionesIndex({
                                     <tr>
                                         <td
                                             colSpan={6}
-                                            className="px-4 py-12 text-center text-[#8A8680]"
+                                            className="px-4 py-12 text-center text-muted-foreground"
                                         >
                                             <div className="flex flex-col items-center justify-center gap-2">
-                                                <Inbox className="size-9 text-[#C4C1BA]" />
-                                                <p className="text-sm font-medium text-[#201F1D]">
+                                                <Inbox className="size-9 text-muted-foreground" />
+                                                <p className="text-sm font-medium text-foreground">
                                                     No se encontraron
                                                     cotizaciones
                                                 </p>
-                                                <p className="text-xs text-[#8A8680]">
+                                                <p className="text-xs text-muted-foreground">
                                                     {currentFilter
                                                         ? 'No hay registros para el filtro seleccionado.'
                                                         : 'Aún no hay cotizaciones registradas.'}
@@ -502,7 +508,7 @@ export default function CotizacionesIndex({
                                                                 '',
                                                             )
                                                         }
-                                                        className="mt-2 cursor-pointer text-xs font-semibold text-[#E31E24] hover:underline"
+                                                        className="mt-2 cursor-pointer text-xs font-semibold text-primary hover:underline"
                                                     >
                                                         Limpiar filtros
                                                     </button>
@@ -540,20 +546,20 @@ export default function CotizacionesIndex({
                                         return (
                                             <tr
                                                 key={quote.id}
-                                                className="border-b border-[#F1EFEC] transition-colors hover:bg-[#FAFAF8]"
+                                                className="border-b border-border transition-colors hover:bg-muted/40"
                                             >
                                                 {/* Nº Cotización */}
-                                                <td className="px-2.5 py-3.5 font-mono text-xs font-medium text-[#201F1D]">
+                                                <td className="px-2.5 py-3.5 font-mono text-xs font-medium text-foreground">
                                                     {quote.numero}
                                                 </td>
 
                                                 {/* Cliente */}
-                                                <td className="px-2.5 py-3.5 font-medium text-[#201F1D]">
+                                                <td className="px-2.5 py-3.5 font-medium text-foreground">
                                                     {quote.cliente}
                                                 </td>
 
                                                 {/* Monto */}
-                                                <td className="px-2.5 py-3.5 font-bold text-[#201F1D]">
+                                                <td className="px-2.5 py-3.5 font-bold text-foreground">
                                                     {formatCurrency(
                                                         quote.total,
                                                     )}
@@ -564,16 +570,16 @@ export default function CotizacionesIndex({
                                                     <span
                                                         className={`text-xs ${
                                                             vigencia.isExpired
-                                                                ? 'font-medium text-[#B91C1C]'
+                                                                ? 'font-medium text-destructive'
                                                                 : vigencia.isUrgent
-                                                                  ? 'font-medium text-[#B45309]'
-                                                                  : 'text-[#4A4742]'
+                                                                  ? 'font-medium text-amber-600 dark:text-amber-400'
+                                                                  : 'text-foreground/80'
                                                         }`}
                                                     >
                                                         {vigencia.label}
                                                     </span>
                                                     {vigencia.subLabel ? (
-                                                        <div className="font-mono text-[10px] text-[#8A8680]">
+                                                        <div className="font-mono text-[10px] text-muted-foreground">
                                                             {vigencia.subLabel}
                                                         </div>
                                                     ) : null}
@@ -606,7 +612,7 @@ export default function CotizacionesIndex({
                                                                 disabled={
                                                                     isRowProcessing
                                                                 }
-                                                                className="flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] bg-[#18181B] px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-[#27272A] disabled:opacity-50"
+                                                                className="flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] bg-card px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-foreground/90 disabled:opacity-50"
                                                             >
                                                                 {isSending ? (
                                                                     <Loader2 className="size-3 animate-spin" />
@@ -632,7 +638,7 @@ export default function CotizacionesIndex({
                                                                     disabled={
                                                                         isRowProcessing
                                                                     }
-                                                                    className="flex h-7 cursor-pointer items-center gap-1 rounded-[7px] bg-[#1E8E5A] px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-[#18754A] disabled:opacity-50"
+                                                                    className="flex h-7 cursor-pointer items-center gap-1 rounded-[7px] bg-emerald-600 px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-emerald-700 disabled:opacity-50"
                                                                 >
                                                                     {isAccepting ? (
                                                                         <Loader2 className="size-3 animate-spin" />
@@ -654,7 +660,7 @@ export default function CotizacionesIndex({
                                                                     disabled={
                                                                         isRowProcessing
                                                                     }
-                                                                    className="flex h-7 cursor-pointer items-center gap-1 rounded-[7px] border border-[#E4E1DC] bg-white px-2.5 text-[11px] font-bold text-[#B91C1C] shadow-xs transition-colors hover:bg-[#FBE7E7] disabled:opacity-50"
+                                                                    className="flex h-7 cursor-pointer items-center gap-1 rounded-[7px] border border-border bg-card px-2.5 text-[11px] font-bold text-destructive shadow-xs transition-colors hover:bg-destructive/10 disabled:opacity-50"
                                                                 >
                                                                     {isRejecting ? (
                                                                         <Loader2 className="size-3 animate-spin" />
@@ -670,7 +676,7 @@ export default function CotizacionesIndex({
 
                                                         {!canSend &&
                                                             !canAcceptOrReject && (
-                                                                <span className="px-1 text-xs text-[#8A8680]">
+                                                                <span className="px-1 text-xs text-muted-foreground">
                                                                     —
                                                                 </span>
                                                             )}
@@ -686,18 +692,18 @@ export default function CotizacionesIndex({
 
                     {/* Pagination */}
                     {quotes.links && quotes.links.length > 3 && (
-                        <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-[#F1EFEC] pt-3.5 sm:flex-row">
-                            <div className="text-xs text-[#8A8680]">
+                        <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-border pt-3.5 sm:flex-row">
+                            <div className="text-xs text-muted-foreground">
                                 Mostrando{' '}
-                                <span className="font-semibold text-[#201F1D]">
+                                <span className="font-semibold text-foreground">
                                     {quotes.from ?? 0}
                                 </span>{' '}
                                 a{' '}
-                                <span className="font-semibold text-[#201F1D]">
+                                <span className="font-semibold text-foreground">
                                     {quotes.to ?? 0}
                                 </span>{' '}
                                 de{' '}
-                                <span className="font-semibold text-[#201F1D]">
+                                <span className="font-semibold text-foreground">
                                     {quotes.total ?? 0}
                                 </span>{' '}
                                 cotizaciones
@@ -709,7 +715,7 @@ export default function CotizacionesIndex({
                                         return (
                                             <span
                                                 key={index}
-                                                className="inline-flex h-8 min-w-[32px] items-center justify-center rounded-[7px] border border-[#E4E1DC] bg-[#FAFAF8] px-2.5 text-xs text-[#A8A49D] opacity-60"
+                                                className="inline-flex h-8 min-w-[32px] items-center justify-center rounded-[7px] border border-border bg-muted/40 px-2.5 text-xs text-muted-foreground opacity-60"
                                             >
                                                 {renderPaginationLabel(
                                                     link.label,
@@ -726,8 +732,8 @@ export default function CotizacionesIndex({
                                             preserveState
                                             className={`inline-flex h-8 min-w-[32px] items-center justify-center rounded-[7px] px-2.5 text-xs font-semibold transition-colors ${
                                                 link.active
-                                                    ? 'bg-[#18181B] text-white'
-                                                    : 'border border-[#E4E1DC] bg-white text-[#4A4742] hover:bg-[#F3F1ED] hover:text-[#201F1D]'
+                                                    ? 'bg-foreground text-background'
+                                                    : 'border border-border bg-card text-foreground/80 hover:bg-background hover:text-foreground'
                                             }`}
                                         >
                                             {renderPaginationLabel(link.label)}

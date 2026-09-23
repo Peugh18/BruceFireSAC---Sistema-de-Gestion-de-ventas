@@ -122,6 +122,38 @@ test('vendedor user can view index and show of certificates', function () {
     $responseShow->assertOk();
 });
 
+test('vendedor can download and print the certificate pdf', function () {
+    $user = vendedorUser();
+    $client = Client::factory()->create();
+    $tipo = CertificateType::factory()->create([
+        'codigo' => 'operatividad_garantia',
+        'nombre' => 'Operatividad y Garantía',
+    ]);
+
+    $certificate = Certificate::factory()->create([
+        'certificate_type_id' => $tipo->id,
+        'client_id' => $client->id,
+    ]);
+    $certificate->certificateUnits()->create(['numero_serie_snapshot' => 'BF-EQ-000010']);
+
+    $download = $this->actingAs($user)->get(route('vendedor.certificados.pdf', [
+        'current_team' => $user->currentTeam,
+        'certificate' => $certificate,
+    ]));
+
+    $download->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf')
+        ->assertHeader('Content-Disposition', "attachment; filename=\"certificado-{$certificate->numero}.pdf\"");
+
+    $inline = $this->actingAs($user)->get(route('vendedor.certificados.pdf', [
+        'current_team' => $user->currentTeam,
+        'certificate' => $certificate,
+    ]).'?inline=1');
+
+    $inline->assertOk()
+        ->assertHeader('Content-Disposition', "inline; filename=\"certificado-{$certificate->numero}.pdf\"");
+});
+
 test('public route verifies certificate with valid token and returns 404 with invalid token without auth', function () {
     $tipo = CertificateType::factory()->create([
         'codigo' => 'operatividad_garantia',

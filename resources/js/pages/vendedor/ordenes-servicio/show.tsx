@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+﻿import { Head, Link, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     Building2,
@@ -109,23 +109,30 @@ export default function ServiceOrderShow({ serviceOrder }: Props) {
                             asChild
                             variant="outline"
                             size="icon"
-                            className="size-8 rounded-[8px] border-[#E7E4DE] bg-white text-[#4A4742] shadow-none"
+                            className="size-8 rounded-[8px] border-border bg-card text-foreground/80 shadow-none"
                         >
-                            <Link href={ServiceOrderController.index.url(teamSlug)}>
+                            <Link
+                                href={ServiceOrderController.index.url(
+                                    teamSlug,
+                                )}
+                            >
                                 <ArrowLeft className="size-4" />
                             </Link>
                         </Button>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h2 className="font-['Oswald',sans-serif] text-[22px] font-semibold text-[#201F1D]">
+                                <h2 className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
                                     {serviceOrder.codigo}
                                 </h2>
-                                <Badge className="border-none bg-[#E9EFFD] text-[#2563EB]">
+                                <Badge className="border-none bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                                     {serviceOrder.estado.replace(/_/g, ' ')}
                                 </Badge>
                             </div>
-                            <p className="text-[12px] text-[#8A8680]">
-                                Creada el {new Date(serviceOrder.created_at).toLocaleDateString('es-PE')}
+                            <p className="text-[12px] text-muted-foreground">
+                                Creada el{' '}
+                                {new Date(
+                                    serviceOrder.created_at,
+                                ).toLocaleDateString('es-PE')}
                             </p>
                         </div>
                     </div>
@@ -134,7 +141,7 @@ export default function ServiceOrderShow({ serviceOrder }: Props) {
                         <Button
                             asChild
                             variant="outline"
-                            className="rounded-[9px] border-[#E4E1DC] bg-white text-xs font-semibold text-[#4A4742]"
+                            className="rounded-[9px] border-border bg-card text-xs font-semibold text-foreground/80"
                         >
                             <Link href={`/${teamSlug}/vendedor/comunicacion`}>
                                 <MessageCircle className="mr-1.5 size-3.5" />
@@ -145,8 +152,8 @@ export default function ServiceOrderShow({ serviceOrder }: Props) {
                 </div>
 
                 {/* 4-Step Progress Tracker Banner */}
-                <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
-                    <div className="mb-3 text-xs font-bold text-[#8A8680] uppercase">
+                <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <div className="mb-3 text-xs font-bold text-muted-foreground uppercase">
                         Progreso de atención
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -160,24 +167,30 @@ export default function ServiceOrderShow({ serviceOrder }: Props) {
                                     key={stepItem.key}
                                     className={`flex items-center gap-2 rounded-[10px] p-3 text-xs font-bold transition-all ${
                                         isCurrent
-                                            ? 'bg-[#E9EFFD] text-[#2563EB] ring-1 ring-blue-300'
+                                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 ring-1 ring-blue-300'
                                             : isDone
-                                              ? 'bg-[#E5F5EC] text-[#1E8E5A]'
-                                              : 'bg-[#FAFAF8] text-[#A8A49D]'
+                                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                              : 'bg-muted/40 text-muted-foreground'
                                     }`}
                                 >
                                     <div
                                         className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] ${
                                             isCurrent
-                                                ? 'bg-[#2563EB] text-white'
+                                                ? 'bg-blue-600 text-white'
                                                 : isDone
-                                                  ? 'bg-[#1E8E5A] text-white'
-                                                  : 'bg-[#E4E1DC] text-[#6B6862]'
+                                                  ? 'bg-emerald-600 text-white'
+                                                  : 'bg-muted/40 text-muted-foreground'
                                         }`}
                                     >
-                                        {isDone ? <CheckCircle2 className="size-3.5" /> : stepNum}
+                                        {isDone ? (
+                                            <CheckCircle2 className="size-3.5" />
+                                        ) : (
+                                            stepNum
+                                        )}
                                     </div>
-                                    <span className="truncate">{stepItem.label}</span>
+                                    <span className="truncate">
+                                        {stepItem.label}
+                                    </span>
                                 </div>
                             );
                         })}
@@ -188,58 +201,89 @@ export default function ServiceOrderShow({ serviceOrder }: Props) {
                 <div className="grid gap-4 lg:grid-cols-12">
                     {/* Left Column: Detalle del Servicio & Cliente (5 cols) */}
                     <div className="flex flex-col gap-4 lg:col-span-5">
-                        <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
-                            <div className="text-[13.5px] font-bold text-[#201F1D]">Detalles del servicio</div>
-                            <div className="mt-3 divide-y divide-[#F1EFEC] text-[12.5px]">
+                        <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                            <div className="text-[13.5px] font-bold text-foreground">
+                                Detalles del servicio
+                            </div>
+                            <div className="mt-3 divide-y divide-border text-[12.5px]">
                                 <div className="py-2">
-                                    <div className="text-[11px] text-[#8A8680]">Tipo de servicio</div>
-                                    <div className="font-semibold text-[#201F1D]">{serviceOrder.tipo_servicio}</div>
-                                </div>
-                                <div className="py-2">
-                                    <div className="text-[11px] text-[#8A8680]">Fecha programada</div>
-                                    <div className="font-mono text-[#201F1D]">{serviceOrder.fecha}</div>
-                                </div>
-                                <div className="py-2">
-                                    <div className="text-[11px] text-[#8A8680]">Departamento / Prioridad</div>
-                                    <div className="capitalize text-[#201F1D]">
-                                        {serviceOrder.departamento_tecnico || 'General'} · Prioridad {serviceOrder.prioridad}
+                                    <div className="text-[11px] text-muted-foreground">
+                                        Tipo de servicio
+                                    </div>
+                                    <div className="font-semibold text-foreground">
+                                        {serviceOrder.tipo_servicio}
                                     </div>
                                 </div>
                                 <div className="py-2">
-                                    <div className="text-[11px] text-[#8A8680]">Técnico asignado</div>
-                                    <div className="font-semibold text-[#201F1D]">
-                                        {serviceOrder.tecnico?.name || 'Pendiente de asignación'}
+                                    <div className="text-[11px] text-muted-foreground">
+                                        Fecha programada
+                                    </div>
+                                    <div className="font-mono text-foreground">
+                                        {serviceOrder.fecha}
+                                    </div>
+                                </div>
+                                <div className="py-2">
+                                    <div className="text-[11px] text-muted-foreground">
+                                        Departamento / Prioridad
+                                    </div>
+                                    <div className="text-foreground capitalize">
+                                        {serviceOrder.departamento_tecnico ||
+                                            'General'}{' '}
+                                        · Prioridad {serviceOrder.prioridad}
+                                    </div>
+                                </div>
+                                <div className="py-2">
+                                    <div className="text-[11px] text-muted-foreground">
+                                        Técnico asignado
+                                    </div>
+                                    <div className="font-semibold text-foreground">
+                                        {serviceOrder.tecnico?.name ||
+                                            'Pendiente de asignación'}
                                     </div>
                                 </div>
                                 {serviceOrder.observaciones && (
                                     <div className="py-2">
-                                        <div className="text-[11px] text-[#8A8680]">Observaciones</div>
-                                        <div className="text-[#4A4742]">{serviceOrder.observaciones}</div>
+                                        <div className="text-[11px] text-muted-foreground">
+                                            Observaciones
+                                        </div>
+                                        <div className="text-foreground/80">
+                                            {serviceOrder.observaciones}
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         </Card>
 
                         {serviceOrder.client && (
-                            <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
-                                <div className="text-[13.5px] font-bold text-[#201F1D]">Datos del cliente</div>
+                            <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                                <div className="text-[13.5px] font-bold text-foreground">
+                                    Datos del cliente
+                                </div>
                                 <div className="mt-3 space-y-1.5 text-[12.5px]">
-                                    <div className="font-bold text-[#201F1D]">
+                                    <div className="font-bold text-foreground">
                                         {serviceOrder.client.razon_social}
                                     </div>
                                     {serviceOrder.client.numero_documento && (
-                                        <div className="font-mono text-xs text-[#8A8680]">
-                                            RUC/DNI: {serviceOrder.client.numero_documento}
+                                        <div className="font-mono text-xs text-muted-foreground">
+                                            RUC/DNI:{' '}
+                                            {
+                                                serviceOrder.client
+                                                    .numero_documento
+                                            }
                                         </div>
                                     )}
                                     {serviceOrder.client.direccion_fiscal && (
-                                        <div className="text-xs text-[#4A4742]">
-                                            {serviceOrder.client.direccion_fiscal}
+                                        <div className="text-xs text-foreground/80">
+                                            {
+                                                serviceOrder.client
+                                                    .direccion_fiscal
+                                            }
                                         </div>
                                     )}
                                     {serviceOrder.client.telefono && (
-                                        <div className="text-xs text-[#8A8680]">
-                                            Teléfono: {serviceOrder.client.telefono}
+                                        <div className="text-xs text-muted-foreground">
+                                            Teléfono:{' '}
+                                            {serviceOrder.client.telefono}
                                         </div>
                                     )}
                                 </div>
@@ -249,57 +293,71 @@ export default function ServiceOrderShow({ serviceOrder }: Props) {
 
                     {/* Right Column: Bitácora de Eventos (7 cols) */}
                     <div className="flex flex-col lg:col-span-7">
-                        <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
+                        <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Clock className="size-4 text-[#8A8680]" />
-                                    <span className="text-[13.5px] font-bold text-[#201F1D]">
+                                    <Clock className="size-4 text-muted-foreground" />
+                                    <span className="text-[13.5px] font-bold text-foreground">
                                         Bitácora y eventos de orden
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-[#8A8680]">
+                                <span className="text-[11px] text-muted-foreground">
                                     {serviceOrder.events?.length ?? 0} eventos
                                 </span>
                             </div>
 
                             <div className="mt-4 space-y-4">
-                                {serviceOrder.events && serviceOrder.events.length > 0 ? (
+                                {serviceOrder.events &&
+                                serviceOrder.events.length > 0 ? (
                                     serviceOrder.events.map((evt) => (
-                                        <div key={evt.id} className="flex gap-3 text-[12.5px]">
-                                            <div className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-[#F1EFEC] text-[#8A8680]">
+                                        <div
+                                            key={evt.id}
+                                            className="flex gap-3 text-[12.5px]"
+                                        >
+                                            <div className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                                                 <CheckCircle2 className="size-3.5" />
                                             </div>
-                                            <div className="flex-1 rounded-[10px] border border-[#F1EFEC] bg-[#FAFAF8] p-3">
+                                            <div className="flex-1 rounded-[10px] border border-border bg-muted/40 p-3">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="font-bold text-[#201F1D] capitalize">
-                                                        {evt.tipo.replace(/_/g, ' ')}
+                                                    <span className="font-bold text-foreground capitalize">
+                                                        {evt.tipo.replace(
+                                                            /_/g,
+                                                            ' ',
+                                                        )}
                                                     </span>
-                                                    <span className="font-mono text-[10.5px] text-[#8A8680]">
-                                                        {new Date(evt.created_at).toLocaleString('es-PE', {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        })}
+                                                    <span className="font-mono text-[10.5px] text-muted-foreground">
+                                                        {new Date(
+                                                            evt.created_at,
+                                                        ).toLocaleString(
+                                                            'es-PE',
+                                                            {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                            },
+                                                        )}
                                                     </span>
                                                 </div>
-                                                <div className="mt-1 text-[#4A4742]">
+                                                <div className="mt-1 text-foreground/80">
                                                     {evt.payload?.mensaje ||
                                                         (evt.payload?.resultado
                                                             ? `Resultado: ${evt.payload.resultado}`
                                                             : 'Evento registrado en orden de servicio')}
                                                 </div>
                                                 {evt.user?.name && (
-                                                    <div className="mt-1 text-[11px] text-[#8A8680]">
-                                                        Registrado por: <b>{evt.user.name}</b>
+                                                    <div className="mt-1 text-[11px] text-muted-foreground">
+                                                        Registrado por:{' '}
+                                                        <b>{evt.user.name}</b>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="py-8 text-center text-xs text-[#8A8680]">
-                                        No se han registrado eventos adicionales en esta orden.
+                                    <div className="py-8 text-center text-xs text-muted-foreground">
+                                        No se han registrado eventos adicionales
+                                        en esta orden.
                                     </div>
                                 )}
                             </div>

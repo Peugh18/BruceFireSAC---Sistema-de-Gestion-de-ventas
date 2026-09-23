@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Vendedor;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Team;
+use App\Services\Certificates\CertificatePdfService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -77,6 +79,26 @@ class CertificateController extends Controller
                 'certificate_units' => $certificate->certificateUnits,
                 'unidades' => $certificate->certificateUnits->pluck('numero_serie_snapshot')->all(),
             ],
+        ]);
+    }
+
+    /**
+     * Genera y sirve el PDF del certificado (§83.2). `inline=1` lo abre en
+     * el navegador (para imprimir); sin ese parámetro se descarga.
+     */
+    public function pdf(
+        Team $current_team,
+        Certificate $certificate,
+        Request $request,
+        CertificatePdfService $certificatePdfService
+    ): HttpResponse {
+        $pdf = $certificatePdfService->generate($certificate);
+        $filename = "certificado-{$certificate->numero}.pdf";
+        $disposition = $request->boolean('inline') ? 'inline' : 'attachment';
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => sprintf('%s; filename="%s"', $disposition, $filename),
         ]);
     }
 }

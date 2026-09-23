@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
+use App\Models\Client;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
@@ -44,6 +45,9 @@ class ServiceOrderController extends Controller
         return Inertia::render('vendedor/ordenes-servicio/index', [
             'orders' => $orders,
             'filters' => ['estado' => $estado],
+            'clients' => Client::query()
+                ->orderBy('razon_social')
+                ->get(['id', 'razon_social', 'numero_documento']),
         ]);
     }
 

@@ -28,8 +28,77 @@ function roleLabel(role: string | null): string {
     return role.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+const MODULE_LABELS: Record<string, string> = {
+    dashboard: 'Dashboard',
+    clients: 'Clientes',
+    client_sites: 'Sedes del Cliente',
+    vehicles: 'Vehículos',
+    sedes: 'Sedes',
+    inventory: 'Inventario',
+    products: 'Productos',
+    services: 'Servicios',
+    quotes: 'Cotizaciones',
+    sales: 'Ventas',
+    certificates: 'Certificados',
+    billing: 'Facturación',
+    guias_remision: 'Guías de Remisión',
+    collections: 'Cobranzas',
+    cashregister: 'Caja',
+    alerts: 'Alertas',
+    service_orders: 'Órdenes de Servicio',
+    deficiencies: 'Deficiencias',
+    communication: 'Comunicación',
+    equipment: 'Equipos',
+    reports: 'Reportes',
+    audit: 'Auditoría',
+    roles_permissions: 'Roles y Permisos',
+};
+
+const ACTION_LABELS: Record<string, string> = {
+    view: 'Ver',
+    view_own: 'Ver lo propio',
+    view_total: 'Ver todo',
+    view_all: 'Ver todo',
+    view_history: 'Ver historial',
+    create: 'Crear',
+    update: 'Editar',
+    manage: 'Gestionar',
+    receive: 'Recibir',
+    adjust: 'Ajustar',
+    print_stickers: 'Imprimir stickers',
+    lookup: 'Consultar',
+    convert: 'Convertir',
+    scan_units: 'Escanear unidades',
+    print: 'Imprimir',
+    generate: 'Generar',
+    resend: 'Reenviar',
+    download: 'Descargar',
+    void: 'Anular',
+    credit_note: 'Nota de crédito',
+    register_payment: 'Registrar pago',
+    open: 'Abrir',
+    close: 'Cerrar',
+    assign: 'Asignar',
+    execute: 'Ejecutar',
+    authorize: 'Autorizar',
+    resolve: 'Resolver',
+    create_event: 'Registrar evento',
+    toggle_status: 'Activar/Desactivar',
+    export: 'Exportar',
+};
+
+function humanizePermission(permiso: string): string {
+    const [module, ...actionParts] = permiso.split('.');
+    const action = actionParts.join('.');
+    const moduleLabel = MODULE_LABELS[module] ?? module;
+    const actionLabel = ACTION_LABELS[action] ?? action.replaceAll('_', ' ');
+
+    return `${moduleLabel}: ${actionLabel}`;
+}
+
 export default function UsuariosIndex() {
-    const { currentTeam, usuarios, roles, matrizPermisos, flash } = usePage<PageProps>().props;
+    const { currentTeam, usuarios, roles, matrizPermisos, flash } =
+        usePage<PageProps>().props;
     const [tab, setTab] = useState<'usuarios' | 'matriz'>('usuarios');
     const [pendingUserId, setPendingUserId] = useState<number | null>(null);
 
@@ -45,7 +114,7 @@ export default function UsuariosIndex() {
             {
                 preserveScroll: true,
                 onFinish: () => setPendingUserId(null),
-            }
+            },
         );
     };
 
@@ -53,12 +122,12 @@ export default function UsuariosIndex() {
         <GerenteLayout title="Usuarios y Roles">
             <div className="space-y-6">
                 <div>
-                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-[#201F1D] uppercase">
+                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
                         Usuarios y Roles
                     </h1>
-                    <p className="mt-1 text-sm text-[#8A8680]">
-                        Asignación de uno de los 5 roles fijos del sistema y consulta de la matriz de permisos
-                        efectivos (§36).
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Asignación de uno de los 5 roles fijos del sistema y
+                        consulta de la matriz de permisos efectivos.
                     </p>
                 </div>
 
@@ -69,14 +138,14 @@ export default function UsuariosIndex() {
                     </div>
                 )}
 
-                <div className="flex gap-2 border-b border-[#E7E4DE]">
+                <div className="flex gap-2 border-b border-border">
                     <button
                         type="button"
                         onClick={() => setTab('usuarios')}
                         className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${
                             tab === 'usuarios'
-                                ? 'border-[#E31E24] text-[#201F1D]'
-                                : 'border-transparent text-[#8A8680] hover:text-[#201F1D]'
+                                ? 'border-primary text-foreground'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
                         }`}
                     >
                         <Users className="size-3.5" />
@@ -87,8 +156,8 @@ export default function UsuariosIndex() {
                         onClick={() => setTab('matriz')}
                         className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${
                             tab === 'matriz'
-                                ? 'border-[#E31E24] text-[#201F1D]'
-                                : 'border-transparent text-[#8A8680] hover:text-[#201F1D]'
+                                ? 'border-primary text-foreground'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
                         }`}
                     >
                         <ShieldQuestion className="size-3.5" />
@@ -97,29 +166,44 @@ export default function UsuariosIndex() {
                 </div>
 
                 {tab === 'usuarios' && (
-                    <div className="overflow-hidden rounded-xl border border-[#E7E4DE] bg-white shadow-xs">
+                    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs">
-                                <thead className="border-b border-[#E7E4DE] bg-[#FAFAF8] text-[11px] font-semibold tracking-wider text-[#8A8680] uppercase">
+                                <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                                     <tr>
                                         <th className="px-4 py-3">Nombre</th>
                                         <th className="px-4 py-3">Email</th>
-                                        <th className="px-4 py-3">Rol Actual</th>
-                                        <th className="px-4 py-3">Cambiar Rol</th>
+                                        <th className="px-4 py-3">
+                                            Rol Actual
+                                        </th>
+                                        <th className="px-4 py-3">
+                                            Cambiar Rol
+                                        </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#F3F1ED]">
+                                <tbody className="divide-y divide-border">
                                     {usuarios.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="py-8 text-center text-[#8A8680]">
-                                                No hay usuarios en este team todavía.
+                                            <td
+                                                colSpan={4}
+                                                className="py-8 text-center text-muted-foreground"
+                                            >
+                                                No hay usuarios en este team
+                                                todavía.
                                             </td>
                                         </tr>
                                     ) : (
                                         usuarios.map((u) => (
-                                            <tr key={u.id} className="transition-colors hover:bg-[#FAFAF8]">
-                                                <td className="px-4 py-3 font-semibold text-[#201F1D]">{u.name}</td>
-                                                <td className="px-4 py-3 text-[#6B6965]">{u.email}</td>
+                                            <tr
+                                                key={u.id}
+                                                className="transition-colors hover:bg-muted/40"
+                                            >
+                                                <td className="px-4 py-3 font-semibold text-foreground">
+                                                    {u.name}
+                                                </td>
+                                                <td className="px-4 py-3 text-muted-foreground">
+                                                    {u.email}
+                                                </td>
                                                 <td className="px-4 py-3">
                                                     <span
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
@@ -134,15 +218,29 @@ export default function UsuariosIndex() {
                                                 <td className="px-4 py-3">
                                                     <select
                                                         value={u.role ?? ''}
-                                                        disabled={pendingUserId === u.id}
-                                                        onChange={(e) => handleRoleChange(u, e.target.value)}
-                                                        className="w-full max-w-[180px] rounded-lg border border-[#E7E4DE] bg-[#FAFAF8] px-3 py-1.5 text-xs focus:border-[#201F1D] focus:outline-none disabled:opacity-50"
+                                                        disabled={
+                                                            pendingUserId ===
+                                                            u.id
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleRoleChange(
+                                                                u,
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="w-full max-w-[180px] rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none disabled:opacity-50"
                                                     >
-                                                        <option value="" disabled>
+                                                        <option
+                                                            value=""
+                                                            disabled
+                                                        >
                                                             Seleccionar rol
                                                         </option>
                                                         {roles.map((r) => (
-                                                            <option key={r} value={r}>
+                                                            <option
+                                                                key={r}
+                                                                value={r}
+                                                            >
                                                                 {roleLabel(r)}
                                                             </option>
                                                         ))}
@@ -159,23 +257,29 @@ export default function UsuariosIndex() {
 
                 {tab === 'matriz' && (
                     <div className="space-y-4">
-                        {Object.entries(matrizPermisos).map(([role, permisos]) => (
-                            <div key={role} className="rounded-xl border border-[#E7E4DE] bg-white p-4 shadow-xs">
-                                <h3 className="font-['Oswald',sans-serif] text-sm font-bold tracking-wide text-[#201F1D] uppercase">
-                                    {roleLabel(role)}
-                                </h3>
-                                <div className="mt-2.5 flex flex-wrap gap-1.5">
-                                    {permisos.map((permiso) => (
-                                        <span
-                                            key={permiso}
-                                            className="rounded-full bg-[#F3F1ED] px-2 py-0.5 font-mono text-[10px] text-[#4A4742]"
-                                        >
-                                            {permiso}
-                                        </span>
-                                    ))}
+                        {Object.entries(matrizPermisos).map(
+                            ([role, permisos]) => (
+                                <div
+                                    key={role}
+                                    className="rounded-xl border border-border bg-card p-4 shadow-xs"
+                                >
+                                    <h3 className="font-['Oswald',sans-serif] text-sm font-bold tracking-wide text-foreground uppercase">
+                                        {roleLabel(role)}
+                                    </h3>
+                                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                        {permisos.map((permiso) => (
+                                            <span
+                                                key={permiso}
+                                                title={permiso}
+                                                className="rounded-full bg-background px-2 py-0.5 text-[10.5px] font-semibold text-foreground/80"
+                                            >
+                                                {humanizePermission(permiso)}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ),
+                        )}
                     </div>
                 )}
             </div>

@@ -8,9 +8,11 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -38,4 +40,33 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Reemplaza las páginas de error genéricas de Laravel (sin marca,
+        // en inglés) por una pantalla propia de BRUCE FIRE para los códigos
+        // que un usuario real puede encontrarse en uso normal del sistema
+        // (403 de permisos, 404, sesión expirada). Los 500/503 solo se
+        // reemplazan fuera de local/testing para no perder el detalle de
+        // depuración de Laravel mientras se desarrolla.
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return $response;
+            }
+
+            $status = $response->getStatusCode();
+
+            if ($status === 419) {
+                return back()->with(['message' => 'Tu sesión expiró, intenta de nuevo.']);
+            }
+
+            $renderBranded = in_array($status, [403, 404], true)
+                || (in_array($status, [500, 503], true) && ! app()->environment(['local', 'testing']));
+
+            if ($renderBranded) {
+                return Inertia::render('errors/error', ['status' => $status])
+                    ->toResponse($request)
+                    ->setStatusCode($status);
+            }
+
+            return $response;
+        });
     })->create();

@@ -1,4 +1,4 @@
-import { Link, router, useForm } from '@inertiajs/react';
+﻿import { Link, router, useForm } from '@inertiajs/react';
 import {
     AlertCircle,
     Clock3,
@@ -137,7 +137,11 @@ function FieldError({ message }: { message?: string }) {
         return null;
     }
 
-    return <p className="mt-1 text-[11px] font-semibold text-[#B91C1C]">{message}</p>;
+    return (
+        <p className="mt-1 text-[11px] font-semibold text-destructive">
+            {message}
+        </p>
+    );
 }
 
 function ClientFormFields({
@@ -147,16 +151,26 @@ function ClientFormFields({
 }: {
     data: ClientFormData;
     errors: Partial<Record<keyof ClientFormData, string>>;
-    setData: <K extends keyof ClientFormData>(key: K, value: ClientFormData[K]) => void;
+    setData: <K extends keyof ClientFormData>(
+        key: K,
+        value: ClientFormData[K],
+    ) => void;
 }) {
     return (
         <div className="grid gap-3 sm:grid-cols-2">
             <div>
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Tipo doc.</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Tipo doc.
+                </Label>
                 <select
                     value={data.tipo_documento}
-                    onChange={(event) => setData('tipo_documento', event.target.value as 'ruc' | 'dni')}
-                    className="mt-1 h-9 w-full rounded-[8px] border border-[#E4E1DC] bg-white px-3 text-[13px] outline-none"
+                    onChange={(event) =>
+                        setData(
+                            'tipo_documento',
+                            event.target.value as 'ruc' | 'dni',
+                        )
+                    }
+                    className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] outline-none"
                 >
                     <option value="ruc">RUC</option>
                     <option value="dni">DNI</option>
@@ -165,92 +179,126 @@ function ClientFormFields({
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Numero</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Numero
+                </Label>
                 <Input
                     value={data.numero_documento}
-                    onChange={(event) => setData('numero_documento', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    onChange={(event) =>
+                        setData('numero_documento', event.target.value)
+                    }
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.numero_documento} />
             </div>
 
             <div className="sm:col-span-2">
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Razon social</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Razon social
+                </Label>
                 <Input
                     value={data.razon_social}
-                    onChange={(event) => setData('razon_social', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    onChange={(event) =>
+                        setData('razon_social', event.target.value)
+                    }
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.razon_social} />
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Nombre comercial</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Nombre comercial
+                </Label>
                 <Input
                     value={data.nombre_comercial}
-                    onChange={(event) => setData('nombre_comercial', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    onChange={(event) =>
+                        setData('nombre_comercial', event.target.value)
+                    }
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.nombre_comercial} />
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Email</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Email
+                </Label>
                 <Input
                     type="email"
                     value={data.email}
                     onChange={(event) => setData('email', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.email} />
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Telefono</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Telefono
+                </Label>
                 <Input
                     value={data.telefono}
-                    onChange={(event) => setData('telefono', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    onChange={(event) =>
+                        setData('telefono', event.target.value)
+                    }
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.telefono} />
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">WhatsApp</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    WhatsApp
+                </Label>
                 <Input
                     value={data.whatsapp}
-                    onChange={(event) => setData('whatsapp', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    onChange={(event) =>
+                        setData('whatsapp', event.target.value)
+                    }
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.whatsapp} />
             </div>
 
             <div className="sm:col-span-2">
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Direccion fiscal</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Direccion fiscal
+                </Label>
                 <Input
                     value={data.direccion_fiscal}
-                    onChange={(event) => setData('direccion_fiscal', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    onChange={(event) =>
+                        setData('direccion_fiscal', event.target.value)
+                    }
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.direccion_fiscal} />
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Estado SUNAT</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Estado SUNAT
+                </Label>
                 <Input
                     value={data.estado_contribuyente}
-                    onChange={(event) => setData('estado_contribuyente', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    onChange={(event) =>
+                        setData('estado_contribuyente', event.target.value)
+                    }
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.estado_contribuyente} />
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-[#4A4742] uppercase">Condicion</Label>
+                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    Condicion
+                </Label>
                 <Input
                     value={data.condicion_domicilio}
-                    onChange={(event) => setData('condicion_domicilio', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-[#E4E1DC] bg-white text-[13px]"
+                    onChange={(event) =>
+                        setData('condicion_domicilio', event.target.value)
+                    }
+                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                 />
                 <FieldError message={errors.condicion_domicilio} />
             </div>
@@ -303,52 +351,57 @@ export default function ClientesIndex({
             label: 'Total clientes',
             value: formatNumber(kpis.total_clientes),
             icon: UsersRound,
-            bg: 'bg-[#E9EFFD]',
-            text: 'text-[#2563EB]',
+            bg: 'bg-blue-500/10',
+            text: 'text-blue-600 dark:text-blue-400',
         },
         {
             label: 'Nuevos este mes',
             value: formatNumber(kpis.nuevos_este_mes),
             icon: Plus,
-            bg: 'bg-[#E5F5EC]',
-            text: 'text-[#1E8E5A]',
+            bg: 'bg-emerald-500/10',
+            text: 'text-emerald-600 dark:text-emerald-400',
         },
         {
             label: 'RUC activo y habido',
             value: `${kpis.porcentaje_activo_habido}%`,
             icon: Clock3,
-            bg: 'bg-[#FDF1E0]',
-            text: 'text-[#B45309]',
+            bg: 'bg-amber-500/10',
+            text: 'text-amber-600 dark:text-amber-400',
         },
         {
             label: 'Inactivos',
             value: formatNumber(kpis.inactivos),
             icon: AlertCircle,
-            bg: 'bg-[#FBE7E7]',
-            text: 'text-[#B91C1C]',
+            bg: 'bg-destructive/10',
+            text: 'text-destructive',
         },
     ];
 
     return (
         <VendedorLayout title="Clientes">
             <div className="flex flex-col gap-4">
-                <div className="grid gap-4 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {kpiItems.map((item) => {
                         const Icon = item.icon;
 
                         return (
                             <Card
                                 key={item.label}
-                                className="flex-row items-center gap-3.5 rounded-[14px] border-[#E7E4DE] bg-white px-[18px] py-4 shadow-none"
+                                className="flex-row items-center gap-3.5 rounded-[14px] border-border bg-card px-[18px] py-4 shadow-none"
                             >
-                                <div className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}>
-                                    <Icon className={`size-5 ${item.text}`} strokeWidth={2} />
+                                <div
+                                    className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}
+                                >
+                                    <Icon
+                                        className={`size-5 ${item.text}`}
+                                        strokeWidth={2}
+                                    />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] font-bold tracking-[0.03em] text-[#8A8680] uppercase">
+                                    <div className="text-[11px] font-bold tracking-[0.03em] text-muted-foreground uppercase">
                                         {item.label}
                                     </div>
-                                    <div className="font-['Oswald',sans-serif] text-[21px] leading-tight font-semibold text-[#201F1D]">
+                                    <div className="font-['Oswald',sans-serif] text-[21px] leading-tight font-semibold text-foreground">
                                         {item.value}
                                     </div>
                                 </div>
@@ -357,22 +410,30 @@ export default function ClientesIndex({
                     })}
                 </div>
 
-                <Card className="gap-0 rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
+                <Card className="gap-0 rounded-[16px] border-border bg-card p-5 shadow-none">
                     <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
-                        <form onSubmit={submitSearch} className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-[#E4E1DC] bg-[#FAFAF8] px-3">
-                            <Search className="size-3.5 shrink-0 text-[#8A8680]" strokeWidth={2} />
+                        <form
+                            onSubmit={submitSearch}
+                            className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3"
+                        >
+                            <Search
+                                className="size-3.5 shrink-0 text-muted-foreground"
+                                strokeWidth={2}
+                            />
                             <input
                                 value={search}
-                                onChange={(event) => setSearch(event.target.value)}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
                                 placeholder="Buscar por razon social, RUC o DNI..."
-                                className="h-10 min-w-0 flex-1 bg-transparent text-[13px] text-[#201F1D] outline-none placeholder:text-[#8A8680]"
+                                className="h-10 min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
                             />
                         </form>
 
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-10 rounded-[9px] border-[#E4E1DC] bg-white px-3.5 text-[12.5px] font-semibold text-[#4A4742] shadow-none"
+                            className="h-10 rounded-[9px] border-border bg-card px-3.5 text-[12.5px] font-semibold text-foreground/80 shadow-none"
                         >
                             <Filter className="size-3.5" />
                             Filtros
@@ -380,7 +441,7 @@ export default function ClientesIndex({
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-10 rounded-[9px] border-[#E4E1DC] bg-white px-3.5 text-[12.5px] font-semibold text-[#4A4742] shadow-none"
+                            className="h-10 rounded-[9px] border-border bg-card px-3.5 text-[12.5px] font-semibold text-foreground/80 shadow-none"
                         >
                             <Download className="size-3.5" />
                             Exportar
@@ -388,7 +449,7 @@ export default function ClientesIndex({
                         <Button
                             type="button"
                             onClick={() => setDialogOpen(true)}
-                            className="h-10 rounded-[9px] bg-[#E31E24] px-4 text-[13px] font-bold text-white shadow-none hover:bg-[#C9181D]"
+                            className="h-10 rounded-[9px] bg-primary px-4 text-[13px] font-bold text-white shadow-none hover:bg-primary/90"
                         >
                             <Plus className="size-3.5" />
                             Agregar cliente
@@ -402,7 +463,7 @@ export default function ClientesIndex({
                                     {columns.map((column) => (
                                         <th
                                             key={column}
-                                            className="border-b border-[#E7E4DE] px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap text-[#8A8680] uppercase"
+                                            className="border-b border-border px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap text-muted-foreground uppercase"
                                         >
                                             {column}
                                         </th>
@@ -415,51 +476,84 @@ export default function ClientesIndex({
 
                                     return (
                                         <tr key={client.id}>
-                                            <td className="border-b border-[#F1EFEC] px-2.5 py-[13px]">
+                                            <td className="border-b border-border px-2.5 py-[13px]">
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-[#F1EFEC] text-[11px] font-bold text-[#4A4742]">
-                                                        {initials(client.cliente.razon_social) || client.cliente.avatar}
+                                                    <div className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground/80">
+                                                        {initials(
+                                                            client.cliente
+                                                                .razon_social,
+                                                        ) ||
+                                                            client.cliente
+                                                                .avatar}
                                                     </div>
                                                     <div className="min-w-[180px]">
-                                                        <div className="font-bold text-[#201F1D]">
-                                                            {client.cliente.razon_social}
+                                                        <div className="flex items-center gap-1.5 font-bold text-foreground">
+                                                            {
+                                                                client.cliente
+                                                                    .razon_social
+                                                            }
+                                                            {!client.activo && (
+                                                                <Badge className="rounded-full border-transparent bg-destructive/10 px-1.5 py-0 text-[9.5px] font-bold text-destructive shadow-none">
+                                                                    Inactivo
+                                                                </Badge>
+                                                            )}
                                                         </div>
-                                                        <div className="text-[11px] text-[#8A8680]">
-                                                            {client.codigo_interno} · {client.cliente.tipo_documento.toUpperCase()}
+                                                        <div className="text-[11px] text-muted-foreground">
+                                                            {
+                                                                client.codigo_interno
+                                                            }{' '}
+                                                            ·{' '}
+                                                            {client.cliente.tipo_documento.toUpperCase()}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="border-b border-[#F1EFEC] px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[#3A3833]">
+                                            <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-muted-foreground">
                                                 {client.documento}
                                             </td>
-                                            <td className="max-w-[280px] border-b border-[#F1EFEC] px-2.5 py-[13px] text-[#3A3833]">
-                                                <span className="line-clamp-2">{client.direccion ?? '-'}</span>
+                                            <td className="max-w-[280px] border-b border-border px-2.5 py-[13px] text-muted-foreground">
+                                                <span className="line-clamp-2">
+                                                    {client.direccion ?? '-'}
+                                                </span>
                                             </td>
-                                            <td className="border-b border-[#F1EFEC] px-2.5 py-[13px]">
+                                            <td className="border-b border-border px-2.5 py-[13px]">
                                                 <Badge
                                                     className={[
                                                         'rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold shadow-none',
                                                         healthy
-                                                            ? 'bg-[#E5F5EC] text-[#1E8E5A]'
-                                                            : 'bg-[#FBE7E7] text-[#B91C1C]',
+                                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                                            : 'bg-destructive/10 text-destructive border border-destructive/20',
                                                     ].join(' ')}
                                                 >
-                                                    {client.estado_sunat.estado_contribuyente ?? '-'} · {client.estado_sunat.condicion_domicilio ?? '-'}
+                                                    {client.estado_sunat
+                                                        .estado_contribuyente ??
+                                                        '-'}{' '}
+                                                    ·{' '}
+                                                    {client.estado_sunat
+                                                        .condicion_domicilio ??
+                                                        '-'}
                                                 </Badge>
                                             </td>
-                                            <td className="border-b border-[#F1EFEC] px-2.5 py-[13px] text-[#3A3833]">
+                                            <td className="border-b border-border px-2.5 py-[13px] text-muted-foreground">
                                                 {client.ultima_compra ?? '-'}
                                             </td>
-                                            <td className="border-b border-[#F1EFEC] px-2.5 py-[13px]">
+                                            <td className="border-b border-border px-2.5 py-[13px]">
                                                 <div className="flex gap-1.5">
                                                     <Button
                                                         asChild
                                                         variant="outline"
                                                         size="icon"
-                                                        className="size-7 rounded-[7px] border-[#E7E4DE] bg-white text-[#4A4742] shadow-none"
+                                                        className="size-7 rounded-[7px] border-border bg-card text-foreground/80 shadow-none"
                                                     >
-                                                        <Link href={clientes.show({ current_team: currentTeam.slug, client: client.id })}>
+                                                        <Link
+                                                            href={clientes.show(
+                                                                {
+                                                                    current_team:
+                                                                        currentTeam.slug,
+                                                                    client: client.id,
+                                                                },
+                                                            )}
+                                                        >
                                                             <Eye className="size-3.5" />
                                                         </Link>
                                                     </Button>
@@ -472,9 +566,10 @@ export default function ClientesIndex({
                         </table>
                     </div>
 
-                    <div className="mt-3.5 flex flex-col gap-3 text-[11.5px] text-[#8A8680] sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mt-3.5 flex flex-col gap-3 text-[11.5px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                         <span>
-                            Mostrando {clients.from ?? 0}-{clients.to ?? 0} de {formatNumber(clients.total)} clientes
+                            Mostrando {clients.from ?? 0}-{clients.to ?? 0} de{' '}
+                            {formatNumber(clients.total)} clientes
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                             {clients.links.map((link, index) =>
@@ -487,8 +582,8 @@ export default function ClientesIndex({
                                         className={[
                                             'flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-["IBM_Plex_Mono",monospace] text-[11.5px] no-underline',
                                             link.active
-                                                ? 'bg-[#E31E24] font-bold text-white'
-                                                : 'text-[#8A8680] hover:bg-[#F1EFEC] hover:text-[#201F1D]',
+                                                ? 'bg-primary font-bold text-white'
+                                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                                         ].join(' ')}
                                     >
                                         {cleanPaginationLabel(link.label)}
@@ -496,7 +591,7 @@ export default function ClientesIndex({
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
-                                        className="flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] text-[#C9C5BE]"
+                                        className="flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] text-muted-foreground"
                                     >
                                         {cleanPaginationLabel(link.label)}
                                     </span>
@@ -508,34 +603,38 @@ export default function ClientesIndex({
             </div>
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-h-[88vh] overflow-y-auto rounded-[16px] border-[#E7E4DE] bg-white sm:max-w-2xl">
+                <DialogContent className="max-h-[88vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-2xl">
                     <DialogHeader>
                         <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[11px] bg-[#FBE7E7] text-[#E31E24]">
+                            <div className="flex size-10 items-center justify-center rounded-[11px] bg-destructive/10 text-primary">
                                 <UserRoundPlus className="size-5" />
                             </div>
-                            <DialogTitle className="font-['Oswald',sans-serif] text-[20px] font-semibold uppercase text-[#201F1D]">
+                            <DialogTitle className="font-['Oswald',sans-serif] text-[20px] font-semibold text-foreground uppercase">
                                 Agregar cliente
                             </DialogTitle>
                         </div>
                     </DialogHeader>
 
                     <form onSubmit={submitClient} className="space-y-4">
-                        <ClientFormFields data={form.data} errors={form.errors} setData={form.setData} />
+                        <ClientFormFields
+                            data={form.data}
+                            errors={form.errors}
+                            setData={form.setData}
+                        />
 
                         <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={() => setDialogOpen(false)}
-                                className="rounded-[9px] border-[#E4E1DC] bg-white text-[#4A4742] shadow-none"
+                                className="rounded-[9px] border-border bg-card text-foreground/80 shadow-none"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={form.processing}
-                                className="rounded-[9px] bg-[#E31E24] font-bold text-white shadow-none hover:bg-[#C9181D]"
+                                className="rounded-[9px] bg-primary font-bold text-white shadow-none hover:bg-primary/90"
                             >
                                 Guardar cliente
                             </Button>

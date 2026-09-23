@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
@@ -81,14 +81,14 @@ export default function RecojoShow({ order, custodyEvents }: Props) {
                 {/* Back Link */}
                 <Link
                     href={`${teamPrefix}/recojos`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
                 >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="h-4 w-4" />
                     <span>Volver a Lista de Recojos</span>
                 </Link>
 
                 {/* Client & Service Info Card */}
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-3">
+                <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <div className="flex items-center gap-2">
@@ -96,33 +96,33 @@ export default function RecojoShow({ order, custodyEvents }: Props) {
                                     {order.codigo}
                                 </span>
                                 {yaRecogido ? (
-                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-full">
+                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                                         Recojo Registrado
                                     </span>
                                 ) : (
-                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 rounded-full">
+                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
                                         Pendiente de Recojo
                                     </span>
                                 )}
                             </div>
-                            <h2 className="font-bold text-base text-neutral-900 dark:text-neutral-100 mt-1">
+                            <h2 className="mt-1 text-base font-bold text-neutral-900 dark:text-neutral-100">
                                 {order.cliente.nombre}
                             </h2>
-                            <p className="text-xs text-neutral-500 font-mono">
+                            <p className="font-mono text-xs text-neutral-500">
                                 RUC/DNI: {order.cliente.documento}
                             </p>
                         </div>
                     </div>
 
-                    <div className="space-y-2 pt-2 border-t border-neutral-100 dark:border-neutral-700/60 text-xs text-neutral-600 dark:text-neutral-400">
+                    <div className="space-y-2 border-t border-neutral-100 pt-2 text-xs text-neutral-600 dark:border-neutral-700/60 dark:text-neutral-400">
                         {order.cliente.direccion && (
                             <div className="flex items-start gap-1.5">
-                                <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
                                 <a
                                     href={`https://maps.google.com/?q=${encodeURIComponent(order.cliente.direccion)}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                                    className="text-blue-600 hover:underline dark:text-blue-400"
                                 >
                                     {order.cliente.direccion}
                                 </a>
@@ -130,8 +130,11 @@ export default function RecojoShow({ order, custodyEvents }: Props) {
                         )}
                         {order.cliente.telefono && (
                             <div className="flex items-center gap-1.5">
-                                <Phone className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                                <a href={`tel:${order.cliente.telefono}`} className="text-neutral-800 dark:text-neutral-200 font-medium">
+                                <Phone className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                                <a
+                                    href={`tel:${order.cliente.telefono}`}
+                                    className="font-medium text-neutral-800 dark:text-neutral-200"
+                                >
                                     {order.cliente.telefono}
                                 </a>
                             </div>
@@ -145,21 +148,25 @@ export default function RecojoShow({ order, custodyEvents }: Props) {
                 </div>
 
                 {/* Cadena de Custodia Timeline (§22.4) */}
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-3">
-                    <h3 className="text-xs font-bold uppercase text-neutral-700 dark:text-neutral-300 tracking-wider flex items-center gap-1.5">
-                        <ShieldCheck className="w-4 h-4 text-blue-600" />
-                        <span>Cadena de Custodia (§22.4)</span>
+                <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
+                    <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-neutral-700 uppercase dark:text-neutral-300">
+                        <ShieldCheck className="h-4 w-4 text-blue-600" />
+                        <span>Cadena de Custodia</span>
                     </h3>
 
                     {custodyEvents.length === 0 ? (
                         <p className="text-xs text-neutral-400 italic">
-                            Aún no se han registrado eslabones de custodia para esta orden.
+                            Aún no se han registrado eslabones de custodia para
+                            esta orden.
                         </p>
                     ) : (
-                        <div className="space-y-3 relative before:absolute before:inset-0 before:left-2.5 before:w-0.5 before:bg-neutral-200 dark:before:bg-neutral-700">
+                        <div className="relative space-y-3 before:absolute before:inset-0 before:left-2.5 before:w-0.5 before:bg-neutral-200 dark:before:bg-neutral-700">
                             {custodyEvents.map((ev) => (
-                                <div key={ev.id} className="relative pl-7 space-y-1">
-                                    <div className="absolute left-1 top-1 w-3.5 h-3.5 rounded-full bg-blue-600 ring-4 ring-white dark:ring-neutral-800" />
+                                <div
+                                    key={ev.id}
+                                    className="relative space-y-1 pl-7"
+                                >
+                                    <div className="absolute top-1 left-1 h-3.5 w-3.5 rounded-full bg-blue-600 ring-4 ring-white dark:ring-neutral-800" />
                                     <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
                                         {ev.etapa || ev.eslabon}
                                     </div>
@@ -168,11 +175,12 @@ export default function RecojoShow({ order, custodyEvents }: Props) {
                                     </div>
                                     {ev.payload?.contacto_cliente && (
                                         <div className="text-[11px] text-neutral-600 dark:text-neutral-400">
-                                            Entregado por cliente: {ev.payload.contacto_cliente}
+                                            Entregado por cliente:{' '}
+                                            {ev.payload.contacto_cliente}
                                         </div>
                                     )}
                                     {ev.payload?.observaciones && (
-                                        <div className="text-[11px] text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900 p-1.5 rounded-lg">
+                                        <div className="rounded-lg bg-neutral-50 p-1.5 text-[11px] text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400">
                                             {ev.payload.observaciones}
                                         </div>
                                     )}
@@ -184,98 +192,138 @@ export default function RecojoShow({ order, custodyEvents }: Props) {
 
                 {/* Recojo Form (§22.1, §85.6.2) */}
                 {!yaRecogido ? (
-                    <div className="p-4 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-200 dark:border-blue-900/40 rounded-2xl space-y-3">
-                        <h3 className="text-xs font-bold uppercase text-blue-900 dark:text-blue-300 tracking-wider flex items-center gap-1.5">
-                            <Truck className="w-4 h-4" />
+                    <div className="space-y-3 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent p-4 dark:border-blue-900/40">
+                        <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-blue-900 uppercase dark:text-blue-300">
+                            <Truck className="h-4 w-4" />
                             <span>Registro de Recojo Físico en Sitio</span>
                         </h3>
 
-                        <form onSubmit={handleSubmit} className="space-y-3 pt-1">
+                        <form
+                            onSubmit={handleSubmit}
+                            className="space-y-3 pt-1"
+                        >
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                         Cantidad Recogida *
                                     </label>
                                     <input
                                         type="number"
                                         min={1}
                                         value={form.data.cantidad}
-                                        onChange={(e) => form.setData('cantidad', Number(e.target.value))}
-                                        className="w-full text-xs p-2.5 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'cantidad',
+                                                Number(e.target.value),
+                                            )
+                                        }
+                                        className="w-full rounded-xl border border-neutral-300 bg-card p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                         Teléfono Contacto
                                     </label>
                                     <input
                                         type="text"
                                         value={form.data.contacto_telefono}
-                                        onChange={(e) => form.setData('contacto_telefono', e.target.value)}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'contacto_telefono',
+                                                e.target.value,
+                                            )
+                                        }
                                         placeholder="Teléfono móvil"
-                                        className="w-full text-xs p-2.5 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                        className="w-full rounded-xl border border-neutral-300 bg-card p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Nombre del Responsable que Entrega (Cliente) *
+                                <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                    Nombre del Responsable que Entrega (Cliente)
+                                    *
                                 </label>
                                 <input
                                     type="text"
                                     value={form.data.contacto_nombre}
-                                    onChange={(e) => form.setData('contacto_nombre', e.target.value)}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'contacto_nombre',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Nombre completo de quien entrega en el local"
-                                    className="w-full text-xs p-2.5 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                    className="w-full rounded-xl border border-neutral-300 bg-card p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                     Observaciones de Estado en Recojo
                                 </label>
                                 <textarea
                                     value={form.data.observaciones}
-                                    onChange={(e) => form.setData('observaciones', e.target.value)}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'observaciones',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Detalles sobre el estado físico de los extintores al retirarlos..."
                                     rows={2}
-                                    className="w-full text-xs p-2.5 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                    className="w-full rounded-xl border border-neutral-300 bg-card p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                 />
                             </div>
 
                             {/* Conformidad / Firma por defecto (§85.6.2) */}
-                            <div className="p-3 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-1">
-                                <label className="flex items-start gap-2.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200 cursor-pointer">
+                            <div className="space-y-1 rounded-xl border border-neutral-200 bg-card p-3 dark:border-neutral-700 dark:bg-neutral-900">
+                                <label className="flex cursor-pointer items-start gap-2.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200">
                                     <input
                                         type="checkbox"
                                         checked={form.data.conformidad_cliente}
-                                        onChange={(e) => form.setData('conformidad_cliente', e.target.checked)}
-                                        className="mt-0.5 rounded border-neutral-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'conformidad_cliente',
+                                                e.target.checked,
+                                            )
+                                        }
+                                        className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
                                         required
                                     />
                                     <span>
-                                        Conformidad del cliente: El responsable declara haber entregado los equipos detallados para su traslado a Planta Bruce Fire (§85.6.2).
+                                        Conformidad del cliente: El responsable
+                                        declara haber entregado los equipos
+                                        detallados para su traslado a Planta
+                                        Bruce Fire.
                                     </span>
                                 </label>
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={form.processing || !form.data.conformidad_cliente}
-                                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
+                                disabled={
+                                    form.processing ||
+                                    !form.data.conformidad_cliente
+                                }
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
                             >
-                                <CheckCircle2 className="w-4 h-4" />
-                                <span>Confirmar Recojo y Cadena de Custodia</span>
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>
+                                    Confirmar Recojo y Cadena de Custodia
+                                </span>
                             </button>
                         </form>
                     </div>
                 ) : (
-                    <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                        <span>Recojo formalizado. Los equipos se encuentran en custodia rumbo a Planta.</span>
+                    <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+                        <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                        <span>
+                            Recojo formalizado. Los equipos se encuentran en
+                            custodia rumbo a Planta.
+                        </span>
                     </div>
                 )}
             </div>

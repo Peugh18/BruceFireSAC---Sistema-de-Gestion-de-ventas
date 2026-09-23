@@ -11,6 +11,7 @@ import {
     TriangleAlert,
     UsersRound,
     Wrench,
+    X,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -64,7 +65,10 @@ function formatCount(count?: number): string | undefined {
     return new Intl.NumberFormat('es-PE').format(count);
 }
 
-function buildNavGroups(teamSlug: string, counts: SidebarCounts | null | undefined): VendedorNavGroup[] {
+function buildNavGroups(
+    teamSlug: string,
+    counts: SidebarCounts | null | undefined,
+): VendedorNavGroup[] {
     return [
         {
             items: [
@@ -171,8 +175,14 @@ function isActivePath(currentPath: string, href: string): boolean {
     );
 }
 
-export function VendedorSidebar() {
-    const { auth, currentTeam, sidebarCounts } = usePage<VendedorPageProps>().props;
+type VendedorSidebarProps = {
+    open: boolean;
+    onClose: () => void;
+};
+
+export function VendedorSidebar({ open, onClose }: VendedorSidebarProps) {
+    const { auth, currentTeam, sidebarCounts } =
+        usePage<VendedorPageProps>().props;
     const currentPath = usePage().url;
     const getInitials = useInitials();
     const userRole = auth.roles?.[0] ?? 'Vendedor';
@@ -181,88 +191,117 @@ export function VendedorSidebar() {
         : [];
 
     return (
-        <aside className="flex h-screen w-[236px] shrink-0 flex-col bg-[#18181B]">
-            <div className="flex h-[66px] shrink-0 items-center gap-2.5 px-5">
-                <div className="flex size-[26px] items-center justify-center rounded-[7px] bg-[#E31E24] font-['Oswald',sans-serif] text-[11px] font-bold text-white">
-                    BF
-                </div>
-                <div className="min-w-0">
-                    <div className="font-['Oswald',sans-serif] text-[13px] leading-none font-bold tracking-[0.02em] text-white uppercase">
-                        BRUCE FIRE
+        <>
+            {open && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+                    onClick={onClose}
+                />
+            )}
+
+            <aside
+                className={[
+                    'fixed inset-y-0 left-0 z-50 flex h-full w-[236px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:static lg:h-full lg:translate-x-0',
+                    open ? 'translate-x-0' : '-translate-x-full',
+                ].join(' ')}
+            >
+                <div className="flex h-[66px] shrink-0 items-center gap-2.5 px-5">
+                    <div className="flex size-[26px] items-center justify-center rounded-[7px] bg-primary font-['Oswald',sans-serif] text-[11px] font-bold text-primary-foreground shadow-xs">
+                        BF
                     </div>
-                    <div className="mt-1 font-['IBM_Plex_Mono',monospace] text-[8px] tracking-[0.1em] text-[#6B6965] uppercase">
-                        Panel vendedor
+                    <div className="min-w-0 flex-1">
+                        <div className="font-['Oswald',sans-serif] text-[13px] leading-none font-bold tracking-[0.02em] text-sidebar-foreground uppercase">
+                            BRUCE FIRE
+                        </div>
+                        <div className="mt-1 font-['IBM_Plex_Mono',monospace] text-[8px] tracking-[0.1em] text-sidebar-foreground/60 uppercase">
+                            Panel vendedor
+                        </div>
                     </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Cerrar menú"
+                        className="flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground lg:hidden transition-colors"
+                    >
+                        <X className="size-4" />
+                    </button>
                 </div>
-            </div>
 
-            <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-3.5">
-                {vendedorNavGroups.map((group, groupIndex) => (
-                    <div key={group.label ?? `group-${groupIndex}`}>
-                        {group.label && (
-                            <div className="px-2.5 pt-4 pb-1.5 font-['IBM_Plex_Mono',monospace] text-[9.5px] tracking-[0.1em] text-[#6B6965] uppercase">
-                                {group.label}
-                            </div>
-                        )}
+                <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-3.5 overscroll-contain">
+                    {vendedorNavGroups.map((group, groupIndex) => (
+                        <div key={group.label ?? `group-${groupIndex}`}>
+                            {group.label && (
+                                <div className="px-2.5 pt-4 pb-1.5 font-['IBM_Plex_Mono',monospace] text-[9.5px] tracking-[0.1em] text-sidebar-foreground/50 uppercase">
+                                    {group.label}
+                                </div>
+                            )}
 
-                        {group.items.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = isActivePath(currentPath, item.href);
+                            {group.items.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = isActivePath(
+                                    currentPath,
+                                    item.href,
+                                );
 
-                            return (
-                                <Link
-                                    key={item.title}
-                                    href={item.href}
-                                    prefetch
-                                    className={[
-                                        'flex h-[38px] items-center gap-[11px] rounded-[9px] px-3 text-[13px] font-medium no-underline transition-colors',
-                                        isActive
-                                            ? 'bg-[#E31E24] font-bold text-white'
-                                            : 'text-[#B9B7B2] hover:bg-[#232327] hover:text-white',
-                                    ].join(' ')}
-                                >
-                                    <Icon
+                                return (
+                                    <Link
+                                        key={item.title}
+                                        href={item.href}
+                                        prefetch
+                                        onClick={onClose}
                                         className={[
-                                            'size-4 shrink-0',
-                                            isActive ? 'opacity-100' : 'opacity-80',
+                                            'flex h-[38px] items-center gap-[11px] rounded-[9px] px-3 text-[13px] font-medium no-underline transition-colors',
+                                            isActive
+                                                ? 'bg-primary font-bold text-primary-foreground shadow-xs'
+                                                : 'text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground',
                                         ].join(' ')}
-                                        strokeWidth={2}
-                                    />
-                                    <span className="min-w-0 flex-1 truncate">
-                                        {item.title}
-                                    </span>
-                                    {item.count !== undefined && item.count > 0 && (
-                                        <span
+                                    >
+                                        <Icon
                                             className={[
-                                                'rounded-full px-1.5 py-px font-mono text-[10px]',
+                                                'size-4 shrink-0',
                                                 isActive
-                                                    ? 'bg-white/25'
-                                                    : 'bg-white/[0.12]',
+                                                    ? 'opacity-100'
+                                                    : 'opacity-80',
                                             ].join(' ')}
-                                        >
-                                            {formatCount(item.count)}
+                                            strokeWidth={2}
+                                        />
+                                        <span className="min-w-0 flex-1 truncate">
+                                            {item.title}
                                         </span>
-                                    )}
-                                </Link>
-                            );
-                        })}
-                    </div>
-                ))}
-            </nav>
+                                        {item.count !== undefined &&
+                                            item.count > 0 && (
+                                                <span
+                                                    className={[
+                                                        'rounded-full px-1.5 py-px font-mono text-[10px]',
+                                                        isActive
+                                                            ? 'bg-primary-foreground/20 text-primary-foreground'
+                                                            : 'bg-sidebar-accent text-sidebar-foreground/90',
+                                                    ].join(' ')}
+                                                >
+                                                    {formatCount(item.count)}
+                                                </span>
+                                            )}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </nav>
 
-            <div className="flex shrink-0 items-center gap-2.5 border-t border-[#26262A] px-5 py-4">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#E31E24] text-xs font-bold text-white">
-                    {getInitials(auth.user.name)}
-                </div>
-                <div className="min-w-0">
-                    <div className="truncate text-[12.5px] font-bold whitespace-nowrap text-white">
-                        {auth.user.name}
+                <div className="flex shrink-0 items-center gap-2.5 border-t border-sidebar-border px-5 py-4">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary text-xs font-bold text-primary-foreground shadow-xs">
+                        {getInitials(auth.user.name)}
                     </div>
-                    <div className="font-['IBM_Plex_Mono',monospace] text-[9.5px] text-[#6B6965]">
-                        {userRole}
+                    <div className="min-w-0">
+                        <div className="truncate text-[12.5px] font-bold whitespace-nowrap text-sidebar-foreground">
+                            {auth.user.name}
+                        </div>
+                        <div className="font-['IBM_Plex_Mono',monospace] text-[9.5px] text-sidebar-foreground/60">
+                            {userRole}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </aside>
+            </aside>
+        </>
     );
 }

@@ -14,6 +14,10 @@ void createInertiaApp({
         switch (true) {
             case name === 'welcome':
                 return null;
+            case name.startsWith('errors/'):
+                // Página de error propia, sin marca del starter-kit ni
+                // sidebar genérico — debe verse igual sin sesión iniciada.
+                return null;
             case name.startsWith('vendedor/'):
                 // Las páginas de vendedor se envuelven a sí mismas con
                 // VendedorLayout (sidebar propio) — no usan el AppLayout

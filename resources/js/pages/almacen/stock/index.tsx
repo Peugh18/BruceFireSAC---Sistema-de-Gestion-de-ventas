@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+﻿import { Head, router } from '@inertiajs/react';
 import {
     ArrowUpDown,
     Boxes,
@@ -49,7 +49,13 @@ export type StockItem = {
 export type KardexItem = {
     id: number;
     fecha: string | null;
-    tipo: 'ingreso' | 'salida_venta' | 'salida_servicio' | 'ajuste' | 'traslado' | string;
+    tipo:
+        | 'ingreso'
+        | 'salida_venta'
+        | 'salida_servicio'
+        | 'ajuste'
+        | 'traslado'
+        | string;
     cantidad: number;
     producto: {
         id: number;
@@ -124,51 +130,54 @@ function formatDate(isoString: string | null): string {
 function getTipoBadge(tipo: 'producto' | 'servicio') {
     if (tipo === 'producto') {
         return (
-            <span className="inline-flex items-center gap-1 rounded-[6px] border border-[#BFDBFE] bg-[#EFF6FF] px-2 py-0.5 text-[10.5px] font-bold text-[#2563EB]">
+            <span className="inline-flex items-center gap-1 rounded-[6px] border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10.5px] font-bold text-blue-600 dark:text-blue-400">
                 <Package className="size-3" />
                 Producto
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center gap-1 rounded-[6px] border border-[#DDD6FE] bg-[#F5F3FF] px-2 py-0.5 text-[10.5px] font-bold text-[#7C3AED]">
+        <span className="inline-flex items-center gap-1 rounded-[6px] border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[10.5px] font-bold text-purple-600 dark:text-purple-400">
             <Wrench className="size-3" />
             Servicio
         </span>
     );
 }
 
-function getTipoMovimientoBadge(tipo: string): { label: string; className: string } {
+function getTipoMovimientoBadge(tipo: string): {
+    label: string;
+    className: string;
+} {
     switch (tipo) {
         case 'ingreso':
             return {
                 label: 'Ingreso',
-                className: 'bg-[#E5F5EC] text-[#1E8E5A] border-[#C3E8D4]',
+                className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border-emerald-500/20',
             };
         case 'salida_venta':
             return {
                 label: 'Venta',
-                className: 'bg-[#FBEAE9] text-[#E31E24] border-[#F5C6C5]',
+                className: 'bg-destructive/10 text-primary border-destructive/20',
             };
         case 'salida_servicio':
             return {
                 label: 'Consumo Taller',
-                className: 'bg-[#F5F3FF] text-[#7C3AED] border-[#DDD6FE]',
+                className: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
             };
         case 'ajuste':
             return {
                 label: 'Ajuste',
-                className: 'bg-[#FEF6E9] text-[#B4690E] border-[#FCE1B6]',
+                className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
             };
         case 'traslado':
             return {
                 label: 'Traslado',
-                className: 'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
+                className: 'bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20',
             };
         default:
             return {
                 label: tipo,
-                className: 'bg-[#F1EFEC] text-[#6B6965] border-[#E4E1DC]',
+                className: 'bg-muted text-muted-foreground border-border',
             };
     }
 }
@@ -189,10 +198,18 @@ export default function StockIndex({
     const [stockTipo, setStockTipo] = useState(filters.tipo || 'todos');
 
     // Filtros de Kardex
-    const [kProductId, setKProductId] = useState(kardex_filters.product_id ? String(kardex_filters.product_id) : '');
-    const [kSedeId, setKSedeId] = useState(kardex_filters.sede_id ? String(kardex_filters.sede_id) : '');
-    const [kFechaDesde, setKFechaDesde] = useState(kardex_filters.fecha_desde || '');
-    const [kFechaHasta, setKFechaHasta] = useState(kardex_filters.fecha_hasta || '');
+    const [kProductId, setKProductId] = useState(
+        kardex_filters.product_id ? String(kardex_filters.product_id) : '',
+    );
+    const [kSedeId, setKSedeId] = useState(
+        kardex_filters.sede_id ? String(kardex_filters.sede_id) : '',
+    );
+    const [kFechaDesde, setKFechaDesde] = useState(
+        kardex_filters.fecha_desde || '',
+    );
+    const [kFechaHasta, setKFechaHasta] = useState(
+        kardex_filters.fecha_hasta || '',
+    );
     const [kTipo, setKTipo] = useState(kardex_filters.tipo || 'todos');
 
     // Búsqueda en Stock
@@ -208,7 +225,10 @@ export default function StockIndex({
                 kardex_sede_id: kardex_filters.sede_id || undefined,
                 kardex_fecha_desde: kardex_filters.fecha_desde || undefined,
                 kardex_fecha_hasta: kardex_filters.fecha_hasta || undefined,
-                kardex_tipo: kardex_filters.tipo !== 'todos' ? kardex_filters.tipo : undefined,
+                kardex_tipo:
+                    kardex_filters.tipo !== 'todos'
+                        ? kardex_filters.tipo
+                        : undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -224,7 +244,10 @@ export default function StockIndex({
                 kardex_sede_id: kardex_filters.sede_id || undefined,
                 kardex_fecha_desde: kardex_filters.fecha_desde || undefined,
                 kardex_fecha_hasta: kardex_filters.fecha_hasta || undefined,
-                kardex_tipo: kardex_filters.tipo !== 'todos' ? kardex_filters.tipo : undefined,
+                kardex_tipo:
+                    kardex_filters.tipo !== 'todos'
+                        ? kardex_filters.tipo
+                        : undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -271,74 +294,82 @@ export default function StockIndex({
             <div className="flex flex-col gap-6">
                 {/* 4 KPI Cards */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
-                        <div className="flex items-center justify-between text-[#8A8680]">
-                            <span className="text-xs font-bold uppercase tracking-wider">Productos en catálogo</span>
-                            <Package className="size-4 text-[#201F1D]" />
+                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                        <div className="flex items-center justify-between text-muted-foreground">
+                            <span className="text-xs font-bold tracking-wider uppercase">
+                                Productos en catálogo
+                            </span>
+                            <Package className="size-4 text-foreground" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-[#201F1D]">
+                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-foreground">
                             {kpis.total_productos}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-[#8A8680]">
+                        <div className="mt-1 text-[11.5px] text-muted-foreground">
                             Productos físicos y repuestos
                         </div>
                     </Card>
 
-                    <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
-                        <div className="flex items-center justify-between text-[#8A8680]">
-                            <span className="text-xs font-bold uppercase tracking-wider">Servicios en catálogo</span>
-                            <Wrench className="size-4 text-[#7C3AED]" />
+                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                        <div className="flex items-center justify-between text-muted-foreground">
+                            <span className="text-xs font-bold tracking-wider uppercase">
+                                Servicios en catálogo
+                            </span>
+                            <Wrench className="size-4 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-[#201F1D]">
+                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-foreground">
                             {kpis.total_servicios}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-[#8A8680]">
+                        <div className="mt-1 text-[11.5px] text-muted-foreground">
                             Recargas, pruebas y mantenimientos
                         </div>
                     </Card>
 
-                    <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
-                        <div className="flex items-center justify-between text-[#8A8680]">
-                            <span className="text-xs font-bold uppercase tracking-wider">Unidades disponibles</span>
-                            <Boxes className="size-4 text-[#1E8E5A]" />
+                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                        <div className="flex items-center justify-between text-muted-foreground">
+                            <span className="text-xs font-bold tracking-wider uppercase">
+                                Unidades disponibles
+                            </span>
+                            <Boxes className="size-4 text-emerald-600 dark:text-emerald-400" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-[#1E8E5A]">
+                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-emerald-600 dark:text-emerald-400">
                             {kpis.unidades_en_stock}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-[#8A8680]">
+                        <div className="mt-1 text-[11.5px] text-muted-foreground">
                             Total en todos los almacenes
                         </div>
                     </Card>
 
-                    <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
-                        <div className="flex items-center justify-between text-[#8A8680]">
-                            <span className="text-xs font-bold uppercase tracking-wider">Bajo stock mínimo</span>
-                            <TrendingDown className="size-4 text-[#E31E24]" />
+                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                        <div className="flex items-center justify-between text-muted-foreground">
+                            <span className="text-xs font-bold tracking-wider uppercase">
+                                Bajo stock mínimo
+                            </span>
+                            <TrendingDown className="size-4 text-primary" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-[#E31E24]">
+                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-primary">
                             {kpis.bajo_minimo}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-[#8A8680]">
+                        <div className="mt-1 text-[11.5px] text-muted-foreground">
                             Requieren reabastecimiento
                         </div>
                     </Card>
                 </div>
 
                 {/* Tabs Switcher: [Stock Actual] | [Movimientos Kardex] */}
-                <div className="flex items-center gap-2 border-b border-[#E7E4DE] pb-2">
+                <div className="flex items-center gap-2 border-b border-border pb-2">
                     <button
                         type="button"
                         onClick={() => setActiveTab('stock')}
                         className={[
                             'flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-bold transition-all',
                             activeTab === 'stock'
-                                ? 'bg-[#18181B] text-white shadow-xs'
-                                : 'text-[#6B6965] hover:bg-[#F3F1ED] hover:text-[#201F1D]',
+                                ? 'bg-foreground text-background shadow-xs'
+                                : 'text-muted-foreground hover:bg-background hover:text-foreground',
                         ].join(' ')}
                     >
                         <Boxes className="size-4" />
                         <span>Stock de Productos y Servicios</span>
-                        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10.5px]">
+                        <span className="rounded-full bg-card/20 px-2 py-0.5 text-[10.5px]">
                             {items.length}
                         </span>
                     </button>
@@ -349,13 +380,13 @@ export default function StockIndex({
                         className={[
                             'flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-bold transition-all',
                             activeTab === 'kardex'
-                                ? 'bg-[#18181B] text-white shadow-xs'
-                                : 'text-[#6B6965] hover:bg-[#F3F1ED] hover:text-[#201F1D]',
+                                ? 'bg-foreground text-background shadow-xs'
+                                : 'text-muted-foreground hover:bg-background hover:text-foreground',
                         ].join(' ')}
                     >
                         <History className="size-4" />
                         <span>Historial de Kardex</span>
-                        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10.5px]">
+                        <span className="rounded-full bg-card/20 px-2 py-0.5 text-[10.5px]">
                             {kardex.total}
                         </span>
                     </button>
@@ -363,16 +394,23 @@ export default function StockIndex({
 
                 {/* TAB 1: STOCK Y CATÁLOGO */}
                 {activeTab === 'stock' && (
-                    <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
+                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
                         {/* Filters Bar */}
-                        <form onSubmit={handleStockFilter} className="flex flex-wrap items-end gap-3 pb-5 border-b border-[#F1EFEC]">
-                            <div className="flex-1 min-w-[220px]">
-                                <Label className="text-xs font-bold text-[#4A4742]">Buscar ítem</Label>
+                        <form
+                            onSubmit={handleStockFilter}
+                            className="flex flex-wrap items-end gap-3 border-b border-border pb-5"
+                        >
+                            <div className="min-w-[220px] flex-1">
+                                <Label className="text-xs font-bold text-foreground/80">
+                                    Buscar ítem
+                                </Label>
                                 <div className="relative mt-1">
-                                    <Search className="absolute top-2.5 left-3 size-4 text-[#8A8680]" />
+                                    <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
                                     <Input
                                         value={stockSearch}
-                                        onChange={(e) => setStockSearch(e.target.value)}
+                                        onChange={(e) =>
+                                            setStockSearch(e.target.value)
+                                        }
                                         placeholder="Código o nombre del producto..."
                                         className="h-9 pl-9 text-xs"
                                     />
@@ -380,30 +418,45 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[180px]">
-                                <Label className="text-xs font-bold text-[#4A4742]">Tipo de ítem</Label>
+                                <Label className="text-xs font-bold text-foreground/80">
+                                    Tipo de ítem
+                                </Label>
                                 <select
                                     value={stockTipo}
-                                    onChange={(e) => setStockTipo(e.target.value)}
-                                    className="mt-1 h-9 w-full rounded-md border border-[#E4E1DC] bg-white px-3 text-xs text-[#201F1D] focus:border-[#E31E24] focus:outline-none"
+                                    onChange={(e) =>
+                                        setStockTipo(e.target.value)
+                                    }
+                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
                                 >
-                                    <option value="todos">Todos los tipos</option>
-                                    <option value="producto">Solo Productos</option>
-                                    <option value="servicio">Solo Servicios</option>
+                                    <option value="todos">
+                                        Todos los tipos
+                                    </option>
+                                    <option value="producto">
+                                        Solo Productos
+                                    </option>
+                                    <option value="servicio">
+                                        Solo Servicios
+                                    </option>
                                 </select>
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <Button type="submit" size="sm" className="h-9 gap-1.5 bg-[#18181B] text-white hover:bg-[#27272A]">
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    className="h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                                >
                                     <Filter className="size-3.5" />
                                     <span>Filtrar</span>
                                 </Button>
-                                {(stockSearch !== '' || stockTipo !== 'todos') && (
+                                {(stockSearch !== '' ||
+                                    stockTipo !== 'todos') && (
                                     <Button
                                         type="button"
                                         variant="outline"
                                         size="sm"
                                         onClick={handleResetStock}
-                                        className="h-9 gap-1.5 text-[#6B6965]"
+                                        className="h-9 gap-1.5 text-muted-foreground"
                                     >
                                         <RotateCcw className="size-3.5" />
                                         <span>Limpiar</span>
@@ -415,79 +468,128 @@ export default function StockIndex({
                         {/* Stock Table */}
                         {items.length === 0 ? (
                             <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                                <Package className="size-10 text-[#D5D2CB]" />
-                                <p className="mt-2 text-sm font-medium text-[#8A8680]">
-                                    No se encontraron productos ni servicios con los filtros indicados.
+                                <Package className="size-10 text-muted-foreground" />
+                                <p className="mt-2 text-sm font-medium text-muted-foreground">
+                                    No se encontraron productos ni servicios con
+                                    los filtros indicados.
                                 </p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto mt-4">
+                            <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-[12.5px]">
                                     <thead>
-                                        <tr className="border-b border-[#E7E4DE] text-[11px] font-bold text-[#8A8680] uppercase tracking-wider">
-                                            <th className="py-2.5 pr-4">Código</th>
-                                            <th className="py-2.5 px-4">Ítem / Descripción</th>
-                                            <th className="py-2.5 px-3">Tipo</th>
-                                            <th className="py-2.5 px-3 text-center">U.M.</th>
-                                            <th className="py-2.5 px-3 text-right">Precio Ref.</th>
+                                        <tr className="border-b border-border text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                                            <th className="py-2.5 pr-4">
+                                                Código
+                                            </th>
+                                            <th className="px-4 py-2.5">
+                                                Ítem / Descripción
+                                            </th>
+                                            <th className="px-3 py-2.5">
+                                                Tipo
+                                            </th>
+                                            <th className="px-3 py-2.5 text-center">
+                                                U.M.
+                                            </th>
+                                            <th className="px-3 py-2.5 text-right">
+                                                Precio Ref.
+                                            </th>
                                             {sedes.map((sede) => (
-                                                <th key={sede.id} className="py-2.5 px-3 text-center">
+                                                <th
+                                                    key={sede.id}
+                                                    className="px-3 py-2.5 text-center"
+                                                >
                                                     <div className="flex items-center justify-center gap-1">
-                                                        <Building2 className="size-3 text-[#8A8680]" />
-                                                        <span>{sede.nombre}</span>
+                                                        <Building2 className="size-3 text-muted-foreground" />
+                                                        <span>
+                                                            {sede.nombre}
+                                                        </span>
                                                     </div>
                                                 </th>
                                             ))}
-                                            <th className="py-2.5 pl-4 text-center">Stock Total</th>
+                                            <th className="py-2.5 pl-4 text-center">
+                                                Stock Total
+                                            </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#F1EFEC]">
+                                    <tbody className="divide-y divide-border">
                                         {items.map((item) => {
                                             const isBajoMinimo =
                                                 item.tipo === 'producto' &&
                                                 item.stock_minimo !== null &&
                                                 item.stock_minimo > 0 &&
-                                                (item.stock_disponible_total ?? 0) <= item.stock_minimo;
+                                                (item.stock_disponible_total ??
+                                                    0) <= item.stock_minimo;
 
                                             return (
-                                                <tr key={`${item.tipo}-${item.id}`} className="hover:bg-[#FAFAF8] transition-colors">
-                                                    <td className="py-3 pr-4 font-mono font-bold text-[#201F1D]">
+                                                <tr
+                                                    key={`${item.tipo}-${item.id}`}
+                                                    className="transition-colors hover:bg-muted/40"
+                                                >
+                                                    <td className="py-3 pr-4 font-mono font-bold text-foreground">
                                                         {item.codigo}
                                                     </td>
-                                                    <td className="py-3 px-4">
-                                                        <div className="font-bold text-[#201F1D]">{item.nombre}</div>
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-bold text-foreground">
+                                                            {item.nombre}
+                                                        </div>
                                                         {item.serializado && (
-                                                            <div className="flex items-center gap-1 text-[10.5px] text-[#6B6965] mt-0.5">
-                                                                <ScanBarcode className="size-3 text-[#1E8E5A]" />
-                                                                <span>Unidad serializada con código de barras</span>
+                                                            <div className="mt-0.5 flex items-center gap-1 text-[10.5px] text-muted-foreground">
+                                                                <ScanBarcode className="size-3 text-emerald-600 dark:text-emerald-400" />
+                                                                <span>
+                                                                    Unidad
+                                                                    serializada
+                                                                    con código
+                                                                    de barras
+                                                                </span>
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td className="py-3 px-3">
-                                                        {getTipoBadge(item.tipo)}
+                                                    <td className="px-3 py-3">
+                                                        {getTipoBadge(
+                                                            item.tipo,
+                                                        )}
                                                     </td>
-                                                    <td className="py-3 px-3 text-center font-mono text-[#6B6965]">
+                                                    <td className="px-3 py-3 text-center font-mono text-muted-foreground">
                                                         {item.unidad_medida}
                                                     </td>
-                                                    <td className="py-3 px-3 text-right font-mono font-medium text-[#201F1D]">
-                                                        {formatCurrency(item.precio_venta)}
+                                                    <td className="px-3 py-3 text-right font-mono font-medium text-foreground">
+                                                        {formatCurrency(
+                                                            item.precio_venta,
+                                                        )}
                                                     </td>
 
                                                     {/* Stock por sede */}
                                                     {sedes.map((sede) => {
-                                                        const qty = item.stock_por_sede[sede.id];
+                                                        const qty =
+                                                            item.stock_por_sede[
+                                                                sede.id
+                                                            ];
                                                         return (
-                                                            <td key={sede.id} className="py-3 px-3 text-center">
-                                                                {item.tipo === 'servicio' ? (
-                                                                    <span className="font-mono text-[11px] text-[#B9B7B2]">N/A</span>
+                                                            <td
+                                                                key={sede.id}
+                                                                className="px-3 py-3 text-center"
+                                                            >
+                                                                {item.tipo ===
+                                                                'servicio' ? (
+                                                                    <span className="font-mono text-[11px] text-muted-foreground">
+                                                                        N/A
+                                                                    </span>
                                                                 ) : (
                                                                     <span
                                                                         className={[
                                                                             'font-mono font-bold text-[12px]',
-                                                                            qty && qty > 0 ? 'text-[#201F1D]' : 'text-[#B9B7B2]',
-                                                                        ].join(' ')}
+                                                                            qty &&
+                                                                            qty >
+                                                                                0
+                                                                                ? 'text-foreground'
+                                                                                : 'text-muted-foreground',
+                                                                        ].join(
+                                                                            ' ',
+                                                                        )}
                                                                     >
-                                                                        {qty ?? 0}
+                                                                        {qty ??
+                                                                            0}
                                                                     </span>
                                                                 )}
                                                             </td>
@@ -496,25 +598,35 @@ export default function StockIndex({
 
                                                     {/* Stock Total */}
                                                     <td className="py-3 pl-4 text-center">
-                                                        {item.tipo === 'servicio' ? (
-                                                            <span className="font-mono text-[11px] text-[#B9B7B2]">N/A</span>
+                                                        {item.tipo ===
+                                                        'servicio' ? (
+                                                            <span className="font-mono text-[11px] text-muted-foreground">
+                                                                N/A
+                                                            </span>
                                                         ) : (
                                                             <div className="flex flex-col items-center">
                                                                 <span
                                                                     className={[
                                                                         'inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[12px] font-bold',
                                                                         isBajoMinimo
-                                                                            ? 'bg-[#FBEAE9] text-[#E31E24] border border-[#F5C6C5]'
-                                                                            : 'bg-[#E5F5EC] text-[#1E8E5A] border border-[#C3E8D4]',
+                                                                            ? 'bg-destructive/10 text-primary border border-destructive/20'
+                                                                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border border-emerald-500/20',
                                                                     ].join(' ')}
                                                                 >
-                                                                    {item.stock_disponible_total ?? 0}
+                                                                    {item.stock_disponible_total ??
+                                                                        0}
                                                                 </span>
-                                                                {item.stock_minimo !== null && item.stock_minimo > 0 && (
-                                                                    <span className="text-[10px] text-[#8A8680] mt-0.5">
-                                                                        Mín: {item.stock_minimo}
-                                                                    </span>
-                                                                )}
+                                                                {item.stock_minimo !==
+                                                                    null &&
+                                                                    item.stock_minimo >
+                                                                        0 && (
+                                                                        <span className="mt-0.5 text-[10px] text-muted-foreground">
+                                                                            Mín:{' '}
+                                                                            {
+                                                                                item.stock_minimo
+                                                                            }
+                                                                        </span>
+                                                                    )}
                                                             </div>
                                                         )}
                                                     </td>
@@ -530,17 +642,26 @@ export default function StockIndex({
 
                 {/* TAB 2: HISTORIAL DE KARDEX */}
                 {activeTab === 'kardex' && (
-                    <Card className="rounded-[16px] border-[#E7E4DE] bg-white p-5 shadow-none">
+                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
                         {/* Kardex Filters Bar */}
-                        <form onSubmit={handleKardexFilter} className="flex flex-wrap items-end gap-3 pb-5 border-b border-[#F1EFEC]">
+                        <form
+                            onSubmit={handleKardexFilter}
+                            className="flex flex-wrap items-end gap-3 border-b border-border pb-5"
+                        >
                             <div className="w-[200px]">
-                                <Label className="text-xs font-bold text-[#4A4742]">Producto</Label>
+                                <Label className="text-xs font-bold text-foreground/80">
+                                    Producto
+                                </Label>
                                 <select
                                     value={kProductId}
-                                    onChange={(e) => setKProductId(e.target.value)}
-                                    className="mt-1 h-9 w-full rounded-md border border-[#E4E1DC] bg-white px-3 text-xs text-[#201F1D] focus:border-[#E31E24] focus:outline-none"
+                                    onChange={(e) =>
+                                        setKProductId(e.target.value)
+                                    }
+                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
                                 >
-                                    <option value="">Todos los productos</option>
+                                    <option value="">
+                                        Todos los productos
+                                    </option>
                                     {product_list.map((prod) => (
                                         <option key={prod.id} value={prod.id}>
                                             {prod.codigo} - {prod.nombre}
@@ -550,11 +671,13 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[160px]">
-                                <Label className="text-xs font-bold text-[#4A4742]">Sede / Almacén</Label>
+                                <Label className="text-xs font-bold text-foreground/80">
+                                    Sede / Almacén
+                                </Label>
                                 <select
                                     value={kSedeId}
                                     onChange={(e) => setKSedeId(e.target.value)}
-                                    className="mt-1 h-9 w-full rounded-md border border-[#E4E1DC] bg-white px-3 text-xs text-[#201F1D] focus:border-[#E31E24] focus:outline-none"
+                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
                                 >
                                     <option value="">Todas las sedes</option>
                                     {sedes.map((sede) => (
@@ -566,53 +689,83 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[150px]">
-                                <Label className="text-xs font-bold text-[#4A4742]">Tipo movimiento</Label>
+                                <Label className="text-xs font-bold text-foreground/80">
+                                    Tipo movimiento
+                                </Label>
                                 <select
                                     value={kTipo}
                                     onChange={(e) => setKTipo(e.target.value)}
-                                    className="mt-1 h-9 w-full rounded-md border border-[#E4E1DC] bg-white px-3 text-xs text-[#201F1D] focus:border-[#E31E24] focus:outline-none"
+                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
                                 >
-                                    <option value="todos">Todos los tipos</option>
-                                    <option value="ingreso">Ingreso (Recepción)</option>
-                                    <option value="salida_venta">Salida Venta</option>
-                                    <option value="salida_servicio">Consumo en Taller</option>
-                                    <option value="ajuste">Ajuste de inventario</option>
-                                    <option value="traslado">Traslado entre sedes</option>
+                                    <option value="todos">
+                                        Todos los tipos
+                                    </option>
+                                    <option value="ingreso">
+                                        Ingreso (Recepción)
+                                    </option>
+                                    <option value="salida_venta">
+                                        Salida Venta
+                                    </option>
+                                    <option value="salida_servicio">
+                                        Consumo en Taller
+                                    </option>
+                                    <option value="ajuste">
+                                        Ajuste de inventario
+                                    </option>
+                                    <option value="traslado">
+                                        Traslado entre sedes
+                                    </option>
                                 </select>
                             </div>
 
                             <div className="w-[130px]">
-                                <Label className="text-xs font-bold text-[#4A4742]">Desde</Label>
+                                <Label className="text-xs font-bold text-foreground/80">
+                                    Desde
+                                </Label>
                                 <Input
                                     type="date"
                                     value={kFechaDesde}
-                                    onChange={(e) => setKFechaDesde(e.target.value)}
+                                    onChange={(e) =>
+                                        setKFechaDesde(e.target.value)
+                                    }
                                     className="mt-1 h-9 text-xs"
                                 />
                             </div>
 
                             <div className="w-[130px]">
-                                <Label className="text-xs font-bold text-[#4A4742]">Hasta</Label>
+                                <Label className="text-xs font-bold text-foreground/80">
+                                    Hasta
+                                </Label>
                                 <Input
                                     type="date"
                                     value={kFechaHasta}
-                                    onChange={(e) => setKFechaHasta(e.target.value)}
+                                    onChange={(e) =>
+                                        setKFechaHasta(e.target.value)
+                                    }
                                     className="mt-1 h-9 text-xs"
                                 />
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <Button type="submit" size="sm" className="h-9 gap-1.5 bg-[#18181B] text-white hover:bg-[#27272A]">
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    className="h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                                >
                                     <Filter className="size-3.5" />
                                     <span>Filtrar</span>
                                 </Button>
-                                {(kProductId !== '' || kSedeId !== '' || kTipo !== 'todos' || kFechaDesde !== '' || kFechaHasta !== '') && (
+                                {(kProductId !== '' ||
+                                    kSedeId !== '' ||
+                                    kTipo !== 'todos' ||
+                                    kFechaDesde !== '' ||
+                                    kFechaHasta !== '') && (
                                     <Button
                                         type="button"
                                         variant="outline"
                                         size="sm"
                                         onClick={handleResetKardex}
-                                        className="h-9 gap-1.5 text-[#6B6965]"
+                                        className="h-9 gap-1.5 text-muted-foreground"
                                     >
                                         <RotateCcw className="size-3.5" />
                                         <span>Limpiar</span>
@@ -624,76 +777,123 @@ export default function StockIndex({
                         {/* Kardex Records Table */}
                         {kardex.data.length === 0 ? (
                             <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                                <History className="size-10 text-[#D5D2CB]" />
-                                <p className="mt-2 text-sm font-medium text-[#8A8680]">
-                                    No se encontraron movimientos registrados en el Kardex con estos filtros.
+                                <History className="size-10 text-muted-foreground" />
+                                <p className="mt-2 text-sm font-medium text-muted-foreground">
+                                    No se encontraron movimientos registrados en
+                                    el Kardex con estos filtros.
                                 </p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto mt-4">
+                            <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-[12.5px]">
                                     <thead>
-                                        <tr className="border-b border-[#E7E4DE] text-[11px] font-bold text-[#8A8680] uppercase tracking-wider">
-                                            <th className="py-2.5 pr-4">Fecha</th>
-                                            <th className="py-2.5 px-3">Tipo</th>
-                                            <th className="py-2.5 px-4">Producto</th>
-                                            <th className="py-2.5 px-3">Unidad / Serie</th>
-                                            <th className="py-2.5 px-3">Sede</th>
-                                            <th className="py-2.5 px-3 text-right">Cantidad</th>
-                                            <th className="py-2.5 px-4">Usuario</th>
-                                            <th className="py-2.5 pl-4">Observación</th>
+                                        <tr className="border-b border-border text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                                            <th className="py-2.5 pr-4">
+                                                Fecha
+                                            </th>
+                                            <th className="px-3 py-2.5">
+                                                Tipo
+                                            </th>
+                                            <th className="px-4 py-2.5">
+                                                Producto
+                                            </th>
+                                            <th className="px-3 py-2.5">
+                                                Unidad / Serie
+                                            </th>
+                                            <th className="px-3 py-2.5">
+                                                Sede
+                                            </th>
+                                            <th className="px-3 py-2.5 text-right">
+                                                Cantidad
+                                            </th>
+                                            <th className="px-4 py-2.5">
+                                                Usuario
+                                            </th>
+                                            <th className="py-2.5 pl-4">
+                                                Observación
+                                            </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#F1EFEC]">
+                                    <tbody className="divide-y divide-border">
                                         {kardex.data.map((mov) => {
-                                            const badge = getTipoMovimientoBadge(mov.tipo);
-                                            const isSalida = mov.tipo === 'salida_venta';
+                                            const badge =
+                                                getTipoMovimientoBadge(
+                                                    mov.tipo,
+                                                );
+                                            const isSalida =
+                                                mov.tipo === 'salida_venta';
 
                                             return (
-                                                <tr key={mov.id} className="hover:bg-[#FAFAF8] transition-colors">
-                                                    <td className="py-3 pr-4 font-mono text-[11.5px] text-[#4A4742] whitespace-nowrap">
+                                                <tr
+                                                    key={mov.id}
+                                                    className="transition-colors hover:bg-muted/40"
+                                                >
+                                                    <td className="py-3 pr-4 font-mono text-[11.5px] whitespace-nowrap text-foreground/80">
                                                         {formatDate(mov.fecha)}
                                                     </td>
-                                                    <td className="py-3 px-3">
+                                                    <td className="px-3 py-3">
                                                         <span
                                                             className={`inline-flex items-center rounded-[6px] border px-2 py-0.5 text-[10.5px] font-bold ${badge.className}`}
                                                         >
                                                             {badge.label}
                                                         </span>
                                                     </td>
-                                                    <td className="py-3 px-4">
-                                                        <div className="font-bold text-[#201F1D]">
-                                                            {mov.producto.nombre}
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-bold text-foreground">
+                                                            {
+                                                                mov.producto
+                                                                    .nombre
+                                                            }
                                                         </div>
-                                                        <div className="font-mono text-[11px] text-[#8A8680]">
-                                                            Cód: {mov.producto.codigo}
+                                                        <div className="font-mono text-[11px] text-muted-foreground">
+                                                            Cód:{' '}
+                                                            {
+                                                                mov.producto
+                                                                    .codigo
+                                                            }
                                                         </div>
                                                     </td>
-                                                    <td className="py-3 px-3">
+                                                    <td className="px-3 py-3">
                                                         {mov.unidad_serie ? (
-                                                            <span className="flex items-center gap-1 font-mono text-[11.5px] font-bold text-[#201F1D]">
-                                                                <ScanBarcode className="size-3 text-[#1E8E5A]" />
-                                                                {mov.unidad_serie}
+                                                            <span className="flex items-center gap-1 font-mono text-[11.5px] font-bold text-foreground">
+                                                                <ScanBarcode className="size-3 text-emerald-600 dark:text-emerald-400" />
+                                                                {
+                                                                    mov.unidad_serie
+                                                                }
                                                             </span>
                                                         ) : (
-                                                            <span className="text-[11px] text-[#B9B7B2]">—</span>
+                                                            <span className="text-[11px] text-muted-foreground">
+                                                                —
+                                                            </span>
                                                         )}
                                                     </td>
-                                                    <td className="py-3 px-3 text-[#4A4742]">
+                                                    <td className="px-3 py-3 text-foreground/80">
                                                         {mov.sede || '—'}
                                                     </td>
-                                                    <td className="py-3 px-3 text-right font-mono font-bold text-[12.5px]">
-                                                        <span className={isSalida ? 'text-[#E31E24]' : 'text-[#1E8E5A]'}>
-                                                            {isSalida ? `-${mov.cantidad}` : `+${mov.cantidad}`}
+                                                    <td className="px-3 py-3 text-right font-mono text-[12.5px] font-bold">
+                                                        <span
+                                                            className={
+                                                                isSalida
+                                                                    ? 'text-primary'
+                                                                    : 'text-emerald-600 dark:text-emerald-400'
+                                                            }
+                                                        >
+                                                            {isSalida
+                                                                ? `-${mov.cantidad}`
+                                                                : `+${mov.cantidad}`}
                                                         </span>{' '}
-                                                        <span className="text-[10px] font-normal text-[#8A8680]">
-                                                            {mov.producto.unidad_medida}
+                                                        <span className="text-[10px] font-normal text-muted-foreground">
+                                                            {
+                                                                mov.producto
+                                                                    .unidad_medida
+                                                            }
                                                         </span>
                                                     </td>
-                                                    <td className="py-3 px-4 text-[#6B6965] text-[11.5px]">
-                                                        {mov.usuario || 'Sistema'}
+                                                    <td className="px-4 py-3 text-[11.5px] text-muted-foreground">
+                                                        {mov.usuario ||
+                                                            'Sistema'}
                                                     </td>
-                                                    <td className="py-3 pl-4 text-[#8A8680] text-[11.5px] max-w-[200px] truncate">
+                                                    <td className="max-w-[200px] truncate py-3 pl-4 text-[11.5px] text-muted-foreground">
                                                         {mov.observacion || '—'}
                                                     </td>
                                                 </tr>
@@ -704,9 +904,11 @@ export default function StockIndex({
 
                                 {/* Paginador del Kardex */}
                                 {kardex.links.length > 3 && (
-                                    <div className="mt-4 flex items-center justify-between border-t border-[#F1EFEC] pt-4 text-xs text-[#8A8680]">
+                                    <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
                                         <span>
-                                            Mostrando <b>{kardex.data.length}</b> de <b>{kardex.total}</b> movimientos
+                                            Mostrando{' '}
+                                            <b>{kardex.data.length}</b> de{' '}
+                                            <b>{kardex.total}</b> movimientos
                                         </span>
                                         <div className="flex items-center gap-1">
                                             {kardex.links.map((link, idx) => (
@@ -716,17 +918,26 @@ export default function StockIndex({
                                                     disabled={!link.url}
                                                     onClick={() => {
                                                         if (link.url) {
-                                                            router.get(link.url, {}, { preserveState: true, preserveScroll: true });
+                                                            router.get(
+                                                                link.url,
+                                                                {},
+                                                                {
+                                                                    preserveState: true,
+                                                                    preserveScroll: true,
+                                                                },
+                                                            );
                                                         }
                                                     }}
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: link.label,
+                                                    }}
                                                     className={[
                                                         'h-8 min-w-[32px] rounded-md px-2 font-medium transition-colors',
                                                         link.active
-                                                            ? 'bg-[#18181B] text-white font-bold'
+                                                            ? 'bg-foreground text-background font-bold'
                                                             : link.url
-                                                            ? 'hover:bg-[#F1EFEC] text-[#201F1D]'
-                                                            : 'opacity-40 cursor-not-allowed',
+                                                              ? 'hover:bg-muted text-foreground'
+                                                              : 'opacity-40 cursor-not-allowed',
                                                     ].join(' ')}
                                                 />
                                             ))}

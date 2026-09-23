@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
@@ -52,7 +52,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
         router.get(
             `${teamPrefix}/recojos`,
             { search: search.trim() },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -66,7 +66,8 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                         Recojos de Extintores
                     </h1>
                     <p className="text-xs text-neutral-500">
-                        Cadena de custodia y recepción en instalaciones del cliente (§22.1, §22.4)
+                        Cadena de custodia y recepción en instalaciones del
+                        cliente
                     </p>
                 </div>
 
@@ -77,12 +78,12 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar por cliente, orden o dirección..."
-                        className="w-full pl-9 pr-24 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-neutral-200 bg-card py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800"
                     />
-                    <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-3.5" />
+                    <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
                         type="submit"
-                        className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-neutral-900 dark:bg-neutral-700 text-white rounded-lg text-xs font-medium"
+                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white dark:bg-neutral-700"
                     >
                         Buscar
                     </button>
@@ -91,8 +92,8 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                 {/* List */}
                 <div className="space-y-3">
                     {recojos.data.length === 0 ? (
-                        <div className="p-8 text-center bg-white dark:bg-neutral-800/40 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700 space-y-2">
-                            <Truck className="w-8 h-8 text-neutral-400 mx-auto" />
+                        <div className="space-y-2 rounded-2xl border border-dashed border-neutral-200 bg-card p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
+                            <Truck className="mx-auto h-8 w-8 text-neutral-400" />
                             <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                                 No hay recojos pendientes
                             </p>
@@ -102,7 +103,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                             <Link
                                 key={r.id}
                                 href={`${teamPrefix}/recojos/${r.id}`}
-                                className="block p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm active:scale-[0.99] transition-transform space-y-2.5"
+                                className="block space-y-2.5 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div>
@@ -111,34 +112,42 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                                                 {r.codigo}
                                             </span>
                                             {r.ya_recogido ? (
-                                                <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-full flex items-center gap-1">
-                                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                                <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                                    <CheckCircle2 className="h-2.5 w-2.5" />
                                                     Recogido
                                                 </span>
                                             ) : (
-                                                <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 rounded-full flex items-center gap-1">
-                                                    <Clock className="w-2.5 h-2.5" />
+                                                <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                                                    <Clock className="h-2.5 w-2.5" />
                                                     Por Recoger
                                                 </span>
                                             )}
                                         </div>
-                                        <h3 className="font-semibold text-sm text-neutral-900 dark:text-neutral-100 mt-1 line-clamp-1">
+                                        <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                                             {r.cliente}
                                         </h3>
                                     </div>
-                                    <ArrowRight className="w-5 h-5 text-neutral-300 dark:text-neutral-600 flex-shrink-0" />
+                                    <ArrowRight className="h-5 w-5 flex-shrink-0 text-neutral-300 dark:text-neutral-600" />
                                 </div>
 
                                 {r.direccion && (
                                     <div className="flex items-start gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
-                                        <MapPin className="w-3.5 h-3.5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <span className="line-clamp-2">{r.direccion}</span>
+                                        <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+                                        <span className="line-clamp-2">
+                                            {r.direccion}
+                                        </span>
                                     </div>
                                 )}
 
-                                <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700/60 flex items-center justify-between text-[11px] text-neutral-500">
-                                    <span>{r.equipos_count > 0 ? `${r.equipos_count} equipo(s)` : 'Cantidad a confirmar'}</span>
-                                    {r.vehiculo && <span>Vehículo: {r.vehiculo}</span>}
+                                <div className="flex items-center justify-between border-t border-neutral-100 pt-2 text-[11px] text-neutral-500 dark:border-neutral-700/60">
+                                    <span>
+                                        {r.equipos_count > 0
+                                            ? `${r.equipos_count} equipo(s)`
+                                            : 'Cantidad a confirmar'}
+                                    </span>
+                                    {r.vehiculo && (
+                                        <span>Vehículo: {r.vehiculo}</span>
+                                    )}
                                 </div>
                             </Link>
                         ))

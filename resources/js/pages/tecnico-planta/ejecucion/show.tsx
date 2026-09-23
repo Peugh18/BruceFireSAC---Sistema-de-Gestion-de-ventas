@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -85,12 +85,17 @@ interface Props {
     certificates: CertificateItem[];
 }
 
-export default function EjecucionShow({ order, repuestos, certificates }: Props) {
+export default function EjecucionShow({
+    order,
+    repuestos,
+    certificates,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
     const teamPrefix = `/${teamSlug}/tecnico-planta`;
 
-    const [selectedDeficiency, setSelectedDeficiency] = useState<DeficiencyItem | null>(null);
+    const [selectedDeficiency, setSelectedDeficiency] =
+        useState<DeficiencyItem | null>(null);
     const [phRealizada, setPhRealizada] = useState(false);
 
     // Form for consuming spare parts
@@ -110,12 +115,15 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
         e.preventDefault();
         if (!selectedDeficiency) return;
 
-        spareForm.post(`${teamPrefix}/ordenes/${order.id}/deficiencias/${selectedDeficiency.id}/consumir-repuesto`, {
-            onSuccess: () => {
-                setSelectedDeficiency(null);
-                spareForm.reset();
+        spareForm.post(
+            `${teamPrefix}/ordenes/${order.id}/deficiencias/${selectedDeficiency.id}/consumir-repuesto`,
+            {
+                onSuccess: () => {
+                    setSelectedDeficiency(null);
+                    spareForm.reset();
+                },
             },
-        });
+        );
     };
 
     const handleAdvance = (targetState: string) => {
@@ -134,49 +142,75 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
                 {/* Back Link */}
                 <Link
                     href={`${teamPrefix}/dashboard`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
                 >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="h-4 w-4" />
                     <span>Volver a Órdenes de Planta</span>
                 </Link>
 
                 {/* Header Card */}
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-3">
+                <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <div className="flex items-center gap-2">
                                 <span className="font-mono text-base font-extrabold text-neutral-900 dark:text-neutral-100">
                                     {order.codigo}
                                 </span>
-                                <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-900 uppercase dark:bg-amber-950/60 dark:text-amber-300">
                                     {order.estado.replace('_', ' ')}
                                 </span>
                             </div>
-                            <h2 className="font-semibold text-base text-neutral-900 dark:text-neutral-100 mt-1">
+                            <h2 className="mt-1 text-base font-semibold text-neutral-900 dark:text-neutral-100">
                                 {order.cliente}
                             </h2>
-                            <p className="text-xs text-neutral-500 font-mono">
-                                RUC/DNI: {order.cliente_doc} {order.telefono ? `• ${order.telefono}` : ''}
+                            <p className="font-mono text-xs text-neutral-500">
+                                RUC/DNI: {order.cliente_doc}{' '}
+                                {order.telefono ? `• ${order.telefono}` : ''}
                             </p>
                         </div>
                     </div>
 
                     {/* Progress steps (§16.2) */}
-                    <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700/60">
+                    <div className="border-t border-neutral-100 pt-2 dark:border-neutral-700/60">
                         <div className="flex items-center justify-between text-[11px] font-bold text-neutral-500">
-                            <span className={order.estado === 'recibido_planta' || order.estado === 'en_revision' ? 'text-amber-600 font-extrabold' : ''}>
+                            <span
+                                className={
+                                    order.estado === 'recibido_planta' ||
+                                    order.estado === 'en_revision'
+                                        ? 'font-extrabold text-amber-600'
+                                        : ''
+                                }
+                            >
                                 1. Taller
                             </span>
-                            <ChevronRight className="w-3 h-3 text-neutral-300" />
-                            <span className={order.estado === 'en_proceso' ? 'text-amber-600 font-extrabold' : ''}>
+                            <ChevronRight className="h-3 w-3 text-neutral-300" />
+                            <span
+                                className={
+                                    order.estado === 'en_proceso'
+                                        ? 'font-extrabold text-amber-600'
+                                        : ''
+                                }
+                            >
                                 2. En Proceso
                             </span>
-                            <ChevronRight className="w-3 h-3 text-neutral-300" />
-                            <span className={order.estado === 'trabajo_terminado' ? 'text-amber-600 font-extrabold' : ''}>
+                            <ChevronRight className="h-3 w-3 text-neutral-300" />
+                            <span
+                                className={
+                                    order.estado === 'trabajo_terminado'
+                                        ? 'font-extrabold text-amber-600'
+                                        : ''
+                                }
+                            >
                                 3. Terminado
                             </span>
-                            <ChevronRight className="w-3 h-3 text-neutral-300" />
-                            <span className={order.estado === 'listo_certificado' ? 'text-emerald-600 font-extrabold' : ''}>
+                            <ChevronRight className="h-3 w-3 text-neutral-300" />
+                            <span
+                                className={
+                                    order.estado === 'listo_certificado'
+                                        ? 'font-extrabold text-emerald-600'
+                                        : ''
+                                }
+                            >
                                 4. Certificado
                             </span>
                         </div>
@@ -184,72 +218,89 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
                 </div>
 
                 {/* Primary Action Buttons Bar */}
-                <div className="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200 dark:border-amber-900/40 rounded-2xl space-y-3">
-                    <h3 className="text-xs font-bold uppercase text-amber-900 dark:text-amber-300 tracking-wider flex items-center gap-1.5">
-                        <Wrench className="w-4 h-4" />
-                        <span>Control de Ejecución en Planta (§85)</span>
+                <div className="space-y-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-4 dark:border-amber-900/40">
+                    <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-amber-900 uppercase dark:text-amber-300">
+                        <Wrench className="h-4 w-4" />
+                        <span>Control de Ejecución en Planta</span>
                     </h3>
 
-                    {order.estado === 'recibido_planta' || order.estado === 'autorizado' ? (
+                    {order.estado === 'recibido_planta' ||
+                    order.estado === 'autorizado' ? (
                         <button
                             type="button"
                             onClick={() => handleAdvance('en_proceso')}
-                            className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
+                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-700"
                         >
-                            <Wrench className="w-4 h-4" />
+                            <Wrench className="h-4 w-4" />
                             <span>Iniciar Trabajo en Taller (En Proceso)</span>
                         </button>
                     ) : order.estado === 'en_proceso' ? (
                         <button
                             type="button"
                             onClick={() => handleAdvance('trabajo_terminado')}
-                            className="w-full py-3 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 text-white dark:text-neutral-900 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
+                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3 text-xs font-bold text-white shadow-sm hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
                         >
-                            <CheckCircle2 className="w-4 h-4" />
+                            <CheckCircle2 className="h-4 w-4" />
                             <span>Marcar Trabajo como Terminado en Taller</span>
                         </button>
-                    ) : order.estado === 'trabajo_terminado' || order.estado === 'datos_completos' ? (
+                    ) : order.estado === 'trabajo_terminado' ||
+                      order.estado === 'datos_completos' ? (
                         <div className="space-y-3">
-                            <label className="flex items-center gap-2 text-xs font-semibold text-neutral-800 dark:text-neutral-200 cursor-pointer bg-white dark:bg-neutral-800 p-3 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 bg-card p-3 text-xs font-semibold text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
                                 <input
                                     type="checkbox"
                                     checked={phRealizada}
-                                    onChange={(e) => setPhRealizada(e.target.checked)}
-                                    className="w-4 h-4 rounded text-amber-600 border-neutral-300 focus:ring-amber-500"
+                                    onChange={(e) =>
+                                        setPhRealizada(e.target.checked)
+                                    }
+                                    className="h-4 w-4 rounded border-neutral-300 text-amber-600 focus:ring-amber-500"
                                 />
-                                <span>Se realizó Prueba Hidrostática (P.H.) en el cilindro</span>
+                                <span>
+                                    Se realizó Prueba Hidrostática (P.H.) en el
+                                    cilindro
+                                </span>
                             </label>
 
                             <button
                                 type="button"
-                                onClick={() => handleAdvance('listo_certificado')}
-                                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-md"
+                                onClick={() =>
+                                    handleAdvance('listo_certificado')
+                                }
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-xs font-extrabold text-white shadow-md hover:bg-emerald-700 active:bg-emerald-800"
                             >
-                                <Sparkles className="w-4 h-4" />
-                                <span>Cerrar Taller y Emitir Certificados Automáticos</span>
+                                <Sparkles className="h-4 w-4" />
+                                <span>
+                                    Cerrar Taller y Emitir Certificados
+                                    Automáticos
+                                </span>
                             </button>
                         </div>
                     ) : (
-                        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                            <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                            <span>Trabajo de taller finalizado y certificado emitido.</span>
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                            <ShieldCheck className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                            <span>
+                                Trabajo de taller finalizado y certificado
+                                emitido.
+                            </span>
                         </div>
                     )}
                 </div>
 
                 {/* Certificates Section */}
                 {certificates.length > 0 && (
-                    <div className="p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-3">
-                        <div className="flex items-center gap-2 text-neutral-900 dark:text-neutral-100 font-bold text-sm">
-                            <FileCheck2 className="w-4 h-4 text-emerald-600" />
-                            <span>Certificados Emitidos ({certificates.length})</span>
+                    <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
+                        <div className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                            <FileCheck2 className="h-4 w-4 text-emerald-600" />
+                            <span>
+                                Certificados Emitidos ({certificates.length})
+                            </span>
                         </div>
 
                         <div className="space-y-2">
                             {certificates.map((cert) => (
                                 <div
                                     key={cert.id}
-                                    className="p-3 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl flex items-center justify-between gap-2"
+                                    className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-800/50 dark:bg-emerald-950/20"
                                 >
                                     <div>
                                         <div className="font-mono text-xs font-bold text-emerald-900 dark:text-emerald-300">
@@ -259,10 +310,11 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
                                             {cert.tipo}
                                         </div>
                                         <div className="text-[11px] text-neutral-500">
-                                            Vigente hasta: {cert.fecha_vigencia_hasta}
+                                            Vigente hasta:{' '}
+                                            {cert.fecha_vigencia_hasta}
                                         </div>
                                     </div>
-                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 rounded-full uppercase">
+                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 uppercase dark:bg-emerald-900/60 dark:text-emerald-300">
                                         {cert.estado}
                                     </span>
                                 </div>
@@ -274,15 +326,18 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
                 {/* Deficiencies & Spare Parts Consumption Section (§85, Fase 5) */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                            <Wrench className="w-4 h-4 text-amber-600" />
-                            <span>Repuestos y Deficiencias ({order.deficiencies.length})</span>
+                        <h3 className="flex items-center gap-1.5 text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                            <Wrench className="h-4 w-4 text-amber-600" />
+                            <span>
+                                Repuestos y Deficiencias (
+                                {order.deficiencies.length})
+                            </span>
                         </h3>
                     </div>
 
                     {order.deficiencies.length === 0 ? (
-                        <div className="p-6 bg-white dark:bg-neutral-800/40 border border-dashed border-neutral-200 dark:border-neutral-700 rounded-2xl text-center">
-                            <ShieldCheck className="w-8 h-8 text-emerald-500 mx-auto mb-1.5" />
+                        <div className="rounded-2xl border border-dashed border-neutral-200 bg-card p-6 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
+                            <ShieldCheck className="mx-auto mb-1.5 h-8 w-8 text-emerald-500" />
                             <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                                 No hay deficiencias registradas en esta orden
                             </p>
@@ -292,7 +347,7 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
                             {order.deficiencies.map((d) => (
                                 <div
                                     key={d.id}
-                                    className="p-3.5 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-2"
+                                    className="space-y-2 rounded-2xl border border-neutral-200 bg-card p-3.5 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div>
@@ -303,35 +358,43 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
                                                 {d.condicion}
                                             </p>
                                         </div>
-                                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                                            d.estado === 'resuelta'
-                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
-                                                : d.estado === 'autorizada'
-                                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                                        }`}>
+                                        <span
+                                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                d.estado === 'resuelta'
+                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                                                    : d.estado === 'autorizada'
+                                                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                                      : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                            }`}
+                                        >
                                             {d.estado.replace('_', ' ')}
                                         </span>
                                     </div>
 
                                     {d.repuesto_sugerido && (
                                         <div className="text-[11px] text-neutral-500">
-                                            <b>Repuesto requerido: </b> {d.repuesto_sugerido}
+                                            <b>Repuesto requerido: </b>{' '}
+                                            {d.repuesto_sugerido}
                                         </div>
                                     )}
 
                                     {d.resolucion ? (
-                                        <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-xs text-blue-900 dark:text-blue-300">
+                                        <div className="rounded-lg bg-blue-50 p-2 text-xs text-blue-900 dark:bg-blue-950/30 dark:text-blue-300">
                                             <b>Solución: </b> {d.resolucion}
                                         </div>
                                     ) : (
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedDeficiency(d)}
-                                            className="w-full py-2 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 text-white dark:text-neutral-900 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs"
+                                            onClick={() =>
+                                                setSelectedDeficiency(d)
+                                            }
+                                            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-neutral-900 py-2 text-xs font-bold text-white shadow-xs hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
                                         >
-                                            <Package className="w-3.5 h-3.5" />
-                                            <span>Consumir Repuesto de Almacén (Kardex)</span>
+                                            <Package className="h-3.5 w-3.5" />
+                                            <span>
+                                                Consumir Repuesto de Almacén
+                                                (Kardex)
+                                            </span>
                                         </button>
                                     )}
                                 </div>
@@ -342,15 +405,16 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
 
                 {/* MODAL: Consumir Repuesto de Almacén (§85) */}
                 {selectedDeficiency && (
-                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-                        <div className="w-full sm:max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-xl border border-neutral-200 dark:border-neutral-800 animate-in slide-in-from-bottom duration-200">
-                            <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
+                        <div className="animate-in slide-in-from-bottom w-full space-y-4 rounded-t-3xl border border-neutral-200 bg-card p-5 shadow-xl duration-200 sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
+                            <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
                                 <div>
                                     <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                                         Consumo de Repuesto
                                     </h3>
                                     <p className="text-xs text-neutral-500">
-                                        Kardex Almacén para {selectedDeficiency.componente}
+                                        Kardex Almacén para{' '}
+                                        {selectedDeficiency.componente}
                                     </p>
                                 </div>
                                 <button
@@ -362,59 +426,82 @@ export default function EjecucionShow({ order, repuestos, certificates }: Props)
                                 </button>
                             </div>
 
-                            <form onSubmit={handleConsumeSpare} className="space-y-3">
+                            <form
+                                onSubmit={handleConsumeSpare}
+                                className="space-y-3"
+                            >
                                 <div>
-                                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                    <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Producto / Repuesto de Almacén *
                                     </label>
                                     <select
                                         value={spareForm.data.product_id}
-                                        onChange={(e) => spareForm.setData('product_id', Number(e.target.value))}
-                                        className="w-full text-xs p-2.5 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                        onChange={(e) =>
+                                            spareForm.setData(
+                                                'product_id',
+                                                Number(e.target.value),
+                                            )
+                                        }
+                                        className="w-full rounded-xl border border-neutral-300 bg-neutral-50 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                         required
                                     >
                                         {repuestos.map((p) => (
                                             <option key={p.id} value={p.id}>
-                                                {p.codigo ? `[${p.codigo}] ` : ''}{p.nombre}
+                                                {p.codigo
+                                                    ? `[${p.codigo}] `
+                                                    : ''}
+                                                {p.nombre}
                                             </option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                    <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Cantidad a Descontar del Kardex *
                                     </label>
                                     <input
                                         type="number"
                                         min={1}
                                         value={spareForm.data.cantidad}
-                                        onChange={(e) => spareForm.setData('cantidad', Number(e.target.value))}
-                                        className="w-full text-xs p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                        onChange={(e) =>
+                                            spareForm.setData(
+                                                'cantidad',
+                                                Number(e.target.value),
+                                            )
+                                        }
+                                        className="w-full rounded-xl border border-neutral-300 bg-neutral-50 p-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                    <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Observación Técnica
                                     </label>
                                     <input
                                         type="text"
                                         value={spareForm.data.observacion}
-                                        onChange={(e) => spareForm.setData('observacion', e.target.value)}
+                                        onChange={(e) =>
+                                            spareForm.setData(
+                                                'observacion',
+                                                e.target.value,
+                                            )
+                                        }
                                         placeholder="Ej: Reemplazo por fisura de manómetro..."
-                                        className="w-full text-xs p-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                        className="w-full rounded-xl border border-neutral-300 bg-neutral-50 p-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                     />
                                 </div>
 
                                 <button
                                     type="submit"
                                     disabled={spareForm.processing}
-                                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-700"
                                 >
-                                    <Package className="w-4 h-4" />
-                                    <span>Registrar Salida en Kardex y Resolver</span>
+                                    <Package className="h-4 w-4" />
+                                    <span>
+                                        Registrar Salida en Kardex y Resolver
+                                    </span>
                                 </button>
                             </form>
                         </div>

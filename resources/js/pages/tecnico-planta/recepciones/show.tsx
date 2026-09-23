@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -105,13 +105,17 @@ export default function RecepcionShow({ order }: Props) {
         setScanLoading(true);
         setScanError(null);
         try {
-            const res = await fetch(`${teamPrefix}/equipos/buscar?code=${encodeURIComponent(barcodeScanInput.trim())}`);
+            const res = await fetch(
+                `${teamPrefix}/equipos/buscar?code=${encodeURIComponent(barcodeScanInput.trim())}`,
+            );
             const data = await res.json();
             if (data.found) {
                 setScanResult(data.equipment);
             } else {
                 setScanResult(null);
-                setScanError('No se encontró ningún equipo con este código Bruce Fire.');
+                setScanError(
+                    'No se encontró ningún equipo con este código Bruce Fire.',
+                );
             }
         } catch {
             setScanError('Error de red al consultar el código.');
@@ -142,7 +146,9 @@ export default function RecepcionShow({ order }: Props) {
         });
     };
 
-    const setUnreadable = (field: 'marca' | 'serie_fabricante' | 'anio_fabricacion') => {
+    const setUnreadable = (
+        field: 'marca' | 'serie_fabricante' | 'anio_fabricacion',
+    ) => {
         equipmentForm.setData(field, 'No legible / Pendiente de verificar');
     };
 
@@ -154,14 +160,14 @@ export default function RecepcionShow({ order }: Props) {
                 {/* Back Button */}
                 <Link
                     href={`${teamPrefix}/recepciones`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
                 >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="h-4 w-4" />
                     <span>Volver a Recepciones</span>
                 </Link>
 
                 {/* Header Card */}
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-3">
+                <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <div className="flex items-center gap-2">
@@ -169,20 +175,23 @@ export default function RecepcionShow({ order }: Props) {
                                     {order.codigo}
                                 </span>
                                 {isPendiente ? (
-                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 rounded-full">
+                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
                                         Pendiente de Recepción
                                     </span>
                                 ) : (
-                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-full">
+                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300">
                                         Recibido en Planta
                                     </span>
                                 )}
                             </div>
-                            <h2 className="font-semibold text-base text-neutral-900 dark:text-neutral-100 mt-1">
+                            <h2 className="mt-1 text-base font-semibold text-neutral-900 dark:text-neutral-100">
                                 {order.cliente.nombre}
                             </h2>
-                            <p className="text-xs text-neutral-500 font-mono">
-                                RUC/DNI: {order.cliente.documento} {order.cliente.telefono ? `• Tel: ${order.cliente.telefono}` : ''}
+                            <p className="font-mono text-xs text-neutral-500">
+                                RUC/DNI: {order.cliente.documento}{' '}
+                                {order.cliente.telefono
+                                    ? `• Tel: ${order.cliente.telefono}`
+                                    : ''}
                             </p>
                         </div>
 
@@ -191,28 +200,30 @@ export default function RecepcionShow({ order }: Props) {
                                 href={`${teamPrefix}/recepciones/${order.id}/stickers`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="p-2.5 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 text-neutral-800 dark:text-neutral-200 rounded-xl flex items-center justify-center flex-shrink-0"
+                                className="flex flex-shrink-0 items-center justify-center rounded-xl bg-neutral-100 p-2.5 text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200"
                                 title="Imprimir stickers 2x2"
                             >
-                                <Printer className="w-4 h-4" />
+                                <Printer className="h-4 w-4" />
                             </a>
                         )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-700/60 text-xs">
+                    <div className="grid grid-cols-2 gap-2 border-t border-neutral-100 pt-2 text-xs dark:border-neutral-700/60">
                         <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
-                            <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                            <Building2 className="h-3.5 w-3.5 text-neutral-400" />
                             <span>{order.sede || 'Sede Principal'}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
-                            <Calendar className="w-3.5 h-3.5 text-neutral-400" />
+                            <Calendar className="h-3.5 w-3.5 text-neutral-400" />
                             <span>{order.fecha}</span>
                         </div>
                     </div>
 
                     {order.observaciones && (
-                        <div className="p-2.5 bg-neutral-50 dark:bg-neutral-900/50 rounded-xl text-xs text-neutral-600 dark:text-neutral-400 border border-neutral-100 dark:border-neutral-800">
-                            <span className="font-semibold">Observaciones: </span>
+                        <div className="rounded-xl border border-neutral-100 bg-neutral-50 p-2.5 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400">
+                            <span className="font-semibold">
+                                Observaciones:{' '}
+                            </span>
                             {order.observaciones}
                         </div>
                     )}
@@ -220,45 +231,61 @@ export default function RecepcionShow({ order }: Props) {
 
                 {/* Status & Confirmation Section */}
                 {isPendiente ? (
-                    <div className="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200 dark:border-amber-900/40 rounded-2xl space-y-3">
+                    <div className="space-y-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-4 dark:border-amber-900/40">
                         <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300">
-                            <AlertTriangle className="w-4 h-4" />
-                            <h3 className="text-xs font-bold uppercase tracking-wider">
+                            <AlertTriangle className="h-4 w-4" />
+                            <h3 className="text-xs font-bold tracking-wider uppercase">
                                 Confirmación de Ingreso a Taller
                             </h3>
                         </div>
-                        <p className="text-xs text-amber-800 dark:text-amber-300/90 leading-relaxed">
-                            Verifique que los extintores físicos coincidan con la orden. Puede agregar observaciones o registrar faltantes/sobrantes.
+                        <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300/90">
+                            Verifique que los extintores físicos coincidan con
+                            la orden. Puede agregar observaciones o registrar
+                            faltantes/sobrantes.
                         </p>
 
-                        <form onSubmit={handleConfirmReception} className="space-y-3 pt-1">
+                        <form
+                            onSubmit={handleConfirmReception}
+                            className="space-y-3 pt-1"
+                        >
                             <div>
-                                <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Diferencias o novedades en la recepción física
+                                <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                    Diferencias o novedades en la recepción
+                                    física
                                 </label>
                                 <input
                                     type="text"
                                     value={confirmForm.data.diferencias}
-                                    onChange={(e) => confirmForm.setData('diferencias', e.target.value)}
+                                    onChange={(e) =>
+                                        confirmForm.setData(
+                                            'diferencias',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Ej: Se reciben 2 cilindros en vez de 3, o con manguera rota..."
-                                    className="w-full text-xs px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-amber-500"
+                                    className="w-full rounded-xl border border-neutral-200 bg-card px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-900"
                                 />
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={confirmForm.processing}
-                                className="w-full py-3 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-amber-700 active:bg-amber-800"
                             >
-                                <CheckCircle2 className="w-4 h-4" />
-                                <span>Confirmar Recepción Física en Planta</span>
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>
+                                    Confirmar Recepción Física en Planta
+                                </span>
                             </button>
                         </form>
                     </div>
                 ) : (
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-xl flex items-center gap-2 text-emerald-800 dark:text-emerald-300 text-xs">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <span>Esta orden ya ingresó formalmente al taller de Planta.</span>
+                    <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-300">
+                        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                        <span>
+                            Esta orden ya ingresó formalmente al taller de
+                            Planta.
+                        </span>
                     </div>
                 )}
 
@@ -266,33 +293,37 @@ export default function RecepcionShow({ order }: Props) {
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                                <QrCode className="w-4 h-4 text-amber-600" />
-                                <span>Equipos en esta Orden ({order.equipments.length})</span>
+                            <h3 className="flex items-center gap-1.5 text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                                <QrCode className="h-4 w-4 text-amber-600" />
+                                <span>
+                                    Equipos en esta Orden (
+                                    {order.equipments.length})
+                                </span>
                             </h3>
                             <p className="text-[11px] text-neutral-500">
-                                Identificación con código de barras Bruce Fire (§18)
+                                Identificación con código de barras Bruce Fire
                             </p>
                         </div>
 
                         <button
                             type="button"
                             onClick={() => setShowRegisterModal(true)}
-                            className="px-3 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform"
+                            className="flex items-center gap-1.5 rounded-xl bg-neutral-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-transform active:scale-95 dark:bg-neutral-100 dark:text-neutral-900"
                         >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Plus className="h-3.5 w-3.5" />
                             <span>Alta Rápida</span>
                         </button>
                     </div>
 
                     {order.equipments.length === 0 ? (
-                        <div className="p-6 bg-white dark:bg-neutral-800/40 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-2xl text-center space-y-2">
-                            <QrCode className="w-8 h-8 text-neutral-400 mx-auto" />
+                        <div className="space-y-2 rounded-2xl border border-dashed border-neutral-300 bg-card p-6 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
+                            <QrCode className="mx-auto h-8 w-8 text-neutral-400" />
                             <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                                 Aún no hay equipos vinculados a esta orden
                             </p>
                             <p className="text-[11px] text-neutral-500">
-                                Presione "Alta Rápida" para escanear un equipo existente o generar un sticker nuevo.
+                                Presione "Alta Rápida" para escanear un equipo
+                                existente o generar un sticker nuevo.
                             </p>
                         </div>
                     ) : (
@@ -300,18 +331,18 @@ export default function RecepcionShow({ order }: Props) {
                             {order.equipments.map((eq) => (
                                 <div
                                     key={eq.id}
-                                    className="p-3.5 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-2"
+                                    className="space-y-2 rounded-2xl border border-neutral-200 bg-card p-3.5 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <span className="font-mono text-sm font-extrabold text-amber-600 dark:text-amber-400">
                                                 {eq.numero_serie}
                                             </span>
-                                            <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
+                                            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
                                                 {eq.tipo_agente || 'Extintor'}
                                             </span>
                                             {eq.capacidad && (
-                                                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded">
+                                                <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
                                                     {eq.capacidad}
                                                 </span>
                                             )}
@@ -319,28 +350,34 @@ export default function RecepcionShow({ order }: Props) {
 
                                         <Link
                                             href={`${teamPrefix}/ordenes/${order.id}/equipos/${eq.id}/checklist`}
-                                            className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shadow-xs"
+                                            className="flex items-center gap-1 rounded-xl bg-amber-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-xs hover:bg-amber-700"
                                         >
-                                            <Wrench className="w-3.5 h-3.5" />
+                                            <Wrench className="h-3.5 w-3.5" />
                                             <span>Checklist</span>
                                         </Link>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 text-[11px] text-neutral-600 dark:text-neutral-400">
                                         <div>
-                                            <span className="text-neutral-400">Marca: </span>
+                                            <span className="text-neutral-400">
+                                                Marca:{' '}
+                                            </span>
                                             <span className="font-medium text-neutral-800 dark:text-neutral-200">
                                                 {eq.marca || 'N/A'}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-neutral-400">Serie Fab: </span>
+                                            <span className="text-neutral-400">
+                                                Serie Fab:{' '}
+                                            </span>
                                             <span className="font-mono font-medium text-neutral-800 dark:text-neutral-200">
                                                 {eq.serie_fabricante || 'N/A'}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-neutral-400">Año Fab: </span>
+                                            <span className="text-neutral-400">
+                                                Año Fab:{' '}
+                                            </span>
                                             <span className="font-medium text-neutral-800 dark:text-neutral-200">
                                                 {eq.anio_fabricacion || 'N/A'}
                                             </span>
@@ -348,7 +385,7 @@ export default function RecepcionShow({ order }: Props) {
                                     </div>
 
                                     {eq.notas && (
-                                        <p className="text-[11px] text-neutral-500 bg-neutral-50 dark:bg-neutral-900/40 p-2 rounded-lg">
+                                        <p className="rounded-lg bg-neutral-50 p-2 text-[11px] text-neutral-500 dark:bg-neutral-900/40">
                                             {eq.notas}
                                         </p>
                                     )}
@@ -360,15 +397,15 @@ export default function RecepcionShow({ order }: Props) {
 
                 {/* MODAL: Alta Técnica Rápida (§18) */}
                 {showRegisterModal && (
-                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-                        <div className="w-full sm:max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-xl border border-neutral-200 dark:border-neutral-800 animate-in slide-in-from-bottom duration-200">
-                            <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
+                        <div className="animate-in slide-in-from-bottom max-h-[90vh] w-full space-y-4 overflow-y-auto rounded-t-3xl border border-neutral-200 bg-card p-5 shadow-xl duration-200 sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
+                            <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
                                 <div>
                                     <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                                         Alta Técnica Rápida
                                     </h3>
                                     <p className="text-xs text-neutral-500">
-                                        Recepción de extintores en Planta (§18)
+                                        Recepción de extintores en Planta
                                     </p>
                                 </div>
                                 <button
@@ -381,13 +418,13 @@ export default function RecepcionShow({ order }: Props) {
                             </div>
 
                             {/* Tabs: Caso A vs Caso B */}
-                            <div className="flex gap-2 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                            <div className="flex gap-2 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-800">
                                 <button
                                     type="button"
                                     onClick={() => setRegisterTab('new')}
-                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
+                                    className={`flex-1 rounded-lg py-2 text-xs font-bold transition-colors ${
                                         registerTab === 'new'
-                                            ? 'bg-white dark:bg-neutral-700 text-amber-600 dark:text-amber-400 shadow-sm'
+                                            ? 'bg-card text-amber-600 shadow-sm dark:bg-neutral-700 dark:text-amber-400'
                                             : 'text-neutral-600 dark:text-neutral-400'
                                     }`}
                                 >
@@ -396,9 +433,9 @@ export default function RecepcionShow({ order }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => setRegisterTab('scan')}
-                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
+                                    className={`flex-1 rounded-lg py-2 text-xs font-bold transition-colors ${
                                         registerTab === 'scan'
-                                            ? 'bg-white dark:bg-neutral-700 text-amber-600 dark:text-amber-400 shadow-sm'
+                                            ? 'bg-card text-amber-600 shadow-sm dark:bg-neutral-700 dark:text-amber-400'
                                             : 'text-neutral-600 dark:text-neutral-400'
                                     }`}
                                 >
@@ -410,44 +447,61 @@ export default function RecepcionShow({ order }: Props) {
                             {registerTab === 'scan' ? (
                                 <div className="space-y-3">
                                     <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                                        Escanee o ingrese el código de barras existente (ej. BF-EQ-000123):
+                                        Escanee o ingrese el código de barras
+                                        existente (ej. BF-EQ-000123):
                                     </p>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
                                             value={barcodeScanInput}
-                                            onChange={(e) => setBarcodeScanInput(e.target.value)}
+                                            onChange={(e) =>
+                                                setBarcodeScanInput(
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="BF-EQ-XXXXXX"
-                                            className="flex-1 font-mono text-xs px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-amber-500 uppercase"
+                                            className="flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-3 py-2 font-mono text-xs uppercase focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-800"
                                         />
                                         <button
                                             type="button"
                                             onClick={handleSearchExisting}
                                             disabled={scanLoading}
-                                            className="px-4 py-2 bg-neutral-900 dark:bg-neutral-700 text-white rounded-xl text-xs font-bold"
+                                            className="rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white dark:bg-neutral-700"
                                         >
-                                            <Search className="w-4 h-4" />
+                                            <Search className="h-4 w-4" />
                                         </button>
                                     </div>
 
                                     {scanError && (
-                                        <p className="text-xs text-rose-600 font-medium">{scanError}</p>
+                                        <p className="text-xs font-medium text-rose-600">
+                                            {scanError}
+                                        </p>
                                     )}
 
                                     {scanResult && (
-                                        <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl space-y-2">
-                                            <div className="font-mono font-bold text-amber-900 dark:text-amber-300 text-sm">
+                                        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/60 dark:bg-amber-950/40">
+                                            <div className="font-mono text-sm font-bold text-amber-900 dark:text-amber-300">
                                                 {scanResult.numero_serie}
                                             </div>
                                             <div className="text-xs text-neutral-700 dark:text-neutral-300">
-                                                <p><b>Cliente:</b> {scanResult.cliente}</p>
-                                                <p><b>Tipo/Capacidad:</b> {scanResult.tipo_agente} - {scanResult.capacidad}</p>
-                                                <p><b>Marca:</b> {scanResult.marca}</p>
+                                                <p>
+                                                    <b>Cliente:</b>{' '}
+                                                    {scanResult.cliente}
+                                                </p>
+                                                <p>
+                                                    <b>Tipo/Capacidad:</b>{' '}
+                                                    {scanResult.tipo_agente} -{' '}
+                                                    {scanResult.capacidad}
+                                                </p>
+                                                <p>
+                                                    <b>Marca:</b>{' '}
+                                                    {scanResult.marca}
+                                                </p>
                                             </div>
                                             <button
                                                 type="button"
                                                 onClick={handleLinkExisting}
-                                                className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold"
+                                                className="w-full rounded-xl bg-amber-600 py-2 text-xs font-bold text-white hover:bg-amber-700"
                                             >
                                                 Vincular a esta Orden
                                             </button>
@@ -455,52 +509,85 @@ export default function RecepcionShow({ order }: Props) {
                                     )}
                                 </div>
                             ) : (
-                                <form onSubmit={handleCreateNew} className="space-y-3">
-                                    <div className="p-2.5 bg-neutral-50 dark:bg-neutral-800/60 rounded-xl text-[11px] text-neutral-600 dark:text-neutral-400">
-                                        💡 Se asignará un correlativo oficial <b>BF-EQ-XXXXXX</b> de Bruce Fire. Si algún dato no se puede leer, use el botón de ayuda.
+                                <form
+                                    onSubmit={handleCreateNew}
+                                    className="space-y-3"
+                                >
+                                    <div className="rounded-xl bg-neutral-50 p-2.5 text-[11px] text-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-400">
+                                        💡 Se asignará un correlativo oficial{' '}
+                                        <b>BF-EQ-XXXXXX</b> de Bruce Fire. Si
+                                        algún dato no se puede leer, use el
+                                        botón de ayuda.
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                            <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                 Agente / Tipo *
                                             </label>
                                             <select
-                                                value={equipmentForm.data.tipo_agente}
-                                                onChange={(e) => equipmentForm.setData('tipo_agente', e.target.value)}
-                                                className="w-full text-xs px-2.5 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                                value={
+                                                    equipmentForm.data
+                                                        .tipo_agente
+                                                }
+                                                onChange={(e) =>
+                                                    equipmentForm.setData(
+                                                        'tipo_agente',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                             >
-                                                <option value="PQS ABC">PQS ABC</option>
+                                                <option value="PQS ABC">
+                                                    PQS ABC
+                                                </option>
                                                 <option value="CO2">CO2</option>
-                                                <option value="Agua Presurizada">Agua Presurizada</option>
-                                                <option value="Acetato de Potasio (K)">Acetato de Potasio (K)</option>
-                                                <option value="Espuma AFFF">Espuma AFFF</option>
-                                                <option value="Otro">Otro</option>
+                                                <option value="Agua Presurizada">
+                                                    Agua Presurizada
+                                                </option>
+                                                <option value="Acetato de Potasio (K)">
+                                                    Acetato de Potasio (K)
+                                                </option>
+                                                <option value="Espuma AFFF">
+                                                    Espuma AFFF
+                                                </option>
+                                                <option value="Otro">
+                                                    Otro
+                                                </option>
                                             </select>
                                         </div>
 
                                         <div>
-                                            <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                            <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                 Capacidad *
                                             </label>
                                             <input
                                                 type="text"
-                                                value={equipmentForm.data.capacidad}
-                                                onChange={(e) => equipmentForm.setData('capacidad', e.target.value)}
+                                                value={
+                                                    equipmentForm.data.capacidad
+                                                }
+                                                onChange={(e) =>
+                                                    equipmentForm.setData(
+                                                        'capacidad',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 placeholder="Ej: 6 kg, 10 lbs..."
-                                                className="w-full text-xs px-2.5 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                                className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <div className="flex items-center justify-between mb-1">
+                                        <div className="mb-1 flex items-center justify-between">
                                             <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                 Marca del Cilindro
                                             </label>
                                             <button
                                                 type="button"
-                                                onClick={() => setUnreadable('marca')}
+                                                onClick={() =>
+                                                    setUnreadable('marca')
+                                                }
                                                 className="text-[10px] text-amber-600 hover:underline"
                                             >
                                                 No legible
@@ -509,21 +596,30 @@ export default function RecepcionShow({ order }: Props) {
                                         <input
                                             type="text"
                                             value={equipmentForm.data.marca}
-                                            onChange={(e) => equipmentForm.setData('marca', e.target.value)}
+                                            onChange={(e) =>
+                                                equipmentForm.setData(
+                                                    'marca',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Ej: Buckeye, Amerex, Badger..."
-                                            className="w-full text-xs px-2.5 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                            className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
-                                            <div className="flex items-center justify-between mb-1">
+                                            <div className="mb-1 flex items-center justify-between">
                                                 <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                     Serie Fab.
                                                 </label>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setUnreadable('serie_fabricante')}
+                                                    onClick={() =>
+                                                        setUnreadable(
+                                                            'serie_fabricante',
+                                                        )
+                                                    }
                                                     className="text-[10px] text-amber-600 hover:underline"
                                                 >
                                                     No legible
@@ -531,21 +627,33 @@ export default function RecepcionShow({ order }: Props) {
                                             </div>
                                             <input
                                                 type="text"
-                                                value={equipmentForm.data.serie_fabricante}
-                                                onChange={(e) => equipmentForm.setData('serie_fabricante', e.target.value)}
+                                                value={
+                                                    equipmentForm.data
+                                                        .serie_fabricante
+                                                }
+                                                onChange={(e) =>
+                                                    equipmentForm.setData(
+                                                        'serie_fabricante',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 placeholder="Serie original"
-                                                className="w-full text-xs px-2.5 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl font-mono"
+                                                className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 font-mono text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                             />
                                         </div>
 
                                         <div>
-                                            <div className="flex items-center justify-between mb-1">
+                                            <div className="mb-1 flex items-center justify-between">
                                                 <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                     Año Fab.
                                                 </label>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setUnreadable('anio_fabricacion')}
+                                                    onClick={() =>
+                                                        setUnreadable(
+                                                            'anio_fabricacion',
+                                                        )
+                                                    }
                                                     className="text-[10px] text-amber-600 hover:underline"
                                                 >
                                                     No legible
@@ -553,34 +661,49 @@ export default function RecepcionShow({ order }: Props) {
                                             </div>
                                             <input
                                                 type="text"
-                                                value={equipmentForm.data.anio_fabricacion}
-                                                onChange={(e) => equipmentForm.setData('anio_fabricacion', e.target.value)}
+                                                value={
+                                                    equipmentForm.data
+                                                        .anio_fabricacion
+                                                }
+                                                onChange={(e) =>
+                                                    equipmentForm.setData(
+                                                        'anio_fabricacion',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 placeholder="Ej: 2021"
-                                                className="w-full text-xs px-2.5 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                                className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                        <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                             Notas de Recepción / Ubicación
                                         </label>
                                         <input
                                             type="text"
                                             value={equipmentForm.data.notas}
-                                            onChange={(e) => equipmentForm.setData('notas', e.target.value)}
+                                            onChange={(e) =>
+                                                equipmentForm.setData(
+                                                    'notas',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Detalles visuales del equipo..."
-                                            className="w-full text-xs px-2.5 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                            className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                         />
                                     </div>
 
                                     <button
                                         type="submit"
                                         disabled={equipmentForm.processing}
-                                        className="w-full py-3 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-700 active:bg-amber-800"
                                     >
-                                        <Sparkles className="w-4 h-4" />
-                                        <span>Generar Código BF-EQ y Registrar</span>
+                                        <Sparkles className="h-4 w-4" />
+                                        <span>
+                                            Generar Código BF-EQ y Registrar
+                                        </span>
                                     </button>
                                 </form>
                             )}

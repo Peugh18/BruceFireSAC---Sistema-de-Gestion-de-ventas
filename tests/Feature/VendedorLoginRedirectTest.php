@@ -48,3 +48,33 @@ test('visiting the generic dashboard bounces a vendedor user to their own dashbo
         'current_team' => $user->currentTeam->slug,
     ]));
 });
+
+test('visiting the generic dashboard bounces a tecnico planta user to their own dashboard', function () {
+    $this->seed(RolesAndPermissionsSeeder::class);
+
+    $user = User::factory()->create();
+    $user->assignRole('TecnicoPlanta');
+
+    $response = $this->actingAs($user)->get(route('dashboard', [
+        'current_team' => $user->currentTeam->slug,
+    ]));
+
+    $response->assertRedirect(route('tecnico-planta.dashboard', [
+        'current_team' => $user->currentTeam->slug,
+    ]));
+});
+
+test('visiting the generic dashboard bounces a tecnico campo user to their own dashboard', function () {
+    $this->seed(RolesAndPermissionsSeeder::class);
+
+    $user = User::factory()->create();
+    $user->assignRole('TecnicoCampo');
+
+    $response = $this->actingAs($user)->get(route('dashboard', [
+        'current_team' => $user->currentTeam->slug,
+    ]));
+
+    $response->assertRedirect(route('tecnico-campo.dashboard', [
+        'current_team' => $user->currentTeam->slug,
+    ]));
+});

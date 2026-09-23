@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -51,7 +51,11 @@ interface Props {
     elementos: ElementConfig[];
 }
 
-export default function ChecklistCreate({ order, equipment, elementos }: Props) {
+export default function ChecklistCreate({
+    order,
+    equipment,
+    elementos,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
     const teamPrefix = `/${teamSlug}/tecnico-planta`;
@@ -77,7 +81,10 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
         observaciones: '',
     });
 
-    const handleEstadoChange = (clave: string, nuevoEstado: 'conforme' | 'observado' | 'no_aplica') => {
+    const handleEstadoChange = (
+        clave: string,
+        nuevoEstado: 'conforme' | 'observado' | 'no_aplica',
+    ) => {
         setItems((prev) => ({
             ...prev,
             [clave]: {
@@ -87,7 +94,11 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
         }));
     };
 
-    const handleFieldChange = (clave: string, field: keyof ItemState, value: any) => {
+    const handleFieldChange = (
+        clave: string,
+        field: keyof ItemState,
+        value: any,
+    ) => {
         setItems((prev) => ({
             ...prev,
             [clave]: {
@@ -114,10 +125,14 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
             items,
             observaciones: observacionesGenerales,
         });
-        form.post(`${teamPrefix}/ordenes/${order.id}/equipos/${equipment.id}/checklist`);
+        form.post(
+            `${teamPrefix}/ordenes/${order.id}/equipos/${equipment.id}/checklist`,
+        );
     };
 
-    const countObservados = Object.values(items).filter((i) => i.estado === 'observado').length;
+    const countObservados = Object.values(items).filter(
+        (i) => i.estado === 'observado',
+    ).length;
 
     return (
         <TecnicoPlantaLayout>
@@ -127,14 +142,14 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
                 {/* Back Link */}
                 <Link
                     href={`${teamPrefix}/recepciones/${order.id}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
                 >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="h-4 w-4" />
                     <span>Volver a Recepción #{order.codigo}</span>
                 </Link>
 
                 {/* Equipment Master Data Header (§19.2) */}
-                <div className="p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm space-y-2.5">
+                <div className="space-y-2.5 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
                     <div className="flex items-center justify-between">
                         <span className="font-mono text-base font-extrabold text-amber-600 dark:text-amber-400">
                             {equipment.numero_serie}
@@ -146,13 +161,17 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
 
                     <div className="grid grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
                         <div>
-                            <span className="text-neutral-400">Agente/Tipo: </span>
+                            <span className="text-neutral-400">
+                                Agente/Tipo:{' '}
+                            </span>
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 {equipment.tipo_agente || 'PQS ABC'}
                             </span>
                         </div>
                         <div>
-                            <span className="text-neutral-400">Capacidad: </span>
+                            <span className="text-neutral-400">
+                                Capacidad:{' '}
+                            </span>
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 {equipment.capacidad || 'N/A'}
                             </span>
@@ -173,16 +192,16 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
                 </div>
 
                 {/* Quick Action bar */}
-                <div className="flex items-center justify-between gap-2 p-2 bg-neutral-100 dark:bg-neutral-800/80 rounded-xl">
-                    <div className="text-xs font-medium text-neutral-600 dark:text-neutral-300 pl-2">
+                <div className="flex items-center justify-between gap-2 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800/80">
+                    <div className="pl-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">
                         {countObservados > 0 ? (
-                            <span className="text-amber-700 dark:text-amber-400 font-bold flex items-center gap-1">
-                                <AlertTriangle className="w-3.5 h-3.5" />
+                            <span className="flex items-center gap-1 font-bold text-amber-700 dark:text-amber-400">
+                                <AlertTriangle className="h-3.5 w-3.5" />
                                 {countObservados} componente(s) observado(s)
                             </span>
                         ) : (
-                            <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                                <ShieldCheck className="w-3.5 h-3.5" />
+                            <span className="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
+                                <ShieldCheck className="h-3.5 w-3.5" />
                                 Todos conformes
                             </span>
                         )}
@@ -190,7 +209,7 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
                     <button
                         type="button"
                         onClick={handleMarkAllConforme}
-                        className="px-3 py-1.5 bg-white dark:bg-neutral-700 hover:bg-neutral-50 text-neutral-800 dark:text-neutral-200 rounded-lg text-xs font-semibold shadow-xs"
+                        className="rounded-lg bg-card px-3 py-1.5 text-xs font-semibold text-neutral-800 shadow-xs hover:bg-neutral-50 dark:bg-neutral-700 dark:text-neutral-200"
                     >
                         Marcar Todo Conforme
                     </button>
@@ -212,10 +231,10 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
                         return (
                             <div
                                 key={el.clave}
-                                className={`p-3.5 rounded-2xl border transition-all ${
+                                className={`rounded-2xl border p-3.5 transition-all ${
                                     isObservado
-                                        ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800'
-                                        : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700'
+                                        ? 'border-amber-300 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20'
+                                        : 'border-neutral-200 bg-card dark:border-neutral-700 dark:bg-neutral-800'
                                 }`}
                             >
                                 <div className="space-y-2.5">
@@ -226,114 +245,169 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
                                     </div>
 
                                     {/* 3 State Touch Buttons (Mobile-first min 44px) */}
-                                    <div className="grid grid-cols-3 gap-1.5 p-1 bg-neutral-100 dark:bg-neutral-900 rounded-xl">
+                                    <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-900">
                                         <button
                                             type="button"
-                                            onClick={() => handleEstadoChange(el.clave, 'conforme')}
-                                            className={`min-h-[44px] rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all ${
+                                            onClick={() =>
+                                                handleEstadoChange(
+                                                    el.clave,
+                                                    'conforme',
+                                                )
+                                            }
+                                            className={`flex min-h-[44px] items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all ${
                                                 item.estado === 'conforme'
                                                     ? 'bg-emerald-600 text-white shadow-sm'
-                                                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900'
+                                                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400'
                                             }`}
                                         >
-                                            <CheckCircle2 className="w-4 h-4" />
+                                            <CheckCircle2 className="h-4 w-4" />
                                             <span>Conforme</span>
                                         </button>
 
                                         <button
                                             type="button"
-                                            onClick={() => handleEstadoChange(el.clave, 'observado')}
-                                            className={`min-h-[44px] rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all ${
+                                            onClick={() =>
+                                                handleEstadoChange(
+                                                    el.clave,
+                                                    'observado',
+                                                )
+                                            }
+                                            className={`flex min-h-[44px] items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all ${
                                                 item.estado === 'observado'
                                                     ? 'bg-amber-600 text-white shadow-sm'
-                                                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900'
+                                                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400'
                                             }`}
                                         >
-                                            <AlertTriangle className="w-4 h-4" />
+                                            <AlertTriangle className="h-4 w-4" />
                                             <span>Observado</span>
                                         </button>
 
                                         <button
                                             type="button"
-                                            onClick={() => handleEstadoChange(el.clave, 'no_aplica')}
-                                            className={`min-h-[44px] rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all ${
+                                            onClick={() =>
+                                                handleEstadoChange(
+                                                    el.clave,
+                                                    'no_aplica',
+                                                )
+                                            }
+                                            className={`flex min-h-[44px] items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all ${
                                                 item.estado === 'no_aplica'
                                                     ? 'bg-neutral-600 text-white shadow-sm'
-                                                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900'
+                                                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400'
                                             }`}
                                         >
-                                            <MinusCircle className="w-4 h-4" />
+                                            <MinusCircle className="h-4 w-4" />
                                             <span>N / A</span>
                                         </button>
                                     </div>
 
                                     {/* Expanded Observado Subform (§19.2) */}
                                     {isObservado && (
-                                        <div className="pt-2.5 space-y-2 border-t border-amber-200 dark:border-amber-900/60 animate-in fade-in duration-150">
+                                        <div className="animate-in fade-in space-y-2 border-t border-amber-200 pt-2.5 duration-150 dark:border-amber-900/60">
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
-                                                    <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                         Condición / Falla *
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={item.condicion}
-                                                        onChange={(e) => handleFieldChange(el.clave, 'condicion', e.target.value)}
+                                                        onChange={(e) =>
+                                                            handleFieldChange(
+                                                                el.clave,
+                                                                'condicion',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         placeholder="Ej: Picado, Fisurado, Despresurizado..."
-                                                        className="w-full text-xs px-2.5 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                                        className="w-full rounded-xl border border-neutral-300 bg-card px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                                         required
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                         Acción Recomendada
                                                     </label>
                                                     <input
                                                         type="text"
-                                                        value={item.accion_recomendada}
-                                                        onChange={(e) => handleFieldChange(el.clave, 'accion_recomendada', e.target.value)}
+                                                        value={
+                                                            item.accion_recomendada
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleFieldChange(
+                                                                el.clave,
+                                                                'accion_recomendada',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         placeholder="Ej: Cambio de componente, P.H..."
-                                                        className="w-full text-xs px-2.5 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                                        className="w-full rounded-xl border border-neutral-300 bg-card px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                                     />
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
-                                                    <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                         Repuesto Sugerido
                                                     </label>
                                                     <input
                                                         type="text"
-                                                        value={item.repuesto_sugerido}
-                                                        onChange={(e) => handleFieldChange(el.clave, 'repuesto_sugerido', e.target.value)}
+                                                        value={
+                                                            item.repuesto_sugerido
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleFieldChange(
+                                                                el.clave,
+                                                                'repuesto_sugerido',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         placeholder="Ej: Manómetro 1/8, Manguera..."
-                                                        className="w-full text-xs px-2.5 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                                        className="w-full rounded-xl border border-neutral-300 bg-card px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                                     />
                                                 </div>
                                                 <div className="flex items-center pt-5">
-                                                    <label className="flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-300 cursor-pointer">
+                                                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-300">
                                                         <input
                                                             type="checkbox"
-                                                            checked={item.requiere_autorizacion}
-                                                            onChange={(e) => handleFieldChange(el.clave, 'requiere_autorizacion', e.target.checked)}
-                                                            className="rounded border-amber-400 text-amber-600 focus:ring-amber-500 w-4 h-4"
+                                                            checked={
+                                                                item.requiere_autorizacion
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleFieldChange(
+                                                                    el.clave,
+                                                                    'requiere_autorizacion',
+                                                                    e.target
+                                                                        .checked,
+                                                                )
+                                                            }
+                                                            className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
                                                         />
-                                                        <span>Requiere Autorización</span>
+                                                        <span>
+                                                            Requiere
+                                                            Autorización
+                                                        </span>
                                                     </label>
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                                <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                     Nota Técnica
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={item.nota}
-                                                    onChange={(e) => handleFieldChange(el.clave, 'nota', e.target.value)}
+                                                    onChange={(e) =>
+                                                        handleFieldChange(
+                                                            el.clave,
+                                                            'nota',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     placeholder="Detalles adicionales para Vendedor..."
-                                                    className="w-full text-xs px-2.5 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl"
+                                                    className="w-full rounded-xl border border-neutral-300 bg-card px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                                 />
                                             </div>
                                         </div>
@@ -344,32 +418,36 @@ export default function ChecklistCreate({ order, equipment, elementos }: Props) 
                     })}
 
                     {/* General Observations */}
-                    <div className="p-3.5 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 space-y-1.5">
+                    <div className="space-y-1.5 rounded-2xl border border-neutral-200 bg-card p-3.5 dark:border-neutral-700 dark:bg-neutral-800">
                         <label className="block text-xs font-bold text-neutral-900 dark:text-neutral-100">
                             Observaciones Generales de la Inspección
                         </label>
                         <textarea
                             value={observacionesGenerales}
-                            onChange={(e) => setObservacionesGenerales(e.target.value)}
+                            onChange={(e) =>
+                                setObservacionesGenerales(e.target.value)
+                            }
                             placeholder="Conclusiones técnicas adicionales..."
                             rows={2}
-                            className="w-full text-xs p-2.5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-amber-500"
+                            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-2.5 text-xs focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-900"
                         />
                     </div>
 
                     {/* Sticky Bottom Bar */}
-                    <div className="fixed bottom-14 left-0 right-0 p-3 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-3 max-w-lg mx-auto z-40">
+                    <div className="fixed right-0 bottom-14 left-0 z-40 mx-auto flex max-w-lg items-center justify-between gap-3 border-t border-neutral-200 bg-card/95 p-3 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/95">
                         <div className="text-xs">
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                                {countObservados > 0 ? `${countObservados} Falla(s)` : '100% Conforme'}
+                                {countObservados > 0
+                                    ? `${countObservados} Falla(s)`
+                                    : '100% Conforme'}
                             </span>
                         </div>
                         <button
                             type="submit"
                             disabled={form.processing}
-                            className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-md hover:bg-amber-700 active:bg-amber-800"
                         >
-                            <ClipboardCheck className="w-4 h-4" />
+                            <ClipboardCheck className="h-4 w-4" />
                             <span>Guardar Checklist Técnico</span>
                         </button>
                     </div>
