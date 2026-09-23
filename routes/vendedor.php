@@ -62,6 +62,7 @@ Route::prefix('vendedor')
         Route::post('ventas', [SaleController::class, 'store'])->name('ventas.store');
         Route::get('ventas/escanear-serie', [SaleItemScanController::class, 'resolve'])->name('ventas.escanear-serie');
         Route::get('ventas/{sale}', [SaleController::class, 'show'])->name('ventas.show');
+        Route::get('ventas/{sale}/nota-venta-pdf', [SaleController::class, 'notaVentaPdf'])->name('ventas.nota-venta-pdf');
         Route::post('ventas/{sale}/confirmar', [SaleController::class, 'confirm'])->name('ventas.confirmar');
 
         Route::get('ordenes-servicio', [ServiceOrderController::class, 'index'])->name('ordenes-servicio.index');

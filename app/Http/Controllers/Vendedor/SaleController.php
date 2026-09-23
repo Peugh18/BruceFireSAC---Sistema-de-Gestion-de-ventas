@@ -7,30 +7,37 @@ use App\Actions\Sales\CreateSale;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\Client;
+use App\Models\CompanySetting;
 use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\Team;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class SaleController extends Controller
 {
     public function index(Team $current_team, Request $request): Response
     {
         $estado = $request->string('estado')->toString();
+        $comprobante = $request->string('comprobante')->toString();
         $vendedorId = $request->user()->id;
 
         $sales = Sale::query()
             ->with('client')
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
+            ->when($comprobante === 'nota_venta', fn ($query) => $query->where('comprobante_tipo', Sale::NOTA_VENTA))
+            ->when($comprobante === 'sunat', fn ($query) => $query->where('comprobante_tipo', '!=', Sale::NOTA_VENTA))
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString()
             ->through(fn (Sale $sale) => [
                 'id' => $sale->id,
                 'numero_interno' => $sale->numero_interno,
+                'numero_nota_venta' => $sale->numero_nota_venta,
                 'cliente' => $sale->client->razon_social,
                 'fecha' => $sale->fecha->toDateString(),
                 'comprobante_tipo' => $sale->comprobante_tipo,
@@ -40,7 +47,7 @@ class SaleController extends Controller
 
         return Inertia::render('vendedor/ventas/index', [
             'sales' => $sales,
-            'filters' => ['estado' => $estado],
+            'filters' => ['estado' => $estado, 'comprobante' => $comprobante],
             // KPIs siempre acotados al vendedor autenticado: NUNCA acumulado
             // de toda la empresa (regla de la sección 77.3 del doc maestro).
             'kpis' => [
@@ -85,6 +92,18 @@ class SaleController extends Controller
         return Inertia::render('vendedor/ventas/show', [
             'sale' => $sale->load('items.product', 'items.service', 'client', 'payments', 'electronicDocuments'),
         ]);
+    }
+
+    public function notaVentaPdf(Team $current_team, Sale $sale): HttpResponse
+    {
+        abort_unless($sale->esNotaVenta() && $sale->numero_nota_venta, 404);
+
+        $sale->load('client', 'items.product', 'items.service', 'items.equipment');
+
+        return Pdf::loadView('pdf.nota-venta', [
+            'sale' => $sale,
+            'company' => CompanySetting::current(),
+        ])->setPaper('a4')->stream("{$sale->numero_nota_venta}.pdf");
     }
 
     public function confirm(Team $current_team, Sale $sale, ConfirmSale $confirmSale): RedirectResponse

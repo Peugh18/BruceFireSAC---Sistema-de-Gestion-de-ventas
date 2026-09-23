@@ -39,7 +39,7 @@ type SedeOption = {
 type LineType = 'unidad_nueva' | 'recarga_servicio';
 type Destination = 'local_cliente' | 'vehiculo';
 type PaymentCondition = 'contado' | 'credito_30';
-type DocumentType = 'factura' | 'boleta';
+type DocumentType = 'factura' | 'boleta' | 'nota_venta';
 
 type SaleItemForm = {
     tipo_linea: LineType;
@@ -98,7 +98,7 @@ function money(value: number) {
 
 function fieldError(errors: Partial<Record<string, string>>, key: string) {
     return errors[key] ? (
-        <p className="mt-1 text-[11px] font-semibold text-destructive">
+        <p className="text-destructive mt-1 text-[11px] font-semibold">
             {errors[key]}
         </p>
     ) : null;
@@ -317,16 +317,16 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                 className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]"
             >
                 <div className="flex min-w-0 flex-col gap-4">
-                    <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                         <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[11px] bg-destructive/10 text-primary">
+                            <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
                                 <Search className="size-5" />
                             </div>
                             <div>
-                                <h2 className="font-['Oswald',sans-serif] text-[18px] font-semibold text-foreground uppercase">
+                                <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                                     Cliente y comprobante
                                 </h2>
-                                <p className="text-[12px] text-muted-foreground">
+                                <p className="text-muted-foreground text-[12px]">
                                     Selecciona un cliente existente antes de
                                     emitir.
                                 </p>
@@ -335,28 +335,28 @@ export default function NuevaVenta({ clients, sedes }: Props) {
 
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Buscar cliente
                                 </Label>
-                                <div className="mt-1 flex items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
-                                    <Search className="size-3.5 shrink-0 text-muted-foreground" />
+                                <div className="border-border bg-muted/40 mt-1 flex items-center gap-2 rounded-[9px] border px-3">
+                                    <Search className="text-muted-foreground size-3.5 shrink-0" />
                                     <input
                                         value={clientSearch}
                                         onChange={(event) =>
                                             setClientSearch(event.target.value)
                                         }
                                         placeholder="RUC, DNI o razón social..."
-                                        className="h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+                                        className="placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
                                     />
                                     {lookupLoading || clientSearchLoading ? (
-                                        <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                                        <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
                                     ) : null}
                                 </div>
                                 {fieldError(form.errors, 'client_id')}
 
-                                <div className="mt-2 max-h-[168px] overflow-y-auto rounded-[10px] border border-border">
+                                <div className="border-border mt-2 max-h-[168px] overflow-y-auto rounded-[10px] border">
                                     {filteredClients.length === 0 ? (
-                                        <div className="px-3 py-4 text-[12px] text-muted-foreground">
+                                        <div className="text-muted-foreground px-3 py-4 text-[12px]">
                                             {searchedClients !== null
                                                 ? 'No se encontraron clientes con esa búsqueda.'
                                                 : 'No hay clientes recientes. Escribe para buscar.'}
@@ -375,13 +375,13 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                                         client,
                                                     );
                                                 }}
-                                                className={`flex w-full items-center justify-between gap-3 border-b border-border px-3 py-2.5 text-left last:border-b-0 ${form.data.client_id === client.id ? 'bg-destructive/10' : 'bg-card hover:bg-muted/40'}`}
+                                                className={`border-border flex w-full items-center justify-between gap-3 border-b px-3 py-2.5 text-left last:border-b-0 ${form.data.client_id === client.id ? 'bg-destructive/10' : 'bg-card hover:bg-muted/40'}`}
                                             >
                                                 <span>
-                                                    <span className="block text-[13px] font-bold text-foreground">
+                                                    <span className="text-foreground block text-[13px] font-bold">
                                                         {client.razon_social}
                                                     </span>
-                                                    <span className="font-['IBM_Plex_Mono',monospace] text-[11px] text-muted-foreground">
+                                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
                                                         {
                                                             client.numero_documento
                                                         }
@@ -389,7 +389,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                                 </span>
                                                 {form.data.client_id ===
                                                 client.id ? (
-                                                    <CheckCircle2 className="size-4 text-primary" />
+                                                    <CheckCircle2 className="text-primary size-4" />
                                                 ) : null}
                                             </button>
                                         ))
@@ -397,7 +397,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                 </div>
 
                                 {lookup ? (
-                                    <div className="mt-2 rounded-[10px] border border-dashed border-border bg-muted/30 px-3 py-2 text-[11.5px] text-muted-foreground">
+                                    <div className="border-border bg-muted/30 text-muted-foreground mt-2 rounded-[10px] border border-dashed px-3 py-2 text-[11.5px]">
                                         {lookup.message
                                             ? lookup.message
                                             : `Consulta: ${lookup.razon_social ?? lookup.nombre_o_razon_social ?? 'documento encontrado'}`}
@@ -407,7 +407,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
 
                             <div className="grid gap-3">
                                 <div>
-                                    <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                         Fecha
                                     </Label>
                                     <Input
@@ -419,15 +419,15 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                                 event.target.value,
                                             )
                                         }
-                                        className="mt-1 h-10 rounded-[9px] border-border bg-card text-[13px]"
+                                        className="border-border bg-card mt-1 h-10 rounded-[9px] text-[13px]"
                                     />
                                     {fieldError(form.errors, 'fecha')}
                                 </div>
                                 <div>
-                                    <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                         Tipo comprobante
                                     </Label>
-                                    <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                                    <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                         <SegmentButton
                                             active={
                                                 form.data.comprobante_tipo ===
@@ -456,19 +456,33 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                         >
                                             Boleta
                                         </SegmentButton>
+                                        <SegmentButton
+                                            active={
+                                                form.data.comprobante_tipo ===
+                                                'nota_venta'
+                                            }
+                                            onClick={() =>
+                                                form.setData(
+                                                    'comprobante_tipo',
+                                                    'nota_venta',
+                                                )
+                                            }
+                                        >
+                                            Nota de venta
+                                        </SegmentButton>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </Card>
 
-                    <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                         <div className="grid gap-4 lg:grid-cols-3">
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Destino
                                 </Label>
-                                <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                     <SegmentButton
                                         active={
                                             form.data.destino ===
@@ -498,10 +512,10 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                 </div>
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Condición de pago
                                 </Label>
-                                <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                     <SegmentButton
                                         active={
                                             form.data.condicion_pago ===
@@ -534,7 +548,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                 </div>
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Sede almacén
                                 </Label>
                                 <select
@@ -547,7 +561,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                                 : '',
                                         )
                                     }
-                                    className="mt-1 h-10 w-full rounded-[9px] border border-border bg-card px-3 text-[13px] outline-none"
+                                    className="border-border bg-card mt-1 h-10 w-full rounded-[9px] border px-3 text-[13px] outline-none"
                                 >
                                     <option value="">
                                         Selecciona una sede...
@@ -563,22 +577,22 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                         </div>
                     </Card>
 
-                    <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                         <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[11px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                            <div className="flex size-10 items-center justify-center rounded-[11px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
                                 <ScanLine className="size-5" />
                             </div>
                             <div>
-                                <h2 className="font-['Oswald',sans-serif] text-[18px] font-semibold text-foreground uppercase">
+                                <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                                     Escaneo de items
                                 </h2>
-                                <p className="text-[12px] text-muted-foreground">
+                                <p className="text-muted-foreground text-[12px]">
                                     El tipo seleccionado se aplicará al próximo
                                     escaneo.
                                 </p>
                             </div>
                             <div className="flex-1" />
-                            <div className="flex rounded-[9px] bg-muted p-[3px]">
+                            <div className="bg-muted flex rounded-[9px] p-[3px]">
                                 <SegmentButton
                                     active={tipoLinea === 'unidad_nueva'}
                                     onClick={() => setTipoLinea('unidad_nueva')}
@@ -611,13 +625,13 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                     }
                                 }}
                                 placeholder="Escanear o escribir número de serie..."
-                                className="h-11 rounded-[9px] border-border bg-muted/40 text-[13px]"
+                                className="border-border bg-muted/40 h-11 rounded-[9px] text-[13px]"
                             />
                             <Button
                                 type="button"
                                 onClick={() => void scanSerial()}
                                 disabled={scanLoading}
-                                className="h-11 rounded-[9px] bg-card px-4 text-[13px] font-bold text-white shadow-none hover:bg-foreground/90"
+                                className="bg-card hover:bg-foreground/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                             >
                                 {scanLoading ? (
                                     <Loader2 className="size-4 animate-spin" />
@@ -651,7 +665,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                         ].map((h) => (
                                             <th
                                                 key={h}
-                                                className="border-b border-border px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] text-muted-foreground uppercase"
+                                                className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
                                             >
                                                 {h}
                                             </th>
@@ -663,7 +677,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                         <tr>
                                             <td
                                                 colSpan={8}
-                                                className="px-2.5 py-10 text-center text-muted-foreground"
+                                                className="text-muted-foreground px-2.5 py-10 text-center"
                                             >
                                                 Escanea una unidad para empezar
                                                 la venta.
@@ -674,15 +688,15 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                             <tr
                                                 key={`${item.numero_serie}-${index}`}
                                             >
-                                                <td className="border-b border-border px-2.5 py-[13px] font-semibold text-foreground">
+                                                <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
                                                     {item.nombre}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
+                                                <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
                                                     {item.numero_serie}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <Badge
-                                                        className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold ${item.tipo_linea === 'unidad_nueva' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'}`}
+                                                        className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold ${item.tipo_linea === 'unidad_nueva' ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}
                                                     >
                                                         {item.tipo_linea ===
                                                         'unidad_nueva'
@@ -690,10 +704,10 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                                             : 'Recarga en planta'}
                                                     </Badge>
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     {item.cantidad}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <Input
                                                         type="number"
                                                         min={0}
@@ -723,10 +737,10 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                                                 ),
                                                             )
                                                         }
-                                                        className="h-8 w-24 rounded-[7px] border-border text-[12px]"
+                                                        className="border-border h-8 w-24 rounded-[7px] text-[12px]"
                                                     />
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <Input
                                                         type="number"
                                                         min={0}
@@ -754,17 +768,17 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                                                 ),
                                                             )
                                                         }
-                                                        className="h-8 w-24 rounded-[7px] border-border text-[12px]"
+                                                        className="border-border h-8 w-24 rounded-[7px] text-[12px]"
                                                     />
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                                <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
                                                     {money(
                                                         item.cantidad *
                                                             item.precio_unitario -
                                                             item.descuento,
                                                     )}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <Button
                                                         type="button"
                                                         variant="outline"
@@ -781,7 +795,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                                                 ),
                                                             )
                                                         }
-                                                        className="size-7 rounded-[7px] border-border bg-card text-destructive shadow-none"
+                                                        className="border-border bg-card text-destructive size-7 rounded-[7px] shadow-none"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </Button>
@@ -796,41 +810,45 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                 </div>
 
                 <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
-                    <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[11px] bg-destructive/10 text-primary">
+                            <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
                                 <FileText className="size-5" />
                             </div>
                             <div>
-                                <h2 className="font-['Oswald',sans-serif] text-[18px] font-semibold text-foreground uppercase">
+                                <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                                     Panel fiscal
                                 </h2>
-                                <p className="text-[12px] text-muted-foreground">
+                                <p className="text-muted-foreground text-[12px]">
                                     {selectedClient?.razon_social ??
                                         'Cliente pendiente'}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="space-y-2 rounded-[12px] bg-muted/40 p-4 text-[13px]">
+                        <div className="bg-muted/40 space-y-2 rounded-[12px] p-4 text-[13px]">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Subtotal</span>
+                                <span className="text-muted-foreground">
+                                    Subtotal
+                                </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
                                     {money(subtotal)}
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">IGV 18%</span>
+                                <span className="text-muted-foreground">
+                                    IGV 18%
+                                </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
                                     {money(igv)}
                                 </span>
                             </div>
-                            <div className="border-t border-border pt-3">
+                            <div className="border-border border-t pt-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="font-bold text-foreground">
+                                    <span className="text-foreground font-bold">
                                         Total
                                     </span>
-                                    <span className="font-['Oswald',sans-serif] text-[28px] font-semibold text-foreground">
+                                    <span className="text-foreground font-['Oswald',sans-serif] text-[28px] font-semibold">
                                         {money(total)}
                                     </span>
                                 </div>
@@ -838,7 +856,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                         </div>
 
                         <div>
-                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Observaciones
                             </Label>
                             <textarea
@@ -849,14 +867,14 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                         event.target.value,
                                     )
                                 }
-                                className="mt-1 min-h-[86px] w-full rounded-[9px] border border-border bg-card px-3 py-2 text-[13px] outline-none"
+                                className="border-border bg-card mt-1 min-h-[86px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none"
                             />
                         </div>
 
                         <Button
                             type="submit"
                             disabled={form.processing}
-                            className="h-11 rounded-[9px] bg-primary px-4 text-[13px] font-bold text-white shadow-none hover:bg-primary/90"
+                            className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             {form.processing ? (
                                 <Loader2 className="size-4 animate-spin" />
@@ -869,14 +887,14 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                             type="button"
                             variant="outline"
                             onClick={cancel}
-                            className="h-10 rounded-[9px] border-border bg-card text-foreground/80 shadow-none"
+                            className="border-border bg-card text-foreground/80 h-10 rounded-[9px] shadow-none"
                         >
                             Cancelar
                         </Button>
                     </Card>
 
-                    <Card className="gap-2 rounded-[16px] border-border bg-card p-4 shadow-none">
-                        <div className="text-[11px] font-bold tracking-[0.05em] text-muted-foreground uppercase">
+                    <Card className="border-border bg-card gap-2 rounded-[16px] p-4 shadow-none">
+                        <div className="text-muted-foreground text-[11px] font-bold tracking-[0.05em] uppercase">
                             Resumen operativo
                         </div>
                         <div className="flex justify-between text-[12.5px]">

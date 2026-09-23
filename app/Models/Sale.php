@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property string $numero_interno
+ * @property string|null $numero_nota_venta
  * @property int|null $quote_id
  * @property int $client_id
  * @property int|null $sede_id
@@ -41,13 +42,23 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ElectronicDocument> $electronicDocuments
  */
 #[Fillable([
-    'numero_interno', 'quote_id', 'client_id', 'sede_id', 'vehicle_id', 'vendedor_id', 'fecha',
+    'numero_interno', 'numero_nota_venta', 'quote_id', 'client_id', 'sede_id', 'vehicle_id', 'vendedor_id', 'fecha',
     'destino', 'condicion_pago', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones',
 ])]
 class Sale extends Model
 {
     /** @use HasFactory<SaleFactory> */
     use HasFactory;
+
+    public const NOTA_VENTA = 'nota_venta';
+
+    /**
+     * Una nota de venta es una venta interna: no se envía a SUNAT.
+     */
+    public function esNotaVenta(): bool
+    {
+        return $this->comprobante_tipo === self::NOTA_VENTA;
+    }
 
     protected function casts(): array
     {

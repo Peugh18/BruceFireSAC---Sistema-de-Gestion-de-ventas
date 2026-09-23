@@ -41,6 +41,7 @@ type ElectronicDocument = {
 type Sale = {
     id: number;
     numero_interno?: string;
+    numero_nota_venta?: string | null;
     fecha?: string;
     comprobante_tipo?: string;
     condicion_pago?: string;
@@ -94,7 +95,7 @@ export default function VentasShow({ sale }: Props) {
                     <Button
                         asChild
                         variant="outline"
-                        className="h-9 rounded-[9px] border-border bg-card text-foreground/80 shadow-none"
+                        className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
                     >
                         <Link href={ventas.index(teamSlug)}>
                             <ArrowLeft className="size-4" />
@@ -102,10 +103,10 @@ export default function VentasShow({ sale }: Props) {
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="font-['Oswald',sans-serif] text-[24px] font-semibold tracking-[0.02em] text-foreground uppercase">
+                        <h1 className="text-foreground font-['Oswald',sans-serif] text-[24px] font-semibold tracking-[0.02em] uppercase">
                             {sale.numero_interno ?? `Venta ${sale.id}`}
                         </h1>
-                        <p className="text-[12.5px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[12.5px]">
                             {sale.client?.razon_social ?? 'Cliente sin datos'}
                         </p>
                     </div>
@@ -118,14 +119,31 @@ export default function VentasShow({ sale }: Props) {
                         >
                             {confirmando
                                 ? 'Confirmando…'
-                                : 'Confirmar y emitir'}
+                                : sale.comprobante_tipo === 'nota_venta'
+                                  ? 'Confirmar nota de venta'
+                                  : 'Confirmar y emitir'}
                         </Button>
                     )}
-                    <Badge className="rounded-full border-transparent bg-emerald-500/10 px-3 py-1 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400 capitalize">
+                    <Badge className="rounded-full border-transparent bg-emerald-500/10 px-3 py-1 text-[10.5px] font-bold text-emerald-600 capitalize dark:text-emerald-400">
                         {sale.estado ?? 'registrada'}
                     </Badge>
+                    {sale.numero_nota_venta && (
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
+                        >
+                            <a
+                                href={`/${teamSlug}/vendedor/ventas/${sale.id}/nota-venta-pdf`}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                {sale.numero_nota_venta} · PDF
+                            </a>
+                        </Button>
+                    )}
                     {documento && (
-                        <Badge className="rounded-full border-transparent bg-blue-500/10 px-3 py-1 text-[10.5px] font-bold text-blue-600 dark:text-blue-400 capitalize">
+                        <Badge className="rounded-full border-transparent bg-blue-500/10 px-3 py-1 text-[10.5px] font-bold text-blue-600 capitalize dark:text-blue-400">
                             SUNAT: {documento.serie}-{documento.correlativo} ·{' '}
                             {documento.sunat_estado}
                         </Badge>
@@ -133,35 +151,35 @@ export default function VentasShow({ sale }: Props) {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Card className="gap-1 rounded-[14px] border-border bg-card p-4 shadow-none">
+                    <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
                         <CalendarDays className="size-5 text-amber-600 dark:text-amber-400" />
-                        <div className="text-[11px] font-bold text-muted-foreground uppercase">
+                        <div className="text-muted-foreground text-[11px] font-bold uppercase">
                             Fecha
                         </div>
                         <div className="font-['IBM_Plex_Mono',monospace] text-[13px] font-bold">
                             {sale.fecha ?? '-'}
                         </div>
                     </Card>
-                    <Card className="gap-1 rounded-[14px] border-border bg-card p-4 shadow-none">
+                    <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
                         <ReceiptText className="size-5 text-blue-600 dark:text-blue-400" />
-                        <div className="text-[11px] font-bold text-muted-foreground uppercase">
+                        <div className="text-muted-foreground text-[11px] font-bold uppercase">
                             Comprobante
                         </div>
                         <div className="font-['IBM_Plex_Mono',monospace] text-[13px] font-bold uppercase">
-                            {sale.comprobante_tipo ?? '-'}
+                            {nice(sale.comprobante_tipo)}
                         </div>
                     </Card>
-                    <Card className="gap-1 rounded-[14px] border-border bg-card p-4 shadow-none">
+                    <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
                         <Banknote className="size-5 text-emerald-600 dark:text-emerald-400" />
-                        <div className="text-[11px] font-bold text-muted-foreground uppercase">
+                        <div className="text-muted-foreground text-[11px] font-bold uppercase">
                             Condición
                         </div>
                         <div className="text-[13px] font-bold capitalize">
                             {nice(sale.condicion_pago)}
                         </div>
                     </Card>
-                    <Card className="gap-1 rounded-[14px] border-border bg-card p-4 shadow-none">
-                        <div className="text-[11px] font-bold text-muted-foreground uppercase">
+                    <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
+                        <div className="text-muted-foreground text-[11px] font-bold uppercase">
                             Total
                         </div>
                         <div className="font-['Oswald',sans-serif] text-[25px] font-semibold">
@@ -170,7 +188,7 @@ export default function VentasShow({ sale }: Props) {
                     </Card>
                 </div>
 
-                <Card className="gap-0 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <h2 className="mb-3 font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                         Items
                     </h2>
@@ -189,7 +207,7 @@ export default function VentasShow({ sale }: Props) {
                                     ].map((h) => (
                                         <th
                                             key={h}
-                                            className="border-b border-border px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] text-muted-foreground uppercase"
+                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
                                         >
                                             {h}
                                         </th>
@@ -199,27 +217,27 @@ export default function VentasShow({ sale }: Props) {
                             <tbody>
                                 {(sale.items ?? []).map((item) => (
                                     <tr key={item.id}>
-                                        <td className="border-b border-border px-2.5 py-[13px] font-semibold">
+                                        <td className="border-border border-b px-2.5 py-[13px] font-semibold">
                                             {item.product?.nombre ??
                                                 item.service?.nombre ??
                                                 '-'}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
+                                        <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
                                             {item.numero_serie ?? '-'}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px] capitalize">
+                                        <td className="border-border border-b px-2.5 py-[13px] capitalize">
                                             {nice(item.tipo_linea)}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px]">
+                                        <td className="border-border border-b px-2.5 py-[13px]">
                                             {item.cantidad ?? 1}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px]">
+                                        <td className="border-border border-b px-2.5 py-[13px]">
                                             {money(item.precio_unitario)}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px]">
+                                        <td className="border-border border-b px-2.5 py-[13px]">
                                             {money(item.descuento)}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px] font-bold">
+                                        <td className="border-border border-b px-2.5 py-[13px] font-bold">
                                             {money(item.subtotal)}
                                         </td>
                                     </tr>
@@ -229,7 +247,7 @@ export default function VentasShow({ sale }: Props) {
                     </div>
                 </Card>
 
-                <Card className="gap-0 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <h2 className="mb-3 font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                         Pagos
                     </h2>
@@ -241,7 +259,7 @@ export default function VentasShow({ sale }: Props) {
                                         (h) => (
                                             <th
                                                 key={h}
-                                                className="border-b border-border px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] text-muted-foreground uppercase"
+                                                className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
                                             >
                                                 {h}
                                             </th>
@@ -254,7 +272,7 @@ export default function VentasShow({ sale }: Props) {
                                     <tr>
                                         <td
                                             colSpan={4}
-                                            className="px-2.5 py-8 text-center text-muted-foreground"
+                                            className="text-muted-foreground px-2.5 py-8 text-center"
                                         >
                                             Sin pagos registrados
                                         </td>
@@ -262,16 +280,16 @@ export default function VentasShow({ sale }: Props) {
                                 ) : (
                                     (sale.payments ?? []).map((payment) => (
                                         <tr key={payment.id}>
-                                            <td className="border-b border-border px-2.5 py-[13px] capitalize">
+                                            <td className="border-border border-b px-2.5 py-[13px] capitalize">
                                                 {nice(payment.forma_pago)}
                                             </td>
-                                            <td className="border-b border-border px-2.5 py-[13px]">
+                                            <td className="border-border border-b px-2.5 py-[13px]">
                                                 {payment.fecha_pago ?? '-'}
                                             </td>
-                                            <td className="border-b border-border px-2.5 py-[13px] font-bold">
+                                            <td className="border-border border-b px-2.5 py-[13px] font-bold">
                                                 {money(payment.monto)}
                                             </td>
-                                            <td className="border-b border-border px-2.5 py-[13px] capitalize">
+                                            <td className="border-border border-b px-2.5 py-[13px] capitalize">
                                                 {payment.estado ?? '-'}
                                             </td>
                                         </tr>

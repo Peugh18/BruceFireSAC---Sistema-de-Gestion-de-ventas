@@ -25,7 +25,7 @@ class StoreSaleRequest extends FormRequest
             'fecha' => ['required', 'date'],
             'destino' => ['required', Rule::in(['local_cliente', 'vehiculo'])],
             'condicion_pago' => ['required', Rule::in(['contado', 'credito_30'])],
-            'comprobante_tipo' => ['required', Rule::in(['factura', 'boleta'])],
+            'comprobante_tipo' => ['required', Rule::in(['factura', 'boleta', 'nota_venta'])],
             'observaciones' => ['nullable', 'string'],
 
             'items' => ['required', 'array', 'min:1'],

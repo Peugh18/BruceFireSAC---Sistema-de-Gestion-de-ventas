@@ -19,6 +19,7 @@ import type { Team } from '@/types';
 type SaleRow = {
     id: number;
     numero_interno: string;
+    numero_nota_venta?: string | null;
     cliente: string;
     fecha: string;
     comprobante_tipo: string;
@@ -38,7 +39,7 @@ type Paginated<T> = {
 
 type Props = {
     sales: Paginated<SaleRow>;
-    filters: { estado?: string };
+    filters: { estado?: string; comprobante?: string };
     kpis: {
         ventas_del_mes: number | string;
         comprobantes: number;
@@ -91,10 +92,15 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
             : '');
     const currentFilter = filters.estado ?? '';
 
-    const changeFilter = (estado: string) => {
+    const currentComprobante = filters.comprobante ?? '';
+
+    const changeFilter = (estado: string, comprobante = currentComprobante) => {
         router.get(
             ventas.index.url(teamSlug, {
-                query: { estado: estado || undefined },
+                query: {
+                    estado: estado || undefined,
+                    comprobante: comprobante || undefined,
+                },
             }),
             {},
             { preserveScroll: true, preserveState: true },
@@ -142,7 +148,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                         return (
                             <Card
                                 key={item.label}
-                                className="flex-row items-center gap-3.5 rounded-[14px] border-border bg-card px-[18px] py-4 shadow-none"
+                                className="border-border bg-card flex-row items-center gap-3.5 rounded-[14px] px-[18px] py-4 shadow-none"
                             >
                                 <div
                                     className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}
@@ -153,10 +159,10 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                     />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] font-bold tracking-[0.03em] text-muted-foreground uppercase">
+                                    <div className="text-muted-foreground text-[11px] font-bold tracking-[0.03em] uppercase">
                                         {item.label}
                                     </div>
-                                    <div className="font-['Oswald',sans-serif] text-[21px] leading-tight font-semibold text-foreground">
+                                    <div className="text-foreground font-['Oswald',sans-serif] text-[21px] leading-tight font-semibold">
                                         {item.value}
                                     </div>
                                 </div>
@@ -165,9 +171,9 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                     })}
                 </div>
 
-                <Card className="gap-0 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <div className="mb-4 flex flex-wrap items-center gap-2.5">
-                        <div className="flex rounded-[9px] bg-muted p-[3px]">
+                        <div className="bg-muted flex rounded-[9px] p-[3px]">
                             {FILTERS.map((filter) => {
                                 const active =
                                     filter.value === ''
@@ -193,10 +199,38 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                 );
                             })}
                         </div>
+                        <div className="bg-muted flex rounded-[9px] p-[3px]">
+                            {[
+                                { label: 'Todos', value: '' },
+                                { label: 'Con comprobante', value: 'sunat' },
+                                {
+                                    label: 'Notas de venta',
+                                    value: 'nota_venta',
+                                },
+                            ].map((option) => (
+                                <button
+                                    key={option.label}
+                                    type="button"
+                                    onClick={() =>
+                                        changeFilter(
+                                            currentFilter,
+                                            option.value,
+                                        )
+                                    }
+                                    className={`rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
+                                        currentComprobante === option.value
+                                            ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
                         <div className="flex-1" />
                         <Button
                             asChild
-                            className="h-10 rounded-[9px] bg-primary px-4 text-[13px] font-bold text-white shadow-none hover:bg-primary/90"
+                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             <Link href={ventas.create(teamSlug)}>
                                 <Plus className="size-3.5" />
@@ -220,7 +254,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                     ].map((column) => (
                                         <th
                                             key={column}
-                                            className="border-b border-border px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap text-muted-foreground uppercase"
+                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap uppercase"
                                         >
                                             {column}
                                         </th>
@@ -233,24 +267,28 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                         key={sale.id}
                                         className="hover:bg-muted/40"
                                     >
-                                        <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold text-foreground">
+                                        <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
                                             {sale.numero_interno}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px] font-semibold text-foreground">
+                                        <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
                                             {sale.cliente}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px] text-foreground/80">
+                                        <td className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
                                             {sale.fecha}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px]">
-                                            <span className="rounded-[5px] bg-muted px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold text-foreground/80 uppercase">
-                                                {sale.comprobante_tipo}
+                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                            <span className="bg-muted text-foreground/80 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">
+                                                {sale.numero_nota_venta ??
+                                                    sale.comprobante_tipo.replace(
+                                                        '_',
+                                                        ' ',
+                                                    )}
                                             </span>
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold text-foreground">
+                                        <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
                                             {money(sale.total)}
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px]">
+                                        <td className="border-border border-b px-2.5 py-[13px]">
                                             <Badge
                                                 className={`rounded-full px-2.5 py-1 text-[10.5px] font-bold capitalize shadow-none ${statusBadge(sale.estado)}`}
                                             >
@@ -258,12 +296,12 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                                 {sale.estado}
                                             </Badge>
                                         </td>
-                                        <td className="border-b border-border px-2.5 py-[13px]">
+                                        <td className="border-border border-b px-2.5 py-[13px]">
                                             <Button
                                                 asChild
                                                 variant="outline"
                                                 size="icon"
-                                                className="size-7 rounded-[7px] border-border bg-card text-foreground/80 shadow-none"
+                                                className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
                                             >
                                                 <Link
                                                     href={ventas.show({
@@ -281,7 +319,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                         </table>
                     </div>
 
-                    <div className="mt-3.5 flex flex-col gap-3 text-[11.5px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
                         <span>
                             Mostrando {sales.from ?? 0}-{sales.to ?? 0} de{' '}
                             {sales.total ?? sales.data.length} ventas
@@ -301,7 +339,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
-                                        className="flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] text-muted-foreground"
+                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
                                     >
                                         {cleanLabel(link.label)}
                                     </span>

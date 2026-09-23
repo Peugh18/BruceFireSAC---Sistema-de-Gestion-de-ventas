@@ -3,14 +3,19 @@
 namespace App\Actions\Sales;
 
 use App\Actions\Billing\EmitElectronicDocument;
+use App\Actions\Billing\ReserveNextCorrelativo;
 use App\Models\Sale;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ConfirmSale
 {
+    public const SERIE_NOTA_VENTA = 'NV01';
+
     public function __construct(
         protected EmitElectronicDocument $emitElectronicDocument,
+        protected ReserveNextCorrelativo $reserveNextCorrelativo,
     ) {}
 
     /**
@@ -19,6 +24,9 @@ class ConfirmSale
      * si el comprobante es Factura o Boleta, emite el comprobante
      * electrónico. No aplica a Boleta con DNI: las personas naturales no
      * tienen estado de contribuyente.
+     *
+     * Una nota de venta es una venta interna: no valida el RUC, no se envía
+     * a SUNAT y recibe una numeración propia NV independiente de F001/B001.
      */
     public function handle(Sale $sale): Sale
     {
@@ -30,6 +38,10 @@ class ConfirmSale
 
         $sale->loadMissing('client');
 
+        if ($sale->esNotaVenta()) {
+            return $this->confirmarNotaVenta($sale);
+        }
+
         if ($sale->client->tipo_documento === 'ruc') {
             $this->assertRucActivoYHabido($sale);
         }
@@ -38,6 +50,27 @@ class ConfirmSale
             $sale->update(['estado' => 'confirmada']);
 
             $this->emitElectronicDocument->handle($sale);
+
+            return $sale->refresh();
+        });
+    }
+
+    protected function confirmarNotaVenta(Sale $sale): Sale
+    {
+        return DB::transaction(function () use ($sale) {
+            $correlativo = $this->reserveNextCorrelativo->handle(Sale::NOTA_VENTA, self::SERIE_NOTA_VENTA);
+
+            $sale->update([
+                'estado' => 'confirmada',
+                'numero_nota_venta' => 'NV-'.str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT),
+            ]);
+
+            AuditLogger::log(
+                action: 'venta.nota_venta_confirmada',
+                entity: $sale,
+                newValues: ['numero_nota_venta' => $sale->numero_nota_venta, 'total' => $sale->total],
+                userId: auth()->id()
+            );
 
             return $sale->refresh();
         });

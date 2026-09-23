@@ -9,6 +9,7 @@ use App\Services\Billing\ComprobantePdfService;
 use App\Services\Billing\GreenterService;
 use App\Services\Billing\ResponseClassifier;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 
 class EmitElectronicDocument
 {
@@ -21,6 +22,10 @@ class EmitElectronicDocument
 
     public function handle(Sale $sale): ElectronicDocument
     {
+        if ($sale->esNotaVenta()) {
+            throw new InvalidArgumentException('Una nota de venta no se envía a SUNAT.');
+        }
+
         $tipo = $sale->comprobante_tipo === 'factura' ? 'factura' : 'boleta';
         $serie = $this->serieFor($tipo);
         $correlativo = $this->reserveNextCorrelativo->handle($tipo, $serie);

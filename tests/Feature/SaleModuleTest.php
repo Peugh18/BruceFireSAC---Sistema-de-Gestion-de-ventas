@@ -127,7 +127,8 @@ test('recarga de servicio no descuenta stock y requiere equipo del cliente corre
 
     expect($unit->refresh()->estado)->toBe('disponible')
         ->and($sale->items()->first()->equipment_id)->toBe($equipment->id)
-        ->and(InventoryMovement::count())->toBe(0);
+        ->and(InventoryMovement::count())->toBe(0)
+        ->and($equipment->refresh()->proxima_fecha_atencion->toDateString())->toBe(now()->addYear()->toDateString());
 
     expect(fn () => app(CreateSale::class)->handle([
         'client_id' => $client->id,

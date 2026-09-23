@@ -110,6 +110,10 @@ class ProcessSaleItem
             ]);
         }
 
+        $equipment->update([
+            'proxima_fecha_atencion' => $sale->fecha->copy()->addYear(),
+        ]);
+
         return $sale->items()->create([
             'product_id' => null,
             'service_id' => $itemData['service_id'] ?? null,
