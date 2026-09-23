@@ -8,6 +8,7 @@ use App\Http\Controllers\Gerente\CompanySettingController;
 use App\Http\Controllers\Gerente\DashboardController;
 use App\Http\Controllers\Gerente\ProductController;
 use App\Http\Controllers\Gerente\ReportController;
+use App\Http\Controllers\Gerente\SedeController;
 use App\Http\Controllers\Gerente\ServiceController;
 use App\Http\Controllers\Gerente\UserController;
 use Illuminate\Support\Facades\Route;
@@ -42,9 +43,14 @@ Route::prefix('gerente')
         // Auditoría (§37)
         Route::get('auditoria', [AuditController::class, 'index'])->name('auditoria.index');
 
+        // Sedes: tiendas, almacenes y sedes mixtas
+        Route::resource('sedes', SedeController::class)->only(['index', 'store', 'update']);
+        Route::patch('sedes/{sede}/toggle-status', [SedeController::class, 'toggleStatus'])->name('sedes.toggle-status');
+
         // Usuarios y roles (§36, §86.4.8)
         Route::get('usuarios', [UserController::class, 'index'])->name('usuarios.index');
         Route::patch('usuarios/{user}/rol', [UserController::class, 'updateRole'])->name('usuarios.update-role');
+        Route::patch('usuarios/{user}/sede', [UserController::class, 'updateSede'])->name('usuarios.update-sede');
 
         Route::get('configuracion/empresa', [CompanySettingController::class, 'edit'])->name('configuracion.empresa.edit');
         Route::post('configuracion/empresa', [CompanySettingController::class, 'update'])->name('configuracion.empresa.update');

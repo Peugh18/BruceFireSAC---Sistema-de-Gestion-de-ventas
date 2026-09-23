@@ -9,12 +9,16 @@ type UsuarioItem = {
     name: string;
     email: string;
     role: string | null;
+    sede_id: number | null;
 };
+
+type SedeOption = { id: number; nombre: string };
 
 type PageProps = {
     currentTeam: { slug: string };
     usuarios: UsuarioItem[];
     roles: string[];
+    sedes: SedeOption[];
     matrizPermisos: Record<string, string[]>;
     flash?: { success?: string; error?: string };
     [key: string]: unknown;
@@ -97,7 +101,7 @@ function humanizePermission(permiso: string): string {
 }
 
 export default function UsuariosIndex() {
-    const { currentTeam, usuarios, roles, matrizPermisos, flash } =
+    const { currentTeam, usuarios, roles, sedes, matrizPermisos, flash } =
         usePage<PageProps>().props;
     const [tab, setTab] = useState<'usuarios' | 'matriz'>('usuarios');
     const [pendingUserId, setPendingUserId] = useState<number | null>(null);
@@ -118,14 +122,26 @@ export default function UsuariosIndex() {
         );
     };
 
+    const handleSedeChange = (user: UsuarioItem, value: string) => {
+        setPendingUserId(user.id);
+        router.patch(
+            `/${currentTeam.slug}/gerente/usuarios/${user.id}/sede`,
+            { sede_id: value === '' ? null : Number(value) },
+            {
+                preserveScroll: true,
+                onFinish: () => setPendingUserId(null),
+            },
+        );
+    };
+
     return (
         <GerenteLayout title="Usuarios y Roles">
             <div className="space-y-6">
                 <div>
-                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
+                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
                         Usuarios y Roles
                     </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-sm">
                         Asignación de uno de los 5 roles fijos del sistema y
                         consulta de la matriz de permisos efectivos.
                     </p>
@@ -138,14 +154,14 @@ export default function UsuariosIndex() {
                     </div>
                 )}
 
-                <div className="flex gap-2 border-b border-border">
+                <div className="border-border flex gap-2 border-b">
                     <button
                         type="button"
                         onClick={() => setTab('usuarios')}
                         className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${
                             tab === 'usuarios'
                                 ? 'border-primary text-foreground'
-                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                                : 'text-muted-foreground hover:text-foreground border-transparent'
                         }`}
                     >
                         <Users className="size-3.5" />
@@ -157,7 +173,7 @@ export default function UsuariosIndex() {
                         className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${
                             tab === 'matriz'
                                 ? 'border-primary text-foreground'
-                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                                : 'text-muted-foreground hover:text-foreground border-transparent'
                         }`}
                     >
                         <ShieldQuestion className="size-3.5" />
@@ -166,10 +182,10 @@ export default function UsuariosIndex() {
                 </div>
 
                 {tab === 'usuarios' && (
-                    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+                    <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs">
-                                <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                                <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
                                     <tr>
                                         <th className="px-4 py-3">Nombre</th>
                                         <th className="px-4 py-3">Email</th>
@@ -179,14 +195,15 @@ export default function UsuariosIndex() {
                                         <th className="px-4 py-3">
                                             Cambiar Rol
                                         </th>
+                                        <th className="px-4 py-3">Sede</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-border divide-y">
                                     {usuarios.length === 0 ? (
                                         <tr>
                                             <td
-                                                colSpan={4}
-                                                className="py-8 text-center text-muted-foreground"
+                                                colSpan={5}
+                                                className="text-muted-foreground py-8 text-center"
                                             >
                                                 No hay usuarios en este team
                                                 todavía.
@@ -196,12 +213,12 @@ export default function UsuariosIndex() {
                                         usuarios.map((u) => (
                                             <tr
                                                 key={u.id}
-                                                className="transition-colors hover:bg-muted/40"
+                                                className="hover:bg-muted/40 transition-colors"
                                             >
-                                                <td className="px-4 py-3 font-semibold text-foreground">
+                                                <td className="text-foreground px-4 py-3 font-semibold">
                                                     {u.name}
                                                 </td>
-                                                <td className="px-4 py-3 text-muted-foreground">
+                                                <td className="text-muted-foreground px-4 py-3">
                                                     {u.email}
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -228,7 +245,7 @@ export default function UsuariosIndex() {
                                                                 e.target.value,
                                                             )
                                                         }
-                                                        className="w-full max-w-[180px] rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none disabled:opacity-50"
+                                                        className="border-border bg-muted/40 focus:border-primary w-full max-w-[180px] rounded-lg border px-3 py-1.5 text-xs focus:outline-none disabled:opacity-50"
                                                     >
                                                         <option
                                                             value=""
@@ -242,6 +259,34 @@ export default function UsuariosIndex() {
                                                                 value={r}
                                                             >
                                                                 {roleLabel(r)}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <select
+                                                        value={u.sede_id ?? ''}
+                                                        disabled={
+                                                            pendingUserId ===
+                                                            u.id
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleSedeChange(
+                                                                u,
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="border-border bg-muted/40 focus:border-primary w-full max-w-[200px] rounded-lg border px-3 py-1.5 text-xs focus:outline-none disabled:opacity-50"
+                                                    >
+                                                        <option value="">
+                                                            Todas las sedes
+                                                        </option>
+                                                        {sedes.map((sede) => (
+                                                            <option
+                                                                key={sede.id}
+                                                                value={sede.id}
+                                                            >
+                                                                {sede.nombre}
                                                             </option>
                                                         ))}
                                                     </select>
@@ -261,9 +306,9 @@ export default function UsuariosIndex() {
                             ([role, permisos]) => (
                                 <div
                                     key={role}
-                                    className="rounded-xl border border-border bg-card p-4 shadow-xs"
+                                    className="border-border bg-card rounded-xl border p-4 shadow-xs"
                                 >
-                                    <h3 className="font-['Oswald',sans-serif] text-sm font-bold tracking-wide text-foreground uppercase">
+                                    <h3 className="text-foreground font-['Oswald',sans-serif] text-sm font-bold tracking-wide uppercase">
                                         {roleLabel(role)}
                                     </h3>
                                     <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -271,7 +316,7 @@ export default function UsuariosIndex() {
                                             <span
                                                 key={permiso}
                                                 title={permiso}
-                                                className="rounded-full bg-background px-2 py-0.5 text-[10.5px] font-semibold text-foreground/80"
+                                                className="bg-background text-foreground/80 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
                                             >
                                                 {humanizePermission(permiso)}
                                             </span>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Gerente;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\UpdateUserRoleRequest;
+use App\Http\Requests\Gerente\UpdateUserSedeRequest;
+use App\Models\Sede;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\AuditLogger;
@@ -29,6 +31,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->roles->first()?->name,
+                'sede_id' => $user->sede_id,
             ]);
 
         $matrizPermisos = collect([
@@ -42,6 +45,7 @@ class UserController extends Controller
         return Inertia::render('gerente/usuarios/index', [
             'usuarios' => $usuarios,
             'roles' => RolesAndPermissionsSeeder::BUSINESS_ROLES,
+            'sedes' => Sede::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
             'matrizPermisos' => $matrizPermisos,
         ]);
     }
@@ -67,5 +71,27 @@ class UserController extends Controller
         return redirect()
             ->route('gerente.usuarios.index', ['current_team' => $current_team])
             ->with('success', "Rol de {$user->name} actualizado a {$nuevoRol}.");
+    }
+
+    /**
+     * Asigna la única sede del trabajador. Sin sede ve todas las sedes.
+     */
+    public function updateSede(UpdateUserSedeRequest $request, Team $current_team, User $user): RedirectResponse
+    {
+        $sedeAnterior = $user->sede_id;
+
+        $user->update(['sede_id' => $request->validated('sede_id')]);
+
+        AuditLogger::log(
+            action: 'usuario.sede_actualizada',
+            entity: $user,
+            oldValues: ['sede_id' => $sedeAnterior],
+            newValues: ['sede_id' => $user->sede_id],
+            userId: $request->user()->id
+        );
+
+        return redirect()
+            ->route('gerente.usuarios.index', ['current_team' => $current_team])
+            ->with('success', "Sede de {$user->name} actualizada.");
     }
 }

@@ -47,6 +47,11 @@ class Sede extends Model
         return $this->hasMany(self::class, 'almacen_id');
     }
 
+    public function usuarios(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
     public function esAlmacen(): bool
     {
         return in_array($this->tipo, ['almacen', 'mixta'], true);
