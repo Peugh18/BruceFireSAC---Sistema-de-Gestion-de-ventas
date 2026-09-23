@@ -5,12 +5,13 @@ import {
     Download,
     Eye,
     Filter,
+    Loader2,
     Plus,
     Search,
     UserRoundPlus,
     UsersRound,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import { rucLookup } from '@/routes/vendedor';
 import clientes from '@/routes/vendedor/clientes';
 
 type CurrentTeam = {
@@ -102,8 +104,8 @@ const emptyClientForm: ClientFormData = {
     whatsapp: '',
     email: '',
     direccion_fiscal: '',
-    estado_contribuyente: 'ACTIVO',
-    condicion_domicilio: 'HABIDO',
+    estado_contribuyente: '',
+    condicion_domicilio: '',
     activo: true,
     observaciones: '',
 };
@@ -148,6 +150,8 @@ function ClientFormFields({
     data,
     errors,
     setData,
+    lookupLoading,
+    lookupMessage,
 }: {
     data: ClientFormData;
     errors: Partial<Record<keyof ClientFormData, string>>;
@@ -155,6 +159,8 @@ function ClientFormFields({
         key: K,
         value: ClientFormData[K],
     ) => void;
+    lookupLoading: boolean;
+    lookupMessage: string | null;
 }) {
     return (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -182,19 +188,40 @@ function ClientFormFields({
                 <Label className="text-[11px] font-bold text-foreground/80 uppercase">
                     Numero
                 </Label>
-                <Input
-                    value={data.numero_documento}
-                    onChange={(event) =>
-                        setData('numero_documento', event.target.value)
-                    }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
+                <div className="relative">
+                    <Input
+                        value={data.numero_documento}
+                        onChange={(event) =>
+                            setData(
+                                'numero_documento',
+                                event.target.value.replace(/\D/g, ''),
+                            )
+                        }
+                        maxLength={data.tipo_documento === 'dni' ? 8 : 11}
+                        placeholder={
+                            data.tipo_documento === 'dni'
+                                ? '8 dígitos'
+                                : '11 dígitos'
+                        }
+                        className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                    />
+                    {lookupLoading && (
+                        <Loader2 className="absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />
+                    )}
+                </div>
                 <FieldError message={errors.numero_documento} />
+                {lookupMessage && !lookupLoading && (
+                    <p className="mt-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                        {lookupMessage}
+                    </p>
+                )}
             </div>
 
             <div className="sm:col-span-2">
                 <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Razon social
+                    {data.tipo_documento === 'dni'
+                        ? 'Nombres y apellidos'
+                        : 'Razon social'}
                 </Label>
                 <Input
                     value={data.razon_social}
@@ -206,19 +233,25 @@ function ClientFormFields({
                 <FieldError message={errors.razon_social} />
             </div>
 
-            <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Nombre comercial
-                </Label>
-                <Input
-                    value={data.nombre_comercial}
-                    onChange={(event) =>
-                        setData('nombre_comercial', event.target.value)
-                    }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
-                <FieldError message={errors.nombre_comercial} />
-            </div>
+            {data.tipo_documento === 'ruc' && (
+                <div>
+                    <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                        Nombre comercial{' '}
+                        <span className="font-normal normal-case text-muted-foreground">
+                            (opcional, no viene de SUNAT — se escribe a mano
+                            si aplica)
+                        </span>
+                    </Label>
+                    <Input
+                        value={data.nombre_comercial}
+                        onChange={(event) =>
+                            setData('nombre_comercial', event.target.value)
+                        }
+                        className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                    />
+                    <FieldError message={errors.nombre_comercial} />
+                </div>
+            )}
 
             <div>
                 <Label className="text-[11px] font-bold text-foreground/80 uppercase">
@@ -275,33 +308,41 @@ function ClientFormFields({
                 <FieldError message={errors.direccion_fiscal} />
             </div>
 
-            <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Estado SUNAT
-                </Label>
-                <Input
-                    value={data.estado_contribuyente}
-                    onChange={(event) =>
-                        setData('estado_contribuyente', event.target.value)
-                    }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
-                <FieldError message={errors.estado_contribuyente} />
-            </div>
+            {data.tipo_documento === 'ruc' && (
+                <>
+                    <div>
+                        <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            Estado SUNAT{' '}
+                            <span className="font-normal normal-case text-muted-foreground">
+                                (según consulta)
+                            </span>
+                        </Label>
+                        <Input
+                            value={data.estado_contribuyente}
+                            readOnly
+                            disabled
+                            className="mt-1 h-9 cursor-not-allowed rounded-[8px] border-border bg-muted/40 text-[13px]"
+                        />
+                        <FieldError message={errors.estado_contribuyente} />
+                    </div>
 
-            <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Condicion
-                </Label>
-                <Input
-                    value={data.condicion_domicilio}
-                    onChange={(event) =>
-                        setData('condicion_domicilio', event.target.value)
-                    }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
-                <FieldError message={errors.condicion_domicilio} />
-            </div>
+                    <div>
+                        <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            Condicion{' '}
+                            <span className="font-normal normal-case text-muted-foreground">
+                                (según consulta)
+                            </span>
+                        </Label>
+                        <Input
+                            value={data.condicion_domicilio}
+                            readOnly
+                            disabled
+                            className="mt-1 h-9 cursor-not-allowed rounded-[8px] border-border bg-muted/40 text-[13px]"
+                        />
+                        <FieldError message={errors.condicion_domicilio} />
+                    </div>
+                </>
+            )}
         </div>
     );
 }
@@ -316,6 +357,63 @@ export default function ClientesIndex({
     const [search, setSearch] = useState(filters.search ?? '');
     const [dialogOpen, setDialogOpen] = useState(false);
     const form = useForm<ClientFormData>(emptyClientForm);
+    const [lookupLoading, setLookupLoading] = useState(false);
+    const [lookupMessage, setLookupMessage] = useState<string | null>(null);
+
+    // Autocompleta Razon social / Direccion / Estado SUNAT desde RENIEC-SUNAT
+    // (via APIsPeru) apenas el numero de documento tiene el largo correcto.
+    useEffect(() => {
+        const numero = form.data.numero_documento.trim();
+        const expectedLength = form.data.tipo_documento === 'dni' ? 8 : 11;
+        setLookupMessage(null);
+
+        if (numero.length !== expectedLength) {
+            return;
+        }
+
+        const timeout = window.setTimeout(async () => {
+            setLookupLoading(true);
+            try {
+                const response = await fetch(
+                    rucLookup.url(currentTeam.slug, {
+                        query: { numero_documento: numero },
+                    }),
+                );
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    setLookupMessage(
+                        payload.message ??
+                            'No se pudo consultar el documento.',
+                    );
+                    return;
+                }
+
+                form.setData('razon_social', payload.razon_social ?? '');
+                form.setData(
+                    'direccion_fiscal',
+                    payload.direccion ?? form.data.direccion_fiscal,
+                );
+                if (form.data.tipo_documento === 'ruc') {
+                    form.setData(
+                        'estado_contribuyente',
+                        payload.estado_contribuyente ?? '',
+                    );
+                    form.setData(
+                        'condicion_domicilio',
+                        payload.condicion_domicilio ?? '',
+                    );
+                }
+            } catch {
+                setLookupMessage('No se pudo conectar con el servicio de consulta.');
+            } finally {
+                setLookupLoading(false);
+            }
+        }, 400);
+
+        return () => window.clearTimeout(timeout);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.data.numero_documento, form.data.tipo_documento, currentTeam.slug]);
 
     const submitSearch = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -448,7 +546,11 @@ export default function ClientesIndex({
                         </Button>
                         <Button
                             type="button"
-                            onClick={() => setDialogOpen(true)}
+                            onClick={() => {
+                                form.reset();
+                                setLookupMessage(null);
+                                setDialogOpen(true);
+                            }}
                             className="h-10 rounded-[9px] bg-primary px-4 text-[13px] font-bold text-white shadow-none hover:bg-primary/90"
                         >
                             <Plus className="size-3.5" />
@@ -620,6 +722,8 @@ export default function ClientesIndex({
                             data={form.data}
                             errors={form.errors}
                             setData={form.setData}
+                            lookupLoading={lookupLoading}
+                            lookupMessage={lookupMessage}
                         />
 
                         <DialogFooter>
