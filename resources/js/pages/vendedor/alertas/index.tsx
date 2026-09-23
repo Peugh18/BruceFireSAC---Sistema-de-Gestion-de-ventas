@@ -21,15 +21,16 @@ import type { Team } from '@/types';
 export type AlertItem = {
     client_id: number;
     cliente: string;
-    equipment_id: number;
+    equipment_id: number | null;
     equipo: string;
-    numero_serie: string;
+    numero_serie: string | null;
     fecha: string;
     dias: number;
     segmento: 'vencidas' | 'esta_semana' | 'este_mes';
     cantidad: number;
     telefono?: string;
     whatsapp?: string;
+    origen: 'equipo_registrado' | 'estimado_historico';
 };
 
 export type Props = {
@@ -174,7 +175,7 @@ export default function AlertasIndex({ alerts }: Props) {
 
                             return (
                                 <div
-                                    key={`${item.equipment_id}-${item.fecha}-${idx}`}
+                                    key={`${item.equipment_id ?? 'hist'}-${item.client_id}-${item.fecha}-${idx}`}
                                     className={`flex flex-col gap-3 rounded-[14px] border border-border bg-card p-4 shadow-none transition-all sm:flex-row sm:items-center sm:gap-4 ${
                                         isVencida
                                             ? 'border-l-[5px] border-l-[#B91C1C]'
@@ -217,6 +218,15 @@ export default function AlertasIndex({ alerts }: Props) {
                                                       ? 'Vence hoy'
                                                       : `Vence en ${item.dias} días`}
                                             </Badge>
+                                            {item.origen ===
+                                                'estimado_historico' && (
+                                                <Badge
+                                                    title="No hay un equipo con número de serie registrado para este cliente — la fecha se estima desde su historial de compras."
+                                                    className="rounded-full border-none bg-sky-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-sky-600 dark:text-sky-400"
+                                                >
+                                                    Estimado por historial
+                                                </Badge>
+                                            )}
                                         </div>
 
                                         <div className="mt-1 text-[12px] text-muted-foreground">
