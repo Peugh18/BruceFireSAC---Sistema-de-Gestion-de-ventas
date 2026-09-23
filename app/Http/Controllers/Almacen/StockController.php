@@ -27,9 +27,12 @@ class StockController extends Controller
         $tipo = $request->string('tipo')->toString(); // 'todos', 'producto', 'servicio'
 
         // 1. Sedes activas de tipo almacén o mixta
+        $almacenId = $request->user()->almacenRestringidoId();
+
         $sedes = Sede::query()
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
+            ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
             ->orderBy('id')
             ->get(['id', 'nombre', 'tipo', 'ciudad']);
 
@@ -159,6 +162,7 @@ class StockController extends Controller
                 'user:id,name',
             ])
             ->when($kardexProductId > 0, fn ($q) => $q->where('product_id', $kardexProductId))
+            ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
             ->when($kardexSedeId > 0, fn ($q) => $q->where('sede_id', $kardexSedeId))
             ->when($kardexFechaDesde !== '', fn ($q) => $q->whereDate('created_at', '>=', $kardexFechaDesde))
             ->when($kardexFechaHasta !== '', fn ($q) => $q->whereDate('created_at', '<=', $kardexFechaHasta))

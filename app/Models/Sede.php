@@ -47,6 +47,15 @@ class Sede extends Model
         return $this->hasMany(self::class, 'almacen_id');
     }
 
+    /**
+     * Sede cuyo stock usa esta sede: una tienda saca del almacén asignado;
+     * un almacén o una sede mixta usan el suyo propio.
+     */
+    public function almacenEfectivoId(): int
+    {
+        return $this->tipo === 'tienda' && $this->almacen_id ? (int) $this->almacen_id : $this->id;
+    }
+
     public function usuarios(): HasMany
     {
         return $this->hasMany(User::class);

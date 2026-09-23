@@ -22,11 +22,13 @@ class StockLookupController extends Controller
     public function index(Request $request, Team $current_team): Response
     {
         $search = trim((string) $request->input('search', ''));
-        $sedeId = $request->filled('sede_id') ? (int) $request->input('sede_id') : null;
+        $almacenId = $request->user()->almacenRestringidoId();
+        $sedeId = $almacenId ?? ($request->filled('sede_id') ? (int) $request->input('sede_id') : null);
 
         $sedes = Sede::query()
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
+            ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'tipo', 'ciudad']);
 

@@ -64,8 +64,10 @@ class CashRegisterController extends Controller
                 'estado' => $cr->estado,
             ]);
 
+        $sedeRestringida = $user->sedeRestringidaId();
         $sedes = Sede::query()
             ->where('activo', true)
+            ->when($sedeRestringida, fn ($q) => $q->where('id', $sedeRestringida))
             ->get(['id', 'nombre', 'tipo']);
 
         return Inertia::render('vendedor/cobranzas/index', [
@@ -93,7 +95,7 @@ class CashRegisterController extends Controller
     ): RedirectResponse {
         $action->handle(
             $request->user(),
-            $request->validated('sede_id') ? (int) $request->validated('sede_id') : null,
+            $request->user()->sedeRestringidaId() ?? ($request->validated('sede_id') ? (int) $request->validated('sede_id') : null),
             (float) $request->validated('monto_apertura')
         );
 

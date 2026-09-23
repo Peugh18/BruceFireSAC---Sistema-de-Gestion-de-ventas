@@ -30,7 +30,8 @@ class CollectionController extends Controller
 
         $installments = Installment::query()
             ->whereIn('estado', ['pendiente', 'parcial', 'vencido'])
-            ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id))
+            ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id)
+                ->when($user->sedeRestringidaId(), fn ($sq, $sedeId) => $sq->where('sede_id', $sedeId)))
             ->with(['sale.client'])
             ->orderBy('fecha_vencimiento')
             ->paginate(15)

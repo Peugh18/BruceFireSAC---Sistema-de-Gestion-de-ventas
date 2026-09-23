@@ -24,13 +24,15 @@ class ReceptionController extends Controller
     public function index(Team $current_team, Request $request): Response
     {
         $search = $request->string('search')->toString();
-        $sedeId = $request->integer('sede_id');
+        $almacenId = $request->user()->almacenRestringidoId();
+        $sedeId = $almacenId ?? $request->integer('sede_id');
         $fechaDesde = $request->string('fecha_desde')->toString();
         $fechaHasta = $request->string('fecha_hasta')->toString();
 
         $sedes = Sede::query()
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
+            ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
             ->get(['id', 'nombre', 'ciudad']);
 
         $receptions = Reception::query()
@@ -90,11 +92,14 @@ class ReceptionController extends Controller
     /**
      * Formulario para nueva recepción (§84.8).
      */
-    public function create(Team $current_team): Response
+    public function create(Team $current_team, Request $request): Response
     {
+        $almacenId = $request->user()->almacenRestringidoId();
+
         $sedes = Sede::query()
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
+            ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
             ->get(['id', 'nombre', 'tipo', 'ciudad']);
 
         $products = Product::query()

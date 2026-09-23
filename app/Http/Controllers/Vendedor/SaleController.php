@@ -25,9 +25,11 @@ class SaleController extends Controller
         $estado = $request->string('estado')->toString();
         $comprobante = $request->string('comprobante')->toString();
         $vendedorId = $request->user()->id;
+        $sedeId = $request->user()->sedeRestringidaId();
 
         $sales = Sale::query()
             ->with('client')
+            ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
             ->when($comprobante === 'nota_venta', fn ($query) => $query->where('comprobante_tipo', Sale::NOTA_VENTA))
             ->when($comprobante === 'sunat', fn ($query) => $query->where('comprobante_tipo', '!=', Sale::NOTA_VENTA))
@@ -60,8 +62,10 @@ class SaleController extends Controller
         ]);
     }
 
-    public function create(Team $current_team): Response
+    public function create(Team $current_team, Request $request): Response
     {
+        $sedeId = $request->user()->sedeRestringidaId();
+
         return Inertia::render('vendedor/ventas/nueva', [
             'clients' => Client::query()
                 ->orderByDesc('created_at')
@@ -69,6 +73,7 @@ class SaleController extends Controller
                 ->get(['id', 'razon_social', 'numero_documento']),
             'sedes' => Sede::query()
                 ->where('activo', true)
+                ->when($sedeId, fn ($query) => $query->where('id', $sedeId))
                 ->orderBy('nombre')
                 ->get(['id', 'nombre']),
         ]);
@@ -79,6 +84,10 @@ class SaleController extends Controller
         $data = $request->safe()->except('items');
         $items = $request->safe()->input('items');
 
+        if ($sedeId = $request->user()->sedeRestringidaId()) {
+            $data['sede_id'] = $sedeId;
+        }
+
         $sale = $createSale->handle($data, $items, $request->user()->id);
 
         return redirect()->route('vendedor.ventas.show', [
@@ -87,15 +96,19 @@ class SaleController extends Controller
         ]);
     }
 
-    public function show(Team $current_team, Sale $sale): Response
+    public function show(Team $current_team, Sale $sale, Request $request): Response
     {
+        $this->assertSedeAccess($request, $sale);
+
         return Inertia::render('vendedor/ventas/show', [
             'sale' => $sale->load('items.product', 'items.service', 'client', 'payments', 'electronicDocuments'),
         ]);
     }
 
-    public function notaVentaPdf(Team $current_team, Sale $sale): HttpResponse
+    public function notaVentaPdf(Team $current_team, Sale $sale, Request $request): HttpResponse
     {
+        $this->assertSedeAccess($request, $sale);
+
         abort_unless($sale->esNotaVenta() && $sale->numero_nota_venta, 404);
 
         $sale->load('client', 'items.product', 'items.service', 'items.equipment');
@@ -106,13 +119,25 @@ class SaleController extends Controller
         ])->setPaper('a4')->stream("{$sale->numero_nota_venta}.pdf");
     }
 
-    public function confirm(Team $current_team, Sale $sale, ConfirmSale $confirmSale): RedirectResponse
+    public function confirm(Team $current_team, Sale $sale, ConfirmSale $confirmSale, Request $request): RedirectResponse
     {
+        $this->assertSedeAccess($request, $sale);
+
         $confirmSale->handle($sale);
 
         return redirect()->route('vendedor.ventas.show', [
             'current_team' => $current_team,
             'sale' => $sale,
         ]);
+    }
+
+    /**
+     * Un trabajador con sede asignada solo opera las ventas de su sede.
+     */
+    protected function assertSedeAccess(Request $request, Sale $sale): void
+    {
+        $sedeId = $request->user()->sedeRestringidaId();
+
+        abort_if($sedeId !== null && (int) $sale->sede_id !== $sedeId, 404);
     }
 }

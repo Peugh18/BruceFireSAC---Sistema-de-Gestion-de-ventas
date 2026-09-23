@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Http\Controllers\Controller;
 use App\Models\InventoryUnit;
+use App\Models\Sede;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -29,7 +30,9 @@ class InventoryLookupController extends Controller
             return response()->json(['message' => 'No se encontró ninguna unidad con esa serie.'], 404);
         }
 
-        if ($unit->sede_almacen_id !== (int) $data['sede_almacen_id']) {
+        $almacenId = Sede::find($data['sede_almacen_id'])?->almacenEfectivoId() ?? (int) $data['sede_almacen_id'];
+
+        if ($unit->sede_almacen_id !== $almacenId) {
             return response()->json(['message' => 'Esa unidad no pertenece al almacén de la sede activa.'], 422);
         }
 

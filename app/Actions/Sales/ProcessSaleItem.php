@@ -7,6 +7,7 @@ use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Sede;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -54,7 +55,9 @@ class ProcessSaleItem
             ]);
         }
 
-        if ($unit->sede_almacen_id !== (int) $sale->sede_id) {
+        $almacenId = Sede::find($sale->sede_id)?->almacenEfectivoId() ?? (int) $sale->sede_id;
+
+        if ($unit->sede_almacen_id !== $almacenId) {
             throw ValidationException::withMessages([
                 'items' => 'La unidad escaneada no pertenece a la sede de la venta.',
             ]);

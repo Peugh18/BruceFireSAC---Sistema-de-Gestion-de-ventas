@@ -22,8 +22,10 @@ class QuoteController extends Controller
     public function index(Request $request): Response
     {
         $estado = $request->string('estado')->toString();
+        $sedeId = $request->user()->sedeRestringidaId();
+        $porSede = fn ($query) => $query->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId));
 
-        $quotes = Quote::query()
+        $quotes = $porSede(Quote::query())
             ->with('client')
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
             ->orderByDesc('created_at')
@@ -42,14 +44,14 @@ class QuoteController extends Controller
             'quotes' => $quotes,
             'filters' => ['estado' => $estado],
             'kpis' => [
-                'activas' => Quote::whereIn('estado', ['borrador', 'emitida', 'enviada'])->count(),
-                'por_vencer' => Quote::where('estado', 'enviada')
+                'activas' => $porSede(Quote::query())->whereIn('estado', ['borrador', 'emitida', 'enviada'])->count(),
+                'por_vencer' => $porSede(Quote::query())->where('estado', 'enviada')
                     ->whereBetween('vigencia_hasta', [now(), now()->addDays(7)])
                     ->count(),
-                'aceptadas_este_mes' => Quote::where('estado', 'aceptada')
+                'aceptadas_este_mes' => $porSede(Quote::query())->where('estado', 'aceptada')
                     ->whereBetween('updated_at', [now()->startOfMonth(), now()->endOfMonth()])
                     ->count(),
-                'vencidas' => Quote::where('estado', 'vencida')->count(),
+                'vencidas' => $porSede(Quote::query())->where('estado', 'vencida')->count(),
             ],
         ]);
     }
@@ -114,6 +116,10 @@ class QuoteController extends Controller
     {
         $data = $request->safe()->except('items');
         $items = $request->safe()->input('items');
+
+        if ($sedeId = $request->user()->sedeRestringidaId()) {
+            $data['sede_id'] = $sedeId;
+        }
 
         $quote = $createQuote->handle($data, $items, $request->user()->id);
 

@@ -78,6 +78,30 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * Sede a la que se acota lo operativo del usuario. El Gerente y los
+     * usuarios sin sede asignada ven todas las sedes (devuelve null).
+     */
+    public function sedeRestringidaId(): ?int
+    {
+        if ($this->hasRole('Gerente')) {
+            return null;
+        }
+
+        return $this->sede_id;
+    }
+
+    /**
+     * Sede de cuyo stock puede ver el usuario: la de su almacén efectivo
+     * (una tienda usa el almacén asignado). Null si ve todas las sedes.
+     */
+    public function almacenRestringidoId(): ?int
+    {
+        $sedeId = $this->sedeRestringidaId();
+
+        return $sedeId ? Sede::find($sedeId)?->almacenEfectivoId() : null;
+    }
+
+    /**
      * Registros de auditoría generados por este usuario (§37).
      *
      * @return HasMany<AuditLog, $this>

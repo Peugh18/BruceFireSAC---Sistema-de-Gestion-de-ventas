@@ -23,8 +23,11 @@ class ServiceOrderController extends Controller
             'completadas' => ['listo_certificado', 'listo_entrega', 'entregado', 'cerrado'],
         ];
 
+        $sedeId = $request->user()->sedeRestringidaId();
+
         $orders = ServiceOrder::query()
             ->with(['client', 'tecnico'])
+            ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
             ->when(isset($estadoMap[$estado]), fn ($query) => $query->whereIn('estado', $estadoMap[$estado]))
             ->orderByDesc('created_at')
             ->paginate(15)
@@ -55,6 +58,7 @@ class ServiceOrderController extends Controller
     {
         $order = ServiceOrder::create([
             ...$request->validated(),
+            ...($request->user()->sedeRestringidaId() ? ['sede_id' => $request->user()->sedeRestringidaId()] : []),
             'codigo' => 'OT-'.now()->year.'-'.str_pad((string) (ServiceOrder::count() + 1), 4, '0', STR_PAD_LEFT),
             'prioridad' => $request->input('prioridad', 'normal'),
             'estado' => 'pendiente_recepcion',
@@ -71,8 +75,11 @@ class ServiceOrderController extends Controller
         return back();
     }
 
-    public function show(Team $current_team, ServiceOrder $service_order): Response
+    public function show(Team $current_team, ServiceOrder $service_order, Request $request): Response
     {
+        $sedeId = $request->user()->sedeRestringidaId();
+        abort_if($sedeId !== null && (int) $service_order->sede_id !== $sedeId, 404);
+
         $service_order->load([
             'client',
             'tecnico',
