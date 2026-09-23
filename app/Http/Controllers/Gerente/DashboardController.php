@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gerente;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClientRetentionScore;
 use App\Models\ElectronicDocument;
 use App\Models\Equipment;
 use App\Models\Installment;
@@ -14,6 +15,7 @@ use App\Models\SaleItem;
 use App\Models\SalePayment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Ml\RetentionModel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -192,6 +194,59 @@ class DashboardController extends Controller
             ])
             ->all();
 
+        // 3. IA Predictiva: Modelo de Retención y Recompra (§39.1)
+        $retentionModel = app(RetentionModel::class);
+        $totalScores = ClientRetentionScore::query()->count();
+
+        $aiRetention = null;
+        if ($totalScores > 0) {
+            $conteoAlta = ClientRetentionScore::query()->where('categoria', 'alta')->count();
+            $conteoMedia = ClientRetentionScore::query()->where('categoria', 'media')->count();
+            $conteoBaja = ClientRetentionScore::query()->where('categoria', 'baja')->count();
+
+            $topRecompra = ClientRetentionScore::query()
+                ->with(['client:id,razon_social,numero_documento,telefono,whatsapp'])
+                ->orderByDesc('probabilidad')
+                ->limit(6)
+                ->get()
+                ->map(fn (ClientRetentionScore $score) => [
+                    'clientId' => $score->client_id,
+                    'cliente' => $score->client?->razon_social ?? 'Cliente #'.$score->client_id,
+                    'documento' => $score->client?->numero_documento ?? '-',
+                    'telefono' => $score->client?->telefono ?? $score->client?->whatsapp,
+                    'probabilidad' => round($score->probabilidad * 100, 1),
+                    'categoria' => $score->categoria,
+                    'recenciaDias' => $score->recencia_dias,
+                    'frecuencia' => $score->frecuencia_compras,
+                    'montoTotal' => round((float) $score->monto_total, 2),
+                    'ticketPromedio' => round((float) $score->ticket_promedio, 2),
+                    'comproRecarga' => (bool) $score->compro_recarga,
+                    'factores' => $score->factores_json ?? ['positivos' => [], 'negativos' => []],
+                ])
+                ->all();
+
+            $modelMetadata = $retentionModel->getModelMetadata();
+
+            $aiRetention = [
+                'totalEvaluados' => $totalScores,
+                'distribucion' => [
+                    'alta' => ['cantidad' => $conteoAlta, 'porcentaje' => round(($conteoAlta / $totalScores) * 100, 1)],
+                    'media' => ['cantidad' => $conteoMedia, 'porcentaje' => round(($conteoMedia / $totalScores) * 100, 1)],
+                    'baja' => ['cantidad' => $conteoBaja, 'porcentaje' => round(($conteoBaja / $totalScores) * 100, 1)],
+                ],
+                'topClientes' => $topRecompra,
+                'modelo' => [
+                    'disponible' => true,
+                    'nombre' => 'Regresión Logística Calibrada (Entrenamiento Local)',
+                    'aucRoc' => $modelMetadata['metrics']['test']['roc_auc'] ?? 0.7372,
+                    'accuracy' => $modelMetadata['metrics']['test']['accuracy'] ?? 0.7572,
+                    'precision' => $modelMetadata['metrics']['test']['precision'] ?? 0.6724,
+                    'recall' => $modelMetadata['metrics']['test']['recall'] ?? 0.3000,
+                    'fechaEntrenamiento' => $modelMetadata['trained_at'] ?? null,
+                ],
+            ];
+        }
+
         return Inertia::render('gerente/dashboard', [
             'metrics' => [
                 'ventasDia' => round($ventasDia, 2),
@@ -215,6 +270,7 @@ class DashboardController extends Controller
                 'topClientes' => $topClientes,
                 'productosMayorMovimiento' => $productosMayorMovimiento,
             ],
+            'aiRetention' => $aiRetention,
         ]);
     }
 }

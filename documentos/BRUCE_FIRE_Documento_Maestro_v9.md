@@ -12,35 +12,35 @@ Laravel + React + Inertia + MySQL**
 > se controlarán los extintores y certificados, y dónde aportará valor
 > la IA sin sobrecargar el sistema.
 
-------------------------------------------------------------------------
+---
 
 # 1. VISIÓN DEL SISTEMA
 
 BRUCE FIRE tendrá una plataforma web empresarial única para administrar:
 
--   clientes, contactos, sedes y vehículos;
--   equipos/extintores pertenecientes a los clientes;
--   productos, servicios, componentes y repuestos;
--   inventario físico;
--   cotizaciones internas;
--   ventas;
--   facturas, boletas y notas electrónicas;
--   guías de remisión electrónicas cuando correspondan;
--   órdenes de servicio;
--   recojo y entrega de equipos;
--   recarga y mantenimiento en Planta;
--   inspecciones, instalaciones y mantenimiento en Campo;
--   checklists técnicos;
--   deficiencias y componentes observados;
--   autorizaciones de adicionales;
--   fotografías y evidencias;
--   actas de conformidad;
--   certificados;
--   cuentas por cobrar;
--   alertas de próximas atenciones;
--   reportes;
--   usuarios, roles, permisos y auditoría;
--   IA predictiva y asistiva.
+- clientes, contactos, sedes y vehículos;
+- equipos/extintores pertenecientes a los clientes;
+- productos, servicios, componentes y repuestos;
+- inventario físico;
+- cotizaciones internas;
+- ventas;
+- facturas, boletas y notas electrónicas;
+- guías de remisión electrónicas cuando correspondan;
+- órdenes de servicio;
+- recojo y entrega de equipos;
+- recarga y mantenimiento en Planta;
+- inspecciones, instalaciones y mantenimiento en Campo;
+- checklists técnicos;
+- deficiencias y componentes observados;
+- autorizaciones de adicionales;
+- fotografías y evidencias;
+- actas de conformidad;
+- certificados;
+- cuentas por cobrar;
+- alertas de próximas atenciones;
+- reportes;
+- usuarios, roles, permisos y auditoría;
+- IA predictiva y asistiva.
 
 El principio fundamental será:
 
@@ -50,7 +50,7 @@ Ejemplo: la serie, marca, capacidad y tipo de un extintor no se volverán
 a escribir en la orden, certificado, acta e historial. Se registran en
 la ficha del equipo y los demás procesos los reutilizan.
 
-------------------------------------------------------------------------
+---
 
 # 2. ALCANCE GENERAL
 
@@ -99,27 +99,27 @@ la ficha del equipo y los demás procesos los reutilizan.
 
 ## 2.2 El sistema NO tendrá inicialmente
 
--   tienda e-commerce pública;
--   marketplace;
--   aplicación móvil nativa;
--   microservicios;
--   chat interno completo;
--   telefonía desde la computadora;
--   WhatsApp Business API automatizada en el MVP;
--   CRM complejo de llamadas;
--   módulo contable completo;
--   planillas;
--   recursos humanos;
--   compras/ERP completo;
--   múltiples empresas emisoras/multitenancy;
--   portal de cliente completo;
--   reconocimiento automático de datos técnicos sin confirmación humana;
--   decisiones técnicas realizadas por IA;
--   reglas tributarias decididas por IA;
--   eliminación física de equipos con historial;
--   módulos duplicados de Cotización y Proforma.
+- tienda e-commerce pública;
+- marketplace;
+- aplicación móvil nativa;
+- microservicios;
+- chat interno completo;
+- telefonía desde la computadora;
+- WhatsApp Business API automatizada en el MVP;
+- CRM complejo de llamadas;
+- módulo contable completo;
+- planillas;
+- recursos humanos;
+- compras/ERP completo;
+- múltiples empresas emisoras/multitenancy;
+- portal de cliente completo;
+- reconocimiento automático de datos técnicos sin confirmación humana;
+- decisiones técnicas realizadas por IA;
+- reglas tributarias decididas por IA;
+- eliminación física de equipos con historial;
+- módulos duplicados de Cotización y Proforma.
 
-------------------------------------------------------------------------
+---
 
 # 3. IDENTIDAD VISUAL Y DISEÑO EMPRESARIAL
 
@@ -131,14 +131,14 @@ literalmente el diseño.
 La identidad visual se adaptará a BRUCE FIRE usando sus elementos de
 marca:
 
--   rojo como color primario;
--   negro/grafito como color corporativo secundario;
--   blanco como fondo principal del tema claro;
--   grises neutros para superficies;
--   rojo oscuro para estados críticos;
--   verde únicamente para éxito/conformidad;
--   ámbar para advertencias;
--   azul solo cuando sea necesario para información neutral.
+- rojo como color primario;
+- negro/grafito como color corporativo secundario;
+- blanco como fondo principal del tema claro;
+- grises neutros para superficies;
+- rojo oscuro para estados críticos;
+- verde únicamente para éxito/conformidad;
+- ámbar para advertencias;
+- azul solo cuando sea necesario para información neutral.
 
 ## 3.1 Tema claro
 
@@ -166,26 +166,26 @@ Inspirado en la versión negra del material corporativo:
 
 ## 3.3 Reglas de UI
 
--   Sidebar colapsable.
--   Header superior limpio.
--   Breadcrumbs en páginas profundas.
--   Buscador global opcional.
--   Campana de notificaciones.
--   Selector Light / Dark / Sistema.
--   Avatar y menú de usuario.
--   Tablas con búsqueda, filtros, paginación y acciones contextuales.
--   Formularios por secciones; evitar formularios gigantes.
--   Acciones destructivas siempre con confirmación.
--   Badges de estado.
--   Skeleton/loading states.
--   Empty states claros.
--   Diseño responsive.
--   En móvil técnico: tarjetas, no tablas horizontales enormes.
--   Acciones principales siempre visibles.
--   El rojo corporativo no debe usarse para todo; se reserva para
-    identidad y acciones prioritarias.
+- Sidebar colapsable.
+- Header superior limpio.
+- Breadcrumbs en páginas profundas.
+- Buscador global opcional.
+- Campana de notificaciones.
+- Selector Light / Dark / Sistema.
+- Avatar y menú de usuario.
+- Tablas con búsqueda, filtros, paginación y acciones contextuales.
+- Formularios por secciones; evitar formularios gigantes.
+- Acciones destructivas siempre con confirmación.
+- Badges de estado.
+- Skeleton/loading states.
+- Empty states claros.
+- Diseño responsive.
+- En móvil técnico: tarjetas, no tablas horizontales enormes.
+- Acciones principales siempre visibles.
+- El rojo corporativo no debe usarse para todo; se reserva para
+  identidad y acciones prioritarias.
 
-------------------------------------------------------------------------
+---
 
 # 4. NAVEGACIÓN PRINCIPAL
 
@@ -206,7 +206,7 @@ La navegación propuesta será:
 
 Los módulos visibles dependerán del rol y permisos.
 
-------------------------------------------------------------------------
+---
 
 # 5. DASHBOARD
 
@@ -216,91 +216,91 @@ No existirá un único dashboard idéntico para todos.
 
 Tarjetas:
 
--   ventas del día;
--   ventas del mes;
--   facturación del mes;
--   monto cobrado;
--   cuentas por cobrar;
--   vencido por cobrar;
--   cotizaciones pendientes;
--   tasa de conversión;
--   órdenes en proceso;
--   equipos próximos a atención;
--   stock crítico;
--   documentos SUNAT con error.
+- ventas del día;
+- ventas del mes;
+- facturación del mes;
+- monto cobrado;
+- cuentas por cobrar;
+- vencido por cobrar;
+- cotizaciones pendientes;
+- tasa de conversión;
+- órdenes en proceso;
+- equipos próximos a atención;
+- stock crítico;
+- documentos SUNAT con error.
 
 Gráficos:
 
--   ventas mensuales;
--   ventas por producto/servicio;
--   servicios por tipo;
--   cartera por estado;
--   tendencia de recargas;
--   top clientes;
--   productos/repuestos con mayor movimiento.
+- ventas mensuales;
+- ventas por producto/servicio;
+- servicios por tipo;
+- cartera por estado;
+- tendencia de recargas;
+- top clientes;
+- productos/repuestos con mayor movimiento.
 
 IA:
 
--   proyección de ventas;
--   demanda estimada;
--   clientes con mayor probabilidad de volver a requerir servicio;
--   riesgo de quiebre de stock;
--   resumen ejecutivo.
+- proyección de ventas;
+- demanda estimada;
+- clientes con mayor probabilidad de volver a requerir servicio;
+- riesgo de quiebre de stock;
+- resumen ejecutivo.
 
 ## 5.2 Vendedor
 
--   cotizaciones pendientes;
--   cotizaciones aceptadas;
--   ventas recientes;
--   equipos próximos a atención;
--   equipos vencidos;
--   clientes a contactar;
--   órdenes esperando autorización;
--   órdenes listas;
--   certificados listos;
--   cuentas por cobrar relacionadas.
+- cotizaciones pendientes;
+- cotizaciones aceptadas;
+- ventas recientes;
+- equipos próximos a atención;
+- equipos vencidos;
+- clientes a contactar;
+- órdenes esperando autorización;
+- órdenes listas;
+- certificados listos;
+- cuentas por cobrar relacionadas.
 
 Acciones rápidas:
 
--   Nueva cotización.
--   Nueva venta.
--   Nuevo cliente.
--   Nueva orden.
--   WhatsApp a cliente.
--   Convertir cotización a venta.
+- Nueva cotización.
+- Nueva venta.
+- Nuevo cliente.
+- Nueva orden.
+- WhatsApp a cliente.
+- Convertir cotización a venta.
 
 ## 5.3 Almacén
 
--   stock bajo;
--   productos sin stock;
--   recepciones recientes;
--   movimientos del día;
--   unidades físicas disponibles;
--   repuestos críticos.
+- stock bajo;
+- productos sin stock;
+- recepciones recientes;
+- movimientos del día;
+- unidades físicas disponibles;
+- repuestos críticos.
 
 ## 5.4 Técnico de Planta
 
--   órdenes pendientes de recepción;
--   recibidas;
--   en revisión;
--   esperando autorización;
--   autorizadas;
--   en proceso;
--   pendientes de datos;
--   listas para certificado;
--   listas para entrega.
+- órdenes pendientes de recepción;
+- recibidas;
+- en revisión;
+- esperando autorización;
+- autorizadas;
+- en proceso;
+- pendientes de datos;
+- listas para certificado;
+- listas para entrega.
 
 ## 5.5 Técnico de Campo
 
--   servicios de hoy;
--   recojos;
--   entregas;
--   inspecciones;
--   instalaciones;
--   mantenimientos;
--   pendientes;
--   en proceso;
--   finalizados.
+- servicios de hoy;
+- recojos;
+- entregas;
+- inspecciones;
+- instalaciones;
+- mantenimientos;
+- pendientes;
+- en proceso;
+- finalizados.
 
 ## 5.6 Administrador
 
@@ -309,62 +309,62 @@ No tendrá un dashboard técnico ficticio de "salud del sistema".
 Tendrá acceso principalmente a configuración, usuarios, roles, permisos,
 plantillas, series, parámetros y auditoría.
 
-------------------------------------------------------------------------
+---
 
 # 6. CLIENTES
 
 ## 6.1 Datos del cliente
 
--   código interno automático;
--   tipo de documento;
--   DNI/RUC;
--   razón social/nombres;
--   nombre comercial;
--   condición/estado tributario si se integra una fuente válida;
--   teléfono;
--   WhatsApp;
--   email;
--   dirección fiscal;
--   departamento;
--   provincia;
--   distrito;
--   ubigeo;
--   estado activo/inactivo;
--   observaciones.
+- código interno automático;
+- tipo de documento;
+- DNI/RUC;
+- razón social/nombres;
+- nombre comercial;
+- condición/estado tributario si se integra una fuente válida;
+- teléfono;
+- WhatsApp;
+- email;
+- dirección fiscal;
+- departamento;
+- provincia;
+- distrito;
+- ubigeo;
+- estado activo/inactivo;
+- observaciones.
 
 ## 6.2 Sedes
 
 Un cliente puede tener:
 
--   oficina;
--   tienda;
--   planta;
--   almacén;
--   local;
--   sucursal;
--   otra sede.
+- oficina;
+- tienda;
+- planta;
+- almacén;
+- local;
+- sucursal;
+- otra sede.
 
 Cada sede:
 
--   nombre;
--   dirección;
--   ubigeo;
--   referencia;
--   contacto;
--   teléfono;
--   email;
--   estado.
+- nombre;
+- dirección;
+- ubigeo;
+- referencia;
+- contacto;
+- teléfono;
+- email;
+- estado.
 
 ## 6.3 Vehículos
 
 Cuando la operación sea para vehículos:
 
--   placa;
--   marca;
--   modelo;
--   descripción;
--   cliente;
--   estado.
+- placa;
+- marca;
+- modelo;
+- descripción;
+- cliente;
+- estado.
 
 La placa puede reutilizarse en cotización, factura impresa, acta y
 certificado cuando corresponda.
@@ -373,19 +373,19 @@ certificado cuando corresponda.
 
 Pestañas:
 
--   Resumen.
--   Sedes.
--   Vehículos.
--   Equipos.
--   Cotizaciones.
--   Ventas.
--   Servicios.
--   Certificados.
--   Comprobantes.
--   Cobranzas.
--   Historial.
+- Resumen.
+- Sedes.
+- Vehículos.
+- Equipos.
+- Cotizaciones.
+- Ventas.
+- Servicios.
+- Certificados.
+- Comprobantes.
+- Cobranzas.
+- Historial.
 
-------------------------------------------------------------------------
+---
 
 # 7. EQUIPOS DEL CLIENTE
 
@@ -403,59 +403,59 @@ físico.
 
 ## 7.1 Datos
 
--   ID interno;
--   código BRUCE FIRE;
--   barcode;
--   cliente;
--   sede;
--   vehículo opcional;
--   origen: vendido por BRUCE FIRE / externo / desconocido;
--   tipo de equipo;
--   agente;
--   capacidad/peso;
--   marca;
--   serie fabricante;
--   año fabricación;
--   ubicación;
--   estado;
--   última atención;
--   próxima atención;
--   última P.H.;
--   próxima P.H.;
--   observaciones.
+- ID interno;
+- código BRUCE FIRE;
+- barcode;
+- cliente;
+- sede;
+- vehículo opcional;
+- origen: vendido por BRUCE FIRE / externo / desconocido;
+- tipo de equipo;
+- agente;
+- capacidad/peso;
+- marca;
+- serie fabricante;
+- año fabricación;
+- ubicación;
+- estado;
+- última atención;
+- próxima atención;
+- última P.H.;
+- próxima P.H.;
+- observaciones.
 
 ## 7.2 Historial de vida
 
 Cada equipo tendrá timeline:
 
--   alta;
--   venta si fue vendido por BRUCE FIRE;
--   transferencia;
--   recojo;
--   recarga;
--   mantenimiento;
--   inspección;
--   P.H.;
--   deficiencias;
--   repuestos reemplazados;
--   fotos;
--   certificados;
--   entregas;
--   cambios de sede;
--   baja/reemplazo.
+- alta;
+- venta si fue vendido por BRUCE FIRE;
+- transferencia;
+- recojo;
+- recarga;
+- mantenimiento;
+- inspección;
+- P.H.;
+- deficiencias;
+- repuestos reemplazados;
+- fotos;
+- certificados;
+- entregas;
+- cambios de sede;
+- baja/reemplazo.
 
 ## 7.3 Estados
 
--   Activo.
--   Fuera de servicio.
--   Reemplazado.
--   Retirado.
--   Baja definitiva.
--   No localizado.
+- Activo.
+- Fuera de servicio.
+- Reemplazado.
+- Retirado.
+- Baja definitiva.
+- No localizado.
 
 Nunca se elimina un equipo que tenga historial.
 
-------------------------------------------------------------------------
+---
 
 # 8. TRANSFERENCIA DE EQUIPOS
 
@@ -465,18 +465,18 @@ Acción: **Transferir equipo**.
 
 Registrar:
 
--   equipo;
--   cliente/sede origen;
--   cliente/sede destino;
--   fecha;
--   motivo;
--   responsable;
--   evidencia/documento opcional;
--   observación.
+- equipo;
+- cliente/sede origen;
+- cliente/sede destino;
+- fecha;
+- motivo;
+- responsable;
+- evidencia/documento opcional;
+- observación.
 
 El historial anterior permanece intacto.
 
-------------------------------------------------------------------------
+---
 
 # 9. CÓDIGO DE BARRAS BRUCE FIRE
 
@@ -504,77 +504,77 @@ El barcode **no sustituye** la serie del fabricante.
 No necesita imprimir vencimiento o P.H. si BRUCE FIRE ya usa etiquetas
 técnicas separadas para esos datos.
 
-------------------------------------------------------------------------
+---
 
 # 10. CATÁLOGO
 
 ## 10.1 Productos
 
--   código;
--   categoría;
--   nombre;
--   descripción;
--   unidad;
--   precio;
--   impuesto;
--   controla stock;
--   control serializado;
--   genera barcode;
--   estado.
+- código;
+- categoría;
+- nombre;
+- descripción;
+- unidad;
+- precio;
+- impuesto;
+- controla stock;
+- control serializado;
+- genera barcode;
+- estado.
 
 Ejemplos:
 
--   Extintor PQS ABC 6 kg.
--   Cámara.
--   Manguera.
--   Válvula.
--   Manómetro.
+- Extintor PQS ABC 6 kg.
+- Cámara.
+- Manguera.
+- Válvula.
+- Manómetro.
 
 ## 10.2 Servicios
 
--   código;
--   categoría;
--   nombre;
--   descripción;
--   precio;
--   unidad;
--   impuesto;
--   tipo técnico;
--   requiere orden;
--   requiere certificado;
--   checklist aplicable;
--   estado.
+- código;
+- categoría;
+- nombre;
+- descripción;
+- precio;
+- unidad;
+- impuesto;
+- tipo técnico;
+- requiere orden;
+- requiere certificado;
+- checklist aplicable;
+- estado.
 
 Ejemplos:
 
--   Recarga y mantenimiento PQS 6 kg.
--   Recarga y mantenimiento PQS 9 kg.
--   Inspección.
--   Instalación.
--   Mantenimiento.
--   Prueba hidrostática.
--   Capacitación.
+- Recarga y mantenimiento PQS 6 kg.
+- Recarga y mantenimiento PQS 9 kg.
+- Inspección.
+- Instalación.
+- Mantenimiento.
+- Prueba hidrostática.
+- Capacitación.
 
 ## 10.3 Repuestos/componentes
 
 Podrán controlarse:
 
--   manguera;
--   válvula;
--   manómetro;
--   pasador/seguro;
--   precinto/sello;
--   boquilla;
--   difusor/corneta;
--   manija/palanca;
--   empaques;
--   O-ring;
--   otros repuestos reales.
+- manguera;
+- válvula;
+- manómetro;
+- pasador/seguro;
+- precinto/sello;
+- boquilla;
+- difusor/corneta;
+- manija/palanca;
+- empaques;
+- O-ring;
+- otros repuestos reales.
 
 No se cargará un catálogo enorme ficticio. Se registrarán los
 componentes que BRUCE FIRE realmente compra, usa o vende.
 
-------------------------------------------------------------------------
+---
 
 # 11. INVENTARIO
 
@@ -585,37 +585,37 @@ físicamente.**
 
 ## 11.1 Funciones
 
--   stock;
--   stock mínimo;
--   entradas;
--   salidas;
--   movimientos;
--   ajustes autorizados;
--   recepciones;
--   unidades serializadas;
--   repuestos;
--   disponibilidad;
--   historial.
+- stock;
+- stock mínimo;
+- entradas;
+- salidas;
+- movimientos;
+- ajustes autorizados;
+- recepciones;
+- unidades serializadas;
+- repuestos;
+- disponibilidad;
+- historial.
 
 ## 11.2 Recepción de proveedor
 
--   proveedor;
--   documento referencia;
--   fecha;
--   producto;
--   cantidad;
--   cantidad conforme;
--   cantidad observada;
--   observación;
--   usuario.
+- proveedor;
+- documento referencia;
+- fecha;
+- producto;
+- cantidad;
+- cantidad conforme;
+- cantidad observada;
+- observación;
+- usuario.
 
 Para extintores nuevos:
 
--   serie;
--   marca;
--   capacidad;
--   año;
--   barcode si corresponde.
+- serie;
+- marca;
+- capacidad;
+- año;
+- barcode si corresponde.
 
 ## 11.3 Regla de venta
 
@@ -624,7 +624,7 @@ Para extintores nuevos:
 El Vendedor es quien escanea los extintores físicos exactos que se
 entregarán al cliente.
 
-------------------------------------------------------------------------
+---
 
 # 12. COMERCIAL
 
@@ -638,45 +638,45 @@ No existirá Proforma como flujo separado.
 
 ### Datos
 
--   número;
--   fecha;
--   vendedor;
--   cliente;
--   sede;
--   vehículo/placa cuando corresponda;
--   vigencia;
--   productos;
--   servicios;
--   cantidades;
--   precios;
--   descuentos;
--   subtotal;
--   IGV;
--   total;
--   condición propuesta;
--   observaciones;
--   estado.
+- número;
+- fecha;
+- vendedor;
+- cliente;
+- sede;
+- vehículo/placa cuando corresponda;
+- vigencia;
+- productos;
+- servicios;
+- cantidades;
+- precios;
+- descuentos;
+- subtotal;
+- IGV;
+- total;
+- condición propuesta;
+- observaciones;
+- estado.
 
 ### Estados
 
--   Borrador.
--   Emitida.
--   Enviada.
--   Aceptada.
--   Rechazada.
--   Vencida.
--   Convertida.
--   Anulada internamente.
+- Borrador.
+- Emitida.
+- Enviada.
+- Aceptada.
+- Rechazada.
+- Vencida.
+- Convertida.
+- Anulada internamente.
 
 ### Acciones
 
--   editar mientras corresponda;
--   duplicar;
--   descargar PDF;
--   imprimir;
--   enviar;
--   marcar aceptación;
--   convertir a venta.
+- editar mientras corresponda;
+- duplicar;
+- descargar PDF;
+- imprimir;
+- enviar;
+- marcar aceptación;
+- convertir a venta.
 
 ## 12.2 Conversión a venta
 
@@ -686,13 +686,13 @@ Flujo:
 
 Al convertir:
 
--   cliente se conserva;
--   sede se conserva;
--   placa se conserva;
--   ítems se conservan;
--   precios/descuentos se conservan;
--   observaciones se trasladan;
--   no se vuelve a digitar.
+- cliente se conserva;
+- sede se conserva;
+- placa se conserva;
+- ítems se conservan;
+- precios/descuentos se conservan;
+- observaciones se trasladan;
+- no se vuelve a digitar.
 
 Si contiene servicios:
 
@@ -704,26 +704,26 @@ Si contiene productos y servicios:
 
 Ambos conservan referencia a la cotización original.
 
-------------------------------------------------------------------------
+---
 
 # 13. VENTA
 
 ## 13.1 Datos
 
--   número interno;
--   cotización origen opcional;
--   cliente;
--   sede;
--   vehículo/placa;
--   vendedor;
--   fecha;
--   productos/servicios;
--   unidades físicas seleccionadas;
--   condición de pago;
--   forma(s) de pago;
--   total;
--   estado;
--   observaciones.
+- número interno;
+- cotización origen opcional;
+- cliente;
+- sede;
+- vehículo/placa;
+- vendedor;
+- fecha;
+- productos/servicios;
+- unidades físicas seleccionadas;
+- condición de pago;
+- forma(s) de pago;
+- total;
+- estado;
+- observaciones.
 
 ## 13.2 Escaneo de extintores vendidos
 
@@ -739,38 +739,38 @@ Para producto serializado:
 
 Nunca seleccionar unidades aleatorias.
 
-------------------------------------------------------------------------
+---
 
 # 14. CONDICIÓN Y FORMAS DE PAGO
 
 ## 14.1 Condición
 
--   Contado.
--   Crédito.
+- Contado.
+- Crédito.
 
 ## 14.2 Formas internas
 
--   efectivo;
--   transferencia;
--   Yape;
--   Plin;
--   POS;
--   depósito;
--   otro.
+- efectivo;
+- transferencia;
+- Yape;
+- Plin;
+- POS;
+- depósito;
+- otro.
 
 ## 14.3 Crédito
 
--   monto pendiente;
--   número de cuotas;
--   fecha de vencimiento;
--   monto por cuota;
--   estado;
--   pagos parciales.
+- monto pendiente;
+- número de cuotas;
+- fecha de vencimiento;
+- monto por cuota;
+- estado;
+- pagos parciales.
 
 La estructura debe soportar los comprobantes reales de BRUCE FIRE con
 cuota y fecha de vencimiento.
 
-------------------------------------------------------------------------
+---
 
 # 15. SERVICIOS
 
@@ -778,53 +778,53 @@ El módulo central operativo.
 
 Tipos:
 
--   Recarga.
--   Mantenimiento.
--   Prueba hidrostática.
--   Inspección.
--   Instalación.
--   Mantenimiento en campo.
--   Otros configurables.
+- Recarga.
+- Mantenimiento.
+- Prueba hidrostática.
+- Inspección.
+- Instalación.
+- Mantenimiento en campo.
+- Otros configurables.
 
-------------------------------------------------------------------------
+---
 
 # 16. ORDEN DE SERVICIO
 
 ## 16.1 Datos generales
 
--   código;
--   cliente;
--   sede;
--   vehículo;
--   cotización/venta origen;
--   tipo de servicio;
--   fecha;
--   técnico asignado;
--   equipos;
--   observaciones;
--   prioridad;
--   estado.
+- código;
+- cliente;
+- sede;
+- vehículo;
+- cotización/venta origen;
+- tipo de servicio;
+- fecha;
+- técnico asignado;
+- equipos;
+- observaciones;
+- prioridad;
+- estado.
 
 ## 16.2 Estados de Planta
 
--   Pendiente de recepción.
--   Recibido en Planta.
--   En revisión.
--   Esperando autorización.
--   Autorizado.
--   En proceso.
--   Trabajo terminado.
--   Pendiente de datos.
--   Datos completos.
--   Listo para certificado.
--   Listo para entrega.
--   Entregado.
--   Cerrado.
+- Pendiente de recepción.
+- Recibido en Planta.
+- En revisión.
+- Esperando autorización.
+- Autorizado.
+- En proceso.
+- Trabajo terminado.
+- Pendiente de datos.
+- Datos completos.
+- Listo para certificado.
+- Listo para entrega.
+- Entregado.
+- Cerrado.
 
 Los estados deben controlarse mediante transiciones válidas, no como
 texto libre.
 
-------------------------------------------------------------------------
+---
 
 # 17. COMUNICACIÓN VENDEDOR ↔ TÉCNICO DE PLANTA
 
@@ -851,7 +851,7 @@ Ejemplo:
 
 Así la información queda trazable.
 
-------------------------------------------------------------------------
+---
 
 # 18. ALTA TÉCNICA RÁPIDA
 
@@ -867,13 +867,13 @@ Para extintores de otras empresas.
 
 Datos mínimos:
 
--   agente/tipo;
--   capacidad;
--   marca;
--   serie si legible;
--   año si legible;
--   foto general;
--   foto de placa si aporta información.
+- agente/tipo;
+- capacidad;
+- marca;
+- serie si legible;
+- año si legible;
+- foto general;
+- foto de placa si aporta información.
 
 Si un dato no puede leerse:
 
@@ -881,7 +881,7 @@ Si un dato no puede leerse:
 
 Nunca obligar al técnico a inventar datos.
 
-------------------------------------------------------------------------
+---
 
 # 19. CHECKLIST TÉCNICO DIGITAL
 
@@ -889,29 +889,29 @@ Diseñado para móvil/tablet.
 
 Opciones:
 
--   Conforme.
--   Observado.
--   No aplica.
+- Conforme.
+- Observado.
+- No aplica.
 
 ## 19.1 Elementos
 
--   identificación;
--   cilindro;
--   corrosión;
--   golpes/deformación;
--   válvula;
--   manómetro cuando aplique;
--   pasador;
--   precinto;
--   manguera;
--   boquilla/difusor;
--   manija/palanca;
--   rotulado;
--   agente/carga;
--   servicio;
--   observaciones;
--   bloque P.H. cuando aplique;
--   bloque específico por tipo de extintor.
+- identificación;
+- cilindro;
+- corrosión;
+- golpes/deformación;
+- válvula;
+- manómetro cuando aplique;
+- pasador;
+- precinto;
+- manguera;
+- boquilla/difusor;
+- manija/palanca;
+- rotulado;
+- agente/carga;
+- servicio;
+- observaciones;
+- bloque P.H. cuando aplique;
+- bloque específico por tipo de extintor.
 
 ## 19.2 Checklist dinámico
 
@@ -922,44 +922,44 @@ datos maestros.
 
 Si marca **Observado**, se despliega:
 
--   componente;
--   condición;
--   foto;
--   nota;
--   acción recomendada.
+- componente;
+- condición;
+- foto;
+- nota;
+- acción recomendada.
 
-------------------------------------------------------------------------
+---
 
 # 20. DEFICIENCIAS
 
 Cada deficiencia pertenece a:
 
--   una orden;
--   un equipo;
--   un componente.
+- una orden;
+- un equipo;
+- un componente.
 
 Campos:
 
--   componente;
--   condición;
--   foto;
--   nota;
--   acción recomendada;
--   repuesto sugerido;
--   requiere autorización;
--   estado;
--   resolución.
+- componente;
+- condición;
+- foto;
+- nota;
+- acción recomendada;
+- repuesto sugerido;
+- requiere autorización;
+- estado;
+- resolución.
 
 Estados:
 
--   Detectada.
--   Esperando autorización.
--   Autorizada.
--   Rechazada.
--   En corrección.
--   Resuelta.
+- Detectada.
+- Esperando autorización.
+- Autorizada.
+- Rechazada.
+- En corrección.
+- Resuelta.
 
-------------------------------------------------------------------------
+---
 
 # 21. AUTORIZACIÓN DE ADICIONALES
 
@@ -971,17 +971,17 @@ Flujo:
 
 Canales aceptados:
 
--   WhatsApp.
--   Presencial.
+- WhatsApp.
+- Presencial.
 
 El sistema guardará:
 
--   quién autorizó;
--   fecha;
--   canal;
--   observación/evidencia si se requiere.
+- quién autorizó;
+- fecha;
+- canal;
+- observación/evidencia si se requiere.
 
-------------------------------------------------------------------------
+---
 
 # 22. RECOJO Y ENTREGA
 
@@ -989,35 +989,35 @@ Responsable operativo: **Técnico de Campo**.
 
 ## 22.1 Recojo
 
--   orden;
--   cliente;
--   dirección/sede;
--   contacto;
--   fecha/hora;
--   cantidad;
--   equipos;
--   fotos;
--   observaciones;
--   responsable;
--   conformidad/firma.
+- orden;
+- cliente;
+- dirección/sede;
+- contacto;
+- fecha/hora;
+- cantidad;
+- equipos;
+- fotos;
+- observaciones;
+- responsable;
+- conformidad/firma.
 
 ## 22.2 Recepción en Planta
 
--   quién entrega;
--   quién recibe;
--   cantidad;
--   diferencias;
--   observaciones;
--   fecha/hora.
+- quién entrega;
+- quién recibe;
+- cantidad;
+- diferencias;
+- observaciones;
+- fecha/hora.
 
 ## 22.3 Entrega final
 
--   cantidad;
--   fecha/hora;
--   fotos;
--   observaciones;
--   receptor;
--   firma/conformidad.
+- cantidad;
+- fecha/hora;
+- fotos;
+- observaciones;
+- receptor;
+- firma/conformidad.
 
 ## 22.4 Cadena de custodia
 
@@ -1025,7 +1025,7 @@ El sistema conserva:
 
 `Recogido por → recibido por Planta → procesado por → entregado por → recibido por cliente`
 
-------------------------------------------------------------------------
+---
 
 # 23. ACTA DE CONFORMIDAD
 
@@ -1035,28 +1035,28 @@ Se generará desde la Orden.
 
 Datos:
 
--   BRUCE FIRE;
--   RUC;
--   cliente;
--   RUC/DNI;
--   fecha recepción;
--   fecha entrega;
--   objeto del servicio;
--   tabla de equipos;
--   placa;
--   peso/capacidad;
--   serie;
--   tipo;
--   observaciones;
--   fotografías;
--   nombre del receptor;
--   firma/conformidad.
+- BRUCE FIRE;
+- RUC;
+- cliente;
+- RUC/DNI;
+- fecha recepción;
+- fecha entrega;
+- objeto del servicio;
+- tabla de equipos;
+- placa;
+- peso/capacidad;
+- serie;
+- tipo;
+- observaciones;
+- fotografías;
+- nombre del receptor;
+- firma/conformidad.
 
 La tabla será dinámica.
 
 Si son 20 extintores, genera 20 filas automáticamente.
 
-------------------------------------------------------------------------
+---
 
 # 24. INSPECCIONES
 
@@ -1068,83 +1068,83 @@ Técnico de Campo.
 
 ## Datos de cabecera
 
--   cliente;
--   RUC;
--   domicilio;
--   actividad;
--   sede;
--   fecha;
--   responsable;
--   cargo;
--   firma;
--   número de trabajadores si el formato lo requiere.
+- cliente;
+- RUC;
+- domicilio;
+- actividad;
+- sede;
+- fecha;
+- responsable;
+- cargo;
+- firma;
+- número de trabajadores si el formato lo requiere.
 
 ## Por extintor
 
--   número interno;
--   serie;
--   ubicación;
--   agente;
--   capacidad;
--   manómetro;
--   pasador;
--   manguera;
--   marca/procedencia;
--   fabricación;
--   tarjeta;
--   próxima recarga;
--   P.H.;
--   observación.
+- número interno;
+- serie;
+- ubicación;
+- agente;
+- capacidad;
+- manómetro;
+- pasador;
+- manguera;
+- marca/procedencia;
+- fabricación;
+- tarjeta;
+- próxima recarga;
+- P.H.;
+- observación.
 
 En móvil cada extintor será una tarjeta, no una tabla horizontal.
 
-------------------------------------------------------------------------
+---
 
 # 25. INSTALACIONES
 
 Técnico de Campo.
 
--   orden;
--   cliente;
--   sede;
--   áreas;
--   productos;
--   unidades;
--   técnicos;
--   ubicación instalada;
--   foto antes;
--   foto después;
--   pruebas;
--   observaciones;
--   firma;
--   certificado aplicable.
+- orden;
+- cliente;
+- sede;
+- áreas;
+- productos;
+- unidades;
+- técnicos;
+- ubicación instalada;
+- foto antes;
+- foto después;
+- pruebas;
+- observaciones;
+- firma;
+- certificado aplicable.
 
 Los equipos instalados que requieran seguimiento pueden pasar a Equipos
 del Cliente.
 
-------------------------------------------------------------------------
+---
 
 # 26. CERTIFICADOS
 
 Tipos iniciales:
 
--   Operatividad y Garantía.
--   Prueba Hidrostática.
--   Capacitación/Participación.
--   Operatividad de Sistemas de Detección/Alarma.
--   Otros configurables.
+- Operatividad y Garantía.
+- Prueba Hidrostática.
+- Capacitación/Participación.
+- Operatividad de Sistemas de Detección/Alarma.
+- Otros configurables.
 
 ## 26.1 Motor de reglas
 
 El sistema sugerirá certificados según:
 
--   servicio realizado;
--   tipo de equipo;
--   destino;
--   vehículo/local;
--   P.H. realizada;
--   capacitación realizada;
--   reglas configuradas.
+- servicio realizado;
+- tipo de equipo;
+- destino;
+- vehículo/local;
+- P.H. realizada;
+- capacitación realizada;
+- reglas configuradas.
 
 Ejemplos operativos BRUCE FIRE:
 
@@ -1165,9 +1165,9 @@ Una plantilla por tipo:
 
 Si la orden tiene 20:
 
--   20 filas;
--   salto automático de página;
--   datos comunes una sola vez.
+- 20 filas;
+- salto automático de página;
+- datos comunes una sola vez.
 
 ## 26.3 Firmas
 
@@ -1179,32 +1179,32 @@ No obligar a insertar manualmente la firma en cada certificado.
 
 Cada certificado:
 
--   número único;
--   QR;
--   token público no predecible;
--   página pública de verificación.
+- número único;
+- QR;
+- token público no predecible;
+- página pública de verificación.
 
 La página mostrará:
 
--   BRUCE FIRE;
--   número;
--   tipo;
--   cliente;
--   emisión;
--   vigencia;
--   equipos esenciales;
--   estado.
+- BRUCE FIRE;
+- número;
+- tipo;
+- cliente;
+- emisión;
+- vigencia;
+- equipos esenciales;
+- estado.
 
 Estados:
 
--   Vigente.
--   Vencido.
--   Reemplazado.
--   Anulado.
+- Vigente.
+- Vencido.
+- Reemplazado.
+- Anulado.
 
 El QR del certificado **no es QR SUNAT**.
 
-------------------------------------------------------------------------
+---
 
 # 27. ALERTAS Y PRÓXIMAS ATENCIONES
 
@@ -1212,19 +1212,19 @@ No será un CRM complicado.
 
 Widget/listado:
 
--   cliente;
--   equipo;
--   cantidad;
--   próxima fecha;
--   estado;
--   teléfono;
--   email.
+- cliente;
+- equipo;
+- cantidad;
+- próxima fecha;
+- estado;
+- teléfono;
+- email.
 
 Acciones:
 
--   **WhatsApp**
--   **Correo**
--   **Crear cotización**
+- **WhatsApp**
+- **Correo**
+- **Crear cotización**
 
 No habrá botón de llamada.
 
@@ -1232,11 +1232,11 @@ WhatsApp abre conversación mediante click-to-chat/WhatsApp Web.
 
 Colores:
 
--   rojo = vencido;
--   ámbar = próximo;
--   normal = futuro.
+- rojo = vencido;
+- ámbar = próximo;
+- normal = futuro.
 
-------------------------------------------------------------------------
+---
 
 # 28. FACTURACIÓN ELECTRÓNICA
 
@@ -1250,26 +1250,26 @@ Flujo:
 
 Soportar:
 
--   cliente/RUC;
--   dirección;
--   condición pago;
--   emisión;
--   vencimiento;
--   placa cuando corresponda;
--   detalle;
--   unidad;
--   cantidad;
--   precio;
--   descuento;
--   gravado;
--   IGV;
--   total;
--   cuotas;
--   observación;
--   cuentas bancarias;
--   representación PDF;
--   XML;
--   CDR.
+- cliente/RUC;
+- dirección;
+- condición pago;
+- emisión;
+- vencimiento;
+- placa cuando corresponda;
+- detalle;
+- unidad;
+- cantidad;
+- precio;
+- descuento;
+- gravado;
+- IGV;
+- total;
+- cuotas;
+- observación;
+- cuentas bancarias;
+- representación PDF;
+- XML;
+- CDR.
 
 ## 28.2 Boleta
 
@@ -1279,14 +1279,14 @@ Mismo principio tributario, con reglas propias del documento.
 
 Guardar estructuradamente:
 
--   monto pendiente;
--   cuotas;
--   vencimientos;
--   importes.
+- monto pendiente;
+- cuotas;
+- vencimientos;
+- importes.
 
 No solo imprimirlo en PDF.
 
-------------------------------------------------------------------------
+---
 
 # 29. NOTAS DE CRÉDITO/DÉBITO
 
@@ -1298,19 +1298,19 @@ Flujo:
 
 Guardar:
 
--   CPE afectado;
--   motivo;
--   detalle;
--   importe;
--   fecha;
--   respuesta SUNAT;
--   XML;
--   CDR;
--   PDF.
+- CPE afectado;
+- motivo;
+- detalle;
+- importe;
+- fecha;
+- respuesta SUNAT;
+- XML;
+- CDR;
+- PDF.
 
 El comprobante original permanece en historial.
 
-------------------------------------------------------------------------
+---
 
 # 30. GRE
 
@@ -1319,27 +1319,27 @@ factura/boleta.
 
 Campos:
 
--   documento relacionado;
--   motivo traslado;
--   fecha inicio;
--   origen;
--   destino;
--   destinatario;
--   bienes;
--   peso;
--   modalidad;
--   transportista;
--   vehículo;
--   placa;
--   conductor;
--   licencia;
--   observaciones;
--   estado SUNAT.
+- documento relacionado;
+- motivo traslado;
+- fecha inicio;
+- origen;
+- destino;
+- destinatario;
+- bienes;
+- peso;
+- modalidad;
+- transportista;
+- vehículo;
+- placa;
+- conductor;
+- licencia;
+- observaciones;
+- estado SUNAT.
 
 Debe soportar los escenarios reales de transporte privado/público que
 BRUCE FIRE utiliza.
 
-------------------------------------------------------------------------
+---
 
 # 31. GREENTER / SUNAT
 
@@ -1347,7 +1347,7 @@ Greenter será una **capa de integración**, no el centro del sistema.
 
 Arquitectura propuesta:
 
-``` text
+```text
 Venta
   ↓
 BillingService
@@ -1366,67 +1366,67 @@ flujo/API diferente.
 
 Guardar:
 
--   tipo;
--   serie;
--   correlativo;
--   XML;
--   hash;
--   CDR;
--   estado;
--   respuesta;
--   error;
--   intentos;
--   fecha envío.
+- tipo;
+- serie;
+- correlativo;
+- XML;
+- hash;
+- CDR;
+- estado;
+- respuesta;
+- error;
+- intentos;
+- fecha envío.
 
 No guardar certificados digitales/credenciales como texto plano en
 tablas visibles.
 
-------------------------------------------------------------------------
+---
 
 # 32. COBRANZAS
 
--   documentos pendientes;
--   cliente;
--   total;
--   saldo;
--   vencimiento;
--   cuotas;
--   estado;
--   pagos parciales;
--   método;
--   número de operación;
--   fecha;
--   observación.
+- documentos pendientes;
+- cliente;
+- total;
+- saldo;
+- vencimiento;
+- cuotas;
+- estado;
+- pagos parciales;
+- método;
+- número de operación;
+- fecha;
+- observación.
 
 Dashboard:
 
--   total por cobrar;
--   vencido;
--   vence esta semana;
--   cobrado este mes.
+- total por cobrar;
+- vencido;
+- vence esta semana;
+- cobrado este mes.
 
-------------------------------------------------------------------------
+---
 
 # 33. FOTOGRAFÍAS Y EVIDENCIA
 
 Tipos:
 
--   recepción;
--   placa/identificación;
--   deficiencia;
--   proceso;
--   antes;
--   después;
--   entrega;
--   evidencia adicional.
+- recepción;
+- placa/identificación;
+- deficiencia;
+- proceso;
+- antes;
+- después;
+- entrega;
+- evidencia adicional.
 
 Cada foto debe saber:
 
--   orden;
--   equipo opcional;
--   etapa;
--   usuario;
--   fecha.
+- orden;
+- equipo opcional;
+- etapa;
+- usuario;
+- fecha.
 
 ## Política
 
@@ -1442,68 +1442,68 @@ Estrategia:
 
 Documentos fiscales y evidencias críticas tienen políticas separadas.
 
-------------------------------------------------------------------------
+---
 
 # 34. REPORTES
 
 ## Comerciales
 
--   ventas por periodo;
--   vendedor;
--   cliente;
--   producto;
--   servicio;
--   conversión de cotizaciones.
+- ventas por periodo;
+- vendedor;
+- cliente;
+- producto;
+- servicio;
+- conversión de cotizaciones.
 
 ## Inventario
 
--   stock;
--   movimientos;
--   repuestos;
--   stock mínimo;
--   rotación.
+- stock;
+- movimientos;
+- repuestos;
+- stock mínimo;
+- rotación.
 
 ## Servicios
 
--   órdenes;
--   tiempos;
--   recargas;
--   inspecciones;
--   instalaciones;
--   deficiencias;
--   técnicos.
+- órdenes;
+- tiempos;
+- recargas;
+- inspecciones;
+- instalaciones;
+- deficiencias;
+- técnicos.
 
 ## Equipos
 
--   próximos a atención;
--   P.H.;
--   historial;
--   estado;
--   cliente/sede.
+- próximos a atención;
+- P.H.;
+- historial;
+- estado;
+- cliente/sede.
 
 ## Certificados
 
--   emitidos;
--   vigentes;
--   vencidos;
--   anulados.
+- emitidos;
+- vigentes;
+- vencidos;
+- anulados.
 
 ## Facturación
 
--   CPE;
--   estado SUNAT;
--   errores;
--   ventas contado/crédito.
+- CPE;
+- estado SUNAT;
+- errores;
+- ventas contado/crédito.
 
 ## Cobranzas
 
--   saldos;
--   vencidos;
--   pagos.
+- saldos;
+- vencidos;
+- pagos.
 
 Exportar a Excel/PDF cuando aporte valor.
 
-------------------------------------------------------------------------
+---
 
 # 35. ROLES Y PERMISOS
 
@@ -1520,89 +1520,89 @@ Roles:
 
 Acceso amplio de consulta a:
 
--   dashboards;
--   ventas;
--   servicios;
--   inventario;
--   certificados;
--   facturación;
--   cobranzas;
--   reportes;
--   IA.
+- dashboards;
+- ventas;
+- servicios;
+- inventario;
+- certificados;
+- facturación;
+- cobranzas;
+- reportes;
+- IA.
 
 No necesita necesariamente administrar credenciales técnicas SUNAT.
 
 ## 35.2 Vendedor
 
--   clientes;
--   sedes;
--   vehículos;
--   cotizaciones;
--   ventas;
--   escaneo de unidades vendidas;
--   alertas;
--   órdenes;
--   deficiencias comerciales;
--   autorizaciones;
--   certificados;
--   CPE según permisos;
--   cobranzas según permisos.
+- clientes;
+- sedes;
+- vehículos;
+- cotizaciones;
+- ventas;
+- escaneo de unidades vendidas;
+- alertas;
+- órdenes;
+- deficiencias comerciales;
+- autorizaciones;
+- certificados;
+- CPE según permisos;
+- cobranzas según permisos.
 
 ## 35.3 Almacén
 
--   catálogo lectura;
--   stock;
--   recepciones;
--   movimientos;
--   unidades;
--   repuestos.
+- catálogo lectura;
+- stock;
+- recepciones;
+- movimientos;
+- unidades;
+- repuestos.
 
 No escanea equipos para asignarlos a una venta.
 
 ## 35.4 Técnico de Planta
 
--   órdenes asignadas;
--   recepción;
--   alta rápida;
--   barcode;
--   checklist;
--   recarga;
--   mantenimiento;
--   P.H. aplicable;
--   deficiencias;
--   fotos;
--   datos técnicos;
--   cierre técnico.
+- órdenes asignadas;
+- recepción;
+- alta rápida;
+- barcode;
+- checklist;
+- recarga;
+- mantenimiento;
+- P.H. aplicable;
+- deficiencias;
+- fotos;
+- datos técnicos;
+- cierre técnico.
 
 No cambia precios ni emite CPE.
 
 ## 35.5 Técnico de Campo
 
--   órdenes asignadas;
--   recojo;
--   entrega;
--   inspección;
--   instalación;
--   mantenimiento de campo;
--   checklist;
--   fotos;
--   firmas;
--   deficiencias;
--   cierre.
+- órdenes asignadas;
+- recojo;
+- entrega;
+- inspección;
+- instalación;
+- mantenimiento de campo;
+- checklist;
+- fotos;
+- firmas;
+- deficiencias;
+- cierre.
 
 ## 35.6 Administrador
 
--   usuarios;
--   roles;
--   permisos;
--   parámetros;
--   series;
--   plantillas;
--   configuración;
--   auditoría;
--   credenciales/integraciones protegidas.
+- usuarios;
+- roles;
+- permisos;
+- parámetros;
+- series;
+- plantillas;
+- configuración;
+- auditoría;
+- credenciales/integraciones protegidas.
 
-------------------------------------------------------------------------
+---
 
 # 36. MATRIZ DE PERMISOS
 
@@ -1610,7 +1610,7 @@ No programar la seguridad preguntando únicamente "¿es vendedor?".
 
 Usar permisos granulares:
 
-``` text
+```text
 clients.view
 clients.create
 clients.update
@@ -1662,38 +1662,38 @@ audit.view
 Los permisos se asignan a roles; evitar permisos directos a usuarios
 salvo excepción justificada.
 
-------------------------------------------------------------------------
+---
 
 # 37. AUDITORÍA
 
 Registrar acciones sensibles:
 
--   creación/edición de cliente;
--   cambio de precio importante;
--   conversión de cotización;
--   venta;
--   ajuste de stock;
--   transferencia de equipo;
--   autorización de adicional;
--   cierre de orden;
--   emisión/anulación de certificado;
--   emisión de CPE;
--   nota de crédito;
--   registro/modificación de pago;
--   cambios de roles/permisos;
--   cambios de configuración.
+- creación/edición de cliente;
+- cambio de precio importante;
+- conversión de cotización;
+- venta;
+- ajuste de stock;
+- transferencia de equipo;
+- autorización de adicional;
+- cierre de orden;
+- emisión/anulación de certificado;
+- emisión de CPE;
+- nota de crédito;
+- registro/modificación de pago;
+- cambios de roles/permisos;
+- cambios de configuración.
 
 Guardar:
 
--   usuario;
--   acción;
--   entidad;
--   ID;
--   antes/después cuando aplique;
--   fecha;
--   contexto.
+- usuario;
+- acción;
+- entidad;
+- ID;
+- antes/después cuando aplique;
+- fecha;
+- contexto.
 
-------------------------------------------------------------------------
+---
 
 # 38. NOTIFICACIONES INTERNAS
 
@@ -1701,20 +1701,20 @@ Notificaciones útiles, no ruido.
 
 Ejemplos:
 
--   nueva orden para Planta;
--   recojo asignado a Campo;
--   deficiencia para Ventas;
--   adicional autorizado para Técnico;
--   trabajo terminado;
--   certificado listo;
--   equipo próximo a atención;
--   stock crítico;
--   cuota próxima/vencida;
--   error SUNAT.
+- nueva orden para Planta;
+- recojo asignado a Campo;
+- deficiencia para Ventas;
+- adicional autorizado para Técnico;
+- trabajo terminado;
+- certificado listo;
+- equipo próximo a atención;
+- stock crítico;
+- cuota próxima/vencida;
+- error SUNAT.
 
 Campana con contador y bandeja.
 
-------------------------------------------------------------------------
+---
 
 # 39. IA DEL SISTEMA
 
@@ -1724,24 +1724,26 @@ La IA no debe existir solo "para decir que tiene IA".
 
 Con históricos:
 
--   probabilidad de próximo servicio;
--   clientes con mayor oportunidad;
--   estimación de demanda;
--   proyección de ventas;
--   estacionalidad;
--   riesgo de stock.
+- probabilidad de próximo servicio;
+- clientes con mayor oportunidad;
+- estimación de demanda;
+- proyección de ventas;
+- estacionalidad;
+- riesgo de stock.
 
 La salida debe mostrarse como apoyo, no como verdad absoluta.
+
+> **Estado de Implementación (§39.1 — 2026-09-23):** Implementado con Machine Learning supervisado real y local (Regresión Logística, `scikit-learn` en script `scripts/ml/train_retention_model.py`, exportado a `storage/app/ml/retention_model.json`). Inferencia en PHP puro (`RetentionModel.php`) sin dependencias de Python ni APIs externas en producción. Evalúa 7 features libres de fuga (corte temporal `2026-03-12`) con métricas auditadas en conjunto de prueba: **ROC-AUC: 73.7%**, **Accuracy: 75.7%**, **Precision: 67.2%**. Integrado en el Dashboard del Gerente con factores explicativos y persistido mediante comando diario `ml:score-clients` en `client_retention_scores`.
 
 ## 39.2 IA para lectura asistida
 
 Foto de placa/etiqueta:
 
--   sugerir marca;
--   serie;
--   capacidad;
--   año;
--   texto visible.
+- sugerir marca;
+- serie;
+- capacidad;
+- año;
+- texto visible.
 
 **El técnico confirma.**
 
@@ -1749,10 +1751,10 @@ Foto de placa/etiqueta:
 
 Ejemplos:
 
--   "¿Cuánto vendimos este mes?"
--   "¿Qué clientes tienen más equipos por vencer?"
--   "¿Qué servicio creció más?"
--   "¿Qué repuestos están cerca de agotarse?"
+- "¿Cuánto vendimos este mes?"
+- "¿Qué clientes tienen más equipos por vencer?"
+- "¿Qué servicio creció más?"
+- "¿Qué repuestos están cerca de agotarse?"
 
 Debe respetar permisos.
 
@@ -1760,45 +1762,45 @@ Debe respetar permisos.
 
 A partir de checklist/notas:
 
--   generar borrador de observación;
--   resumir deficiencias;
--   preparar texto comercial.
+- generar borrador de observación;
+- resumir deficiencias;
+- preparar texto comercial.
 
 Nunca modificar automáticamente datos técnicos.
 
 ## 39.5 IA NO hará
 
--   decidir si un extintor es técnicamente seguro sin técnico;
--   inventar serie/año;
--   calcular tributos libremente;
--   decidir reglas SUNAT;
--   emitir CPE por sí sola;
--   autorizar descuentos;
--   modificar inventario sin acción transaccional.
+- decidir si un extintor es técnicamente seguro sin técnico;
+- inventar serie/año;
+- calcular tributos libremente;
+- decidir reglas SUNAT;
+- emitir CPE por sí sola;
+- autorizar descuentos;
+- modificar inventario sin acción transaccional.
 
-------------------------------------------------------------------------
+---
 
 # 40. STACK TECNOLÓGICO
 
 ## Backend
 
--   Laravel.
--   PHP.
--   Eloquent ORM.
--   MySQL.
--   Jobs/Queues.
--   Scheduler.
--   Notifications.
--   Storage.
+- Laravel.
+- PHP.
+- Eloquent ORM.
+- MySQL.
+- Jobs/Queues.
+- Scheduler.
+- Notifications.
+- Storage.
 
 ## Frontend
 
--   React 19.
--   TypeScript.
--   Inertia.
--   Tailwind CSS.
--   shadcn/ui.
--   Vite.
+- React 19.
+- TypeScript.
+- Inertia.
+- Tailwind CSS.
+- shadcn/ui.
+- Vite.
 
 ## Arquitectura
 
@@ -1812,7 +1814,7 @@ No API REST interna innecesaria para cada pantalla.
 
 Inertia permite mantener Laravel + React dentro del mismo proyecto.
 
-------------------------------------------------------------------------
+---
 
 # 41. LIBRERÍAS / PAQUETES RECOMENDADOS
 
@@ -1820,19 +1822,19 @@ Inertia permite mantener Laravel + React dentro del mismo proyecto.
 
 Para:
 
--   roles;
--   permisos;
--   integración con Laravel Gate;
--   autorización granular.
+- roles;
+- permisos;
+- integración con Laravel Gate;
+- autorización granular.
 
 ## 41.2 spatie/laravel-activitylog
 
 Para:
 
--   auditoría;
--   eventos de modelos;
--   usuario causante;
--   cambios relevantes.
+- auditoría;
+- eventos de modelos;
+- usuario causante;
+- cambios relevantes.
 
 No registrar cada lectura de pantalla; solo eventos que aporten
 trazabilidad.
@@ -1841,11 +1843,11 @@ trazabilidad.
 
 Para:
 
--   construir CPE;
--   XML UBL;
--   firma;
--   envío;
--   procesamiento de respuesta/CDR.
+- construir CPE;
+- XML UBL;
+- firma;
+- envío;
+- procesamiento de respuesta/CDR.
 
 Debe quedar encapsulado en servicios propios.
 
@@ -1853,13 +1855,13 @@ Debe quedar encapsulado en servicios propios.
 
 Para:
 
--   envío SUNAT;
--   reintentos;
--   PDFs pesados;
--   exportaciones;
--   notificaciones;
--   tareas de archivo;
--   procesos IA no inmediatos.
+- envío SUNAT;
+- reintentos;
+- PDFs pesados;
+- exportaciones;
+- notificaciones;
+- tareas de archivo;
+- procesos IA no inmediatos.
 
 Para empezar puede utilizarse el driver de base de datos; Redis no es
 obligatorio.
@@ -1868,19 +1870,19 @@ obligatorio.
 
 Para:
 
--   detectar próximos vencimientos;
--   actualizar alertas;
--   ejecutar archivo de evidencias;
--   tareas recurrentes;
--   reintentos controlados.
+- detectar próximos vencimientos;
+- actualizar alertas;
+- ejecutar archivo de evidencias;
+- tareas recurrentes;
+- reintentos controlados.
 
 ## 41.6 Laravel Notifications
 
 Para:
 
--   bandeja interna;
--   correo cuando corresponda;
--   avisos de órdenes/deficiencias.
+- bandeja interna;
+- correo cuando corresponda;
+- avisos de órdenes/deficiencias.
 
 ## 41.7 Laravel Precognition
 
@@ -1891,8 +1893,8 @@ React/Inertia.
 
 Usar una librería mantenida y compatible con el stack final para:
 
--   barcode interno de equipo;
--   QR de certificado.
+- barcode interno de equipo;
+- QR de certificado.
 
 Debe abstraerse detrás de un servicio para no acoplar el dominio a un
 paquete concreto.
@@ -1905,11 +1907,11 @@ cuando se cierre la versión exacta de Laravel.
 No instalar paquetes "por si acaso"; cada dependencia debe justificar su
 uso.
 
-------------------------------------------------------------------------
+---
 
 # 42. ESTRUCTURA BACKEND SUGERIDA
 
-``` text
+```text
 app/
 ├── Actions/
 ├── Enums/
@@ -1945,11 +1947,11 @@ No crear una "Clean Architecture" exagerada para un capstone.
 
 Sí separar lógica importante de los Controllers.
 
-------------------------------------------------------------------------
+---
 
 # 43. ESTRUCTURA FRONTEND SUGERIDA
 
-``` text
+```text
 resources/js/
 ├── components/
 │   ├── ui/
@@ -1976,36 +1978,36 @@ resources/js/
 └── types/
 ```
 
-------------------------------------------------------------------------
+---
 
 # 44. COMPONENTES VISUALES REUTILIZABLES
 
 Crear componentes comunes:
 
--   `PageHeader`
--   `StatCard`
--   `StatusBadge`
--   `DataTable`
--   `FilterBar`
--   `SearchInput`
--   `ConfirmDialog`
--   `EmptyState`
--   `FormSection`
--   `EntityCard`
--   `EquipmentCard`
--   `ChecklistItem`
--   `PhotoUploader`
--   `BarcodeScannerInput`
--   `Timeline`
--   `NotificationBell`
--   `ThemeToggle`
--   `MoneyDisplay`
--   `SunatStatusBadge`
--   `CertificateStatusBadge`
+- `PageHeader`
+- `StatCard`
+- `StatusBadge`
+- `DataTable`
+- `FilterBar`
+- `SearchInput`
+- `ConfirmDialog`
+- `EmptyState`
+- `FormSection`
+- `EntityCard`
+- `EquipmentCard`
+- `ChecklistItem`
+- `PhotoUploader`
+- `BarcodeScannerInput`
+- `Timeline`
+- `NotificationBell`
+- `ThemeToggle`
+- `MoneyDisplay`
+- `SunatStatusBadge`
+- `CertificateStatusBadge`
 
 Esto mantiene consistencia visual.
 
-------------------------------------------------------------------------
+---
 
 # 45. RESPONSIVE
 
@@ -2023,41 +2025,41 @@ Tarjetas de equipos y checklist.
 
 Prioridad Técnico de Campo/Planta:
 
--   órdenes;
--   equipo;
--   escaneo;
--   checklist;
--   fotos;
--   deficiencias;
--   firma;
--   cerrar trabajo.
+- órdenes;
+- equipo;
+- escaneo;
+- checklist;
+- fotos;
+- deficiencias;
+- firma;
+- cerrar trabajo.
 
 No intentar mostrar el ERP completo como escritorio reducido.
 
-------------------------------------------------------------------------
+---
 
 # 46. SEGURIDAD
 
--   contraseñas hasheadas;
--   HTTPS;
--   CSRF;
--   validación backend;
--   autorización mediante Policies/Gates;
--   rate limiting donde corresponda;
--   sesiones seguras;
--   credenciales SUNAT protegidas;
--   certificado digital fuera de almacenamiento público;
--   logs sin secretos;
--   backups;
--   control de acceso a fotografías/documentos;
--   URLs públicas de certificados con token no predecible;
--   auditoría de cambios sensibles.
+- contraseñas hasheadas;
+- HTTPS;
+- CSRF;
+- validación backend;
+- autorización mediante Policies/Gates;
+- rate limiting donde corresponda;
+- sesiones seguras;
+- credenciales SUNAT protegidas;
+- certificado digital fuera de almacenamiento público;
+- logs sin secretos;
+- backups;
+- control de acceso a fotografías/documentos;
+- URLs públicas de certificados con token no predecible;
+- auditoría de cambios sensibles.
 
 Registro público de usuarios: **deshabilitado** para el sistema interno.
 
 Los usuarios los crea el Administrador.
 
-------------------------------------------------------------------------
+---
 
 # 47. DOCUMENTOS Y ARCHIVOS
 
@@ -2065,31 +2067,31 @@ Separar:
 
 ## Comerciales
 
--   Cotización.
+- Cotización.
 
 ## Operativos
 
--   Orden.
--   Acta.
--   Informe.
--   Evidencias.
+- Orden.
+- Acta.
+- Informe.
+- Evidencias.
 
 ## Técnicos
 
--   Certificados.
+- Certificados.
 
 ## Fiscales
 
--   Factura.
--   Boleta.
--   NC/ND.
--   GRE.
--   XML.
--   CDR.
+- Factura.
+- Boleta.
+- NC/ND.
+- GRE.
+- XML.
+- CDR.
 
 No mezclar estados ni reglas.
 
-------------------------------------------------------------------------
+---
 
 # 48. MODELO DE ESTADOS: REGLA GENERAL
 
@@ -2117,7 +2119,7 @@ anulado.
 
 **Cobranza:** pendiente, parcial, pagada, vencida.
 
-------------------------------------------------------------------------
+---
 
 # 49. REGLAS IMPORTANTES DE NEGOCIO
 
@@ -2143,13 +2145,13 @@ anulado.
 19. NC/ND nacen vinculadas a un CPE.
 20. La IA nunca reemplaza validaciones tributarias/técnicas.
 
-------------------------------------------------------------------------
+---
 
 # 50. FLUJOS MAESTROS
 
 ## 50.1 Venta directa de extintores
 
-``` text
+```text
 Cliente
 → Venta/Cotización
 → Producto
@@ -2164,7 +2166,7 @@ Cliente
 
 ## 50.2 Cotización aceptada
 
-``` text
+```text
 Cotización
 → Aceptada
 → Convertir a venta
@@ -2177,7 +2179,7 @@ Cotización
 
 ## 50.3 Recarga de equipo externo
 
-``` text
+```text
 Cliente
 → Orden
 → Recepción
@@ -2197,7 +2199,7 @@ Cliente
 
 ## 50.4 Vencimiento recurrente
 
-``` text
+```text
 Equipo
 → Próxima atención
 → Alerta
@@ -2215,7 +2217,7 @@ Equipo
 
 ## 50.5 Inspección
 
-``` text
+```text
 Orden
 → Campo
 → Equipo
@@ -2230,7 +2232,7 @@ Orden
 
 ## 50.6 Instalación
 
-``` text
+```text
 Cotización
 → Venta + Orden
 → Campo
@@ -2242,7 +2244,7 @@ Cotización
 → Activos del cliente
 ```
 
-------------------------------------------------------------------------
+---
 
 # 51. DISEÑO DEL DASHBOARD VISUAL
 
@@ -2250,12 +2252,12 @@ Inspirado en la referencia compartida:
 
 ## Header
 
--   saludo según usuario;
--   fecha;
--   búsqueda;
--   notificaciones;
--   tema;
--   perfil.
+- saludo según usuario;
+- fecha;
+- búsqueda;
+- notificaciones;
+- tema;
+- perfil.
 
 ## Primera fila
 
@@ -2263,22 +2265,22 @@ Inspirado en la referencia compartida:
 
 Ejemplo Gerente:
 
--   Ventas mes.
--   Facturación.
--   Por cobrar.
--   Servicios pendientes.
--   Equipos por vencer.
+- Ventas mes.
+- Facturación.
+- Por cobrar.
+- Servicios pendientes.
+- Equipos por vencer.
 
 ## Segunda fila
 
--   gráfico principal de ventas;
--   gráfico distribución de servicios.
+- gráfico principal de ventas;
+- gráfico distribución de servicios.
 
 ## Tercera fila
 
--   próximos vencimientos;
--   órdenes recientes;
--   stock crítico.
+- próximos vencimientos;
+- órdenes recientes;
+- stock crítico.
 
 ## Sidebar
 
@@ -2288,22 +2290,22 @@ Menú con íconos.
 
 Abajo:
 
--   tema;
--   configuración si tiene permiso;
--   perfil;
--   cerrar sesión.
+- tema;
+- configuración si tiene permiso;
+- perfil;
+- cerrar sesión.
 
 En Dark Mode el logo puede usar la versión diseñada para fondo negro; en
 Light Mode la versión para fondo blanco.
 
-------------------------------------------------------------------------
+---
 
 # 52. TOKENS DE DISEÑO
 
 En lugar de poner colores directamente en cada componente, definir
 tokens:
 
-``` text
+```text
 --background
 --foreground
 --card
@@ -2323,61 +2325,61 @@ Luego Light/Dark redefine los valores.
 
 Esto facilita mantener el estilo BRUCE FIRE sin duplicar CSS.
 
-------------------------------------------------------------------------
+---
 
 # 53. TIPOGRAFÍA E ICONOGRAFÍA
 
--   Tipografía sans-serif moderna y limpia.
--   Pesos limitados.
--   Iconos consistentes (una sola familia).
--   Evitar iconos 3D/mezclas de estilos dentro del software.
--   El logo sí conserva la identidad gráfica corporativa.
+- Tipografía sans-serif moderna y limpia.
+- Pesos limitados.
+- Iconos consistentes (una sola familia).
+- Evitar iconos 3D/mezclas de estilos dentro del software.
+- El logo sí conserva la identidad gráfica corporativa.
 
-------------------------------------------------------------------------
+---
 
 # 54. ACCESIBILIDAD
 
--   contraste adecuado;
--   no depender solo del color;
--   foco visible;
--   labels;
--   botones con área táctil suficiente;
--   tablas accesibles;
--   dark mode legible;
--   estados con texto + color;
--   confirmaciones claras.
+- contraste adecuado;
+- no depender solo del color;
+- foco visible;
+- labels;
+- botones con área táctil suficiente;
+- tablas accesibles;
+- dark mode legible;
+- estados con texto + color;
+- confirmaciones claras.
 
-------------------------------------------------------------------------
+---
 
 # 55. RENDIMIENTO
 
--   paginación server-side;
--   búsqueda indexada;
--   índices MySQL;
--   eager loading controlado;
--   no cargar todas las fotos;
--   thumbnails;
--   jobs para tareas pesadas;
--   cache solo donde aporte;
--   no agregar Redis inicialmente sin necesidad;
--   consultas agregadas para dashboards;
--   archivos fuera de DB.
+- paginación server-side;
+- búsqueda indexada;
+- índices MySQL;
+- eager loading controlado;
+- no cargar todas las fotos;
+- thumbnails;
+- jobs para tareas pesadas;
+- cache solo donde aporte;
+- no agregar Redis inicialmente sin necesidad;
+- consultas agregadas para dashboards;
+- archivos fuera de DB.
 
-------------------------------------------------------------------------
+---
 
 # 56. RESPALDO Y RECUPERACIÓN
 
 Definir:
 
--   backup de MySQL;
--   backup de archivos críticos;
--   retención;
--   restauración probada;
--   separación de evidencias archivadas;
--   certificado/credenciales protegidas;
--   exportación de información importante.
+- backup de MySQL;
+- backup de archivos críticos;
+- retención;
+- restauración probada;
+- separación de evidencias archivadas;
+- certificado/credenciales protegidas;
+- exportación de información importante.
 
-------------------------------------------------------------------------
+---
 
 # 57. DATOS HISTÓRICOS E IA
 
@@ -2396,83 +2398,83 @@ Antes de IA predictiva:
 
 Solo después se entrena/evalúa un modelo.
 
-------------------------------------------------------------------------
+---
 
 # 58. ROADMAP DE DESARROLLO
 
 ## Fase 1 --- Base
 
--   proyecto Laravel;
--   React/Inertia;
--   MySQL;
--   autenticación;
--   tema Light/Dark;
--   layout;
--   roles/permisos;
--   auditoría;
--   configuración base.
+- proyecto Laravel;
+- React/Inertia;
+- MySQL;
+- autenticación;
+- tema Light/Dark;
+- layout;
+- roles/permisos;
+- auditoría;
+- configuración base.
 
 ## Fase 2 --- Maestros
 
--   clientes;
--   sedes;
--   vehículos;
--   catálogo;
--   inventario;
--   equipos del cliente.
+- clientes;
+- sedes;
+- vehículos;
+- catálogo;
+- inventario;
+- equipos del cliente.
 
 ## Fase 3 --- Comercial
 
--   cotizaciones;
--   conversión;
--   ventas;
--   escaneo;
--   contado/crédito.
+- cotizaciones;
+- conversión;
+- ventas;
+- escaneo;
+- contado/crédito.
 
 ## Fase 4 --- Servicios
 
--   órdenes;
--   Planta;
--   Campo;
--   recojo/entrega;
--   checklists;
--   deficiencias;
--   evidencias;
--   actas.
+- órdenes;
+- Planta;
+- Campo;
+- recojo/entrega;
+- checklists;
+- deficiencias;
+- evidencias;
+- actas.
 
 ## Fase 5 --- Certificados
 
--   plantillas;
--   reglas;
--   PDF;
--   QR;
--   verificación.
+- plantillas;
+- reglas;
+- PDF;
+- QR;
+- verificación.
 
 ## Fase 6 --- SUNAT
 
--   Greenter;
--   factura;
--   boleta;
--   NC/ND;
--   XML/CDR;
--   estados;
--   GRE.
+- Greenter;
+- factura;
+- boleta;
+- NC/ND;
+- XML/CDR;
+- estados;
+- GRE.
 
 ## Fase 7 --- Cobranzas y reportes
 
--   cuotas;
--   pagos;
--   dashboards;
--   exportaciones.
+- cuotas;
+- pagos;
+- dashboards;
+- exportaciones.
 
 ## Fase 8 --- IA
 
--   migración histórica;
--   predicción;
--   lectura asistida;
--   asistente gerencial.
+- migración histórica;
+- predicción;
+- lectura asistida;
+- asistente gerencial.
 
-------------------------------------------------------------------------
+---
 
 # 59. CRITERIO PARA MVP
 
@@ -2495,63 +2497,63 @@ Prioridad:
 
 IA entra cuando la base de datos ya es confiable.
 
-------------------------------------------------------------------------
+---
 
 # 60. DECISIONES YA CONGELADAS
 
--   Documento comercial previo: **COTIZACIÓN**.
--   Cotización no va a SUNAT.
--   Botón **Convertir a venta**.
--   Venta origina Factura/Boleta.
--   Dos técnicos: Planta y Campo.
--   Campo realiza recojo/entrega.
--   Planta realiza recarga.
--   Campo realiza inspección/instalación/mantenimiento en campo.
--   Checklist rápido.
--   Deficiencias con foto.
--   Adicionales autorizados por WhatsApp o presencial.
--   Componentes/repuestos controlables.
--   Barcode BRUCE FIRE al recibir/capturar equipo externo.
--   Serie fabricante no se reemplaza.
--   P.H. controlada separadamente.
--   Certificados dinámicos por grupo.
--   Firmas cargadas en plantilla/configuración.
--   QR de verificación en certificados.
--   Equipos no se eliminan si tienen historial.
--   Transferencias auditadas.
--   Evidencias con política de archivo.
--   Light/Dark.
--   Laravel + React + Inertia + MySQL.
--   Greenter como integración SUNAT.
--   Spatie Permission para roles/permisos.
--   Spatie Activitylog para auditoría.
--   IA como asistencia/predicción, no como autoridad.
+- Documento comercial previo: **COTIZACIÓN**.
+- Cotización no va a SUNAT.
+- Botón **Convertir a venta**.
+- Venta origina Factura/Boleta.
+- Dos técnicos: Planta y Campo.
+- Campo realiza recojo/entrega.
+- Planta realiza recarga.
+- Campo realiza inspección/instalación/mantenimiento en campo.
+- Checklist rápido.
+- Deficiencias con foto.
+- Adicionales autorizados por WhatsApp o presencial.
+- Componentes/repuestos controlables.
+- Barcode BRUCE FIRE al recibir/capturar equipo externo.
+- Serie fabricante no se reemplaza.
+- P.H. controlada separadamente.
+- Certificados dinámicos por grupo.
+- Firmas cargadas en plantilla/configuración.
+- QR de verificación en certificados.
+- Equipos no se eliminan si tienen historial.
+- Transferencias auditadas.
+- Evidencias con política de archivo.
+- Light/Dark.
+- Laravel + React + Inertia + MySQL.
+- Greenter como integración SUNAT.
+- Spatie Permission para roles/permisos.
+- Spatie Activitylog para auditoría.
+- IA como asistencia/predicción, no como autoridad.
 
-------------------------------------------------------------------------
+---
 
 # 61. PENDIENTES QUE YA NO CAMBIAN LA ARQUITECTURA
 
 Solo quedan datos de configuración/carga:
 
--   lista final real de repuestos;
--   plantillas finales de certificados;
--   firmas definitivas;
--   imágenes/formatos de etiquetas físicas actuales;
--   reglas exactas de campos obligatorios por tipo de certificado;
--   series reales que utilizará BRUCE FIRE;
--   credenciales/certificado SUNAT en despliegue;
--   política empresarial definitiva de retención de fotografías;
--   históricos concretos a migrar.
+- lista final real de repuestos;
+- plantillas finales de certificados;
+- firmas definitivas;
+- imágenes/formatos de etiquetas físicas actuales;
+- reglas exactas de campos obligatorios por tipo de certificado;
+- series reales que utilizará BRUCE FIRE;
+- credenciales/certificado SUNAT en despliegue;
+- política empresarial definitiva de retención de fotografías;
+- históricos concretos a migrar.
 
 Estos puntos no requieren crear módulos nuevos.
 
-------------------------------------------------------------------------
+---
 
 # 62. RESULTADO ESPERADO
 
 El sistema final debe permitir que una operación fluya sin duplicación:
 
-``` text
+```text
 CLIENTE
   ↓
 COTIZACIÓN
@@ -2582,25 +2584,25 @@ VENTA → FACTURA / BOLETA → GRE si corresponde
 La meta no es tener "muchos módulos", sino que **cada módulo tenga una
 responsabilidad clara y todos compartan una sola fuente de verdad**.
 
-------------------------------------------------------------------------
+---
 
 # 63. REFERENCIAS TÉCNICAS PARA IMPLEMENTACIÓN
 
--   Laravel Starter Kit oficial: React + TypeScript + Inertia +
-    Tailwind/shadcn.
--   Spatie Laravel Permission: roles/permisos sobre Laravel Gate.
--   Spatie Laravel Activitylog: auditoría de actividad y cambios.
--   Greenter: integración de facturación electrónica peruana y SUNAT.
--   Laravel Queues / Scheduler / Notifications: procesos asíncronos,
-    tareas recurrentes y avisos.
--   Laravel Precognition: opción para validación anticipada de
-    formularios React/Inertia.
+- Laravel Starter Kit oficial: React + TypeScript + Inertia +
+  Tailwind/shadcn.
+- Spatie Laravel Permission: roles/permisos sobre Laravel Gate.
+- Spatie Laravel Activitylog: auditoría de actividad y cambios.
+- Greenter: integración de facturación electrónica peruana y SUNAT.
+- Laravel Queues / Scheduler / Notifications: procesos asíncronos,
+  tareas recurrentes y avisos.
+- Laravel Precognition: opción para validación anticipada de
+  formularios React/Inertia.
 
 > Antes de instalar cualquier dependencia adicional se verificará
 > compatibilidad con la versión final de Laravel/PHP. No se instalarán
 > paquetes innecesarios.
 
-------------------------------------------------------------------------
+---
 
 # 64. CONCLUSIÓN
 
@@ -2630,7 +2632,7 @@ bajo control humano.
 construir el ERD, diccionario de datos, mapa de pantallas, matriz final
 de permisos y backlog técnico.**
 
-------------------------------------------------------------------------
+---
 
 # 65. ESTÁNDARES OBLIGATORIOS DE DESARROLLO
 
@@ -2640,29 +2642,29 @@ parte de la definición técnica del proyecto.
 
 ## 65.1 Principios
 
--   Código legible antes que código "ingenioso".
--   Responsabilidad única.
--   No duplicar lógica.
--   No duplicar fuentes de verdad.
--   Controllers delgados.
--   Validaciones centralizadas.
--   Autorización mediante Policies/Gates y permisos.
--   Estados mediante Enums cuando corresponda.
--   Operaciones críticas dentro de transacciones.
--   Servicios externos encapsulados.
--   Componentes React reutilizables.
--   TypeScript estricto.
--   Consultas eficientes y revisión de N+1.
--   Tests para procesos críticos.
--   Refactorización continua.
--   Mobile-first obligatorio para los técnicos.
--   No sobrearquitecturar.
+- Código legible antes que código "ingenioso".
+- Responsabilidad única.
+- No duplicar lógica.
+- No duplicar fuentes de verdad.
+- Controllers delgados.
+- Validaciones centralizadas.
+- Autorización mediante Policies/Gates y permisos.
+- Estados mediante Enums cuando corresponda.
+- Operaciones críticas dentro de transacciones.
+- Servicios externos encapsulados.
+- Componentes React reutilizables.
+- TypeScript estricto.
+- Consultas eficientes y revisión de N+1.
+- Tests para procesos críticos.
+- Refactorización continua.
+- Mobile-first obligatorio para los técnicos.
+- No sobrearquitecturar.
 
 ## 65.2 Regla de modularidad
 
 Cada dominio es dueño de su información:
 
-``` text
+```text
 Clientes       → clientes, sedes, vehículos y equipos del cliente
 Catálogo       → definición de productos, servicios y repuestos
 Inventario     → existencias y movimientos físicos
@@ -2680,7 +2682,7 @@ otro.
 
 ## 65.3 Flujo interno recomendado
 
-``` text
+```text
 Request
    ↓
 Controller
@@ -2696,7 +2698,7 @@ Events / Jobs / Notifications cuando corresponda
 
 Ejemplos de acciones con responsabilidad concreta:
 
-``` text
+```text
 ConvertQuoteToSaleAction
 AssignSerializedUnitsAction
 CreateServiceOrderAction
@@ -2716,11 +2718,11 @@ No convertir todo en `Services` genéricos gigantes.
 
 Un Controller:
 
--   recibe la solicitud;
--   delega validación;
--   verifica autorización;
--   llama a una acción/servicio;
--   devuelve respuesta.
+- recibe la solicitud;
+- delega validación;
+- verifica autorización;
+- llama a una acción/servicio;
+- devuelve respuesta.
 
 No debe contener cientos de líneas de reglas de negocio.
 
@@ -2731,13 +2733,13 @@ atómica.
 
 Ejemplos:
 
--   Cotización → Venta.
--   Venta de equipo serializado → asignación de unidad → movimiento de
-    inventario.
--   Venta con servicios → creación de Orden.
--   Registro de pago → actualización de saldo/cuota.
--   Transferencia de equipo.
--   Emisión de documentos cuando existan cambios internos relacionados.
+- Cotización → Venta.
+- Venta de equipo serializado → asignación de unidad → movimiento de
+  inventario.
+- Venta con servicios → creación de Orden.
+- Registro de pago → actualización de saldo/cuota.
+- Transferencia de equipo.
+- Emisión de documentos cuando existan cambios internos relacionados.
 
 Si una parte crítica falla, no debe quedar una operación a medias.
 
@@ -2769,13 +2771,13 @@ Se utilizarán cuando exista una necesidad concreta.
 La prioridad será una arquitectura sencilla, modular, mantenible y fácil
 de defender académicamente.
 
-------------------------------------------------------------------------
+---
 
 # 66. SKILL INTERNA DE DESARROLLO BRUCE FIRE
 
 Se mantendrá una guía interna, por ejemplo:
 
-``` text
+```text
 /skills/bruce-fire-development/SKILL.md
 ```
 
@@ -2784,7 +2786,7 @@ código contradictorio.
 
 ## Antes de programar
 
-``` text
+```text
 1. Leer el Documento Maestro vigente.
 2. Identificar el módulo propietario del dato.
 3. Revisar modelos/tablas/componentes existentes.
@@ -2796,7 +2798,7 @@ código contradictorio.
 
 ## Durante el desarrollo
 
-``` text
+```text
 ✓ nombres claros
 ✓ métodos pequeños
 ✓ Controller delgado
@@ -2815,7 +2817,7 @@ código contradictorio.
 
 ## Antes de cerrar una tarea
 
-``` text
+```text
 □ pruebas pasan
 □ permisos revisados
 □ no hay lógica duplicada
@@ -2829,7 +2831,7 @@ código contradictorio.
 □ refactorización realizada
 ```
 
-------------------------------------------------------------------------
+---
 
 # 67. POLÍTICA DE LIBRERÍAS Y DEPENDENCIAS
 
@@ -2857,12 +2859,12 @@ Antes de instalar un paquete se comprobará:
 
 Integración SUNAT:
 
--   construcción de documentos electrónicos;
--   XML;
--   firma;
--   envío;
--   respuesta/CDR;
--   integración fiscal encapsulada.
+- construcción de documentos electrónicos;
+- XML;
+- firma;
+- envío;
+- respuesta/CDR;
+- integración fiscal encapsulada.
 
 Greenter no contiene reglas comerciales de BRUCE FIRE.
 
@@ -2870,10 +2872,10 @@ Greenter no contiene reglas comerciales de BRUCE FIRE.
 
 Para:
 
--   roles;
--   permisos;
--   Gates;
--   autorización granular.
+- roles;
+- permisos;
+- Gates;
+- autorización granular.
 
 ### spatie/laravel-activitylog
 
@@ -2883,11 +2885,11 @@ Para auditoría de acciones relevantes.
 
 Candidato recomendado para:
 
--   fotografías;
--   evidencias;
--   asociación de archivos a modelos;
--   conversiones/miniaturas;
--   organización de medios.
+- fotografías;
+- evidencias;
+- asociación de archivos a modelos;
+- conversiones/miniaturas;
+- organización de medios.
 
 Antes de congelarlo se verificará compatibilidad con la versión exacta
 del stack.
@@ -2905,33 +2907,33 @@ Para formato consistente del código PHP.
 
 Laravel ya proporciona capacidades para:
 
--   Queues;
--   Scheduler;
--   Notifications;
--   Events;
--   Policies/Gates;
--   Validation;
--   Filesystem;
--   Mail;
--   Cache;
--   Logging.
+- Queues;
+- Scheduler;
+- Notifications;
+- Events;
+- Policies/Gates;
+- Validation;
+- Filesystem;
+- Mail;
+- Cache;
+- Logging.
 
 No instalar un paquete externo para reemplazarlas sin una razón
 concreta.
 
 ## 67.3 Dependencias a evaluar solo cuando aparezca la necesidad
 
--   `spatie/laravel-data`: DTOs/datos tipados si reduce duplicación
-    real.
--   herramientas de Excel/importación/exportación;
--   librería de PDF elegida después de probar las plantillas reales;
--   librería de QR/barcode mantenida y compatible;
--   herramientas de filtros avanzados si Eloquent normal deja de ser
-    suficiente.
+- `spatie/laravel-data`: DTOs/datos tipados si reduce duplicación
+  real.
+- herramientas de Excel/importación/exportación;
+- librería de PDF elegida después de probar las plantillas reales;
+- librería de QR/barcode mantenida y compatible;
+- herramientas de filtros avanzados si Eloquent normal deja de ser
+  suficiente.
 
 No forman parte obligatoria del núcleo hasta validar su necesidad.
 
-------------------------------------------------------------------------
+---
 
 # 68. LIMPIEZA DEL STARTER KIT
 
@@ -2941,7 +2943,7 @@ Después de crear el proyecto se realizará una limpieza controlada.
 
 ## 68.1 Conservar
 
-``` text
+```text
 Autenticación
 Login
 Logout
@@ -2960,7 +2962,7 @@ Infraestructura de validación/autenticación necesaria
 
 ## 68.2 Eliminar o reemplazar
 
-``` text
+```text
 Registro público
 Dashboard demo
 Widgets demo
@@ -2984,7 +2986,7 @@ BRUCE FIRE es un sistema interno.
 
 Los usuarios son creados por un usuario autorizado.
 
-------------------------------------------------------------------------
+---
 
 # 69. USUARIOS Y ROLES INICIALES
 
@@ -3009,7 +3011,7 @@ usuarios con el mismo rol.
 
 Ejemplo:
 
-``` text
+```text
 Usuario A → Técnico de Campo
 Usuario B → Técnico de Campo
 Usuario C → Vendedor
@@ -3018,7 +3020,7 @@ Usuario C → Vendedor
 Los permisos se asignarán principalmente al rol mediante Spatie
 Permission.
 
-------------------------------------------------------------------------
+---
 
 # 70. MOBILE-FIRST OBLIGATORIO PARA TÉCNICOS
 
@@ -3026,8 +3028,8 @@ Este requisito es **obligatorio**, no opcional.
 
 Las interfaces de:
 
--   Técnico de Planta;
--   Técnico de Campo;
+- Técnico de Planta;
+- Técnico de Campo;
 
 deben diseñarse primero para celular y después adaptarse a
 tablet/escritorio.
@@ -3036,25 +3038,25 @@ tablet/escritorio.
 
 El técnico debe poder trabajar desde el celular mientras:
 
--   recoge equipos;
--   recibe equipos;
--   escanea barcode;
--   registra equipo externo;
--   realiza checklist;
--   toma fotos;
--   registra deficiencias;
--   revisa autorizaciones;
--   ejecuta mantenimiento;
--   inspecciona;
--   instala;
--   registra entrega;
--   obtiene conformidad.
+- recoge equipos;
+- recibe equipos;
+- escanea barcode;
+- registra equipo externo;
+- realiza checklist;
+- toma fotos;
+- registra deficiencias;
+- revisa autorizaciones;
+- ejecuta mantenimiento;
+- inspecciona;
+- instala;
+- registra entrega;
+- obtiene conformidad.
 
 ## 70.2 Pantalla móvil de trabajo
 
 Ejemplo conceptual:
 
-``` text
+```text
 ┌───────────────────────────┐
 │ OS-00152                  │
 │ FONPELL S.A.C.            │
@@ -3081,21 +3083,21 @@ Ejemplo conceptual:
 
 ## 70.3 Reglas UX móvil
 
--   botones táctiles grandes;
--   información esencial primero;
--   navegación por pasos;
--   cámara accesible directamente;
--   escaneo rápido;
--   selector Conforme / Observado / N/A;
--   guardar avance;
--   minimizar escritura;
--   precargar datos conocidos;
--   feedback inmediato;
--   evitar modales innecesarios;
--   no utilizar tablas horizontales;
--   acciones principales en zona fácil de alcanzar;
--   errores comprensibles;
--   funcionar correctamente con teclado móvil.
+- botones táctiles grandes;
+- información esencial primero;
+- navegación por pasos;
+- cámara accesible directamente;
+- escaneo rápido;
+- selector Conforme / Observado / N/A;
+- guardar avance;
+- minimizar escritura;
+- precargar datos conocidos;
+- feedback inmediato;
+- evitar modales innecesarios;
+- no utilizar tablas horizontales;
+- acciones principales en zona fácil de alcanzar;
+- errores comprensibles;
+- funcionar correctamente con teclado móvil.
 
 ## 70.4 Diferencia de interfaces
 
@@ -3107,7 +3109,7 @@ grandes.
 
 No se diseñará una única pantalla de escritorio para luego "encogerla".
 
-------------------------------------------------------------------------
+---
 
 # 71. ESTRATEGIA DE CALIDAD
 
@@ -3116,18 +3118,18 @@ No se diseñará una única pantalla de escritorio para luego "encogerla".
 Se priorizarán pruebas sobre reglas que podrían causar pérdidas o
 inconsistencias:
 
--   permisos;
--   conversión Cotización → Venta;
--   cálculo de totales;
--   asignación de equipos serializados;
--   movimientos de inventario;
--   creación de Orden;
--   estados de Orden;
--   deficiencias/autorizaciones;
--   transferencia de equipo;
--   generación de certificado;
--   facturación;
--   registro de pagos.
+- permisos;
+- conversión Cotización → Venta;
+- cálculo de totales;
+- asignación de equipos serializados;
+- movimientos de inventario;
+- creación de Orden;
+- estados de Orden;
+- deficiencias/autorizaciones;
+- transferencia de equipo;
+- generación de certificado;
+- facturación;
+- registro de pagos.
 
 ## 71.2 Datos de prueba
 
@@ -3138,13 +3140,13 @@ sin utilizar información real innecesariamente.
 
 Toda funcionalidad de interfaz se comprobará en:
 
--   Light;
--   Dark;
--   escritorio;
--   tablet cuando aplique;
--   móvil, obligatorio para técnicos.
+- Light;
+- Dark;
+- escritorio;
+- tablet cuando aplique;
+- móvil, obligatorio para técnicos.
 
-------------------------------------------------------------------------
+---
 
 # 72. ORDEN CORRECTO PARA EMPEZAR A DESARROLLAR
 
@@ -3152,7 +3154,7 @@ No empezar directamente por Facturación ni IA.
 
 ## Paso 1 --- Crear base
 
-``` text
+```text
 Laravel Starter Kit
 React + TypeScript + Inertia
 MySQL
@@ -3170,29 +3172,29 @@ infraestructura necesaria.
 
 Construir:
 
--   AppLayout;
--   sidebar;
--   header;
--   ThemeToggle;
--   tokens Light/Dark;
--   navegación;
--   estados comunes;
--   componentes UI base.
+- AppLayout;
+- sidebar;
+- header;
+- ThemeToggle;
+- tokens Light/Dark;
+- navegación;
+- estados comunes;
+- componentes UI base.
 
 ## Paso 4 --- Usuarios, roles y permisos
 
--   instalar/configurar Permission;
--   crear roles;
--   seed inicial;
--   Policies;
--   navegación por permisos;
--   pruebas de autorización.
+- instalar/configurar Permission;
+- crear roles;
+- seed inicial;
+- Policies;
+- navegación por permisos;
+- pruebas de autorización.
 
 ## Paso 5 --- Maestros
 
 En orden:
 
-``` text
+```text
 Clientes
 → Sedes
 → Vehículos
@@ -3203,7 +3205,7 @@ Clientes
 
 ## Paso 6 --- Comercial
 
-``` text
+```text
 Cotización
 → aceptación
 → Convertir a Venta
@@ -3212,7 +3214,7 @@ Cotización
 
 ## Paso 7 --- Servicios
 
-``` text
+```text
 Orden
 → Planta/Campo
 → recojo
@@ -3243,7 +3245,7 @@ Completar procesos complementarios.
 
 Solo con datos suficientes y procesos estables.
 
-------------------------------------------------------------------------
+---
 
 # 73. DEFINICIÓN DE TERMINADO POR FUNCIONALIDAD
 
@@ -3251,7 +3253,7 @@ Una historia no está terminada únicamente porque "funciona en mi PC".
 
 Debe cumplir:
 
-``` text
+```text
 □ regla de negocio implementada
 □ validación backend
 □ autorización
@@ -3270,7 +3272,7 @@ Debe cumplir:
 □ documentación actualizada si cambió una regla
 ```
 
-------------------------------------------------------------------------
+---
 
 # 74. REGLA DE CONTROL DE CAMBIOS
 
@@ -3278,7 +3280,7 @@ El Documento Maestro es la fuente funcional.
 
 Si durante desarrollo aparece una nueva idea:
 
-``` text
+```text
 Idea
 → comprobar necesidad real
 → comprobar módulo propietario
@@ -3292,13 +3294,13 @@ Idea
 Esto evita que el sistema vuelva a llenarse de funciones
 contradictorias.
 
-------------------------------------------------------------------------
+---
 
 # 75. DECISIÓN TÉCNICA FINAL PARA EL ARRANQUE
 
 El proyecto comenzará con una base pequeña y controlada:
 
-``` text
+```text
 Laravel
 React
 TypeScript
@@ -3330,7 +3332,7 @@ El orden será:
 Esta secuencia reduce retrabajo porque SUNAT, certificados e IA se
 apoyarán en datos y procesos ya estabilizados.
 
-------------------------------------------------------------------------
+---
 
 # 76. ADENDA — AUDITORÍA TÉCNICA Y PLAN DE EJECUCIÓN (2026-09-19)
 
@@ -3414,17 +3416,17 @@ qué orden se ejecuta, siguiendo la Regla de Control de Cambios
 - Ejemplos de certificado y checklist recibidos como archivos de
   referencia el 2026-09-19 (quedan como insumo de diseño, no se
   transcriben aquí por ser documentos de terceros):
-  - Planilla de inspección con columnas Ítem, N° interno, N° serie,
-    ubicación, agente, capacidad, manómetro, pasador, manguera,
-    marca/procedencia, fabricación, tarjeta, fecha próx. recarga,
-    vencimiento P.H., observación — confirma exactamente la sección
-    24 ("por extintor") y valida que debe ser una tabla dinámica de N
-    filas, no N plantillas.
-  - Certificado de instalación de lámina de seguridad con datos del
-    cliente, detalle de instalación (mampara/medida), características
-    técnicas, QR de verificación y firma — encaja en la sección 26
-    como un tipo más de "Otros configurables" del motor de reglas,
-    mismo patrón que Operatividad/P.H./Capacitación.
+    - Planilla de inspección con columnas Ítem, N° interno, N° serie,
+      ubicación, agente, capacidad, manómetro, pasador, manguera,
+      marca/procedencia, fabricación, tarjeta, fecha próx. recarga,
+      vencimiento P.H., observación — confirma exactamente la sección
+      24 ("por extintor") y valida que debe ser una tabla dinámica de N
+      filas, no N plantillas.
+    - Certificado de instalación de lámina de seguridad con datos del
+      cliente, detalle de instalación (mampara/medida), características
+      técnicas, QR de verificación y firma — encaja en la sección 26
+      como un tipo más de "Otros configurables" del motor de reglas,
+      mismo patrón que Operatividad/P.H./Capacitación.
 - Confirmación explícita de que el checklist/certificado debe
   generalizarse para todos los servicios técnicos de campo
   (fumigación, desratización, pozos sépticos, sistema de detección,
@@ -3483,7 +3485,7 @@ migración nueva. Verificado: 445 tests pasan y el esquema de
 `sales`/`sale_items`/`electronic_documents`/`credit_debit_notes` en la
 base de desarrollo ya coincide con lo que el código escribe.
 
-------------------------------------------------------------------------
+---
 
 # 77. INVESTIGACIÓN CON FUENTES — GRE, CAJA Y DASHBOARDS (2026-09-19)
 
@@ -3529,7 +3531,7 @@ Confirmado por auditoría (`grep -ri caja`): **no existe ningún módulo
 de control de caja** en el sistema. Se diseña con el patrón estándar
 de POS ("arqueo ciego"), que es la práctica más usada porque fuerza
 honestidad en el conteo (el sistema no le muestra al vendedor cuánto
-*debería* tener antes de que él cuente)
+_debería_ tener antes de que él cuente)
 ([Arqueo de caja: Checklist de control de efectivo en tienda](https://safetyculture.com/library/retail/arqueo-q5ufvffkecwk4ymc),
 [Arqueo de caja: cómo hacerlo paso a paso](https://yo-facturo.com/blog/arqueo-de-caja-guia/)):
 
@@ -3591,7 +3593,7 @@ Nota: las notas de voz del usuario se guardan tal cual, sin editar, en
 sesiones. Este documento (v9) es la versión ya organizada y con
 fuentes; ese otro archivo es el material crudo de origen.
 
-------------------------------------------------------------------------
+---
 
 # 78. INVESTIGACIÓN ADICIONAL CON FUENTES — VACÍOS DETECTADOS (2026-09-19, continuación)
 
@@ -3718,7 +3720,7 @@ para este documento:
   percepción, no exporta, no vende bolsas plásticas) — se documentan
   como descartados a propósito, no como pendientes.
 
-------------------------------------------------------------------------
+---
 
 # 79. VERIFICACIÓN CRUZADA — NOTA DE VOZ 2026-09-19 vs DOCUMENTO (2026-09-20)
 
@@ -3795,7 +3797,7 @@ Esta preferencia ya se está seguiendo de facto desde §76 en adelante;
 se deja explícita para que una sesión futura no vuelva a pedir "dame
 todo el contexto" innecesariamente.
 
-------------------------------------------------------------------------
+---
 
 # 80. AUDITORÍA DEL ROL VENDEDOR Y VERIFICACIÓN DE GREENTER (2026-09-20)
 
@@ -3862,9 +3864,9 @@ código:
 - `GreenterService::build()` arma un **array PHP plano** a partir del
   `Sale`, no un objeto `Greenter\Model\Sale\Invoice` (ni `Note` para
   notas de crédito/débito, ni `Despatch` para GRE). El propio docblock
-  de la clase lo dice: *"Esta capa no firma ni envía XML: solo
+  de la clase lo dice: _"Esta capa no firma ni envía XML: solo
   transforma el Sale a datos de facturación para que luego puedan
-  convertirse a objetos Greenter cuando exista certificado."*
+  convertirse a objetos Greenter cuando exista certificado."_
 - `GreenterService::signNormalizedPayload()` no firma nada: hace
   `json_encode(['document_name' => ..., 'payload' => $payload])` y
   llama a ese resultado "xmlSigned".
@@ -3913,7 +3915,7 @@ Etapa 2 (§76.4: reconexión de `GreenterService` a `Product`/`Service`)
 sigue sin empezar — cuando se ejecute, `GreenterService` debe
 actualizarse para leer de `Product`/`Service` en vez de `CatalogItem`.
 
-------------------------------------------------------------------------
+---
 
 # 81. CORRECCIÓN DEL ROL VENDEDOR — GREENTER REAL, RUC ACTIVO/HABIDO Y KPIs (2026-09-20)
 
@@ -4007,7 +4009,7 @@ completa, igual que ya hacía `DashboardController`.
   `SUNAT_RUC`/`USUARIO_SOL`/`CLAVE_SOL`/`CERT_PATH` y
   `BILLING_COMPANY_*` con los datos reales de BRUCE FIRE.
 
-------------------------------------------------------------------------
+---
 
 # 82. VERIFICACIÓN LEGAL — QUÉ DEBE LLEVAR UNA FACTURA/BOLETA PARA NO ARRIESGAR MULTA (2026-09-21)
 
@@ -4043,6 +4045,7 @@ versión electrónica dice otra cosa es exactamente el tipo de
 inconsistencia que genera observaciones/riesgo en una fiscalización.
 
 Se corrigió:
+
 - Nuevo campo `CompanySetting.cuenta_detraccion` (cuenta del Banco de
   la Nación), editable desde Gerente → Datos de la empresa.
 - El PDF ahora muestra, cuando aplica: la leyenda "Operación sujeta al
@@ -4134,7 +4137,7 @@ como patrón, más la página pública de verificación). Queda como
 siguiente fase pendiente de decidir con el usuario, no se construye
 sin confirmación explícita de alcance.
 
-------------------------------------------------------------------------
+---
 
 # 83. PLAN — CIERRE DE VACÍOS DEL ROL VENDEDOR (planificado 2026-09-21, sin construir todavía)
 
@@ -4231,7 +4234,7 @@ riesgo real):
 4. PDF con el mismo patrón visual que ya mostró el usuario (referencia
    TCPDF de "Bruce Cars", ver nota de Obsidian del 2026-09-20).
 
-------------------------------------------------------------------------
+---
 
 # 84. PLAN — ROL ALMACÉN (planificado 2026-09-21, sin construir todavía)
 
@@ -4252,8 +4255,8 @@ controladores/pantallas encima.
 Almacén tiene, según la especificación ya escrita:
 catálogo (solo lectura), stock, recepciones, movimientos, unidades
 serializadas, repuestos. **Regla dura repetida tres veces en el
-documento** (§11.3, §35.3, §49.6): *"Almacén NO pistolea/escanea
-equipos para asignarlos a una venta — eso lo hace el Vendedor."* Es la
+documento** (§11.3, §35.3, §49.6): _"Almacén NO pistolea/escanea
+equipos para asignarlos a una venta — eso lo hace el Vendedor."_ Es la
 frontera de responsabilidad más importante a respetar al construir
 este rol: Almacén controla existencias, nunca decide qué se vende.
 
@@ -4400,24 +4403,24 @@ detalle de qué permiso cubre cada módulo está en §84.5-§84.12.
   (invokable, mismo patrón que `Vendedor\DashboardController` — KPIs
   propios del rol, nunca acumulados de otros roles).
 - **KPIs:**
-  - Unidades disponibles en stock (`InventoryUnit::where('estado',
-    'disponible')->count()`, agrupable por sede).
-  - Recepciones de hoy (`InventoryMovement::where('tipo',
-    'ingreso')->whereDate('created_at', today())->count()`).
-  - Movimientos recientes: últimos 10 `InventoryMovement` (con
-    `catalogItem`, `sede`, `user`).
-  - Productos bajo el mínimo: **aclaración importante (2026-09-21)** —
-    este KPI es sobre **reabastecer el almacén** (ej. "quedan 2
-    extintores PQS 6kg en stock, hay que comprar más al proveedor"),
-    **no tiene nada que ver** con que un extintor instalado en casa de
-    un cliente necesite cambio/recarga/prueba hidrostática — eso ya es
-    otro módulo completamente distinto (Alertas de Vencimiento, ya
-    construido para Vendedor en `Vendedor\AlertController`, basado en
-    `Equipment.proxima_fecha_atencion`/`proxima_prueba_hidrostatica`,
-    nada que ver con `InventoryUnit`/stock de almacén). Son dos
-    conceptos con el mismo verbo ("vencer") pero completamente
-    separados: uno es inventario propio de la empresa, el otro es
-    mantenimiento de equipos de clientes.
+    - Unidades disponibles en stock (`InventoryUnit::where('estado',
+'disponible')->count()`, agrupable por sede).
+    - Recepciones de hoy (`InventoryMovement::where('tipo',
+'ingreso')->whereDate('created_at', today())->count()`).
+    - Movimientos recientes: últimos 10 `InventoryMovement` (con
+      `catalogItem`, `sede`, `user`).
+    - Productos bajo el mínimo: **aclaración importante (2026-09-21)** —
+      este KPI es sobre **reabastecer el almacén** (ej. "quedan 2
+      extintores PQS 6kg en stock, hay que comprar más al proveedor"),
+      **no tiene nada que ver** con que un extintor instalado en casa de
+      un cliente necesite cambio/recarga/prueba hidrostática — eso ya es
+      otro módulo completamente distinto (Alertas de Vencimiento, ya
+      construido para Vendedor en `Vendedor\AlertController`, basado en
+      `Equipment.proxima_fecha_atencion`/`proxima_prueba_hidrostatica`,
+      nada que ver con `InventoryUnit`/stock de almacén). Son dos
+      conceptos con el mismo verbo ("vencer") pero completamente
+      separados: uno es inventario propio de la empresa, el otro es
+      mantenimiento de equipos de clientes.
 - **Modelos:** `InventoryUnit`, `InventoryMovement` (solo lectura).
 - **Permiso:** `dashboard.view_own` (reutiliza el permiso ya existente,
   no hace falta uno nuevo).
@@ -4431,12 +4434,12 @@ dentro del Módulo 3 — Stock (§84.7) a continuación.
 ## 84.7 Módulo 3 — Stock (incluye qué existe y cuánto hay) y Kardex (módulo central)
 
 - **Rutas:**
-  - `GET almacen/stock` → `almacen.stock.index` — listado de
-    Producto/Servicio con stock actual por sede (reemplaza al antiguo
-    "Catálogo" del §84.6: es la única pantalla de "qué hay y cuánto
-    hay" para Almacén, no hay una segunda pantalla de solo-catálogo).
-  - `GET almacen/kardex` → `almacen.kardex.index` — historial de
-    movimientos.
+    - `GET almacen/stock` → `almacen.stock.index` — listado de
+      Producto/Servicio con stock actual por sede (reemplaza al antiguo
+      "Catálogo" del §84.6: es la única pantalla de "qué hay y cuánto
+      hay" para Almacén, no hay una segunda pantalla de solo-catálogo).
+    - `GET almacen/kardex` → `almacen.kardex.index` — historial de
+      movimientos.
 - **Controladores:** `Almacen\StockController@index`,
   `Almacen\KardexController@index`.
 - **Filtros de Stock:** `search` (código o nombre), `tipo`
@@ -4490,6 +4493,7 @@ receptions (tabla nueva)
 Cada línea de la recepción genera **un `InventoryMovement` tipo
 `ingreso`** con `referencia_type = Reception::class` y
 `referencia_id = $reception->id`:
+
 - Línea de producto **no serializado** (repuestos, insumos): un solo
   `InventoryMovement` con `cantidad = N`, `inventory_unit_id = null`.
 - Línea de producto **serializado** (extintores nuevos): se crean `N`
@@ -4524,28 +4528,28 @@ fabricación varían por lote/unidad y necesitan vivir en
   `almacen.recepciones.show`.
 - **Controlador:** `Almacen\ReceptionController`.
 - **Campos del formulario:**
-  - `proveedor`: string, required, max:150.
-  - `documento_referencia`: string, nullable, max:50.
-  - `fecha`: date, required, `before_or_equal:today`.
-  - `sede_almacen_id`: select, required, `exists:sedes,id` (solo
-    sedes con `tipo` en `almacen`/`mixta`).
-  - `items`: array, required, min 1 elemento. Cada item:
-    - `catalog_item_id`: required, `exists:catalog_items,id`.
-    - `cantidad`: integer, required, min:1.
-    - `cantidad_conforme`: integer, required, min:0,
-      `lte:cantidad`.
-    - `observacion_item`: string, nullable, **required si
-      `cantidad_conforme < cantidad`** (obliga a explicar por qué,
-      para poder reclamarle al proveedor después).
-    - Si `catalog_item.serializado === true`, además un array
-      `unidades` de tamaño `cantidad_conforme`, cada una con:
-      `marca` (string, required) y `anio_fabricacion` (integer,
-      required, entre 1990 y el año actual). El `numero_serie` **no**
-      lo captura el usuario — lo genera el backend (ver abajo).
+    - `proveedor`: string, required, max:150.
+    - `documento_referencia`: string, nullable, max:50.
+    - `fecha`: date, required, `before_or_equal:today`.
+    - `sede_almacen_id`: select, required, `exists:sedes,id` (solo
+      sedes con `tipo` en `almacen`/`mixta`).
+    - `items`: array, required, min 1 elemento. Cada item:
+        - `catalog_item_id`: required, `exists:catalog_items,id`.
+        - `cantidad`: integer, required, min:1.
+        - `cantidad_conforme`: integer, required, min:0,
+          `lte:cantidad`.
+        - `observacion_item`: string, nullable, **required si
+          `cantidad_conforme < cantidad`** (obliga a explicar por qué,
+          para poder reclamarle al proveedor después).
+        - Si `catalog_item.serializado === true`, además un array
+          `unidades` de tamaño `cantidad_conforme`, cada una con:
+          `marca` (string, required) y `anio_fabricacion` (integer,
+          required, entre 1990 y el año actual). El `numero_serie` **no**
+          lo captura el usuario — lo genera el backend (ver abajo).
 - **Generación del código interno — DECIDIDO 2026-09-21:** en el
   momento de crear cada `InventoryUnit`, el backend genera
   `numero_serie` con el formato `BF-EQ-{secuencial autoincremental de
-  6 dígitos con ceros a la izquierda}` (ej. `BF-EQ-000123`),
+6 dígitos con ceros a la izquierda}` (ej. `BF-EQ-000123`),
   garantizado único y correlativo por un `autoincrement`/secuencia de
   BD, nunca por conteo de filas (para no repetir número si se borra
   una unidad). Confirmado con el usuario, sin cambios de formato.
@@ -4559,15 +4563,15 @@ fabricación varían por lote/unidad y necesitan vivir en
   de la ventana de disputa, pero **nunca se mezcla con el stock
   disponible para la venta**. Aplicado a este sistema, sin construir
   una zona de cuarentena completa (fuera de alcance, nadie la pidió):
-  - La cantidad no conforme de cada línea queda registrada en la
-    propia tabla `receptions`/línea (`cantidad` vs `cantidad_conforme`
-    + `observacion_item` obligatoria) — es el respaldo para el
-    reclamo al proveedor.
-  - **Solo `cantidad_conforme` genera `InventoryUnit`/`InventoryMovement`**
-    (entra al stock real). La diferencia (`cantidad - cantidad_conforme`)
-    NO crea unidades ni movimiento — no ensucia el Kardex con algo que
-    nunca estuvo disponible para vender, pero el hecho no se pierde
-    porque vive en el documento de recepción.
+    - La cantidad no conforme de cada línea queda registrada en la
+      propia tabla `receptions`/línea (`cantidad` vs `cantidad_conforme`
+        - `observacion_item` obligatoria) — es el respaldo para el
+          reclamo al proveedor.
+    - **Solo `cantidad_conforme` genera `InventoryUnit`/`InventoryMovement`**
+      (entra al stock real). La diferencia (`cantidad - cantidad_conforme`)
+      NO crea unidades ni movimiento — no ensucia el Kardex con algo que
+      nunca estuvo disponible para vender, pero el hecho no se pierde
+      porque vive en el documento de recepción.
 - **Recepción confirmada: editable — DECIDIDO 2026-09-21.** A
   diferencia de una Venta (que se vuelve inmutable al confirmarse), una
   Recepción sí se puede corregir después (ej. error de tipeo en
@@ -4591,20 +4595,20 @@ fabricación varían por lote/unidad y necesitan vivir en
   mismo patrón que `ComprobantePdfService`: recibe la `Reception`,
   carga sus `InventoryUnit` (vía los `InventoryMovement` asociados),
   genera el PDF con `Pdf::loadView('pdf.stickers', [...])
-  ->setPaper('a4')` y lo guarda/streamea.
+->setPaper('a4')` y lo guarda/streamea.
 - **Vista nueva:** `resources/views/pdf/stickers.blade.php`.
 - **Layout de la hoja A4:** grilla 2×2 (4 etiquetas por hoja),
   cada etiqueta ~9.5cm × 6cm con margen entre celdas para no
   desperdiciar hoja. Contenido de cada etiqueta, de arriba a abajo:
-  1. Logo BF pequeño (esquina superior, opcional, mismo
-     `logoBase64()` que ya usa `ComprobantePdfService`).
-  2. Código de barras 1D (Code128) del `numero_serie`.
-  3. `numero_serie` en texto legible debajo del barcode (por si el
-     lector falla).
-  4. Nombre del `CatalogItem` (truncado a 1-2 líneas).
-  5. Marca + año de fabricación, en fuente pequeña.
-  - Si la recepción tiene más de 4 unidades, se repite la grilla en
-    páginas siguientes (dompdf pagina automático con `page-break`).
+    1. Logo BF pequeño (esquina superior, opcional, mismo
+       `logoBase64()` que ya usa `ComprobantePdfService`).
+    2. Código de barras 1D (Code128) del `numero_serie`.
+    3. `numero_serie` en texto legible debajo del barcode (por si el
+       lector falla).
+    4. Nombre del `CatalogItem` (truncado a 1-2 líneas).
+    5. Marca + año de fabricación, en fuente pequeña.
+    - Si la recepción tiene más de 4 unidades, se repite la grilla en
+      páginas siguientes (dompdf pagina automático con `page-break`).
 - **Librería de barcode — dependencia nueva requerida:**
   `endroid/qr-code` (ya instalado) **solo genera códigos QR**, no
   sirve para Code128 1D. `bacon/bacon-qr-code` tampoco genera 1D
@@ -4621,20 +4625,20 @@ fabricación varían por lote/unidad y necesitan vivir en
 ## 84.10 Módulo 6 — Ajustes de stock autorizados
 
 - **Rutas:**
-  - `GET almacen/ajustes` → `almacen.ajustes.index`.
-  - `POST almacen/ajustes` → `almacen.ajustes.store`.
+    - `GET almacen/ajustes` → `almacen.ajustes.index`.
+    - `POST almacen/ajustes` → `almacen.ajustes.store`.
 - **Controlador:** `Almacen\StockAdjustmentController`.
 - **Campos del formulario:**
-  - `product_id`: required, `exists:products,id` (tras Etapa 1, §84.3).
-  - `inventory_unit_id`: nullable, `exists:inventory_units,id` — solo
-    cuando el ajuste es sobre una unidad serializada puntual (ej. dar
-    de baja una unidad dañada).
-  - `sede_id`: required, `exists:sedes,id`.
-  - `tipo_ajuste`: required, `in:incremento,decremento`.
-  - `cantidad`: integer, required, min:1.
-  - `motivo`: string, required, min:10 — **obligatorio siempre**, es
-    la regla explícita del doc maestro (§84.2 punto 6).
-  - `observacion`: string, nullable.
+    - `product_id`: required, `exists:products,id` (tras Etapa 1, §84.3).
+    - `inventory_unit_id`: nullable, `exists:inventory_units,id` — solo
+      cuando el ajuste es sobre una unidad serializada puntual (ej. dar
+      de baja una unidad dañada).
+    - `sede_id`: required, `exists:sedes,id`.
+    - `tipo_ajuste`: required, `in:incremento,decremento`.
+    - `cantidad`: integer, required, min:1.
+    - `motivo`: string, required, min:10 — **obligatorio siempre**, es
+      la regla explícita del doc maestro (§84.2 punto 6).
+    - `observacion`: string, nullable.
 - **Backend:** crea un `InventoryMovement` tipo `ajuste` con
   `cantidad` firmada según `tipo_ajuste` (positiva si incremento,
   negativa si decremento) y `observacion = motivo`. **Nunca** se
@@ -4682,37 +4686,37 @@ en la Recepción usan la rama "no serializado"
   reutiliza `Vendedor\InventoryLookupController` directamente porque
   ese está pensado para venta: filtra `estaDisponible()` y exige
   `sede_almacen_id`). El de Almacén:
-  - Busca por `numero_serie` exacto, sin exigir `sede_almacen_id`
-    (opcional como filtro).
-  - **No filtra por `estaDisponible()`** — Almacén debe poder
-    consultar también unidades `vendido`/`baja`/`reservado` para dar
-    soporte o auditar.
-  - Devuelve: `numero_serie`, `product` (nombre, código),
-    `sede_almacen`, `estado`, `fecha_ingreso`, `marca`,
-    `anio_fabricacion`, y los últimos 5 `InventoryMovement` de esa
-    unidad (historial).
-  - **Regla dura:** esta pantalla es 100% de solo lectura. No expone
-    ninguna acción de "reservar", "vender" ni "agregar a venta" — esa
-    es exactamente la frontera de §11.3/§35.3/§49.6 que Almacén no
-    puede cruzar. No comparte controlador ni lógica de escritura con
-    `SaleItemScanController`.
+    - Busca por `numero_serie` exacto, sin exigir `sede_almacen_id`
+      (opcional como filtro).
+    - **No filtra por `estaDisponible()`** — Almacén debe poder
+      consultar también unidades `vendido`/`baja`/`reservado` para dar
+      soporte o auditar.
+    - Devuelve: `numero_serie`, `product` (nombre, código),
+      `sede_almacen`, `estado`, `fecha_ingreso`, `marca`,
+      `anio_fabricacion`, y los últimos 5 `InventoryMovement` de esa
+      unidad (historial).
+    - **Regla dura:** esta pantalla es 100% de solo lectura. No expone
+      ninguna acción de "reservar", "vender" ni "agregar a venta" — esa
+      es exactamente la frontera de §11.3/§35.3/§49.6 que Almacén no
+      puede cruzar. No comparte controlador ni lógica de escritura con
+      `SaleItemScanController`.
 - **Modelos:** `InventoryUnit`, `InventoryMovement` (solo lectura).
 - **Permiso:** `inventory.lookup`.
 
 ## 84.13 Resumen de cambios de esquema y dependencias nuevas (actualizado 2026-09-21)
 
-| Cambio | Tipo | Estado | Módulo |
-|---|---|---|---|
-| Migración `Product`/`Service` (retirar `CatalogItem`) | Etapa 1 ya decidida (§76.2), ahora con fecha de ejecución | **A ejecutar primero, ver §84.3** | Todos |
-| Tabla `receptions` | tabla nueva | por construir | 84.8 |
-| `products.serializado` (boolean) | columna nueva | por construir | 84.8 |
-| `inventory_units.marca` (string nullable) | columna nueva | por construir | 84.8, 84.9 |
-| `inventory_units.anio_fabricacion` (smallint nullable) | columna nueva | por construir | 84.8, 84.9 |
-| `products.stock_minimo` (integer nullable) | columna nueva | **aclarado qué es (84.5), falta que el usuario confirme si se agrega** | 84.5 (KPI "bajo mínimo" — reabastecer almacén, no vencimiento de equipos) |
-| `products.categoria` | — | **descartado por ahora** (§84.11), no sobre-construir | — |
-| `picqer/php-barcode-generator` | dependencia Composer nueva | **APROBADO por el usuario 2026-09-21** | 84.9 (stickers) |
-| Layout/sidebar `AlmacenLayout`/`AlmacenSidebar` | frontend nuevo | por construir | todos |
-| `routes/almacen.php` | archivo nuevo | por construir | todos |
+| Cambio                                                 | Tipo                                                      | Estado                                                                 | Módulo                                                                    |
+| ------------------------------------------------------ | --------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Migración `Product`/`Service` (retirar `CatalogItem`)  | Etapa 1 ya decidida (§76.2), ahora con fecha de ejecución | **A ejecutar primero, ver §84.3**                                      | Todos                                                                     |
+| Tabla `receptions`                                     | tabla nueva                                               | por construir                                                          | 84.8                                                                      |
+| `products.serializado` (boolean)                       | columna nueva                                             | por construir                                                          | 84.8                                                                      |
+| `inventory_units.marca` (string nullable)              | columna nueva                                             | por construir                                                          | 84.8, 84.9                                                                |
+| `inventory_units.anio_fabricacion` (smallint nullable) | columna nueva                                             | por construir                                                          | 84.8, 84.9                                                                |
+| `products.stock_minimo` (integer nullable)             | columna nueva                                             | **aclarado qué es (84.5), falta que el usuario confirme si se agrega** | 84.5 (KPI "bajo mínimo" — reabastecer almacén, no vencimiento de equipos) |
+| `products.categoria`                                   | —                                                         | **descartado por ahora** (§84.11), no sobre-construir                  | —                                                                         |
+| `picqer/php-barcode-generator`                         | dependencia Composer nueva                                | **APROBADO por el usuario 2026-09-21**                                 | 84.9 (stickers)                                                           |
+| Layout/sidebar `AlmacenLayout`/`AlmacenSidebar`        | frontend nuevo                                            | por construir                                                          | todos                                                                     |
+| `routes/almacen.php`                                   | archivo nuevo                                             | por construir                                                          | todos                                                                     |
 
 Todo lo demás (permisos, controladores, vistas Inertia) es capa nueva
 sobre modelos ya existentes — ningún otro cambio de esquema es
@@ -4750,7 +4754,7 @@ pidió explícitamente:
    día uno) o se pospone ese KPI puntual hasta que haga falta (el
    resto del dashboard de Almacén funciona igual sin él).
 
-------------------------------------------------------------------------
+---
 
 # 85. PLAN — ROLES TÉCNICO DE PLANTA Y TÉCNICO DE CAMPO (planificado 2026-09-21, sin construir todavía)
 
@@ -4839,6 +4843,7 @@ solo el resumen:
     orden.
 
 ## 85.6 Preguntas abiertas (a resolver por el agente ejecutor solo si
+
 bloquean una fase; si no, seguir con el valor por defecto indicado)
 
 1. ¿Un técnico puede estar asignado a Planta y Campo a la vez, o son
@@ -4858,7 +4863,7 @@ bloquean una fase; si no, seguir con el valor por defecto indicado)
    `entrega_final`) — evita una tabla nueva para algo que ya es,
    estructuralmente, una bitácora de eventos.
 
-------------------------------------------------------------------------
+---
 
 # 86. PLAN — ROL GERENTE (planificado 2026-09-21, sin construir todavía)
 
@@ -4943,8 +4948,8 @@ granulares (§36) ya permite hacerlo sin tocar la arquitectura.
 **Fuera de alcance de este plan** (decisión, no olvido): las tarjetas
 y gráficos de IA del §5.1 (proyección de ventas, demanda estimada,
 riesgo de quiebre de stock, resumen ejecutivo). El propio doc maestro
-lo dice en el §59: *"IA entra cuando la base de datos ya es
-confiable"* — y el roadmap (§58) pone IA en la Fase 8, la última. El
+lo dice en el §59: _"IA entra cuando la base de datos ya es
+confiable"_ — y el roadmap (§58) pone IA en la Fase 8, la última. El
 dashboard de Gerente se construye con las tarjetas y gráficos de
 datos reales primero; el bloque de IA queda como sección vacía o
 directamente omitido hasta que corresponda su fase.
@@ -4983,7 +4988,7 @@ directamente omitido hasta que corresponda su fase.
 
 ## 86.5 Preguntas abiertas (valor por defecto si no bloquean)
 
-1. ¿El CRUD de Producto/Servicio lo usa *solo* Gerente, o también
+1. ¿El CRUD de Producto/Servicio lo usa _solo_ Gerente, o también
    Vendedor/Almacén pueden editar precios como se mencionó y quedó
    pendiente en la auditoría de Almacén (§84, "eso ya vemos cómo
    arreglar luego")? Por defecto: el CRUD (crear/desactivar producto)

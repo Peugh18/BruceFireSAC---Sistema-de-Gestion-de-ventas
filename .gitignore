@@ -42,3 +42,6 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+/storage/app/ml/*.csv
+*.csv
+!/storage/app/ml/retention_model.json

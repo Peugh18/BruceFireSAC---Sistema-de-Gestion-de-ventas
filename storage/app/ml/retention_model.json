@@ -1,0 +1,71 @@
+{
+  "model_name": "brucefire_client_retention_logistic_regression",
+  "version": "1.0.0",
+  "description": "Modelo de regresion logistica para predecir recompra de clientes a 6 meses",
+  "cutoff_date": "2026-03-12",
+  "trained_at": "2026-09-23T17:21:26.165170+00:00",
+  "random_state": 42,
+  "features": [
+    "recencia_dias",
+    "frecuencia_compras",
+    "monto_total",
+    "ticket_promedio",
+    "antiguedad_dias",
+    "diversidad_productos",
+    "compro_recarga"
+  ],
+  "scaler": {
+    "mean": {
+      "recencia_dias": 168.25303867403315,
+      "frecuencia_compras": 2.527624309392265,
+      "monto_total": 633.0285469613259,
+      "ticket_promedio": 234.5373591160221,
+      "antiguedad_dias": 229.76795580110496,
+      "diversidad_productos": 3.7049723756906077,
+      "compro_recarga": 0.8243093922651934
+    },
+    "std": {
+      "recencia_dias": 113.20787145457133,
+      "frecuencia_compras": 5.690892150806957,
+      "monto_total": 2561.9773161329986,
+      "ticket_promedio": 856.1136792760839,
+      "antiguedad_dias": 113.96559173821342,
+      "diversidad_productos": 4.971657529476173,
+      "compro_recarga": 0.38055672125004036
+    }
+  },
+  "coefficients": {
+    "recencia_dias": -0.4500701883886581,
+    "frecuencia_compras": 1.8516072167654845,
+    "monto_total": -0.16786518526413052,
+    "ticket_promedio": 0.15846291996656522,
+    "antiguedad_dias": 0.3843699418242532,
+    "diversidad_productos": -0.08802414317733401,
+    "compro_recarga": 0.10744555097386055
+  },
+  "intercept": -0.893663258382359,
+  "metrics": {
+    "train": {
+      "accuracy": 0.7713,
+      "precision": 0.7063,
+      "recall": 0.3436,
+      "f1": 0.4623,
+      "roc_auc": 0.7405,
+      "samples": 1810
+    },
+    "test": {
+      "accuracy": 0.7572,
+      "precision": 0.6724,
+      "recall": 0.3,
+      "f1": 0.4149,
+      "roc_auc": 0.7372,
+      "samples": 453
+    }
+  },
+  "dataset_summary": {
+    "total_samples": 2263,
+    "positives": 648,
+    "negatives": 1615,
+    "base_rate": 0.2863
+  }
+}

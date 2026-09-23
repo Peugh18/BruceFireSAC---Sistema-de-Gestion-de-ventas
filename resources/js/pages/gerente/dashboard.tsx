@@ -1,10 +1,11 @@
-﻿import {
+import {
     AlertTriangle,
     ArrowUpRight,
     Award,
     BadgeAlert,
     BarChart3,
     Boxes,
+    BrainCircuit,
     Building2,
     Calendar,
     CheckCircle2,
@@ -12,8 +13,13 @@
     Clock,
     FileCheck,
     FileText,
+    HelpCircle,
+    Info,
+    MessageCircle,
     Percent,
     ShieldAlert,
+    Sparkles,
+    TrendingDown,
     TrendingUp,
     Users,
     Wrench,
@@ -45,9 +51,53 @@ type DashboardCharts = {
     productosMayorMovimiento: Array<{ producto: string; cantidad: number }>;
 };
 
+type AiRetentionFactor = {
+    factor: string;
+    impacto: string;
+    detalle: string;
+};
+
+type AiRetentionClient = {
+    clientId: number;
+    cliente: string;
+    documento: string;
+    telefono: string | null;
+    probabilidad: number;
+    categoria: 'alta' | 'media' | 'baja';
+    recenciaDias: number;
+    frecuencia: number;
+    montoTotal: number;
+    ticketPromedio: number;
+    comproRecarga: boolean;
+    factores: {
+        positivos?: AiRetentionFactor[];
+        negativos?: AiRetentionFactor[];
+    };
+};
+
+type AiRetentionData = {
+    totalEvaluados: number;
+    distribucion: {
+        alta: { cantidad: number; porcentaje: number };
+        media: { cantidad: number; porcentaje: number };
+        baja: { cantidad: number; porcentaje: number };
+    };
+    topClientes: AiRetentionClient[];
+    modelo: {
+        disponible: boolean;
+        nombre: string;
+        aucRoc: number;
+        accuracy: number;
+        precision: number;
+        recall: number;
+        fechaEntrenamiento: string | null;
+    };
+} | null;
+
 type GerenteDashboardProps = {
     metrics: DashboardMetrics;
     charts: DashboardCharts;
+    aiRetention?: AiRetentionData;
 };
 
 function formatCurrency(amount: number): string {
@@ -65,6 +115,7 @@ function formatNumber(num: number): string {
 export default function GerenteDashboard({
     metrics,
     charts,
+    aiRetention,
 }: GerenteDashboardProps) {
     const maxVentaMensual = Math.max(
         ...charts.ventasMensuales.map((m) => m.monto),
@@ -639,6 +690,257 @@ export default function GerenteDashboard({
                             )}
                         </div>
                     </div>
+                </div>
+
+                {/* Sección 3: IA Predictiva de Recompra (§39.1) */}
+                <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+                    {/* Cabecera del Módulo IA */}
+                    <div className="flex flex-col justify-between gap-4 border-b border-border pb-5 lg:flex-row lg:items-center">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2.5">
+                                <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                    <BrainCircuit className="size-5 text-primary" />
+                                </div>
+                                <h2 className="font-['Oswald',sans-serif] text-lg font-bold tracking-wide text-foreground uppercase">
+                                    Predicción de Recompra — Modelo IA (§39.1)
+                                </h2>
+                                <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                                    <Sparkles className="size-3" />
+                                    ML Local
+                                </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Estimación probabilística de recompra en los próximos 6 meses mediante regresión logística entrenada con el histórico real de ventas pre-corte.
+                            </p>
+                        </div>
+
+                        {aiRetention && (
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-md border border-border bg-muted/40 px-2.5 py-1 font-mono text-[11px] font-medium text-foreground">
+                                    ROC-AUC: <b className="text-emerald-600 font-bold">{Math.round(aiRetention.modelo.aucRoc * 1000) / 10}%</b>
+                                </span>
+                                <span className="rounded-md border border-border bg-muted/40 px-2.5 py-1 font-mono text-[11px] font-medium text-foreground">
+                                    Accuracy: <b className="text-foreground">{Math.round(aiRetention.modelo.accuracy * 1000) / 10}%</b>
+                                </span>
+                                <span className="rounded-md border border-border bg-muted/40 px-2.5 py-1 font-mono text-[11px] font-medium text-foreground">
+                                    Precision: <b className="text-foreground">{Math.round(aiRetention.modelo.precision * 1000) / 10}%</b>
+                                </span>
+                                <span className="rounded-md border border-border bg-muted/40 px-2.5 py-1 font-mono text-[11px] text-muted-foreground">
+                                    {formatNumber(aiRetention.totalEvaluados)} evaluados
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {!aiRetention || aiRetention.topClientes.length === 0 ? (
+                        /* Estado Vacío Elegante */
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <div className="flex size-12 items-center justify-center rounded-full bg-muted/50 text-muted-foreground">
+                                <BrainCircuit className="size-6 text-muted-foreground" />
+                            </div>
+                            <h3 className="mt-3 text-sm font-semibold text-foreground">
+                                Modelo de IA no ejecutado aún
+                            </h3>
+                            <p className="mt-1 max-w-md text-xs text-muted-foreground">
+                                El modelo predictivo de retención está listo para procesar la cartera. Ejecuta el comando de scoring para generar las probabilidades de los clientes.
+                            </p>
+                            <code className="mt-3 rounded border border-border bg-muted px-3 py-1 font-mono text-[11px] text-foreground">
+                                php artisan ml:score-clients
+                            </code>
+                        </div>
+                    ) : (
+                        <div className="mt-6 space-y-6">
+                            {/* Distribución de la Cartera */}
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                {/* Alta */}
+                                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                                            Alta Oportunidad (P ≥ 60%)
+                                        </span>
+                                        <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                                            {aiRetention.distribucion.alta.porcentaje}%
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                                        {formatNumber(aiRetention.distribucion.alta.cantidad)} <span className="text-xs font-normal text-muted-foreground">empresas</span>
+                                    </div>
+                                    <p className="mt-1 text-[11px] text-muted-foreground">
+                                        Clientes con alta recurrencia y recencia óptima
+                                    </p>
+                                </div>
+
+                                {/* Media */}
+                                <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                                            Media Probabilidad (35% ≤ P &lt; 60%)
+                                        </span>
+                                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                                            {aiRetention.distribucion.media.porcentaje}%
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 font-mono text-2xl font-bold text-amber-700 dark:text-amber-300">
+                                        {formatNumber(aiRetention.distribucion.media.cantidad)} <span className="text-xs font-normal text-muted-foreground">empresas</span>
+                                    </div>
+                                    <p className="mt-1 text-[11px] text-muted-foreground">
+                                        Requieren seguimiento comercial activo
+                                    </p>
+                                </div>
+
+                                {/* Baja */}
+                                <div className="rounded-lg border border-border bg-muted/20 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Baja Probabilidad (P &lt; 35%)
+                                        </span>
+                                        <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] font-bold text-muted-foreground">
+                                            {aiRetention.distribucion.baja.porcentaje}%
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 font-mono text-2xl font-bold text-foreground">
+                                        {formatNumber(aiRetention.distribucion.baja.cantidad)} <span className="text-xs font-normal text-muted-foreground">empresas</span>
+                                    </div>
+                                    <p className="mt-1 text-[11px] text-muted-foreground">
+                                        Inactividad prolongada o compras esporádicas
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Top Clientes con Mayor Probabilidad de Recompra */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="font-['Oswald',sans-serif] text-sm font-bold text-foreground uppercase tracking-wide">
+                                        Top Clientes Prioritarios para Gestión Comercial
+                                    </h3>
+                                    <span className="text-[11px] text-muted-foreground">
+                                        Ordenados por propensión matemática de recompra
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                    {aiRetention.topClientes.map((c) => {
+                                        const isAlta = c.categoria === 'alta';
+                                        const isMedia = c.categoria === 'media';
+
+                                        return (
+                                            <div
+                                                key={c.clientId}
+                                                className="flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-xs"
+                                            >
+                                                <div>
+                                                    {/* Header de la tarjeta */}
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="min-w-0 flex-1">
+                                                            <h4 className="truncate text-xs font-bold text-foreground" title={c.cliente}>
+                                                                {c.cliente}
+                                                            </h4>
+                                                            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                                                                RUC/Doc: {c.documento}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="text-right">
+                                                            <span
+                                                                className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-xs font-bold ${
+                                                                    isAlta
+                                                                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                                                                        : isMedia
+                                                                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                                                                          : 'bg-muted text-muted-foreground'
+                                                                }`}
+                                                            >
+                                                                {c.probabilidad}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Métricas del cliente */}
+                                                    <div className="mt-3 grid grid-cols-3 gap-2 rounded border border-border/60 bg-muted/20 p-2 text-center">
+                                                        <div>
+                                                            <div className="text-[10px] text-muted-foreground">Recencia</div>
+                                                            <div className="font-mono text-xs font-bold text-foreground">
+                                                                {c.recenciaDias}d
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-[10px] text-muted-foreground">Compras</div>
+                                                            <div className="font-mono text-xs font-bold text-foreground">
+                                                                {c.frecuencia}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-[10px] text-muted-foreground">Total S/</div>
+                                                            <div className="font-mono text-xs font-bold text-foreground">
+                                                                {formatNumber(Math.round(c.montoTotal))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Factores explicativos del modelo */}
+                                                    <div className="mt-3 space-y-1.5">
+                                                        <div className="text-[10px] font-semibold text-muted-foreground uppercase">
+                                                            Factores determinantes:
+                                                        </div>
+                                                        {c.factores.positivos && c.factores.positivos.length > 0 ? (
+                                                            c.factores.positivos.map((f, idx) => (
+                                                                <div
+                                                                    key={idx}
+                                                                    className="flex items-center gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-400"
+                                                                >
+                                                                    <CheckCircle2 className="size-3 shrink-0" />
+                                                                    <span className="truncate">{f.factor}: {f.detalle}</span>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="text-[11px] text-muted-foreground italic">
+                                                                Sin factores dominantes
+                                                            </div>
+                                                        )}
+                                                        {c.factores.negativos && c.factores.negativos.slice(0, 1).map((f, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400"
+                                                            >
+                                                                <AlertTriangle className="size-3 shrink-0" />
+                                                                <span className="truncate">{f.factor}: {f.detalle}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Acciones */}
+                                                {c.telefono && (
+                                                    <div className="mt-4 border-t border-border/60 pt-2.5">
+                                                        <a
+                                                            href={`https://wa.me/51${c.telefono.replace(/[^0-9]/g, '')}`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300"
+                                                        >
+                                                            <MessageCircle className="size-3.5" />
+                                                            Contactar por WhatsApp
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Aviso de Responsabilidad y Apoyo a la Decisión (§39.1 y §39.5) */}
+                            <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 p-3.5 text-xs text-muted-foreground">
+                                <Info className="size-4 shrink-0 text-primary mt-0.5" />
+                                <div>
+                                    <span className="font-semibold text-foreground">
+                                        Nota de apoyo a la decisión comercial (§39.1):
+                                    </span>{' '}
+                                    Este modelo de regresión logística supervisado estima la probabilidad de recompra como apoyo analítico para priorizar contactos y campañas comerciales. <b>No constituye una verdad absoluta</b>. El mantenimiento y recarga de extintores sigue rigiéndose por la norma técnica de recarga cada 12 meses, la cual opera como regla fija del sistema (§39.5).
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </GerenteLayout>
