@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $codigo
  * @property string $nombre
+ * @property string|null $categoria
  * @property string|null $descripcion
  * @property string $unidad_medida
  * @property float $precio_venta
@@ -32,6 +33,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'codigo',
     'nombre',
+    'categoria',
     'descripcion',
     'unidad_medida',
     'precio_venta',
