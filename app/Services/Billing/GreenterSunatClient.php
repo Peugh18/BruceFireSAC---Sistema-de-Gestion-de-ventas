@@ -5,6 +5,7 @@ namespace App\Services\Billing;
 use App\Contracts\SunatClientInterface;
 use Greenter\Model\Response\BillResult;
 use Greenter\Model\Sale\Invoice;
+use Greenter\Model\Sale\Note;
 use Greenter\See;
 use RuntimeException;
 
@@ -35,7 +36,9 @@ class GreenterSunatClient implements SunatClientInterface
         // XmlBuilderResolver::findBuilderType() revienta con
         // substr(strrchr('invoice', '\\'), 1) porque 'invoice' no tiene '\\'.
         // Solo se soportan Factura/Boleta por ahora (GreenterService::buildInvoice).
-        $result = $see->sendXml(Invoice::class, $documentName, $xmlSigned);
+        // Nombre Greenter: RUC-TIPODOC-SERIE-CORRELATIVO. 07 y 08 son notas.
+        $tipoDoc = explode('-', $documentName)[1] ?? '';
+        $result = $see->sendXml(in_array($tipoDoc, ['07', '08'], true) ? Note::class : Invoice::class, $documentName, $xmlSigned);
 
         if (! $result || ! $result->isSuccess()) {
             $error = $result?->getError();

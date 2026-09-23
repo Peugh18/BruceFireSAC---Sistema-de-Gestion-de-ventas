@@ -65,8 +65,8 @@ class BillingController extends Controller
 
     public function resend(Team $current_team, ElectronicDocument $electronic_document, EmitElectronicDocument $emitElectronicDocument): RedirectResponse
     {
-        if (! in_array($electronic_document->sunat_estado, ['observado', 'excepcion'], true)) {
-            abort(422, 'Solo se pueden reenviar documentos observados o con excepción.');
+        if (! in_array($electronic_document->sunat_estado, ['pendiente', 'observado', 'excepcion'], true)) {
+            abort(422, 'Solo se pueden reenviar documentos pendientes observados o con excepción.');
         }
 
         $emitElectronicDocument->sendDocument($electronic_document);

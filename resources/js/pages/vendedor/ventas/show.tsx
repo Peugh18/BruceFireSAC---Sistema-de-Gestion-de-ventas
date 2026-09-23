@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SaleNotesPanel } from '@/components/sale-notes-panel';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
@@ -34,6 +35,8 @@ type ElectronicDocument = {
     tipo?: string;
     serie?: string;
     correlativo?: number;
+    motivo_catalogo?: string | null;
+    importe?: number | string | null;
     sunat_estado?: string;
     sunat_mensaje?: string;
 };
@@ -77,7 +80,9 @@ export default function VentasShow({ sale }: Props) {
             ? window.location.pathname.split('/')[1]
             : '');
     const [confirmando, setConfirmando] = useState(false);
-    const documento = (sale.electronic_documents ?? [])[0];
+    const documento = (sale.electronic_documents ?? []).find(
+        (d) => d.tipo === 'factura' || d.tipo === 'boleta',
+    );
 
     function confirmarVenta() {
         setConfirmando(true);
@@ -299,6 +304,12 @@ export default function VentasShow({ sale }: Props) {
                         </table>
                     </div>
                 </Card>
+
+                <SaleNotesPanel
+                    teamSlug={teamSlug}
+                    documents={sale.electronic_documents ?? []}
+                    saleEstado={sale.estado}
+                />
             </div>
         </VendedorLayout>
     );

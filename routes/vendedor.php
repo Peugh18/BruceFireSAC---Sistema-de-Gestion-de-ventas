@@ -10,6 +10,7 @@ use App\Http\Controllers\Vendedor\CollectionController;
 use App\Http\Controllers\Vendedor\CommunicationController;
 use App\Http\Controllers\Vendedor\CreditNoteController;
 use App\Http\Controllers\Vendedor\DashboardController;
+use App\Http\Controllers\Vendedor\DebitNoteController;
 use App\Http\Controllers\Vendedor\DeficiencyAuthorizationController;
 use App\Http\Controllers\Vendedor\DeficiencyController;
 use App\Http\Controllers\Vendedor\InventoryLookupController;
@@ -86,6 +87,7 @@ Route::prefix('vendedor')
         Route::get('facturacion/{electronic_document}/cdr', [BillingController::class, 'downloadCdr'])->name('facturacion.cdr');
         Route::get('facturacion/{electronic_document}/pdf', [BillingController::class, 'downloadPdf'])->name('facturacion.pdf');
         Route::post('notas-credito', [CreditNoteController::class, 'store'])->name('notas-credito.store');
+        Route::post('notas-debito', [DebitNoteController::class, 'store'])->name('notas-debito.store');
 
         Route::get('caja', [CashRegisterController::class, 'show'])->name('caja.index');
         Route::post('caja/abrir', [CashRegisterController::class, 'open'])->name('caja.abrir');

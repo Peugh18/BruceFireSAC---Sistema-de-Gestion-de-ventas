@@ -19,6 +19,7 @@ use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\FormaPagos\FormaPagoCredito;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
+use Greenter\Model\Sale\Note;
 use Greenter\Model\Sale\SaleDetail;
 use Greenter\See;
 use RuntimeException;
@@ -65,28 +66,8 @@ class GreenterService
 
         $sale->loadMissing('client', 'items.product', 'items.service', 'installments');
 
-        $companySetting = CompanySetting::current();
-
-        $company = (new Company)
-            ->setRuc($companySetting->ruc)
-            ->setRazonSocial($companySetting->razon_social)
-            ->setNombreComercial($companySetting->nombre_comercial ?? $companySetting->razon_social)
-            ->setAddress(
-                (new Address)
-                    ->setUbigueo((string) $companySetting->ubigeo)
-                    ->setDepartamento((string) $companySetting->departamento)
-                    ->setProvincia((string) $companySetting->provincia)
-                    ->setDistrito((string) $companySetting->distrito)
-                    ->setUrbanizacion('-')
-                    ->setDireccion((string) $companySetting->direccion)
-                    ->setCodLocal('0000')
-            );
-
-        $client = (new GreenterClient)
-            ->setTipoDoc($this->tipoDocCatalogo06($sale->client->tipo_documento))
-            ->setNumDoc($sale->client->numero_documento)
-            ->setRznSocial($sale->client->razon_social)
-            ->setAddress((new Address)->setDireccion($sale->client->direccion_fiscal ?? '-'));
+        $company = $this->buildCompany();
+        $client = $this->buildClient($sale);
 
         $details = $sale->items->map(fn (SaleItem $item) => $this->buildDetail($item))->values()->all();
 
@@ -170,6 +151,124 @@ class GreenterService
         }
 
         return $xmlSigned;
+    }
+
+    protected function buildCompany(): Company
+    {
+        $companySetting = CompanySetting::current();
+
+        return (new Company)
+            ->setRuc($companySetting->ruc)
+            ->setRazonSocial($companySetting->razon_social)
+            ->setNombreComercial($companySetting->nombre_comercial ?? $companySetting->razon_social)
+            ->setAddress(
+                (new Address)
+                    ->setUbigueo((string) $companySetting->ubigeo)
+                    ->setDepartamento((string) $companySetting->departamento)
+                    ->setProvincia((string) $companySetting->provincia)
+                    ->setDistrito((string) $companySetting->distrito)
+                    ->setUrbanizacion('-')
+                    ->setDireccion((string) $companySetting->direccion)
+                    ->setCodLocal('0000')
+            );
+    }
+
+    protected function buildClient(Sale $sale): GreenterClient
+    {
+        return (new GreenterClient)
+            ->setTipoDoc($this->tipoDocCatalogo06($sale->client->tipo_documento))
+            ->setNumDoc($sale->client->numero_documento)
+            ->setRznSocial($sale->client->razon_social)
+            ->setAddress((new Address)->setDireccion($sale->client->direccion_fiscal ?? '-'));
+    }
+
+    /**
+     * Construye la Nota de Crédito (07) o de Débito (08) que afecta a una
+     * factura o boleta. Usa el importe persistido de la nota (con IGV) en una
+     * sola línea con la descripción del motivo, sin fabricar montos.
+     */
+    public function buildNote(ElectronicDocument $note): Note
+    {
+        if (! in_array($note->tipo, ['nota_credito', 'nota_debito'], true)) {
+            throw new RuntimeException("GreenterService::buildNote solo soporta notas de crédito o débito (recibido: {$note->tipo}).");
+        }
+
+        $original = $note->cpeAfectado;
+
+        if (! $original || $note->importe === null) {
+            throw new RuntimeException('La nota no tiene comprobante afectado o importe persistido.');
+        }
+
+        $note->loadMissing('sale.client');
+        $sale = $note->sale;
+        $esCredito = $note->tipo === 'nota_credito';
+
+        $importe = (float) $note->importe;
+        $base = round($importe / 1.18, 2);
+        $igv = round($importe - $base, 2);
+        $descripcion = $esCredito ? $this->descripcionMotivoCredito($note->motivo_catalogo) : $this->descripcionMotivoDebito($note->motivo_catalogo);
+
+        $detail = (new SaleDetail)
+            ->setCodProducto($esCredito ? 'NC-01' : 'ND-01')
+            ->setUnidad('ZZ')
+            ->setCantidad(1)
+            ->setDescripcion($descripcion)
+            ->setMtoValorUnitario($base)
+            ->setMtoValorVenta($base)
+            ->setMtoBaseIgv($base)
+            ->setPorcentajeIgv(18.00)
+            ->setIgv($igv)
+            ->setTipAfeIgv('10')
+            ->setTotalImpuestos($igv)
+            ->setMtoPrecioUnitario($importe);
+
+        return (new Note)
+            ->setUblVersion('2.1')
+            ->setTipoDoc($esCredito ? '07' : '08')
+            ->setSerie($note->serie)
+            ->setCorrelativo((string) $note->correlativo)
+            ->setFechaEmision(now())
+            ->setTipDocAfectado($original->tipo === 'factura' ? '01' : '03')
+            ->setNumDocfectado("{$original->serie}-{$original->correlativo}")
+            ->setCodMotivo($note->motivo_catalogo)
+            ->setDesMotivo($descripcion)
+            ->setTipoMoneda('PEN')
+            ->setCompany($this->buildCompany())
+            ->setClient($this->buildClient($sale))
+            ->setMtoOperGravadas($base)
+            ->setMtoIGV($igv)
+            ->setTotalImpuestos($igv)
+            ->setMtoImpVenta($importe)
+            ->setDetails([$detail])
+            ->setLegends([
+                (new Legend)
+                    ->setCode('1000')
+                    ->setValue($this->numeroEnLetras->convertir($importe)),
+            ]);
+    }
+
+    protected function descripcionMotivoCredito(?string $codigo): string
+    {
+        return match ($codigo) {
+            '01' => 'ANULACION DE LA OPERACION',
+            '02' => 'ANULACION POR ERROR EN EL RUC',
+            '03' => 'CORRECCION POR ERROR EN LA DESCRIPCION',
+            '04' => 'DESCUENTO GLOBAL',
+            '05' => 'DESCUENTO POR ITEM',
+            '06' => 'DEVOLUCION TOTAL',
+            '07' => 'DEVOLUCION POR ITEM',
+            default => 'AJUSTE DEL COMPROBANTE',
+        };
+    }
+
+    protected function descripcionMotivoDebito(?string $codigo): string
+    {
+        return match ($codigo) {
+            '01' => 'INTERESES POR MORA',
+            '02' => 'AUMENTO EN EL VALOR',
+            '03' => 'PENALIDADES U OTROS CONCEPTOS',
+            default => 'AJUSTE DEL COMPROBANTE',
+        };
     }
 
     protected function buildDetail(SaleItem $item): SaleDetail

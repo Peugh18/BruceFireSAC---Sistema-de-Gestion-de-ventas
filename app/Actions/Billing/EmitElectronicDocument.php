@@ -45,7 +45,12 @@ class EmitElectronicDocument
     {
         $document->loadMissing('sale.client', 'sale.items.product', 'sale.items.service', 'sale.installments');
 
-        $invoice = $this->greenterService->buildInvoice($document->sale, $document);
+        $esNota = in_array($document->tipo, ['nota_credito', 'nota_debito'], true);
+        $document->loadMissing('cpeAfectado');
+
+        $invoice = $esNota
+            ? $this->greenterService->buildNote($document)
+            : $this->greenterService->buildInvoice($document->sale, $document);
         $xmlSigned = $this->greenterService->sign($invoice);
         $documentName = $invoice->getName();
 
@@ -60,12 +65,12 @@ class EmitElectronicDocument
             Storage::disk('local')->put($cdrPath, $response['cdr_zip']);
         }
 
-        $pdfPath = $this->pdfService->generate($document, $xmlSigned);
+        $pdfPath = $esNota ? null : $this->pdfService->generate($document, $xmlSigned);
 
         $document->update([
             'xml_path' => "xml/{$documentName}.xml",
             'cdr_path' => $cdrPath ?? $document->cdr_path,
-            'pdf_path' => $pdfPath,
+            'pdf_path' => $pdfPath ?? $document->pdf_path,
             'sunat_estado' => $this->responseClassifier->classify((int) $response['codigo'], $notas),
             'sunat_codigo_respuesta' => (string) $response['codigo'],
             'sunat_mensaje' => $notas === [] ? $response['mensaje'] : $response['mensaje'].' | '.implode(' | ', $notas),
