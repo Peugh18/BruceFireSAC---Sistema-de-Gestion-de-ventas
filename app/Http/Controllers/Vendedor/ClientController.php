@@ -11,6 +11,7 @@ use App\Models\Client;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,6 +22,7 @@ class ClientController extends Controller
         $search = $request->string('search')->toString();
 
         $clients = Client::query()
+            ->withMax('sales', 'fecha')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('razon_social', 'like', "%{$search}%")
@@ -45,7 +47,9 @@ class ClientController extends Controller
                     'estado_contribuyente' => $client->estado_contribuyente,
                     'condicion_domicilio' => $client->condicion_domicilio,
                 ],
-                'ultima_compra' => null,
+                'ultima_compra' => $client->sales_max_fecha
+                    ? Carbon::parse($client->sales_max_fecha)->toDateString()
+                    : null,
                 'activo' => $client->activo,
             ]);
 

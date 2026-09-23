@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Client;
+use App\Models\Sale;
 use App\Models\User;
 use App\Services\Sunat\RucLookupService;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -120,6 +121,31 @@ test('ruc lookup sends an http request when the document is not local', function
 
     Http::assertSent(fn (Request $request) => $request->url() === 'https://dniruc.apisperu.com/api/v1/ruc/20601111222?token=test-token');
     Http::assertSentCount(1);
+});
+
+test('clientes index shows the latest sale date per client', function () {
+    $user = vendedorUser();
+
+    $client = Client::factory()->create();
+    Sale::factory()->create([
+        'client_id' => $client->id,
+        'vendedor_id' => $user->id,
+        'fecha' => '2026-01-10',
+    ]);
+    Sale::factory()->create([
+        'client_id' => $client->id,
+        'vendedor_id' => $user->id,
+        'fecha' => '2026-03-15',
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('vendedor.clientes.index', ['current_team' => $user->currentTeam]))
+        ->assertOk();
+
+    $row = collect($response->viewData('page')['props']['clients']['data'])
+        ->firstWhere('id', $client->id);
+
+    expect($row['ultima_compra'])->toBe('2026-03-15');
 });
 
 if (! function_exists('vendedorUser')) {

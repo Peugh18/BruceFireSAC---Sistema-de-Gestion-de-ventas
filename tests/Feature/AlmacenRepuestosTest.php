@@ -100,7 +100,7 @@ test('flujo end-to-end de repuestos y componentes a granel (§84.11)', function 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('almacen/stock/index')
-            ->where('items', function ($items) use ($valvula, $manometro, $sede) {
+            ->where('items.data', function ($items) use ($valvula, $manometro, $sede) {
                 $itemValvula = collect($items)->firstWhere('id', $valvula->id);
                 $itemManometro = collect($items)->firstWhere('id', $manometro->id);
 

@@ -61,12 +61,12 @@ test('almacen stock index lista productos y servicios con su stock por sede', fu
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('almacen/stock/index')
-        ->has('items', 2)
+        ->has('items.data', 2)
         ->has('sedes', 2)
         ->has('kardex.data')
     );
 
-    $items = collect($response->viewData('page')['props']['items']);
+    $items = collect($response->viewData('page')['props']['items']['data']);
     $prodRow = $items->firstWhere('codigo', 'PROD-001');
     $servRow = $items->firstWhere('codigo', 'SERV-001');
 
@@ -91,7 +91,7 @@ test('almacen stock index permite filtrar por search y por tipo de item', functi
         ]))
         ->assertOk();
 
-    $itemsProd = collect($resProd->viewData('page')['props']['items']);
+    $itemsProd = collect($resProd->viewData('page')['props']['items']['data']);
     expect($itemsProd->pluck('tipo')->unique()->all())->toBe(['producto']);
 
     // Filtrar solo servicios
@@ -102,7 +102,7 @@ test('almacen stock index permite filtrar por search y por tipo de item', functi
         ]))
         ->assertOk();
 
-    $itemsServ = collect($resServ->viewData('page')['props']['items']);
+    $itemsServ = collect($resServ->viewData('page')['props']['items']['data']);
     expect($itemsServ->pluck('tipo')->unique()->all())->toBe(['servicio']);
 
     // Búsqueda por texto
@@ -113,7 +113,7 @@ test('almacen stock index permite filtrar por search y por tipo de item', functi
         ]))
         ->assertOk();
 
-    $itemsSearch = collect($resSearch->viewData('page')['props']['items']);
+    $itemsSearch = collect($resSearch->viewData('page')['props']['items']['data']);
     expect($itemsSearch)->toHaveCount(1)
         ->and($itemsSearch->first()['codigo'])->toBe('REC-PQS');
 });
@@ -195,6 +195,23 @@ test('almacen kardex permite filtrar movimientos por producto, sede, fecha y tip
     $kardexDataSede = collect($resSede->viewData('page')['props']['kardex']['data']);
     expect($kardexDataSede)->toHaveCount(1)
         ->and($kardexDataSede->first()['id'])->toBe($mov2->id);
+});
+
+test('almacen stock index pagina el catalogo cuando hay mas de 15 items', function () {
+    $user = almacenUserForStockTest();
+
+    Product::factory()->count(20)->create(['activo' => true]);
+
+    $response = $this->actingAs($user)
+        ->get(route('almacen.stock.index', ['current_team' => $user->currentTeam]))
+        ->assertOk();
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('almacen/stock/index')
+        ->has('items.data', 15)
+        ->where('items.total', 20)
+        ->where('items.last_page', 2)
+    );
 });
 
 test('usuario no autorizado no puede acceder al modulo de stock', function () {

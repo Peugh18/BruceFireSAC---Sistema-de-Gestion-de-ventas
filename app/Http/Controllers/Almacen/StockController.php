@@ -10,6 +10,8 @@ use App\Models\Sede;
 use App\Models\Service;
 use App\Models\Team;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -127,7 +129,20 @@ class StockController extends Controller
         }
 
         // 5. Unir y ordenar catálogo de ítems
-        $items = $products->concat($services)->sortBy('nombre')->values()->all();
+        $allItems = $products->concat($services)->sortBy('nombre')->values()->all();
+
+        // El catálogo se arma en PHP a partir de dos fuentes (Productos +
+        // Servicios) con stock por sede ya calculado, así que se pagina el
+        // arreglo resultante a mano en vez de un Eloquent::paginate().
+        $itemsPerPage = 15;
+        $itemsPage = Paginator::resolveCurrentPage('page') ?: 1;
+        $items = new LengthAwarePaginator(
+            array_slice($allItems, ($itemsPage - 1) * $itemsPerPage, $itemsPerPage),
+            count($allItems),
+            $itemsPerPage,
+            $itemsPage,
+            ['path' => $request->url(), 'query' => $request->query()],
+        );
 
         // 6. Kardex filtrable
         $kardexProductId = $request->integer('kardex_product_id');

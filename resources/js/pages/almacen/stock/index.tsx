@@ -84,8 +84,16 @@ export type PaginatedKardex = {
     total: number;
 };
 
+export type PaginatedStock = {
+    data: StockItem[];
+    links: PaginationLink[];
+    current_page: number;
+    last_page: number;
+    total: number;
+};
+
 export type StockPageProps = {
-    items: StockItem[];
+    items: PaginatedStock;
     sedes: SedeInfo[];
     filters: {
         search: string;
@@ -370,7 +378,7 @@ export default function StockIndex({
                         <Boxes className="size-4" />
                         <span>Stock de Productos y Servicios</span>
                         <span className="rounded-full bg-card/20 px-2 py-0.5 text-[10.5px]">
-                            {items.length}
+                            {items.total}
                         </span>
                     </button>
 
@@ -466,7 +474,7 @@ export default function StockIndex({
                         </form>
 
                         {/* Stock Table */}
-                        {items.length === 0 ? (
+                        {items.data.length === 0 ? (
                             <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
                                 <Package className="size-10 text-muted-foreground" />
                                 <p className="mt-2 text-sm font-medium text-muted-foreground">
@@ -513,7 +521,7 @@ export default function StockIndex({
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border">
-                                        {items.map((item) => {
+                                        {items.data.map((item) => {
                                             const isBajoMinimo =
                                                 item.tipo === 'producto' &&
                                                 item.stock_minimo !== null &&
@@ -635,6 +643,49 @@ export default function StockIndex({
                                         })}
                                     </tbody>
                                 </table>
+
+                                {/* Paginador del catálogo */}
+                                {items.links.length > 3 && (
+                                    <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+                                        <span>
+                                            Mostrando{' '}
+                                            <b>{items.data.length}</b> de{' '}
+                                            <b>{items.total}</b> ítems
+                                        </span>
+                                        <div className="flex items-center gap-1">
+                                            {items.links.map((link, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    disabled={!link.url}
+                                                    onClick={() => {
+                                                        if (link.url) {
+                                                            router.get(
+                                                                link.url,
+                                                                {},
+                                                                {
+                                                                    preserveState: true,
+                                                                    preserveScroll: true,
+                                                                },
+                                                            );
+                                                        }
+                                                    }}
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: link.label,
+                                                    }}
+                                                    className={[
+                                                        'h-8 min-w-[32px] rounded-md px-2 font-medium transition-colors',
+                                                        link.active
+                                                            ? 'bg-foreground text-background font-bold'
+                                                            : link.url
+                                                              ? 'hover:bg-muted text-foreground'
+                                                              : 'opacity-40 cursor-not-allowed',
+                                                    ].join(' ')}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </Card>
