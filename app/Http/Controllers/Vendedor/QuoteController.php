@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Service;
 use App\Models\Team;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -56,18 +57,57 @@ class QuoteController extends Controller
     public function create(Team $current_team): Response
     {
         return Inertia::render('vendedor/cotizaciones/nueva', [
+            // Solo un puñado inicial: con miles de clientes/productos reales,
+            // mandar la tabla completa como prop en cada carga de página pesa
+            // varios cientos de KB. El resto se busca en el servidor (ver
+            // ClientController::search() y self::searchCatalogo()).
             'clients' => Client::query()
-                ->orderBy('razon_social')
+                ->orderByDesc('created_at')
+                ->limit(10)
                 ->get(['id', 'razon_social', 'numero_documento']),
             'products' => Product::query()
                 ->where('activo', true)
                 ->orderBy('nombre')
+                ->limit(8)
                 ->get(['id', 'nombre', 'precio_venta']),
             'services' => Service::query()
                 ->where('activo', true)
                 ->orderBy('nombre')
+                ->limit(8)
                 ->get(['id', 'nombre', 'precio_venta']),
         ]);
+    }
+
+    /**
+     * Búsqueda liviana de productos + servicios para el selector de ítems
+     * de Nueva Cotización (ver nota en create() sobre por qué no se manda
+     * el catálogo completo como prop).
+     */
+    public function searchCatalogo(Request $request): JsonResponse
+    {
+        $search = $request->string('search')->toString();
+
+        if (mb_strlen($search) < 2) {
+            return response()->json([]);
+        }
+
+        $products = Product::query()
+            ->where('activo', true)
+            ->where('nombre', 'like', "%{$search}%")
+            ->orderBy('nombre')
+            ->limit(10)
+            ->get(['id', 'nombre', 'precio_venta'])
+            ->map(fn (Product $product) => [...$product->only(['id', 'nombre', 'precio_venta']), 'tipo' => 'product']);
+
+        $services = Service::query()
+            ->where('activo', true)
+            ->where('nombre', 'like', "%{$search}%")
+            ->orderBy('nombre')
+            ->limit(10)
+            ->get(['id', 'nombre', 'precio_venta'])
+            ->map(fn (Service $service) => [...$service->only(['id', 'nombre', 'precio_venta']), 'tipo' => 'service']);
+
+        return response()->json($products->concat($services)->values());
     }
 
     public function store(StoreQuoteRequest $request, CreateQuote $createQuote): RedirectResponse

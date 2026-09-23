@@ -10,7 +10,6 @@ use App\Models\Client;
 use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\Team;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -66,31 +65,6 @@ class SaleController extends Controller
                 ->orderBy('nombre')
                 ->get(['id', 'nombre']),
         ]);
-    }
-
-    /**
-     * Búsqueda de clientes para el selector de Nueva Venta. El create()
-     * solo manda los 10 más recientes; con miles de clientes reales hace
-     * falta poder buscar por nombre/documento contra toda la tabla.
-     */
-    public function buscarCliente(Request $request): JsonResponse
-    {
-        $search = $request->string('search')->toString();
-
-        if (mb_strlen($search) < 2) {
-            return response()->json([]);
-        }
-
-        $clients = Client::query()
-            ->where(function ($query) use ($search) {
-                $query->where('razon_social', 'like', "%{$search}%")
-                    ->orWhere('numero_documento', 'like', "%{$search}%");
-            })
-            ->orderBy('razon_social')
-            ->limit(10)
-            ->get(['id', 'razon_social', 'numero_documento']);
-
-        return response()->json($clients);
     }
 
     public function store(Team $current_team, StoreSaleRequest $request, CreateSale $createSale): RedirectResponse

@@ -10,13 +10,14 @@ import {
     Trash2,
     Wrench,
 } from 'lucide-react';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import clientes from '@/routes/vendedor/clientes';
 import cotizaciones from '@/routes/vendedor/cotizaciones';
 import type { Team } from '@/types';
 
@@ -31,6 +32,8 @@ type CatalogOption = {
     nombre: string;
     precio_venta: number | string;
 };
+
+type CatalogSearchResult = CatalogOption & { tipo: 'product' | 'service' };
 
 type QuoteItemForm = {
     tipo: 'product' | 'service';
@@ -104,39 +107,76 @@ export default function NuevaCotizacion({
     });
 
     const [clientSearch, setClientSearch] = useState('');
+    const [searchedClients, setSearchedClients] = useState<
+        ClientOption[] | null
+    >(null);
+    const [selectedClientData, setSelectedClientData] =
+        useState<ClientOption | null>(null);
     const [itemSearch, setItemSearch] = useState('');
+    const [searchedItems, setSearchedItems] = useState<
+        CatalogSearchResult[] | null
+    >(null);
 
-    const filteredClients = useMemo(() => {
-        const term = clientSearch.trim().toLowerCase();
-        if (!term) return clients.slice(0, 10);
+    // Sin búsqueda: se muestra el puñado reciente que ya viene en props.
+    // Con 2+ caracteres se busca en el servidor contra toda la tabla
+    // (miles de clientes/productos reales, no solo el puñado inicial).
+    const filteredClients = searchedClients ?? clients;
 
-        return clients.filter(
-            (client) =>
-                client.razon_social.toLowerCase().includes(term) ||
-                client.numero_documento.includes(term),
-        );
-    }, [clientSearch, clients]);
+    useEffect(() => {
+        const term = clientSearch.trim();
+        if (term.length < 2) {
+            setSearchedClients(null);
+            return;
+        }
 
-    const catalogItems = useMemo(() => {
-        const term = itemSearch.trim().toLowerCase();
-        const productOptions = products.map((p) => ({
-            ...p,
-            tipo: 'product' as const,
-        }));
-        const serviceOptions = services.map((s) => ({
-            ...s,
-            tipo: 'service' as const,
-        }));
-        const all = [...productOptions, ...serviceOptions];
+        const timeout = window.setTimeout(async () => {
+            try {
+                const response = await fetch(
+                    clientes.search.url(teamSlug, { query: { search: term } }),
+                );
+                setSearchedClients((await response.json()) as ClientOption[]);
+            } catch {
+                setSearchedClients([]);
+            }
+        }, 300);
 
-        if (!term) return all.slice(0, 8);
+        return () => window.clearTimeout(timeout);
+    }, [clientSearch, teamSlug]);
 
-        return all.filter((item) => item.nombre.toLowerCase().includes(term));
-    }, [itemSearch, products, services]);
+    const defaultCatalogItems: CatalogSearchResult[] = [
+        ...products.map((p) => ({ ...p, tipo: 'product' as const })),
+        ...services.map((s) => ({ ...s, tipo: 'service' as const })),
+    ];
+    const catalogItems = searchedItems ?? defaultCatalogItems;
 
-    const selectedClient = clients.find(
-        (client) => client.id === form.data.client_id,
-    );
+    useEffect(() => {
+        const term = itemSearch.trim();
+        if (term.length < 2) {
+            setSearchedItems(null);
+            return;
+        }
+
+        const timeout = window.setTimeout(async () => {
+            try {
+                const response = await fetch(
+                    cotizaciones.buscarCatalogo.url(teamSlug, {
+                        query: { search: term },
+                    }),
+                );
+                setSearchedItems(
+                    (await response.json()) as CatalogSearchResult[],
+                );
+            } catch {
+                setSearchedItems([]);
+            }
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [itemSearch, teamSlug]);
+
+    const selectedClient =
+        selectedClientData ??
+        clients.find((client) => client.id === form.data.client_id);
 
     const setItems = (items: QuoteItemForm[]) => form.setData('items', items);
 
@@ -215,19 +255,24 @@ export default function NuevaCotizacion({
                                 <div className="mt-2 max-h-[168px] overflow-y-auto rounded-[10px] border border-border">
                                     {filteredClients.length === 0 ? (
                                         <div className="px-3 py-4 text-[12px] text-muted-foreground">
-                                            No hay coincidencias.
+                                            {searchedClients !== null
+                                                ? 'No se encontraron clientes con esa búsqueda.'
+                                                : 'No hay clientes recientes. Escribe para buscar.'}
                                         </div>
                                     ) : (
                                         filteredClients.map((client) => (
                                             <button
                                                 key={client.id}
                                                 type="button"
-                                                onClick={() =>
+                                                onClick={() => {
                                                     form.setData(
                                                         'client_id',
                                                         client.id,
-                                                    )
-                                                }
+                                                    );
+                                                    setSelectedClientData(
+                                                        client,
+                                                    );
+                                                }}
                                                 className={`flex w-full items-center justify-between gap-3 border-b border-border px-3 py-2.5 text-left last:border-b-0 ${form.data.client_id === client.id ? 'bg-destructive/10' : 'bg-card hover:bg-muted/40'}`}
                                             >
                                                 <span>
@@ -320,7 +365,9 @@ export default function NuevaCotizacion({
                             <div className="mt-1.5 max-h-[200px] overflow-y-auto rounded-[10px] border border-border">
                                 {catalogItems.length === 0 ? (
                                     <div className="px-3 py-3 text-[12px] text-muted-foreground">
-                                        Sin coincidencias en el catálogo.
+                                        {searchedItems !== null
+                                            ? 'Sin coincidencias en el catálogo.'
+                                            : 'Escribe para buscar productos o servicios.'}
                                     </div>
                                 ) : (
                                     catalogItems.map((item) => (

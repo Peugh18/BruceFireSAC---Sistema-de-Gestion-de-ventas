@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import { rucLookup } from '@/routes/vendedor';
+import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
@@ -179,7 +180,7 @@ export default function NuevaVenta({ clients, sedes }: Props) {
             setClientSearchLoading(true);
             try {
                 const response = await fetch(
-                    ventas.buscarCliente.url(teamSlug, {
+                    clientes.search.url(teamSlug, {
                         query: { search: term },
                     }),
                 );

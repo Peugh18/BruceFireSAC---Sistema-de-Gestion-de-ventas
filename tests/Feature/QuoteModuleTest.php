@@ -3,6 +3,7 @@
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Models\Service;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
 beforeEach(function () {
@@ -68,4 +69,30 @@ test('vendedor can send, then accept a quote, but not accept directly from borra
         ->assertSessionHasErrors();
 
     expect($quote->refresh()->estado)->toBe('borrador');
+});
+
+test('buscar catalogo en nueva cotizacion encuentra productos y servicios fuera del listado inicial', function () {
+    $user = vendedorUser();
+
+    Product::factory()->count(8)->create(['activo' => true]);
+    Service::factory()->count(8)->create(['activo' => true]);
+
+    $productoBuscado = Product::factory()->create([
+        'nombre' => 'EXTINTOR PQS-ABC DE 6KG',
+        'activo' => true,
+    ]);
+    $servicioBuscado = Service::factory()->create([
+        'nombre' => 'RECARGA DE EXTINTOR PQS-ABC',
+        'activo' => true,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->getJson(route('vendedor.cotizaciones.buscar-catalogo', [
+            'current_team' => $user->currentTeam,
+            'search' => 'EXTINTOR',
+        ]))
+        ->assertOk();
+
+    $response->assertJsonFragment(['id' => $productoBuscado->id, 'tipo' => 'product'])
+        ->assertJsonFragment(['id' => $servicioBuscado->id, 'tipo' => 'service']);
 });

@@ -148,6 +148,37 @@ test('clientes index shows the latest sale date per client', function () {
     expect($row['ultima_compra'])->toBe('2026-03-15');
 });
 
+test('client search endpoint finds clients beyond the first page by name or document', function () {
+    $user = vendedorUser();
+
+    Client::factory()->count(10)->create();
+    $buscado = Client::factory()->create([
+        'razon_social' => 'RJHM S.A.C.',
+        'numero_documento' => '20603335717',
+    ]);
+
+    $porNombre = $this->actingAs($user)
+        ->getJson(route('vendedor.clientes.search', ['current_team' => $user->currentTeam, 'search' => 'RJHM']))
+        ->assertOk();
+    $porNombre->assertJsonFragment(['id' => $buscado->id]);
+
+    $porDocumento = $this->actingAs($user)
+        ->getJson(route('vendedor.clientes.search', ['current_team' => $user->currentTeam, 'search' => '20603335717']))
+        ->assertOk();
+    $porDocumento->assertJsonFragment(['id' => $buscado->id]);
+});
+
+test('client search endpoint requires at least 2 characters', function () {
+    $user = vendedorUser();
+
+    Client::factory()->create(['razon_social' => 'A S.A.C.']);
+
+    $this->actingAs($user)
+        ->getJson(route('vendedor.clientes.search', ['current_team' => $user->currentTeam, 'search' => 'A']))
+        ->assertOk()
+        ->assertJson([]);
+});
+
 if (! function_exists('vendedorUser')) {
     function vendedorUser(): User
     {

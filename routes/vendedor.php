@@ -35,6 +35,7 @@ Route::prefix('vendedor')
 
         Route::get('clientes', [ClientController::class, 'index'])->name('clientes.index');
         Route::post('clientes', [ClientController::class, 'store'])->name('clientes.store');
+        Route::get('clientes/buscar', [ClientController::class, 'search'])->name('clientes.search');
         Route::get('clientes/{client}', [ClientController::class, 'show'])->name('clientes.show');
         Route::put('clientes/{client}', [ClientController::class, 'update'])->name('clientes.update');
 
@@ -50,6 +51,7 @@ Route::prefix('vendedor')
 
         Route::get('cotizaciones', [QuoteController::class, 'index'])->name('cotizaciones.index');
         Route::get('cotizaciones/nueva', [QuoteController::class, 'create'])->name('cotizaciones.create');
+        Route::get('cotizaciones/buscar-catalogo', [QuoteController::class, 'searchCatalogo'])->name('cotizaciones.buscar-catalogo');
         Route::post('cotizaciones', [QuoteController::class, 'store'])->name('cotizaciones.store');
         Route::post('cotizaciones/{quote}/enviar', [QuoteController::class, 'send'])->name('cotizaciones.send');
         Route::post('cotizaciones/{quote}/aceptar', [QuoteController::class, 'accept'])->name('cotizaciones.accept');
@@ -59,7 +61,6 @@ Route::prefix('vendedor')
         Route::get('ventas/nueva', [SaleController::class, 'create'])->name('ventas.create');
         Route::post('ventas', [SaleController::class, 'store'])->name('ventas.store');
         Route::get('ventas/escanear-serie', [SaleItemScanController::class, 'resolve'])->name('ventas.escanear-serie');
-        Route::get('ventas/buscar-cliente', [SaleController::class, 'buscarCliente'])->name('ventas.buscar-cliente');
         Route::get('ventas/{sale}', [SaleController::class, 'show'])->name('ventas.show');
         Route::post('ventas/{sale}/confirmar', [SaleController::class, 'confirm'])->name('ventas.confirmar');
 

@@ -9,6 +9,7 @@ use App\Http\Requests\Clientes\StoreClientRequest;
 use App\Http\Requests\Clientes\UpdateClientRequest;
 use App\Models\Client;
 use App\Models\Team;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -66,6 +67,31 @@ class ClientController extends Controller
                 'inactivos' => Client::where('activo', false)->count(),
             ],
         ]);
+    }
+
+    /**
+     * Búsqueda liviana de clientes para selectores de otras pantallas
+     * (Nueva Venta, Nueva Cotización) que no pueden mandar la tabla
+     * completa de clientes como prop en cada carga de página.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $search = $request->string('search')->toString();
+
+        if (mb_strlen($search) < 2) {
+            return response()->json([]);
+        }
+
+        $clients = Client::query()
+            ->where(function ($query) use ($search) {
+                $query->where('razon_social', 'like', "%{$search}%")
+                    ->orWhere('numero_documento', 'like', "%{$search}%");
+            })
+            ->orderBy('razon_social')
+            ->limit(10)
+            ->get(['id', 'razon_social', 'numero_documento']);
+
+        return response()->json($clients);
     }
 
     public function store(StoreClientRequest $request, CreateClient $createClient): RedirectResponse
