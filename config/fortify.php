@@ -161,7 +161,8 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Sistema empresarial: las cuentas las crea un Gerente desde el
+        // panel de Usuarios, no hay alta pública. Ver §Usuarios.
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

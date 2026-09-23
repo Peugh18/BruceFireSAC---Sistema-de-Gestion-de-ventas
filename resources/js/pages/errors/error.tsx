@@ -54,9 +54,11 @@ export default function ErrorPage({ status }: Props) {
         <>
             <Head title={`Error ${status}`} />
             <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center text-foreground">
-                <div className="flex size-[52px] items-center justify-center rounded-[12px] bg-primary font-['Oswald',sans-serif] text-[16px] font-bold text-white">
-                    BF
-                </div>
+                <img
+                    src="/brand/logo-icon.png"
+                    alt="Bruce Fire"
+                    className="size-[52px]"
+                />
                 <div className="mt-3 font-['Oswald',sans-serif] text-[13px] font-bold tracking-[0.08em] text-muted-foreground uppercase">
                     Bruce Fire
                 </div>

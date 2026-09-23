@@ -2,7 +2,6 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     CalendarCheck,
     ClipboardCheck,
-    Flame,
     LayoutDashboard,
     LogOut,
     MapPin,
@@ -84,9 +83,11 @@ export default function TecnicoCampoLayout({
             {/* Mobile Top Header (Fixed top, isolated from scroll) */}
             <header className="shrink-0 flex h-14 w-full items-center justify-between border-b border-border bg-card px-4 shadow-xs transition-colors">
                 <div className="flex items-center gap-2.5">
-                    <div className="flex size-8 items-center justify-center rounded-[8px] bg-info text-info-foreground shadow-xs">
-                        <Flame className="size-4" />
-                    </div>
+                    <img
+                        src="/brand/logo-icon.png"
+                        alt="Bruce Fire"
+                        className="size-8 shrink-0"
+                    />
                     <div>
                         <div className="flex items-center gap-1.5">
                             <span className="text-xs font-black tracking-tight text-foreground">

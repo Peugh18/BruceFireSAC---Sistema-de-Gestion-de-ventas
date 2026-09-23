@@ -12,8 +12,6 @@ void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
-            case name === 'welcome':
-                return null;
             case name.startsWith('errors/'):
                 // Página de error propia, sin marca del starter-kit ni
                 // sidebar genérico — debe verse igual sin sesión iniciada.

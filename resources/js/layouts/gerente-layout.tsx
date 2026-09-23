@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Bell, LogOut, Menu, Search } from 'lucide-react';
+import { Bell, LogOut, Menu } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { GerenteSidebar } from '@/components/gerente-sidebar';
@@ -51,14 +51,6 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
                             Gerencia
                             <span className="mx-1.5 opacity-60">›</span>
                             <b className="font-bold text-foreground">{title}</b>
-                        </div>
-
-                        <div className="hidden h-[38px] w-[230px] items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3 text-[13px] text-muted-foreground md:flex">
-                            <Search
-                                className="size-3.5 shrink-0"
-                                strokeWidth={2}
-                            />
-                            <span>Buscar en gerencia...</span>
                         </div>
 
                         <ThemeToggle />

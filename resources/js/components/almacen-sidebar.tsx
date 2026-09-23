@@ -161,9 +161,11 @@ export function AlmacenSidebar({ open, onClose }: AlmacenSidebarProps) {
                 ].join(' ')}
             >
                 <div className="flex h-[66px] shrink-0 items-center gap-2.5 px-5">
-                    <div className="flex size-[26px] items-center justify-center rounded-[7px] bg-primary font-['Oswald',sans-serif] text-[11px] font-bold text-primary-foreground shadow-xs">
-                        BF
-                    </div>
+                    <img
+                        src="/brand/logo-icon.png"
+                        alt="Bruce Fire"
+                        className="size-[30px] shrink-0"
+                    />
                     <div className="min-w-0 flex-1">
                         <div className="font-['Oswald',sans-serif] text-[13px] leading-none font-bold tracking-[0.02em] text-sidebar-foreground uppercase">
                             BRUCE FIRE
