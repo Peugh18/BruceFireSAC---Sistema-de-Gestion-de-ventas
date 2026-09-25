@@ -1,4 +1,4 @@
-﻿import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     AlertTriangle,
@@ -51,6 +51,8 @@ export type ReceptionItemData = {
 export type SerializedUnitData = {
     id: number;
     numero_serie: string;
+    capacidad: string | null;
+    serie_fabricante: string | null;
     marca: string | null;
     anio_fabricacion: number | null;
     estado: string;
@@ -95,6 +97,8 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
             cantidad_conforme: it.cantidad_conforme,
             observacion_item: it.observacion_item || '',
             unidades_nuevas: [] as Array<{
+                capacidad: string;
+                serie_fabricante: string;
                 marca: string;
                 anio_fabricacion: number;
             }>,
@@ -121,6 +125,8 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                 { length: extraCount },
                 (_, i) =>
                     unidadesNuevas[i] || {
+                        capacidad: '',
+                        serie_fabricante: '',
                         marca: '',
                         anio_fabricacion: current_year,
                     },
@@ -140,7 +146,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
     const updateUnidadNueva = (
         itemIndex: number,
         unitIndex: number,
-        field: 'marca' | 'anio_fabricacion',
+        field: 'capacidad' | 'serie_fabricante' | 'marca' | 'anio_fabricacion',
         val: string | number,
     ) => {
         const nextItems = [...data.items];
@@ -429,7 +435,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                             conformes a
                                                             incorporar:
                                                         </div>
-                                                        <div className="grid gap-2 sm:grid-cols-2">
+                                                        <div className="grid gap-2">
                                                             {it.unidades_nuevas.map(
                                                                 (u, uIdx) => (
                                                                     <div
@@ -438,6 +444,45 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                         }
                                                                         className="flex items-center gap-2"
                                                                     >
+                                                                        <Input
+                                                                            placeholder="Capacidad"
+                                                                            value={
+                                                                                u.capacidad
+                                                                            }
+                                                                            onChange={(
+                                                                                e,
+                                                                            ) =>
+                                                                                updateUnidadNueva(
+                                                                                    idx,
+                                                                                    uIdx,
+                                                                                    'capacidad',
+                                                                                    e
+                                                                                        .target
+                                                                                        .value,
+                                                                                )
+                                                                            }
+                                                                            className="h-7 text-xs"
+                                                                            required
+                                                                        />
+                                                                        <Input
+                                                                            placeholder="N° de serie"
+                                                                            value={
+                                                                                u.serie_fabricante
+                                                                            }
+                                                                            onChange={(
+                                                                                e,
+                                                                            ) =>
+                                                                                updateUnidadNueva(
+                                                                                    idx,
+                                                                                    uIdx,
+                                                                                    'serie_fabricante',
+                                                                                    e
+                                                                                        .target
+                                                                                        .value,
+                                                                                )
+                                                                            }
+                                                                            className="h-7 text-xs"
+                                                                        />
                                                                         <Input
                                                                             placeholder="Marca"
                                                                             value={
@@ -700,6 +745,18 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                         {unit.numero_serie}
                                                     </div>
                                                     <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                                        Cap.:{' '}
+                                                        <b className="text-foreground/80">
+                                                            {unit.capacidad ||
+                                                                'N/A'}
+                                                        </b>{' '}
+                                                        • Serie:{' '}
+                                                        <b className="text-foreground/80">
+                                                            {unit.serie_fabricante ||
+                                                                'N/A'}
+                                                        </b>
+                                                    </div>
+                                                    <div className="text-[11px] text-muted-foreground">
                                                         Marca:{' '}
                                                         <b className="text-foreground/80">
                                                             {unit.marca ||

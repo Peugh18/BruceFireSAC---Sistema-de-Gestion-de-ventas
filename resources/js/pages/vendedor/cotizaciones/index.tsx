@@ -11,13 +11,16 @@ import {
     Loader2,
     Plus,
     Send,
+    ShoppingCart,
     X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
 import { Button } from '@/components/ui/button';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
 export type QuoteItem = {
@@ -276,6 +279,13 @@ export default function CotizacionesIndex({
         );
     };
 
+    const mostrarError = (errors: Record<string, string>) => {
+        toast.error(
+            Object.values(errors)[0] ??
+                'No se pudo actualizar la cotización.',
+        );
+    };
+
     const handleSend = (quote: QuoteItem) => {
         setProcessingAction({ id: quote.id, action: 'send' });
         router.post(
@@ -286,6 +296,7 @@ export default function CotizacionesIndex({
             {},
             {
                 preserveScroll: true,
+                onError: mostrarError,
                 onFinish: () => setProcessingAction(null),
             },
         );
@@ -301,6 +312,7 @@ export default function CotizacionesIndex({
             {},
             {
                 preserveScroll: true,
+                onError: mostrarError,
                 onFinish: () => setProcessingAction(null),
             },
         );
@@ -316,6 +328,7 @@ export default function CotizacionesIndex({
             {},
             {
                 preserveScroll: true,
+                onError: mostrarError,
                 onFinish: () => setProcessingAction(null),
             },
         );
@@ -542,6 +555,8 @@ export default function CotizacionesIndex({
                                             quote.estado === 'emitida';
                                         const canAcceptOrReject =
                                             quote.estado === 'enviada';
+                                        const canConvert =
+                                            quote.estado === 'aceptada';
 
                                         return (
                                             <tr
@@ -612,7 +627,7 @@ export default function CotizacionesIndex({
                                                                 disabled={
                                                                     isRowProcessing
                                                                 }
-                                                                className="flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] bg-card px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-foreground/90 disabled:opacity-50"
+                                                                className="flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] bg-foreground px-2.5 text-[11px] font-bold text-background shadow-xs transition-colors hover:bg-foreground/90 disabled:opacity-50"
                                                             >
                                                                 {isSending ? (
                                                                     <Loader2 className="size-3 animate-spin" />
@@ -674,8 +689,30 @@ export default function CotizacionesIndex({
                                                             </>
                                                         )}
 
+                                                        {canConvert && (
+                                                            <Link
+                                                                href={ventas.create.url(
+                                                                    teamSlug,
+                                                                    {
+                                                                        query: {
+                                                                            cotizacion:
+                                                                                quote.id,
+                                                                        },
+                                                                    },
+                                                                )}
+                                                                className="flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] bg-primary px-2.5 text-[11px] font-bold text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
+                                                            >
+                                                                <ShoppingCart className="size-3" />
+                                                                <span>
+                                                                    Pasar a
+                                                                    venta
+                                                                </span>
+                                                            </Link>
+                                                        )}
+
                                                         {!canSend &&
-                                                            !canAcceptOrReject && (
+                                                            !canAcceptOrReject &&
+                                                            !canConvert && (
                                                                 <span className="px-1 text-xs text-muted-foreground">
                                                                     —
                                                                 </span>

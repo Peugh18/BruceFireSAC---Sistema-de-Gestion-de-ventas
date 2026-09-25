@@ -81,12 +81,14 @@ test('recepcion creates inventory units and movements for conforming items with 
                 'observacion_item' => null,
                 'unidades' => [
                     [
-                        'numero_serie' => 'SN-EXT-001',
+                        'capacidad' => '6 kg',
+                        'serie_fabricante' => 'SN-EXT-001',
                         'marca' => 'Buckeye',
                         'anio_fabricacion' => 2026,
                     ],
                     [
-                        'numero_serie' => 'SN-EXT-002',
+                        'capacidad' => '6 kg',
+                        'serie_fabricante' => 'SN-EXT-002',
                         'marca' => 'Buckeye',
                         'anio_fabricacion' => 2026,
                     ],
@@ -129,6 +131,8 @@ test('recepcion creates inventory units and movements for conforming items with 
     expect($units)->toHaveCount(2)
         ->and($units[0]->codigo_interno)->toBe('BF-EQ-000001')
         ->and($units[0]->numero_serie)->toBe('BF-EQ-000001')
+        ->and($units[0]->capacidad)->toBe('6 kg')
+        ->and($units[0]->serie_fabricante)->toBe('SN-EXT-001')
         ->and($units[0]->marca)->toBe('Buckeye')
         ->and($units[0]->anio_fabricacion)->toBe(2026)
         ->and($units[0]->estado)->toBe('disponible')
@@ -174,8 +178,8 @@ test('rule 2: mercaderia no conforme never creates InventoryUnit or InventoryMov
                 'costo_unitario' => 80.00,
                 'observacion_item' => '',
                 'unidades' => [
-                    ['numero_serie' => 'SER-1', 'marca' => 'ABC', 'anio_fabricacion' => 2026],
-                    ['numero_serie' => 'SER-2', 'marca' => 'ABC', 'anio_fabricacion' => 2026],
+                    ['capacidad' => '6 kg', 'serie_fabricante' => 'SER-1', 'marca' => 'ABC', 'anio_fabricacion' => 2026],
+                    ['capacidad' => '6 kg', 'serie_fabricante' => 'SER-2', 'marca' => 'ABC', 'anio_fabricacion' => 2026],
                 ],
             ],
         ],
@@ -325,8 +329,8 @@ test('recepcion editing can add conforming quantity and create extra units and p
                 'costo_unitario' => 200.00,
                 'observacion_item' => '1 pendiente de prueba hidrostatica previa',
                 'unidades' => [
-                    ['numero_serie' => 'CO2-01', 'marca' => 'Kidde', 'anio_fabricacion' => 2026],
-                    ['numero_serie' => 'CO2-02', 'marca' => 'Kidde', 'anio_fabricacion' => 2026],
+                    ['capacidad' => '6 kg', 'serie_fabricante' => 'CO2-01', 'marca' => 'Kidde', 'anio_fabricacion' => 2026],
+                    ['capacidad' => '6 kg', 'serie_fabricante' => 'CO2-02', 'marca' => 'Kidde', 'anio_fabricacion' => 2026],
                 ],
             ],
         ],
@@ -352,7 +356,7 @@ test('recepcion editing can add conforming quantity and create extra units and p
                 'costo_unitario' => 200.00,
                 'observacion_item' => null,
                 'unidades_nuevas' => [
-                    ['numero_serie' => 'CO2-03', 'marca' => 'Kidde', 'anio_fabricacion' => 2026],
+                    ['capacidad' => '6 kg', 'serie_fabricante' => 'CO2-03', 'marca' => 'Kidde', 'anio_fabricacion' => 2026],
                 ],
             ],
         ],

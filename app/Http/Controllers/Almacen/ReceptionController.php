@@ -144,7 +144,7 @@ class ReceptionController extends Controller
             'sedeAlmacen:id,nombre,tipo,ciudad',
             'user:id,name',
             'items.product:id,codigo,nombre,unidad_medida,serializado',
-            'movements.inventoryUnit:id,numero_serie,marca,anio_fabricacion,estado',
+            'movements.inventoryUnit:id,numero_serie,capacidad,serie_fabricante,marca,anio_fabricacion,estado',
         ]);
 
         return Inertia::render('almacen/recepciones/show', [
@@ -177,6 +177,8 @@ class ReceptionController extends Controller
                     ->map(fn ($m) => [
                         'id' => $m->inventoryUnit->id,
                         'numero_serie' => $m->inventoryUnit->numero_serie,
+                        'capacidad' => $m->inventoryUnit->capacidad,
+                        'serie_fabricante' => $m->inventoryUnit->serie_fabricante,
                         'marca' => $m->inventoryUnit->marca,
                         'anio_fabricacion' => $m->inventoryUnit->anio_fabricacion,
                         'estado' => $m->inventoryUnit->estado,

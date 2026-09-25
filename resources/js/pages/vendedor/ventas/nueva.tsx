@@ -1,4 +1,4 @@
-﻿import { router, useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     Building2,
@@ -11,22 +11,24 @@ import {
     Search,
     Trash2,
     Truck,
+    UserRoundPlus,
 } from 'lucide-react';
 import { FormEvent, KeyboardEvent, useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import ClientCreateDialog from '@/components/client-create-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
-import { rucLookup } from '@/routes/vendedor';
 import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
 type ClientOption = {
     id: number;
+    tipo_documento?: string;
     razon_social: string;
     numero_documento: string;
 };
@@ -66,7 +68,29 @@ type SaleFormData = {
     items: SaleItemForm[];
 };
 
-type Props = { clients: ClientOption[]; sedes: SedeOption[] };
+type QuoteLine = {
+    tipo: 'product' | 'service';
+    product_id: number | null;
+    service_id: number | null;
+    nombre: string;
+    cantidad: number;
+    precio_unitario: number;
+};
+
+type QuoteOption = {
+    id: number;
+    numero: string;
+    client: ClientOption;
+    items: QuoteLine[];
+};
+
+type Props = {
+    clients: ClientOption[];
+    clientesVarios: ClientOption;
+    limiteBoletaSinIdentificar: number;
+    sedes: SedeOption[];
+    quote: QuoteOption | null;
+};
 
 type ScanResponse = {
     inventory_unit_id: number;
@@ -74,15 +98,6 @@ type ScanResponse = {
     product_id: number;
     nombre: string;
     precio_venta: number | string;
-};
-
-type LookupResponse = {
-    razon_social?: string;
-    nombre_o_razon_social?: string;
-    numero_documento?: string;
-    estado_contribuyente?: string;
-    condicion_domicilio?: string;
-    message?: string;
 };
 
 function today() {
@@ -108,16 +123,22 @@ function SegmentButton({
     active,
     children,
     onClick,
+    disabled = false,
+    title,
 }: {
     active: boolean;
     children: React.ReactNode;
     onClick: () => void;
+    disabled?: boolean;
+    title?: string;
 }) {
     return (
         <button
             type="button"
             onClick={onClick}
-            className={`rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
+            disabled={disabled}
+            title={title}
+            className={`rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                 active
                     ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                     : 'text-muted-foreground hover:text-foreground'
@@ -128,7 +149,13 @@ function SegmentButton({
     );
 }
 
-export default function NuevaVenta({ clients, sedes }: Props) {
+export default function NuevaVenta({
+    clients,
+    clientesVarios,
+    limiteBoletaSinIdentificar,
+    sedes,
+    quote,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ??
@@ -137,10 +164,10 @@ export default function NuevaVenta({ clients, sedes }: Props) {
             : '');
 
     const form = useForm<SaleFormData>({
-        client_id: '',
+        client_id: quote?.client.id ?? '',
         sede_id: '',
         vehicle_id: '',
-        quote_id: '',
+        quote_id: quote?.id ?? '',
         fecha: today(),
         destino: 'local_cliente',
         condicion_pago: 'contado',
@@ -150,14 +177,13 @@ export default function NuevaVenta({ clients, sedes }: Props) {
     });
 
     const [clientSearch, setClientSearch] = useState('');
+    const [clientDialogOpen, setClientDialogOpen] = useState(false);
     const [searchedClients, setSearchedClients] = useState<
         ClientOption[] | null
     >(null);
     const [clientSearchLoading, setClientSearchLoading] = useState(false);
     const [selectedClientData, setSelectedClientData] =
-        useState<ClientOption | null>(null);
-    const [lookup, setLookup] = useState<LookupResponse | null>(null);
-    const [lookupLoading, setLookupLoading] = useState(false);
+        useState<ClientOption | null>(quote?.client ?? null);
     const [tipoLinea, setTipoLinea] = useState<LineType>('unidad_nueva');
     const [scanValue, setScanValue] = useState('');
     const [scanLoading, setScanLoading] = useState(false);
@@ -167,6 +193,8 @@ export default function NuevaVenta({ clients, sedes }: Props) {
     // en props. Con 2+ caracteres se busca en el servidor contra toda la
     // tabla de clientes (miles de registros reales, no solo los 10 recientes).
     const filteredClients = searchedClients ?? clients;
+    const clientNotFound =
+        searchedClients !== null && searchedClients.length === 0;
 
     useEffect(() => {
         const term = clientSearch.trim();
@@ -200,34 +228,6 @@ export default function NuevaVenta({ clients, sedes }: Props) {
         selectedClientData ??
         clients.find((client) => client.id === form.data.client_id);
 
-    useEffect(() => {
-        const value = clientSearch.trim();
-        setLookup(null);
-
-        if (!/^\d{8}$|^\d{11}$/.test(value)) {
-            return;
-        }
-
-        const timeout = window.setTimeout(async () => {
-            setLookupLoading(true);
-            try {
-                const response = await fetch(
-                    rucLookup.url(teamSlug, {
-                        query: { numero_documento: value },
-                    }),
-                );
-                const payload = (await response.json()) as LookupResponse;
-                setLookup(payload);
-            } catch {
-                setLookup({ message: 'No se pudo consultar el documento.' });
-            } finally {
-                setLookupLoading(false);
-            }
-        }, 350);
-
-        return () => window.clearTimeout(timeout);
-    }, [clientSearch, teamSlug]);
-
     const subtotal = form.data.items.reduce(
         (sum, item) =>
             sum + item.cantidad * item.precio_unitario - item.descuento,
@@ -235,6 +235,39 @@ export default function NuevaVenta({ clients, sedes }: Props) {
     );
     const igv = subtotal * 0.18;
     const total = subtotal + igv;
+
+    // SUNAT solo acepta factura a clientes con RUC (error 2800 con DNI) y
+    // la boleta a CLIENTES VARIOS solo hasta el límite sin identificar.
+    const clienteSinRuc =
+        selectedClient !== undefined &&
+        selectedClient !== null &&
+        selectedClient.tipo_documento !== undefined &&
+        selectedClient.tipo_documento !== 'ruc';
+    const esClientesVarios = selectedClient?.id === clientesVarios.id;
+    const boletaSuperaLimite =
+        esClientesVarios &&
+        form.data.comprobante_tipo === 'boleta' &&
+        total > limiteBoletaSinIdentificar;
+
+    useEffect(() => {
+        if (clienteSinRuc && form.data.comprobante_tipo === 'factura') {
+            form.setData('comprobante_tipo', 'boleta');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [clienteSinRuc, form.data.comprobante_tipo]);
+
+    const seleccionarClientesVarios = () => {
+        form.setData((data) => ({
+            ...data,
+            client_id: clientesVarios.id,
+            comprobante_tipo:
+                data.comprobante_tipo === 'factura'
+                    ? 'boleta'
+                    : data.comprobante_tipo,
+        }));
+        setSelectedClientData(clientesVarios);
+        setClientSearch('');
+    };
 
     const setItems = (items: SaleItemForm[]) => form.setData('items', items);
 
@@ -279,6 +312,11 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                 return;
             }
 
+            // Si la venta viene de una cotización, se respeta el precio cotizado.
+            const precioCotizado = quote?.items.find(
+                (line) => line.product_id === payload.product_id,
+            )?.precio_unitario;
+
             setItems([
                 ...form.data.items,
                 {
@@ -286,7 +324,8 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                     numero_serie: payload.numero_serie,
                     product_id: payload.product_id,
                     cantidad: 1,
-                    precio_unitario: Number(payload.precio_venta) || 0,
+                    precio_unitario:
+                        precioCotizado ?? (Number(payload.precio_venta) || 0),
                     descuento: 0,
                     nombre: payload.nombre,
                     inventory_unit_id: payload.inventory_unit_id,
@@ -317,6 +356,73 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                 className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]"
             >
                 <div className="flex min-w-0 flex-col gap-4">
+                    {quote ? (
+                        <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
+                                    <FileText className="size-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
+                                        Desde la cotización {quote.numero}
+                                    </h2>
+                                    <p className="text-muted-foreground text-[12px]">
+                                        {quote.client.razon_social}. Elige la
+                                        sede y escanea la serie de cada producto
+                                        cotizado; se respeta el precio de la
+                                        cotización.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="border-border overflow-hidden rounded-[10px] border">
+                                {quote.items.map((line, index) => {
+                                    const escaneadas =
+                                        line.tipo === 'product'
+                                            ? form.data.items.filter(
+                                                  (item) =>
+                                                      item.product_id ===
+                                                      line.product_id,
+                                              ).length
+                                            : null;
+                                    const completa =
+                                        escaneadas !== null &&
+                                        escaneadas >= line.cantidad;
+
+                                    return (
+                                        <div
+                                            key={`${line.tipo}-${line.product_id ?? line.service_id}-${index}`}
+                                            className="border-border bg-card flex items-center justify-between gap-3 border-b px-3 py-2.5 last:border-b-0"
+                                        >
+                                            <div className="min-w-0">
+                                                <span className="text-foreground block truncate text-[13px] font-bold">
+                                                    {line.nombre}
+                                                </span>
+                                                <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                    {line.tipo === 'service'
+                                                        ? 'Servicio'
+                                                        : 'Producto'}{' '}
+                                                    · {line.cantidad} ×{' '}
+                                                    {money(
+                                                        line.precio_unitario,
+                                                    )}
+                                                </span>
+                                            </div>
+                                            {escaneadas !== null ? (
+                                                <Badge
+                                                    className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold ${completa ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
+                                                >
+                                                    {escaneadas} de{' '}
+                                                    {line.cantidad} escaneadas
+                                                </Badge>
+                                            ) : null}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            {fieldError(form.errors, 'quote_id')}
+                        </Card>
+                    ) : null}
+
                     <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                         <div className="flex flex-wrap items-center gap-3">
                             <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
@@ -335,30 +441,67 @@ export default function NuevaVenta({ clients, sedes }: Props) {
 
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Buscar cliente
-                                </Label>
-                                <div className="border-border bg-muted/40 mt-1 flex items-center gap-2 rounded-[9px] border px-3">
-                                    <Search className="text-muted-foreground size-3.5 shrink-0" />
-                                    <input
-                                        value={clientSearch}
-                                        onChange={(event) =>
-                                            setClientSearch(event.target.value)
-                                        }
-                                        placeholder="RUC, DNI o razón social..."
-                                        className="placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
-                                    />
-                                    {lookupLoading || clientSearchLoading ? (
-                                        <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
+                                <div className="flex items-center justify-between gap-2">
+                                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                        Buscar cliente
+                                    </Label>
+                                    {form.data.comprobante_tipo !==
+                                    'factura' ? (
+                                        <button
+                                            type="button"
+                                            onClick={seleccionarClientesVarios}
+                                            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold transition-colors ${esClientesVarios ? 'border-primary bg-destructive/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            Clientes varios
+                                        </button>
+                                    ) : null}
+                                </div>
+                                <div className="mt-1 flex items-stretch gap-2">
+                                    <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                                        <Search className="text-muted-foreground size-3.5 shrink-0" />
+                                        <input
+                                            value={clientSearch}
+                                            onChange={(event) =>
+                                                setClientSearch(
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder="RUC, DNI, nombre o razón social..."
+                                            className="placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
+                                        />
+                                        {clientSearchLoading ? (
+                                            <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
+                                        ) : null}
+                                    </div>
+                                    {clientNotFound ? (
+                                        <Button
+                                            type="button"
+                                            onClick={() =>
+                                                setClientDialogOpen(true)
+                                            }
+                                            className="h-auto shrink-0 rounded-[9px] bg-primary px-3.5 text-[12.5px] font-bold text-white shadow-none hover:bg-primary/90"
+                                        >
+                                            <UserRoundPlus className="size-3.5" />
+                                            Agregar cliente
+                                        </Button>
                                     ) : null}
                                 </div>
                                 {fieldError(form.errors, 'client_id')}
+                                {esClientesVarios ? (
+                                    <p
+                                        className={`mt-1 text-[11px] font-semibold ${boletaSuperaLimite ? 'text-destructive' : 'text-muted-foreground'}`}
+                                    >
+                                        {boletaSuperaLimite
+                                            ? `La boleta a CLIENTES VARIOS no puede superar S/ ${limiteBoletaSinIdentificar.toFixed(2)}. Busca o registra el DNI del cliente.`
+                                            : `Venta a CLIENTES VARIOS: boleta hasta S/ ${limiteBoletaSinIdentificar.toFixed(2)}.`}
+                                    </p>
+                                ) : null}
 
                                 <div className="border-border mt-2 max-h-[168px] overflow-y-auto rounded-[10px] border">
                                     {filteredClients.length === 0 ? (
                                         <div className="text-muted-foreground px-3 py-4 text-[12px]">
                                             {searchedClients !== null
-                                                ? 'No se encontraron clientes con esa búsqueda.'
+                                                ? 'No está registrado en la base de datos. Usa "Agregar cliente" para registrarlo.'
                                                 : 'No hay clientes recientes. Escribe para buscar.'}
                                         </div>
                                     ) : (
@@ -395,14 +538,6 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                         ))
                                     )}
                                 </div>
-
-                                {lookup ? (
-                                    <div className="border-border bg-muted/30 text-muted-foreground mt-2 rounded-[10px] border border-dashed px-3 py-2 text-[11.5px]">
-                                        {lookup.message
-                                            ? lookup.message
-                                            : `Consulta: ${lookup.razon_social ?? lookup.nombre_o_razon_social ?? 'documento encontrado'}`}
-                                    </div>
-                                ) : null}
                             </div>
 
                             <div className="grid gap-3">
@@ -429,6 +564,12 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                     </Label>
                                     <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                         <SegmentButton
+                                            disabled={clienteSinRuc}
+                                            title={
+                                                clienteSinRuc
+                                                    ? 'Para factura, el cliente necesita RUC'
+                                                    : undefined
+                                            }
                                             active={
                                                 form.data.comprobante_tipo ===
                                                 'factura'
@@ -471,6 +612,16 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                                             Nota de venta
                                         </SegmentButton>
                                     </div>
+                                    {clienteSinRuc ? (
+                                        <p className="text-muted-foreground mt-1 text-[11px]">
+                                            Para factura, el cliente necesita
+                                            RUC. Se emite boleta.
+                                        </p>
+                                    ) : null}
+                                    {fieldError(
+                                        form.errors,
+                                        'comprobante_tipo',
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -918,6 +1069,22 @@ export default function NuevaVenta({ clients, sedes }: Props) {
                     </Card>
                 </aside>
             </form>
+
+            <ClientCreateDialog
+                open={clientDialogOpen}
+                onOpenChange={setClientDialogOpen}
+                teamSlug={teamSlug}
+                initialDocumento={
+                    /^\d{8}$|^\d{11}$/.test(clientSearch.trim())
+                        ? clientSearch.trim()
+                        : ''
+                }
+                onCreated={(client) => {
+                    form.setData('client_id', client.id);
+                    setSelectedClientData(client);
+                    setSearchedClients([client]);
+                }}
+            />
         </VendedorLayout>
     );
 }

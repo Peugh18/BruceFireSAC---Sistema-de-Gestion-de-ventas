@@ -1,4 +1,4 @@
-﻿import { router, useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import {
     CheckCircle2,
     ClipboardList,
@@ -8,10 +8,12 @@ import {
     Plus,
     Search,
     Trash2,
+    UserRoundPlus,
     Wrench,
 } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 
+import ClientCreateDialog from '@/components/client-create-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,6 +25,7 @@ import type { Team } from '@/types';
 
 type ClientOption = {
     id: number;
+    tipo_documento?: string;
     razon_social: string;
     numero_documento: string;
 };
@@ -107,6 +110,7 @@ export default function NuevaCotizacion({
     });
 
     const [clientSearch, setClientSearch] = useState('');
+    const [clientDialogOpen, setClientDialogOpen] = useState(false);
     const [searchedClients, setSearchedClients] = useState<
         ClientOption[] | null
     >(null);
@@ -121,6 +125,8 @@ export default function NuevaCotizacion({
     // Con 2+ caracteres se busca en el servidor contra toda la tabla
     // (miles de clientes/productos reales, no solo el puñado inicial).
     const filteredClients = searchedClients ?? clients;
+    const clientNotFound =
+        searchedClients !== null && searchedClients.length === 0;
 
     useEffect(() => {
         const term = clientSearch.trim();
@@ -239,16 +245,32 @@ export default function NuevaCotizacion({
                                 <Label className="text-[11px] font-bold text-foreground/80 uppercase">
                                     Buscar cliente
                                 </Label>
-                                <div className="mt-1 flex items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
-                                    <Search className="size-3.5 shrink-0 text-muted-foreground" />
-                                    <input
-                                        value={clientSearch}
-                                        onChange={(event) =>
-                                            setClientSearch(event.target.value)
-                                        }
-                                        placeholder="RUC, DNI o razón social..."
-                                        className="h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
-                                    />
+                                <div className="mt-1 flex items-stretch gap-2">
+                                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
+                                        <Search className="size-3.5 shrink-0 text-muted-foreground" />
+                                        <input
+                                            value={clientSearch}
+                                            onChange={(event) =>
+                                                setClientSearch(
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder="RUC, DNI, nombre o razón social..."
+                                            className="h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+                                        />
+                                    </div>
+                                    {clientNotFound ? (
+                                        <Button
+                                            type="button"
+                                            onClick={() =>
+                                                setClientDialogOpen(true)
+                                            }
+                                            className="h-auto shrink-0 rounded-[9px] bg-primary px-3.5 text-[12.5px] font-bold text-white shadow-none hover:bg-primary/90"
+                                        >
+                                            <UserRoundPlus className="size-3.5" />
+                                            Agregar cliente
+                                        </Button>
+                                    ) : null}
                                 </div>
                                 {fieldError(form.errors, 'client_id')}
 
@@ -256,7 +278,7 @@ export default function NuevaCotizacion({
                                     {filteredClients.length === 0 ? (
                                         <div className="px-3 py-4 text-[12px] text-muted-foreground">
                                             {searchedClients !== null
-                                                ? 'No se encontraron clientes con esa búsqueda.'
+                                                ? 'No está registrado en la base de datos. Usa "Agregar cliente" para registrarlo.'
                                                 : 'No hay clientes recientes. Escribe para buscar.'}
                                         </div>
                                     ) : (
@@ -588,13 +610,17 @@ export default function NuevaCotizacion({
 
                         <div className="space-y-2 rounded-[12px] bg-muted/40 p-4 text-[13px]">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Subtotal</span>
+                                <span className="text-muted-foreground">
+                                    Subtotal
+                                </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
                                     {money(subtotal)}
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">IGV 18%</span>
+                                <span className="text-muted-foreground">
+                                    IGV 18%
+                                </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
                                     {money(igv)}
                                 </span>
@@ -667,6 +693,22 @@ export default function NuevaCotizacion({
                     </Card>
                 </aside>
             </form>
+
+            <ClientCreateDialog
+                open={clientDialogOpen}
+                onOpenChange={setClientDialogOpen}
+                teamSlug={teamSlug}
+                initialDocumento={
+                    /^\d{8}$|^\d{11}$/.test(clientSearch.trim())
+                        ? clientSearch.trim()
+                        : ''
+                }
+                onCreated={(client) => {
+                    form.setData('client_id', client.id);
+                    setSelectedClientData(client);
+                    setSearchedClients([client]);
+                }}
+            />
         </VendedorLayout>
     );
 }

@@ -54,9 +54,9 @@
             <tr><th>Descripción</th><th class="right">Cant.</th><th class="right">P. unit.</th><th class="right">Subtotal</th></tr>
         </thead>
         <tbody>
-            @foreach ($sale->items as $item)
+            @foreach ($sale->lineasComprobante() as $item)
                 <tr>
-                    <td>{{ $item->product?->nombre ?? $item->service?->nombre }} @if ($item->equipment?->numero_serie) · Serie {{ $item->equipment->numero_serie }} @endif</td>
+                    <td>{{ $item->product?->nombre ?? $item->service?->nombre }}</td>
                     <td class="right">{{ $item->cantidad }}</td>
                     <td class="right">{{ number_format((float) $item->precio_unitario, 2) }}</td>
                     <td class="right">{{ number_format((float) $item->subtotal, 2) }}</td>

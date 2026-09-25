@@ -167,6 +167,7 @@ test('issue credit note rejects unsupported originals and creates valid note', f
     $validOriginal = ElectronicDocument::factory()->create([
         'sale_id' => $sale->id,
         'tipo' => 'factura',
+        'sunat_estado' => 'aceptado',
     ]);
 
     expect(fn () => app(IssueCreditNote::class)->handle($invalidOriginal, '01', 'Anulación', 10))
@@ -210,3 +211,42 @@ function saleWithItem(): Sale
 
     return $sale;
 }
+
+test('el comprobante agrupa las unidades del mismo producto y precio en una sola linea', function () {
+    $sale = Sale::factory()->create([
+        'comprobante_tipo' => 'factura',
+        'condicion_pago' => 'contado',
+        'subtotal' => 490,
+        'igv' => 88.2,
+        'total' => 578.2,
+    ]);
+    $extintor = Product::factory()->create();
+    $otro = Product::factory()->create();
+
+    SaleItem::factory()->count(6)->create([
+        'sale_id' => $sale->id,
+        'product_id' => $extintor->id,
+        'cantidad' => 1,
+        'precio_unitario' => 65,
+        'descuento' => 0,
+        'subtotal' => 65,
+    ]);
+    SaleItem::factory()->create([
+        'sale_id' => $sale->id,
+        'product_id' => $otro->id,
+        'cantidad' => 1,
+        'precio_unitario' => 100,
+        'descuento' => 0,
+        'subtotal' => 100,
+    ]);
+    $document = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura']);
+
+    $details = app(GreenterService::class)->buildInvoice($sale, $document)->getDetails();
+
+    expect($details)->toHaveCount(2)
+        ->and($details[0]->getCodProducto())->toBe($extintor->codigo)
+        ->and($details[0]->getCantidad())->toEqual(6.0)
+        ->and($details[0]->getMtoValorUnitario())->toEqual(65.0)
+        ->and($details[0]->getMtoValorVenta())->toEqual(390.0)
+        ->and($details[1]->getCantidad())->toEqual(1.0);
+});

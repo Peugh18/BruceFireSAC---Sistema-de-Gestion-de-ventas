@@ -73,9 +73,15 @@ export function SaleNotesPanel({ teamSlug, documents, saleEstado }: Props) {
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState<NoteKind>('nota_credito');
 
-    const original = documents.find(
-        (d) => d.tipo === 'factura' || d.tipo === 'boleta',
-    );
+    // Solo un comprobante que SUNAT ya aceptó admite notas; antes de eso se
+    // corrige con "Editar comprobante".
+    const original = documents
+        .filter(
+            (d) =>
+                (d.tipo === 'factura' || d.tipo === 'boleta') &&
+                ['aceptado', 'observado'].includes(d.sunat_estado ?? ''),
+        )
+        .at(-1);
     const notas = documents.filter(
         (d) => d.tipo === 'nota_credito' || d.tipo === 'nota_debito',
     );

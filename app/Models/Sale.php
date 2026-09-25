@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * @property int $id
@@ -51,6 +52,11 @@ class Sale extends Model
     use HasFactory;
 
     public const NOTA_VENTA = 'nota_venta';
+
+    /**
+     * Monto máximo de una boleta sin identificar al cliente (CLIENTES VARIOS).
+     */
+    public const LIMITE_BOLETA_SIN_IDENTIFICAR = 700.00;
 
     /**
      * Una nota de venta es una venta interna: no se envía a SUNAT.
@@ -113,5 +119,46 @@ class Sale extends Model
     public function electronicDocuments(): HasMany
     {
         return $this->hasMany(ElectronicDocument::class);
+    }
+
+    /**
+     * Líneas tal como salen en el comprobante (XML a SUNAT y PDF). Cada
+     * unidad serializada se guarda como su propio ítem para el control
+     * interno de series; al cliente se le muestra una sola línea por
+     * producto/servicio y precio, con la cantidad y el total sumados.
+     *
+     * @return SupportCollection<int, SaleItem>
+     */
+    public function lineasComprobante(): SupportCollection
+    {
+        $this->loadMissing('items.product', 'items.service');
+
+        return $this->items
+            ->groupBy(fn (SaleItem $item) => implode('|', [
+                $item->product_id,
+                $item->service_id,
+                $item->precio_unitario,
+            ]))
+            ->map(function (Collection $grupo) {
+                /** @var SaleItem $primero */
+                $primero = $grupo->first();
+
+                $linea = new SaleItem([
+                    'sale_id' => $this->id,
+                    'product_id' => $primero->product_id,
+                    'service_id' => $primero->service_id,
+                    'tipo_linea' => $primero->tipo_linea,
+                    'cantidad' => $grupo->sum('cantidad'),
+                    'precio_unitario' => $primero->precio_unitario,
+                    'descuento' => round($grupo->sum(fn (SaleItem $item) => (float) $item->descuento), 2),
+                    'subtotal' => round($grupo->sum(fn (SaleItem $item) => (float) $item->subtotal), 2),
+                ]);
+                $linea->setRelation('product', $primero->product);
+                $linea->setRelation('service', $primero->service);
+
+                return $linea;
+            })
+            ->values()
+            ->toBase();
     }
 }

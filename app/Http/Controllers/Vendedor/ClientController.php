@@ -82,21 +82,35 @@ class ClientController extends Controller
             return response()->json([]);
         }
 
+        $words = preg_split('/\s+/', trim($search), -1, PREG_SPLIT_NO_EMPTY);
+
         $clients = Client::query()
-            ->where(function ($query) use ($search) {
-                $query->where('razon_social', 'like', "%{$search}%")
-                    ->orWhere('numero_documento', 'like', "%{$search}%");
+            ->where(function ($query) use ($search, $words) {
+                $query->where('numero_documento', 'like', "%{$search}%")
+                    ->orWhere('codigo_interno', 'like', "%{$search}%")
+                    ->orWhere(function ($query) use ($words) {
+                        foreach ($words as $word) {
+                            $query->where(function ($query) use ($word) {
+                                $query->where('razon_social', 'like', "%{$word}%")
+                                    ->orWhere('nombre_comercial', 'like', "%{$word}%");
+                            });
+                        }
+                    });
             })
             ->orderBy('razon_social')
             ->limit(10)
-            ->get(['id', 'razon_social', 'numero_documento']);
+            ->get(['id', 'tipo_documento', 'razon_social', 'numero_documento']);
 
         return response()->json($clients);
     }
 
-    public function store(StoreClientRequest $request, CreateClient $createClient): RedirectResponse
+    public function store(StoreClientRequest $request, CreateClient $createClient): RedirectResponse|JsonResponse
     {
         $client = $createClient->handle($request->validated());
+
+        if ($request->expectsJson()) {
+            return response()->json($client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 201);
+        }
 
         return redirect()->route('vendedor.clientes.show', [
             'current_team' => $request->route('current_team'),

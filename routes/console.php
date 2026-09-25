@@ -13,3 +13,4 @@ Schedule::call(function () {
 Schedule::command('quotes:expire')->daily();
 Schedule::command('alerts:recompute')->daily();
 Schedule::command('ml:score-clients')->daily();
+Schedule::command('billing:enviar-programados')->everyFiveMinutes()->withoutOverlapping();

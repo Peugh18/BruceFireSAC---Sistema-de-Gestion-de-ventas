@@ -14,6 +14,7 @@ use App\Models\Team;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -123,9 +124,11 @@ class QuoteController extends Controller
 
         $quote = $createQuote->handle($data, $items, $request->user()->id);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} creada. Pulsa Enviar cuando se la mandes al cliente."]);
+
         return redirect()->route('vendedor.cotizaciones.index', [
             'current_team' => $request->route('current_team'),
-        ])->with('success', "Cotización {$quote->numero} creada correctamente.");
+        ]);
     }
 
     /**
@@ -137,9 +140,23 @@ class QuoteController extends Controller
      * implícito) aunque no se use, en vez de dejar que "current_team" se
      * cuele posicionalmente en el lugar de $quote.
      */
+    /**
+     * La lista solo ofrece "Enviar": un borrador se emite y se envía en el
+     * mismo paso, respetando la secuencia borrador → emitida → enviada.
+     */
     public function send(Team $current_team, Quote $quote): RedirectResponse
     {
-        app(TransitionQuoteState::class)->handle($quote, 'enviada');
+        $transitionQuoteState = app(TransitionQuoteState::class);
+
+        DB::transaction(function () use ($quote, $transitionQuoteState) {
+            if ($quote->estado === 'borrador') {
+                $transitionQuoteState->handle($quote, 'emitida');
+            }
+
+            $transitionQuoteState->handle($quote, 'enviada');
+        });
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} enviada al cliente."]);
 
         return back();
     }
@@ -148,12 +165,16 @@ class QuoteController extends Controller
     {
         app(TransitionQuoteState::class)->handle($quote, 'aceptada');
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} aceptada. Ya puedes pasarla a venta."]);
+
         return back();
     }
 
     public function reject(Team $current_team, Quote $quote): RedirectResponse
     {
         app(TransitionQuoteState::class)->handle($quote, 'rechazada');
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} rechazada."]);
 
         return back();
     }

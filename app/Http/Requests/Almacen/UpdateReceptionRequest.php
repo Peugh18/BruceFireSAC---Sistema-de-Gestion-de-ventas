@@ -28,6 +28,8 @@ class UpdateReceptionRequest extends FormRequest
             'items.*.cantidad_conforme' => ['required', 'integer', 'min:0'],
             'items.*.observacion_item' => ['nullable', 'string'],
             'items.*.unidades_nuevas' => ['nullable', 'array'],
+            'items.*.unidades_nuevas.*.capacidad' => ['required_with:items.*.unidades_nuevas', 'string', 'max:50'],
+            'items.*.unidades_nuevas.*.serie_fabricante' => ['nullable', 'string', 'max:100'],
             'items.*.unidades_nuevas.*.marca' => ['required_with:items.*.unidades_nuevas', 'string', 'max:100'],
             'items.*.unidades_nuevas.*.anio_fabricacion' => [
                 'required_with:items.*.unidades_nuevas',

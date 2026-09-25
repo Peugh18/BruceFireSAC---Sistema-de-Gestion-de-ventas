@@ -1,10 +1,11 @@
-﻿import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     AlertTriangle,
     ArrowLeft,
     Check,
     CheckCircle2,
+    Copy,
     Package,
     Plus,
     ScanBarcode,
@@ -36,6 +37,8 @@ export type ProductOption = {
 };
 
 export type UnidadSerializadaForm = {
+    capacidad: string;
+    serie_fabricante: string;
     marca: string;
     anio_fabricacion: number;
 };
@@ -77,6 +80,32 @@ export default function RecepcionesCreate({
         items: [] as ReceptionItemForm[],
     });
 
+    const newUnit = (): UnidadSerializadaForm => ({
+        capacidad: '',
+        serie_fabricante: '',
+        marca: '',
+        anio_fabricacion: current_year,
+    });
+
+    const copyFirstUnitToAll = (itemIndex: number) => {
+        const next = [...data.items];
+        const [first, ...rest] = next[itemIndex].unidades;
+        if (!first) return;
+        next[itemIndex] = {
+            ...next[itemIndex],
+            unidades: [
+                first,
+                ...rest.map((unit) => ({
+                    ...unit,
+                    capacidad: first.capacidad,
+                    marca: first.marca,
+                    anio_fabricacion: first.anio_fabricacion,
+                })),
+            ],
+        };
+        setData('items', next);
+    };
+
     const addLine = () => {
         if (products.length === 0) return;
         const firstProd = products[0];
@@ -87,9 +116,7 @@ export default function RecepcionesCreate({
                 cantidad: 1,
                 cantidad_conforme: 1,
                 observacion_item: '',
-                unidades: firstProd.serializado
-                    ? [{ marca: '', anio_fabricacion: current_year }]
-                    : [],
+                unidades: firstProd.serializado ? [newUnit()] : [],
             },
         ]);
     };
@@ -109,10 +136,7 @@ export default function RecepcionesCreate({
             ...next[index],
             product_id: productId,
             unidades: prod?.serializado
-                ? Array.from({ length: conforme }, () => ({
-                      marca: '',
-                      anio_fabricacion: current_year,
-                  }))
+                ? Array.from({ length: conforme }, () => newUnit())
                 : [],
         };
         setData('items', next);
@@ -129,11 +153,7 @@ export default function RecepcionesCreate({
         if (prod?.serializado) {
             unidades = Array.from(
                 { length: newConforme },
-                (_, i) =>
-                    unidades[i] || {
-                        marca: '',
-                        anio_fabricacion: current_year,
-                    },
+                (_, i) => unidades[i] || newUnit(),
             );
         }
 
@@ -155,11 +175,7 @@ export default function RecepcionesCreate({
         if (prod?.serializado) {
             unidades = Array.from(
                 { length: val },
-                (_, i) =>
-                    unidades[i] || {
-                        marca: '',
-                        anio_fabricacion: current_year,
-                    },
+                (_, i) => unidades[i] || newUnit(),
             );
         }
 
@@ -565,92 +581,183 @@ export default function RecepcionesCreate({
                                         {isSerializado &&
                                             item.cantidad_conforme > 0 && (
                                                 <div className="mt-1 rounded-[12px] border border-border bg-muted/40 p-4">
-                                                    <div className="mb-3 flex items-center gap-1.5 text-xs font-bold text-foreground">
-                                                        <ScanBarcode className="size-4 text-emerald-600 dark:text-emerald-400" />
-                                                        <span>
-                                                            Captura de Unidades
-                                                            Físicas (
-                                                            {
-                                                                item.cantidad_conforme
-                                                            }{' '}
-                                                            conformes)
-                                                        </span>
-                                                        <span className="text-[11px] font-normal text-muted-foreground">
-                                                            — Los números de
-                                                            serie correlativos
-                                                            BF-EQ-XXXXXX se
-                                                            generan
-                                                            automáticamente.
-                                                        </span>
+                                                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                                        <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-foreground">
+                                                            <ScanBarcode className="size-4 text-emerald-600 dark:text-emerald-400" />
+                                                            <span>
+                                                                Captura de
+                                                                Unidades Físicas
+                                                                (
+                                                                {
+                                                                    item.cantidad_conforme
+                                                                }{' '}
+                                                                conformes)
+                                                            </span>
+                                                            <span className="text-[11px] font-normal text-muted-foreground">
+                                                                — El código
+                                                                interno
+                                                                BF-EQ-XXXXXX se
+                                                                genera
+                                                                automáticamente.
+                                                            </span>
+                                                        </div>
+                                                        {item.unidades.length >
+                                                            1 && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    copyFirstUnitToAll(
+                                                                        index,
+                                                                    )
+                                                                }
+                                                                className="h-7 text-[11px]"
+                                                            >
+                                                                <Copy className="size-3.5" />
+                                                                Copiar fila 1 a
+                                                                todas
+                                                            </Button>
+                                                        )}
                                                     </div>
 
-                                                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                                        {item.unidades.map(
-                                                            (unit, uIdx) => (
-                                                                <div
-                                                                    key={uIdx}
-                                                                    className="flex items-center gap-2 rounded-lg border border-border bg-card p-2 text-xs"
-                                                                >
-                                                                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
-                                                                        {uIdx +
-                                                                            1}
-                                                                    </span>
-
-                                                                    <div className="flex-1">
-                                                                        <Input
-                                                                            placeholder="Marca (ej. BADGER)"
-                                                                            value={
-                                                                                unit.marca
+                                                    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+                                                        <table className="w-full min-w-[560px] text-xs">
+                                                            <thead>
+                                                                <tr className="bg-primary text-left text-[10px] font-bold tracking-wide text-primary-foreground uppercase">
+                                                                    <th className="w-12 px-2 py-2 text-center">
+                                                                        Ítem
+                                                                    </th>
+                                                                    <th className="px-2 py-2">
+                                                                        Capacidad
+                                                                    </th>
+                                                                    <th className="px-2 py-2">
+                                                                        N° de
+                                                                        serie
+                                                                    </th>
+                                                                    <th className="px-2 py-2">
+                                                                        Marca
+                                                                    </th>
+                                                                    <th className="w-24 px-2 py-2">
+                                                                        Año fab.
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {item.unidades.map(
+                                                                    (
+                                                                        unit,
+                                                                        uIdx,
+                                                                    ) => (
+                                                                        <tr
+                                                                            key={
+                                                                                uIdx
                                                                             }
-                                                                            onChange={(
-                                                                                e,
-                                                                            ) =>
-                                                                                updateLineUnidad(
-                                                                                    index,
-                                                                                    uIdx,
-                                                                                    'marca',
-                                                                                    e
-                                                                                        .target
-                                                                                        .value,
-                                                                                )
-                                                                            }
-                                                                            className="h-7 text-[11px]"
-                                                                            required
-                                                                        />
-                                                                    </div>
-
-                                                                    <div className="w-[85px]">
-                                                                        <Input
-                                                                            type="number"
-                                                                            min="1990"
-                                                                            max={
-                                                                                current_year
-                                                                            }
-                                                                            placeholder="Año"
-                                                                            value={
-                                                                                unit.anio_fabricacion
-                                                                            }
-                                                                            onChange={(
-                                                                                e,
-                                                                            ) =>
-                                                                                updateLineUnidad(
-                                                                                    index,
-                                                                                    uIdx,
-                                                                                    'anio_fabricacion',
-                                                                                    Number(
-                                                                                        e
-                                                                                            .target
-                                                                                            .value,
-                                                                                    ),
-                                                                                )
-                                                                            }
-                                                                            className="h-7 text-[11px]"
-                                                                            required
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            ),
-                                                        )}
+                                                                            className="border-t border-border"
+                                                                        >
+                                                                            <td className="px-2 py-1.5 text-center font-bold text-muted-foreground">
+                                                                                {uIdx +
+                                                                                    1}
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5">
+                                                                                <Input
+                                                                                    placeholder="Ej. 6 kg"
+                                                                                    value={
+                                                                                        unit.capacidad
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) =>
+                                                                                        updateLineUnidad(
+                                                                                            index,
+                                                                                            uIdx,
+                                                                                            'capacidad',
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    className="h-7 text-[11px]"
+                                                                                    required
+                                                                                />
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5">
+                                                                                <Input
+                                                                                    placeholder="Serie del fabricante"
+                                                                                    value={
+                                                                                        unit.serie_fabricante
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) =>
+                                                                                        updateLineUnidad(
+                                                                                            index,
+                                                                                            uIdx,
+                                                                                            'serie_fabricante',
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    className="h-7 text-[11px]"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5">
+                                                                                <Input
+                                                                                    placeholder="Ej. BADGER"
+                                                                                    value={
+                                                                                        unit.marca
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) =>
+                                                                                        updateLineUnidad(
+                                                                                            index,
+                                                                                            uIdx,
+                                                                                            'marca',
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    className="h-7 text-[11px]"
+                                                                                    required
+                                                                                />
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5">
+                                                                                <Input
+                                                                                    type="number"
+                                                                                    min="1990"
+                                                                                    max={
+                                                                                        current_year
+                                                                                    }
+                                                                                    placeholder="Año"
+                                                                                    value={
+                                                                                        unit.anio_fabricacion
+                                                                                    }
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) =>
+                                                                                        updateLineUnidad(
+                                                                                            index,
+                                                                                            uIdx,
+                                                                                            'anio_fabricacion',
+                                                                                            Number(
+                                                                                                e
+                                                                                                    .target
+                                                                                                    .value,
+                                                                                            ),
+                                                                                        )
+                                                                                    }
+                                                                                    className="h-7 text-[11px]"
+                                                                                    required
+                                                                                />
+                                                                            </td>
+                                                                        </tr>
+                                                                    ),
+                                                                )}
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             )}

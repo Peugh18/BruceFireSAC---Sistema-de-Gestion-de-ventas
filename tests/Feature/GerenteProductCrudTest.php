@@ -77,6 +77,24 @@ test('gerente puede crear un nuevo producto con stock minimo', function () {
     ]);
 });
 
+test('al crear un producto el catalogo muestra el aviso de producto creado', function () {
+    $user = createGerenteUserForProductTest();
+
+    $this->actingAs($user)
+        ->followingRedirects()
+        ->post(route('gerente.productos.store', ['current_team' => $user->currentTeam]), [
+            'codigo' => 'PROD-AVISO-01',
+            'nombre' => 'Extintor CO2 5kg',
+            'unidad_medida' => 'NIU',
+            'precio_venta' => 250,
+        ])
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('gerente/productos/index')
+            ->where('flash.success', 'Producto creado exitosamente.')
+        );
+});
+
 test('gerente puede editar un producto existente y modificar stock minimo', function () {
     $user = createGerenteUserForProductTest();
     $product = Product::factory()->create([

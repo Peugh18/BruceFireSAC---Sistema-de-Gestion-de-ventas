@@ -15,15 +15,17 @@ class ConfirmSale
 
     public function __construct(
         protected EmitElectronicDocument $emitElectronicDocument,
+        protected ValidarComprobanteCliente $validarComprobanteCliente,
         protected ReserveNextCorrelativo $reserveNextCorrelativo,
     ) {}
 
     /**
      * Confirma una venta en borrador: valida que el RUC del cliente esté
      * Activo y Habido (regla dura SUNAT, ver Documento Maestro §78.1) y,
-     * si el comprobante es Factura o Boleta, emite el comprobante
-     * electrónico. No aplica a Boleta con DNI: las personas naturales no
-     * tienen estado de contribuyente.
+     * si el comprobante es Factura o Boleta, lo deja "por enviar": se envía a
+     * SUNAT al vencer la ventana de revisión (billing.envio_diferido_horas).
+     * No aplica a Boleta con DNI: las personas naturales no tienen estado de
+     * contribuyente.
      *
      * Una nota de venta es una venta interna: no valida el RUC, no se envía
      * a SUNAT y recibe una numeración propia NV independiente de F001/B001.
@@ -42,14 +44,12 @@ class ConfirmSale
             return $this->confirmarNotaVenta($sale);
         }
 
-        if ($sale->client->tipo_documento === 'ruc') {
-            $this->assertRucActivoYHabido($sale);
-        }
+        $this->validarComprobanteCliente->handle($sale->client, $sale->comprobante_tipo, (float) $sale->total, exigirRucHabido: true);
 
         return DB::transaction(function () use ($sale) {
             $sale->update(['estado' => 'confirmada']);
 
-            $this->emitElectronicDocument->handle($sale);
+            $this->emitElectronicDocument->programar($sale);
 
             return $sale->refresh();
         });
@@ -74,16 +74,5 @@ class ConfirmSale
 
             return $sale->refresh();
         });
-    }
-
-    protected function assertRucActivoYHabido(Sale $sale): void
-    {
-        $client = $sale->client;
-
-        if ($client->estado_contribuyente !== 'ACTIVO' || $client->condicion_domicilio !== 'HABIDO') {
-            throw ValidationException::withMessages([
-                'client_id' => "No se puede facturar a {$client->razon_social}: su RUC no está Activo y Habido ante SUNAT (estado: {$client->estado_contribuyente}, domicilio: {$client->condicion_domicilio}).",
-            ]);
-        }
     }
 }

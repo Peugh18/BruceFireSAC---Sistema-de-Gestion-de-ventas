@@ -37,6 +37,8 @@ class StoreReceptionRequest extends FormRequest
             'items.*.cantidad_conforme' => ['required', 'integer', 'min:0'],
             'items.*.observacion_item' => ['nullable', 'string'],
             'items.*.unidades' => ['nullable', 'array'],
+            'items.*.unidades.*.capacidad' => ['required_with:items.*.unidades', 'string', 'max:50'],
+            'items.*.unidades.*.serie_fabricante' => ['nullable', 'string', 'max:100'],
             'items.*.unidades.*.marca' => ['required_with:items.*.unidades', 'string', 'max:100'],
             'items.*.unidades.*.anio_fabricacion' => [
                 'required_with:items.*.unidades',

@@ -10,7 +10,7 @@ dibujo, no un enlace real (verificado en modo Vista Previa: clic en
 "Dashboard" no navegaba a ninguna parte). Antes de retomar diseño hay
 que tener este mapa cerrado para no rehacer pantallas.
 
-------------------------------------------------------------------------
+---
 
 ## 0. Correcciones de esta revisión (2026-09-19, sesión de diseño)
 
@@ -112,35 +112,35 @@ Leyenda: **TOTAL** (crear/editar/eliminar) · **VER** (solo lectura) ·
 **PROPIO** (solo sus propios registros) · **APRUEBA** (crea y/o
 aprueba/rechaza) · **NO** (sin acceso).
 
-| Módulo | Gerente | Vendedor | Almacén | Téc. Planta | Téc. Campo |
-|---|---|---|---|---|---|
-| Dashboard | TOTAL (mensual) | PROPIO (día) | PROPIO | PROPIO | PROPIO |
-| Notificaciones | PROPIO | PROPIO | PROPIO | PROPIO | PROPIO |
-| Clientes | TOTAL | TOTAL | VER | NO | VER |
-| Equipos del Cliente | TOTAL | VER | VER | APRUEBA (certifica) | APRUEBA (campo) |
-| Inventario | TOTAL | VER (para vender) | TOTAL | APRUEBA (consumo insumos) | NO |
-| Cotizaciones | TOTAL | TOTAL | NO | NO | NO |
-| Ventas | TOTAL | TOTAL | NO | NO | NO |
-| Cobranzas | TOTAL | PROPIO (sus ventas) | NO | NO | NO |
-| Órdenes de Servicio | TOTAL | APRUEBA (crea) | NO | PROPIO (taller) | PROPIO (campo) |
-| Checklist / Inspecciones | VER | NO | NO | TOTAL | TOTAL |
-| Instalaciones | VER | NO | NO | NO | TOTAL |
-| Alta Técnica Rápida | VER | NO | APRUEBA | APRUEBA | APRUEBA |
-| Deficiencias | APRUEBA | VER | NO | APRUEBA (crea) | APRUEBA (crea) |
-| Autorización de Adicionales | APRUEBA | APRUEBA | NO | APRUEBA (crea) | APRUEBA (crea) |
-| Cadena de Custodia | VER | NO | APRUEBA (recepción) | APRUEBA | APRUEBA |
-| Acta de Conformidad | VER | NO | NO | NO | APRUEBA (firma) |
-| Comunicación por Orden | VER | APRUEBA | NO | APRUEBA | NO |
-| Evidencia Fotográfica | VER | NO | NO | APRUEBA | APRUEBA |
-| Alertas de Vencimiento | TOTAL | PROPIO (sus clientes) | NO | NO | PROPIO (sus visitas) |
-| Motor de Certificados | TOTAL | VER (imprime) | NO | APRUEBA (operatividad/P.H.) | APRUEBA (detección/lámina) |
-| Facturación Electrónica | TOTAL | APRUEBA (emite) | NO | NO | NO |
-| Notas de Crédito/Débito | TOTAL | APRUEBA (con aprobación) | NO | NO | NO |
-| Guía de Remisión | TOTAL | APRUEBA (crea) | APRUEBA (despacho) | NO | NO |
-| Reportes | TOTAL | PROPIO | PROPIO (inventario) | PROPIO | PROPIO |
-| Roles y Permisos | TOTAL (único) | NO | NO | NO | NO |
-| Auditoría | TOTAL | NO | NO | NO | NO |
-| Asistente IA | TOTAL (predictivo + gerencial) | PROPIO (sus clientes) | PROPIO (riesgo de stock) | APRUEBA (lee, técnico confirma) | APRUEBA (lee, técnico confirma) |
+| Módulo                      | Gerente                        | Vendedor                 | Almacén                  | Téc. Planta                     | Téc. Campo                      |
+| --------------------------- | ------------------------------ | ------------------------ | ------------------------ | ------------------------------- | ------------------------------- |
+| Dashboard                   | TOTAL (mensual)                | PROPIO (día)             | PROPIO                   | PROPIO                          | PROPIO                          |
+| Notificaciones              | PROPIO                         | PROPIO                   | PROPIO                   | PROPIO                          | PROPIO                          |
+| Clientes                    | TOTAL                          | TOTAL                    | VER                      | NO                              | VER                             |
+| Equipos del Cliente         | TOTAL                          | VER                      | VER                      | APRUEBA (certifica)             | APRUEBA (campo)                 |
+| Inventario                  | TOTAL                          | VER (para vender)        | TOTAL                    | APRUEBA (consumo insumos)       | NO                              |
+| Cotizaciones                | TOTAL                          | TOTAL                    | NO                       | NO                              | NO                              |
+| Ventas                      | TOTAL                          | TOTAL                    | NO                       | NO                              | NO                              |
+| Cobranzas                   | TOTAL                          | PROPIO (sus ventas)      | NO                       | NO                              | NO                              |
+| Órdenes de Servicio         | TOTAL                          | APRUEBA (crea)           | NO                       | PROPIO (taller)                 | PROPIO (campo)                  |
+| Checklist / Inspecciones    | VER                            | NO                       | NO                       | TOTAL                           | TOTAL                           |
+| Instalaciones               | VER                            | NO                       | NO                       | NO                              | TOTAL                           |
+| Alta Técnica Rápida         | VER                            | NO                       | APRUEBA                  | APRUEBA                         | APRUEBA                         |
+| Deficiencias                | APRUEBA                        | VER                      | NO                       | APRUEBA (crea)                  | APRUEBA (crea)                  |
+| Autorización de Adicionales | APRUEBA                        | APRUEBA                  | NO                       | APRUEBA (crea)                  | APRUEBA (crea)                  |
+| Cadena de Custodia          | VER                            | NO                       | APRUEBA (recepción)      | APRUEBA                         | APRUEBA                         |
+| Acta de Conformidad         | VER                            | NO                       | NO                       | NO                              | APRUEBA (firma)                 |
+| Comunicación por Orden      | VER                            | APRUEBA                  | NO                       | APRUEBA                         | NO                              |
+| Evidencia Fotográfica       | VER                            | NO                       | NO                       | APRUEBA                         | APRUEBA                         |
+| Alertas de Vencimiento      | TOTAL                          | PROPIO (sus clientes)    | NO                       | NO                              | PROPIO (sus visitas)            |
+| Motor de Certificados       | TOTAL                          | VER (imprime)            | NO                       | APRUEBA (operatividad/P.H.)     | APRUEBA (detección/lámina)      |
+| Facturación Electrónica     | TOTAL                          | APRUEBA (emite)          | NO                       | NO                              | NO                              |
+| Notas de Crédito/Débito     | TOTAL                          | APRUEBA (con aprobación) | NO                       | NO                              | NO                              |
+| Guía de Remisión            | TOTAL                          | APRUEBA (crea)           | APRUEBA (despacho)       | NO                              | NO                              |
+| Reportes                    | TOTAL                          | PROPIO                   | PROPIO (inventario)      | PROPIO                          | PROPIO                          |
+| Roles y Permisos            | TOTAL (único)                  | NO                       | NO                       | NO                              | NO                              |
+| Auditoría                   | TOTAL                          | NO                       | NO                       | NO                              | NO                              |
+| Asistente IA                | TOTAL (predictivo + gerencial) | PROPIO (sus clientes)    | PROPIO (riesgo de stock) | APRUEBA (lee, técnico confirma) | APRUEBA (lee, técnico confirma) |
 
 ## 5. Cómo Gerencia activa o retira módulos (sin tocar código)
 

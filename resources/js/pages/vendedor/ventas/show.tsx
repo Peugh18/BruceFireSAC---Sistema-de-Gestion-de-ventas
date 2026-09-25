@@ -1,12 +1,28 @@
-﻿import { Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Banknote, CalendarDays, ReceiptText } from 'lucide-react';
+import { Link, router, usePage } from '@inertiajs/react';
+import {
+    ArrowLeft,
+    Banknote,
+    CalendarDays,
+    Clock3,
+    FileText,
+    PencilLine,
+    ReceiptText,
+    Send,
+    TriangleAlert,
+    XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
+import ComprobanteEditDialog, {
+    type ComprobanteClient,
+} from '@/components/comprobante-edit-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SaleNotesPanel } from '@/components/sale-notes-panel';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import facturacion from '@/routes/vendedor/facturacion';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
@@ -39,6 +55,8 @@ type ElectronicDocument = {
     importe?: number | string | null;
     sunat_estado?: string;
     sunat_mensaje?: string;
+    enviar_desde?: string | null;
+    pdf_path?: string | null;
 };
 
 type Sale = {
@@ -53,13 +71,17 @@ type Sale = {
     igv?: number | string;
     total?: number | string;
     estado?: string;
-    client?: { razon_social?: string; numero_documento?: string };
+    client: ComprobanteClient;
     items?: SaleItem[];
     payments?: SalePayment[];
     electronic_documents?: ElectronicDocument[];
 };
 
-type Props = { sale: Sale };
+type Props = {
+    sale: Sale;
+    clientesVarios: ComprobanteClient;
+    limiteBoletaSinIdentificar: number;
+};
 
 function money(value?: number | string) {
     return new Intl.NumberFormat('es-PE', {
@@ -72,7 +94,25 @@ function nice(value?: string) {
     return value ? value.replaceAll('_', ' ') : '-';
 }
 
-export default function VentasShow({ sale }: Props) {
+function horaDeEnvio(value?: string | null) {
+    if (!value) {
+        return '-';
+    }
+
+    return new Intl.DateTimeFormat('es-PE', {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(value));
+}
+
+export default function VentasShow({
+    sale,
+    clientesVarios,
+    limiteBoletaSinIdentificar,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ??
@@ -80,16 +120,61 @@ export default function VentasShow({ sale }: Props) {
             ? window.location.pathname.split('/')[1]
             : '');
     const [confirmando, setConfirmando] = useState(false);
-    const documento = (sale.electronic_documents ?? []).find(
-        (d) => d.tipo === 'factura' || d.tipo === 'boleta',
+    const [editando, setEditando] = useState(false);
+    const [procesando, setProcesando] = useState<'enviar' | 'anular' | null>(
+        null,
     );
+    const documento = (sale.electronic_documents ?? [])
+        .filter((d) => d.tipo === 'factura' || d.tipo === 'boleta')
+        .at(-1);
+    const porEnviar = documento?.sunat_estado === 'por_enviar';
+    const rechazado =
+        documento?.sunat_estado === 'rechazado' ||
+        documento?.sunat_estado === 'excepcion';
+    const ventaActiva = sale.estado === 'confirmada';
+
+    function accion(tipo: 'enviar' | 'anular') {
+        if (
+            tipo === 'anular' &&
+            !window.confirm(
+                'Se anula la venta, las unidades vuelven al stock y el número del comprobante se libera. ¿Continuar?',
+            )
+        ) {
+            return;
+        }
+
+        setProcesando(tipo);
+        router.post(
+            (tipo === 'enviar' ? ventas.enviarSunat : ventas.anular).url({
+                current_team: teamSlug,
+                sale: sale.id,
+            }),
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+                onFinish: () => setProcesando(null),
+            },
+        );
+    }
 
     function confirmarVenta() {
         setConfirmando(true);
         router.post(
             ventas.confirmar.url({ current_team: teamSlug, sale: sale.id }),
             {},
-            { onFinish: () => setConfirmando(false) },
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo confirmar la venta.',
+                    ),
+                onFinish: () => setConfirmando(false),
+            },
         );
     }
 
@@ -150,10 +235,91 @@ export default function VentasShow({ sale }: Props) {
                     {documento && (
                         <Badge className="rounded-full border-transparent bg-blue-500/10 px-3 py-1 text-[10.5px] font-bold text-blue-600 capitalize dark:text-blue-400">
                             SUNAT: {documento.serie}-{documento.correlativo} ·{' '}
-                            {documento.sunat_estado}
+                            {nice(documento.sunat_estado)}
                         </Badge>
                     )}
+                    {documento?.pdf_path && (
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
+                        >
+                            <a
+                                href={facturacion.pdf.url({
+                                    current_team: teamSlug,
+                                    electronic_document: documento.id,
+                                })}
+                            >
+                                <FileText className="size-4" />
+                                PDF
+                            </a>
+                        </Button>
+                    )}
                 </div>
+
+                {documento && ventaActiva && (porEnviar || rechazado) ? (
+                    <Card
+                        className={`flex flex-col gap-3 rounded-[14px] p-4 shadow-none sm:flex-row sm:items-center ${rechazado ? 'border-destructive/40 bg-destructive/5' : 'border-amber-500/40 bg-amber-500/5'}`}
+                    >
+                        <div className="flex flex-1 items-start gap-3">
+                            {rechazado ? (
+                                <TriangleAlert className="text-destructive mt-0.5 size-5 shrink-0" />
+                            ) : (
+                                <Clock3 className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                            )}
+                            <div>
+                                <div className="text-foreground text-[13.5px] font-bold">
+                                    {rechazado
+                                        ? `SUNAT rechazó ${documento.serie}-${documento.correlativo}`
+                                        : `${documento.serie}-${documento.correlativo} por enviar a SUNAT`}
+                                </div>
+                                <p className="text-muted-foreground text-[12px]">
+                                    {rechazado
+                                        ? documento.sunat_mensaje
+                                        : `Se envía automáticamente el ${horaDeEnvio(documento.enviar_desde)}. Hasta entonces puedes corregirlo sin nota de crédito.`}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setEditando(true)}
+                                className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
+                            >
+                                <PencilLine className="size-4" />
+                                {rechazado
+                                    ? 'Corregir y reemitir'
+                                    : 'Editar comprobante'}
+                            </Button>
+                            {porEnviar ? (
+                                <>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={procesando !== null}
+                                        onClick={() => accion('anular')}
+                                        className="border-border bg-card text-destructive h-9 rounded-[9px] shadow-none"
+                                    >
+                                        <XCircle className="size-4" />
+                                        Anular venta
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        disabled={procesando !== null}
+                                        onClick={() => accion('enviar')}
+                                        className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] text-white shadow-none"
+                                    >
+                                        <Send className="size-4" />
+                                        {procesando === 'enviar'
+                                            ? 'Enviando…'
+                                            : 'Enviar ya'}
+                                    </Button>
+                                </>
+                            ) : null}
+                        </div>
+                    </Card>
+                ) : null}
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
@@ -311,6 +477,23 @@ export default function VentasShow({ sale }: Props) {
                     saleEstado={sale.estado}
                 />
             </div>
+
+            {documento && (porEnviar || rechazado) ? (
+                <ComprobanteEditDialog
+                    open={editando}
+                    onOpenChange={setEditando}
+                    teamSlug={teamSlug}
+                    saleId={sale.id}
+                    total={Number(sale.total ?? 0)}
+                    tipoActual={
+                        documento.tipo === 'factura' ? 'factura' : 'boleta'
+                    }
+                    clienteActual={sale.client}
+                    clientesVarios={clientesVarios}
+                    limiteBoletaSinIdentificar={limiteBoletaSinIdentificar}
+                    rechazado={rechazado}
+                />
+            ) : null}
         </VendedorLayout>
     );
 }

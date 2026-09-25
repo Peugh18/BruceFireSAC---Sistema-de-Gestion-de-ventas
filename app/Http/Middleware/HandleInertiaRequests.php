@@ -49,6 +49,12 @@ class HandleInertiaRequests extends Middleware
                 'roles' => fn () => $user?->getRoleNames() ?? [],
                 'permissions' => fn () => $user?->getAllPermissions()->pluck('name') ?? [],
             ],
+            // Mensajes de redirect()->with('success'|'error', ...) que las
+            // páginas de Gerente muestran como aviso (flash.success / flash.error).
+            'flash' => fn () => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
             'teams' => fn () => $user?->toUserTeams(includeCurrent: true) ?? [],

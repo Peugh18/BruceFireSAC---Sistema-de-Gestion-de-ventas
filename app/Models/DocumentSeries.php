@@ -12,12 +12,13 @@ use Illuminate\Support\Carbon;
  * @property string $tipo_comprobante
  * @property string $serie
  * @property int $correlativo_actual
+ * @property list<int>|null $correlativos_liberados
  * @property int|null $sede_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Sede|null $sede
  */
-#[Fillable(['tipo_comprobante', 'serie', 'correlativo_actual', 'sede_id'])]
+#[Fillable(['tipo_comprobante', 'serie', 'correlativo_actual', 'correlativos_liberados', 'sede_id'])]
 class DocumentSeries extends Model
 {
     protected $table = 'document_series';
@@ -26,6 +27,7 @@ class DocumentSeries extends Model
     {
         return [
             'correlativo_actual' => 'integer',
+            'correlativos_liberados' => 'array',
         ];
     }
 

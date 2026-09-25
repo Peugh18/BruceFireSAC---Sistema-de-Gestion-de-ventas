@@ -71,6 +71,18 @@ test('vendedor can send, then accept a quote, but not accept directly from borra
     expect($quote->refresh()->estado)->toBe('borrador');
 });
 
+test('enviar una cotizacion en borrador la emite y la deja enviada', function () {
+    $user = vendedorUser();
+    $quote = Quote::factory()->create(['vendedor_id' => $user->id, 'estado' => 'borrador']);
+
+    $this->actingAs($user)
+        ->post(route('vendedor.cotizaciones.send', ['current_team' => $user->currentTeam, 'quote' => $quote]))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect($quote->refresh()->estado)->toBe('enviada');
+});
+
 test('buscar catalogo en nueva cotizacion encuentra productos y servicios fuera del listado inicial', function () {
     $user = vendedorUser();
 

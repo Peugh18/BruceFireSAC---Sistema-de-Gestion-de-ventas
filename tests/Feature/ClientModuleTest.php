@@ -168,6 +168,45 @@ test('client search endpoint finds clients beyond the first page by name or docu
     $porDocumento->assertJsonFragment(['id' => $buscado->id]);
 });
 
+test('client search endpoint matches every word of a name in any order', function () {
+    $user = vendedorUser();
+
+    $buscado = Client::factory()->create([
+        'tipo_documento' => 'dni',
+        'razon_social' => 'URCIA GUEVARA JOSE MIGUEL',
+        'numero_documento' => '71234567',
+    ]);
+    Client::factory()->create(['razon_social' => 'JOSE PEREZ QUISPE']);
+
+    $this->actingAs($user)
+        ->getJson(route('vendedor.clientes.search', ['current_team' => $user->currentTeam, 'search' => 'jose urcia']))
+        ->assertOk()
+        ->assertJsonCount(1)
+        ->assertJsonFragment(['id' => $buscado->id]);
+});
+
+test('creating a client from the sale or quote modal returns it as json', function () {
+    $user = vendedorUser();
+
+    $response = $this->actingAs($user)
+        ->postJson(route('vendedor.clientes.store', ['current_team' => $user->currentTeam]), [
+            'tipo_documento' => 'dni',
+            'numero_documento' => '71234567',
+            'razon_social' => 'URCIA GUEVARA JOSE MIGUEL',
+            'activo' => true,
+        ])
+        ->assertCreated();
+
+    $client = Client::where('numero_documento', '71234567')->firstOrFail();
+
+    $response->assertExactJson([
+        'id' => $client->id,
+        'tipo_documento' => 'dni',
+        'razon_social' => 'URCIA GUEVARA JOSE MIGUEL',
+        'numero_documento' => '71234567',
+    ]);
+});
+
 test('client search endpoint requires at least 2 characters', function () {
     $user = vendedorUser();
 

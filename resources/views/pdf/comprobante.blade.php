@@ -110,7 +110,7 @@
                 @if($document->tipo === 'factura' || $document->tipo === 'boleta')
                     <span class="label">CONDICIÓN DE PAGO:</span> {{ $sale->condicion_pago === 'credito_30' ? 'CREDITO 30 DIAS' : 'CONTADO' }}<br>
                 @endif
-                <span class="label">FECHA EMISIÓN:</span> {{ $sale->fecha->format('d/m/Y') }}
+                <span class="label">FECHA EMISIÓN:</span> {{ ($document->fecha_emision ?? $sale->fecha)->format('d/m/Y') }}
                 @if($sale->condicion_pago === 'credito_30' && $sale->installments->isNotEmpty())
                     <br><span class="label">FECHA VENCIMIENTO:</span> {{ optional($sale->installments->last()->fecha_vencimiento)->format('d/m/Y') }}
                 @endif
@@ -144,7 +144,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($sale->items as $index => $item)
+            @foreach($sale->lineasComprobante() as $index => $item)
                 @php $productOrService = $item->product ?? $item->service; @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>

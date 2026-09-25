@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $tipo
  * @property string $serie
  * @property int $correlativo
+ * @property Carbon|null $fecha_emision
  * @property int|null $cpe_afectado_id
  * @property string|null $motivo_catalogo
  * @property string|null $importe
@@ -22,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $cdr_path
  * @property string|null $pdf_path
  * @property string $sunat_estado
+ * @property Carbon|null $enviar_desde
  * @property string|null $sunat_codigo_respuesta
  * @property string|null $sunat_mensaje
  * @property Carbon|null $enviado_at
@@ -31,9 +33,9 @@ use Illuminate\Support\Carbon;
  * @property-read ElectronicDocument|null $cpeAfectado
  */
 #[Fillable([
-    'sale_id', 'tipo', 'serie', 'correlativo', 'cpe_afectado_id', 'motivo_catalogo', 'importe',
+    'sale_id', 'tipo', 'serie', 'correlativo', 'fecha_emision', 'cpe_afectado_id', 'motivo_catalogo', 'importe',
     'xml_path', 'cdr_path', 'pdf_path', 'sunat_estado', 'sunat_codigo_respuesta',
-    'sunat_mensaje', 'enviado_at',
+    'sunat_mensaje', 'enviar_desde', 'enviado_at',
 ])]
 class ElectronicDocument extends Model
 {
@@ -45,8 +47,28 @@ class ElectronicDocument extends Model
         return [
             'correlativo' => 'integer',
             'importe' => 'decimal:2',
+            'fecha_emision' => 'date',
+            'enviar_desde' => 'datetime',
             'enviado_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Mientras no se envía, SUNAT no conoce el comprobante: se puede corregir
+     * sin nota de crédito.
+     */
+    public function estaPorEnviar(): bool
+    {
+        return $this->sunat_estado === 'por_enviar';
+    }
+
+    /**
+     * Rechazado o con excepción: el comprobante no tiene validez y se corrige
+     * emitiendo uno nuevo con otro número.
+     */
+    public function fueRechazado(): bool
+    {
+        return in_array($this->sunat_estado, ['rechazado', 'excepcion'], true);
     }
 
     public function sale(): BelongsTo

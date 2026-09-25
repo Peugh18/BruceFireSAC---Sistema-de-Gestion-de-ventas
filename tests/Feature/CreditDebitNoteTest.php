@@ -3,6 +3,7 @@
 use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Billing\IssueDebitNote;
 use App\Actions\Sales\CreateSale;
+use App\Contracts\SunatClientInterface;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryMovement;
@@ -146,6 +147,13 @@ test('greenter construye las notas con el importe persistido y el comprobante af
 
 test('el vendedor emite notas desde el detalle y si SUNAT no responde quedan pendientes', function () {
     [, $factura] = ventaConFactura();
+    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    {
+        public function send(string $xmlSigned, string $documentName): array
+        {
+            throw new RuntimeException('SUNAT no responde');
+        }
+    });
     $vendedor = vendedorUser();
     $team = ['current_team' => $vendedor->currentTeam];
 

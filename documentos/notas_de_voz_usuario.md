@@ -8,7 +8,7 @@ editar; la versión organizada, deduplicada y con fuentes está en
 usuario dicte algo nuevo, se agrega aquí como una entrada nueva y luego
 se integra al documento maestro.
 
-------------------------------------------------------------------------
+---
 
 ## Entrada 2026-09-19 (sesión de rediseño de inventario)
 

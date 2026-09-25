@@ -14,7 +14,7 @@ El proyecto anterior (`BruceFireSAC`) queda descartado — no se vuelve a
 tocar ni se migra código de ahí; el criterio ya no es "¿qué había
 hecho?" sino "¿qué dice el documento maestro?".
 
-------------------------------------------------------------------------
+---
 
 ## Fase 0 — Base del proyecto (antes de diseño)
 
@@ -250,7 +250,7 @@ adaptada a que ahora se parte de cero):
   Facturación Electrónica activado con anticipación, credenciales
   separadas para GRE).
 
-------------------------------------------------------------------------
+---
 
 ## Librerías confirmadas para BruceFireSacv2 (investigado 2026-09-19)
 
@@ -259,22 +259,22 @@ pero dejaba la librería exacta "a definir cuando se cierre la versión
 de Laravel". Ya está cerrada (Laravel 13 / PHP 8.3), así que se fija la
 elección concreta, con la razón:
 
-| Necesidad | Paquete elegido | Por qué |
-| --- | --- | --- |
-| Roles y permisos | `spatie/laravel-permission` | Ya confirmado en uso real (Documento Maestro §76.1) — integra con Gate/Policy nativos de Laravel. |
-| Auditoría | `spatie/laravel-activitylog` | Estándar de facto para "quién cambió qué", ya decidido en §41.2. |
-| Multimedia (fotos de evidencia técnica, logo, adjuntos de certificado) | `spatie/laravel-medialibrary` | Ya aprobado en §67.1; evita reinventar manejo de archivos/conversions. |
-| Backups | `spatie/laravel-backup` | Ya aprobado en §67.1. |
-| **PDF** (certificados, comprobantes, reportes) | `spatie/laravel-pdf` (Browsershot/Chromium) | El starter usa Tailwind v4 con clases modernas (grid/flex); `barryvdh/laravel-dompdf` solo soporta CSS 2.1 y rompería el mismo diseño que se define en la Fase 1. `spatie/laravel-pdf` renderiza con Chromium real, mismo resultado visual que en el navegador ([comparación 2026](https://medium.com/@developerawam/spaties-laravel-pdf-vs-laravel-dompdf-which-one-should-you-actually-use-8c1d2ca104f7)). Costo: requiere Node/Chromium en el servidor — se define en Fase 5 según dónde se despliegue. |
-| **QR** (certificados, código de barras interno) | `f9webltd/simple-qrcode` | El paquete original `simplesoftwareio/simple-qrcode` está sin mantenimiento; este fork activo soporta PHP ^8.2 y Laravel ^11/^12/^13, misma API fluida y fácil de abstraer detrás de un servicio propio (§41.8). |
-| **Código de barras** (stickers internos de extintores/unidades serializadas) | `picqer/php-barcode-generator` | QR y código de barras no resuelven el mismo problema: el QR valida certificados públicamente; el barcode interno agiliza escaneo físico en almacén/venta/taller. `picqer/php-barcode-generator` evita dibujar barras a mano y puede envolverse en un servicio `BarcodeService`. |
-| **Excel** (exportar clientes/ventas/reportes) | `maatwebsite/excel` v4.x | La v4.0.3 (14/09/2026) ya soporta Laravel ^12/^13 y PHP ^8.3 de forma nativa — no hace falta alternativa. |
-| **Facturación electrónica SUNAT** | `greenter/lite` | Ya decidido y documentado a fondo en `docs/FACTURACION_GREENTER_SUNAT.md`. |
-| Colas/Scheduler/Notifications | Nativos de Laravel | Ya decidido en §41.4-41.6, sin paquete externo. |
-| Tablas complejas en React | `@tanstack/react-table` | Clientes, inventario, ventas, comprobantes, cobranzas y reportes necesitan filtros, ordenamiento, columnas y paginación sin reinventar una tabla propia. Encaja con Inertia + React y no impone UI visual. |
-| Gráficos de dashboards | `recharts` | Suficiente para KPIs por rol, ventas por mes, cartera, stock crítico y servicios; más simple que librerías pesadas para el MVP. |
-| Fechas/calendarios | `date-fns` + `react-day-picker` | Filtros por mes, vencimientos, cuotas, próximas atenciones, programación de servicios y calendarios ligeros. |
-| Buscador global / comandos rápidos | `cmdk` | Opcional cuando exista navegación real por módulos: buscar cliente, venta, certificado, orden o comando rápido sin construir un command palette desde cero. |
+| Necesidad                                                                    | Paquete elegido                             | Por qué                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Roles y permisos                                                             | `spatie/laravel-permission`                 | Ya confirmado en uso real (Documento Maestro §76.1) — integra con Gate/Policy nativos de Laravel.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Auditoría                                                                    | `spatie/laravel-activitylog`                | Estándar de facto para "quién cambió qué", ya decidido en §41.2.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Multimedia (fotos de evidencia técnica, logo, adjuntos de certificado)       | `spatie/laravel-medialibrary`               | Ya aprobado en §67.1; evita reinventar manejo de archivos/conversions.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Backups                                                                      | `spatie/laravel-backup`                     | Ya aprobado en §67.1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **PDF** (certificados, comprobantes, reportes)                               | `spatie/laravel-pdf` (Browsershot/Chromium) | El starter usa Tailwind v4 con clases modernas (grid/flex); `barryvdh/laravel-dompdf` solo soporta CSS 2.1 y rompería el mismo diseño que se define en la Fase 1. `spatie/laravel-pdf` renderiza con Chromium real, mismo resultado visual que en el navegador ([comparación 2026](https://medium.com/@developerawam/spaties-laravel-pdf-vs-laravel-dompdf-which-one-should-you-actually-use-8c1d2ca104f7)). Costo: requiere Node/Chromium en el servidor — se define en Fase 5 según dónde se despliegue. |
+| **QR** (certificados, código de barras interno)                              | `f9webltd/simple-qrcode`                    | El paquete original `simplesoftwareio/simple-qrcode` está sin mantenimiento; este fork activo soporta PHP ^8.2 y Laravel ^11/^12/^13, misma API fluida y fácil de abstraer detrás de un servicio propio (§41.8).                                                                                                                                                                                                                                                                                           |
+| **Código de barras** (stickers internos de extintores/unidades serializadas) | `picqer/php-barcode-generator`              | QR y código de barras no resuelven el mismo problema: el QR valida certificados públicamente; el barcode interno agiliza escaneo físico en almacén/venta/taller. `picqer/php-barcode-generator` evita dibujar barras a mano y puede envolverse en un servicio `BarcodeService`.                                                                                                                                                                                                                            |
+| **Excel** (exportar clientes/ventas/reportes)                                | `maatwebsite/excel` v4.x                    | La v4.0.3 (14/09/2026) ya soporta Laravel ^12/^13 y PHP ^8.3 de forma nativa — no hace falta alternativa.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Facturación electrónica SUNAT**                                            | `greenter/lite`                             | Ya decidido y documentado a fondo en `docs/FACTURACION_GREENTER_SUNAT.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Colas/Scheduler/Notifications                                                | Nativos de Laravel                          | Ya decidido en §41.4-41.6, sin paquete externo.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Tablas complejas en React                                                    | `@tanstack/react-table`                     | Clientes, inventario, ventas, comprobantes, cobranzas y reportes necesitan filtros, ordenamiento, columnas y paginación sin reinventar una tabla propia. Encaja con Inertia + React y no impone UI visual.                                                                                                                                                                                                                                                                                                 |
+| Gráficos de dashboards                                                       | `recharts`                                  | Suficiente para KPIs por rol, ventas por mes, cartera, stock crítico y servicios; más simple que librerías pesadas para el MVP.                                                                                                                                                                                                                                                                                                                                                                            |
+| Fechas/calendarios                                                           | `date-fns` + `react-day-picker`             | Filtros por mes, vencimientos, cuotas, próximas atenciones, programación de servicios y calendarios ligeros.                                                                                                                                                                                                                                                                                                                                                                                               |
+| Buscador global / comandos rápidos                                           | `cmdk`                                      | Opcional cuando exista navegación real por módulos: buscar cliente, venta, certificado, orden o comando rápido sin construir un command palette desde cero.                                                                                                                                                                                                                                                                                                                                                |
 
 No se agrega ninguna dependencia más "por si acaso" — cada fila de
 esta tabla resuelve una necesidad ya escrita en el documento maestro,
@@ -310,39 +310,38 @@ reutilizables para varios asistentes, no solo Boost.
 #### Skills recomendadas para BruceFireSacv2
 
 Estas son las que sí encajan con el stack real del proyecto
-(Laravel 13, PHP 8.3, Inertia React, Pest, PHPStan/Larastan, Tailwind
-4) y con el tipo de sistema: comercial, técnico, fiscal y con auditoría.
+(Laravel 13, PHP 8.3, Inertia React, Pest, PHPStan/Larastan, Tailwind 4) y con el tipo de sistema: comercial, técnico, fiscal y con auditoría.
 
-| Prioridad | Skill | Comando | Uso en Bruce Fire | Decisión |
-| --- | --- | --- | --- | --- |
-| Alta | `spatie-laravel-php` | `php artisan boost:add-skill spatie/guidelines-skills --skill spatie-laravel-php` | Estándar general de PHP/Laravel: tipado, PSR-12, controladores, validación, Blade, convenciones de rutas y estilo Spatie. | **Instalar**. Es la skill más alineada con el estilo que el usuario ya mencionó ("sabía yo de Spatie"). |
-| Alta | `laravel-inertia-react` | `php artisan boost:add-skill asyrafhussin/agent-skills --skill laravel-inertia-react` | Formularios Inertia, page props, layouts persistentes, páginas React conectadas a controladores Laravel. | **Instalar** cuando empiece Fase 3 (pantallas reales). |
-| Alta | `laravel-best-practices` | `php artisan boost:add-skill asyrafhussin/agent-skills --skill laravel-best-practices` | Convenciones Laravel 13 para controladores, modelos, migraciones, servicios y validación. | **Instalar** si no se instala una skill equivalente de arquitectura; no duplicar con muchas similares. |
-| Alta | `laravel-testing` | `php artisan boost:add-skill asyrafhussin/agent-skills --skill laravel-testing` | Pest 4 / PHPUnit 12, factories, HTTP tests, autenticación y assertions de BD. | **Instalar** antes de Fase 2-3 para que las migraciones y módulos nazcan con pruebas. |
-| Alta | `laravel-security` o `laravel-security-affaan-m` | `php artisan boost:add-skill affaan-m/ecc --skill laravel-security` | Autenticación, autorización, policies, CSRF, XSS, uploads, `.env`, producción y auditoría de seguridad. | **Instalar una sola variante**; preferir `affaan-m/ecc` para evitar duplicado con `everything-claude-code`. |
-| Media | `laravel-verification` o `laravel-verification-affaan-m` | `php artisan boost:add-skill affaan-m/ecc --skill laravel-verification` | Checklist de verificación: lint, PHPStan/Larastan, tests, seguridad y readiness antes de merge/deploy. | **Instalar una sola variante**; útil para Fase 5 y cierres por módulo. |
-| Media | `laravel-queues` | `php artisan boost:add-skill asyrafhussin/agent-skills --skill laravel-queues` | Facturación SUNAT, PDFs, emails, backups, reportes grandes, reintentos y fallos. | **Instalar cuando se implementen jobs/colas**; no es urgente en diseño. |
-| Media | `laravel-pdf` | `php artisan boost:add-skill spatie/laravel-pdf --skill laravel-pdf` | Generación de PDF con `spatie/laravel-pdf`: certificados, comprobantes, reportes. | **Instalar cuando empiece Certificados/PDF**; tiene pocas instalaciones, pero viene del repo del paquete. |
+| Prioridad | Skill                                                    | Comando                                                                                | Uso en Bruce Fire                                                                                                         | Decisión                                                                                                    |
+| --------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Alta      | `spatie-laravel-php`                                     | `php artisan boost:add-skill spatie/guidelines-skills --skill spatie-laravel-php`      | Estándar general de PHP/Laravel: tipado, PSR-12, controladores, validación, Blade, convenciones de rutas y estilo Spatie. | **Instalar**. Es la skill más alineada con el estilo que el usuario ya mencionó ("sabía yo de Spatie").     |
+| Alta      | `laravel-inertia-react`                                  | `php artisan boost:add-skill asyrafhussin/agent-skills --skill laravel-inertia-react`  | Formularios Inertia, page props, layouts persistentes, páginas React conectadas a controladores Laravel.                  | **Instalar** cuando empiece Fase 3 (pantallas reales).                                                      |
+| Alta      | `laravel-best-practices`                                 | `php artisan boost:add-skill asyrafhussin/agent-skills --skill laravel-best-practices` | Convenciones Laravel 13 para controladores, modelos, migraciones, servicios y validación.                                 | **Instalar** si no se instala una skill equivalente de arquitectura; no duplicar con muchas similares.      |
+| Alta      | `laravel-testing`                                        | `php artisan boost:add-skill asyrafhussin/agent-skills --skill laravel-testing`        | Pest 4 / PHPUnit 12, factories, HTTP tests, autenticación y assertions de BD.                                             | **Instalar** antes de Fase 2-3 para que las migraciones y módulos nazcan con pruebas.                       |
+| Alta      | `laravel-security` o `laravel-security-affaan-m`         | `php artisan boost:add-skill affaan-m/ecc --skill laravel-security`                    | Autenticación, autorización, policies, CSRF, XSS, uploads, `.env`, producción y auditoría de seguridad.                   | **Instalar una sola variante**; preferir `affaan-m/ecc` para evitar duplicado con `everything-claude-code`. |
+| Media     | `laravel-verification` o `laravel-verification-affaan-m` | `php artisan boost:add-skill affaan-m/ecc --skill laravel-verification`                | Checklist de verificación: lint, PHPStan/Larastan, tests, seguridad y readiness antes de merge/deploy.                    | **Instalar una sola variante**; útil para Fase 5 y cierres por módulo.                                      |
+| Media     | `laravel-queues`                                         | `php artisan boost:add-skill asyrafhussin/agent-skills --skill laravel-queues`         | Facturación SUNAT, PDFs, emails, backups, reportes grandes, reintentos y fallos.                                          | **Instalar cuando se implementen jobs/colas**; no es urgente en diseño.                                     |
+| Media     | `laravel-pdf`                                            | `php artisan boost:add-skill spatie/laravel-pdf --skill laravel-pdf`                   | Generación de PDF con `spatie/laravel-pdf`: certificados, comprobantes, reportes.                                         | **Instalar cuando empiece Certificados/PDF**; tiene pocas instalaciones, pero viene del repo del paquete.   |
 
 #### Skills útiles pero no prioritarias
 
-| Skill | Motivo |
-| --- | --- |
-| `laravel-specialist` | Muy instalada y amplia, pero mezcla Sanctum, Horizon, Livewire y patrones generales. Puede servir si se quiere una skill "todo terreno", aunque se solapa con `laravel-best-practices`, `laravel-testing` y `laravel-queues`. |
-| `php-pro` / `php-best-practices` | Buenas para PHP puro, pero el proyecto ya está fuertemente en Laravel; usar solo si se trabaja en servicios PHP complejos fuera de controladores/modelos. |
-| `laravel-patterns` / `laravel-patterns-affaan-m` | Similar a `laravel-best-practices`. Elegir una familia, no ambas. |
-| `laravel-project-patterns` | Interesante porque intenta derivar convenciones desde el propio repositorio; se evalúa luego, cuando el proyecto tenga más módulos propios ya implementados. |
-| `laravel-mcp` / `php-mcp-server-generator` | No aplica ahora; Bruce Fire no está construyendo un servidor MCP propio. |
+| Skill                                            | Motivo                                                                                                                                                                                                                        |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `laravel-specialist`                             | Muy instalada y amplia, pero mezcla Sanctum, Horizon, Livewire y patrones generales. Puede servir si se quiere una skill "todo terreno", aunque se solapa con `laravel-best-practices`, `laravel-testing` y `laravel-queues`. |
+| `php-pro` / `php-best-practices`                 | Buenas para PHP puro, pero el proyecto ya está fuertemente en Laravel; usar solo si se trabaja en servicios PHP complejos fuera de controladores/modelos.                                                                     |
+| `laravel-patterns` / `laravel-patterns-affaan-m` | Similar a `laravel-best-practices`. Elegir una familia, no ambas.                                                                                                                                                             |
+| `laravel-project-patterns`                       | Interesante porque intenta derivar convenciones desde el propio repositorio; se evalúa luego, cuando el proyecto tenga más módulos propios ya implementados.                                                                  |
+| `laravel-mcp` / `php-mcp-server-generator`       | No aplica ahora; Bruce Fire no está construyendo un servidor MCP propio.                                                                                                                                                      |
 
 #### Skills descartadas para este proyecto
 
-| Skill | Por qué no |
-| --- | --- |
-| `wp-phpstan` | Es para WordPress, no Laravel. |
-| `laravel-inertia-vue`, `shadcn-vue` | El proyecto usa React, no Vue. |
-| `laravel-livewire` / skills centradas en Livewire | El starter usa Inertia + React. No mezclar frameworks de UI. |
+| Skill                                                                               | Por qué no                                                                                                                  |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `wp-phpstan`                                                                        | Es para WordPress, no Laravel.                                                                                              |
+| `laravel-inertia-vue`, `shadcn-vue`                                                 | El proyecto usa React, no Vue.                                                                                              |
+| `laravel-livewire` / skills centradas en Livewire                                   | El starter usa Inertia + React. No mezclar frameworks de UI.                                                                |
 | Skills genéricas de documentos (`word-documents`, `analyze-document`, `markitdown`) | No resuelven generación de certificados del sistema; para eso ya se decidió `spatie/laravel-pdf` + plantillas HTML propias. |
-| Skills de `laravel-11-12-app-guidelines` | La app es Laravel 13; solo serviría si aparece una versión explícita para Laravel 13. |
+| Skills de `laravel-11-12-app-guidelines`                                            | La app es Laravel 13; solo serviría si aparece una versión explícita para Laravel 13.                                       |
 
 #### Regla de adopción
 
@@ -360,7 +359,7 @@ compatibilidad con Laravel 13/PHP 8.3, auditorías en verde, repositorio
 fuente confiable, y que no empuje tecnologías que el proyecto no usa
 (Livewire, Vue, WordPress, APIs genéricas sin necesidad).
 
-------------------------------------------------------------------------
+---
 
 ## Estado de esta fase
 
@@ -388,15 +387,15 @@ fuente confiable, y que no empuje tecnologías que el proyecto no usa
    documentos de planificación, para que todo el proyecto se vea como
    un solo sistema.
 
-   **Fase 1.1 — entregada**: Login + Dashboard de los 5 roles
-   (Gerente, Vendedor, Almacén, Técnico de Planta, Técnico de Campo en
-   versión móvil), con el sidebar de cada rol reflejando exactamente
-   los módulos que le corresponden según la matriz de permisos.
-   Pendiente de aprobación del usuario antes de continuar.
+    **Fase 1.1 — entregada**: Login + Dashboard de los 5 roles
+    (Gerente, Vendedor, Almacén, Técnico de Planta, Técnico de Campo en
+    versión móvil), con el sidebar de cada rol reflejando exactamente
+    los módulos que le corresponden según la matriz de permisos.
+    Pendiente de aprobación del usuario antes de continuar.
 
-   **Próximas sub-fases** (una vez aprobada 1.1): 1.2 Comercial
-   (Clientes, Cotizaciones, Ventas, Cobranzas) · 1.3 Operación técnica
-   (Inventario, Órdenes de Servicio, Checklist, Instalaciones,
-   Deficiencias, Adicionales, Custodia, Acta de Conformidad) · 1.4
-   Certificados y Fiscal SUNAT · 1.5 Gestión (Reportes, Roles y
-   Permisos, Auditoría, Asistente IA).
+    **Próximas sub-fases** (una vez aprobada 1.1): 1.2 Comercial
+    (Clientes, Cotizaciones, Ventas, Cobranzas) · 1.3 Operación técnica
+    (Inventario, Órdenes de Servicio, Checklist, Instalaciones,
+    Deficiencias, Adicionales, Custodia, Acta de Conformidad) · 1.4
+    Certificados y Fiscal SUNAT · 1.5 Gestión (Reportes, Roles y
+    Permisos, Auditoría, Asistente IA).

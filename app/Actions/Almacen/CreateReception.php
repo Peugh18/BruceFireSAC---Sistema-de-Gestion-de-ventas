@@ -61,6 +61,8 @@ class CreateReception
                             'product_id' => $product->id,
                             'sede_almacen_id' => $reception->sede_almacen_id,
                             'numero_serie' => $numeroSerie,
+                            'capacidad' => $uData['capacidad'] ?? null,
+                            'serie_fabricante' => $uData['serie_fabricante'] ?? null,
                             'marca' => $uData['marca'] ?? null,
                             'anio_fabricacion' => $uData['anio_fabricacion'] ?? null,
                             'estado' => 'disponible',

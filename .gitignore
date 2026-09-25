@@ -45,3 +45,6 @@ yarn-error.log
 /storage/app/ml/*.csv
 *.csv
 !/storage/app/ml/retention_model.json
+/.codex
+/skills-lock.json
+/cootiz.html

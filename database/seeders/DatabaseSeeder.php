@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $vendedor = User::firstOrCreate(
-            ['email' => 'test@example.com'],
+            ['email' => 'vendedor@brucefire.pe'],
             [
                 'name' => 'Vendedor Demo',
                 'password' => bcrypt('password'),

@@ -1,32 +1,21 @@
-﻿import { Link, router, useForm } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     AlertCircle,
     Clock3,
     Download,
     Eye,
     Filter,
-    Loader2,
     Plus,
     Search,
-    UserRoundPlus,
     UsersRound,
 } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useState } from 'react';
 
+import ClientCreateDialog from '@/components/client-create-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
-import { rucLookup } from '@/routes/vendedor';
 import clientes from '@/routes/vendedor/clientes';
 
 type CurrentTeam = {
@@ -80,36 +69,6 @@ type Props = {
     };
 };
 
-type ClientFormData = {
-    tipo_documento: 'ruc' | 'dni';
-    numero_documento: string;
-    razon_social: string;
-    nombre_comercial: string;
-    telefono: string;
-    whatsapp: string;
-    email: string;
-    direccion_fiscal: string;
-    estado_contribuyente: string;
-    condicion_domicilio: string;
-    activo: boolean;
-    observaciones: string;
-};
-
-const emptyClientForm: ClientFormData = {
-    tipo_documento: 'ruc',
-    numero_documento: '',
-    razon_social: '',
-    nombre_comercial: '',
-    telefono: '',
-    whatsapp: '',
-    email: '',
-    direccion_fiscal: '',
-    estado_contribuyente: '',
-    condicion_domicilio: '',
-    activo: true,
-    observaciones: '',
-};
-
 function formatNumber(value: number) {
     return new Intl.NumberFormat('es-PE').format(value);
 }
@@ -134,219 +93,6 @@ function cleanPaginationLabel(label: string) {
     return label.replace('&laquo;', '<').replace('&raquo;', '>');
 }
 
-function FieldError({ message }: { message?: string }) {
-    if (!message) {
-        return null;
-    }
-
-    return (
-        <p className="mt-1 text-[11px] font-semibold text-destructive">
-            {message}
-        </p>
-    );
-}
-
-function ClientFormFields({
-    data,
-    errors,
-    setData,
-    lookupLoading,
-    lookupMessage,
-}: {
-    data: ClientFormData;
-    errors: Partial<Record<keyof ClientFormData, string>>;
-    setData: <K extends keyof ClientFormData>(
-        key: K,
-        value: ClientFormData[K],
-    ) => void;
-    lookupLoading: boolean;
-    lookupMessage: string | null;
-}) {
-    return (
-        <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Tipo doc.
-                </Label>
-                <select
-                    value={data.tipo_documento}
-                    onChange={(event) =>
-                        setData(
-                            'tipo_documento',
-                            event.target.value as 'ruc' | 'dni',
-                        )
-                    }
-                    className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] outline-none"
-                >
-                    <option value="ruc">RUC</option>
-                    <option value="dni">DNI</option>
-                </select>
-                <FieldError message={errors.tipo_documento} />
-            </div>
-
-            <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Numero
-                </Label>
-                <div className="relative">
-                    <Input
-                        value={data.numero_documento}
-                        onChange={(event) =>
-                            setData(
-                                'numero_documento',
-                                event.target.value.replace(/\D/g, ''),
-                            )
-                        }
-                        maxLength={data.tipo_documento === 'dni' ? 8 : 11}
-                        placeholder={
-                            data.tipo_documento === 'dni'
-                                ? '8 dígitos'
-                                : '11 dígitos'
-                        }
-                        className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                    />
-                    {lookupLoading && (
-                        <Loader2 className="absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />
-                    )}
-                </div>
-                <FieldError message={errors.numero_documento} />
-                {lookupMessage && !lookupLoading && (
-                    <p className="mt-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                        {lookupMessage}
-                    </p>
-                )}
-            </div>
-
-            <div className="sm:col-span-2">
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    {data.tipo_documento === 'dni'
-                        ? 'Nombres y apellidos'
-                        : 'Razon social'}
-                </Label>
-                <Input
-                    value={data.razon_social}
-                    onChange={(event) =>
-                        setData('razon_social', event.target.value)
-                    }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
-                <FieldError message={errors.razon_social} />
-            </div>
-
-            {data.tipo_documento === 'ruc' && (
-                <div>
-                    <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                        Nombre comercial{' '}
-                        <span className="font-normal normal-case text-muted-foreground">
-                            (opcional, no viene de SUNAT — se escribe a mano
-                            si aplica)
-                        </span>
-                    </Label>
-                    <Input
-                        value={data.nombre_comercial}
-                        onChange={(event) =>
-                            setData('nombre_comercial', event.target.value)
-                        }
-                        className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                    />
-                    <FieldError message={errors.nombre_comercial} />
-                </div>
-            )}
-
-            <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Email
-                </Label>
-                <Input
-                    type="email"
-                    value={data.email}
-                    onChange={(event) => setData('email', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
-                <FieldError message={errors.email} />
-            </div>
-
-            <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Telefono
-                </Label>
-                <Input
-                    value={data.telefono}
-                    onChange={(event) =>
-                        setData('telefono', event.target.value)
-                    }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
-                <FieldError message={errors.telefono} />
-            </div>
-
-            <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    WhatsApp
-                </Label>
-                <Input
-                    value={data.whatsapp}
-                    onChange={(event) =>
-                        setData('whatsapp', event.target.value)
-                    }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
-                <FieldError message={errors.whatsapp} />
-            </div>
-
-            <div className="sm:col-span-2">
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                    Direccion fiscal
-                </Label>
-                <Input
-                    value={data.direccion_fiscal}
-                    onChange={(event) =>
-                        setData('direccion_fiscal', event.target.value)
-                    }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                />
-                <FieldError message={errors.direccion_fiscal} />
-            </div>
-
-            {data.tipo_documento === 'ruc' && (
-                <>
-                    <div>
-                        <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                            Estado SUNAT{' '}
-                            <span className="font-normal normal-case text-muted-foreground">
-                                (según consulta)
-                            </span>
-                        </Label>
-                        <Input
-                            value={data.estado_contribuyente}
-                            readOnly
-                            disabled
-                            className="mt-1 h-9 cursor-not-allowed rounded-[8px] border-border bg-muted/40 text-[13px]"
-                        />
-                        <FieldError message={errors.estado_contribuyente} />
-                    </div>
-
-                    <div>
-                        <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                            Condicion{' '}
-                            <span className="font-normal normal-case text-muted-foreground">
-                                (según consulta)
-                            </span>
-                        </Label>
-                        <Input
-                            value={data.condicion_domicilio}
-                            readOnly
-                            disabled
-                            className="mt-1 h-9 cursor-not-allowed rounded-[8px] border-border bg-muted/40 text-[13px]"
-                        />
-                        <FieldError message={errors.condicion_domicilio} />
-                    </div>
-                </>
-            )}
-        </div>
-    );
-}
-
 export default function ClientesIndex({
     currentTeam,
     clients,
@@ -356,65 +102,6 @@ export default function ClientesIndex({
 }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [dialogOpen, setDialogOpen] = useState(false);
-    const form = useForm<ClientFormData>(emptyClientForm);
-    const [lookupLoading, setLookupLoading] = useState(false);
-    const [lookupMessage, setLookupMessage] = useState<string | null>(null);
-
-    // Autocompleta Razon social / Direccion / Estado SUNAT desde RENIEC-SUNAT
-    // (via APIsPeru) apenas el numero de documento tiene el largo correcto.
-    useEffect(() => {
-        const numero = form.data.numero_documento.trim();
-        const expectedLength = form.data.tipo_documento === 'dni' ? 8 : 11;
-        setLookupMessage(null);
-
-        if (numero.length !== expectedLength) {
-            return;
-        }
-
-        const timeout = window.setTimeout(async () => {
-            setLookupLoading(true);
-            try {
-                const response = await fetch(
-                    rucLookup.url(currentTeam.slug, {
-                        query: { numero_documento: numero },
-                    }),
-                );
-                const payload = await response.json();
-
-                if (!response.ok) {
-                    setLookupMessage(
-                        payload.message ??
-                            'No se pudo consultar el documento.',
-                    );
-                    return;
-                }
-
-                form.setData('razon_social', payload.razon_social ?? '');
-                form.setData(
-                    'direccion_fiscal',
-                    payload.direccion ?? form.data.direccion_fiscal,
-                );
-                if (form.data.tipo_documento === 'ruc') {
-                    form.setData(
-                        'estado_contribuyente',
-                        payload.estado_contribuyente ?? '',
-                    );
-                    form.setData(
-                        'condicion_domicilio',
-                        payload.condicion_domicilio ?? '',
-                    );
-                }
-            } catch {
-                setLookupMessage('No se pudo conectar con el servicio de consulta.');
-            } finally {
-                setLookupLoading(false);
-            }
-        }, 400);
-
-        return () => window.clearTimeout(timeout);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [form.data.numero_documento, form.data.tipo_documento, currentTeam.slug]);
-
     const submitSearch = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -430,18 +117,6 @@ export default function ClientesIndex({
                 preserveState: true,
             },
         );
-    };
-
-    const submitClient = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        form.post(clientes.store.url(currentTeam.slug), {
-            preserveScroll: true,
-            onSuccess: () => {
-                form.reset();
-                setDialogOpen(false);
-            },
-        });
     };
 
     const kpiItems = [
@@ -547,8 +222,6 @@ export default function ClientesIndex({
                         <Button
                             type="button"
                             onClick={() => {
-                                form.reset();
-                                setLookupMessage(null);
                                 setDialogOpen(true);
                             }}
                             className="h-10 rounded-[9px] bg-primary px-4 text-[13px] font-bold text-white shadow-none hover:bg-primary/90"
@@ -704,48 +377,19 @@ export default function ClientesIndex({
                 </Card>
             </div>
 
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-h-[88vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-2xl">
-                    <DialogHeader>
-                        <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[11px] bg-destructive/10 text-primary">
-                                <UserRoundPlus className="size-5" />
-                            </div>
-                            <DialogTitle className="font-['Oswald',sans-serif] text-[20px] font-semibold text-foreground uppercase">
-                                Agregar cliente
-                            </DialogTitle>
-                        </div>
-                    </DialogHeader>
-
-                    <form onSubmit={submitClient} className="space-y-4">
-                        <ClientFormFields
-                            data={form.data}
-                            errors={form.errors}
-                            setData={form.setData}
-                            lookupLoading={lookupLoading}
-                            lookupMessage={lookupMessage}
-                        />
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setDialogOpen(false)}
-                                className="rounded-[9px] border-border bg-card text-foreground/80 shadow-none"
-                            >
-                                Cancelar
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={form.processing}
-                                className="rounded-[9px] bg-primary font-bold text-white shadow-none hover:bg-primary/90"
-                            >
-                                Guardar cliente
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            <ClientCreateDialog
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+                teamSlug={currentTeam.slug}
+                onCreated={(client) =>
+                    router.visit(
+                        clientes.show.url({
+                            current_team: currentTeam.slug,
+                            client: client.id,
+                        }),
+                    )
+                }
+            />
         </VendedorLayout>
     );
 }

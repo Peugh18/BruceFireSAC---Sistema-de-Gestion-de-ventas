@@ -42,6 +42,35 @@ class Client extends Model
     /** @use HasFactory<ClientFactory> */
     use HasFactory;
 
+    public const TIPO_DOCUMENTO_VARIOS = 'varios';
+
+    /**
+     * Cliente genérico para boletas a consumidores que no dan su DNI.
+     * SUNAT solo lo acepta en boletas de hasta S/ 700.00.
+     */
+    public static function clientesVarios(): self
+    {
+        return self::query()->firstOrCreate(
+            ['tipo_documento' => self::TIPO_DOCUMENTO_VARIOS, 'numero_documento' => '00000000'],
+            [
+                'codigo_interno' => 'CLI-VARIOS',
+                'razon_social' => 'CLIENTES VARIOS',
+                'direccion_fiscal' => '-',
+                'activo' => true,
+            ],
+        );
+    }
+
+    public function esClientesVarios(): bool
+    {
+        return $this->tipo_documento === self::TIPO_DOCUMENTO_VARIOS;
+    }
+
+    public function tieneRuc(): bool
+    {
+        return $this->tipo_documento === 'ruc';
+    }
+
     /**
      * @return HasMany<ClientSite, $this>
      */

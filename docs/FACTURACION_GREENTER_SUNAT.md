@@ -1,4 +1,5 @@
 # GUÍA TÉCNICA MAESTRA: FACTURACIÓN ELECTRÓNICA CON GREENTER & SUNAT (PERÚ)
+
 ## Bruce Fire S.A.C. — Estándar UBL 2.1
 
 Este documento constituye la fuente técnica oficial y completa para la integración de Facturación Electrónica con **Greenter (UBL 2.1)** y los servicios de **SUNAT** en el sistema Bruce Fire.
@@ -8,37 +9,43 @@ Este documento constituye la fuente técnica oficial y completa para la integrac
 ## 1. INSTALACIÓN Y REQUERIMIENTOS TÉCNICOS
 
 ### 1.1 Dependencias Composer
+
 ```bash
 composer require greenter/lite
 ```
-*(Para códigos QR y utilitarios adicionales: `simplesoftwareio/simple-qrcode`).*
+
+_(Para códigos QR y utilitarios adicionales: `simplesoftwareio/simple-qrcode`)._
 
 ### 1.2 Requisitos del Servidor / PHP
+
 - **PHP:** 8.2 o superior.
 - **Extensiones obligatorias en `php.ini`:**
-  ```ini
-  extension=soap
-  extension=openssl
-  extension=curl
-  extension=fileinfo
-  ```
+    ```ini
+    extension=soap
+    extension=openssl
+    extension=curl
+    extension=fileinfo
+    ```
 
 ---
 
 ## 2. CONFIGURACIÓN Y CERTIFICADO DIGITAL
 
 ### 2.1 Endpoints de SUNAT
+
 Greenter provee los endpoints oficiales en `Greenter\Ws\Services\SunatEndpoints`:
+
 - **Beta / Pruebas:** `SunatEndpoints::FE_BETA` (`https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService`)
 - **Producción:** `SunatEndpoints::FE_PRODUCCION` (`https://e-factura.sunat.gob.pe/ol-it-wscontain/billService`)
 - **Consultas CDR:** `SunatEndpoints::FE_CONSULTA_CDR` (`https://e-factura.sunat.gob.pe/ol-it-wsconscdr/billConsultService`)
 - **Guías de Remisión (API REST 2022+):**
-  - Auth: `https://api-seguridad.sunat.gob.pe/v1`
-  - CPE: `https://api-cpe.sunat.gob.pe/v1`
+    - Auth: `https://api-seguridad.sunat.gob.pe/v1`
+    - CPE: `https://api-cpe.sunat.gob.pe/v1`
 
 ### 2.2 Carga de Certificado Digital (.pem vs .pfx)
 
 #### Caso A: Certificado en formato `.pem` (Recomendado para producción)
+
 ```php
 use Greenter\See;
 use Greenter\Ws\Services\SunatEndpoints;
@@ -50,7 +57,9 @@ $see->setClaveSOL('20600000001', 'USUARIOSOL', 'CONTRASEÑASOL');
 ```
 
 #### Caso B: Certificado en formato `.pfx` / `.p12`
+
 Si el cliente provee el certificado emitido en `.pfx` con contraseña:
+
 ```php
 use Greenter\XMLSecLibs\Certificate\X509Certificate;
 use Greenter\XMLSecLibs\Certificate\X509ContentType;
@@ -150,10 +159,11 @@ $invoice = (new Invoice())
 > Los servicios de mantenimiento, recarga y reparación de extintores están sujetos al Sistema de Pago de Obligaciones Tributarias (SPOT) con una tasa del **12%** cuando el importe total del comprobante supera los **S/ 700.00**.
 
 > ⚠️ **PENDIENTE DE CONFIRMAR CON CONTADOR ANTES DE LA ETAPA 3** — el código de bien/servicio del Catálogo 54 usado abajo (`022`) es una hipótesis, no un hecho verificado. Investigando el Anexo 3 de la R.S. 183-2004/SUNAT hay al menos tres códigos candidatos, todos al 12%, y la elección correcta depende de cómo el contador de BRUCE FIRE ya viene declarando estos servicios:
+>
 > - **`020` — Mantenimiento y reparación de bienes muebles**: el más literal, porque un extintor es un bien mueble y el servicio es justamente mantenimiento/reparación/recarga del mismo.
 > - **`022` — Otros servicios empresariales**: el que ya estaba puesto aquí; es más genérico, no específico a "mantenimiento de bienes muebles".
 > - **`037` — Demás servicios gravados con IGV**: catálogo residual, solo si ninguno de los anteriores aplica.
-> No se puede decidir por documentación pública genérica — esto se confirma con el contador o con el historial de detracciones que BRUCE FIRE ya viene depositando, antes de codificarlo en `CreditDebitNoteBuilder`/`SaleDocumentBuilder`.
+>   No se puede decidir por documentación pública genérica — esto se confirma con el contador o con el historial de detracciones que BRUCE FIRE ya viene depositando, antes de codificarlo en `CreditDebitNoteBuilder`/`SaleDocumentBuilder`.
 
 ```php
 use Greenter\Model\Sale\Detraction;
@@ -184,6 +194,7 @@ $invoice->setLegends([$legend]);
 ## 5. FORMAS DE PAGO: CONTADO VS. CRÉDITO (RS 193-2020)
 
 ### 5.1 Venta al Contado
+
 ```php
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 
@@ -191,6 +202,7 @@ $invoice->setFormaPago(new FormaPagoContado());
 ```
 
 ### 5.2 Venta al Crédito con Cuotas
+
 > **REGLA SUNAT:** Si la venta es al crédito, se debe consignar el **Monto Neto Pendiente de Pago** (Total venta menos detracciones/retenciones si aplican) y el detalle de cada cuota con su fecha de vencimiento e importe.
 
 ```php
@@ -222,6 +234,7 @@ $invoice->setCuotas([
 ## 6. BOLETA DE VENTA ELECTRÓNICA (UBL 2.1)
 
 Las boletas siguen la misma estructura que la factura con las siguientes diferencias:
+
 - `tipoDoc` = `'03'` (Catálogo 01).
 - `serie` = Inicia con `B` (ejemplo: `B001`).
 - `client->tipoDoc` = `'1'` para DNI, `'4'` Carnet Extranjería, `'7'` Pasaporte, `'0'` Sin documento (solo hasta S/ 700.00).
@@ -279,6 +292,7 @@ $result = $see->send($note);
 ```
 
 ### Principales Motivos de Nota de Crédito (Catálogo 09)
+
 - `01`: Anulación de la operación.
 - `02`: Anulación por error en el RUC.
 - `03`: Corrección por error en la descripción.
@@ -364,7 +378,7 @@ try {
     // 1. Error de Conexión / Timeout / SoapFault
     if (! $result->isSuccess()) {
         $error = $result->getError();
-        
+
         return [
             'estado' => 'error_comunicacion',
             'codigo_error' => $error->getCode(),
@@ -444,6 +458,7 @@ RUC_EMISOR|TIPO_DOC|SERIE|CORRELATIVO|TOTAL_IGV|TOTAL_VENTA|FECHA_EMISION|TIPO_D
 ```
 
 **Ejemplo de cadena para el QR:**
+
 ```text
 20600000001|01|F001|00000001|18.00|118.00|2026-09-18|6|20123456789|t1k2j3h4k5l6=|
 ```
@@ -452,20 +467,20 @@ RUC_EMISOR|TIPO_DOC|SERIE|CORRELATIVO|TOTAL_IGV|TOTAL_VENTA|FECHA_EMISION|TIPO_D
 
 ## 11. TABLA RESUMEN DE CATÁLOGOS SUNAT UTILIZADOS
 
-| Catálogo | Nombre | Valores Frecuentes |
-| :---: | :--- | :--- |
-| **01** | Tipo de Documento | `01` = Factura, `03` = Boleta, `07` = Nota Crédito, `08` = Nota Débito, `09` = GRE |
-| **02** | Tipo de Moneda | `PEN` = Soles, `USD` = Dólares Americanos |
-| **03** | Unidad de Medida | `NIU` = Unidad / Bien, `ZZ` = Servicio, `KGM` = Kilogramo |
-| **06** | Documento de Identidad | `6` = RUC (11 dígitos), `1` = DNI (8 dígitos), `4` = Carnet Ext., `7` = Pasaporte |
-| **07** | Afectación al IGV | `10` = Gravado - Op. Onerosa, `20` = Exonerado, `30` = Inafecto |
-| **09** | Motivo Nota de Crédito | `01` = Anulación de operación, `06` = Devolución total, `07` = Devolución parcial |
-| **10** | Motivo Nota de Débito | `01` = Penalidad / otros cobros, `02` = Aumento de valor |
-| **18** | Modalidad de Traslado (GRE) | `01` = Transporte público, `02` = Transporte privado |
-| **20** | Motivo de Traslado (GRE) | `01` = Venta, `08` = Traslado para recojo / reparación / mantenimiento |
-| **51** | Tipo de Operación | `0101` = Venta Interna, `0102` = Exportación, `1001` = Venta sujeta a Detracción |
-| **54** | Códigos de Detracción | `022` = Otros servicios empresariales / Mantenimiento, `020` = Mantenimiento muebles |
-| **59** | Medios de Pago Detracción | `001` = Depósito en cuenta del Banco de la Nación |
+| Catálogo | Nombre                      | Valores Frecuentes                                                                   |
+| :------: | :-------------------------- | :----------------------------------------------------------------------------------- |
+|  **01**  | Tipo de Documento           | `01` = Factura, `03` = Boleta, `07` = Nota Crédito, `08` = Nota Débito, `09` = GRE   |
+|  **02**  | Tipo de Moneda              | `PEN` = Soles, `USD` = Dólares Americanos                                            |
+|  **03**  | Unidad de Medida            | `NIU` = Unidad / Bien, `ZZ` = Servicio, `KGM` = Kilogramo                            |
+|  **06**  | Documento de Identidad      | `6` = RUC (11 dígitos), `1` = DNI (8 dígitos), `4` = Carnet Ext., `7` = Pasaporte    |
+|  **07**  | Afectación al IGV           | `10` = Gravado - Op. Onerosa, `20` = Exonerado, `30` = Inafecto                      |
+|  **09**  | Motivo Nota de Crédito      | `01` = Anulación de operación, `06` = Devolución total, `07` = Devolución parcial    |
+|  **10**  | Motivo Nota de Débito       | `01` = Penalidad / otros cobros, `02` = Aumento de valor                             |
+|  **18**  | Modalidad de Traslado (GRE) | `01` = Transporte público, `02` = Transporte privado                                 |
+|  **20**  | Motivo de Traslado (GRE)    | `01` = Venta, `08` = Traslado para recojo / reparación / mantenimiento               |
+|  **51**  | Tipo de Operación           | `0101` = Venta Interna, `0102` = Exportación, `1001` = Venta sujeta a Detracción     |
+|  **54**  | Códigos de Detracción       | `022` = Otros servicios empresariales / Mantenimiento, `020` = Mantenimiento muebles |
+|  **59**  | Medios de Pago Detracción   | `001` = Depósito en cuenta del Banco de la Nación                                    |
 
 ---
 
@@ -476,6 +491,7 @@ Se revisó toda la documentación oficial de [greenter.dev](https://greenter.dev
 ### 12.1 Aplican al alcance actual — sí se implementan
 
 **Descuento por línea** (`greenter.dev/examples/descuento-linea`) — sí aplica: BRUCE FIRE puede dar descuentos comerciales en ítems de una venta o cotización.
+
 ```php
 use Greenter\Model\Sale\Charge;
 
@@ -489,6 +505,7 @@ $item->setDescuentos([
 ```
 
 **Anticipo** (`greenter.dev/examples/anticipo`) — sí aplica: los servicios de instalación (sistema de detección, cámaras, pozo a tierra) suelen cobrar un adelanto antes de ejecutar la obra, y luego facturar el saldo. Greenter soporta esto de forma nativa referenciando el comprobante del anticipo:
+
 ```php
 use Greenter\Model\Sale\Prepayment;
 
@@ -501,6 +518,7 @@ $invoice->setAnticipos([
 $invoice->setTotalAnticipos(100.00);
 // setMtoImpVenta() debe reflejar el total YA descontado el anticipo.
 ```
+
 Esto encaja con la sección 12.2 (Comercial → conversión a venta) del documento maestro: cuando una Cotización de instalación se acepta con anticipo, se emite primero la factura del anticipo y luego la factura final referenciándola.
 
 ### 12.2 No aplican hoy — no se implementan (documentado para no reabrir la duda)

@@ -19,6 +19,8 @@ use Illuminate\Support\Carbon;
  * @property int $product_id
  * @property int $sede_almacen_id
  * @property string $numero_serie
+ * @property string|null $capacidad
+ * @property string|null $serie_fabricante
  * @property string|null $marca
  * @property int|null $anio_fabricacion
  * @property string $estado
@@ -28,7 +30,7 @@ use Illuminate\Support\Carbon;
  * @property-read Product $product
  * @property-read Sede $sedeAlmacen
  */
-#[Fillable(['product_id', 'sede_almacen_id', 'numero_serie', 'marca', 'anio_fabricacion', 'estado', 'fecha_ingreso'])]
+#[Fillable(['product_id', 'sede_almacen_id', 'numero_serie', 'capacidad', 'serie_fabricante', 'marca', 'anio_fabricacion', 'estado', 'fecha_ingreso'])]
 class InventoryUnit extends Model
 {
     /** @use HasFactory<InventoryUnitFactory> */

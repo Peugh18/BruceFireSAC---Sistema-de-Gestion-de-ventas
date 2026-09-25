@@ -15,7 +15,7 @@ class RevertSale
      * y las cuotas sin cobrar se eliminan. Los pagos ya registrados no se
      * tocan: el dinero se devuelve al cliente de forma manual.
      */
-    public function handle(Sale $sale): Sale
+    public function handle(Sale $sale, string $motivo = 'por nota de crédito'): Sale
     {
         $sale->loadMissing('items.inventoryUnit', 'items.equipment');
 
@@ -37,7 +37,7 @@ class RevertSale
             $movement->referencia_type = $sale->getMorphClass();
             $movement->referencia_id = $sale->id;
             $movement->user_id = auth()->id();
-            $movement->observacion = "Anulación de la venta {$sale->numero_interno} por nota de crédito";
+            $movement->observacion = "Anulación de la venta {$sale->numero_interno} {$motivo}";
             $movement->save();
         }
 
@@ -47,7 +47,7 @@ class RevertSale
         AuditLogger::log(
             action: 'venta.anulada',
             entity: $sale,
-            newValues: ['estado' => 'anulada', 'pagos_registrados' => $sale->payments()->exists()],
+            newValues: ['estado' => 'anulada', 'motivo' => $motivo, 'pagos_registrados' => $sale->payments()->exists()],
             userId: auth()->id()
         );
 

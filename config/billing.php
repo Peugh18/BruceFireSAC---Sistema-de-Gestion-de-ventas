@@ -49,6 +49,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Envío diferido a SUNAT
+    |--------------------------------------------------------------------------
+    | Horas que la factura/boleta queda "por enviar" antes del envío automático,
+    | para corregirla sin nota de crédito. SUNAT da hasta 3 días calendario
+    | desde el día siguiente a la emisión (R.S. 003-2023/SUNAT); 6 horas
+    | cubren el turno y dejan casi 3 días de margen para reintentos. Con 0 se
+    | envía al confirmar.
+    */
+    'envio_diferido_horas' => (float) env('BILLING_ENVIO_DIFERIDO_HORAS', 6),
+
+    /*
+    |--------------------------------------------------------------------------
     | Series por tipo de comprobante (semilla / valores por defecto)
     |--------------------------------------------------------------------------
     */

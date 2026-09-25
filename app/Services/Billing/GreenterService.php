@@ -2,6 +2,7 @@
 
 namespace App\Services\Billing;
 
+use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
 use App\Models\Product;
@@ -69,7 +70,7 @@ class GreenterService
         $company = $this->buildCompany();
         $client = $this->buildClient($sale);
 
-        $details = $sale->items->map(fn (SaleItem $item) => $this->buildDetail($item))->values()->all();
+        $details = $sale->lineasComprobante()->map(fn (SaleItem $item) => $this->buildDetail($item))->values()->all();
 
         $esServicio = $sale->items->contains(fn (SaleItem $item) => $item->esServicio());
         $detraccionCalc = $this->detraccionCalculator->calcular((float) $sale->total, $esServicio);
@@ -80,7 +81,7 @@ class GreenterService
             ->setTipoDoc($document->tipo === 'factura' ? '01' : '03')
             ->setSerie($document->serie)
             ->setCorrelativo((string) $document->correlativo)
-            ->setFechaEmision($sale->fecha)
+            ->setFechaEmision($document->fecha_emision ?? $sale->fecha)
             ->setFormaPago($this->buildFormaPago($sale))
             ->setTipoMoneda('PEN')
             ->setCompany($company)
@@ -320,6 +321,7 @@ class GreenterService
         return match ($tipoDocumento) {
             'ruc' => '6',
             'dni' => '1',
+            Client::TIPO_DOCUMENTO_VARIOS => '0',
             default => throw new RuntimeException("Tipo de documento de cliente no soportado para SUNAT: {$tipoDocumento}"),
         };
     }

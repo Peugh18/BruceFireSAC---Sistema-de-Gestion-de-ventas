@@ -22,7 +22,11 @@ class ComprobanteQrGenerator
         $company = CompanySetting::current();
 
         $tipoDocSunat = $document->tipo === 'factura' ? '01' : '03';
-        $tipoDocCliente = $sale->client->tipo_documento === 'ruc' ? '6' : '1';
+        $tipoDocCliente = match ($sale->client->tipo_documento) {
+            'ruc' => '6',
+            'dni' => '1',
+            default => '0',
+        };
 
         $texto = implode('|', [
             $company->ruc,
@@ -31,7 +35,7 @@ class ComprobanteQrGenerator
             str_pad((string) $document->correlativo, 8, '0', STR_PAD_LEFT),
             number_format((float) $sale->igv, 2, '.', ''),
             number_format((float) $sale->total, 2, '.', ''),
-            $sale->fecha->toDateString(),
+            ($document->fecha_emision ?? $sale->fecha)->toDateString(),
             $tipoDocCliente,
             $sale->client->numero_documento,
             $this->extractDigestValue($xmlSigned),

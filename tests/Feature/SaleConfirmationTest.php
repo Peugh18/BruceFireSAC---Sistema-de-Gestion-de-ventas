@@ -61,7 +61,7 @@ function draftSaleFor(Client $client, string $comprobanteTipo = 'factura'): Sale
     return $sale;
 }
 
-test('confirmar una venta con RUC activo y habido la pasa a confirmada y emite el comprobante', function () {
+test('confirmar una venta con RUC activo y habido la pasa a confirmada y deja el comprobante por enviar', function () {
     $sale = draftSaleFor(Client::factory()->create([
         'estado_contribuyente' => 'ACTIVO',
         'condicion_domicilio' => 'HABIDO',
@@ -70,7 +70,7 @@ test('confirmar una venta con RUC activo y habido la pasa a confirmada y emite e
     $confirmed = app(ConfirmSale::class)->handle($sale);
 
     expect($confirmed->estado)->toBe('confirmada')
-        ->and(ElectronicDocument::where('sale_id', $sale->id)->first()?->sunat_estado)->toBe('aceptado');
+        ->and(ElectronicDocument::where('sale_id', $sale->id)->first()?->sunat_estado)->toBe('por_enviar');
 });
 
 test('confirmar una venta a un RUC no activo o no habido es bloqueado antes de tocar SUNAT', function () {
