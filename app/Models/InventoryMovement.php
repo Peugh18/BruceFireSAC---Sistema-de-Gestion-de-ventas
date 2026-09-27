@@ -32,26 +32,41 @@ use Illuminate\Support\Carbon;
 #[Fillable(['inventory_unit_id', 'product_id', 'sede_id', 'tipo', 'cantidad', 'referencia_type', 'referencia_id', 'user_id', 'observacion'])]
 class InventoryMovement extends Model
 {
+    /**
+     * @return BelongsTo<InventoryUnit, $this>
+     */
     public function inventoryUnit(): BelongsTo
     {
         return $this->belongsTo(InventoryUnit::class);
     }
 
+    /**
+     * @return BelongsTo<Product, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return MorphTo<Model, $this>
+     */
     public function referencia(): MorphTo
     {
         return $this->morphTo();

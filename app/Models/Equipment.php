@@ -48,16 +48,25 @@ class Equipment extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Client, $this>
+     */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
+    /**
+     * @return BelongsTo<Product, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * @return BelongsToMany<ServiceOrder, $this>
+     */
     public function serviceOrders(): BelongsToMany
     {
         return $this->belongsToMany(ServiceOrder::class, 'service_order_equipment')
@@ -65,6 +74,9 @@ class Equipment extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<TechnicalChecklist, $this>
+     */
     public function checklists(): HasMany
     {
         return $this->hasMany(TechnicalChecklist::class);

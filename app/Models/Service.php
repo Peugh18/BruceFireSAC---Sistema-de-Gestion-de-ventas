@@ -52,17 +52,25 @@ class Service extends Model
 
     /**
      * Certificado que genera este servicio (null si no genera ninguno).
+     *
+     * @return BelongsTo<CertificateType, $this>
      */
     public function certificateType(): BelongsTo
     {
         return $this->belongsTo(CertificateType::class);
     }
 
+    /**
+     * @return HasMany<QuoteItem, $this>
+     */
     public function quoteItems(): HasMany
     {
         return $this->hasMany(QuoteItem::class);
     }
 
+    /**
+     * @return HasMany<SaleItem, $this>
+     */
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class);

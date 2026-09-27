@@ -38,11 +38,17 @@ class ServiceOrderEvent extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<ServiceOrder, $this>
+     */
     public function serviceOrder(): BelongsTo
     {
         return $this->belongsTo(ServiceOrder::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

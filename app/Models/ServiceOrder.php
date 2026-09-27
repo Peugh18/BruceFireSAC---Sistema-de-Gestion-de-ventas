@@ -90,41 +90,65 @@ class ServiceOrder extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Client, $this>
+     */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
     }
 
+    /**
+     * @return BelongsTo<Vehicle, $this>
+     */
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
     }
 
+    /**
+     * @return BelongsTo<Quote, $this>
+     */
     public function quote(): BelongsTo
     {
         return $this->belongsTo(Quote::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function tecnico(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tecnico_id');
     }
 
+    /**
+     * @return HasMany<ServiceOrderEvent, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(ServiceOrderEvent::class);
     }
 
+    /**
+     * @return BelongsTo<Equipment, $this>
+     */
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);
     }
 
+    /**
+     * @return BelongsToMany<Equipment, $this>
+     */
     public function equipments(): BelongsToMany
     {
         return $this->belongsToMany(Equipment::class, 'service_order_equipment')
@@ -132,16 +156,25 @@ class ServiceOrder extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<Deficiency, $this>
+     */
     public function deficiencies(): HasMany
     {
         return $this->hasMany(Deficiency::class);
     }
 
+    /**
+     * @return HasMany<TechnicalChecklist, $this>
+     */
     public function checklists(): HasMany
     {
         return $this->hasMany(TechnicalChecklist::class);
     }
 
+    /**
+     * @return HasMany<Certificate, $this>
+     */
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);

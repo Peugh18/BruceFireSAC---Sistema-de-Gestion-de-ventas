@@ -34,11 +34,17 @@ class CertificateRevision extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Certificate, $this>
+     */
     public function certificate(): BelongsTo
     {
         return $this->belongsTo(Certificate::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -47,16 +47,25 @@ class TechnicalChecklist extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<ServiceOrder, $this>
+     */
     public function serviceOrder(): BelongsTo
     {
         return $this->belongsTo(ServiceOrder::class);
     }
 
+    /**
+     * @return BelongsTo<Equipment, $this>
+     */
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -58,26 +58,41 @@ class Product extends Model
         ];
     }
 
+    /**
+     * @return HasMany<InventoryUnit, $this>
+     */
     public function units(): HasMany
     {
         return $this->hasMany(InventoryUnit::class);
     }
 
+    /**
+     * @return HasMany<InventoryMovement, $this>
+     */
     public function movements(): HasMany
     {
         return $this->hasMany(InventoryMovement::class);
     }
 
+    /**
+     * @return HasMany<Equipment, $this>
+     */
     public function equipment(): HasMany
     {
         return $this->hasMany(Equipment::class);
     }
 
+    /**
+     * @return HasMany<QuoteItem, $this>
+     */
     public function quoteItems(): HasMany
     {
         return $this->hasMany(QuoteItem::class);
     }
 
+    /**
+     * @return HasMany<SaleItem, $this>
+     */
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class);

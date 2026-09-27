@@ -44,16 +44,25 @@ class InventoryUnit extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Product, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sedeAlmacen(): BelongsTo
     {
         return $this->belongsTo(Sede::class, 'sede_almacen_id');
     }
 
+    /**
+     * @return HasMany<InventoryMovement, $this>
+     */
     public function movements(): HasMany
     {
         return $this->hasMany(InventoryMovement::class);

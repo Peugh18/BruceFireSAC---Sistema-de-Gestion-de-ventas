@@ -71,11 +71,17 @@ class ElectronicDocument extends Model
         return in_array($this->sunat_estado, ['rechazado', 'excepcion'], true);
     }
 
+    /**
+     * @return BelongsTo<Sale, $this>
+     */
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
     }
 
+    /**
+     * @return BelongsTo<self, $this>
+     */
     public function cpeAfectado(): BelongsTo
     {
         return $this->belongsTo(self::class, 'cpe_afectado_id');

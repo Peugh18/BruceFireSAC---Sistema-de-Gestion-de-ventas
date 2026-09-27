@@ -37,11 +37,17 @@ class Sede extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<self, $this>
+     */
     public function almacen(): BelongsTo
     {
         return $this->belongsTo(self::class, 'almacen_id');
     }
 
+    /**
+     * @return HasMany<self, $this>
+     */
     public function tiendas(): HasMany
     {
         return $this->hasMany(self::class, 'almacen_id');
@@ -56,6 +62,9 @@ class Sede extends Model
         return $this->tipo === 'tienda' && $this->almacen_id ? (int) $this->almacen_id : $this->id;
     }
 
+    /**
+     * @return HasMany<User, $this>
+     */
     public function usuarios(): HasMany
     {
         return $this->hasMany(User::class);

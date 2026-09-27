@@ -35,11 +35,17 @@ class Installment extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Sale, $this>
+     */
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
     }
 
+    /**
+     * @return HasMany<SalePayment, $this>
+     */
     public function payments(): HasMany
     {
         return $this->hasMany(SalePayment::class);

@@ -33,11 +33,17 @@ class ReceptionItem extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Reception, $this>
+     */
     public function reception(): BelongsTo
     {
         return $this->belongsTo(Reception::class);
     }
 
+    /**
+     * @return BelongsTo<Product, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

@@ -48,26 +48,41 @@ class SaleItem extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Sale, $this>
+     */
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
     }
 
+    /**
+     * @return BelongsTo<Product, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * @return BelongsTo<Service, $this>
+     */
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
     }
 
+    /**
+     * @return BelongsTo<InventoryUnit, $this>
+     */
     public function inventoryUnit(): BelongsTo
     {
         return $this->belongsTo(InventoryUnit::class);
     }
 
+    /**
+     * @return BelongsTo<Equipment, $this>
+     */
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);

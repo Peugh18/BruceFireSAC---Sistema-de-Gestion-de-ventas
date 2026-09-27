@@ -55,11 +55,17 @@ class CashRegister extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function vendedor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'vendedor_id');
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);

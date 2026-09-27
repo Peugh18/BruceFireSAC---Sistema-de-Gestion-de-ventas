@@ -1,6 +1,7 @@
 includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/nesbot/carbon/extension.neon
+    - phpstan-baseline.neon
 
 parameters:
     paths:
@@ -11,3 +12,6 @@ parameters:
         - routes/
 
     level: 7
+
+    # La línea base guarda los avisos antiguos; cualquier error nuevo sí rompe el CI.
+    reportUnmatchedIgnoredErrors: false

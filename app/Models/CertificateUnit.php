@@ -50,11 +50,17 @@ class CertificateUnit extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Certificate, $this>
+     */
     public function certificate(): BelongsTo
     {
         return $this->belongsTo(Certificate::class, 'certificate_id');
     }
 
+    /**
+     * @return BelongsTo<Equipment, $this>
+     */
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);

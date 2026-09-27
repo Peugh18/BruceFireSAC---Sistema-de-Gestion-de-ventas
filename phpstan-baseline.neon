@@ -1,0 +1,1453 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Product\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Actions/Almacen/CreateReception.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Product\>\:\:\$serializado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Actions/Almacen/CreateReception.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Actions/Almacen/CreateReception.php
+
+		-
+			message: '#^Parameter \$userId of static method App\\Services\\AuditLogger\:\:log\(\) expects int\|null, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Almacen/CreateStockAdjustment.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Actions/Almacen/CreateStockAdjustment.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Actions/Almacen/UpdateReception.php
+
+		-
+			message: '#^Offset ''notas'' on array\{cdr_zip\: string\|null, codigo\: int, mensaje\: string, notas\: list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Actions/Billing/EmitElectronicDocument.php
+
+		-
+			message: '#^Method App\\Actions\\Certificates\\EmitirCertificadoDeServicio\:\:pruebas\(\) should return list\<array\{estado\: string, valor\: string\|null\}\> but returns array\<int, array\{estado\: string, valor\: string\|null\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Actions/Certificates/EmitirCertificadoDeServicio.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<array\<string, mixed\>\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Actions/Certificates/EmitirCertificadoDeServicio.php
+
+		-
+			message: '#^Offset ''fotos'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Actions/Certificates/EmitirCertificadosDeVenta.php
+
+		-
+			message: '#^Offset ''unidades'' on array\{referencia\?\: string\|null, direccion\?\: string\|null, tipos\: list\<string\>, unidades\: list\<array\{equipment_id\: int, numero_cliente\?\: string\|null\}\>, capacitacion\?\: array\<string, mixed\>\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: app/Actions/Certificates/EmitirCertificadosDeVenta.php
+
+		-
+			message: '#^Parameter \#2 \$grupos of method App\\Actions\\Certificates\\EmitirCertificadosDeVenta\:\:handle\(\) expects list\<array\{referencia\?\: string\|null, direccion\?\: string\|null, tipos\: list\<string\>, unidades\: list\<array\{equipment_id\: int, numero_cliente\?\: string\|null\}\>, capacitacion\?\: array\<string, mixed\>\|null\}\>, array\{array\{referencia\: string\|null, tipos\: non\-empty\-list\<string\>, unidades\: array\<int, array\{equipment_id\: int, numero_cliente\: string\|null\}\>\}\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Certificates/EmitirCertificadosDeVenta.php
+
+		-
+			message: '#^Offset ''tipos'' on array\{nombre\: string, cargo\: string, cip\?\: string\|null, activo\?\: bool, tipos\: list\<string\>, quitar_firma\?\: bool, quitar_sello\?\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Actions/Certificates/GuardarFirmante.php
+
+		-
+			message: '#^Cannot access offset ''Orientation'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Actions/Certificates/GuardarImagenDeFirma.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: app/Actions/Certificates/GuardarImagenDeFirma.php
+
+		-
+			message: '#^Parameter \#1 \$color of method App\\Actions\\Certificates\\GuardarImagenDeFirma\:\:luz\(\) expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Actions/Certificates/GuardarImagenDeFirma.php
+
+		-
+			message: '#^Parameter \#1 \$width of function imagecreatetruecolor expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Certificates/GuardarImagenDeFirma.php
+
+		-
+			message: '#^Parameter \#2 \$height of function imagecreatetruecolor expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Certificates/GuardarImagenDeFirma.php
+
+		-
+			message: '#^Parameter \#4 \$color of function imagefill expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Certificates/GuardarImagenDeFirma.php
+
+		-
+			message: '#^Parameter \#4 \$color of function imagesetpixel expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Certificates/GuardarImagenDeFirma.php
+
+		-
+			message: '#^Parameter \#5 \$alpha of function imagecolorallocatealpha expects int\<0, 127\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Certificates/GuardarImagenDeFirma.php
+
+		-
+			message: '#^Method App\\Actions\\Certificates\\IssueCertificate\:\:resumen\(\) should return array\{referencia\: string\|null, direccion\: string\|null, datos\: array\<string, mixed\>\|null, unidades\: list\<array\{orden\: int\|null, numero_cliente\: string\|null, serie\: string\|null\}\>\} but returns array\{referencia\: string\|null, direccion\: string\|null, datos\: string\|null, unidades\: array\<int, array\{orden\: int\<0, max\>\|null, numero_cliente\: string\|null, serie\: string\}\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Actions/Certificates/IssueCertificate.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Actions/Certificates/IssueCertificate.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>numero_serie" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Actions/Certificates/IssueCertificate.php
+
+		-
+			message: '#^Cannot assign offset ''modo'' to array\|string\.$#'
+			identifier: offsetAssign.dimType
+			count: 1
+			path: app/Actions/Certificates/SyncCertificateTraining.php
+
+		-
+			message: '#^Method App\\Actions\\Certificates\\SyncCertificateTraining\:\:reemplazarFotos\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Actions/Certificates/SyncCertificateTraining.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{id\?\: int\|null, nombres\: string, dni\?\: string\|null, cargo\?\: string\|null\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Actions/Certificates/SyncCertificateTraining.php
+
+		-
+			message: '#^Parameter \#1 \$width of function imagecreatetruecolor expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Certificates/SyncCertificateTraining.php
+
+		-
+			message: '#^Parameter \#2 \$height of function imagecreatetruecolor expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Certificates/SyncCertificateTraining.php
+
+		-
+			message: '#^Parameter \$userId of static method App\\Services\\AuditLogger\:\:log\(\) expects int\|null, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Sales/ConfirmSale.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<array\{fecha_vencimiento\: string, monto\: float\|int\|string\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Actions/Sales/CreateSale.php
+
+		-
+			message: '#^Parameter \#1 \$client of method App\\Actions\\Sales\\ValidarComprobanteCliente\:\:handle\(\) expects App\\Models\\Client, App\\Models\\Client\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Client\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Actions/Sales/CreateSale.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Product\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Actions/Sales/ProcessSaleItem.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Product\>\:\:\$nombre\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Actions/Sales/ProcessSaleItem.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Product\>\:\:\$serializado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Actions/Sales/ProcessSaleItem.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Service\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Service\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Actions/Sales/ProcessSaleItem.php
+
+		-
+			message: '#^Parameter \$userId of static method App\\Services\\AuditLogger\:\:log\(\) expects int\|null, int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Sales/RevertSale.php
+
+		-
+			message: '#^Property App\\Models\\InventoryMovement\:\:\$user_id \(int\|null\) does not accept int\|string\|null\.$#'
+			identifier: assign.propertyType
+			count: 2
+			path: app/Actions/Sales/RevertSale.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>sede_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Actions/Sales/RevertSale.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Actions/Tecnico/ProcessChecklist.php
+
+		-
+			message: '#^Offset ''estado'' on array\{estado\: ''conforme''\|''no_aplica''\|''observado'', condicion\?\: string\|null, nota\?\: string\|null, accion_recomendada\?\: string\|null, repuesto_sugerido\?\: string\|null, requiere_autorizacion\?\: bool\|null, foto_path\?\: string\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Actions/Tecnico/ProcessChecklist.php
+
+		-
+			message: '#^Offset ''items'' on array\{origen\?\: string, items\: array\<string, array\{estado\: ''conforme''\|''no_aplica''\|''observado'', condicion\?\: string\|null, nota\?\: string\|null, accion_recomendada\?\: string\|null, repuesto_sugerido\?\: string\|null, requiere_autorizacion\?\: bool\|null, foto_path\?\: string\|null\}\>, observaciones\?\: string\|null\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: app/Actions/Tecnico/ProcessChecklist.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: app/Actions/Tecnico/ProcessChecklist.php
+
+		-
+			message: '#^Offset ''cantidad'' on array\{cantidad\: int, contacto_nombre\: string, contacto_telefono\?\: string\|null, observaciones\?\: string\|null, conformidad_cliente\: bool, foto_path\?\: string\|null, equipos_ids\?\: list\<int\>\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Actions/TecnicoCampo/RegisterCollection.php
+
+		-
+			message: '#^Offset ''conformidad_cliente'' on array\{cantidad\: int, contacto_nombre\: string, contacto_telefono\?\: string\|null, observaciones\?\: string\|null, conformidad_cliente\: bool, foto_path\?\: string\|null, equipos_ids\?\: list\<int\>\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Actions/TecnicoCampo/RegisterCollection.php
+
+		-
+			message: '#^Offset ''contacto_nombre'' on array\{cantidad\: int, contacto_nombre\: string, contacto_telefono\?\: string\|null, observaciones\?\: string\|null, conformidad_cliente\: bool, foto_path\?\: string\|null, equipos_ids\?\: list\<int\>\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Actions/TecnicoCampo/RegisterCollection.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Actions/TecnicoCampo/RegisterInstallation.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: app/Console/Commands/ExportRetentionTrainingData.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects array\<int\|string\>, list\<string\|null\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/ImportHistoricalSales.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/ImportHistoricalSales.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fgetcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Console/Commands/ImportHistoricalSales.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, list\<string\|null\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/ImportHistoricalSales.php
+
+		-
+			message: '#^Parameter \#2 \$timestamp of function date expects int\|null, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/ImportHistoricalSales.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$stock_disponible\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Almacen/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Sede\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Almacen/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Almacen/ReceptionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Reception\:\:\$unidades_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Almacen/ReceptionStickerController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/Almacen/ReceptionStickerController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InventoryMovement\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Almacen/StockController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InventoryUnit\:\:\$sede_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Almacen/StockController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InventoryUnit\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Almacen/StockController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$disponible\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Almacen/StockController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Sede\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Almacen/StockController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Almacen/StockLookupController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Almacen/StockLookupController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Gerente/AuditController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Gerente/CashRegisterConsolidatedController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nombre" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Gerente/CashRegisterConsolidatedController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Http/Controllers/Gerente/CollectionConsolidatedController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Gerente/CollectionConsolidatedController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Client\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Http/Controllers/Gerente/CollectionConsolidatedController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Gerente/CollectionConsolidatedController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InventoryMovement\:\:\$producto\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$stock_disponible\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sale\:\:\$cliente\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ServiceOrder\:\:\$cantidad\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/DashboardController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Http/Controllers/Gerente/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nombre" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Gerente/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>telefono" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Gerente/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Client\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Gerente/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$stock_disponible\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Gerente/ProductController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$stock_disponible\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sale\:\:\$cantidad\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Gerente/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sale\:\:\$cliente\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sale\:\:\$monto\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sale\:\:\$nombre\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sede\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Sede\>\:\:\$nombre\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/ReportController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nombre" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Gerente/ReportController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Gerente/SedeController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Sede\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Gerente/SedeController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Gerente/SedeController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Sede\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/Gerente/SedeController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/Gerente/SedeController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:values\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/Gerente/SedeController.php
+
+		-
+			message: '#^Parameter \#2 \$datos of method App\\Actions\\Certificates\\GuardarFirmante\:\:handle\(\) expects array\{nombre\: string, cargo\: string, cip\?\: string\|null, activo\?\: bool, tipos\?\: list\<string\>, quitar_firma\?\: bool, quitar_sello\?\: bool\}, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Gerente/SignerController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sede\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Sede\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Gerente/UserController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Gerente/UserController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Gerente/UserController.php
+
+		-
+			message: '#^Parameter \#2 \$sede of method App\\Actions\\Usuarios\\ValidarSedeDelRol\:\:handle\(\) expects App\\Models\\Sede\|null, App\\Models\\Sede\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Sede\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Gerente/UserController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/Gerente/UserController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/PublicCertificateVerificationController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Http/Controllers/PublicCertificateVerificationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>certificate" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/PublicCertificateVerificationController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\CertificateType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/PublicCertificateVerificationController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Client\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 7
+			path: app/Http/Controllers/PublicCertificateVerificationController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipment\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Equipment\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/TecnicoCampo/InspectionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipment\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Equipment\>\:\:\$numero_serie\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/TecnicoCampo/InspectionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipment\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Equipment\>\:\:\$ubicacion_actual\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TecnicoCampo/InspectionController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/TecnicoPlanta/DeficiencyController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Product\>\:\:\$nombre\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TecnicoPlanta/ExecutionController.php
+
+		-
+			message: '#^Parameter \#3 \$product of method App\\Actions\\TecnicoPlanta\\ExecuteAndCloseServiceOrder\:\:consumeSparePart\(\) expects App\\Models\\Product, App\\Models\\Product\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Product\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/TecnicoPlanta/ExecutionController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/TecnicoPlanta/ExecutionController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\CertificateType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/TecnicoPlanta/ExecutionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Vendedor\\AlertController\:\:alertRow\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Controllers/Vendedor/AlertController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Vendedor\\AlertController\:\:historicalRows\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, array\{cantidad\: mixed\}\|array\{client_id\: mixed, cliente\: mixed, equipment_id\: null, equipo\: string, numero_serie\: null, fecha\: string, dias\: int, segmento\: string, \.\.\.\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/AlertController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/BillingController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fputcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Vendedor/BillingController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/BillingController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Sale\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Vendedor/BillingController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Vendedor/CashRegisterController.php
+
+		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: app/Http/Controllers/Vendedor/CatalogoController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Vendedor\\CatalogoController\:\:coincide\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Http/Controllers/Vendedor/CatalogoController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/Vendedor/CertificateController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/Vendedor/CertificateController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Http/Controllers/Vendedor/CertificateController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\CertificateType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 5
+			path: app/Http/Controllers/Vendedor/CertificateController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Client\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/CertificateController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Client\:\:\$sales_max_fecha\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Vendedor/ClientController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/ClientController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fputcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Vendedor/ClientController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/ClientController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 8
+			path: app/Http/Controllers/Vendedor/ClientController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Product\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/ClientController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\Installment\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/CollectionController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Client\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/CollectionController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/CommunicationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>sede_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/Concerns/AcotaPorSede.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Sale\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/CreditNoteController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Client\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Http/Controllers/Vendedor/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Sale\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Http/Controllers/Vendedor/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Sale\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/DebitNoteController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\ServiceOrder\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/DeficiencyAuthorizationController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/DeficiencyController.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\Sede\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Sede\>\:\:almacenEfectivoId\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Vendedor/InventoryLookupController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>codigo" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/QuoteController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nombre" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/QuoteController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Vendedor\\SaleCertificateController\:\:certificados\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: int, numero\: string, tipo\: string, tipo_codigo\: string, revision\: int, estado\: string, referencia\: string\|null, unidades\: int\<0, max\>\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleCertificateController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Vendedor\\SaleCertificateController\:\:gruposActuales\(\) should return list\<array\{referencia\: string\|null, direccion\: string\|null, tipos\: list\<string\>, unidades\: list\<array\{equipment_id\: int, numero_cliente\: string\|null\}\>, capacitacion\: array\<string, mixed\>\|null\}\> but returns array\<int, array\{referencia\: mixed, direccion\: mixed, tipos\: mixed, unidades\: mixed, capacitacion\: non\-empty\-array\|null\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleCertificateController.php
+
+		-
+			message: '#^Only iterables can be unpacked, array\|string given\.$#'
+			identifier: arrayUnpacking.nonIterable
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleCertificateController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Certificate\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleCertificateController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Certificate\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleCertificateController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:all\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleCertificateController.php
+
+		-
+			message: '#^Return type of call to method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:values\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleCertificateController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Vendedor\\SaleController\:\:cotizacionParaVenta\(\) should return array\{id\: int, numero\: string, client\: array\{id\: int, tipo_documento\: string, razon_social\: string, numero_documento\: string\}, items\: list\<array\{tipo\: string, product_id\: int\|null, service_id\: int\|null, nombre\: string, codigo\: string\|null, serializado\: bool, cantidad\: int, precio_unitario\: float\}\>, referencia\: string\|null\}\|null but returns array\{id\: int, numero\: string, client\: array\{id\: int, tipo_documento\: string, razon_social\: string, numero_documento\: string\}, items\: array\<int, array\{tipo\: ''product''\|''service'', product_id\: int\|null, service_id\: int\|null, nombre\: string\|null, codigo\: string\|null, serializado\: bool, cantidad\: int, precio_unitario\: float\}\>, referencia\: string\|null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\ElectronicDocument\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>numero_serie" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Vendedor/SaleController.php
+
+		-
+			message: '#^Offset ''filas'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Vendedor/ServiceCertificateController.php
+
+		-
+			message: '#^Offset ''observaciones'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Vendedor/ServiceCertificateController.php
+
+		-
+			message: '#^Offset ''pruebas'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Vendedor/ServiceCertificateController.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{clave\: string, titulo\: string, tipo\?\: string, unidad\?\: string\|null, obligatorio\?\: bool\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Http/Controllers/Vendedor/ServiceCertificateController.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{texto\: string, unidad\?\: string\|null, minimo\?\: float\|null, maximo\?\: float\|null\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Http/Controllers/Vendedor/ServiceCertificateController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Vendedor/ServiceOrderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Vendedor/ServiceOrderController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Vendedor\\ServiceOrderController\:\:tecnicosQueAtienden\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Http/Controllers/Vendedor/ServiceOrderController.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/Vendedor/ServiceOrderController.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/Vendedor/ServiceOrderController.php
+
+		-
+			message: '#^Cannot cast object\|string\|null to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: app/Http/Middleware/HandleInertiaRequests.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InventoryUnit\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\InventoryUnit\>\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/Almacen/StoreStockAdjustmentRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InventoryUnit\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\InventoryUnit\>\:\:\$sede_almacen_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/Almacen/StoreStockAdjustmentRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Cotizaciones\\StoreQuoteRequest\:\:withValidator\(\) has parameter \$validator with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Requests/Cotizaciones/StoreQuoteRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Sales\\StoreSaleRequest\:\:withValidator\(\) has parameter \$validator with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Requests/Sales/StoreSaleRequest.php
+
+		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: app/Models/Client.php
+
+		-
+			message: '#^Class App\\Models\\ClientRetentionScore uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ClientRetentionScore.php
+
+		-
+			message: '#^Class App\\Models\\Reception uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Reception.php
+
+		-
+			message: '#^Class App\\Models\\ReceptionItem uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/ReceptionItem.php
+
+		-
+			message: '#^Method App\\Models\\Sede\:\:idsAtendidosPor\(\) should return list\<int\> but returns non\-empty\-array\<int\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Sede.php
+
+		-
+			message: '#^PHPDoc tag @use has invalid type Database\\Factories\\TechnicalChecklistFactory\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/TechnicalChecklist.php
+
+		-
+			message: '#^Type Database\\Factories\\TechnicalChecklistFactory in generic type Illuminate\\Database\\Eloquent\\Factories\\HasFactory\<Database\\Factories\\TechnicalChecklistFactory\> in PHPDoc tag @use is not subtype of template type TFactory of Illuminate\\Database\\Eloquent\\Factories\\Factory of trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory\.$#'
+			identifier: generics.notSubtype
+			count: 1
+			path: app/Models/TechnicalChecklist.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$team_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AuditLogger.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>current_team_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AuditLogger.php
+
+		-
+			message: '#^Method App\\Services\\Avisos\\AvisosDelVendedor\:\:deSuSede\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Avisos/AvisosDelVendedor.php
+
+		-
+			message: '#^Method App\\Services\\Avisos\\AvisosDelVendedor\:\:deSuSede\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Avisos/AvisosDelVendedor.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Client\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Services/Avisos/AvisosDelVendedor.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\ServiceOrder\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/Avisos/AvisosDelVendedor.php
+
+		-
+			message: '#^Method App\\Services\\Billing\\GreenterService\:\:cuotasNetas\(\) should return list\<array\{monto\: float, fecha\: DateTimeInterface\}\> but returns list\<array\{monto\: float, fecha\?\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Billing/GreenterService.php
+
+		-
+			message: '#^Parameter \#1 \$certificate of method Greenter\\See\:\:setCertificate\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Billing/GreenterService.php
+
+		-
+			message: '#^Method App\\Services\\Billing\\GreenterSunatClient\:\:send\(\) should return array\{cdr_zip\: string\|null, codigo\: int, mensaje\: string, notas\: list\<string\>\} but returns array\{cdr_zip\: string\|null, codigo\: int, mensaje\: string, notas\: array\<string\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Billing/GreenterSunatClient.php
+
+		-
+			message: '#^Parameter \#1 \$certificate of method Greenter\\See\:\:setCertificate\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Billing/GreenterSunatClient.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Method App\\Services\\Certificates\\CertificateDocumentData\:\:empresa\(\) should return array\{razon_social\: string\|null, ruc\: string\|null, direccion\: string, ciudad\: string\|null, telefonos\: list\<string\>, email\: string\|null\} but returns array\{razon_social\: string, ruc\: string, direccion\: string, ciudad\: string\|null, telefonos\: array\<int, non\-falsy\-string\>, email\: string\|null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Method App\\Services\\Certificates\\CertificateDocumentData\:\:filasDeEquipos\(\) should return list\<array\<string, string\|null\>\> but returns array\<int, array\{item\: non\-empty\-string\|non\-falsy\-string, capacidad\: string\|null, serie\: string, marca\: string\|null, tipo\: non\-falsy\-string, anio\: string, proxima_ph\: string, vencimiento\: string, \.\.\.\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Method App\\Services\\Certificates\\CertificateDocumentData\:\:firmantes\(\) should return list\<array\{nombre\: string, cargo\: string, cip\: string\|null, firma\: string\|null\}\> but returns array\<int, array\{nombre\: string, cargo\: string, cip\: string\|null, firma\: string\|null\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Offset ''cargo'' on array\{id\: int\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Offset ''cip'' on array\{id\: int\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Offset ''filas'' does not exist on array\{\}\|string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Offset ''filas'' on array\{\}\|string in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Offset ''nombre'' on array\{id\: int\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Offset ''observaciones'' on array\{\}\|string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Offset ''pruebas'' on array\{\}\|string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Offset ''resultado'' on array\{\}\|string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Parameter \#1 \$datos of method App\\Services\\Certificates\\CertificateDocumentData\:\:capacitacion\(\) expects array\<string, mixed\>, array\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<int\<0, max\>, string\>\|iterable\<int\<0, max\>, string\>\|null, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Parameter \#1 \$width of function imagecreatetruecolor expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Parameter \#4 \$color of function imagefill expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>cargo" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>cip" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>configuracion" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>dni" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nombre" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nombres" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>proxima_prueba_hidrostatica" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>qr_token" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Client\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 6
+			path: app/Services/Certificates/CertificateDocumentData.php
+
+		-
+			message: '#^Cannot access offset 0 on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Services/Certificates/CertificatePdfService.php
+
+		-
+			message: '#^Cannot access offset 2 on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Services/Certificates/CertificatePdfService.php
+
+		-
+			message: '#^Method App\\Services\\Certificates\\CertificatePdfService\:\:diplomaPaginas\(\) has parameter \$recursos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/Certificates/CertificatePdfService.php
+
+		-
+			message: '#^Offset ''modo'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Certificates/CertificatePdfService.php
+
+		-
+			message: '#^Parameter \#1 \$paginas of method App\\Services\\Certificates\\CertificatePdfService\:\:diplomaPaginas\(\) expects list\<array\<string, mixed\>\>, non\-empty\-array\<int, array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Certificates/CertificatePdfService.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Services/Certificates/CertificatePdfService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''normal'' and ''por_trabajador'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/Certificates/CertificatePdfService.php
+
+		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: app/Services/Certificates/CertificateWordService.php
+
+		-
+			message: '#^Offset ''modo'' on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Certificates/CertificateWordService.php
+
+		-
+			message: '#^Parameter \#1 \$fontSize of method PhpOffice\\PhpWord\\PhpWord\:\:setDefaultFontSize\(\) expects int, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Certificates/CertificateWordService.php
+
+		-
+			message: '#^Parameter \#2 \$length of function array_chunk expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Certificates/CertificateWordService.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Services/Certificates/CertificateWordService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''normal'' and ''por_trabajador'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/Certificates/CertificateWordService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int\<0, max\>,string\|false\>\:\:map\(\) expects callable\(string\|false, int\<0, max\>\)\: array\{texto\: non\-falsy\-string, puntaje\: int\<0, max\>\}, Closure\(string\)\: array\{texto\: non\-falsy\-string, puntaje\: int\<0, max\>\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Chispa/ChispaAssistant.php
+
+		-
+			message: '#^Parameter \#1 \$string of function mb_strlen expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Chispa/ChispaAssistant.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<int\<0, max\>, string\>\|iterable\<int\<0, max\>, string\>\|null, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/Chispa/ChispaAssistant.php
+
+		-
+			message: '#^Parameter \#2 \$needle of function str_contains expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Chispa/ChispaAssistant.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Chispa/ChispaAssistant.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Chispa/ChispaAssistant.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>payload" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Reports/ActaConformidadPdfService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: database/factories/QuoteItemFactory.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: database/factories/SaleItemFactory.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: database/seeders/CertificateTypeSeeder.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: database/seeders/CertificateTypeSeeder.php

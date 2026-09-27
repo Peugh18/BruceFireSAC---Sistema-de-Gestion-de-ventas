@@ -32,6 +32,9 @@ class CertificateParticipant extends Model
         return ['anulado_at' => 'datetime'];
     }
 
+    /**
+     * @return BelongsTo<Certificate, $this>
+     */
     public function certificate(): BelongsTo
     {
         return $this->belongsTo(Certificate::class);

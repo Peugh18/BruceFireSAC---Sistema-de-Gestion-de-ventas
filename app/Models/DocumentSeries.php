@@ -31,6 +31,9 @@ class DocumentSeries extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);

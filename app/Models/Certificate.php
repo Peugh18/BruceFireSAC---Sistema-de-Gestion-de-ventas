@@ -75,46 +75,73 @@ class Certificate extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<CertificateType, $this>
+     */
     public function certificateType(): BelongsTo
     {
         return $this->belongsTo(CertificateType::class, 'certificate_type_id');
     }
 
+    /**
+     * @return BelongsTo<Client, $this>
+     */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'client_id');
     }
 
+    /**
+     * @return BelongsTo<ServiceOrder, $this>
+     */
     public function serviceOrder(): BelongsTo
     {
         return $this->belongsTo(ServiceOrder::class, 'service_order_id');
     }
 
+    /**
+     * @return BelongsTo<Sale, $this>
+     */
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
     }
 
+    /**
+     * @return HasMany<CertificateUnit, $this>
+     */
     public function certificateUnits(): HasMany
     {
         return $this->hasMany(CertificateUnit::class, 'certificate_id');
     }
 
+    /**
+     * @return HasMany<CertificateParticipant, $this>
+     */
     public function participants(): HasMany
     {
         return $this->hasMany(CertificateParticipant::class)->orderBy('orden');
     }
 
+    /**
+     * @return HasMany<CertificateRevision, $this>
+     */
     public function revisions(): HasMany
     {
         return $this->hasMany(CertificateRevision::class)->orderBy('numero_revision');
     }
 
+    /**
+     * @return BelongsTo<CertificateTypeVersion, $this>
+     */
     public function typeVersion(): BelongsTo
     {
         return $this->belongsTo(CertificateTypeVersion::class, 'certificate_type_version_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function anuladoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'anulado_por');

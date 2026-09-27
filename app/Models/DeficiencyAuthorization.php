@@ -47,16 +47,25 @@ class DeficiencyAuthorization extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Deficiency, $this>
+     */
     public function deficiency(): BelongsTo
     {
         return $this->belongsTo(Deficiency::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function vendedor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'vendedor_id');
     }
 
+    /**
+     * @return BelongsTo<Quote, $this>
+     */
     public function cotizacionAdicional(): BelongsTo
     {
         return $this->belongsTo(Quote::class, 'cotizacion_adicional_id');

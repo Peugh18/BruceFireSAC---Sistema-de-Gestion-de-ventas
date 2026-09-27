@@ -117,51 +117,81 @@ class Sale extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Quote, $this>
+     */
     public function quote(): BelongsTo
     {
         return $this->belongsTo(Quote::class);
     }
 
+    /**
+     * @return BelongsTo<Client, $this>
+     */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
     }
 
+    /**
+     * @return BelongsTo<Vehicle, $this>
+     */
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function vendedor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'vendedor_id');
     }
 
+    /**
+     * @return HasMany<SaleItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(SaleItem::class);
     }
 
+    /**
+     * @return HasMany<SalePayment, $this>
+     */
     public function payments(): HasMany
     {
         return $this->hasMany(SalePayment::class);
     }
 
+    /**
+     * @return HasMany<Installment, $this>
+     */
     public function installments(): HasMany
     {
         return $this->hasMany(Installment::class);
     }
 
+    /**
+     * @return HasMany<ElectronicDocument, $this>
+     */
     public function electronicDocuments(): HasMany
     {
         return $this->hasMany(ElectronicDocument::class);
     }
 
+    /**
+     * @return HasMany<Certificate, $this>
+     */
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);

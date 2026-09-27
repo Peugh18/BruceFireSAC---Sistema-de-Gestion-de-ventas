@@ -72,26 +72,41 @@ class Quote extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function vendedor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'vendedor_id');
     }
 
+    /**
+     * @return BelongsTo<Client, $this>
+     */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
     }
 
+    /**
+     * @return BelongsTo<Vehicle, $this>
+     */
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
     }
 
+    /**
+     * @return HasMany<QuoteItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(QuoteItem::class);
@@ -99,6 +114,8 @@ class Quote extends Model
 
     /**
      * Venta en la que se convirtió la cotización.
+     *
+     * @return HasOne<Sale, $this>
      */
     public function sale(): HasOne
     {

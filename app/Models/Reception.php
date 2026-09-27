@@ -38,21 +38,33 @@ class Reception extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sedeAlmacen(): BelongsTo
     {
         return $this->belongsTo(Sede::class, 'sede_almacen_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return HasMany<ReceptionItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(ReceptionItem::class);
     }
 
+    /**
+     * @return MorphMany<InventoryMovement, $this>
+     */
     public function movements(): MorphMany
     {
         return $this->morphMany(InventoryMovement::class, 'referencia');

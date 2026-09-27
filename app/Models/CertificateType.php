@@ -79,26 +79,41 @@ class CertificateType extends Model
         ];
     }
 
+    /**
+     * @return HasMany<Certificate, $this>
+     */
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
     }
 
+    /**
+     * @return BelongsToMany<Signer, $this>
+     */
     public function signers(): BelongsToMany
     {
         return $this->belongsToMany(Signer::class)->withPivot('orden')->withTimestamps()->orderByPivot('orden');
     }
 
+    /**
+     * @return HasMany<CertificateSequence, $this>
+     */
     public function sequences(): HasMany
     {
         return $this->hasMany(CertificateSequence::class);
     }
 
+    /**
+     * @return HasMany<CertificateTypeVersion, $this>
+     */
     public function versions(): HasMany
     {
         return $this->hasMany(CertificateTypeVersion::class);
     }
 
+    /**
+     * @return HasMany<Service, $this>
+     */
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);

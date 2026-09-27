@@ -36,11 +36,17 @@ class SalePayment extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Sale, $this>
+     */
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
     }
 
+    /**
+     * @return BelongsTo<Installment, $this>
+     */
     public function installment(): BelongsTo
     {
         return $this->belongsTo(Installment::class);

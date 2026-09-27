@@ -39,6 +39,9 @@ class Signer extends Model
         ];
     }
 
+    /**
+     * @return BelongsToMany<CertificateType, $this>
+     */
     public function certificateTypes(): BelongsToMany
     {
         return $this->belongsToMany(CertificateType::class)->withPivot('orden')->withTimestamps();

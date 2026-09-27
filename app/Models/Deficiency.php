@@ -56,16 +56,25 @@ class Deficiency extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<ServiceOrder, $this>
+     */
     public function serviceOrder(): BelongsTo
     {
         return $this->belongsTo(ServiceOrder::class);
     }
 
+    /**
+     * @return BelongsTo<Equipment, $this>
+     */
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);
     }
 
+    /**
+     * @return HasOne<DeficiencyAuthorization, $this>
+     */
     public function authorization(): HasOne
     {
         return $this->hasOne(DeficiencyAuthorization::class);

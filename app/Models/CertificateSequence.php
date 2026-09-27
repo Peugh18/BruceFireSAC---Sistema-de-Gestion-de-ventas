@@ -28,6 +28,9 @@ class CertificateSequence extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<CertificateType, $this>
+     */
     public function certificateType(): BelongsTo
     {
         return $this->belongsTo(CertificateType::class);

@@ -18,6 +18,9 @@ use Illuminate\Validation\ValidationException;
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->seed(CertificateTypeSeeder::class);
+
+    // Al confirmar una factura se firma el XML: se usa el certificado de prueba del proyecto.
+    config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
 });
 
 if (! function_exists('vendedorUser')) {

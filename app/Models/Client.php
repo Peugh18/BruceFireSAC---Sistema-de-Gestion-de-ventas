@@ -126,21 +126,33 @@ class Client extends Model
         return $this->hasMany(Sale::class);
     }
 
+    /**
+     * @return HasMany<Quote, $this>
+     */
     public function quotes(): HasMany
     {
         return $this->hasMany(Quote::class);
     }
 
+    /**
+     * @return HasMany<Equipment, $this>
+     */
     public function equipment(): HasMany
     {
         return $this->hasMany(Equipment::class);
     }
 
+    /**
+     * @return HasMany<Certificate, $this>
+     */
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
     }
 
+    /**
+     * @return HasMany<ServiceOrder, $this>
+     */
     public function serviceOrders(): HasMany
     {
         return $this->hasMany(ServiceOrder::class);
