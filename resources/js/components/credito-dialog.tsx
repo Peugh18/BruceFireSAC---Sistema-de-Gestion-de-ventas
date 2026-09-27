@@ -108,7 +108,7 @@ export default function CreditoDialog({
                 onOpenChange(abierto);
             }}
         >
-            <DialogContent className="max-h-[88vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-lg">
+            <DialogContent className="border-border bg-card max-h-[88vh] overflow-y-auto rounded-[16px] sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
                         Venta a crédito
@@ -120,7 +120,7 @@ export default function CreditoDialog({
                 </DialogHeader>
 
                 <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-                    <label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    <label className="text-foreground/80 text-[11px] font-bold uppercase">
                         Plazo (días)
                         <Input
                             type="number"
@@ -130,7 +130,7 @@ export default function CreditoDialog({
                             className="mt-1 h-9 rounded-[8px] text-[13px]"
                         />
                     </label>
-                    <label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    <label className="text-foreground/80 text-[11px] font-bold uppercase">
                         N° de cuotas
                         <Input
                             type="number"
@@ -170,10 +170,10 @@ export default function CreditoDialog({
                     ))}
                 </div>
 
-                <div className="overflow-hidden rounded-[10px] border border-border">
+                <div className="border-border overflow-hidden rounded-[10px] border">
                     <table className="w-full text-[12.5px]">
                         <thead className="bg-muted/50">
-                            <tr className="text-left text-[10px] font-bold text-muted-foreground uppercase">
+                            <tr className="text-muted-foreground text-left text-[10px] font-bold uppercase">
                                 <th className="px-2.5 py-2">Cuota</th>
                                 <th className="px-2.5 py-2">Vencimiento</th>
                                 <th className="px-2.5 py-2">Monto S/</th>
@@ -184,7 +184,7 @@ export default function CreditoDialog({
                             {filas.map((cuota, index) => (
                                 <tr
                                     key={index}
-                                    className="border-t border-border"
+                                    className="border-border border-t"
                                 >
                                     <td className="px-2.5 py-1.5 font-bold">
                                         {index + 1}
@@ -232,7 +232,7 @@ export default function CreditoDialog({
                                                     ),
                                                 )
                                             }
-                                            className="size-7 rounded-[7px] text-destructive shadow-none"
+                                            className="text-destructive size-7 rounded-[7px] shadow-none"
                                         >
                                             <Trash2 className="size-3.5" />
                                         </Button>
@@ -274,7 +274,7 @@ export default function CreditoDialog({
                     </div>
                 </div>
                 {!fechasValidas ? (
-                    <p className="text-[11.5px] font-semibold text-destructive">
+                    <p className="text-destructive text-[11.5px] font-semibold">
                         Cada cuota debe vencer después de la fecha de la venta.
                     </p>
                 ) : null}
@@ -303,7 +303,7 @@ export default function CreditoDialog({
                             );
                             onOpenChange(false);
                         }}
-                        className="rounded-[9px] bg-primary font-bold text-white shadow-none hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
                     >
                         Guardar crédito
                     </Button>

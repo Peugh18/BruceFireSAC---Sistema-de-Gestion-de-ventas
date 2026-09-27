@@ -1,16 +1,11 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
-    Building2,
-    Calendar,
     CheckCircle2,
     Clock,
-    FileText,
     MessageCircle,
     PencilLine,
     Send,
-    User,
-    Wrench,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -98,7 +93,8 @@ const PRIORIDADES: Record<string, string> = {
 
 /** Título del evento de la bitácora en palabras simples. */
 function tituloDeEvento(evt: ServiceOrderEvent): string {
-    const accion = String(evt.payload?.accion ?? '');
+    const accion =
+        typeof evt.payload?.accion === 'string' ? evt.payload.accion : '';
     const porAccion: Record<string, string> = {
         tecnico_asignado: 'Técnico asignado',
         orden_tomada: 'El técnico tomó la orden',
@@ -233,7 +229,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                             asChild
                             variant="outline"
                             size="icon"
-                            className="size-8 rounded-[8px] border-border bg-card text-foreground/80 shadow-none"
+                            className="border-border bg-card text-foreground/80 size-8 rounded-[8px] shadow-none"
                         >
                             <Link
                                 href={ServiceOrderController.index.url(
@@ -245,7 +241,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                         </Button>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h2 className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
+                                <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
                                     {serviceOrder.codigo}
                                 </h2>
                                 <Badge className="border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
@@ -253,7 +249,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                         serviceOrder.estado.replace(/_/g, ' ')}
                                 </Badge>
                             </div>
-                            <p className="text-[12px] text-muted-foreground">
+                            <p className="text-muted-foreground text-[12px]">
                                 Creada el{' '}
                                 {new Date(
                                     serviceOrder.created_at,
@@ -268,7 +264,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setEditando(true)}
-                                className="rounded-[9px] border-border bg-card text-xs font-semibold text-foreground"
+                                className="border-border bg-card text-foreground rounded-[9px] text-xs font-semibold"
                             >
                                 <PencilLine className="mr-1.5 size-3.5" />
                                 Editar orden
@@ -288,7 +284,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                         <Button
                             asChild
                             variant="outline"
-                            className="rounded-[9px] border-border bg-card text-xs font-semibold text-foreground/80"
+                            className="border-border bg-card text-foreground/80 rounded-[9px] text-xs font-semibold"
                         >
                             <Link href={`/${teamSlug}/vendedor/comunicacion`}>
                                 <MessageCircle className="mr-1.5 size-3.5" />
@@ -299,8 +295,8 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                 </div>
 
                 {/* 4-Step Progress Tracker Banner */}
-                <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                    <div className="mb-3 text-xs font-bold text-muted-foreground uppercase">
+                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <div className="text-muted-foreground mb-3 text-xs font-bold uppercase">
                         Progreso de atención
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -314,9 +310,9 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                     key={stepItem.key}
                                     className={`flex items-center gap-2 rounded-[10px] p-3 text-xs font-bold transition-all ${
                                         isCurrent
-                                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 ring-1 ring-blue-300'
+                                            ? 'border border-blue-500/20 bg-blue-500/10 text-blue-600 ring-1 ring-blue-300 dark:text-blue-400'
                                             : isDone
-                                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                              ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                               : 'bg-muted/40 text-muted-foreground'
                                     }`}
                                 >
@@ -351,21 +347,21 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                 <div className="grid gap-4 lg:grid-cols-12">
                     {/* Left Column: Detalle del Servicio & Cliente (5 cols) */}
                     <div className="flex flex-col gap-4 lg:col-span-5">
-                        <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                            <div className="text-[13.5px] font-bold text-foreground">
+                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                            <div className="text-foreground text-[13.5px] font-bold">
                                 Detalles del servicio
                             </div>
-                            <div className="mt-3 divide-y divide-border text-[12.5px]">
+                            <div className="divide-border mt-3 divide-y text-[12.5px]">
                                 <div className="py-2">
-                                    <div className="text-[11px] text-muted-foreground">
+                                    <div className="text-muted-foreground text-[11px]">
                                         Tipo de servicio
                                     </div>
-                                    <div className="font-semibold text-foreground">
+                                    <div className="text-foreground font-semibold">
                                         {serviceOrder.tipo_servicio}
                                     </div>
                                 </div>
                                 <div className="py-2">
-                                    <div className="text-[11px] text-muted-foreground">
+                                    <div className="text-muted-foreground text-[11px]">
                                         Fecha programada
                                     </div>
                                     <div className="text-foreground capitalize">
@@ -373,7 +369,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                     </div>
                                 </div>
                                 <div className="py-2">
-                                    <div className="text-[11px] text-muted-foreground">
+                                    <div className="text-muted-foreground text-[11px]">
                                         Departamento / Prioridad
                                     </div>
                                     <div className="text-foreground capitalize">
@@ -385,10 +381,10 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                     </div>
                                 </div>
                                 <div className="py-2">
-                                    <div className="text-[11px] text-muted-foreground">
+                                    <div className="text-muted-foreground text-[11px]">
                                         Técnico asignado
                                     </div>
-                                    <div className="font-semibold text-foreground">
+                                    <div className="text-foreground font-semibold">
                                         {serviceOrder.tecnico?.name ||
                                             'Pendiente de asignación'}
                                     </div>
@@ -401,7 +397,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                                         event.target.value,
                                                     )
                                                 }
-                                                className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                                                className="border-input bg-background h-9 flex-1 rounded-md border px-3 text-sm"
                                             >
                                                 <option value="">
                                                     {serviceOrder.tecnico
@@ -451,7 +447,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                 </div>
                                 {serviceOrder.observaciones && (
                                     <div className="py-2">
-                                        <div className="text-[11px] text-muted-foreground">
+                                        <div className="text-muted-foreground text-[11px]">
                                             Observaciones
                                         </div>
                                         <div className="text-foreground/80">
@@ -463,16 +459,16 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                         </Card>
 
                         {serviceOrder.client && (
-                            <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                                <div className="text-[13.5px] font-bold text-foreground">
+                            <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                                <div className="text-foreground text-[13.5px] font-bold">
                                     Datos del cliente
                                 </div>
                                 <div className="mt-3 space-y-1.5 text-[12.5px]">
-                                    <div className="font-bold text-foreground">
+                                    <div className="text-foreground font-bold">
                                         {serviceOrder.client.razon_social}
                                     </div>
                                     {serviceOrder.client.numero_documento && (
-                                        <div className="font-mono text-xs text-muted-foreground">
+                                        <div className="text-muted-foreground font-mono text-xs">
                                             RUC/DNI:{' '}
                                             {
                                                 serviceOrder.client
@@ -481,7 +477,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                         </div>
                                     )}
                                     {serviceOrder.client.direccion_fiscal && (
-                                        <div className="text-xs text-foreground/80">
+                                        <div className="text-foreground/80 text-xs">
                                             {
                                                 serviceOrder.client
                                                     .direccion_fiscal
@@ -489,7 +485,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                         </div>
                                     )}
                                     {serviceOrder.client.telefono && (
-                                        <div className="text-xs text-muted-foreground">
+                                        <div className="text-muted-foreground text-xs">
                                             Teléfono:{' '}
                                             {serviceOrder.client.telefono}
                                         </div>
@@ -501,15 +497,15 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
 
                     {/* Right Column: Bitácora de Eventos (7 cols) */}
                     <div className="flex flex-col lg:col-span-7">
-                        <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Clock className="size-4 text-muted-foreground" />
-                                    <span className="text-[13.5px] font-bold text-foreground">
+                                    <Clock className="text-muted-foreground size-4" />
+                                    <span className="text-foreground text-[13.5px] font-bold">
                                         Bitácora y eventos de orden
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-muted-foreground">
+                                <span className="text-muted-foreground text-[11px]">
                                     {serviceOrder.events?.length ?? 0} eventos
                                 </span>
                             </div>
@@ -529,7 +525,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                         }
                                         maxLength={500}
                                         placeholder="Escribe una indicación para el técnico (la verá en su pantalla)…"
-                                        className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                                        className="border-input bg-background h-9 min-w-0 flex-1 rounded-md border px-3 text-sm"
                                     />
                                     <Button
                                         type="submit"
@@ -554,15 +550,15 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                             key={evt.id}
                                             className="flex gap-3 text-[12.5px]"
                                         >
-                                            <div className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                            <div className="bg-muted text-muted-foreground mt-1 flex size-6 shrink-0 items-center justify-center rounded-full">
                                                 <CheckCircle2 className="size-3.5" />
                                             </div>
-                                            <div className="flex-1 rounded-[10px] border border-border bg-muted/40 p-3">
+                                            <div className="border-border bg-muted/40 flex-1 rounded-[10px] border p-3">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="font-bold text-foreground capitalize">
+                                                    <span className="text-foreground font-bold capitalize">
                                                         {tituloDeEvento(evt)}
                                                     </span>
-                                                    <span className="font-mono text-[10.5px] text-muted-foreground">
+                                                    <span className="text-muted-foreground font-mono text-[10.5px]">
                                                         {new Date(
                                                             evt.created_at,
                                                         ).toLocaleString(
@@ -576,14 +572,14 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                                         )}
                                                     </span>
                                                 </div>
-                                                <div className="mt-1 text-foreground/80">
+                                                <div className="text-foreground/80 mt-1">
                                                     {evt.payload?.mensaje ||
                                                         (evt.payload?.resultado
                                                             ? `Resultado: ${evt.payload.resultado}`
                                                             : 'Evento registrado en orden de servicio')}
                                                 </div>
                                                 {evt.user?.name && (
-                                                    <div className="mt-1 text-[11px] text-muted-foreground">
+                                                    <div className="text-muted-foreground mt-1 text-[11px]">
                                                         Registrado por:{' '}
                                                         <b>{evt.user.name}</b>
                                                     </div>
@@ -592,7 +588,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="py-8 text-center text-xs text-muted-foreground">
+                                    <div className="text-muted-foreground py-8 text-center text-xs">
                                         No se han registrado eventos adicionales
                                         en esta orden.
                                     </div>
@@ -612,7 +608,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                         className="flex flex-col gap-3 text-[13px]"
                     >
                         <label className="flex flex-col gap-1">
-                            <span className="text-[11px] font-bold text-muted-foreground uppercase">
+                            <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                 Fecha programada
                             </span>
                             <input
@@ -621,12 +617,12 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                 onChange={(event) =>
                                     edicion.setData('fecha', event.target.value)
                                 }
-                                className="h-9 rounded-md border border-input bg-background px-3"
+                                className="border-input bg-background h-9 rounded-md border px-3"
                             />
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <label className="flex flex-col gap-1">
-                                <span className="text-[11px] font-bold text-muted-foreground uppercase">
+                                <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Prioridad
                                 </span>
                                 <select
@@ -637,7 +633,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                             event.target.value,
                                         )
                                     }
-                                    className="h-9 rounded-md border border-input bg-background px-3"
+                                    className="border-input bg-background h-9 rounded-md border px-3"
                                 >
                                     <option value="normal">Normal</option>
                                     <option value="alta">Alta</option>
@@ -645,7 +641,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                 </select>
                             </label>
                             <label className="flex flex-col gap-1">
-                                <span className="text-[11px] font-bold text-muted-foreground uppercase">
+                                <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Área
                                 </span>
                                 <select
@@ -662,7 +658,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                             tecnico_id: '',
                                         }))
                                     }
-                                    className="h-9 rounded-md border border-input bg-background px-3 disabled:opacity-60"
+                                    className="border-input bg-background h-9 rounded-md border px-3 disabled:opacity-60"
                                 >
                                     <option value="planta">
                                         Planta (taller)
@@ -676,7 +672,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                         {edicion.data.departamento_tecnico ===
                         serviceOrder.departamento_tecnico ? (
                             <label className="flex flex-col gap-1">
-                                <span className="text-[11px] font-bold text-muted-foreground uppercase">
+                                <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Técnico
                                 </span>
                                 <select
@@ -687,7 +683,7 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                             event.target.value,
                                         )
                                     }
-                                    className="h-9 rounded-md border border-input bg-background px-3"
+                                    className="border-input bg-background h-9 rounded-md border px-3"
                                 >
                                     <option value="">
                                         Sin asignar (lo toma el primero libre)
@@ -703,13 +699,13 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                 </select>
                             </label>
                         ) : (
-                            <p className="text-[11.5px] text-muted-foreground">
+                            <p className="text-muted-foreground text-[11.5px]">
                                 Al cambiar de área, asigna el técnico después de
                                 guardar.
                             </p>
                         )}
                         <label className="flex flex-col gap-1">
-                            <span className="text-[11px] font-bold text-muted-foreground uppercase">
+                            <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                 Indicaciones para el técnico
                             </span>
                             <textarea
@@ -721,11 +717,11 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                                     )
                                 }
                                 rows={3}
-                                className="rounded-md border border-input bg-background px-3 py-2"
+                                className="border-input bg-background rounded-md border px-3 py-2"
                             />
                         </label>
                         {Object.values(edicion.errors)[0] ? (
-                            <p className="text-[11.5px] text-destructive">
+                            <p className="text-destructive text-[11.5px]">
                                 {Object.values(edicion.errors)[0]}
                             </p>
                         ) : null}

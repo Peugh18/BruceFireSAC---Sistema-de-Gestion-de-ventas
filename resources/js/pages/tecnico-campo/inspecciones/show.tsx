@@ -3,21 +3,16 @@ import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import {
     AlertCircle,
     ArrowLeft,
-    Check,
     CheckCircle2,
     ChevronDown,
     ChevronUp,
-    ClipboardCheck,
-    Eye,
     FileCheck,
     Flame,
-    HelpCircle,
     MapPin,
     Phone,
     Plus,
     Send,
     UserCheck,
-    XCircle,
     MessageSquare,
 } from 'lucide-react';
 import React, { useState } from 'react';
@@ -179,7 +174,7 @@ export default function InspeccionShow({
             <div className="mb-4 flex items-center justify-between">
                 <Link
                     href={`/${teamSlug}/tecnico-campo/inspecciones`}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
+                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver al listado</span>
@@ -196,17 +191,17 @@ export default function InspeccionShow({
             )}
 
             {/* Header Data Card (§24) */}
-            <div className="mb-5 rounded-[14px] border border-border bg-card p-4 shadow-xs">
-                <div className="mb-3 flex items-start justify-between gap-2 border-b border-border pb-3">
+            <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
+                <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
                     <div>
-                        <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                        <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
                             Cliente & Sede de Inspección
                         </span>
-                        <h1 className="text-base leading-snug font-black text-foreground">
+                        <h1 className="text-foreground text-base leading-snug font-black">
                             {order.client.razon_social}
                         </h1>
                         {order.client.numero_documento && (
-                            <span className="font-mono text-xs text-muted-foreground">
+                            <span className="text-muted-foreground font-mono text-xs">
                                 RUC/DNI: {order.client.numero_documento}
                             </span>
                         )}
@@ -220,7 +215,7 @@ export default function InspeccionShow({
                     <div className="flex items-start gap-2">
                         <MapPin className="mt-0.5 size-4 shrink-0 text-sky-600 dark:text-sky-400" />
                         <div>
-                            <span className="font-semibold text-foreground">
+                            <span className="text-foreground font-semibold">
                                 Dirección:{' '}
                             </span>
                             <span className="text-muted-foreground">
@@ -234,13 +229,13 @@ export default function InspeccionShow({
                         <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
                                 <Phone className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                                <span className="font-mono text-foreground">
+                                <span className="text-foreground font-mono">
                                     {order.client.telefono}
                                 </span>
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 active:scale-95"
+                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -267,7 +262,7 @@ export default function InspeccionShow({
 
                 return (
                     <div className="mb-6 rounded-[14px] border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
-                        <div className="flex items-center gap-2 font-bold text-xs text-blue-900 dark:text-blue-300">
+                        <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
                             <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
                             <span>Indicaciones de Ventas y Coordinación</span>
                         </div>
@@ -315,12 +310,12 @@ export default function InspeccionShow({
             <div className="mb-6">
                 <div className="mb-3 flex items-center justify-between">
                     <div>
-                        <h2 className="flex items-center gap-1.5 text-sm font-black text-foreground">
+                        <h2 className="text-foreground flex items-center gap-1.5 text-sm font-black">
                             <Flame className="size-4 text-amber-600 dark:text-amber-400" />
                             Extintores a Inspeccionar ({order.equipments.length}
                             )
                         </h2>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[11px]">
                             Inspección física individual en sitio.
                         </p>
                     </div>
@@ -328,7 +323,7 @@ export default function InspeccionShow({
                         <button
                             type="button"
                             onClick={() => setShowAddEquipmentModal(true)}
-                            className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold text-sky-600 dark:text-sky-400 active:scale-95"
+                            className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold text-sky-600 active:scale-95 dark:text-sky-400"
                         >
                             <Plus className="size-3.5" />
                             Agregar Extintor
@@ -338,15 +333,15 @@ export default function InspeccionShow({
 
                 {/* Modal for adding/linking equipment */}
                 {showAddEquipmentModal && (
-                    <div className="mb-4 rounded-[14px] border-2 border-sky-500/20 bg-card p-4 shadow-md">
-                        <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
-                            <h3 className="text-xs font-black text-foreground">
+                    <div className="bg-card mb-4 rounded-[14px] border-2 border-sky-500/20 p-4 shadow-md">
+                        <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
+                            <h3 className="text-foreground text-xs font-black">
                                 Registrar Extintor en Inspección
                             </h3>
                             <button
                                 type="button"
                                 onClick={() => setShowAddEquipmentModal(false)}
-                                className="text-xs font-bold text-muted-foreground"
+                                className="text-muted-foreground text-xs font-bold"
                             >
                                 Cancelar
                             </button>
@@ -358,7 +353,7 @@ export default function InspeccionShow({
                         >
                             {customerEquipments.length > 0 && (
                                 <div>
-                                    <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                    <label className="text-foreground mb-1 block text-[11px] font-bold">
                                         Seleccionar existente del cliente:
                                     </label>
                                     <select
@@ -371,7 +366,7 @@ export default function InspeccionShow({
                                                 e.target.value,
                                             )
                                         }
-                                        className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                        className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                     >
                                         <option value="">
                                             -- Crear nuevo extintor en sitio --
@@ -393,7 +388,7 @@ export default function InspeccionShow({
                             {!addEquipmentForm.data.equipment_id && (
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
+                                        <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
                                             Agente
                                         </label>
                                         <select
@@ -407,7 +402,7 @@ export default function InspeccionShow({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                            className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                         >
                                             <option value="PQS">PQS</option>
                                             <option value="CO2">CO2</option>
@@ -418,7 +413,7 @@ export default function InspeccionShow({
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
+                                        <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
                                             Capacidad
                                         </label>
                                         <input
@@ -433,11 +428,11 @@ export default function InspeccionShow({
                                                 )
                                             }
                                             placeholder="ej. 6 kg, 10 lbs"
-                                            className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                            className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="mb-0.5 block text-[10px] font-bold text-muted-foreground">
+                                        <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
                                             Ubicación en Sede (Oficina, Pasillo,
                                             etc.)
                                         </label>
@@ -454,7 +449,7 @@ export default function InspeccionShow({
                                                 )
                                             }
                                             placeholder="ej. Almacén 2do piso / Puerta Principal"
-                                            className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                            className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                         />
                                     </div>
                                 </div>
@@ -474,8 +469,8 @@ export default function InspeccionShow({
                 {/* List of Extinguishers as Cards */}
                 <div className="space-y-3">
                     {order.equipments.length === 0 ? (
-                        <div className="rounded-[12px] border border-dashed border-border bg-card p-6 text-center">
-                            <p className="text-xs text-muted-foreground">
+                        <div className="border-border bg-card rounded-[12px] border border-dashed p-6 text-center">
+                            <p className="text-muted-foreground text-xs">
                                 No hay extintores vinculados a esta orden
                                 todavía.
                             </p>
@@ -485,7 +480,7 @@ export default function InspeccionShow({
                                     onClick={() =>
                                         setShowAddEquipmentModal(true)
                                     }
-                                    className="mt-2 text-xs font-bold text-sky-600 dark:text-sky-400 underline"
+                                    className="mt-2 text-xs font-bold text-sky-600 underline dark:text-sky-400"
                                 >
                                     + Agregar primer extintor
                                 </button>
@@ -500,21 +495,21 @@ export default function InspeccionShow({
                             return (
                                 <div
                                     key={eq.id}
-                                    className="rounded-[14px] border border-border bg-card p-4 shadow-xs"
+                                    className="border-border bg-card rounded-[14px] border p-4 shadow-xs"
                                 >
                                     <div className="mb-2 flex items-start justify-between gap-2">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-mono text-sm font-black text-foreground">
+                                                <span className="text-foreground font-mono text-sm font-black">
                                                     {eq.numero_serie}
                                                 </span>
-                                                <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                                                <span className="bg-muted text-muted-foreground rounded-md px-2 py-0.5 text-[10px] font-bold">
                                                     {eq.tipo_agente}{' '}
                                                     {eq.capacidad}
                                                 </span>
                                             </div>
-                                            <p className="mt-0.5 text-[11px] text-muted-foreground">
-                                                <span className="font-semibold text-foreground">
+                                            <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                                <span className="text-foreground font-semibold">
                                                     Ubicación:{' '}
                                                 </span>
                                                 {eq.ubicacion_actual ||
@@ -530,7 +525,7 @@ export default function InspeccionShow({
                                                     Conforme
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 rounded-full border border-destructive/20 bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive">
+                                                <span className="border-destructive/20 bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold">
                                                     <AlertCircle className="size-3" />
                                                     Con Observación
                                                 </span>
@@ -544,7 +539,7 @@ export default function InspeccionShow({
 
                                     {/* Action button for Checklist */}
                                     {!isFinalizada && (
-                                        <div className="mt-3 border-t border-border pt-2.5">
+                                        <div className="border-border mt-3 border-t pt-2.5">
                                             <button
                                                 type="button"
                                                 onClick={() =>
@@ -554,7 +549,7 @@ export default function InspeccionShow({
                                                             : eq.id,
                                                     )
                                                 }
-                                                className="flex min-h-[40px] w-full items-center justify-between rounded-[8px] bg-muted/40 px-3 text-xs font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10"
+                                                className="bg-muted/40 flex min-h-[40px] w-full items-center justify-between rounded-[8px] px-3 text-xs font-bold text-sky-600 hover:bg-sky-500/10 dark:text-sky-400"
                                             >
                                                 <span>
                                                     {latestChecklist
@@ -593,30 +588,30 @@ export default function InspeccionShow({
 
             {/* Deficiencies summary if any */}
             {order.deficiencies && order.deficiencies.length > 0 && (
-                <div className="mb-6 rounded-[14px] border border-destructive/20 bg-destructive/10 p-4">
-                    <h3 className="mb-2 flex items-center gap-1.5 text-xs font-black text-destructive">
-                        <AlertCircle className="size-4 text-destructive" />
+                <div className="border-destructive/20 bg-destructive/10 mb-6 rounded-[14px] border p-4">
+                    <h3 className="text-destructive mb-2 flex items-center gap-1.5 text-xs font-black">
+                        <AlertCircle className="text-destructive size-4" />
                         Deficiencias Detectadas ({order.deficiencies.length})
                     </h3>
                     <div className="space-y-2">
                         {order.deficiencies.map((def) => (
                             <div
                                 key={def.id}
-                                className="rounded-[8px] border border-destructive/20 bg-card p-2.5 text-xs"
+                                className="border-destructive/20 bg-card rounded-[8px] border p-2.5 text-xs"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="font-bold text-foreground">
+                                    <span className="text-foreground font-bold">
                                         {def.componente}
                                     </span>
-                                    <span className="font-mono text-[10px] text-muted-foreground">
+                                    <span className="text-muted-foreground font-mono text-[10px]">
                                         {def.equipment?.numero_serie}
                                     </span>
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     {def.condicion}
                                 </p>
                                 {def.requiere_autorizacion && (
-                                    <span className="mt-1 inline-block text-[9.5px] font-bold text-destructive">
+                                    <span className="text-destructive mt-1 inline-block text-[9.5px] font-bold">
                                         Requiere cotización/autorización
                                         comercial
                                     </span>
@@ -638,9 +633,9 @@ export default function InspeccionShow({
                         {order.certificates.map((cert) => (
                             <div
                                 key={cert.id}
-                                className="flex items-center justify-between rounded-[8px] border border-emerald-500/20 bg-card p-2.5 text-xs"
+                                className="bg-card flex items-center justify-between rounded-[8px] border border-emerald-500/20 p-2.5 text-xs"
                             >
-                                <span className="font-bold text-foreground">
+                                <span className="text-foreground font-bold">
                                     {cert.certificateType?.nombre ||
                                         'Certificado'}
                                 </span>
@@ -655,19 +650,19 @@ export default function InspeccionShow({
 
             {/* Finalize Inspection Form (§24, §85.6.2) */}
             {!isFinalizada && (
-                <div className="rounded-[14px] border border-border bg-card p-4 shadow-sm">
-                    <h2 className="mb-1 flex items-center gap-2 text-sm font-black text-foreground">
+                <div className="border-border bg-card rounded-[14px] border p-4 shadow-sm">
+                    <h2 className="text-foreground mb-1 flex items-center gap-2 text-sm font-black">
                         <UserCheck className="size-4 text-sky-600 dark:text-sky-400" />
                         Finalizar Inspección y Conformidad en Sitio
                     </h2>
-                    <p className="mb-4 text-[11px] text-muted-foreground">
+                    <p className="text-muted-foreground mb-4 text-[11px]">
                         Cierre técnico con conformidad del cliente.
                     </p>
 
                     <form onSubmit={handleComplete} className="space-y-4">
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                <label className="text-foreground mb-1 block text-[11px] font-bold">
                                     Responsable Técnico
                                 </label>
                                 <input
@@ -679,11 +674,11 @@ export default function InspeccionShow({
                                             e.target.value,
                                         )
                                     }
-                                    className="w-full rounded-[8px] border border-border bg-muted/40 p-2 text-xs"
+                                    className="border-border bg-muted/40 w-full rounded-[8px] border p-2 text-xs"
                                 />
                             </div>
                             <div>
-                                <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                <label className="text-foreground mb-1 block text-[11px] font-bold">
                                     Cargo
                                 </label>
                                 <input
@@ -695,13 +690,13 @@ export default function InspeccionShow({
                                             e.target.value,
                                         )
                                     }
-                                    className="w-full rounded-[8px] border border-border bg-muted/40 p-2 text-xs"
+                                    className="border-border bg-muted/40 w-full rounded-[8px] border p-2 text-xs"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-[11px] font-bold text-foreground">
+                            <label className="text-foreground mb-1 block text-[11px] font-bold">
                                 Nombre del Receptor / Encargado de Sede{' '}
                                 <span className="text-red-500">*</span>
                             </label>
@@ -716,7 +711,7 @@ export default function InspeccionShow({
                                     )
                                 }
                                 placeholder="Nombre completo de quien atiende la visita"
-                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                             />
                             {completeForm.errors.conformidad_nombre && (
                                 <p className="mt-0.5 text-[10px] text-red-500">
@@ -726,7 +721,7 @@ export default function InspeccionShow({
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-[11px] font-bold text-foreground">
+                            <label className="text-foreground mb-1 block text-[11px] font-bold">
                                 Observaciones Generales de la Visita
                             </label>
                             <textarea
@@ -741,7 +736,7 @@ export default function InspeccionShow({
                                     )
                                 }
                                 placeholder="Notas sobre accesibilidad, señalética, altura de montaje..."
-                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                             />
                         </div>
 
@@ -760,7 +755,7 @@ export default function InspeccionShow({
                                             e.target.checked,
                                         )
                                     }
-                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-600 dark:text-sky-400 focus:ring-[#0284C7]"
+                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-600 focus:ring-[#0284C7] dark:text-sky-400"
                                 />
                                 <span className="text-xs leading-tight font-semibold text-sky-700 dark:text-sky-400">
                                     Conformidad en sitio: El encargado del
@@ -882,7 +877,7 @@ function InlineChecklistForm({
                 <button
                     type="button"
                     onClick={onClose}
-                    className="text-[11px] font-bold text-muted-foreground"
+                    className="text-muted-foreground text-[11px] font-bold"
                 >
                     Cerrar
                 </button>
@@ -898,10 +893,10 @@ function InlineChecklistForm({
                     return (
                         <div
                             key={clave}
-                            className="rounded-[8px] border border-border bg-card p-2.5"
+                            className="border-border bg-card rounded-[8px] border p-2.5"
                         >
                             <div className="mb-1.5 flex items-center justify-between gap-2">
-                                <span className="text-[11px] font-bold text-foreground">
+                                <span className="text-foreground text-[11px] font-bold">
                                     {nombre}
                                 </span>
                                 <div className="flex items-center gap-1">
@@ -949,7 +944,7 @@ function InlineChecklistForm({
 
                             {/* Detalle si está observado */}
                             {isObservado && (
-                                <div className="mt-2 space-y-1.5 border-t border-destructive/20 pt-2">
+                                <div className="border-destructive/20 mt-2 space-y-1.5 border-t pt-2">
                                     <input
                                         type="text"
                                         placeholder="Descripción de la condición observada..."
@@ -961,9 +956,9 @@ function InlineChecklistForm({
                                                 e.target.value,
                                             )
                                         }
-                                        className="w-full rounded-[6px] border border-destructive/20 bg-destructive/10 p-1.5 text-xs"
+                                        className="border-destructive/20 bg-destructive/10 w-full rounded-[6px] border p-1.5 text-xs"
                                     />
-                                    <label className="flex items-center gap-1.5 text-[10.5px] font-semibold text-destructive">
+                                    <label className="text-destructive flex items-center gap-1.5 text-[10.5px] font-semibold">
                                         <input
                                             type="checkbox"
                                             checked={
@@ -977,7 +972,7 @@ function InlineChecklistForm({
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="size-3.5 rounded border-destructive/20 text-destructive"
+                                            className="border-destructive/20 text-destructive size-3.5 rounded"
                                         />
                                         <span>
                                             Requiere cotización/autorización de

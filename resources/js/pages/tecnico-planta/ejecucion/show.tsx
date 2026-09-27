@@ -6,16 +6,12 @@ import type { Team } from '@/types';
 import {
     ArrowLeft,
     CheckCircle2,
-    Clock,
     Wrench,
-    AlertTriangle,
     Package,
     Sparkles,
     ShieldCheck,
     FileCheck2,
-    Calendar,
     ChevronRight,
-    QrCode,
     MessageSquare,
 } from 'lucide-react';
 
@@ -153,7 +149,7 @@ export default function EjecucionShow({
                 </Link>
 
                 {/* Header Card */}
-                <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
+                <div className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <div className="flex items-center gap-2">
@@ -238,7 +234,7 @@ export default function EjecucionShow({
 
                     return (
                         <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
-                            <div className="flex items-center gap-2 font-bold text-xs text-blue-900 dark:text-blue-300">
+                            <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
                                 <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
                                 <span>
                                     Indicaciones de Ventas y Coordinación
@@ -313,7 +309,7 @@ export default function EjecucionShow({
                     ) : order.estado === 'trabajo_terminado' ||
                       order.estado === 'datos_completos' ? (
                         <div className="space-y-3">
-                            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 bg-card p-3 text-xs font-semibold text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                            <label className="bg-card flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 p-3 text-xs font-semibold text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
                                 <input
                                     type="checkbox"
                                     checked={phRealizada}
@@ -355,7 +351,7 @@ export default function EjecucionShow({
 
                 {/* Certificates Section */}
                 {certificates.length > 0 && (
-                    <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
+                    <div className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                         <div className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-neutral-100">
                             <FileCheck2 className="h-4 w-4 text-emerald-600" />
                             <span>
@@ -403,7 +399,7 @@ export default function EjecucionShow({
                     </div>
 
                     {order.deficiencies.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-neutral-200 bg-card p-6 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
+                        <div className="bg-card rounded-2xl border border-dashed border-neutral-200 p-6 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
                             <ShieldCheck className="mx-auto mb-1.5 h-8 w-8 text-emerald-500" />
                             <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                                 No hay deficiencias registradas en esta orden
@@ -414,7 +410,7 @@ export default function EjecucionShow({
                             {order.deficiencies.map((d) => (
                                 <div
                                     key={d.id}
-                                    className="space-y-2 rounded-2xl border border-neutral-200 bg-card p-3.5 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
+                                    className="bg-card space-y-2 rounded-2xl border border-neutral-200 p-3.5 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div>
@@ -473,7 +469,7 @@ export default function EjecucionShow({
                 {/* MODAL: Consumir Repuesto de Almacén (§85) */}
                 {selectedDeficiency && (
                     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="animate-in slide-in-from-bottom w-full space-y-4 rounded-t-3xl border border-neutral-200 bg-card p-5 shadow-xl duration-200 sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
+                        <div className="animate-in slide-in-from-bottom bg-card w-full space-y-4 rounded-t-3xl border border-neutral-200 p-5 shadow-xl duration-200 sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
                             <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
                                 <div>
                                     <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">

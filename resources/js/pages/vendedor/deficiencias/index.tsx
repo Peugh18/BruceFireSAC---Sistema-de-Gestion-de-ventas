@@ -1,14 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    Check,
-    CheckCircle2,
-    Clock,
-    FileText,
-    ShieldAlert,
-    Wrench,
-    X,
-} from 'lucide-react';
+import { Check, CheckCircle2, Wrench, X } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 import DeficiencyAuthorizationController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyAuthorizationController';
@@ -38,14 +29,7 @@ export type DeficiencyItem = {
     cliente: string;
     componente: string;
     condicion: string;
-    estado:
-        | 'detectada'
-        | 'esperando_autorizacion'
-        | 'autorizada'
-        | 'rechazada'
-        | 'en_correccion'
-        | 'resuelta'
-        | string;
+    estado: string;
     requiere_autorizacion: boolean;
     authorization?: {
         autorizado_por: string;
@@ -224,10 +208,10 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
 
                 {/* Header title */}
                 <div>
-                    <h2 className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
+                    <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
                         Deficiencias y Adicionales
                     </h2>
-                    <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+                    <p className="text-muted-foreground mt-0.5 text-[12.5px]">
                         Hallazgos que los técnicos reportaron en equipos de tus
                         clientes. Si implica costo adicional, requiere
                         autorización del cliente antes de proceder.
@@ -235,7 +219,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex w-fit flex-wrap rounded-[9px] bg-muted p-[3px]">
+                <div className="bg-muted flex w-fit flex-wrap rounded-[9px] p-[3px]">
                     {TABS.map((tab) => {
                         const active = currentEstado === tab.id;
                         return (
@@ -258,12 +242,12 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                 {/* List of Deficiency Cards */}
                 <div className="flex flex-col gap-3">
                     {deficiencies.data.length === 0 ? (
-                        <Card className="flex flex-col items-center justify-center gap-2 rounded-[16px] border-border bg-card p-12 text-center shadow-none">
+                        <Card className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-[16px] p-12 text-center shadow-none">
                             <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
-                            <p className="text-sm font-bold text-foreground">
+                            <p className="text-foreground text-sm font-bold">
                                 No se encontraron deficiencias
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                                 {currentEstado
                                     ? 'No hay registros bajo el estado seleccionado.'
                                     : 'No hay deficiencias ni adicionales reportados por los técnicos.'}
@@ -278,17 +262,17 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                             return (
                                 <div
                                     key={item.id}
-                                    className={`flex flex-col gap-3 rounded-[14px] border border-border bg-card p-4.5 shadow-none transition-all sm:flex-row sm:items-start sm:gap-4 ${statusStyle.borderClass}`}
+                                    className={`border-border bg-card flex flex-col gap-3 rounded-[14px] border p-4.5 shadow-none transition-all sm:flex-row sm:items-start sm:gap-4 ${statusStyle.borderClass}`}
                                 >
                                     {/* Icon Box */}
-                                    <div className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-muted text-muted-foreground">
+                                    <div className="bg-muted text-muted-foreground flex size-11 shrink-0 items-center justify-center rounded-[10px]">
                                         <Wrench className="size-5" />
                                     </div>
 
                                     {/* Content */}
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-[13.5px] font-bold text-foreground">
+                                            <span className="text-foreground text-[13.5px] font-bold">
                                                 {item.cliente}
                                             </span>
                                             <Badge
@@ -296,16 +280,16 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                             >
                                                 {statusStyle.label}
                                             </Badge>
-                                            <Badge className="border-none bg-muted text-[10.5px] text-foreground/80">
+                                            <Badge className="bg-muted text-foreground/80 border-none text-[10.5px]">
                                                 {item.componente}
                                             </Badge>
                                         </div>
 
-                                        <div className="mt-1 text-[12.5px] text-muted-foreground">
+                                        <div className="text-muted-foreground mt-1 text-[12.5px]">
                                             {item.condicion}
                                         </div>
 
-                                        <div className="mt-2 flex flex-wrap items-center gap-3 text-[11.5px] text-muted-foreground">
+                                        <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-3 text-[11.5px]">
                                             <span>
                                                 Orden de Servicio:{' '}
                                                 <Link
@@ -317,7 +301,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                                 item.service_order_id,
                                                         },
                                                     )}
-                                                    className="font-mono font-bold text-foreground underline hover:text-primary"
+                                                    className="text-foreground hover:text-primary font-mono font-bold underline"
                                                 >
                                                     {item.orden}
                                                 </Link>
@@ -354,7 +338,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                             false,
                                                         )
                                                     }
-                                                    className="h-8 rounded-[8px] border-destructive/20 bg-card text-xs font-bold text-destructive hover:bg-destructive/10"
+                                                    className="border-destructive/20 bg-card text-destructive hover:bg-destructive/10 h-8 rounded-[8px] text-xs font-bold"
                                                 >
                                                     <X className="mr-1 size-3.5 stroke-[2.5]" />
                                                     <span>Rechazar</span>
@@ -380,7 +364,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                 asChild
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-8 rounded-[8px] border-border bg-card text-xs font-semibold text-foreground/80"
+                                                className="border-border bg-card text-foreground/80 h-8 rounded-[8px] text-xs font-semibold"
                                             >
                                                 <Link
                                                     href={ServiceOrderController.show.url(
@@ -405,7 +389,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
 
                 {/* Pagination */}
                 {deficiencies.links && deficiencies.links.length > 3 && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[11.5px] text-muted-foreground">
+                    <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 pt-2 text-[11.5px]">
                         <span>
                             Mostrando {deficiencies.from ?? 0}-
                             {deficiencies.to ?? 0} de {deficiencies.total}{' '}
@@ -421,7 +405,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                         className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
                                             link.active
                                                 ? 'bg-card font-bold text-white'
-                                                : 'border border-border bg-card text-foreground/80 hover:bg-background'
+                                                : 'border-border bg-card text-foreground/80 hover:bg-background border'
                                         }`}
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
@@ -430,7 +414,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 ) : (
                                     <span
                                         key={idx}
-                                        className="inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs text-muted-foreground opacity-60"
+                                        className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs opacity-60"
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}
@@ -442,7 +426,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                 )}
 
                 {/* Flow note banner */}
-                <div className="rounded-[12px] border border-dashed border-border bg-muted/30 p-3.5 text-xs text-muted-foreground">
+                <div className="border-border bg-muted/30 text-muted-foreground rounded-[12px] border border-dashed p-3.5 text-xs">
                     <b>Flujo de deficiencias:</b> Detectada (técnico reporta en
                     Planta o Campo) &rarr; Si genera costo, pasa a{' '}
                     <b>Esperando autorización</b> (tú avisas al cliente y
@@ -459,14 +443,14 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                     if (!open) setActionModal(null);
                 }}
             >
-                <DialogContent className="rounded-[16px] border-border bg-card sm:max-w-md">
+                <DialogContent className="border-border bg-card rounded-[16px] sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
                             <div
                                 className={`flex size-9 items-center justify-center rounded-[10px] ${
                                     actionModal?.isApproving
-                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                        : 'bg-destructive/10 text-destructive border border-destructive/20'
+                                        ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                        : 'bg-destructive/10 text-destructive border-destructive/20 border'
                                 }`}
                             >
                                 {actionModal?.isApproving ? (
@@ -476,12 +460,12 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 )}
                             </div>
                             <div>
-                                <DialogTitle className="font-['Oswald',sans-serif] text-[18px] font-semibold text-foreground">
+                                <DialogTitle className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold">
                                     {actionModal?.isApproving
                                         ? 'Aprobar deficiencia adicional'
                                         : 'Rechazar deficiencia adicional'}
                                 </DialogTitle>
-                                <DialogDescription className="text-xs text-muted-foreground">
+                                <DialogDescription className="text-muted-foreground text-xs">
                                     {actionModal?.item.cliente} · Orden{' '}
                                     {actionModal?.item.orden}
                                 </DialogDescription>
@@ -494,7 +478,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                         className="mt-3 space-y-3.5"
                     >
                         <div>
-                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 {actionModal?.isApproving
                                     ? 'Persona que autoriza en cliente *'
                                     : 'Persona que comunica el rechazo *'}
@@ -509,10 +493,10 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                     )
                                 }
                                 placeholder="Nombre y cargo de contacto del cliente"
-                                className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                                className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                             />
                             {authForm.errors.autorizado_por && (
-                                <p className="mt-1 text-[11px] text-destructive">
+                                <p className="text-destructive mt-1 text-[11px]">
                                     {authForm.errors.autorizado_por}
                                 </p>
                             )}
@@ -520,7 +504,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Canal *
                                 </Label>
                                 <select
@@ -529,10 +513,11 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                         authForm.setData(
                                             'canal',
                                             e.target.value as
-                                                'whatsapp' | 'presencial',
+                                                | 'whatsapp'
+                                                | 'presencial',
                                         )
                                     }
-                                    className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"
+                                    className="border-border bg-card text-foreground mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none"
                                 >
                                     <option value="whatsapp">
                                         WhatsApp / Mensaje
@@ -544,7 +529,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                             </div>
 
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Fecha *
                                 </Label>
                                 <Input
@@ -557,13 +542,13 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                             e.target.value,
                                         )
                                     }
-                                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Observaciones / Sustento
                             </Label>
                             <Input
@@ -575,7 +560,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                     )
                                 }
                                 placeholder="Ej. Aprobó cotización adicional enviada por correo..."
-                                className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                                className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                             />
                         </div>
 
@@ -584,7 +569,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setActionModal(null)}
-                                className="rounded-[8px] border-border text-xs font-semibold"
+                                className="border-border rounded-[8px] text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>

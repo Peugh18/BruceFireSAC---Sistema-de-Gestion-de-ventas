@@ -89,27 +89,32 @@ function getTipoMovimientoBadge(tipo: string): {
         case 'ingreso':
             return {
                 label: 'Ingreso',
-                className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border-emerald-500/20',
+                className:
+                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border-emerald-500/20',
             };
         case 'salida_venta':
             return {
                 label: 'Venta',
-                className: 'bg-destructive/10 text-primary border-destructive/20',
+                className:
+                    'bg-destructive/10 text-primary border-destructive/20',
             };
         case 'salida_servicio':
             return {
                 label: 'Consumo Taller',
-                className: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+                className:
+                    'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
             };
         case 'ajuste':
             return {
                 label: 'Ajuste',
-                className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                className:
+                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
             };
         case 'traslado':
             return {
                 label: 'Traslado',
-                className: 'bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20',
+                className:
+                    'bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20',
             };
         default:
             return {
@@ -149,7 +154,7 @@ export default function AlmacenDashboard({
                         </span>
                         <Link
                             href={`/${teamSlug}/almacen/stock`}
-                            className="inline-flex items-center gap-1.5 rounded-[8px] bg-card/20 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-card/30"
+                            className="bg-card/20 hover:bg-card/30 inline-flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-bold text-white transition-colors"
                         >
                             <span>Ver stock</span>
                             <ArrowRight className="size-3.5" />
@@ -160,27 +165,27 @@ export default function AlmacenDashboard({
                 {/* 3-Column Top Grid: Unidades en Stock, Recepciones de Hoy, Alerta Reabastecimiento */}
                 <div className="grid gap-4 md:grid-cols-3">
                     {/* 1. Unidades Disponibles */}
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center justify-between">
-                            <span className="text-[13.5px] font-bold text-foreground">
+                            <span className="text-foreground text-[13.5px] font-bold">
                                 Unidades disponibles
                             </span>
-                            <div className="flex size-7 items-center justify-center rounded-[8px] bg-muted text-foreground">
+                            <div className="bg-muted text-foreground flex size-7 items-center justify-center rounded-[8px]">
                                 <Boxes className="size-4" />
                             </div>
                         </div>
 
                         <div className="mt-4">
-                            <div className="font-['Oswald',sans-serif] text-[34px] leading-none font-semibold text-foreground">
+                            <div className="text-foreground font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
                                 {formatNumber(stock.total_disponible)}
                             </div>
-                            <div className="mt-2 text-[11.5px] text-muted-foreground">
+                            <div className="text-muted-foreground mt-2 text-[11.5px]">
                                 Unidades físicas serializadas en almacenes
                             </div>
                         </div>
 
-                        <div className="mt-4 border-t border-border pt-3">
-                            <div className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                        <div className="border-border mt-4 border-t pt-3">
+                            <div className="text-muted-foreground text-[11px] font-bold tracking-wider uppercase">
                                 Por almacén
                             </div>
                             <div className="mt-2 flex flex-col gap-1.5">
@@ -189,11 +194,11 @@ export default function AlmacenDashboard({
                                         key={sede.sede_id}
                                         className="flex items-center justify-between text-[12px]"
                                     >
-                                        <span className="flex items-center gap-1.5 text-foreground/80">
-                                            <Building2 className="size-3.5 text-muted-foreground" />
+                                        <span className="text-foreground/80 flex items-center gap-1.5">
+                                            <Building2 className="text-muted-foreground size-3.5" />
                                             {sede.nombre}
                                         </span>
-                                        <span className="font-bold text-foreground">
+                                        <span className="text-foreground font-bold">
                                             {formatNumber(
                                                 sede.unidades_disponibles,
                                             )}
@@ -205,21 +210,21 @@ export default function AlmacenDashboard({
                     </Card>
 
                     {/* 2. Recepciones de Hoy */}
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center justify-between">
-                            <span className="text-[13.5px] font-bold text-foreground">
+                            <span className="text-foreground text-[13.5px] font-bold">
                                 Recepciones de hoy
                             </span>
-                            <div className="flex size-7 items-center justify-center rounded-[8px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <div className="flex size-7 items-center justify-center rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                 <Truck className="size-4" />
                             </div>
                         </div>
 
                         <div className="mt-4">
-                            <div className="font-['Oswald',sans-serif] text-[34px] leading-none font-semibold text-foreground">
+                            <div className="text-foreground font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
                                 {formatNumber(recepciones_hoy)}
                             </div>
-                            <div className="mt-2 flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+                            <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-[11.5px]">
                                 <span className="inline-flex items-center gap-1 rounded-[6px] bg-emerald-500/10 px-2 py-0.5 font-bold text-emerald-600 dark:text-emerald-400">
                                     <Calendar className="size-3" />
                                     <span>Hoy</span>
@@ -228,10 +233,10 @@ export default function AlmacenDashboard({
                             </div>
                         </div>
 
-                        <div className="mt-5 border-t border-border pt-4">
+                        <div className="border-border mt-5 border-t pt-4">
                             <Link
                                 href={`/${teamSlug}/almacen/recepciones`}
-                                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+                                className="text-primary inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
                             >
                                 <span>Registrar nueva recepción</span>
                                 <ArrowRight className="size-3.5" />
@@ -240,29 +245,29 @@ export default function AlmacenDashboard({
                     </Card>
 
                     {/* 3. Reabastecimiento de Almacén */}
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center justify-between">
-                            <span className="text-[13.5px] font-bold text-foreground">
+                            <span className="text-foreground text-[13.5px] font-bold">
                                 Bajo stock mínimo
                             </span>
-                            <div className="flex size-7 items-center justify-center rounded-[8px] bg-destructive/10 text-primary">
+                            <div className="bg-destructive/10 text-primary flex size-7 items-center justify-center rounded-[8px]">
                                 <TrendingDown className="size-4" />
                             </div>
                         </div>
 
                         <div className="mt-4">
-                            <div className="font-['Oswald',sans-serif] text-[34px] leading-none font-semibold text-primary">
+                            <div className="text-primary font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
                                 {formatNumber(productos_bajo_minimo.length)}
                             </div>
-                            <div className="mt-2 text-[11.5px] text-muted-foreground">
+                            <div className="text-muted-foreground mt-2 text-[11.5px]">
                                 Productos que requieren reposición
                             </div>
                         </div>
 
-                        <div className="mt-5 border-t border-border pt-4">
+                        <div className="border-border mt-5 border-t pt-4">
                             <Link
                                 href={`/${teamSlug}/almacen/stock`}
-                                className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground hover:underline"
+                                className="text-foreground inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
                             >
                                 <span>Ver reporte de inventario</span>
                                 <ArrowRight className="size-3.5" />
@@ -275,29 +280,29 @@ export default function AlmacenDashboard({
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Movimientos Recientes del Kardex (2 cols) */}
                     <div className="lg:col-span-2">
-                        <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                            <div className="flex items-center justify-between border-b border-border pb-4">
+                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                            <div className="border-border flex items-center justify-between border-b pb-4">
                                 <div className="flex items-center gap-2">
-                                    <History className="size-4 text-muted-foreground" />
-                                    <span className="text-[14px] font-bold text-foreground">
+                                    <History className="text-muted-foreground size-4" />
+                                    <span className="text-foreground text-[14px] font-bold">
                                         Últimos 10 movimientos del Kardex
                                     </span>
                                 </div>
-                                <span className="text-[11.5px] font-medium text-muted-foreground">
+                                <span className="text-muted-foreground text-[11.5px] font-medium">
                                     Tiempo real
                                 </span>
                             </div>
 
                             {movimientos_recientes.length === 0 ? (
                                 <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
-                                    <PackageCheck className="size-10 text-muted-foreground" />
-                                    <p className="mt-2 text-sm font-medium text-muted-foreground">
+                                    <PackageCheck className="text-muted-foreground size-10" />
+                                    <p className="text-muted-foreground mt-2 text-sm font-medium">
                                         Aún no se registran movimientos en el
                                         Kardex.
                                     </p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-border overflow-x-auto">
+                                <div className="divide-border divide-y overflow-x-auto">
                                     {movimientos_recientes.map((mov) => {
                                         const badge = getTipoMovimientoBadge(
                                             mov.tipo,
@@ -315,13 +320,13 @@ export default function AlmacenDashboard({
                                                     </span>
 
                                                     <div className="min-w-0">
-                                                        <div className="truncate font-bold text-foreground">
+                                                        <div className="text-foreground truncate font-bold">
                                                             {
                                                                 mov.producto
                                                                     .nombre
                                                             }
                                                         </div>
-                                                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                                                        <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-[11px]">
                                                             <span>
                                                                 Cód:{' '}
                                                                 {
@@ -330,7 +335,7 @@ export default function AlmacenDashboard({
                                                                 }
                                                             </span>
                                                             {mov.unidad_serie && (
-                                                                <span className="flex items-center gap-1 font-mono text-foreground">
+                                                                <span className="text-foreground flex items-center gap-1 font-mono">
                                                                     <ScanBarcode className="size-3" />
                                                                     {
                                                                         mov.unidad_serie
@@ -348,19 +353,19 @@ export default function AlmacenDashboard({
                                                 </div>
 
                                                 <div className="flex shrink-0 items-center justify-between gap-1 text-[11.5px] sm:flex-col sm:items-end">
-                                                    <span className="font-mono font-bold text-foreground">
+                                                    <span className="text-foreground font-mono font-bold">
                                                         {mov.tipo ===
                                                         'salida_venta'
                                                             ? `-${mov.cantidad}`
                                                             : `+${mov.cantidad}`}{' '}
-                                                        <span className="text-[10px] font-normal text-muted-foreground">
+                                                        <span className="text-muted-foreground text-[10px] font-normal">
                                                             {
                                                                 mov.producto
                                                                     .unidad_medida
                                                             }
                                                         </span>
                                                     </span>
-                                                    <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
+                                                    <div className="text-muted-foreground flex items-center gap-1 text-[10.5px]">
                                                         {mov.usuario && (
                                                             <span className="flex items-center gap-0.5">
                                                                 <User className="size-3" />
@@ -385,12 +390,12 @@ export default function AlmacenDashboard({
 
                     {/* Lista detallada de productos bajo stock mínimo (1 col) */}
                     <div className="lg:col-span-1">
-                        <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                            <div className="flex items-center justify-between border-b border-border pb-4">
-                                <span className="text-[14px] font-bold text-foreground">
+                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                            <div className="border-border flex items-center justify-between border-b pb-4">
+                                <span className="text-foreground text-[14px] font-bold">
                                     Stock bajo el mínimo
                                 </span>
-                                <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+                                <span className="bg-destructive/10 text-primary rounded-full px-2 py-0.5 text-[11px] font-bold">
                                     {productos_bajo_minimo.length}
                                 </span>
                             </div>
@@ -404,21 +409,21 @@ export default function AlmacenDashboard({
                                     </p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-border">
+                                <div className="divide-border divide-y">
                                     {productos_bajo_minimo.map((prod) => (
                                         <div
                                             key={prod.id}
                                             className="py-3 text-[12px]"
                                         >
                                             <div className="flex items-center justify-between">
-                                                <span className="max-w-[180px] truncate font-bold text-foreground">
+                                                <span className="text-foreground max-w-[180px] truncate font-bold">
                                                     {prod.nombre}
                                                 </span>
-                                                <span className="font-mono text-[11px] font-bold text-primary">
+                                                <span className="text-primary font-mono text-[11px] font-bold">
                                                     Faltan {prod.diferencia}
                                                 </span>
                                             </div>
-                                            <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                                            <div className="text-muted-foreground mt-1 flex items-center justify-between text-[11px]">
                                                 <span>Cód: {prod.codigo}</span>
                                                 <span>
                                                     Disp:{' '}

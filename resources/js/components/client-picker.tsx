@@ -131,21 +131,21 @@ export default function ClientPicker({
     return (
         <div>
             <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold text-foreground/80 uppercase">
+                <span className="text-foreground/80 text-[11px] font-bold uppercase">
                     Cliente
                 </span>
                 {headerExtra}
             </div>
 
             {value ? (
-                <div className="mt-1 rounded-[10px] border border-primary/40 bg-destructive/5 p-3">
+                <div className="border-primary/40 bg-destructive/5 mt-1 rounded-[10px] border p-3">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <div className="text-[14px] font-bold text-foreground">
+                            <div className="text-foreground text-[14px] font-bold">
                                 {value.razon_social}
                             </div>
                             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11.5px]">
-                                <span className="rounded-[5px] bg-muted px-1.5 py-0.5 font-['IBM_Plex_Mono',monospace] font-bold text-foreground/80 uppercase">
+                                <span className="bg-muted text-foreground/80 rounded-[5px] px-1.5 py-0.5 font-['IBM_Plex_Mono',monospace] font-bold uppercase">
                                     {value.tipo_documento === 'varios'
                                         ? 'Sin doc.'
                                         : value.tipo_documento}{' '}
@@ -160,18 +160,18 @@ export default function ClientPicker({
                                     </span>
                                 ) : null}
                                 {cargandoFicha ? (
-                                    <Cargando className="size-3.5 text-muted-foreground" />
+                                    <Cargando className="text-muted-foreground size-3.5" />
                                 ) : null}
                             </div>
                             {value.direccion_fiscal ? (
-                                <div className="mt-1 text-[12px] text-muted-foreground">
+                                <div className="text-muted-foreground mt-1 text-[12px]">
                                     {value.direccion_fiscal}
                                 </div>
                             ) : null}
                             {tieneRuc &&
                             value.estado_contribuyente &&
                             !rucHabido ? (
-                                <div className="mt-1 text-[11.5px] font-semibold text-destructive">
+                                <div className="text-destructive mt-1 text-[11.5px] font-semibold">
                                     RUC no Activo y Habido: no se le puede
                                     emitir factura.
                                 </div>
@@ -183,7 +183,7 @@ export default function ClientPicker({
                                     asChild
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 rounded-[8px] border-border bg-card shadow-none"
+                                    className="border-border bg-card h-8 rounded-[8px] shadow-none"
                                 >
                                     <a
                                         href={clientes.show.url({
@@ -210,7 +210,7 @@ export default function ClientPicker({
                                         0,
                                     );
                                 }}
-                                className="h-8 rounded-[8px] border-border bg-card text-destructive shadow-none"
+                                className="border-border bg-card text-destructive h-8 rounded-[8px] shadow-none"
                                 title="Quitar cliente"
                             >
                                 <X className="size-3.5" />
@@ -222,8 +222,8 @@ export default function ClientPicker({
             ) : (
                 <div className="relative mt-1">
                     <div className="flex items-stretch gap-2">
-                        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
-                            <Search className="size-3.5 shrink-0 text-muted-foreground" />
+                        <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                            <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
                                 ref={inputRef}
                                 autoFocus={autoFocus}
@@ -233,17 +233,17 @@ export default function ClientPicker({
                                 }
                                 onKeyDown={alTeclear}
                                 placeholder="Escribe nombre, razón social, RUC o DNI..."
-                                className="h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+                                className="placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
                             />
                             {cargando ? (
-                                <Cargando className="size-3.5 text-muted-foreground" />
+                                <Cargando className="text-muted-foreground size-3.5" />
                             ) : null}
                         </div>
                         {noEncontrado ? (
                             <Button
                                 type="button"
                                 onClick={() => setCreando(true)}
-                                className="h-auto shrink-0 rounded-[9px] bg-primary px-3.5 text-[12.5px] font-bold text-white shadow-none hover:bg-primary/90"
+                                className="bg-primary hover:bg-primary/90 h-auto shrink-0 rounded-[9px] px-3.5 text-[12.5px] font-bold text-white shadow-none"
                             >
                                 <UserRoundPlus className="size-3.5" />
                                 Agregar cliente
@@ -252,19 +252,19 @@ export default function ClientPicker({
                     </div>
 
                     {resultados && resultados.length > 0 ? (
-                        <div className="absolute inset-x-0 top-full z-30 mt-1 max-h-[260px] overflow-y-auto rounded-[10px] border border-border bg-card shadow-lg">
+                        <div className="border-border bg-card absolute inset-x-0 top-full z-30 mt-1 max-h-[260px] overflow-y-auto rounded-[10px] border shadow-lg">
                             {resultados.map((cliente, index) => (
                                 <button
                                     key={cliente.id}
                                     type="button"
                                     onMouseEnter={() => setActivo(index)}
                                     onClick={() => void elegir(cliente)}
-                                    className={`flex w-full items-center justify-between gap-3 border-b border-border px-3 py-2.5 text-left last:border-b-0 ${index === activo ? 'bg-muted/60' : 'bg-card'}`}
+                                    className={`border-border flex w-full items-center justify-between gap-3 border-b px-3 py-2.5 text-left last:border-b-0 ${index === activo ? 'bg-muted/60' : 'bg-card'}`}
                                 >
-                                    <span className="truncate text-[13px] font-bold text-foreground">
+                                    <span className="text-foreground truncate text-[13px] font-bold">
                                         {cliente.razon_social}
                                     </span>
-                                    <span className="shrink-0 font-['IBM_Plex_Mono',monospace] text-[11px] text-muted-foreground">
+                                    <span className="text-muted-foreground shrink-0 font-['IBM_Plex_Mono',monospace] text-[11px]">
                                         {cliente.numero_documento}
                                     </span>
                                 </button>
@@ -273,7 +273,7 @@ export default function ClientPicker({
                     ) : null}
 
                     {noEncontrado ? (
-                        <p className="mt-1 text-[11.5px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-1 text-[11.5px]">
                             No está registrado.{' '}
                             {esDocumento
                                 ? 'Agrégalo: se autocompletan sus datos desde RENIEC/SUNAT.'
@@ -284,7 +284,7 @@ export default function ClientPicker({
             )}
 
             {error ? (
-                <p className="mt-1 text-[11px] font-semibold text-destructive">
+                <p className="text-destructive mt-1 text-[11px] font-semibold">
                     {error}
                 </p>
             ) : null}

@@ -138,9 +138,9 @@ export default function ComprobanteEditDialog({
     return (
         <>
             <Dialog open={open} onOpenChange={onOpenChange}>
-                <DialogContent className="max-h-[88vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-xl">
+                <DialogContent className="border-border bg-card max-h-[88vh] overflow-y-auto rounded-[16px] sm:max-w-xl">
                     <DialogHeader>
-                        <DialogTitle className="font-['Oswald',sans-serif] text-[20px] font-semibold text-foreground uppercase">
+                        <DialogTitle className="text-foreground font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
                             {rechazado
                                 ? 'Corregir y reemitir'
                                 : 'Editar comprobante'}
@@ -154,10 +154,10 @@ export default function ComprobanteEditDialog({
 
                     <form onSubmit={guardar} className="space-y-4">
                         <div>
-                            <div className="text-[11px] font-bold text-foreground/80 uppercase">
+                            <div className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Tipo de comprobante
                             </div>
-                            <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                            <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                 {(['factura', 'boleta'] as const).map(
                                     (opcion) => (
                                         <button
@@ -176,7 +176,7 @@ export default function ComprobanteEditDialog({
                                 )}
                             </div>
                             {clienteSinRuc ? (
-                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-1 text-[11px]">
                                     Para factura, el cliente necesita RUC.
                                 </p>
                             ) : null}
@@ -184,7 +184,7 @@ export default function ComprobanteEditDialog({
 
                         <div>
                             <div className="flex items-center justify-between gap-2">
-                                <div className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <div className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Cliente
                                 </div>
                                 {tipo === 'boleta' ? (
@@ -200,41 +200,41 @@ export default function ComprobanteEditDialog({
                                 ) : null}
                             </div>
 
-                            <div className="mt-1 flex items-center justify-between gap-3 rounded-[10px] border border-primary/40 bg-destructive/5 px-3 py-2.5">
+                            <div className="border-primary/40 bg-destructive/5 mt-1 flex items-center justify-between gap-3 rounded-[10px] border px-3 py-2.5">
                                 <span>
-                                    <span className="block text-[13px] font-bold text-foreground">
+                                    <span className="text-foreground block text-[13px] font-bold">
                                         {cliente.razon_social}
                                     </span>
-                                    <span className="font-['IBM_Plex_Mono',monospace] text-[11px] text-muted-foreground">
+                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
                                         {cliente.numero_documento}
                                     </span>
                                 </span>
-                                <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                                <CheckCircle2 className="text-primary size-4 shrink-0" />
                             </div>
                             {superaLimite ? (
-                                <p className="mt-1 text-[11px] font-semibold text-destructive">
+                                <p className="text-destructive mt-1 text-[11px] font-semibold">
                                     La boleta a CLIENTES VARIOS no puede superar
                                     S/ {limiteBoletaSinIdentificar.toFixed(2)}.
                                 </p>
                             ) : null}
 
                             <div className="mt-2 flex items-stretch gap-2">
-                                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
-                                    <Search className="size-3.5 shrink-0 text-muted-foreground" />
+                                <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                                    <Search className="text-muted-foreground size-3.5 shrink-0" />
                                     <input
                                         value={busqueda}
                                         onChange={(event) =>
                                             setBusqueda(event.target.value)
                                         }
                                         placeholder="Cambiar cliente: RUC, DNI o nombre..."
-                                        className="h-9 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+                                        className="placeholder:text-muted-foreground h-9 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
                                     />
                                 </div>
                                 {noEncontrado ? (
                                     <Button
                                         type="button"
                                         onClick={() => setCreandoCliente(true)}
-                                        className="h-auto shrink-0 rounded-[9px] bg-primary px-3 text-[12px] font-bold text-white shadow-none hover:bg-primary/90"
+                                        className="bg-primary hover:bg-primary/90 h-auto shrink-0 rounded-[9px] px-3 text-[12px] font-bold text-white shadow-none"
                                     >
                                         <UserRoundPlus className="size-3.5" />
                                         Agregar cliente
@@ -243,7 +243,7 @@ export default function ComprobanteEditDialog({
                             </div>
 
                             {resultados && resultados.length > 0 ? (
-                                <div className="mt-2 max-h-[168px] overflow-y-auto rounded-[10px] border border-border">
+                                <div className="border-border mt-2 max-h-[168px] overflow-y-auto rounded-[10px] border">
                                     {resultados.map((opcion) => (
                                         <button
                                             key={opcion.id}
@@ -252,26 +252,26 @@ export default function ComprobanteEditDialog({
                                                 setCliente(opcion);
                                                 setBusqueda('');
                                             }}
-                                            className="flex w-full flex-col border-b border-border bg-card px-3 py-2 text-left last:border-b-0 hover:bg-muted/40"
+                                            className="border-border bg-card hover:bg-muted/40 flex w-full flex-col border-b px-3 py-2 text-left last:border-b-0"
                                         >
-                                            <span className="text-[13px] font-bold text-foreground">
+                                            <span className="text-foreground text-[13px] font-bold">
                                                 {opcion.razon_social}
                                             </span>
-                                            <span className="font-['IBM_Plex_Mono',monospace] text-[11px] text-muted-foreground">
+                                            <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
                                                 {opcion.numero_documento}
                                             </span>
                                         </button>
                                     ))}
                                 </div>
                             ) : noEncontrado ? (
-                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-1 text-[11px]">
                                     No está registrado. Usa "Agregar cliente".
                                 </p>
                             ) : null}
                         </div>
 
                         {error ? (
-                            <p className="rounded-[9px] bg-destructive/10 px-3 py-2 text-[12px] font-semibold text-destructive">
+                            <p className="bg-destructive/10 text-destructive rounded-[9px] px-3 py-2 text-[12px] font-semibold">
                                 {error}
                             </p>
                         ) : null}
@@ -281,14 +281,14 @@ export default function ComprobanteEditDialog({
                                 type="button"
                                 variant="outline"
                                 onClick={() => onOpenChange(false)}
-                                className="rounded-[9px] border-border bg-card text-foreground/80 shadow-none"
+                                className="border-border bg-card text-foreground/80 rounded-[9px] shadow-none"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={guardando || superaLimite}
-                                className="rounded-[9px] bg-primary font-bold text-white shadow-none hover:bg-primary/90"
+                                className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
                             >
                                 {guardando
                                     ? 'Guardando…'

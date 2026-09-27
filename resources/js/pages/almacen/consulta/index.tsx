@@ -1,26 +1,13 @@
 ﻿import { Head, router, usePage } from '@inertiajs/react';
 import {
-    AlertCircle,
-    ArrowDownRight,
-    ArrowUpRight,
     Barcode,
-    Boxes,
     Building2,
-    Calendar,
-    Clock,
-    Eye,
-    Filter,
     History,
-    Layers,
     Package,
-    RotateCcw,
     Scan,
     ScanBarcode,
     Search,
     Shield,
-    Tag,
-    User,
-    Wrench,
     X,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
@@ -29,7 +16,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import type { Team } from '@/types';
 
@@ -54,7 +40,7 @@ export type UnitMovement = {
 export type UnitResult = {
     id: number;
     numero_serie: string;
-    estado: 'disponible' | 'reservado' | 'vendido' | 'baja' | string;
+    estado: string;
     marca: string | null;
     anio_fabricacion: number | null;
     fecha_ingreso: string | null;
@@ -131,14 +117,14 @@ function getEstadoBadge(estado: string) {
             );
         case 'baja':
             return (
-                <span className="inline-flex items-center gap-1 rounded-[6px] border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-xs font-bold text-destructive">
-                    <span className="size-2 rounded-full bg-destructive" />
+                <span className="border-destructive/20 bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-[6px] border px-2.5 py-1 text-xs font-bold">
+                    <span className="bg-destructive size-2 rounded-full" />
                     Dado de Baja
                 </span>
             );
         default:
             return (
-                <span className="inline-flex items-center gap-1 rounded-[6px] border border-border bg-muted/30 px-2.5 py-1 text-xs font-bold text-muted-foreground">
+                <span className="border-border bg-muted/30 text-muted-foreground inline-flex items-center gap-1 rounded-[6px] border px-2.5 py-1 text-xs font-bold">
                     {estado}
                 </span>
             );
@@ -191,23 +177,23 @@ export default function ConsultaIndex({
             <div className="mx-auto flex max-w-5xl flex-col gap-6">
                 {/* Title Header */}
                 <div>
-                    <h1 className="text-xl font-bold tracking-tight text-foreground">
+                    <h1 className="text-foreground text-xl font-bold tracking-tight">
                         Consulta Rápida
                     </h1>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                         Escaneo y auditoría de unidades serializadas o productos
                         a granel. 100% modo lectura.
                     </p>
                 </div>
 
                 {/* Scanner / Search Input Box */}
-                <Card className="rounded-[14px] border border-border bg-card p-5 shadow-sm">
+                <Card className="border-border bg-card rounded-[14px] border p-5 shadow-sm">
                     <form
                         onSubmit={handleSearch}
                         className="flex flex-col gap-3 md:flex-row"
                     >
                         <div className="relative flex-1">
-                            <ScanBarcode className="absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-destructive" />
+                            <ScanBarcode className="text-destructive absolute top-1/2 left-3.5 size-5 -translate-y-1/2" />
                             <Input
                                 autoFocus
                                 type="text"
@@ -231,7 +217,7 @@ export default function ConsultaIndex({
                             <select
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
-                                className="h-11 w-full rounded-[9px] border border-border bg-card px-3 text-xs font-medium text-foreground focus:border-primary focus:outline-none"
+                                className="border-border bg-card text-foreground focus:border-primary h-11 w-full rounded-[9px] border px-3 text-xs font-medium focus:outline-none"
                             >
                                 <option value="">Todas las sedes</option>
                                 {sedes.map((s) => (
@@ -245,7 +231,7 @@ export default function ConsultaIndex({
                         <div className="flex gap-2">
                             <Button
                                 type="submit"
-                                className="h-11 gap-2 bg-primary px-5 text-xs font-bold text-white hover:bg-primary/90"
+                                className="bg-primary hover:bg-primary/90 h-11 gap-2 px-5 text-xs font-bold text-white"
                             >
                                 <Search className="size-4" />
                                 <span>Consultar</span>
@@ -268,17 +254,17 @@ export default function ConsultaIndex({
                 {/* RESULTADO: UNIDAD SERIALIZADA */}
                 {unitResult && (
                     <div className="space-y-6">
-                        <Card className="rounded-[14px] border-2 border-border bg-card p-6 shadow-sm">
-                            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+                        <Card className="border-border bg-card rounded-[14px] border-2 p-6 shadow-sm">
+                            <div className="border-border mb-5 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex size-11 items-center justify-center rounded-[10px] bg-muted/30 text-destructive">
+                                    <div className="bg-muted/30 text-destructive flex size-11 items-center justify-center rounded-[10px]">
                                         <Barcode className="size-6" />
                                     </div>
                                     <div>
-                                        <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                                        <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
                                             Unidad Física Serializada
                                         </span>
-                                        <div className="font-mono text-2xl font-black tracking-wider text-foreground">
+                                        <div className="text-foreground font-mono text-2xl font-black tracking-wider">
                                             {unitResult.numero_serie}
                                         </div>
                                     </div>
@@ -291,22 +277,22 @@ export default function ConsultaIndex({
 
                             {/* Detalles de la Unidad */}
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-                                <div className="rounded-[9px] border border-border bg-muted/40 p-3">
-                                    <span className="text-[10.5px] font-semibold text-muted-foreground uppercase">
+                                <div className="border-border bg-muted/40 rounded-[9px] border p-3">
+                                    <span className="text-muted-foreground text-[10.5px] font-semibold uppercase">
                                         Producto
                                     </span>
-                                    <div className="mt-0.5 text-xs font-bold text-foreground">
+                                    <div className="text-foreground mt-0.5 text-xs font-bold">
                                         [{unitResult.producto.codigo}]{' '}
                                         {unitResult.producto.nombre}
                                     </div>
                                 </div>
 
-                                <div className="rounded-[9px] border border-border bg-muted/40 p-3">
-                                    <span className="text-[10.5px] font-semibold text-muted-foreground uppercase">
+                                <div className="border-border bg-muted/40 rounded-[9px] border p-3">
+                                    <span className="text-muted-foreground text-[10.5px] font-semibold uppercase">
                                         Ubicación Actual
                                     </span>
-                                    <div className="mt-0.5 flex items-center gap-1 text-xs font-bold text-foreground">
-                                        <Building2 className="size-3.5 text-destructive" />
+                                    <div className="text-foreground mt-0.5 flex items-center gap-1 text-xs font-bold">
+                                        <Building2 className="text-destructive size-3.5" />
                                         <span>
                                             {unitResult.sede.nombre} (
                                             {unitResult.sede.tipo})
@@ -314,21 +300,21 @@ export default function ConsultaIndex({
                                     </div>
                                 </div>
 
-                                <div className="rounded-[9px] border border-border bg-muted/40 p-3">
-                                    <span className="text-[10.5px] font-semibold text-muted-foreground uppercase">
+                                <div className="border-border bg-muted/40 rounded-[9px] border p-3">
+                                    <span className="text-muted-foreground text-[10.5px] font-semibold uppercase">
                                         Marca & Año
                                     </span>
-                                    <div className="mt-0.5 text-xs font-bold text-foreground">
+                                    <div className="text-foreground mt-0.5 text-xs font-bold">
                                         {unitResult.marca || '—'} /{' '}
                                         {unitResult.anio_fabricacion || '—'}
                                     </div>
                                 </div>
 
-                                <div className="rounded-[9px] border border-border bg-muted/40 p-3">
-                                    <span className="text-[10.5px] font-semibold text-muted-foreground uppercase">
+                                <div className="border-border bg-muted/40 rounded-[9px] border p-3">
+                                    <span className="text-muted-foreground text-[10.5px] font-semibold uppercase">
                                         Fecha de Ingreso
                                     </span>
-                                    <div className="mt-0.5 text-xs font-bold text-foreground">
+                                    <div className="text-foreground mt-0.5 text-xs font-bold">
                                         {unitResult.fecha_ingreso || '—'}
                                     </div>
                                 </div>
@@ -336,8 +322,8 @@ export default function ConsultaIndex({
 
                             {/* Auditoría Kardex: Últimos 5 Movimientos */}
                             <div className="mt-6">
-                                <div className="mb-3 flex items-center gap-2 border-b border-border pb-2 text-xs font-bold text-foreground">
-                                    <History className="size-4 text-destructive" />
+                                <div className="border-border text-foreground mb-3 flex items-center gap-2 border-b pb-2 text-xs font-bold">
+                                    <History className="text-destructive size-4" />
                                     <span>
                                         Historial de Kardex de esta Unidad
                                         (Últimos 5 movimientos)
@@ -345,16 +331,16 @@ export default function ConsultaIndex({
                                 </div>
 
                                 {unitResult.movimientos.length === 0 ? (
-                                    <p className="py-2 text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground py-2 text-xs">
                                         No hay movimientos registrados para esta
                                         unidad.
                                     </p>
                                 ) : (
-                                    <div className="divide-y divide-border overflow-hidden rounded-[9px] border border-border text-xs">
+                                    <div className="divide-border border-border divide-y overflow-hidden rounded-[9px] border text-xs">
                                         {unitResult.movimientos.map((m) => (
                                             <div
                                                 key={m.id}
-                                                className="flex flex-wrap items-center justify-between gap-3 bg-card p-3 hover:bg-muted/40"
+                                                className="bg-card hover:bg-muted/40 flex flex-wrap items-center justify-between gap-3 p-3"
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <span
@@ -366,7 +352,7 @@ export default function ConsultaIndex({
                                                     >
                                                         {m.tipo.toUpperCase()}
                                                     </span>
-                                                    <span className="font-mono text-[11px] text-muted-foreground">
+                                                    <span className="text-muted-foreground font-mono text-[11px]">
                                                         {formatDate(m.fecha)}
                                                     </span>
                                                     <span className="text-foreground">
@@ -375,11 +361,11 @@ export default function ConsultaIndex({
                                                 </div>
 
                                                 <div className="flex items-center gap-3 text-right">
-                                                    <span className="max-w-xs truncate text-[11px] text-muted-foreground">
+                                                    <span className="text-muted-foreground max-w-xs truncate text-[11px]">
                                                         {m.observacion ||
                                                             'Sin observación'}
                                                     </span>
-                                                    <span className="text-[10.5px] font-semibold text-muted-foreground">
+                                                    <span className="text-muted-foreground text-[10.5px] font-semibold">
                                                         Por {m.usuario}
                                                     </span>
                                                 </div>
@@ -390,8 +376,8 @@ export default function ConsultaIndex({
                             </div>
 
                             {/* Banner Informativo de frontera de rol */}
-                            <div className="mt-5 flex items-center gap-2 rounded-[8px] border border-border bg-muted/40 p-3 text-[11.5px] text-muted-foreground">
-                                <Shield className="size-4 shrink-0 text-destructive" />
+                            <div className="border-border bg-muted/40 text-muted-foreground mt-5 flex items-center gap-2 rounded-[8px] border p-3 text-[11.5px]">
+                                <Shield className="text-destructive size-4 shrink-0" />
                                 <span>
                                     <b>Modo Consulta Auditora:</b> Esta pantalla
                                     es estrictamente informativa. Para despachos
@@ -405,17 +391,17 @@ export default function ConsultaIndex({
 
                 {/* RESULTADO: PRODUCTO A GRANEL */}
                 {!unitResult && productResult && (
-                    <Card className="rounded-[14px] border border-border bg-card p-6 shadow-sm">
-                        <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
+                    <Card className="border-border bg-card rounded-[14px] border p-6 shadow-sm">
+                        <div className="border-border mb-4 flex items-center justify-between border-b pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="flex size-10 items-center justify-center rounded-[9px] bg-sky-500/10 text-blue-600 dark:text-blue-400">
                                     <Package className="size-5" />
                                 </div>
                                 <div>
-                                    <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                                    <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
                                         Producto / Repuesto a Granel
                                     </span>
-                                    <h2 className="text-lg font-black text-foreground">
+                                    <h2 className="text-foreground text-lg font-black">
                                         [{productResult.codigo}]{' '}
                                         {productResult.nombre}
                                     </h2>
@@ -429,19 +415,19 @@ export default function ConsultaIndex({
 
                         {/* Stock por Sede */}
                         <div className="mb-6 space-y-2">
-                            <span className="text-xs font-bold text-foreground">
+                            <span className="text-foreground text-xs font-bold">
                                 Disponibilidad por Sede:
                             </span>
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                 {sedes.map((s) => (
                                     <div
                                         key={s.id}
-                                        className="rounded-[9px] border border-border bg-muted/40 p-3 text-center"
+                                        className="border-border bg-muted/40 rounded-[9px] border p-3 text-center"
                                     >
-                                        <div className="truncate text-[11px] font-semibold text-muted-foreground">
+                                        <div className="text-muted-foreground truncate text-[11px] font-semibold">
                                             {s.nombre}
                                         </div>
-                                        <div className="mt-1 text-base font-black text-foreground">
+                                        <div className="text-foreground mt-1 text-base font-black">
                                             {productResult.stock_por_sede[
                                                 s.id
                                             ] ?? 0}
@@ -453,17 +439,17 @@ export default function ConsultaIndex({
 
                         {/* Últimos movimientos del producto */}
                         <div>
-                            <span className="mb-2 block text-xs font-bold text-foreground">
+                            <span className="text-foreground mb-2 block text-xs font-bold">
                                 Últimos Movimientos en Kardex:
                             </span>
-                            <div className="divide-y divide-border overflow-hidden rounded-[9px] border border-border text-xs">
+                            <div className="divide-border border-border divide-y overflow-hidden rounded-[9px] border text-xs">
                                 {productResult.movimientos.map((m) => (
                                     <div
                                         key={m.id}
-                                        className="flex items-center justify-between bg-card p-2.5"
+                                        className="bg-card flex items-center justify-between p-2.5"
                                     >
                                         <div className="flex items-center gap-2">
-                                            <span className="font-mono text-[11px] text-muted-foreground">
+                                            <span className="text-muted-foreground font-mono text-[11px]">
                                                 {formatDate(m.fecha)}
                                             </span>
                                             <Badge
@@ -493,16 +479,16 @@ export default function ConsultaIndex({
 
                 {/* EMPTY STATE */}
                 {!unitResult && !productResult && (
-                    <Card className="rounded-[14px] border border-dashed border-border bg-muted/40 p-12 text-center">
-                        <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-full border border-border bg-card text-destructive shadow-sm">
+                    <Card className="border-border bg-muted/40 rounded-[14px] border border-dashed p-12 text-center">
+                        <div className="border-border bg-card text-destructive mx-auto mb-3 flex size-14 items-center justify-center rounded-full border shadow-sm">
                             <Scan className="size-7" />
                         </div>
-                        <h3 className="text-base font-bold text-foreground">
+                        <h3 className="text-foreground text-base font-bold">
                             {filters.search
                                 ? 'No se encontraron registros'
                                 : 'Listo para escanear o consultar'}
                         </h3>
-                        <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+                        <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs">
                             {filters.search
                                 ? `No existe ninguna unidad física ni producto que coincida con "${filters.search}". Verifique el número de serie.`
                                 : 'Apunte el lector de código de barras a la etiqueta del equipo o ingrese el correlativo BF-EQ-XXXXXX en el campo superior.'}

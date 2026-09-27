@@ -6,11 +6,9 @@ import {
     Truck,
     Search,
     MapPin,
-    Phone,
     CheckCircle2,
     Clock,
     ArrowRight,
-    Package,
 } from 'lucide-react';
 
 interface RecojoItem {
@@ -78,7 +76,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar por cliente, orden o dirección..."
-                        className="w-full rounded-xl border border-neutral-200 bg-card py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
@@ -92,7 +90,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                 {/* List */}
                 <div className="space-y-3">
                     {recojos.data.length === 0 ? (
-                        <div className="space-y-2 rounded-2xl border border-dashed border-neutral-200 bg-card p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
+                        <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
                             <Truck className="mx-auto h-8 w-8 text-neutral-400" />
                             <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                                 No hay recojos pendientes
@@ -103,7 +101,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                             <Link
                                 key={r.id}
                                 href={`${teamPrefix}/recojos/${r.id}`}
-                                className="block space-y-2.5 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
+                                className="bg-card block space-y-2.5 rounded-2xl border border-neutral-200 p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div>

@@ -95,10 +95,10 @@ export default function AuditoriaIndex() {
         <GerenteLayout title="Auditoría">
             <div className="space-y-6">
                 <div>
-                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
+                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
                         Auditoría del Sistema
                     </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-sm">
                         Trazabilidad de acciones sensibles: ventas, ajustes de
                         stock, autorizaciones, cierre de órdenes, certificados y
                         configuración.
@@ -106,23 +106,23 @@ export default function AuditoriaIndex() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Registros Totales
                             </span>
                             <ShieldCheck className="size-4 text-blue-600" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.totalRegistros}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Eventos auditados desde el inicio
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Registros Hoy
                             </span>
@@ -131,22 +131,22 @@ export default function AuditoriaIndex() {
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {kpis.registrosHoy}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Acciones sensibles registradas hoy
                         </p>
                     </div>
                 </div>
 
-                <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-xs">
+                <div className="border-border bg-card space-y-3 rounded-xl border p-4 shadow-xs">
                     <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Acción
                             </label>
                             <select
                                 value={accion}
                                 onChange={(e) => setAccion(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
                             >
                                 <option value="todas">
                                     Todas las acciones
@@ -160,13 +160,13 @@ export default function AuditoriaIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Usuario
                             </label>
                             <select
                                 value={userId}
                                 onChange={(e) => setUserId(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
                             >
                                 <option value="">Todos los usuarios</option>
                                 {usuarios.map((u) => (
@@ -178,42 +178,42 @@ export default function AuditoriaIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Fecha Desde
                             </label>
                             <input
                                 type="date"
                                 value={fechaDesde}
                                 onChange={(e) => setFechaDesde(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
                             />
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Fecha Hasta
                             </label>
                             <input
                                 type="date"
                                 value={fechaHasta}
                                 onChange={(e) => setFechaHasta(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
                             />
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 border-t border-border pt-2">
+                    <div className="border-border flex items-center justify-end gap-2 border-t pt-2">
                         <button
                             type="button"
                             onClick={resetFilters}
-                            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-background"
+                            className="border-border bg-card text-muted-foreground hover:bg-background rounded-lg border px-3 py-1.5 text-xs font-semibold"
                         >
                             Limpiar
                         </button>
                         <button
                             type="button"
                             onClick={applyFilters}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-card px-4 py-1.5 text-xs font-semibold text-white hover:bg-foreground/90"
+                            className="bg-card hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold text-white"
                         >
                             <Filter className="size-3.5" />
                             <span>Aplicar Filtros</span>
@@ -221,10 +221,10 @@ export default function AuditoriaIndex() {
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+                <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
                                 <tr>
                                     <th className="px-4 py-3">Fecha</th>
                                     <th className="px-4 py-3">Acción</th>
@@ -234,12 +234,12 @@ export default function AuditoriaIndex() {
                                     <th className="px-4 py-3">IP</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-border divide-y">
                                 {registros.data.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={6}
-                                            className="py-8 text-center text-muted-foreground"
+                                            className="text-muted-foreground py-8 text-center"
                                         >
                                             No se encontraron registros de
                                             auditoría con estos filtros.
@@ -249,9 +249,9 @@ export default function AuditoriaIndex() {
                                     registros.data.map((r) => (
                                         <tr
                                             key={r.id}
-                                            className="transition-colors hover:bg-muted/40"
+                                            className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="px-4 py-3 font-mono text-[11px] text-foreground/80">
+                                            <td className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
                                                 {r.fecha}
                                             </td>
                                             <td className="px-4 py-3">
@@ -259,15 +259,15 @@ export default function AuditoriaIndex() {
                                                     {r.accion}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 font-semibold text-foreground">
+                                            <td className="text-foreground px-4 py-3 font-semibold">
                                                 {r.usuario}
                                             </td>
-                                            <td className="px-4 py-3 text-muted-foreground">
+                                            <td className="text-muted-foreground px-4 py-3">
                                                 {r.entidad
                                                     ? `${r.entidad} #${r.entidad_id}`
                                                     : '—'}
                                             </td>
-                                            <td className="max-w-xs truncate px-4 py-3 text-[11px] text-muted-foreground">
+                                            <td className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
                                                 {formatValues(r.new_values) !==
                                                 '—'
                                                     ? formatValues(r.new_values)
@@ -275,7 +275,7 @@ export default function AuditoriaIndex() {
                                                           r.old_values,
                                                       )}
                                             </td>
-                                            <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground">
+                                            <td className="text-muted-foreground px-4 py-3 font-mono text-[11px]">
                                                 {r.ip_address || '—'}
                                             </td>
                                         </tr>
@@ -286,7 +286,7 @@ export default function AuditoriaIndex() {
                     </div>
 
                     {registros.links && registros.links.length > 3 && (
-                        <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+                        <div className="border-border bg-muted/40 text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
                             <div>Total: {registros.total} registros</div>
                             <div className="flex items-center gap-1">
                                 {registros.links.map((link, i) => {

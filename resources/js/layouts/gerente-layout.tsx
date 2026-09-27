@@ -31,42 +31,42 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
             <Head title={title} />
 
             {/* Shell con altura completa y desbordamiento controlado (sin scroll en el body) */}
-            <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+            <div className="bg-background text-foreground flex h-screen w-full overflow-hidden">
                 <GerenteSidebar
                     open={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                 />
 
-                <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden">
-                    <header className="flex h-[66px] shrink-0 items-center gap-2 border-b border-border bg-card px-4 sm:gap-3.5 lg:px-[30px] transition-colors">
+                <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+                    <header className="border-border bg-card flex h-[66px] shrink-0 items-center gap-2 border-b px-4 transition-colors sm:gap-3.5 lg:px-[30px]">
                         <button
                             type="button"
                             onClick={() => setSidebarOpen(true)}
                             aria-label="Abrir menú"
-                            className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden transition-colors"
+                            className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-[9px] border transition-colors lg:hidden"
                         >
                             <Menu className="size-4" strokeWidth={2} />
                         </button>
 
-                        <div className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                        <div className="text-muted-foreground min-w-0 flex-1 truncate text-xs">
                             Gerencia
                             <span className="mx-1.5 opacity-60">›</span>
-                            <b className="font-bold text-foreground">{title}</b>
+                            <b className="text-foreground font-bold">{title}</b>
                         </div>
 
                         <ThemeToggle />
 
                         <button
                             type="button"
-                            className="relative flex size-[38px] shrink-0 items-center justify-center rounded-[9px] border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                            className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-[38px] shrink-0 items-center justify-center rounded-[9px] border transition-colors"
                             aria-label="Notificaciones"
                         >
                             <Bell className="size-4" strokeWidth={2} />
-                            <span className="absolute top-[7px] right-[7px] size-[7px] rounded-full border-[1.5px] border-card bg-primary" />
+                            <span className="border-card bg-primary absolute top-[7px] right-[7px] size-[7px] rounded-full border-[1.5px]" />
                         </button>
 
                         <div
-                            className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary text-xs font-bold text-primary-foreground shadow-xs"
+                            className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-[10px] text-xs font-bold shadow-xs"
                             title={auth.user.name}
                         >
                             {getInitials(auth.user.name)}
@@ -75,7 +75,7 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
                         <Link
                             href={logout()}
                             as="button"
-                            className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
+                            className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 flex size-9 shrink-0 items-center justify-center rounded-[9px] border transition-colors"
                             title="Cerrar sesión"
                         >
                             <LogOut className="size-4" strokeWidth={2} />
@@ -83,7 +83,7 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
                     </header>
 
                     {/* Único contenedor de scroll vertical: sidebar y header quedan estáticos */}
-                    <main className="flex-1 overflow-y-auto p-4 pb-32 lg:p-[30px] lg:pb-32 overscroll-contain">
+                    <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-32 lg:p-[30px] lg:pb-32">
                         {children}
                     </main>
                 </div>

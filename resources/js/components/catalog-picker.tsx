@@ -164,8 +164,8 @@ export default function CatalogPicker({
 
     return (
         <div className="relative">
-            <div className="flex items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
-                <ScanLine className="size-4 shrink-0 text-muted-foreground" />
+            <div className="border-border bg-muted/40 flex items-center gap-2 rounded-[9px] border px-3">
+                <ScanLine className="text-muted-foreground size-4 shrink-0" />
                 <input
                     ref={inputRef}
                     disabled={disabled}
@@ -173,23 +173,23 @@ export default function CatalogPicker({
                     onChange={(event) => setBusqueda(event.target.value)}
                     onKeyDown={(event) => void alTeclear(event)}
                     placeholder={placeholder}
-                    className="h-11 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+                    className="placeholder:text-muted-foreground h-11 min-w-0 flex-1 bg-transparent text-[13px] outline-none disabled:cursor-not-allowed"
                 />
                 {cargando ? (
-                    <Cargando className="size-3.5 text-muted-foreground" />
+                    <Cargando className="text-muted-foreground size-3.5" />
                 ) : null}
             </div>
 
             {respuesta && (respuesta.unidad || items.length > 0) ? (
-                <div className="absolute inset-x-0 top-full z-30 mt-1 max-h-[320px] overflow-y-auto rounded-[10px] border border-border bg-card shadow-lg">
+                <div className="border-border bg-card absolute inset-x-0 top-full z-30 mt-1 max-h-[320px] overflow-y-auto rounded-[10px] border shadow-lg">
                     {respuesta.unidad && onPickUnidad ? (
                         <button
                             type="button"
                             onClick={() => elegirUnidad(respuesta.unidad!)}
-                            className="flex w-full items-center justify-between gap-3 border-b border-border bg-emerald-500/5 px-3 py-2.5 text-left"
+                            className="border-border flex w-full items-center justify-between gap-3 border-b bg-emerald-500/5 px-3 py-2.5 text-left"
                         >
                             <span>
-                                <span className="block text-[13px] font-bold text-foreground">
+                                <span className="text-foreground block text-[13px] font-bold">
                                     {respuesta.unidad.nombre}
                                 </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] text-[11px] text-emerald-600 dark:text-emerald-400">
@@ -216,19 +216,19 @@ export default function CatalogPicker({
                                 type="button"
                                 onMouseEnter={() => setActivo(index)}
                                 onClick={() => elegir(item)}
-                                className={`flex w-full items-center justify-between gap-3 border-b border-border px-3 py-2.5 text-left last:border-b-0 ${index === activo ? 'bg-muted/60' : 'bg-card'}`}
+                                className={`border-border flex w-full items-center justify-between gap-3 border-b px-3 py-2.5 text-left last:border-b-0 ${index === activo ? 'bg-muted/60' : 'bg-card'}`}
                             >
                                 <span className="flex min-w-0 items-center gap-2.5">
                                     {item.tipo === 'service' ? (
                                         <Wrench className="size-4 shrink-0 text-blue-600 dark:text-blue-400" />
                                     ) : (
-                                        <Box className="size-4 shrink-0 text-muted-foreground" />
+                                        <Box className="text-muted-foreground size-4 shrink-0" />
                                     )}
                                     <span className="min-w-0">
-                                        <span className="block truncate text-[13px] font-bold text-foreground">
+                                        <span className="text-foreground block truncate text-[13px] font-bold">
                                             {item.nombre}
                                         </span>
-                                        <span className="font-['IBM_Plex_Mono',monospace] text-[11px] text-muted-foreground">
+                                        <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
                                             {item.codigo ?? '—'}
                                             {item.tipo === 'service'
                                                 ? ' · Servicio'
@@ -257,7 +257,7 @@ export default function CatalogPicker({
             ) : null}
 
             {sinResultados ? (
-                <p className="mt-1 text-[11.5px] text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-[11.5px]">
                     No hay productos, servicios ni series que coincidan con "
                     {busqueda.trim()}".
                 </p>

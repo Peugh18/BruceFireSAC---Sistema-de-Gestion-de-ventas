@@ -128,7 +128,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar por orden, cliente, serie BF-EQ..."
-                        className="w-full rounded-xl border border-neutral-200 bg-card py-2.5 pr-24 pl-9 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
@@ -142,7 +142,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                 {/* Orders List */}
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-neutral-200 bg-card p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/50">
+                        <div className="bg-card rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/50">
                             <PackageOpen className="mx-auto mb-2 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
                             <p className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
                                 No hay órdenes en esta lista
@@ -162,7 +162,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                                 <Link
                                     key={order.id}
                                     href={url}
-                                    className="block rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
+                                    className="bg-card block rounded-2xl border border-neutral-200 p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div>

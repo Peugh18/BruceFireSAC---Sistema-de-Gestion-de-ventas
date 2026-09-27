@@ -9,11 +9,7 @@ import {
     MapPin,
     Phone,
     CheckCircle2,
-    Clock,
     ShieldCheck,
-    Calendar,
-    User,
-    FileText,
     MessageSquare,
 } from 'lucide-react';
 
@@ -100,7 +96,7 @@ export default function RecojoShow({
                 </Link>
 
                 {/* Client & Service Info Card */}
-                <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
+                <div className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <div className="flex items-center gap-2">
@@ -170,7 +166,7 @@ export default function RecojoShow({
 
                     return (
                         <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
-                            <div className="flex items-center gap-2 font-bold text-xs text-blue-900 dark:text-blue-300">
+                            <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
                                 <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
                                 <span>
                                     Indicaciones de Ventas y Coordinación
@@ -215,7 +211,7 @@ export default function RecojoShow({
                 })()}
 
                 {/* Cadena de Custodia Timeline (§22.4) */}
-                <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
+                <div className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                     <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-neutral-700 uppercase dark:text-neutral-300">
                         <ShieldCheck className="h-4 w-4 text-blue-600" />
                         <span>Cadena de Custodia</span>
@@ -284,7 +280,7 @@ export default function RecojoShow({
                                                 Number(e.target.value),
                                             )
                                         }
-                                        className="w-full rounded-xl border border-neutral-300 bg-card p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                        className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                         required
                                     />
                                 </div>
@@ -302,7 +298,7 @@ export default function RecojoShow({
                                             )
                                         }
                                         placeholder="Teléfono móvil"
-                                        className="w-full rounded-xl border border-neutral-300 bg-card p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                        className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                     />
                                 </div>
                             </div>
@@ -322,7 +318,7 @@ export default function RecojoShow({
                                         )
                                     }
                                     placeholder="Nombre completo de quien entrega en el local"
-                                    className="w-full rounded-xl border border-neutral-300 bg-card p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                    className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                     required
                                 />
                             </div>
@@ -341,12 +337,12 @@ export default function RecojoShow({
                                     }
                                     placeholder="Detalles sobre el estado físico de los extintores al retirarlos..."
                                     rows={2}
-                                    className="w-full rounded-xl border border-neutral-300 bg-card p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                    className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                 />
                             </div>
 
                             {/* Conformidad / Firma por defecto (§85.6.2) */}
-                            <div className="space-y-1 rounded-xl border border-neutral-200 bg-card p-3 dark:border-neutral-700 dark:bg-neutral-900">
+                            <div className="bg-card space-y-1 rounded-xl border border-neutral-200 p-3 dark:border-neutral-700 dark:bg-neutral-900">
                                 <label className="flex cursor-pointer items-start gap-2.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200">
                                     <input
                                         type="checkbox"

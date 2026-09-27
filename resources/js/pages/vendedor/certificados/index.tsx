@@ -131,7 +131,7 @@ export default function CertificadosIndex({
 
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     {/* Filtro por estado: Todos · Vigentes · Vencidos · Anulados */}
-                    <div className="mb-4 flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
+                    <div className="border-border mb-4 flex flex-wrap items-center gap-1.5 border-b pb-3">
                         {[
                             { valor: '', etiqueta: 'Todos' },
                             { valor: 'vigente', etiqueta: 'Vigentes' },
@@ -278,7 +278,7 @@ export default function CertificadosIndex({
                                                         onClick={(event) =>
                                                             event.stopPropagation()
                                                         }
-                                                        className="text-foreground font-semibold hover:text-primary hover:underline"
+                                                        className="text-foreground hover:text-primary font-semibold hover:underline"
                                                     >
                                                         {certificate.cliente}
                                                     </Link>
@@ -305,7 +305,7 @@ export default function CertificadosIndex({
                                                         }
                                                         className="group inline-flex flex-col"
                                                     >
-                                                        <span className="inline-flex items-center gap-1 font-['IBM_Plex_Mono',monospace] font-bold group-hover:text-primary group-hover:underline">
+                                                        <span className="group-hover:text-primary inline-flex items-center gap-1 font-['IBM_Plex_Mono',monospace] font-bold group-hover:underline">
                                                             <Receipt className="size-3" />
                                                             {certificate.venta
                                                                 .numero ??

@@ -1,14 +1,10 @@
 ﻿import { Head, Link, router } from '@inertiajs/react';
 import {
-    AlertCircle,
     ArrowRight,
-    CheckCircle2,
     ChevronRight,
     ClipboardCheck,
-    Clock,
     Flame,
     MapPin,
-    Plus,
     Search,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -153,11 +149,11 @@ export default function InspeccionesIndex({
             {/* Header Mobile Title */}
             <div className="mb-4 flex items-center justify-between">
                 <div>
-                    <h1 className="flex items-center gap-2 text-xl font-black text-foreground">
+                    <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
                         <ClipboardCheck className="size-6 text-sky-600 dark:text-sky-400" />
                         Inspecciones de Campo
                     </h1>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                         Inspección física y checklist técnico de extintores en
                         sitio.
                     </p>
@@ -229,13 +225,13 @@ export default function InspeccionesIndex({
             {/* Search Input */}
             <form onSubmit={handleSearch} className="mb-4">
                 <div className="relative">
-                    <Search className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="text-muted-foreground absolute top-1/2 left-3.5 size-4 -translate-y-1/2" />
                     <input
                         type="text"
                         placeholder="Buscar por orden, RUC o cliente..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full rounded-[10px] border border-border bg-card py-2 pr-4 pl-9 text-xs focus:ring-2 focus:ring-[#0284C7] focus:outline-hidden"
+                        className="border-border bg-card w-full rounded-[10px] border py-2 pr-4 pl-9 text-xs focus:ring-2 focus:ring-[#0284C7] focus:outline-hidden"
                     />
                 </div>
             </form>
@@ -243,12 +239,12 @@ export default function InspeccionesIndex({
             {/* List of Inspection Orders (Touch Cards) */}
             <div className="space-y-3">
                 {inspecciones.data.length === 0 ? (
-                    <div className="rounded-[12px] border border-border bg-card p-8 text-center">
-                        <ClipboardCheck className="mx-auto mb-2 size-10 text-muted-foreground/40" />
-                        <p className="text-xs font-semibold text-foreground">
+                    <div className="border-border bg-card rounded-[12px] border p-8 text-center">
+                        <ClipboardCheck className="text-muted-foreground/40 mx-auto mb-2 size-10" />
+                        <p className="text-foreground text-xs font-semibold">
                             No hay inspecciones en este filtro
                         </p>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Selecciona otro estado o busca por nombre de
                             cliente.
                         </p>
@@ -266,7 +262,7 @@ export default function InspeccionesIndex({
                             <Link
                                 key={order.id}
                                 href={`/${teamSlug}/tecnico-campo/inspecciones/${order.id}`}
-                                className="block rounded-[14px] border border-border bg-card p-4 shadow-xs transition-all hover:border-sky-500/20 active:scale-[0.99]"
+                                className="border-border bg-card block rounded-[14px] border p-4 shadow-xs transition-all hover:border-sky-500/20 active:scale-[0.99]"
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div>
@@ -280,19 +276,19 @@ export default function InspeccionesIndex({
                                                 {estadoMeta.label}
                                             </span>
                                         </div>
-                                        <h2 className="mt-0.5 line-clamp-1 text-sm font-bold text-foreground">
+                                        <h2 className="text-foreground mt-0.5 line-clamp-1 text-sm font-bold">
                                             {order.customer?.razon_social}
                                         </h2>
                                         {order.customer?.ruc && (
-                                            <span className="font-mono text-[11px] text-muted-foreground">
+                                            <span className="text-muted-foreground font-mono text-[11px]">
                                                 RUC: {order.customer.ruc}
                                             </span>
                                         )}
                                     </div>
-                                    <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground" />
+                                    <ChevronRight className="text-muted-foreground mt-1 size-5 shrink-0" />
                                 </div>
 
-                                <div className="mb-3 flex items-center gap-1 text-[11px] text-muted-foreground">
+                                <div className="text-muted-foreground mb-3 flex items-center gap-1 text-[11px]">
                                     <MapPin className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400" />
                                     <span className="line-clamp-1">
                                         {order.branch?.direccion ||
@@ -301,8 +297,8 @@ export default function InspeccionesIndex({
                                     </span>
                                 </div>
 
-                                <div className="flex items-center justify-between border-t border-border pt-2.5">
-                                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+                                <div className="border-border flex items-center justify-between border-t pt-2.5">
+                                    <div className="text-foreground flex items-center gap-1.5 text-[11px] font-medium">
                                         <Flame className="size-3.5 text-amber-600 dark:text-amber-400" />
                                         <span>
                                             {order.equipments?.length || 0}{' '}
@@ -329,19 +325,19 @@ export default function InspeccionesIndex({
                     {inspecciones.prev_page_url && (
                         <Link
                             href={inspecciones.prev_page_url}
-                            className="rounded-[8px] border border-border bg-card px-3 py-1.5 text-xs font-bold text-foreground"
+                            className="border-border bg-card text-foreground rounded-[8px] border px-3 py-1.5 text-xs font-bold"
                         >
                             Anterior
                         </Link>
                     )}
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                         Página {inspecciones.current_page} de{' '}
                         {inspecciones.last_page}
                     </span>
                     {inspecciones.next_page_url && (
                         <Link
                             href={inspecciones.next_page_url}
-                            className="rounded-[8px] border border-border bg-card px-3 py-1.5 text-xs font-bold text-foreground"
+                            className="border-border bg-card text-foreground rounded-[8px] border px-3 py-1.5 text-xs font-bold"
                         >
                             Siguiente
                         </Link>

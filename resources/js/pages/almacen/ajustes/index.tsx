@@ -3,14 +3,9 @@ import {
     AlertCircle,
     ArrowDownRight,
     ArrowUpRight,
-    Boxes,
-    Building2,
     Calendar,
     CheckCircle2,
-    Clock,
-    FileText,
     History,
-    Layers,
     Plus,
     RotateCcw,
     ShieldAlert,
@@ -168,10 +163,10 @@ export default function AjustesIndex({
                 {/* Header Title */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-foreground text-xl font-bold tracking-tight">
                             Ajustes de Stock
                         </h1>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                             Aplicación directa con motivo obligatorio. Siempre
                             genera un movimiento de Kardex compensatorio.
                         </p>
@@ -180,7 +175,7 @@ export default function AjustesIndex({
                     <Button
                         type="button"
                         onClick={() => setShowForm(!showForm)}
-                        className="h-9 gap-1.5 rounded-[9px] bg-primary px-4 text-xs font-bold text-white hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 h-9 gap-1.5 rounded-[9px] px-4 text-xs font-bold text-white"
                     >
                         <Plus className="size-4" />
                         <span>
@@ -191,48 +186,48 @@ export default function AjustesIndex({
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <Card className="rounded-[12px] border border-border bg-card p-4 shadow-sm">
+                    <Card className="border-border bg-card rounded-[12px] border p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[9px] bg-muted/30 text-destructive">
+                            <div className="bg-muted/30 text-destructive flex size-10 items-center justify-center rounded-[9px]">
                                 <RotateCcw className="size-5" />
                             </div>
                             <div>
-                                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                                <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                                     Total Ajustes Históricos
                                 </span>
-                                <p className="text-xl font-black text-foreground">
+                                <p className="text-foreground text-xl font-black">
                                     {kpis.total_ajustes}
                                 </p>
                             </div>
                         </div>
                     </Card>
 
-                    <Card className="rounded-[12px] border border-border bg-card p-4 shadow-sm">
+                    <Card className="border-border bg-card rounded-[12px] border p-4 shadow-sm">
                         <div className="flex items-center gap-3">
                             <div className="flex size-10 items-center justify-center rounded-[9px] bg-sky-500/10 text-blue-600 dark:text-blue-400">
                                 <Calendar className="size-5" />
                             </div>
                             <div>
-                                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                                <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                                     Ajustes Este Mes
                                 </span>
-                                <p className="text-xl font-black text-foreground">
+                                <p className="text-foreground text-xl font-black">
                                     {kpis.ajustes_mes}
                                 </p>
                             </div>
                         </div>
                     </Card>
 
-                    <Card className="rounded-[12px] border border-border bg-card p-4 shadow-sm">
+                    <Card className="border-border bg-card rounded-[12px] border p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[9px] bg-destructive/10 text-destructive">
+                            <div className="bg-destructive/10 text-destructive flex size-10 items-center justify-center rounded-[9px]">
                                 <Trash2 className="size-5" />
                             </div>
                             <div>
-                                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                                <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                                     Unidades Dadas de Baja
                                 </span>
-                                <p className="text-xl font-black text-foreground">
+                                <p className="text-foreground text-xl font-black">
                                     {kpis.unidades_dadas_de_baja}
                                 </p>
                             </div>
@@ -242,22 +237,22 @@ export default function AjustesIndex({
 
                 {/* Formulario de Nuevo Ajuste (Desplegable) */}
                 {showForm && (
-                    <Card className="rounded-[14px] border-2 border-destructive/20/30 bg-card p-6 shadow-md transition-all">
-                        <div className="mb-5 flex items-center justify-between border-b border-border pb-3">
-                            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-                                <ShieldAlert className="size-5 text-primary" />
+                    <Card className="border-destructive/20/30 bg-card rounded-[14px] border-2 p-6 shadow-md transition-all">
+                        <div className="border-border mb-5 flex items-center justify-between border-b pb-3">
+                            <div className="text-foreground flex items-center gap-2 text-sm font-bold">
+                                <ShieldAlert className="text-primary size-5" />
                                 <span>
                                     Registrar Ajuste en Kardex (Aplicación
                                     Directa)
                                 </span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                                 Requiere motivo de mínimo 10 caracteres
                             </span>
                         </div>
 
                         {Object.keys(errors).length > 0 && (
-                            <div className="mb-4 flex items-start gap-2.5 rounded-[9px] border border-destructive/20 bg-destructive/10 p-3 text-xs text-primary">
+                            <div className="border-destructive/20 bg-destructive/10 text-primary mb-4 flex items-start gap-2.5 rounded-[9px] border p-3 text-xs">
                                 <AlertCircle className="mt-0.5 size-4 shrink-0" />
                                 <div>
                                     <p className="font-bold">
@@ -278,7 +273,7 @@ export default function AjustesIndex({
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 {/* Producto */}
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-bold text-foreground">
+                                    <Label className="text-foreground text-xs font-bold">
                                         Producto / Componente{' '}
                                         <span className="text-red-500">*</span>
                                     </Label>
@@ -291,7 +286,7 @@ export default function AjustesIndex({
                                                 inventory_unit_id: '',
                                             }));
                                         }}
-                                        className="w-full rounded-[8px] border border-border bg-card px-3 py-2 text-xs font-medium text-foreground focus:border-primary focus:outline-none"
+                                        className="border-border bg-card text-foreground focus:border-primary w-full rounded-[8px] border px-3 py-2 text-xs font-medium focus:outline-none"
                                         required
                                     >
                                         {products.map((p) => (
@@ -307,7 +302,7 @@ export default function AjustesIndex({
 
                                 {/* Sede */}
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-bold text-foreground">
+                                    <Label className="text-foreground text-xs font-bold">
                                         Sede Almacén{' '}
                                         <span className="text-red-500">*</span>
                                     </Label>
@@ -320,7 +315,7 @@ export default function AjustesIndex({
                                                 inventory_unit_id: '',
                                             }));
                                         }}
-                                        className="w-full rounded-[8px] border border-border bg-card px-3 py-2 text-xs font-medium text-foreground focus:border-primary focus:outline-none"
+                                        className="border-border bg-card text-foreground focus:border-primary w-full rounded-[8px] border px-3 py-2 text-xs font-medium focus:outline-none"
                                         required
                                     >
                                         {sedes.map((s) => (
@@ -333,7 +328,7 @@ export default function AjustesIndex({
 
                                 {/* Tipo de Ajuste */}
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-bold text-foreground">
+                                    <Label className="text-foreground text-xs font-bold">
                                         Tipo de Ajuste{' '}
                                         <span className="text-red-500">*</span>
                                     </Label>
@@ -383,7 +378,7 @@ export default function AjustesIndex({
                                 {/* Selector condicional de Unidad Serializada */}
                                 {selectedProduct?.serializado ? (
                                     <div className="space-y-1.5">
-                                        <Label className="text-xs font-bold text-foreground">
+                                        <Label className="text-foreground text-xs font-bold">
                                             Unidad Física (Código Serie){' '}
                                             {data.tipo_ajuste ===
                                                 'decremento' && (
@@ -404,7 +399,7 @@ export default function AjustesIndex({
                                                         : d.cantidad,
                                                 }));
                                             }}
-                                            className="w-full rounded-[8px] border border-border bg-card px-3 py-2 text-xs font-medium text-foreground focus:border-primary focus:outline-none"
+                                            className="border-border bg-card text-foreground focus:border-primary w-full rounded-[8px] border px-3 py-2 text-xs font-medium focus:outline-none"
                                             required={
                                                 data.tipo_ajuste ===
                                                 'decremento'
@@ -424,7 +419,7 @@ export default function AjustesIndex({
                                             ))}
                                         </select>
                                         {availableUnits.length === 0 && (
-                                            <p className="text-[11px] text-destructive">
+                                            <p className="text-destructive text-[11px]">
                                                 No hay unidades físicas
                                                 registradas en esta sede.
                                             </p>
@@ -432,10 +427,10 @@ export default function AjustesIndex({
                                     </div>
                                 ) : (
                                     <div className="space-y-1.5">
-                                        <Label className="text-xs font-bold text-foreground">
+                                        <Label className="text-foreground text-xs font-bold">
                                             Tipo de Producto
                                         </Label>
-                                        <div className="rounded-[8px] border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                                        <div className="border-border bg-muted/30 text-muted-foreground rounded-[8px] border border-dashed px-3 py-2 text-xs">
                                             Producto a granel (sin serie
                                             individual)
                                         </div>
@@ -444,7 +439,7 @@ export default function AjustesIndex({
 
                                 {/* Cantidad */}
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-bold text-foreground">
+                                    <Label className="text-foreground text-xs font-bold">
                                         Cantidad a Ajustar{' '}
                                         <span className="text-red-500">*</span>
                                     </Label>
@@ -465,7 +460,7 @@ export default function AjustesIndex({
                                         required
                                     />
                                     {Boolean(data.inventory_unit_id) && (
-                                        <p className="text-[10px] text-muted-foreground">
+                                        <p className="text-muted-foreground text-[10px]">
                                             Fijada en 1 por ser unidad
                                             serializada puntual.
                                         </p>
@@ -474,7 +469,7 @@ export default function AjustesIndex({
 
                                 {/* Motivo Principal (Obligatorio) */}
                                 <div className="space-y-1.5 md:col-span-1">
-                                    <Label className="text-xs font-bold text-foreground">
+                                    <Label className="text-foreground text-xs font-bold">
                                         Motivo de Auditoría (min. 10 caracteres){' '}
                                         <span className="text-red-500">*</span>
                                     </Label>
@@ -493,7 +488,7 @@ export default function AjustesIndex({
 
                             {/* Observación detalle */}
                             <div className="space-y-1.5">
-                                <Label className="text-xs font-bold text-foreground">
+                                <Label className="text-foreground text-xs font-bold">
                                     Detalles Adicionales / Observación
                                     (opcional)
                                 </Label>
@@ -508,7 +503,7 @@ export default function AjustesIndex({
                                 />
                             </div>
 
-                            <div className="flex justify-end gap-2 border-t border-border pt-2">
+                            <div className="border-border flex justify-end gap-2 border-t pt-2">
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -520,7 +515,7 @@ export default function AjustesIndex({
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="h-9 gap-1.5 bg-primary text-xs font-bold text-white hover:bg-primary/90"
+                                    className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs font-bold text-white"
                                 >
                                     <CheckCircle2 className="size-4" />
                                     <span>
@@ -535,22 +530,22 @@ export default function AjustesIndex({
                 )}
 
                 {/* Tabla de Historial de Ajustes */}
-                <Card className="overflow-hidden rounded-[12px] border border-border bg-card shadow-sm">
-                    <div className="flex items-center justify-between border-b border-border bg-muted/40 px-4 py-3">
-                        <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-                            <History className="size-4 text-destructive" />
+                <Card className="border-border bg-card overflow-hidden rounded-[12px] border shadow-sm">
+                    <div className="border-border bg-muted/40 flex items-center justify-between border-b px-4 py-3">
+                        <div className="text-foreground flex items-center gap-2 text-xs font-bold">
+                            <History className="text-destructive size-4" />
                             <span>
                                 Historial de Ajustes de Stock Registrados
                             </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                             {ajustes.total} ajustes totales
                         </span>
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="border-b border-border bg-muted/30/50 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                            <thead className="border-border bg-muted/30/50 text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
                                 <tr>
                                     <th className="px-4 py-2.5">
                                         Fecha y Hora
@@ -569,12 +564,12 @@ export default function AjustesIndex({
                                     <th className="px-4 py-2.5">Usuario</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-border divide-y">
                                 {ajustes.data.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={7}
-                                            className="py-8 text-center text-xs text-muted-foreground"
+                                            className="text-muted-foreground py-8 text-center text-xs"
                                         >
                                             No se han registrado ajustes de
                                             stock aún.
@@ -588,15 +583,15 @@ export default function AjustesIndex({
                                                 key={m.id}
                                                 className="hover:bg-muted/40"
                                             >
-                                                <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground">
+                                                <td className="text-muted-foreground px-4 py-3 font-mono text-[11px]">
                                                     {formatDate(m.created_at)}
                                                 </td>
-                                                <td className="px-4 py-3 font-semibold text-foreground">
+                                                <td className="text-foreground px-4 py-3 font-semibold">
                                                     <div>
                                                         [{m.product.codigo}]{' '}
                                                         {m.product.nombre}
                                                     </div>
-                                                    <div className="text-[10px] text-muted-foreground">
+                                                    <div className="text-muted-foreground text-[10px]">
                                                         {m.product.serializado
                                                             ? 'Serializado'
                                                             : 'A granel'}{' '}
@@ -608,7 +603,7 @@ export default function AjustesIndex({
                                                         )
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 text-foreground">
+                                                <td className="text-foreground px-4 py-3">
                                                     {m.sede.nombre}
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
@@ -631,7 +626,7 @@ export default function AjustesIndex({
                                                 </td>
                                                 <td className="px-4 py-3 font-mono text-xs">
                                                     {m.inventory_unit ? (
-                                                        <span className="font-bold text-foreground">
+                                                        <span className="text-foreground font-bold">
                                                             {
                                                                 m.inventory_unit
                                                                     .numero_serie
@@ -653,14 +648,14 @@ export default function AjustesIndex({
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="max-w-xs px-4 py-3 text-foreground">
+                                                <td className="text-foreground max-w-xs px-4 py-3">
                                                     <p className="line-clamp-2 text-[11.5px]">
                                                         {m.observacion ?? '—'}
                                                     </p>
                                                 </td>
-                                                <td className="px-4 py-3 text-muted-foreground">
+                                                <td className="text-muted-foreground px-4 py-3">
                                                     <div className="flex items-center gap-1">
-                                                        <User className="size-3 text-muted-foreground" />
+                                                        <User className="text-muted-foreground size-3" />
                                                         <span>
                                                             {m.user?.name ??
                                                                 'Sistema'}
@@ -677,8 +672,8 @@ export default function AjustesIndex({
 
                     {/* Paginación */}
                     {ajustes.links.length > 3 && (
-                        <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-3">
-                            <span className="text-xs text-muted-foreground">
+                        <div className="border-border bg-muted/40 flex items-center justify-between border-t px-4 py-3">
+                            <span className="text-muted-foreground text-xs">
                                 Página {ajustes.current_page} de{' '}
                                 {ajustes.last_page}
                             </span>

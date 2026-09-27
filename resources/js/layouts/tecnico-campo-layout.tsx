@@ -33,7 +33,6 @@ type NavItem = {
 
 export default function TecnicoCampoLayout({
     children,
-    title,
 }: {
     children: ReactNode;
     title?: string;
@@ -80,9 +79,9 @@ export default function TecnicoCampoLayout({
     ];
 
     return (
-        <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground antialiased">
+        <div className="bg-background text-foreground flex h-screen w-full flex-col overflow-hidden antialiased">
             {/* Mobile Top Header (Fixed top, isolated from scroll) */}
-            <header className="shrink-0 flex h-14 w-full items-center justify-between border-b border-border bg-card px-4 shadow-xs transition-colors">
+            <header className="border-border bg-card flex h-14 w-full shrink-0 items-center justify-between border-b px-4 shadow-xs transition-colors">
                 <div className="flex items-center gap-2.5">
                     <img
                         src="/brand/logo-icon.png"
@@ -91,14 +90,14 @@ export default function TecnicoCampoLayout({
                     />
                     <div>
                         <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-black tracking-tight text-foreground">
+                            <span className="text-foreground text-xs font-black tracking-tight">
                                 BRUCE FIRE
                             </span>
                             <span className="py-0.2 inline-flex items-center rounded-full border border-sky-500/30 bg-sky-500/10 px-1.5 text-[9.5px] font-black tracking-wide text-sky-600 dark:text-sky-400">
                                 CAMPO
                             </span>
                         </div>
-                        <p className="max-w-[140px] truncate text-[10px] leading-none font-medium text-muted-foreground">
+                        <p className="text-muted-foreground max-w-[140px] truncate text-[10px] leading-none font-medium">
                             {page.props.currentTeam?.name ??
                                 'Operaciones de Campo'}
                         </p>
@@ -109,11 +108,11 @@ export default function TecnicoCampoLayout({
                 <div className="flex items-center gap-2">
                     <ThemeToggle className="size-8 rounded-[8px]" />
 
-                    <div className="flex items-center gap-1.5 rounded-[8px] border border-border bg-muted/40 px-2.5 py-1 text-xs">
-                        <div className="flex size-5 items-center justify-center rounded-full bg-info text-[9px] font-bold text-info-foreground">
+                    <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-[8px] border px-2.5 py-1 text-xs">
+                        <div className="bg-info text-info-foreground flex size-5 items-center justify-center rounded-full text-[9px] font-bold">
                             {initials}
                         </div>
-                        <span className="max-w-[90px] truncate text-[11px] font-semibold text-foreground">
+                        <span className="text-foreground max-w-[90px] truncate text-[11px] font-semibold">
                             {user?.name?.split(' ')[0] ?? 'Técnico'}
                         </span>
                     </div>
@@ -122,7 +121,7 @@ export default function TecnicoCampoLayout({
                         href="/logout"
                         method="post"
                         as="button"
-                        className="flex size-8 items-center justify-center rounded-[8px] border border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex size-8 items-center justify-center rounded-[8px] border transition-colors"
                         title="Cerrar sesión"
                     >
                         <LogOut className="size-3.5" />
@@ -131,7 +130,7 @@ export default function TecnicoCampoLayout({
             </header>
 
             {/* Desktop Navigation Pills (visible only on md and larger) */}
-            <nav className="hidden shrink-0 gap-2 border-b border-border bg-card px-6 py-2 shadow-xs md:flex transition-colors">
+            <nav className="border-border bg-card hidden shrink-0 gap-2 border-b px-6 py-2 shadow-xs transition-colors md:flex">
                 {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = currentPath.includes(item.activeMatch);
@@ -153,12 +152,12 @@ export default function TecnicoCampoLayout({
             </nav>
 
             {/* Main Content Area: único scroll, pb-28 para que la barra inferior táctil nunca tape contenido */}
-            <main className="mx-auto w-full max-w-2xl flex-1 overflow-y-auto px-4 py-5 pb-48 md:pb-32 overscroll-contain">
+            <main className="mx-auto w-full max-w-2xl flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-48 md:pb-32">
                 {children}
             </main>
 
             {/* Mobile Bottom Navigation Bar (Fixed bottom, touch-friendly min 48px) */}
-            <nav className="fixed right-0 bottom-0 left-0 z-40 flex h-16 items-center justify-around border-t border-border bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-md md:hidden transition-colors">
+            <nav className="border-border bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex h-16 items-center justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-md transition-colors md:hidden">
                 {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = currentPath.includes(item.activeMatch);

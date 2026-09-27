@@ -1,20 +1,12 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
-    AlertCircle,
     AlertTriangle,
     Award,
     Building2,
-    Calendar,
     Car,
     CheckCircle2,
-    Clock,
     CreditCard,
     Edit3,
-    ExternalLink,
-    Eye,
-    FileCheck2,
-    FileDown,
-    FileText,
     History,
     Mail,
     MapPin,
@@ -22,14 +14,8 @@ import {
     Phone,
     Plus,
     RefreshCw,
-    Search,
-    ShieldAlert,
-    ShieldCheck,
     ShoppingCart,
     Trash2,
-    Truck,
-    UserRound,
-    Wallet,
     Wrench,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
@@ -57,7 +43,7 @@ import type { Team } from '@/types';
 export type Client = {
     id: number;
     codigo_interno: string;
-    tipo_documento: 'ruc' | 'dni' | string;
+    tipo_documento: string;
     numero_documento: string;
     razon_social: string;
     nombre_comercial: string | null;
@@ -218,10 +204,21 @@ export type Props = {
 };
 
 export type TabKey =
-    'resumen' | 'compras' | 'extintores' | 'servicios' | 'cobranzas' | 'datos';
+    | 'resumen'
+    | 'compras'
+    | 'extintores'
+    | 'servicios'
+    | 'cobranzas'
+    | 'datos';
 
 export type SiteType =
-    'oficina' | 'tienda' | 'planta' | 'almacen' | 'local' | 'sucursal' | 'otra';
+    | 'oficina'
+    | 'tienda'
+    | 'planta'
+    | 'almacen'
+    | 'local'
+    | 'sucursal'
+    | 'otra';
 
 type SiteFormData = {
     tipo: SiteType;
@@ -574,7 +571,7 @@ export default function ClienteShow({
         }
 
         return (
-            <Badge className="rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 text-xs font-bold text-destructive shadow-none">
+            <Badge className="border-destructive/20 bg-destructive/10 text-destructive rounded-full border px-3 py-1 text-xs font-bold shadow-none">
                 <AlertTriangle className="mr-1 inline size-3.5" />
                 {estadoContribuyente || 'No activo'} ·{' '}
                 {condicionDomicilio || 'No habido'}
@@ -619,16 +616,16 @@ export default function ClienteShow({
 
             <div className="flex flex-col gap-6">
                 {/* ================= CABECERA DEL CLIENTE ================= */}
-                <Card className="rounded-[18px] border-border bg-card p-6 shadow-xs">
+                <Card className="border-border bg-card rounded-[18px] p-6 shadow-xs">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                         {/* Identidad */}
                         <div className="flex items-start gap-4">
-                            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary font-bold text-xl">
+                            <div className="bg-primary/10 text-primary flex size-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold">
                                 {initials(client.razon_social)}
                             </div>
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2.5">
-                                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
+                                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
                                         {client.razon_social}
                                     </h1>
                                     {!client.activo && (
@@ -638,8 +635,8 @@ export default function ClienteShow({
                                     )}
                                 </div>
 
-                                <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                                    <span className="font-mono font-semibold text-foreground">
+                                <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                                    <span className="text-foreground font-mono font-semibold">
                                         {client.tipo_documento.toUpperCase()}:{' '}
                                         {client.numero_documento}
                                     </span>
@@ -668,7 +665,7 @@ export default function ClienteShow({
                                             size="sm"
                                             onClick={handleConsultarSunat}
                                             disabled={verificandoSunat}
-                                            className="h-7 gap-1.5 rounded-full border-border bg-card px-3 text-[11px] font-bold text-foreground/80 hover:bg-accent"
+                                            className="border-border bg-card text-foreground/80 hover:bg-accent h-7 gap-1.5 rounded-full px-3 text-[11px] font-bold"
                                         >
                                             <RefreshCw
                                                 className={`size-3 ${verificandoSunat ? 'animate-spin' : ''}`}
@@ -682,7 +679,7 @@ export default function ClienteShow({
                                     )}
 
                                     {sunat?.consultado_at && (
-                                        <span className="text-[11px] text-muted-foreground">
+                                        <span className="text-muted-foreground text-[11px]">
                                             Consultado el {sunat.consultado_at}
                                         </span>
                                     )}
@@ -695,7 +692,7 @@ export default function ClienteShow({
                             <Button
                                 asChild
                                 variant="outline"
-                                className="h-9 rounded-xl border-border bg-card text-xs font-semibold"
+                                className="border-border bg-card h-9 rounded-xl text-xs font-semibold"
                             >
                                 <Link
                                     href={`/${teamSlug}/vendedor/cotizaciones/nueva?client_id=${client.id}`}
@@ -706,7 +703,7 @@ export default function ClienteShow({
                             </Button>
                             <Button
                                 asChild
-                                className="h-9 rounded-xl bg-primary text-xs font-bold text-primary-foreground hover:bg-primary/90"
+                                className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 rounded-xl text-xs font-bold"
                             >
                                 <Link
                                     href={`/${teamSlug}/vendedor/ventas/nueva?client_id=${client.id}`}
@@ -719,7 +716,7 @@ export default function ClienteShow({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setIsEditDialogOpen(true)}
-                                className="h-9 rounded-xl border-border bg-card text-xs font-semibold text-foreground/80"
+                                className="border-border bg-card text-foreground/80 h-9 rounded-xl text-xs font-semibold"
                             >
                                 <Edit3 className="mr-1 size-3.5" />
                                 Editar cliente
@@ -728,23 +725,23 @@ export default function ClienteShow({
                     </div>
 
                     {/* Datos de contacto rápidos */}
-                    <div className="mt-5 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-4 text-xs">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="size-3.5 shrink-0 text-primary" />
+                    <div className="border-border mt-5 grid grid-cols-1 gap-3 border-t pt-4 text-xs sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="text-muted-foreground flex items-center gap-2">
+                            <Phone className="text-primary size-3.5 shrink-0" />
                             <span className="truncate">
                                 {client.telefono ||
                                     client.whatsapp ||
                                     'Sin teléfono'}
                             </span>
                         </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="size-3.5 shrink-0 text-primary" />
+                        <div className="text-muted-foreground flex items-center gap-2">
+                            <Mail className="text-primary size-3.5 shrink-0" />
                             <span className="truncate">
                                 {client.email || 'Sin correo'}
                             </span>
                         </div>
-                        <div className="flex items-center gap-2 text-muted-foreground col-span-1 sm:col-span-2">
-                            <MapPin className="size-3.5 shrink-0 text-primary" />
+                        <div className="text-muted-foreground col-span-1 flex items-center gap-2 sm:col-span-2">
+                            <MapPin className="text-primary size-3.5 shrink-0" />
                             <span className="truncate">
                                 {client.direccion_fiscal ||
                                     'Sin dirección fiscal registrada'}
@@ -754,7 +751,7 @@ export default function ClienteShow({
                 </Card>
 
                 {/* ================= BARRA DE PESTAÑAS (6 PESTAÑAS) ================= */}
-                <div className="flex gap-1.5 overflow-x-auto border-b border-border pb-1">
+                <div className="border-border flex gap-1.5 overflow-x-auto border-b pb-1">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.key;
@@ -763,7 +760,7 @@ export default function ClienteShow({
                                 key={tab.key}
                                 type="button"
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap ${
+                                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
                                     isActive
                                         ? 'bg-primary text-primary-foreground shadow-sm'
                                         : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -773,7 +770,7 @@ export default function ClienteShow({
                                 <span>{tab.label}</span>
                                 {tab.count !== undefined && tab.count > 0 && (
                                     <span
-                                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-extrabold ${
+                                        className={`py-0.2 rounded-full px-1.5 text-[10px] font-extrabold ${
                                             isActive
                                                 ? 'bg-primary-foreground/20 text-primary-foreground'
                                                 : 'bg-muted text-muted-foreground'
@@ -794,25 +791,25 @@ export default function ClienteShow({
                     <div className="space-y-6">
                         {/* KPI Cards */}
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                            <Card className="rounded-2xl border-border bg-card p-4 shadow-none">
-                                <div className="text-[11px] font-bold text-muted-foreground uppercase">
+                            <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
+                                <div className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Total comprado
                                 </div>
-                                <div className="mt-1 text-xl font-bold font-['Oswald',sans-serif] text-foreground">
+                                <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
                                     {money(resumen?.total_comprado)}
                                 </div>
-                                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                <div className="text-muted-foreground mt-0.5 text-[11px]">
                                     Última compra:{' '}
                                     {resumen?.ultima_compra || 'Sin compras'}
                                 </div>
                             </Card>
 
-                            <Card className="rounded-2xl border-border bg-card p-4 shadow-none">
-                                <div className="text-[11px] font-bold text-muted-foreground uppercase">
+                            <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
+                                <div className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Deuda pendiente
                                 </div>
                                 <div
-                                    className={`mt-1 text-xl font-bold font-['Oswald',sans-serif] ${
+                                    className={`mt-1 font-['Oswald',sans-serif] text-xl font-bold ${
                                         (resumen?.deuda_pendiente ?? 0) > 0
                                             ? 'text-amber-600 dark:text-amber-400'
                                             : 'text-foreground'
@@ -820,10 +817,10 @@ export default function ClienteShow({
                                 >
                                     {money(resumen?.deuda_pendiente)}
                                 </div>
-                                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                <div className="text-muted-foreground mt-0.5 text-[11px]">
                                     {resumen?.cuotas_vencidas &&
                                     resumen.cuotas_vencidas > 0 ? (
-                                        <span className="font-bold text-destructive">
+                                        <span className="text-destructive font-bold">
                                             {resumen.cuotas_vencidas} cuota(s)
                                             vencida(s)
                                         </span>
@@ -833,15 +830,15 @@ export default function ClienteShow({
                                 </div>
                             </Card>
 
-                            <Card className="rounded-2xl border-border bg-card p-4 shadow-none">
-                                <div className="text-[11px] font-bold text-muted-foreground uppercase">
+                            <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
+                                <div className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Extintores activos
                                 </div>
-                                <div className="mt-1 text-xl font-bold font-['Oswald',sans-serif] text-foreground">
+                                <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
                                     {resumen?.extintores_activos ??
                                         extintores.length}
                                 </div>
-                                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                <div className="text-muted-foreground mt-0.5 text-[11px]">
                                     {(resumen?.por_vencer_30_dias ?? 0) > 0 ? (
                                         <span className="font-bold text-amber-600 dark:text-amber-400">
                                             {resumen?.por_vencer_30_dias} por
@@ -853,11 +850,11 @@ export default function ClienteShow({
                                 </div>
                             </Card>
 
-                            <Card className="rounded-2xl border-border bg-card p-4 shadow-none">
-                                <div className="text-[11px] font-bold text-muted-foreground uppercase">
+                            <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
+                                <div className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Cotizaciones abiertas
                                 </div>
-                                <div className="mt-1 text-xl font-bold font-['Oswald',sans-serif] text-foreground">
+                                <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
                                     {resumen?.cotizaciones_abiertas ??
                                         cotizaciones.filter((c) =>
                                             [
@@ -867,7 +864,7 @@ export default function ClienteShow({
                                             ].includes(c.estado),
                                         ).length}
                                 </div>
-                                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                <div className="text-muted-foreground mt-0.5 text-[11px]">
                                     En negociación
                                 </div>
                             </Card>
@@ -876,10 +873,10 @@ export default function ClienteShow({
                         {/* Overview: Últimas ventas y extintores próximos */}
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                             {/* Panel Últimas Ventas */}
-                            <Card className="rounded-2xl border-border bg-card p-5 shadow-none">
-                                <div className="flex items-center justify-between pb-3 border-b border-border">
-                                    <div className="flex items-center gap-2 font-bold text-sm text-foreground">
-                                        <ShoppingCart className="size-4 text-primary" />
+                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                                <div className="border-border flex items-center justify-between border-b pb-3">
+                                    <div className="text-foreground flex items-center gap-2 text-sm font-bold">
+                                        <ShoppingCart className="text-primary size-4" />
                                         <span>Últimas ventas</span>
                                     </div>
                                     <button
@@ -888,19 +885,19 @@ export default function ClienteShow({
                                             setActiveTab('compras');
                                             setComprasSubtab('ventas');
                                         }}
-                                        className="text-xs font-bold text-primary hover:underline"
+                                        className="text-primary text-xs font-bold hover:underline"
                                     >
                                         Ver todas &rarr;
                                     </button>
                                 </div>
 
                                 {ventas.length === 0 ? (
-                                    <div className="py-8 text-center text-xs text-muted-foreground">
+                                    <div className="text-muted-foreground py-8 text-center text-xs">
                                         No hay ventas registradas para este
                                         cliente aún.
                                     </div>
                                 ) : (
-                                    <div className="divide-y divide-border">
+                                    <div className="divide-border divide-y">
                                         {ventas.slice(0, 4).map((v) => (
                                             <div
                                                 key={v.id}
@@ -909,31 +906,31 @@ export default function ClienteShow({
                                                 <div>
                                                     <Link
                                                         href={`/${teamSlug}/vendedor/ventas/${v.id}`}
-                                                        className="font-bold text-foreground hover:text-primary"
+                                                        className="text-foreground hover:text-primary font-bold"
                                                     >
                                                         {v.numero_interno}
                                                     </Link>
-                                                    <div className="text-[11px] text-muted-foreground">
+                                                    <div className="text-muted-foreground text-[11px]">
                                                         {v.fecha} ·{' '}
                                                         {v.comprobante ||
                                                             'Nota de venta'}
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="font-bold text-foreground">
+                                                    <span className="text-foreground font-bold">
                                                         {money(v.total)}
                                                     </span>
                                                     <div className="text-[10.5px]">
                                                         {v.saldo_pendiente >
                                                         0 ? (
-                                                            <span className="text-amber-600 font-semibold">
+                                                            <span className="font-semibold text-amber-600">
                                                                 Saldo:{' '}
                                                                 {money(
                                                                     v.saldo_pendiente,
                                                                 )}
                                                             </span>
                                                         ) : (
-                                                            <span className="text-emerald-600 font-semibold">
+                                                            <span className="font-semibold text-emerald-600">
                                                                 Cancelado
                                                             </span>
                                                         )}
@@ -946,10 +943,10 @@ export default function ClienteShow({
                             </Card>
 
                             {/* Panel Extintores por Vencer */}
-                            <Card className="rounded-2xl border-border bg-card p-5 shadow-none">
-                                <div className="flex items-center justify-between pb-3 border-b border-border">
-                                    <div className="flex items-center gap-2 font-bold text-sm text-foreground">
-                                        <Award className="size-4 text-primary" />
+                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                                <div className="border-border flex items-center justify-between border-b pb-3">
+                                    <div className="text-foreground flex items-center gap-2 text-sm font-bold">
+                                        <Award className="text-primary size-4" />
                                         <span>Extintores y Mantenimiento</span>
                                     </div>
                                     <button
@@ -958,29 +955,29 @@ export default function ClienteShow({
                                             setActiveTab('extintores');
                                             setExtintoresSubtab('extintores');
                                         }}
-                                        className="text-xs font-bold text-primary hover:underline"
+                                        className="text-primary text-xs font-bold hover:underline"
                                     >
                                         Ver parque &rarr;
                                     </button>
                                 </div>
 
                                 {extintores.length === 0 ? (
-                                    <div className="py-8 text-center text-xs text-muted-foreground">
+                                    <div className="text-muted-foreground py-8 text-center text-xs">
                                         No hay extintores vinculados a este
                                         cliente.
                                     </div>
                                 ) : (
-                                    <div className="divide-y divide-border">
+                                    <div className="divide-border divide-y">
                                         {extintores.slice(0, 4).map((ext) => (
                                             <div
                                                 key={ext.id}
                                                 className="flex items-center justify-between py-3 text-xs"
                                             >
                                                 <div>
-                                                    <span className="font-mono font-bold text-foreground">
+                                                    <span className="text-foreground font-mono font-bold">
                                                         {ext.numero_serie}
                                                     </span>
-                                                    <div className="text-[11px] text-muted-foreground">
+                                                    <div className="text-muted-foreground text-[11px]">
                                                         {ext.producto} ·{' '}
                                                         {ext.capacidad}
                                                     </div>
@@ -991,11 +988,11 @@ export default function ClienteShow({
                                                             Vencido
                                                         </Badge>
                                                     ) : (
-                                                        <Badge className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 text-[10px]">
+                                                        <Badge className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-600">
                                                             Al día
                                                         </Badge>
                                                     )}
-                                                    <div className="mt-0.5 text-[10.5px] text-muted-foreground">
+                                                    <div className="text-muted-foreground mt-0.5 text-[10.5px]">
                                                         Próx:{' '}
                                                         {ext.proxima_fecha_atencion ||
                                                             'N/A'}
@@ -1012,8 +1009,8 @@ export default function ClienteShow({
 
                 {/* 2. COMPRAS (Ventas + Cotizaciones) */}
                 {activeTab === 'compras' && (
-                    <Card className="rounded-2xl border-border bg-card p-6 shadow-none">
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+                    <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                        <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-4">
                             <div className="flex gap-2">
                                 <button
                                     type="button"
@@ -1044,7 +1041,7 @@ export default function ClienteShow({
                             <Button
                                 asChild
                                 size="sm"
-                                className="h-8 rounded-xl bg-primary text-xs font-bold"
+                                className="bg-primary h-8 rounded-xl text-xs font-bold"
                             >
                                 {comprasSubtab === 'ventas' ? (
                                     <Link
@@ -1068,7 +1065,7 @@ export default function ClienteShow({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-xs">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
                                             <th className="py-2.5">
                                                 N.º Venta
                                             </th>
@@ -1087,12 +1084,12 @@ export default function ClienteShow({
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {ventas.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={8}
-                                                    className="py-8 text-center text-muted-foreground"
+                                                    className="text-muted-foreground py-8 text-center"
                                                 >
                                                     No hay ventas registradas.
                                                 </td>
@@ -1103,7 +1100,7 @@ export default function ClienteShow({
                                                     key={v.id}
                                                     className="hover:bg-muted/30"
                                                 >
-                                                    <td className="py-3 font-bold font-mono text-foreground">
+                                                    <td className="text-foreground py-3 font-mono font-bold">
                                                         <Link
                                                             href={`/${teamSlug}/vendedor/ventas/${v.id}`}
                                                             className="hover:text-primary hover:underline"
@@ -1111,7 +1108,7 @@ export default function ClienteShow({
                                                             {v.numero_interno}
                                                         </Link>
                                                     </td>
-                                                    <td className="py-3 text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3">
                                                         {v.fecha}
                                                     </td>
                                                     <td className="py-3 font-medium">
@@ -1124,8 +1121,8 @@ export default function ClienteShow({
                                                                 className={`text-[10px] ${
                                                                     v.sunat_estado ===
                                                                     'aceptado'
-                                                                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
-                                                                        : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                                                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600'
+                                                                        : 'border-amber-500/20 bg-amber-500/10 text-amber-600'
                                                                 }`}
                                                             >
                                                                 {v.sunat_estado}
@@ -1136,7 +1133,7 @@ export default function ClienteShow({
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td className="py-3 capitalize text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3 capitalize">
                                                         {v.condicion_pago}
                                                         {v.medio_pago
                                                             ? ` (${v.medio_pago})`
@@ -1154,7 +1151,7 @@ export default function ClienteShow({
                                                                 )}
                                                             </span>
                                                         ) : (
-                                                            <span className="text-emerald-600 font-semibold">
+                                                            <span className="font-semibold text-emerald-600">
                                                                 Pagado
                                                             </span>
                                                         )}
@@ -1183,7 +1180,7 @@ export default function ClienteShow({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-xs">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
                                             <th className="py-2.5">
                                                 N.º Cotización
                                             </th>
@@ -1199,12 +1196,12 @@ export default function ClienteShow({
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {cotizaciones.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={7}
-                                                    className="py-8 text-center text-muted-foreground"
+                                                    className="text-muted-foreground py-8 text-center"
                                                 >
                                                     No hay cotizaciones
                                                     registradas.
@@ -1216,13 +1213,13 @@ export default function ClienteShow({
                                                     key={c.id}
                                                     className="hover:bg-muted/30"
                                                 >
-                                                    <td className="py-3 font-bold font-mono text-foreground">
+                                                    <td className="text-foreground py-3 font-mono font-bold">
                                                         {c.numero}
                                                     </td>
-                                                    <td className="py-3 text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3">
                                                         {c.fecha}
                                                     </td>
-                                                    <td className="py-3 text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3">
                                                         {c.vigencia_hasta ||
                                                             '-'}
                                                     </td>
@@ -1241,7 +1238,7 @@ export default function ClienteShow({
                                                         {c.venta ? (
                                                             <Link
                                                                 href={`/${teamSlug}/vendedor/ventas/${c.venta.id}`}
-                                                                className="font-mono text-primary font-bold hover:underline"
+                                                                className="text-primary font-mono font-bold hover:underline"
                                                             >
                                                                 {c.venta.numero}
                                                             </Link>
@@ -1279,8 +1276,8 @@ export default function ClienteShow({
 
                 {/* 3. EXTINTORES Y CERTIFICADOS */}
                 {activeTab === 'extintores' && (
-                    <Card className="rounded-2xl border-border bg-card p-6 shadow-none">
-                        <div className="flex gap-2 border-b border-border pb-4">
+                    <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                        <div className="border-border flex gap-2 border-b pb-4">
                             <button
                                 type="button"
                                 onClick={() =>
@@ -1313,7 +1310,7 @@ export default function ClienteShow({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-xs">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
                                             <th className="py-2.5">
                                                 Serie BF-EQ
                                             </th>
@@ -1333,12 +1330,12 @@ export default function ClienteShow({
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {extintores.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={7}
-                                                    className="py-8 text-center text-muted-foreground"
+                                                    className="text-muted-foreground py-8 text-center"
                                                 >
                                                     No hay extintores
                                                     registrados para este
@@ -1351,25 +1348,25 @@ export default function ClienteShow({
                                                     key={e.id}
                                                     className="hover:bg-muted/30"
                                                 >
-                                                    <td className="py-3 font-mono font-bold text-foreground">
+                                                    <td className="text-foreground py-3 font-mono font-bold">
                                                         {e.numero_serie}
                                                     </td>
                                                     <td className="py-3 font-medium">
                                                         {e.producto}
                                                     </td>
-                                                    <td className="py-3 text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3">
                                                         {[e.capacidad, e.marca]
                                                             .filter(Boolean)
                                                             .join(' · ') || '-'}
                                                     </td>
-                                                    <td className="py-3 text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3">
                                                         {e.fecha_venta || '-'}
                                                     </td>
                                                     <td className="py-3 font-semibold">
                                                         {e.proxima_fecha_atencion ||
                                                             '-'}
                                                     </td>
-                                                    <td className="py-3 text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3">
                                                         {e.proxima_prueba_hidrostatica ||
                                                             '-'}
                                                     </td>
@@ -1379,7 +1376,7 @@ export default function ClienteShow({
                                                                 Vencido
                                                             </Badge>
                                                         ) : (
-                                                            <Badge className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 text-[10.5px]">
+                                                            <Badge className="border-emerald-500/20 bg-emerald-500/10 text-[10.5px] text-emerald-600">
                                                                 Al día
                                                             </Badge>
                                                         )}
@@ -1394,7 +1391,7 @@ export default function ClienteShow({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-xs">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
                                             <th className="py-2.5">
                                                 N.º Certificado
                                             </th>
@@ -1410,12 +1407,12 @@ export default function ClienteShow({
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {certificados.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={7}
-                                                    className="py-8 text-center text-muted-foreground"
+                                                    className="text-muted-foreground py-8 text-center"
                                                 >
                                                     No hay certificados
                                                     emitidos.
@@ -1427,13 +1424,13 @@ export default function ClienteShow({
                                                     key={c.id}
                                                     className="hover:bg-muted/30"
                                                 >
-                                                    <td className="py-3 font-mono font-bold text-foreground">
+                                                    <td className="text-foreground py-3 font-mono font-bold">
                                                         {c.numero}
                                                     </td>
                                                     <td className="py-3 font-medium">
                                                         {c.tipo}
                                                     </td>
-                                                    <td className="py-3 text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3">
                                                         {c.fecha_emision}
                                                     </td>
                                                     <td className="py-3 font-semibold">
@@ -1456,7 +1453,7 @@ export default function ClienteShow({
                                                         {c.venta ? (
                                                             <Link
                                                                 href={`/${teamSlug}/vendedor/ventas/${c.venta.id}`}
-                                                                className="font-mono text-primary hover:underline"
+                                                                className="text-primary font-mono hover:underline"
                                                             >
                                                                 {c.venta.numero}
                                                             </Link>
@@ -1492,13 +1489,13 @@ export default function ClienteShow({
 
                 {/* 4. SERVICIOS (Órdenes de servicio) */}
                 {activeTab === 'servicios' && (
-                    <Card className="rounded-2xl border-border bg-card p-6 shadow-none">
-                        <div className="flex items-center justify-between border-b border-border pb-4">
+                    <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                        <div className="border-border flex items-center justify-between border-b pb-4">
                             <div>
-                                <h3 className="text-base font-bold text-foreground">
+                                <h3 className="text-foreground text-base font-bold">
                                     Órdenes de servicio
                                 </h3>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-muted-foreground text-xs">
                                     Historial técnico de recargas,
                                     mantenimientos e inspecciones
                                 </p>
@@ -1506,7 +1503,7 @@ export default function ClienteShow({
                             <Button
                                 asChild
                                 size="sm"
-                                className="h-8 rounded-xl bg-primary text-xs font-bold"
+                                className="bg-primary h-8 rounded-xl text-xs font-bold"
                             >
                                 <Link
                                     href={`/${teamSlug}/vendedor/ordenes-servicio`}
@@ -1519,7 +1516,7 @@ export default function ClienteShow({
                         <div className="mt-4 overflow-x-auto">
                             <table className="w-full text-left text-xs">
                                 <thead>
-                                    <tr className="border-b border-border text-[11px] font-bold text-muted-foreground uppercase">
+                                    <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
                                         <th className="py-2.5">Código OS</th>
                                         <th className="py-2.5">Fecha</th>
                                         <th className="py-2.5">Servicio</th>
@@ -1531,12 +1528,12 @@ export default function ClienteShow({
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-border divide-y">
                                     {servicios.length === 0 ? (
                                         <tr>
                                             <td
                                                 colSpan={7}
-                                                className="py-8 text-center text-muted-foreground"
+                                                className="text-muted-foreground py-8 text-center"
                                             >
                                                 No hay órdenes de servicio
                                                 registradas para este cliente.
@@ -1548,10 +1545,10 @@ export default function ClienteShow({
                                                 key={s.id}
                                                 className="hover:bg-muted/30"
                                             >
-                                                <td className="py-3 font-mono font-bold text-foreground">
+                                                <td className="text-foreground py-3 font-mono font-bold">
                                                     {s.numero}
                                                 </td>
-                                                <td className="py-3 text-muted-foreground">
+                                                <td className="text-muted-foreground py-3">
                                                     {s.fecha}
                                                 </td>
                                                 <td className="py-3 font-semibold">
@@ -1561,8 +1558,8 @@ export default function ClienteShow({
                                                     <Badge
                                                         className={`text-[10.5px] uppercase ${
                                                             s.area === 'planta'
-                                                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                                                                : 'bg-purple-500/10 text-purple-600 border-purple-500/20'
+                                                                ? 'border-blue-500/20 bg-blue-500/10 text-blue-600'
+                                                                : 'border-purple-500/20 bg-purple-500/10 text-purple-600'
                                                         }`}
                                                     >
                                                         {s.area}
@@ -1577,9 +1574,9 @@ export default function ClienteShow({
                                                             s.estado}
                                                     </Badge>
                                                 </td>
-                                                <td className="py-3 text-muted-foreground">
+                                                <td className="text-muted-foreground py-3">
                                                     {s.tecnico || (
-                                                        <span className="text-amber-600 font-semibold">
+                                                        <span className="font-semibold text-amber-600">
                                                             Por asignar
                                                         </span>
                                                     )}
@@ -1609,8 +1606,8 @@ export default function ClienteShow({
 
                 {/* 5. COBRANZAS (Cuotas + Pagos) */}
                 {activeTab === 'cobranzas' && (
-                    <Card className="rounded-2xl border-border bg-card p-6 shadow-none">
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+                    <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                        <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-4">
                             <div className="flex gap-2">
                                 <button
                                     type="button"
@@ -1654,7 +1651,7 @@ export default function ClienteShow({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-xs">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
                                             <th className="py-2.5">Venta</th>
                                             <th className="py-2.5">Cuota</th>
                                             <th className="py-2.5">Monto</th>
@@ -1668,13 +1665,13 @@ export default function ClienteShow({
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {!cobranzas.cuotas ||
                                         cobranzas.cuotas.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={7}
-                                                    className="py-8 text-center text-muted-foreground"
+                                                    className="text-muted-foreground py-8 text-center"
                                                 >
                                                     No hay cuotas de crédito
                                                     registradas para este
@@ -1700,7 +1697,7 @@ export default function ClienteShow({
                                                         key={cuota.id}
                                                         className="hover:bg-muted/30"
                                                     >
-                                                        <td className="py-3 font-bold font-mono text-foreground">
+                                                        <td className="text-foreground py-3 font-mono font-bold">
                                                             <Link
                                                                 href={`/${teamSlug}/vendedor/ventas/${cuota.venta.id}`}
                                                                 className="hover:text-primary hover:underline"
@@ -1715,10 +1712,10 @@ export default function ClienteShow({
                                                             Cuota{' '}
                                                             {cuota.numero_cuota}
                                                         </td>
-                                                        <td className="py-3 text-muted-foreground">
+                                                        <td className="text-muted-foreground py-3">
                                                             {money(cuota.monto)}
                                                         </td>
-                                                        <td className="py-3 font-bold text-foreground">
+                                                        <td className="text-foreground py-3 font-bold">
                                                             {money(cuota.saldo)}
                                                         </td>
                                                         <td className="py-3 font-semibold">
@@ -1728,7 +1725,7 @@ export default function ClienteShow({
                                                             {isVencido &&
                                                                 cuota.dias_vencido >
                                                                     0 && (
-                                                                    <span className="block text-[10px] text-destructive">
+                                                                    <span className="text-destructive block text-[10px]">
                                                                         Hace{' '}
                                                                         {
                                                                             cuota.dias_vencido
@@ -1760,7 +1757,7 @@ export default function ClienteShow({
                                                                     WhatsApp
                                                                 </a>
                                                             ) : (
-                                                                <span className="text-[11px] text-muted-foreground">
+                                                                <span className="text-muted-foreground text-[11px]">
                                                                     Sin teléfono
                                                                 </span>
                                                             )}
@@ -1776,7 +1773,7 @@ export default function ClienteShow({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-xs">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
                                             <th className="py-2.5">Fecha</th>
                                             <th className="py-2.5">Venta</th>
                                             <th className="py-2.5">
@@ -1790,13 +1787,13 @@ export default function ClienteShow({
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {!cobranzas.pagos ||
                                         cobranzas.pagos.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={5}
-                                                    className="py-8 text-center text-muted-foreground"
+                                                    className="text-muted-foreground py-8 text-center"
                                                 >
                                                     No hay pagos registrados.
                                                 </td>
@@ -1807,10 +1804,10 @@ export default function ClienteShow({
                                                     key={pago.id}
                                                     className="hover:bg-muted/30"
                                                 >
-                                                    <td className="py-3 text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3">
                                                         {pago.fecha}
                                                     </td>
-                                                    <td className="py-3 font-mono font-bold text-foreground">
+                                                    <td className="text-foreground py-3 font-mono font-bold">
                                                         <Link
                                                             href={`/${teamSlug}/vendedor/ventas/${pago.venta.id}`}
                                                             className="hover:text-primary hover:underline"
@@ -1821,10 +1818,10 @@ export default function ClienteShow({
                                                     <td className="py-3 font-bold text-emerald-600">
                                                         {money(pago.monto)}
                                                     </td>
-                                                    <td className="py-3 capitalize text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3 capitalize">
                                                         {pago.forma_pago}
                                                     </td>
-                                                    <td className="py-3 font-mono text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3 font-mono">
                                                         {pago.numero_operacion ||
                                                             '-'}
                                                     </td>
@@ -1842,13 +1839,13 @@ export default function ClienteShow({
                 {activeTab === 'datos' && (
                     <div className="space-y-6">
                         {/* Sedes del cliente */}
-                        <Card className="rounded-2xl border-border bg-card p-6 shadow-none">
-                            <div className="flex items-center justify-between border-b border-border pb-4">
+                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                            <div className="border-border flex items-center justify-between border-b pb-4">
                                 <div>
-                                    <h3 className="text-base font-bold text-foreground">
+                                    <h3 className="text-foreground text-base font-bold">
                                         Sedes y sucursales ({sites.length})
                                     </h3>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground text-xs">
                                         Puntos de entrega, locales y almacenes
                                         del cliente
                                     </p>
@@ -1857,7 +1854,7 @@ export default function ClienteShow({
                                     type="button"
                                     size="sm"
                                     onClick={openCreateSite}
-                                    className="h-8 rounded-xl bg-primary text-xs font-bold"
+                                    className="bg-primary h-8 rounded-xl text-xs font-bold"
                                 >
                                     <Plus className="mr-1 size-3.5" />
                                     Agregar sede
@@ -1866,7 +1863,7 @@ export default function ClienteShow({
 
                             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 {sites.length === 0 ? (
-                                    <p className="col-span-full py-6 text-center text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground col-span-full py-6 text-center text-xs">
                                         No hay sedes registradas para este
                                         cliente.
                                     </p>
@@ -1874,7 +1871,7 @@ export default function ClienteShow({
                                     sites.map((s) => (
                                         <Card
                                             key={s.id}
-                                            className="rounded-xl border border-border p-4 shadow-none"
+                                            className="border-border rounded-xl border p-4 shadow-none"
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div>
@@ -1884,7 +1881,7 @@ export default function ClienteShow({
                                                     >
                                                         {s.tipo}
                                                     </Badge>
-                                                    <h4 className="mt-1 font-bold text-sm text-foreground">
+                                                    <h4 className="text-foreground mt-1 text-sm font-bold">
                                                         {s.nombre}
                                                     </h4>
                                                 </div>
@@ -1894,7 +1891,7 @@ export default function ClienteShow({
                                                         onClick={() =>
                                                             openEditSite(s)
                                                         }
-                                                        className="p-1 text-muted-foreground hover:text-foreground"
+                                                        className="text-muted-foreground hover:text-foreground p-1"
                                                     >
                                                         <Edit3 className="size-3.5" />
                                                     </button>
@@ -1903,17 +1900,17 @@ export default function ClienteShow({
                                                         onClick={() =>
                                                             deleteSite(s.id)
                                                         }
-                                                        className="p-1 text-muted-foreground hover:text-destructive"
+                                                        className="text-muted-foreground hover:text-destructive p-1"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </button>
                                                 </div>
                                             </div>
-                                            <p className="mt-2 text-xs text-muted-foreground">
+                                            <p className="text-muted-foreground mt-2 text-xs">
                                                 {s.direccion}
                                             </p>
                                             {s.contacto && (
-                                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                                <p className="text-muted-foreground mt-1 text-[11px]">
                                                     Contacto:{' '}
                                                     <span className="text-foreground">
                                                         {s.contacto}
@@ -1930,14 +1927,14 @@ export default function ClienteShow({
                         </Card>
 
                         {/* Vehículos del cliente */}
-                        <Card className="rounded-2xl border-border bg-card p-6 shadow-none">
-                            <div className="flex items-center justify-between border-b border-border pb-4">
+                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                            <div className="border-border flex items-center justify-between border-b pb-4">
                                 <div>
-                                    <h3 className="text-base font-bold text-foreground">
+                                    <h3 className="text-foreground text-base font-bold">
                                         Vehículos registrados ({vehicles.length}
                                         )
                                     </h3>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground text-xs">
                                         Unidades móviles para extintores
                                         rodantes o vehiculares
                                     </p>
@@ -1946,7 +1943,7 @@ export default function ClienteShow({
                                     type="button"
                                     size="sm"
                                     onClick={openCreateVehicle}
-                                    className="h-8 rounded-xl bg-primary text-xs font-bold"
+                                    className="bg-primary h-8 rounded-xl text-xs font-bold"
                                 >
                                     <Plus className="mr-1 size-3.5" />
                                     Agregar vehículo
@@ -1955,7 +1952,7 @@ export default function ClienteShow({
 
                             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 {vehicles.length === 0 ? (
-                                    <p className="col-span-full py-6 text-center text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground col-span-full py-6 text-center text-xs">
                                         No hay vehículos registrados para este
                                         cliente.
                                     </p>
@@ -1963,12 +1960,12 @@ export default function ClienteShow({
                                     vehicles.map((v) => (
                                         <Card
                                             key={v.id}
-                                            className="rounded-xl border border-border p-4 shadow-none"
+                                            className="border-border rounded-xl border p-4 shadow-none"
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <Car className="size-4 text-primary" />
-                                                    <h4 className="font-mono font-bold text-base text-foreground">
+                                                    <Car className="text-primary size-4" />
+                                                    <h4 className="text-foreground font-mono text-base font-bold">
                                                         {v.placa}
                                                     </h4>
                                                 </div>
@@ -1978,7 +1975,7 @@ export default function ClienteShow({
                                                         onClick={() =>
                                                             openEditVehicle(v)
                                                         }
-                                                        className="p-1 text-muted-foreground hover:text-foreground"
+                                                        className="text-muted-foreground hover:text-foreground p-1"
                                                     >
                                                         <Edit3 className="size-3.5" />
                                                     </button>
@@ -1987,20 +1984,20 @@ export default function ClienteShow({
                                                         onClick={() =>
                                                             deleteVehicle(v.id)
                                                         }
-                                                        className="p-1 text-muted-foreground hover:text-destructive"
+                                                        className="text-muted-foreground hover:text-destructive p-1"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </button>
                                                 </div>
                                             </div>
-                                            <p className="mt-1 text-xs text-muted-foreground">
+                                            <p className="text-muted-foreground mt-1 text-xs">
                                                 {[v.marca, v.modelo]
                                                     .filter(Boolean)
                                                     .join(' ') ||
                                                     'Sin marca/modelo'}
                                             </p>
                                             {v.descripcion && (
-                                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                                     {v.descripcion}
                                                 </p>
                                             )}
@@ -2011,28 +2008,28 @@ export default function ClienteShow({
                         </Card>
 
                         {/* Historial en línea de tiempo */}
-                        <Card className="rounded-2xl border-border bg-card p-6 shadow-none">
-                            <div className="flex items-center gap-2 border-b border-border pb-3">
-                                <History className="size-4 text-primary" />
-                                <h3 className="text-base font-bold text-foreground">
+                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                            <div className="border-border flex items-center gap-2 border-b pb-3">
+                                <History className="text-primary size-4" />
+                                <h3 className="text-foreground text-base font-bold">
                                     Historial de actividad
                                 </h3>
                             </div>
 
                             <div className="mt-4">
                                 {historial.length === 0 ? (
-                                    <p className="py-6 text-center text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground py-6 text-center text-xs">
                                         Sin eventos de historial registrados.
                                     </p>
                                 ) : (
-                                    <div className="relative border-l border-border pl-4 space-y-4">
+                                    <div className="border-border relative space-y-4 border-l pl-4">
                                         {historial.map((h, idx) => (
                                             <div key={idx} className="relative">
-                                                <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-primary" />
-                                                <div className="text-xs font-semibold text-foreground">
+                                                <span className="bg-primary absolute top-1.5 -left-[21px] size-2.5 rounded-full" />
+                                                <div className="text-foreground text-xs font-semibold">
                                                     {h.texto}
                                                 </div>
-                                                <div className="text-[11px] text-muted-foreground">
+                                                <div className="text-muted-foreground text-[11px]">
                                                     {h.fecha}{' '}
                                                     {h.usuario
                                                         ? `· Por ${h.usuario}`
@@ -2069,7 +2066,7 @@ export default function ClienteShow({
                                             e.target.value as any,
                                         )
                                     }
-                                    className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-2.5 text-xs"
+                                    className="border-border bg-card mt-1 h-9 w-full rounded-xl border px-2.5 text-xs"
                                 >
                                     <option value="ruc">RUC</option>
                                     <option value="dni">DNI</option>
@@ -2085,7 +2082,7 @@ export default function ClienteShow({
                                             e.target.value,
                                         )
                                     }
-                                    className="mt-1 h-9 text-xs font-mono"
+                                    className="mt-1 h-9 font-mono text-xs"
                                 />
                             </div>
                         </div>
@@ -2227,7 +2224,7 @@ export default function ClienteShow({
                                             e.target.value as any,
                                         )
                                     }
-                                    className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-2.5 text-xs capitalize"
+                                    className="border-border bg-card mt-1 h-9 w-full rounded-xl border px-2.5 text-xs capitalize"
                                 >
                                     {siteTypes.map((t) => (
                                         <option key={t} value={t}>
@@ -2346,7 +2343,7 @@ export default function ClienteShow({
                                     )
                                 }
                                 placeholder="Ej: ABC-123"
-                                className="mt-1 h-9 text-xs font-mono uppercase"
+                                className="mt-1 h-9 font-mono text-xs uppercase"
                                 required
                             />
                         </div>

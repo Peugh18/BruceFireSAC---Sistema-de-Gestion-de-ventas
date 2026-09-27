@@ -1,14 +1,8 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import {
-    AlertCircle,
     ArrowLeft,
-    Calendar,
-    Check,
     CheckCircle2,
-    Clock,
-    Download,
-    FileCheck,
     FileText,
     Flame,
     MapPin,
@@ -130,7 +124,7 @@ export default function EntregaShow({
     custodyEvents,
 }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
-    const { auth, flash } = usePage<{
+    const { flash } = usePage<{
         auth?: { user?: { name?: string } };
         flash?: { success?: string; error?: string };
     }>().props;
@@ -158,7 +152,7 @@ export default function EntregaShow({
             <div className="mb-4 flex items-center justify-between">
                 <Link
                     href={`/${teamSlug}/tecnico-campo/entregas`}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
+                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver a entregas</span>
@@ -175,17 +169,17 @@ export default function EntregaShow({
             )}
 
             {/* Header Data Card (§22.3) */}
-            <div className="mb-5 rounded-[14px] border border-border bg-card p-4 shadow-xs">
-                <div className="mb-3 flex items-start justify-between gap-2 border-b border-border pb-3">
+            <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
+                <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
                     <div>
-                        <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                        <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
                             Cliente Receptor
                         </span>
-                        <h1 className="text-base leading-snug font-black text-foreground">
+                        <h1 className="text-foreground text-base leading-snug font-black">
                             {order.client.razon_social}
                         </h1>
                         {order.client.numero_documento && (
-                            <span className="font-mono text-xs text-muted-foreground">
+                            <span className="text-muted-foreground font-mono text-xs">
                                 RUC / DNI: {order.client.numero_documento}
                             </span>
                         )}
@@ -205,7 +199,7 @@ export default function EntregaShow({
                     <div className="flex items-start gap-2">
                         <MapPin className="mt-0.5 size-4 shrink-0 text-sky-600 dark:text-sky-400" />
                         <div>
-                            <span className="font-semibold text-foreground">
+                            <span className="text-foreground font-semibold">
                                 Lugar de Entrega:{' '}
                             </span>
                             <span className="text-muted-foreground">
@@ -220,13 +214,13 @@ export default function EntregaShow({
                         <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
                                 <Phone className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                                <span className="font-mono text-foreground">
+                                <span className="text-foreground font-mono">
                                     {order.client.telefono}
                                 </span>
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 active:scale-95"
+                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -236,12 +230,12 @@ export default function EntregaShow({
                 </div>
 
                 {/* Acta de Conformidad PDF Action */}
-                <div className="mt-4 border-t border-border pt-3">
+                <div className="border-border mt-4 border-t pt-3">
                     <a
                         href={`/${teamSlug}/tecnico-campo/entregas/${order.id}/acta-pdf`}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-sky-500/20 bg-sky-500/10 text-xs font-black text-sky-600 dark:text-sky-400 shadow-2xs transition-all hover:bg-sky-500/10"
+                        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-sky-500/20 bg-sky-500/10 text-xs font-black text-sky-600 shadow-2xs transition-all hover:bg-sky-500/10 dark:text-sky-400"
                     >
                         <FileText className="size-4" />
                         <span>
@@ -268,7 +262,7 @@ export default function EntregaShow({
 
                 return (
                     <div className="mb-5 rounded-[14px] border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
-                        <div className="flex items-center gap-2 font-bold text-xs text-blue-900 dark:text-blue-300">
+                        <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
                             <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
                             <span>Indicaciones de Ventas y Coordinación</span>
                         </div>
@@ -313,18 +307,18 @@ export default function EntregaShow({
             })()}
 
             {/* Custody Chain Trail (§22.4, §85.6.3) */}
-            <div className="mb-5 rounded-[14px] border border-border bg-card p-4 shadow-xs">
-                <h2 className="mb-3 flex items-center gap-2 text-xs font-black tracking-wider text-foreground uppercase">
+            <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
+                <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                     <Truck className="size-4 text-sky-600 dark:text-sky-400" />
                     Cadena de Custodia del Servicio
                 </h2>
 
                 {custodyEvents.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                         No hay eventos de custodia registrados aún.
                     </p>
                 ) : (
-                    <div className="relative space-y-4 pl-6 before:absolute before:top-2 before:bottom-2 before:left-2.5 before:w-0.5 before:bg-muted/40">
+                    <div className="before:bg-muted/40 relative space-y-4 pl-6 before:absolute before:top-2 before:bottom-2 before:left-2.5 before:w-0.5">
                         {custodyEvents.map((evt) => {
                             const meta = ESLABONES_MAP[evt.eslabon] || {
                                 label: evt.eslabon,
@@ -341,11 +335,11 @@ export default function EntregaShow({
                                         <Icon className="size-3" />
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="font-bold text-foreground">
+                                        <span className="text-foreground font-bold">
                                             {meta.label}
                                         </span>
                                         {evt.fecha && (
-                                            <span className="font-mono text-[10px] text-muted-foreground">
+                                            <span className="text-muted-foreground font-mono text-[10px]">
                                                 {new Date(
                                                     evt.fecha,
                                                 ).toLocaleDateString('es-PE', {
@@ -357,9 +351,9 @@ export default function EntregaShow({
                                             </span>
                                         )}
                                     </div>
-                                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    <p className="text-muted-foreground mt-0.5 text-[11px]">
                                         Responsable:{' '}
-                                        <span className="font-semibold text-foreground">
+                                        <span className="text-foreground font-semibold">
                                             {evt.responsable}
                                         </span>
                                     </p>
@@ -371,28 +365,28 @@ export default function EntregaShow({
             </div>
 
             {/* Equipments Table/Cards (§23) */}
-            <div className="mb-5 rounded-[14px] border border-border bg-card p-4 shadow-xs">
-                <h2 className="mb-3 flex items-center gap-2 text-xs font-black tracking-wider text-foreground uppercase">
+            <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
+                <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                     <Flame className="size-4 text-amber-600 dark:text-amber-400" />
                     Equipos Entregados ({order.equipments.length})
                 </h2>
 
                 <div className="space-y-2">
-                    {order.equipments.map((eq, idx) => (
+                    {order.equipments.map((eq, _idx) => (
                         <div
                             key={eq.id}
-                            className="flex items-center justify-between rounded-[8px] border border-border bg-muted/40 p-2.5 text-xs"
+                            className="border-border bg-muted/40 flex items-center justify-between rounded-[8px] border p-2.5 text-xs"
                         >
                             <div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-mono font-black text-sky-600 dark:text-sky-400">
                                         {eq.numero_serie}
                                     </span>
-                                    <span className="py-0.2 rounded border border-border bg-card px-1.5 text-[9.5px] font-bold">
+                                    <span className="py-0.2 border-border bg-card rounded border px-1.5 text-[9.5px] font-bold">
                                         {eq.tipo_agente} {eq.capacidad}
                                     </span>
                                 </div>
-                                <p className="mt-0.5 text-[10.5px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[10.5px]">
                                     {eq.marca || 'Bruce Fire'} •{' '}
                                     {eq.ubicacion_actual || 'Sede cliente'}
                                 </p>
@@ -407,12 +401,12 @@ export default function EntregaShow({
 
             {/* Delivery Confirmation Form (§22.3, §85.6.2) */}
             {!isCerrada && (
-                <div className="rounded-[14px] border border-sky-500/20 bg-card p-4 shadow-sm">
+                <div className="bg-card rounded-[14px] border border-sky-500/20 p-4 shadow-sm">
                     <h2 className="mb-1 flex items-center gap-2 text-sm font-black text-sky-700 dark:text-sky-400">
                         <UserCheck className="size-4 text-sky-600 dark:text-sky-400" />
                         Confirmar Entrega y Acta de Conformidad
                     </h2>
-                    <p className="mb-4 text-[11px] text-muted-foreground">
+                    <p className="text-muted-foreground mb-4 text-[11px]">
                         Cierre final del servicio en sitio con firma/conformidad
                         del receptor.
                     </p>
@@ -420,7 +414,7 @@ export default function EntregaShow({
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                             <div>
-                                <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                <label className="text-foreground mb-1 block text-[11px] font-bold">
                                     Nombre del Receptor / Encargado en Sede{' '}
                                     <span className="text-red-500">*</span>
                                 </label>
@@ -435,7 +429,7 @@ export default function EntregaShow({
                                         )
                                     }
                                     placeholder="Nombre de quien recibe los extintores"
-                                    className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                    className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                 />
                                 {form.errors.receptor_nombre && (
                                     <p className="mt-0.5 text-[10px] text-red-500">
@@ -445,7 +439,7 @@ export default function EntregaShow({
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-[11px] font-bold text-foreground">
+                                <label className="text-foreground mb-1 block text-[11px] font-bold">
                                     DNI / Cargo del Receptor
                                 </label>
                                 <input
@@ -458,13 +452,13 @@ export default function EntregaShow({
                                         )
                                     }
                                     placeholder="ej. DNI 45892147 / Jefe de Almacén"
-                                    className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                    className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-[11px] font-bold text-foreground">
+                            <label className="text-foreground mb-1 block text-[11px] font-bold">
                                 Observaciones de Entrega
                             </label>
                             <textarea
@@ -477,7 +471,7 @@ export default function EntregaShow({
                                     )
                                 }
                                 placeholder="Notas de colocación, tarjetas selladas entregadas..."
-                                className="w-full rounded-[8px] border border-border bg-card p-2 text-xs"
+                                className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                             />
                         </div>
 
@@ -510,7 +504,7 @@ export default function EntregaShow({
                             )}
                         </div>
 
-                        <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-foreground">
+                        <label className="text-foreground flex cursor-pointer items-center gap-2 text-xs font-bold">
                             <input
                                 type="checkbox"
                                 checked={form.data.cerrar_orden}

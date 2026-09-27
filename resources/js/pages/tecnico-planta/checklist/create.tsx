@@ -8,9 +8,6 @@ import {
     AlertTriangle,
     MinusCircle,
     ClipboardCheck,
-    Wrench,
-    HelpCircle,
-    Sparkles,
     ShieldCheck,
 } from 'lucide-react';
 
@@ -149,7 +146,7 @@ export default function ChecklistCreate({
                 </Link>
 
                 {/* Equipment Master Data Header (§19.2) */}
-                <div className="space-y-2.5 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+                <div className="bg-card space-y-2.5 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
                     <div className="flex items-center justify-between">
                         <span className="font-mono text-base font-extrabold text-amber-600 dark:text-amber-400">
                             {equipment.numero_serie}
@@ -209,7 +206,7 @@ export default function ChecklistCreate({
                     <button
                         type="button"
                         onClick={handleMarkAllConforme}
-                        className="rounded-lg bg-card px-3 py-1.5 text-xs font-semibold text-neutral-800 shadow-xs hover:bg-neutral-50 dark:bg-neutral-700 dark:text-neutral-200"
+                        className="bg-card rounded-lg px-3 py-1.5 text-xs font-semibold text-neutral-800 shadow-xs hover:bg-neutral-50 dark:bg-neutral-700 dark:text-neutral-200"
                     >
                         Marcar Todo Conforme
                     </button>
@@ -234,7 +231,7 @@ export default function ChecklistCreate({
                                 className={`rounded-2xl border p-3.5 transition-all ${
                                     isObservado
                                         ? 'border-amber-300 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20'
-                                        : 'border-neutral-200 bg-card dark:border-neutral-700 dark:bg-neutral-800'
+                                        : 'bg-card border-neutral-200 dark:border-neutral-700 dark:bg-neutral-800'
                                 }`}
                             >
                                 <div className="space-y-2.5">
@@ -320,7 +317,7 @@ export default function ChecklistCreate({
                                                             )
                                                         }
                                                         placeholder="Ej: Picado, Fisurado, Despresurizado..."
-                                                        className="w-full rounded-xl border border-neutral-300 bg-card px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                                        className="bg-card w-full rounded-xl border border-neutral-300 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                                         required
                                                     />
                                                 </div>
@@ -341,7 +338,7 @@ export default function ChecklistCreate({
                                                             )
                                                         }
                                                         placeholder="Ej: Cambio de componente, P.H..."
-                                                        className="w-full rounded-xl border border-neutral-300 bg-card px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                                        className="bg-card w-full rounded-xl border border-neutral-300 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                                     />
                                                 </div>
                                             </div>
@@ -364,7 +361,7 @@ export default function ChecklistCreate({
                                                             )
                                                         }
                                                         placeholder="Ej: Manómetro 1/8, Manguera..."
-                                                        className="w-full rounded-xl border border-neutral-300 bg-card px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                                        className="bg-card w-full rounded-xl border border-neutral-300 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                                     />
                                                 </div>
                                                 <div className="flex items-center pt-5">
@@ -407,7 +404,7 @@ export default function ChecklistCreate({
                                                         )
                                                     }
                                                     placeholder="Detalles adicionales para Vendedor..."
-                                                    className="w-full rounded-xl border border-neutral-300 bg-card px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                                    className="bg-card w-full rounded-xl border border-neutral-300 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                                 />
                                             </div>
                                         </div>
@@ -418,7 +415,7 @@ export default function ChecklistCreate({
                     })}
 
                     {/* General Observations */}
-                    <div className="space-y-1.5 rounded-2xl border border-neutral-200 bg-card p-3.5 dark:border-neutral-700 dark:bg-neutral-800">
+                    <div className="bg-card space-y-1.5 rounded-2xl border border-neutral-200 p-3.5 dark:border-neutral-700 dark:bg-neutral-800">
                         <label className="block text-xs font-bold text-neutral-900 dark:text-neutral-100">
                             Observaciones Generales de la Inspección
                         </label>
@@ -434,7 +431,7 @@ export default function ChecklistCreate({
                     </div>
 
                     {/* Sticky Bottom Bar */}
-                    <div className="fixed right-0 bottom-14 left-0 z-40 mx-auto flex max-w-lg items-center justify-between gap-3 border-t border-neutral-200 bg-card/95 p-3 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/95">
+                    <div className="bg-card/95 fixed right-0 bottom-14 left-0 z-40 mx-auto flex max-w-lg items-center justify-between gap-3 border-t border-neutral-200 p-3 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/95">
                         <div className="text-xs">
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 {countObservados > 0

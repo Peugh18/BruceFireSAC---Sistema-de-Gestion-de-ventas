@@ -67,22 +67,22 @@ export default function FirmasYSellos({ firmantes, tipos }: Props) {
                     firmasPendientes={sinFirma}
                 />
                 <div className="flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-[11px] bg-destructive/10 text-primary">
+                    <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
                         <PenLine className="size-5" />
                     </div>
                     <div>
-                        <h1 className="font-['Oswald',sans-serif] text-[20px] font-semibold text-foreground uppercase">
+                        <h1 className="text-foreground font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
                             Firmas y sellos
                         </h1>
-                        <p className="text-[12px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[12px]">
                             Quién firma cada certificado. Los cambios se ven en
                             todos los certificados, también en los ya emitidos.
                         </p>
                     </div>
                 </div>
 
-                <Card className="flex-row items-start gap-3 rounded-[16px] border-border bg-card p-4 shadow-none">
-                    <Camera className="mt-0.5 size-5 shrink-0 text-primary" />
+                <Card className="border-border bg-card flex-row items-start gap-3 rounded-[16px] p-4 shadow-none">
+                    <Camera className="text-primary mt-0.5 size-5 shrink-0" />
                     <div className="text-[12.5px] leading-relaxed">
                         <p className="font-bold">Cómo subir una firma</p>
                         <p className="text-muted-foreground">
@@ -116,14 +116,14 @@ export default function FirmasYSellos({ firmantes, tipos }: Props) {
 
                 <NuevoFirmante teamSlug={teamSlug} />
 
-                <Card className="gap-3 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
                     <div className="flex items-center gap-2">
-                        <FileText className="size-4 text-primary" />
+                        <FileText className="text-primary size-4" />
                         <h2 className="font-['Oswald',sans-serif] text-[16px] font-semibold uppercase">
                             Cómo queda cada certificado
                         </h2>
                     </div>
-                    <div className="flex flex-col divide-y divide-border">
+                    <div className="divide-border flex flex-col divide-y">
                         {tipos.map((tipo) => (
                             <div
                                 key={tipo.codigo}
@@ -156,7 +156,7 @@ export default function FirmasYSellos({ firmantes, tipos }: Props) {
                                         })}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="rounded-[8px] border border-border px-2.5 py-1 text-[11.5px] font-bold transition-colors hover:border-primary/60 hover:text-primary"
+                                        className="border-border hover:border-primary/60 hover:text-primary rounded-[8px] border px-2.5 py-1 text-[11.5px] font-bold transition-colors"
                                     >
                                         Ver ejemplo
                                     </a>
@@ -231,11 +231,11 @@ function TarjetaFirmante({
 
     return (
         <Card
-            className={`gap-3 rounded-[16px] border-border bg-card p-4 shadow-none ${firmante.activo ? '' : 'opacity-60'}`}
+            className={`border-border bg-card gap-3 rounded-[16px] p-4 shadow-none ${firmante.activo ? '' : 'opacity-60'}`}
         >
             <div className="flex gap-3">
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-[10px] border border-dashed border-border bg-white">
+                    <div className="border-border relative flex h-24 items-center justify-center overflow-hidden rounded-[10px] border border-dashed bg-white">
                         {guardando === 'firma' ? (
                             <span className="flex items-center gap-2 text-[12px] text-neutral-500">
                                 <Spinner /> Limpiando la foto…
@@ -285,7 +285,7 @@ function TarjetaFirmante({
                                 onClick={() =>
                                     guardar({ quitar_firma: true }, 'quitar')
                                 }
-                                className="size-8 rounded-[8px] text-destructive shadow-none"
+                                className="text-destructive size-8 rounded-[8px] shadow-none"
                                 aria-label="Quitar firma"
                             >
                                 <Trash2 className="size-3.5" />
@@ -295,7 +295,7 @@ function TarjetaFirmante({
                 </div>
 
                 <div className="flex w-24 shrink-0 flex-col gap-1.5">
-                    <div className="flex h-24 items-center justify-center overflow-hidden rounded-[10px] border border-dashed border-border bg-white">
+                    <div className="border-border flex h-24 items-center justify-center overflow-hidden rounded-[10px] border border-dashed bg-white">
                         {guardando === 'sello' ? (
                             <Spinner />
                         ) : firmante.sello_url ? (
@@ -328,7 +328,7 @@ function TarjetaFirmante({
                             onClick={() =>
                                 guardar({ quitar_sello: true }, 'quitar')
                             }
-                            className="h-8 rounded-[8px] text-[12px] text-destructive shadow-none"
+                            className="text-destructive h-8 rounded-[8px] text-[12px] shadow-none"
                         >
                             Quitar
                         </Button>
@@ -347,7 +347,7 @@ function TarjetaFirmante({
             </div>
 
             {errores.firma || errores.sello || errores.imagen ? (
-                <p className="text-[11.5px] text-destructive">
+                <p className="text-destructive text-[11.5px]">
                     {errores.firma ?? errores.sello ?? errores.imagen}
                 </p>
             ) : null}
@@ -383,7 +383,7 @@ function TarjetaFirmante({
                 </div>
             </div>
             {errores.nombre || errores.cargo ? (
-                <p className="text-[11.5px] text-destructive">
+                <p className="text-destructive text-[11.5px]">
                     {errores.nombre ?? errores.cargo}
                 </p>
             ) : null}
@@ -414,7 +414,7 @@ function TarjetaFirmante({
                 </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
+            <div className="border-border flex items-center justify-between gap-2 border-t pt-3">
                 <label className="flex items-center gap-2 text-[12px]">
                     <input
                         type="checkbox"
@@ -454,9 +454,9 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
     }
 
     return (
-        <Card className="gap-3 rounded-[16px] border-border bg-card p-5 shadow-none">
+        <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
             <div className="flex items-center gap-2">
-                <UserPlus className="size-4 text-primary" />
+                <UserPlus className="text-primary size-4" />
                 <h2 className="font-['Oswald',sans-serif] text-[16px] font-semibold uppercase">
                     Agregar firmante
                 </h2>
@@ -472,7 +472,7 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
                         onChange={(e) => form.setData('nombre', e.target.value)}
                     />
                     {form.errors.nombre ? (
-                        <p className="mt-1 text-[11.5px] text-destructive">
+                        <p className="text-destructive mt-1 text-[11.5px]">
                             {form.errors.nombre}
                         </p>
                     ) : null}
@@ -484,7 +484,7 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
                         onChange={(e) => form.setData('cargo', e.target.value)}
                     />
                     {form.errors.cargo ? (
-                        <p className="mt-1 text-[11.5px] text-destructive">
+                        <p className="text-destructive mt-1 text-[11.5px]">
                             {form.errors.cargo}
                         </p>
                     ) : null}
@@ -502,7 +502,7 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
                     Agregar
                 </Button>
             </form>
-            <p className="text-[11.5px] text-muted-foreground">
+            <p className="text-muted-foreground text-[11.5px]">
                 Después de agregarlo, sube su firma y marca en qué certificados
                 firma.
             </p>

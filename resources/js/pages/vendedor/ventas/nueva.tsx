@@ -59,7 +59,12 @@ type SaleLine = {
 };
 
 type MedioPago =
-    'efectivo' | 'yape' | 'plin' | 'transferencia' | 'pos' | 'deposito';
+    | 'efectivo'
+    | 'yape'
+    | 'plin'
+    | 'transferencia'
+    | 'pos'
+    | 'deposito';
 
 /** Cómo paga el cliente al contado. No va a SUNAT: registra el cobro en caja. */
 const MEDIOS_PAGO: { valor: MedioPago; texto: string }[] = [
@@ -841,7 +846,7 @@ export default function NuevaVenta({
                                 {caja_abierta === false &&
                                     form.data.medio_pago === 'efectivo' && (
                                         <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-800 dark:text-amber-300">
-                                            <AlertCircle className="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                                            <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
                                             <div>
                                                 <p className="font-bold">
                                                     No tienes una caja abierta

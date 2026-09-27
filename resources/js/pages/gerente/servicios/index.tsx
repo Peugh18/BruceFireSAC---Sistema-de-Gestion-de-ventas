@@ -198,7 +198,7 @@ export default function ServiciosIndex() {
                 )}
                 {flash?.error && (
                     <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                        <AlertTriangle className="size-4 shrink-0 text-primary" />
+                        <AlertTriangle className="text-primary size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
                 )}
@@ -206,10 +206,10 @@ export default function ServiciosIndex() {
                 {/* Cabecera y Botón Nuevo */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
-                        <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
+                        <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
                             Catálogo de Servicios Técnicos
                         </h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="text-muted-foreground mt-1 text-sm">
                             Mantenimiento, recarga, pruebas hidrostáticas e
                             inspecciones técnicas.
                         </p>
@@ -218,7 +218,7 @@ export default function ServiciosIndex() {
                     <button
                         type="button"
                         onClick={openCreateModal}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-xs transition-colors"
                     >
                         <Plus className="size-4" />
                         <span>Nuevo Servicio</span>
@@ -227,20 +227,20 @@ export default function ServiciosIndex() {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Total de Servicios
                             </span>
-                            <Wrench className="size-4 text-muted-foreground" />
+                            <Wrench className="text-muted-foreground size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.totalServicios}
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Servicios Activos
                             </span>
@@ -253,36 +253,36 @@ export default function ServiciosIndex() {
                 </div>
 
                 {/* Barra de Filtros y Búsqueda */}
-                <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-xs md:flex-row md:items-center md:justify-between">
+                <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 shadow-xs md:flex-row md:items-center md:justify-between">
                     <form
                         onSubmit={handleSearch}
                         className="flex flex-1 items-center gap-2"
                     >
                         <div className="relative flex-1">
-                            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                             <input
                                 type="text"
                                 value={buscar}
                                 onChange={(e) => setBuscar(e.target.value)}
                                 placeholder="Buscar por código o nombre..."
-                                className="w-full rounded-lg border border-border bg-muted/40 py-2 pr-4 pl-9 text-sm text-foreground focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 text-foreground focus:border-primary w-full rounded-lg border py-2 pr-4 pl-9 text-sm focus:outline-none"
                             />
                         </div>
                         <button
                             type="submit"
-                            className="rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground/80 hover:bg-background"
+                            className="border-border bg-card text-foreground/80 hover:bg-background rounded-lg border px-3.5 py-2 text-xs font-semibold"
                         >
                             Buscar
                         </button>
                     </form>
 
-                    <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs font-medium">
+                    <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
                         <button
                             type="button"
                             onClick={() => handleFilterEstado('todos')}
                             className={`rounded-md px-3 py-1.5 transition-colors ${
                                 filters.estado === 'todos'
-                                    ? 'bg-card font-bold text-foreground shadow-xs'
+                                    ? 'bg-card text-foreground font-bold shadow-xs'
                                     : 'text-muted-foreground hover:text-foreground'
                             }`}
                         >
@@ -293,7 +293,7 @@ export default function ServiciosIndex() {
                             onClick={() => handleFilterEstado('activos')}
                             className={`rounded-md px-3 py-1.5 transition-colors ${
                                 filters.estado === 'activos'
-                                    ? 'bg-card font-bold text-foreground shadow-xs'
+                                    ? 'bg-card text-foreground font-bold shadow-xs'
                                     : 'text-muted-foreground hover:text-foreground'
                             }`}
                         >
@@ -304,7 +304,7 @@ export default function ServiciosIndex() {
                             onClick={() => handleFilterEstado('inactivos')}
                             className={`rounded-md px-3 py-1.5 transition-colors ${
                                 filters.estado === 'inactivos'
-                                    ? 'bg-card font-bold text-foreground shadow-xs'
+                                    ? 'bg-card text-foreground font-bold shadow-xs'
                                     : 'text-muted-foreground hover:text-foreground'
                             }`}
                         >
@@ -314,10 +314,10 @@ export default function ServiciosIndex() {
                 </div>
 
                 {/* Tabla de Servicios */}
-                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+                <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
                                 <tr>
                                     <th className="px-4 py-3">Código</th>
                                     <th className="px-4 py-3">
@@ -338,12 +338,12 @@ export default function ServiciosIndex() {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-border divide-y">
                                 {servicios.data.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={7}
-                                            className="py-8 text-center text-muted-foreground"
+                                            className="text-muted-foreground py-8 text-center"
                                         >
                                             No se encontraron servicios técnicos
                                             registrados.
@@ -353,29 +353,29 @@ export default function ServiciosIndex() {
                                     servicios.data.map((s) => (
                                         <tr
                                             key={s.id}
-                                            className="transition-colors hover:bg-muted/40"
+                                            className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="px-4 py-3 font-mono font-bold text-foreground">
+                                            <td className="text-foreground px-4 py-3 font-mono font-bold">
                                                 {s.codigo}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <div className="font-medium text-foreground">
+                                                <div className="text-foreground font-medium">
                                                     {s.nombre}
                                                 </div>
                                                 {s.descripcion && (
-                                                    <div className="max-w-xs truncate text-[11px] text-muted-foreground">
+                                                    <div className="text-muted-foreground max-w-xs truncate text-[11px]">
                                                         {s.descripcion}
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 font-mono text-foreground/80">
+                                            <td className="text-foreground/80 px-4 py-3 font-mono">
                                                 {s.unidad_medida}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono font-semibold text-foreground">
+                                            <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                 {formatCurrency(s.precio_venta)}
                                             </td>
                                             <td className="px-4 py-3 text-center">
-                                                <span className="rounded-md border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                                <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
                                                     {s.aplica_igv
                                                         ? 'Aplica (18%)'
                                                         : 'Exonerado'}
@@ -401,7 +401,7 @@ export default function ServiciosIndex() {
                                                         onClick={() =>
                                                             openEditModal(s)
                                                         }
-                                                        className="rounded-md p-1.5 text-foreground/80 transition-colors hover:bg-background"
+                                                        className="text-foreground/80 hover:bg-background rounded-md p-1.5 transition-colors"
                                                         title="Editar servicio"
                                                     >
                                                         <Edit2 className="size-3.5" />
@@ -447,7 +447,7 @@ export default function ServiciosIndex() {
 
                     {/* Paginación */}
                     {servicios.links && servicios.links.length > 3 && (
-                        <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+                        <div className="border-border bg-muted/40 text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
                             <div>Total: {servicios.total} servicios</div>
                             <div className="flex items-center gap-1">
                                 {servicios.links.map((link, i) => {
@@ -492,9 +492,9 @@ export default function ServiciosIndex() {
                 {/* Modal Crear / Editar Servicio */}
                 {modalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl">
-                            <div className="flex items-center justify-between border-b border-border pb-3">
-                                <h3 className="font-['Oswald',sans-serif] text-lg font-bold text-foreground uppercase">
+                        <div className="border-border bg-card w-full max-w-lg rounded-xl border p-6 shadow-xl">
+                            <div className="border-border flex items-center justify-between border-b pb-3">
+                                <h3 className="text-foreground font-['Oswald',sans-serif] text-lg font-bold uppercase">
                                     {editingService
                                         ? 'Editar Servicio'
                                         : 'Nuevo Servicio'}
@@ -502,7 +502,7 @@ export default function ServiciosIndex() {
                                 <button
                                     type="button"
                                     onClick={closeModal}
-                                    className="rounded-md p-1 text-muted-foreground hover:bg-background"
+                                    className="text-muted-foreground hover:bg-background rounded-md p-1"
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -514,7 +514,7 @@ export default function ServiciosIndex() {
                             >
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block font-semibold text-foreground/80">
+                                        <label className="text-foreground/80 block font-semibold">
                                             Código *
                                         </label>
                                         <input
@@ -528,7 +528,7 @@ export default function ServiciosIndex() {
                                                 )
                                             }
                                             placeholder="SRV-REC-PQS"
-                                            className="mt-1 w-full rounded-lg border border-border px-3 py-2 font-mono uppercase focus:border-primary focus:outline-none"
+                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono uppercase focus:outline-none"
                                         />
                                         {form.errors.codigo && (
                                             <p className="mt-1 text-red-600">
@@ -538,7 +538,7 @@ export default function ServiciosIndex() {
                                     </div>
 
                                     <div>
-                                        <label className="block font-semibold text-foreground/80">
+                                        <label className="text-foreground/80 block font-semibold">
                                             U.M. *
                                         </label>
                                         <input
@@ -552,13 +552,13 @@ export default function ServiciosIndex() {
                                                 )
                                             }
                                             placeholder="ZZ"
-                                            className="mt-1 w-full rounded-lg border border-border px-3 py-2 font-mono focus:border-primary focus:outline-none"
+                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block font-semibold text-foreground/80">
+                                    <label className="text-foreground/80 block font-semibold">
                                         Nombre del Servicio *
                                     </label>
                                     <input
@@ -572,7 +572,7 @@ export default function ServiciosIndex() {
                                             )
                                         }
                                         placeholder="Recarga y Mantenimiento PQS 6kg"
-                                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 focus:border-primary focus:outline-none"
+                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                     />
                                     {form.errors.nombre && (
                                         <p className="mt-1 text-red-600">
@@ -582,7 +582,7 @@ export default function ServiciosIndex() {
                                 </div>
 
                                 <div>
-                                    <label className="block font-semibold text-foreground/80">
+                                    <label className="text-foreground/80 block font-semibold">
                                         Descripción
                                     </label>
                                     <textarea
@@ -595,12 +595,12 @@ export default function ServiciosIndex() {
                                             )
                                         }
                                         placeholder="Detalle de procedimiento técnico, incluye certificado..."
-                                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 focus:border-primary focus:outline-none"
+                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block font-semibold text-foreground/80">
+                                    <label className="text-foreground/80 block font-semibold">
                                         Precio Venta (S/) *
                                     </label>
                                     <input
@@ -616,7 +616,7 @@ export default function ServiciosIndex() {
                                             )
                                         }
                                         placeholder="45.00"
-                                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 font-mono focus:border-primary focus:outline-none"
+                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
                                     />
                                     {form.errors.precio_venta && (
                                         <p className="mt-1 text-red-600">
@@ -636,7 +636,7 @@ export default function ServiciosIndex() {
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="rounded border-border text-primary"
+                                            className="border-border text-primary rounded"
                                         />
                                         <span className="text-foreground/80">
                                             Aplica IGV (18%)
@@ -653,7 +653,7 @@ export default function ServiciosIndex() {
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="rounded border-border text-primary"
+                                            className="border-border text-primary rounded"
                                         />
                                         <span className="text-foreground/80">
                                             Activo
@@ -661,18 +661,18 @@ export default function ServiciosIndex() {
                                     </label>
                                 </div>
 
-                                <div className="flex justify-end gap-2 border-t border-border pt-3">
+                                <div className="border-border flex justify-end gap-2 border-t pt-3">
                                     <button
                                         type="button"
                                         onClick={closeModal}
-                                        className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground/80 hover:bg-background"
+                                        className="border-border bg-card text-foreground/80 hover:bg-background rounded-lg border px-4 py-2 text-xs font-semibold"
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={form.processing}
-                                        className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+                                        className="bg-primary hover:bg-primary/90 rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
                                     >
                                         {editingService
                                             ? 'Guardar Cambios'

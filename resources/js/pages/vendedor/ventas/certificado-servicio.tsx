@@ -201,7 +201,7 @@ export default function CertificadoServicio({
                     <Button
                         asChild
                         variant="outline"
-                        className="h-9 rounded-[9px] border-border bg-card shadow-none"
+                        className="border-border bg-card h-9 rounded-[9px] shadow-none"
                     >
                         <Link
                             href={ventas.show.url({
@@ -217,7 +217,7 @@ export default function CertificadoServicio({
                         <h1 className="font-['Oswald',sans-serif] text-[22px] font-semibold uppercase">
                             {tipo.nombre}
                         </h1>
-                        <p className="text-[12.5px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[12.5px]">
                             {sale.client.razon_social}
                             {existente
                                 ? ` · corrige ${existente.numero} (queda como revisión ${existente.revision + 1})`
@@ -226,7 +226,7 @@ export default function CertificadoServicio({
                     </div>
                 </div>
 
-                <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                     <div className="grid gap-4 lg:grid-cols-2">
                         <ReferenciaField
                             cliente={ficha}
@@ -242,7 +242,7 @@ export default function CertificadoServicio({
                             }}
                         />
                         <div className="grid gap-3">
-                            <label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            <label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Dirección del servicio
                                 <Input
                                     value={direccion}
@@ -257,10 +257,10 @@ export default function CertificadoServicio({
                                 />
                             </label>
                             <div>
-                                <div className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <div className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Tipo de atención
                                 </div>
-                                <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                     {atenciones.map((a) => (
                                         <button
                                             key={a}
@@ -277,7 +277,7 @@ export default function CertificadoServicio({
                     </div>
                 </Card>
 
-                <Card className="gap-3 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
                     <div className="flex items-center justify-between">
                         <h2 className="font-['Oswald',sans-serif] text-[17px] font-semibold uppercase">
                             Equipos o ambientes ({filas.length})
@@ -293,9 +293,9 @@ export default function CertificadoServicio({
                             Agregar fila
                         </Button>
                     </div>
-                    <div className="overflow-x-auto rounded-[10px] border border-border">
+                    <div className="border-border overflow-x-auto rounded-[10px] border">
                         <table className="w-full min-w-[720px] text-[12.5px]">
-                            <thead className="bg-muted/50 text-left text-[10px] font-bold text-muted-foreground uppercase">
+                            <thead className="bg-muted/50 text-muted-foreground text-left text-[10px] font-bold uppercase">
                                 <tr>
                                     {tipo.columnas.map((c) => (
                                         <th key={c.clave} className="px-2 py-2">
@@ -316,7 +316,7 @@ export default function CertificadoServicio({
                                 {filas.map((fila, i) => (
                                     <tr
                                         key={i}
-                                        className="border-t border-border align-top"
+                                        className="border-border border-t align-top"
                                     >
                                         {tipo.columnas.map((c) => {
                                             const error =
@@ -351,7 +351,7 @@ export default function CertificadoServicio({
                                                                         .value,
                                                                 )
                                                             }
-                                                            className="h-8 w-full rounded-[7px] border border-border bg-card px-2 text-[12px]"
+                                                            className="border-border bg-card h-8 w-full rounded-[7px] border px-2 text-[12px]"
                                                         >
                                                             {RESULTADOS.map(
                                                                 (r) => (
@@ -413,7 +413,7 @@ export default function CertificadoServicio({
                                                         </div>
                                                     ) : null}
                                                     {error ? (
-                                                        <div className="mt-0.5 text-[10.5px] text-destructive">
+                                                        <div className="text-destructive mt-0.5 text-[10.5px]">
                                                             {error}
                                                         </div>
                                                     ) : null}
@@ -440,7 +440,7 @@ export default function CertificadoServicio({
                                                             ),
                                                         ])
                                                     }
-                                                    className="flex size-7 items-center justify-center rounded-[7px] border border-border hover:bg-muted"
+                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
                                                 >
                                                     <Copy className="size-3" />
                                                 </button>
@@ -458,7 +458,7 @@ export default function CertificadoServicio({
                                                             ),
                                                         )
                                                     }
-                                                    className="flex size-7 items-center justify-center rounded-[7px] border border-border text-destructive hover:bg-muted disabled:opacity-40"
+                                                    className="border-border text-destructive hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border disabled:opacity-40"
                                                 >
                                                     <Trash2 className="size-3" />
                                                 </button>
@@ -472,16 +472,16 @@ export default function CertificadoServicio({
                 </Card>
 
                 {tipo.checklist.length > 0 ? (
-                    <Card className="gap-3 rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
                         <h2 className="font-['Oswald',sans-serif] text-[17px] font-semibold uppercase">
                             Pruebas y verificaciones
                         </h2>
-                        <p className="text-[12px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[12px]">
                             C = conforme · NC = no conforme · NA = no aplica. Si
                             un valor medido sale del rango, el certificado lo
                             marca NC solo.
                         </p>
-                        <div className="divide-y divide-border rounded-[10px] border border-border">
+                        <div className="divide-border border-border divide-y rounded-[10px] border">
                             {tipo.checklist.map((punto, i) => {
                                 const aviso = fueraDeRango(
                                     pruebas[i].valor,
@@ -521,12 +521,12 @@ export default function CertificadoServicio({
                                                     }
                                                     className={`h-8 w-20 rounded-[7px] text-[12px] ${aviso ? 'border-amber-500' : ''}`}
                                                 />
-                                                <span className="text-[11.5px] text-muted-foreground">
+                                                <span className="text-muted-foreground text-[11.5px]">
                                                     {punto.unidad}
                                                 </span>
                                             </div>
                                         ) : null}
-                                        <div className="flex rounded-[8px] bg-muted p-[2px]">
+                                        <div className="bg-muted flex rounded-[8px] p-[2px]">
                                             {(['C', 'NC', 'NA'] as const).map(
                                                 (estado) => (
                                                     <button
@@ -551,14 +551,14 @@ export default function CertificadoServicio({
                     </Card>
                 ) : null}
 
-                <Card className="gap-2 rounded-[16px] border-border bg-card p-5 shadow-none">
-                    <label className="text-[11px] font-bold text-foreground/80 uppercase">
+                <Card className="border-border bg-card gap-2 rounded-[16px] p-5 shadow-none">
+                    <label className="text-foreground/80 text-[11px] font-bold uppercase">
                         Observaciones (salen en el certificado)
                         <textarea
                             value={observaciones}
                             maxLength={1000}
                             onChange={(e) => setObservaciones(e.target.value)}
-                            className="mt-1 min-h-[70px] w-full rounded-[9px] border border-border bg-card px-3 py-2 text-[13px] font-normal normal-case outline-none"
+                            className="border-border bg-card mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] font-normal normal-case outline-none"
                         />
                     </label>
                 </Card>
@@ -568,7 +568,7 @@ export default function CertificadoServicio({
                         type="button"
                         disabled={enviando}
                         onClick={guardar}
-                        className="rounded-[9px] bg-primary px-5 font-bold text-white shadow-none hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 rounded-[9px] px-5 font-bold text-white shadow-none"
                     >
                         {enviando ? (
                             <Loader2 className="size-4 animate-spin" />

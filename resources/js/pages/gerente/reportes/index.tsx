@@ -1,22 +1,14 @@
 ﻿import { router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
-    Award,
-    BarChart3,
     Boxes,
-    Building2,
-    Calendar,
-    CheckCircle2,
     CircleDollarSign,
     Download,
-    FileBarChart,
-    FileSpreadsheet,
     FileText,
     Filter,
     Layers,
     Percent,
     TrendingUp,
-    Users,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -165,17 +157,17 @@ export default function ReportesIndex() {
                 {/* Cabecera y Selector de Reporte */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
-                        <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
+                        <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
                             Reportes Gerenciales
                         </h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="text-muted-foreground mt-1 text-sm">
                             Análisis comercial, conversión de cotizaciones,
                             valorización de inventario y rotación.
                         </p>
                     </div>
 
                     {/* Botones de Selección de Reporte */}
-                    <div className="inline-flex rounded-xl border border-border bg-card p-1 text-xs font-semibold shadow-xs">
+                    <div className="border-border bg-card inline-flex rounded-xl border p-1 text-xs font-semibold shadow-xs">
                         <button
                             type="button"
                             onClick={() => switchTipo('comercial')}
@@ -207,10 +199,10 @@ export default function ReportesIndex() {
                 {tipo === 'comercial' && reporteComercial && (
                     <div className="space-y-6">
                         {/* Filtros Comercial */}
-                        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
+                        <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
                             <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
                                 <div>
-                                    <label className="block font-semibold text-foreground/80">
+                                    <label className="text-foreground/80 block font-semibold">
                                         Fecha Desde
                                     </label>
                                     <input
@@ -219,11 +211,11 @@ export default function ReportesIndex() {
                                         onChange={(e) =>
                                             setFechaDesde(e.target.value)
                                         }
-                                        className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 focus:border-primary focus:outline-none"
+                                        className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 focus:outline-none"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-semibold text-foreground/80">
+                                    <label className="text-foreground/80 block font-semibold">
                                         Fecha Hasta
                                     </label>
                                     <input
@@ -232,11 +224,11 @@ export default function ReportesIndex() {
                                         onChange={(e) =>
                                             setFechaHasta(e.target.value)
                                         }
-                                        className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 focus:border-primary focus:outline-none"
+                                        className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 focus:outline-none"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-semibold text-foreground/80">
+                                    <label className="text-foreground/80 block font-semibold">
                                         Vendedor
                                     </label>
                                     <select
@@ -244,7 +236,7 @@ export default function ReportesIndex() {
                                         onChange={(e) =>
                                             setVendedorId(e.target.value)
                                         }
-                                        className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 focus:border-primary focus:outline-none"
+                                        className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 focus:outline-none"
                                     >
                                         <option value="">
                                             Todos los vendedores
@@ -262,7 +254,7 @@ export default function ReportesIndex() {
                                 <button
                                     type="button"
                                     onClick={applyComercialFilters}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 font-semibold text-foreground/80 hover:bg-background"
+                                    className="border-border bg-card text-foreground/80 hover:bg-background inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-1.5 font-semibold"
                                 >
                                     <Filter className="size-3.5" />
                                     <span>Filtrar</span>
@@ -270,7 +262,7 @@ export default function ReportesIndex() {
                                 <button
                                     type="button"
                                     onClick={handleDownloadComercialPdf}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 font-semibold text-white shadow-xs hover:bg-primary/90"
+                                    className="bg-primary hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 font-semibold text-white shadow-xs"
                                 >
                                     <Download className="size-3.5" />
                                     <span>Exportar PDF</span>
@@ -280,66 +272,66 @@ export default function ReportesIndex() {
 
                         {/* KPIs Comerciales */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
                                         Ventas Totales
                                     </span>
                                     <CircleDollarSign className="size-4 text-emerald-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {formatCurrency(
                                         reporteComercial.totalVentas,
                                     )}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     Monto neto sin notas anuladas
                                 </p>
                             </div>
 
-                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
                                         Total de Operaciones
                                     </span>
                                     <FileText className="size-4 text-blue-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteComercial.cantidadVentas}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     Ventas confirmadas en el período
                                 </p>
                             </div>
 
-                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
                                         Ticket Promedio
                                     </span>
                                     <TrendingUp className="size-4 text-purple-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {formatCurrency(
                                         reporteComercial.ticketPromedio,
                                     )}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     Promedio por comprobante
                                 </p>
                             </div>
 
-                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
                                         Conversión Cotizaciones
                                     </span>
                                     <Percent className="size-4 text-amber-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteComercial.tasaConversion}%
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     Efectividad de cierre comercial
                                 </p>
                             </div>
@@ -348,17 +340,17 @@ export default function ReportesIndex() {
                         {/* Tablas de Desglose Comercial */}
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                             {/* Desglose por Vendedor */}
-                            <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-                                <h3 className="font-['Oswald',sans-serif] text-base font-bold text-foreground uppercase">
+                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                                <h3 className="text-foreground font-['Oswald',sans-serif] text-base font-bold uppercase">
                                     Ventas por Vendedor
                                 </h3>
-                                <p className="mb-4 text-xs text-muted-foreground">
+                                <p className="text-muted-foreground mb-4 text-xs">
                                     Rendimiento individual del equipo de ventas
                                 </p>
 
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs">
-                                        <thead className="border-b border-border bg-muted/40 text-[10px] text-muted-foreground uppercase">
+                                        <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
                                             <tr>
                                                 <th className="px-3 py-2">
                                                     Vendedor
@@ -371,13 +363,13 @@ export default function ReportesIndex() {
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-border">
+                                        <tbody className="divide-border divide-y">
                                             {reporteComercial.porVendedor
                                                 .length === 0 ? (
                                                 <tr>
                                                     <td
                                                         colSpan={3}
-                                                        className="py-4 text-center text-muted-foreground"
+                                                        className="text-muted-foreground py-4 text-center"
                                                     >
                                                         Sin ventas en este
                                                         período.
@@ -387,13 +379,13 @@ export default function ReportesIndex() {
                                                 reporteComercial.porVendedor.map(
                                                     (v) => (
                                                         <tr key={v.nombre}>
-                                                            <td className="px-3 py-2.5 font-medium text-foreground">
+                                                            <td className="text-foreground px-3 py-2.5 font-medium">
                                                                 {v.nombre}
                                                             </td>
                                                             <td className="px-3 py-2.5 text-center font-mono">
                                                                 {v.cantidad}
                                                             </td>
-                                                            <td className="px-3 py-2.5 text-right font-mono font-bold text-foreground">
+                                                            <td className="text-foreground px-3 py-2.5 text-right font-mono font-bold">
                                                                 {formatCurrency(
                                                                     v.monto,
                                                                 )}
@@ -408,17 +400,17 @@ export default function ReportesIndex() {
                             </div>
 
                             {/* Top Clientes */}
-                            <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-                                <h3 className="font-['Oswald',sans-serif] text-base font-bold text-foreground uppercase">
+                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                                <h3 className="text-foreground font-['Oswald',sans-serif] text-base font-bold uppercase">
                                     Top Clientes
                                 </h3>
-                                <p className="mb-4 text-xs text-muted-foreground">
+                                <p className="text-muted-foreground mb-4 text-xs">
                                     Clientes con mayor volumen facturado
                                 </p>
 
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs">
-                                        <thead className="border-b border-border bg-muted/40 text-[10px] text-muted-foreground uppercase">
+                                        <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
                                             <tr>
                                                 <th className="px-3 py-2">
                                                     Cliente
@@ -431,13 +423,13 @@ export default function ReportesIndex() {
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-border">
+                                        <tbody className="divide-border divide-y">
                                             {reporteComercial.topClientes
                                                 .length === 0 ? (
                                                 <tr>
                                                     <td
                                                         colSpan={3}
-                                                        className="py-4 text-center text-muted-foreground"
+                                                        className="text-muted-foreground py-4 text-center"
                                                     >
                                                         Sin datos de clientes.
                                                     </td>
@@ -446,8 +438,8 @@ export default function ReportesIndex() {
                                                 reporteComercial.topClientes.map(
                                                     (c, i) => (
                                                         <tr key={c.cliente}>
-                                                            <td className="max-w-xs truncate px-3 py-2.5 font-medium text-foreground">
-                                                                <b className="mr-1 text-primary">
+                                                            <td className="text-foreground max-w-xs truncate px-3 py-2.5 font-medium">
+                                                                <b className="text-primary mr-1">
                                                                     #{i + 1}
                                                                 </b>{' '}
                                                                 {c.cliente}
@@ -455,7 +447,7 @@ export default function ReportesIndex() {
                                                             <td className="px-3 py-2.5 text-center font-mono">
                                                                 {c.cantidad}
                                                             </td>
-                                                            <td className="px-3 py-2.5 text-right font-mono font-bold text-foreground">
+                                                            <td className="text-foreground px-3 py-2.5 text-right font-mono font-bold">
                                                                 {formatCurrency(
                                                                     c.total,
                                                                 )}
@@ -471,17 +463,17 @@ export default function ReportesIndex() {
                         </div>
 
                         {/* Top Ítems Vendidos */}
-                        <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-                            <h3 className="font-['Oswald',sans-serif] text-base font-bold text-foreground uppercase">
+                        <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                            <h3 className="text-foreground font-['Oswald',sans-serif] text-base font-bold uppercase">
                                 Top Productos y Servicios Vendidos
                             </h3>
-                            <p className="mb-4 text-xs text-muted-foreground">
+                            <p className="text-muted-foreground mb-4 text-xs">
                                 Ranking de artículos con mayor recaudación
                             </p>
 
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-xs">
-                                    <thead className="border-b border-border bg-muted/40 text-[10px] text-muted-foreground uppercase">
+                                    <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
                                         <tr>
                                             <th className="px-4 py-2.5">
                                                 Ítem
@@ -494,13 +486,13 @@ export default function ReportesIndex() {
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {reporteComercial.topItems.length ===
                                         0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={3}
-                                                    className="py-6 text-center text-muted-foreground"
+                                                    className="text-muted-foreground py-6 text-center"
                                                 >
                                                     Sin ítems registrados.
                                                 </td>
@@ -509,16 +501,16 @@ export default function ReportesIndex() {
                                             reporteComercial.topItems.map(
                                                 (item, i) => (
                                                     <tr key={item.nombre}>
-                                                        <td className="px-4 py-3 font-medium text-foreground">
-                                                            <b className="mr-2 text-primary">
+                                                        <td className="text-foreground px-4 py-3 font-medium">
+                                                            <b className="text-primary mr-2">
                                                                 #{i + 1}
                                                             </b>{' '}
                                                             {item.nombre}
                                                         </td>
-                                                        <td className="px-4 py-3 text-center font-mono font-semibold text-foreground/80">
+                                                        <td className="text-foreground/80 px-4 py-3 text-center font-mono font-semibold">
                                                             {item.cantidad}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-mono font-bold text-foreground">
+                                                        <td className="text-foreground px-4 py-3 text-right font-mono font-bold">
                                                             {formatCurrency(
                                                                 item.monto,
                                                             )}
@@ -538,10 +530,10 @@ export default function ReportesIndex() {
                 {tipo === 'inventario' && reporteInventario && (
                     <div className="space-y-6">
                         {/* Filtros Inventario */}
-                        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
+                        <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
                             <div className="grid max-w-xl flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div>
-                                    <label className="block font-semibold text-foreground/80">
+                                    <label className="text-foreground/80 block font-semibold">
                                         Sede / Almacén
                                     </label>
                                     <select
@@ -549,7 +541,7 @@ export default function ReportesIndex() {
                                         onChange={(e) =>
                                             setSedeId(e.target.value)
                                         }
-                                        className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 focus:border-primary focus:outline-none"
+                                        className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 focus:outline-none"
                                     >
                                         <option value="">
                                             Todas las sedes
@@ -563,7 +555,7 @@ export default function ReportesIndex() {
                                 </div>
 
                                 <div className="flex items-center pt-5">
-                                    <label className="flex cursor-pointer items-center gap-2 font-medium text-foreground/80">
+                                    <label className="text-foreground/80 flex cursor-pointer items-center gap-2 font-medium">
                                         <input
                                             type="checkbox"
                                             checked={soloBajoMinimo}
@@ -572,7 +564,7 @@ export default function ReportesIndex() {
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="rounded border-border text-primary"
+                                            className="border-border text-primary rounded"
                                         />
                                         <span>
                                             Solo productos bajo stock mínimo
@@ -585,7 +577,7 @@ export default function ReportesIndex() {
                                 <button
                                     type="button"
                                     onClick={applyInventarioFilters}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 font-semibold text-foreground/80 hover:bg-background"
+                                    className="border-border bg-card text-foreground/80 hover:bg-background inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-1.5 font-semibold"
                                 >
                                     <Filter className="size-3.5" />
                                     <span>Filtrar</span>
@@ -593,7 +585,7 @@ export default function ReportesIndex() {
                                 <button
                                     type="button"
                                     onClick={handleDownloadInventarioPdf}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 font-semibold text-white shadow-xs hover:bg-primary/90"
+                                    className="bg-primary hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 font-semibold text-white shadow-xs"
                                 >
                                     <Download className="size-3.5" />
                                     <span>Exportar PDF</span>
@@ -603,74 +595,74 @@ export default function ReportesIndex() {
 
                         {/* KPIs de Inventario */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
                                         Valorización Total
                                     </span>
                                     <CircleDollarSign className="size-4 text-emerald-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {formatCurrency(
                                         reporteInventario.valorizacionTotal,
                                     )}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     Stock disponible × precio venta
                                 </p>
                             </div>
 
-                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
                                         Productos en Catálogo
                                     </span>
                                     <Layers className="size-4 text-blue-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteInventario.totalProductos}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     Productos activos registrados
                                 </p>
                             </div>
 
-                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
                                         Unidades Físicas
                                     </span>
                                     <Boxes className="size-4 text-purple-600" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteInventario.totalUnidades}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     Disponibles para venta/operación
                                 </p>
                             </div>
 
-                            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
                                         Bajo Stock Mínimo
                                     </span>
-                                    <AlertTriangle className="size-4 text-primary" />
+                                    <AlertTriangle className="text-primary size-4" />
                                 </div>
-                                <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-primary">
+                                <div className="text-primary mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteInventario.totalBajoMinimo}
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
                                     Requieren reposición urgente
                                 </p>
                             </div>
                         </div>
 
                         {/* Tabla de Existencias de Inventario */}
-                        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+                        <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-xs">
-                                    <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                                    <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
                                         <tr>
                                             <th className="px-4 py-3">
                                                 Código
@@ -701,13 +693,13 @@ export default function ReportesIndex() {
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {reporteInventario.productos.length ===
                                         0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={9}
-                                                    className="py-8 text-center text-muted-foreground"
+                                                    className="text-muted-foreground py-8 text-center"
                                                 >
                                                     No se encontraron productos
                                                     con los filtros
@@ -719,30 +711,30 @@ export default function ReportesIndex() {
                                                 (p) => (
                                                     <tr
                                                         key={p.id}
-                                                        className="transition-colors hover:bg-muted/40"
+                                                        className="hover:bg-muted/40 transition-colors"
                                                     >
-                                                        <td className="px-4 py-3 font-mono font-bold text-foreground">
+                                                        <td className="text-foreground px-4 py-3 font-mono font-bold">
                                                             {p.codigo}
                                                         </td>
-                                                        <td className="px-4 py-3 font-medium text-foreground">
+                                                        <td className="text-foreground px-4 py-3 font-medium">
                                                             {p.nombre}
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
-                                                            <span className="rounded-md border border-border bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground">
+                                                            <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px]">
                                                                 {p.serializado
                                                                     ? 'Serializado'
                                                                     : 'A Granel'}
                                                             </span>
                                                         </td>
-                                                        <td className="px-4 py-3 text-center font-mono text-foreground/80">
+                                                        <td className="text-foreground/80 px-4 py-3 text-center font-mono">
                                                             {p.unidad_medida}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-mono font-semibold text-foreground">
+                                                        <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                             {formatCurrency(
                                                                 p.precio_venta,
                                                             )}
                                                         </td>
-                                                        <td className="px-4 py-3 text-center font-mono text-foreground/80">
+                                                        <td className="text-foreground/80 px-4 py-3 text-center font-mono">
                                                             {p.stock_minimo !==
                                                             null
                                                                 ? p.stock_minimo
@@ -752,19 +744,19 @@ export default function ReportesIndex() {
                                                             <span
                                                                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
                                                                     p.bajo_minimo
-                                                                        ? 'bg-red-100 text-primary'
+                                                                        ? 'text-primary bg-red-100'
                                                                         : 'bg-background text-foreground'
                                                                 }`}
                                                             >
                                                                 {p.bajo_minimo && (
-                                                                    <AlertTriangle className="size-3 text-primary" />
+                                                                    <AlertTriangle className="text-primary size-3" />
                                                                 )}
                                                                 {
                                                                     p.stock_disponible
                                                                 }
                                                             </span>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-mono font-bold text-foreground">
+                                                        <td className="text-foreground px-4 py-3 text-right font-mono font-bold">
                                                             {formatCurrency(
                                                                 p.valorizacion,
                                                             )}
@@ -773,7 +765,7 @@ export default function ReportesIndex() {
                                                             <span
                                                                 className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                                     p.bajo_minimo
-                                                                        ? 'bg-red-100 text-primary'
+                                                                        ? 'text-primary bg-red-100'
                                                                         : 'bg-emerald-100 text-emerald-800'
                                                                 }`}
                                                             >

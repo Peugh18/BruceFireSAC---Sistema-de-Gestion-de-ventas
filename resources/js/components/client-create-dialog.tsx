@@ -59,7 +59,7 @@ function FieldError({ message }: { message?: string }) {
     }
 
     return (
-        <p className="mt-1 text-[11px] font-semibold text-destructive">
+        <p className="text-destructive mt-1 text-[11px] font-semibold">
             {message}
         </p>
     );
@@ -84,7 +84,7 @@ function ClientFormFields({
     return (
         <div className="grid gap-3 sm:grid-cols-2">
             <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                     Tipo doc.
                 </Label>
                 <select
@@ -95,7 +95,7 @@ function ClientFormFields({
                             event.target.value as 'ruc' | 'dni',
                         )
                     }
-                    className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] outline-none"
+                    className="border-border bg-card mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none"
                 >
                     <option value="ruc">RUC</option>
                     <option value="dni">DNI</option>
@@ -104,7 +104,7 @@ function ClientFormFields({
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                     Numero
                 </Label>
                 <div className="relative">
@@ -122,10 +122,10 @@ function ClientFormFields({
                                 ? '8 dígitos'
                                 : '11 dígitos'
                         }
-                        className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                        className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                     />
                     {lookupLoading && (
-                        <Cargando className="absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Cargando className="text-muted-foreground absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2" />
                     )}
                 </div>
                 <FieldError message={errors.numero_documento} />
@@ -137,7 +137,7 @@ function ClientFormFields({
             </div>
 
             <div className="sm:col-span-2">
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                     {data.tipo_documento === 'dni'
                         ? 'Nombres y apellidos'
                         : 'Razon social'}
@@ -147,16 +147,16 @@ function ClientFormFields({
                     onChange={(event) =>
                         setData('razon_social', event.target.value)
                     }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                 />
                 <FieldError message={errors.razon_social} />
             </div>
 
             {data.tipo_documento === 'ruc' && (
                 <div>
-                    <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                         Nombre comercial{' '}
-                        <span className="font-normal text-muted-foreground normal-case">
+                        <span className="text-muted-foreground font-normal normal-case">
                             (opcional, no viene de SUNAT — se escribe a mano si
                             aplica)
                         </span>
@@ -166,27 +166,27 @@ function ClientFormFields({
                         onChange={(event) =>
                             setData('nombre_comercial', event.target.value)
                         }
-                        className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                        className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                     />
                     <FieldError message={errors.nombre_comercial} />
                 </div>
             )}
 
             <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                     Email
                 </Label>
                 <Input
                     type="email"
                     value={data.email}
                     onChange={(event) => setData('email', event.target.value)}
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                 />
                 <FieldError message={errors.email} />
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                     Telefono
                 </Label>
                 <Input
@@ -194,13 +194,13 @@ function ClientFormFields({
                     onChange={(event) =>
                         setData('telefono', event.target.value)
                     }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                 />
                 <FieldError message={errors.telefono} />
             </div>
 
             <div>
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                     WhatsApp
                 </Label>
                 <Input
@@ -208,13 +208,13 @@ function ClientFormFields({
                     onChange={(event) =>
                         setData('whatsapp', event.target.value)
                     }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                 />
                 <FieldError message={errors.whatsapp} />
             </div>
 
             <div className="sm:col-span-2">
-                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                     Direccion fiscal
                 </Label>
                 <Input
@@ -222,7 +222,7 @@ function ClientFormFields({
                     onChange={(event) =>
                         setData('direccion_fiscal', event.target.value)
                     }
-                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                 />
                 <FieldError message={errors.direccion_fiscal} />
             </div>
@@ -230,9 +230,9 @@ function ClientFormFields({
             {data.tipo_documento === 'ruc' && (
                 <>
                     <div>
-                        <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                        <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                             Estado SUNAT{' '}
-                            <span className="font-normal text-muted-foreground normal-case">
+                            <span className="text-muted-foreground font-normal normal-case">
                                 (según consulta)
                             </span>
                         </Label>
@@ -240,15 +240,15 @@ function ClientFormFields({
                             value={data.estado_contribuyente}
                             readOnly
                             disabled
-                            className="mt-1 h-9 cursor-not-allowed rounded-[8px] border-border bg-muted/40 text-[13px]"
+                            className="border-border bg-muted/40 mt-1 h-9 cursor-not-allowed rounded-[8px] text-[13px]"
                         />
                         <FieldError message={errors.estado_contribuyente} />
                     </div>
 
                     <div>
-                        <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                        <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                             Condicion{' '}
-                            <span className="font-normal text-muted-foreground normal-case">
+                            <span className="text-muted-foreground font-normal normal-case">
                                 (según consulta)
                             </span>
                         </Label>
@@ -256,7 +256,7 @@ function ClientFormFields({
                             value={data.condicion_domicilio}
                             readOnly
                             disabled
-                            className="mt-1 h-9 cursor-not-allowed rounded-[8px] border-border bg-muted/40 text-[13px]"
+                            className="border-border bg-muted/40 mt-1 h-9 cursor-not-allowed rounded-[8px] text-[13px]"
                         />
                         <FieldError message={errors.condicion_domicilio} />
                     </div>
@@ -387,7 +387,7 @@ export default function ClientCreateDialog({
             return;
         }
 
-        form.post(clientes.store.url(teamSlug), {
+        void form.post(clientes.store.url(teamSlug), {
             onSuccess: (client) => {
                 onOpenChange(false);
                 onCreated(client);
@@ -397,13 +397,13 @@ export default function ClientCreateDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[88vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-2xl">
+            <DialogContent className="border-border bg-card max-h-[88vh] overflow-y-auto rounded-[16px] sm:max-w-2xl">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
-                        <div className="flex size-10 items-center justify-center rounded-[11px] bg-destructive/10 text-primary">
+                        <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
                             <UserRoundPlus className="size-5" />
                         </div>
-                        <DialogTitle className="font-['Oswald',sans-serif] text-[20px] font-semibold text-foreground uppercase">
+                        <DialogTitle className="text-foreground font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
                             Agregar cliente
                         </DialogTitle>
                     </div>
@@ -420,7 +420,7 @@ export default function ClientCreateDialog({
 
                     {duplicateClient && (
                         <div className="rounded-[10px] border border-amber-500/30 bg-amber-500/10 p-3">
-                            <p className="text-sm font-semibold text-foreground">
+                            <p className="text-foreground text-sm font-semibold">
                                 Ya está registrado:{' '}
                                 {duplicateClient.razon_social}
                             </p>
@@ -455,7 +455,7 @@ export default function ClientCreateDialog({
                             type="button"
                             variant="outline"
                             onClick={() => onOpenChange(false)}
-                            className="rounded-[9px] border-border bg-card text-foreground/80 shadow-none"
+                            className="border-border bg-card text-foreground/80 rounded-[9px] shadow-none"
                         >
                             Cancelar
                         </Button>
@@ -464,7 +464,7 @@ export default function ClientCreateDialog({
                             disabled={
                                 form.processing || duplicateClient !== null
                             }
-                            className="rounded-[9px] bg-primary font-bold text-white shadow-none hover:bg-primary/90"
+                            className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
                         >
                             Guardar cliente
                         </Button>

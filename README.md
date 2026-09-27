@@ -9,31 +9,36 @@ Sistema web a medida para **Bruce Fire S.A.C.**, empresa de Trujillo (Perú) ded
 ## ✨ Funcionalidades principales
 
 ### 🧾 Ventas y facturación electrónica
+
 - **Cotizaciones** con vigencia, envío al cliente y conversión directa a venta.
 - **Ventas por escaneo de series**: cada extintor vendido se identifica por su código interno `BF-EQ-XXXXXX` y se descuenta del stock en tiempo real.
 - **Facturas y boletas electrónicas** firmadas y enviadas a SUNAT con [Greenter](https://greenter.dev) (XML UBL 2.1, CDR y representación impresa en PDF con QR).
-- **Reglas SUNAT aplicadas en el sistema**: la factura solo se emite a RUC *Activo y Habido*; boletas a *Clientes varios* hasta S/ 700; detracción automática en servicios.
-- **Envío diferido con ventana de revisión**: el comprobante queda *por enviar* unas horas (configurable) y se puede corregir —factura ↔ boleta, cliente o anulación— **sin emitir nota de crédito**. Un proceso programado lo envía y reintenta si SUNAT no responde.
+- **Reglas SUNAT aplicadas en el sistema**: la factura solo se emite a RUC _Activo y Habido_; boletas a _Clientes varios_ hasta S/ 700; detracción automática en servicios.
+- **Envío diferido con ventana de revisión**: el comprobante queda _por enviar_ unas horas (configurable) y se puede corregir —factura ↔ boleta, cliente o anulación— **sin emitir nota de crédito**. Un proceso programado lo envía y reintenta si SUNAT no responde.
 - **Notas de crédito y débito**, notas de venta internas, cobranzas y control de caja.
 - El comprobante agrupa las unidades del mismo producto en una sola línea; las series quedan para el control interno.
 
 ### 👥 Clientes
+
 - Búsqueda por RUC, DNI, nombre o razón social (por palabras, en cualquier orden).
 - Alta de clientes con **autocompletado desde RENIEC / SUNAT** (dirección, estado y condición del contribuyente), consultando la API solo cuando se registra un cliente nuevo.
 
 ### 📦 Almacén e inventario
+
 - **Recepciones de proveedor** con control de mercadería conforme / no conforme.
 - Registro por unidad: capacidad, número de serie del fabricante, marca y año de fabricación.
 - **Kardex** completo, ajustes de stock con motivo, consulta rápida por serie y **stickers con código de barras** en PDF.
 - Multi-sede: cada trabajador opera solo el stock de su sede.
 
 ### 🔧 Técnicos de planta y de campo
+
 - Órdenes de servicio, recojos, recepción en taller, checklist técnico, registro de deficiencias y trabajos adicionales.
 - Instalaciones, inspecciones y actas de entrega en campo.
 - **Certificados** (operatividad, prueba hidrostática, instalación) generados en PDF.
 - **Alertas de vencimiento** de recargas y pruebas hidrostáticas para la venta proactiva.
 
 ### 📊 Gerencia e inteligencia de negocio
+
 - Dashboard con KPIs, reportes comerciales y de inventario.
 - Gestión de usuarios, roles y permisos, sedes y configuración de la empresa.
 - **Auditoría** de las acciones sensibles del sistema.
@@ -43,25 +48,25 @@ Sistema web a medida para **Bruce Fire S.A.C.**, empresa de Trujillo (Perú) ded
 
 ## 👤 Roles del sistema
 
-| Rol | Qué hace |
-|---|---|
-| **Gerente** | Supervisa KPIs, reportes, usuarios, sedes, catálogo, auditoría e IA |
-| **Vendedor** | Clientes, cotizaciones, ventas, facturación, cobranzas, alertas y certificados |
-| **Almacén** | Recepciones, stock y Kardex, ajustes y stickers |
-| **Técnico de Planta** | Recepción de equipos, checklist, deficiencias y mantenimiento |
-| **Técnico de Campo** | Recojos, inspecciones, instalaciones y entregas |
+| Rol                   | Qué hace                                                                       |
+| --------------------- | ------------------------------------------------------------------------------ |
+| **Gerente**           | Supervisa KPIs, reportes, usuarios, sedes, catálogo, auditoría e IA            |
+| **Vendedor**          | Clientes, cotizaciones, ventas, facturación, cobranzas, alertas y certificados |
+| **Almacén**           | Recepciones, stock y Kardex, ajustes y stickers                                |
+| **Técnico de Planta** | Recepción de equipos, checklist, deficiencias y mantenimiento                  |
+| **Técnico de Campo**  | Recojos, inspecciones, instalaciones y entregas                                |
 
 ---
 
 ## 🛠️ Stack tecnológico
 
-| Capa | Tecnologías |
-|---|---|
-| Backend | PHP 8.3 · **Laravel 13** · Laravel Fortify (autenticación, 2FA, passkeys) · Spatie Permission |
-| Frontend | **React 19** · **Inertia.js 3** · TypeScript · **Tailwind CSS 4** · Vite 8 · Laravel Wayfinder |
-| Facturación | Greenter (SUNAT) · DomPDF · códigos QR y de barras |
-| Datos | SQLite (desarrollo) / MySQL (producción) |
-| Calidad | **Pest 4** (más de 370 pruebas automatizadas) · Laravel Pint · PHPStan · GitHub Actions |
+| Capa        | Tecnologías                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------------- |
+| Backend     | PHP 8.3 · **Laravel 13** · Laravel Fortify (autenticación, 2FA, passkeys) · Spatie Permission  |
+| Frontend    | **React 19** · **Inertia.js 3** · TypeScript · **Tailwind CSS 4** · Vite 8 · Laravel Wayfinder |
+| Facturación | Greenter (SUNAT) · DomPDF · códigos QR y de barras                                             |
+| Datos       | SQLite (desarrollo) / MySQL (producción)                                                       |
+| Calidad     | **Pest 4** (más de 370 pruebas automatizadas) · Laravel Pint · PHPStan · GitHub Actions        |
 
 ---
 
@@ -109,13 +114,13 @@ php artisan schedule:work
 
 El seeder crea un usuario por rol, todos con la contraseña `password`:
 
-| Rol | Correo |
-|---|---|
-| Gerente | `gerente@brucefire.pe` |
-| Vendedor | `vendedor@brucefire.pe` |
-| Almacén | `almacen@brucefire.pe` |
+| Rol               | Correo                        |
+| ----------------- | ----------------------------- |
+| Gerente           | `gerente@brucefire.pe`        |
+| Vendedor          | `vendedor@brucefire.pe`       |
+| Almacén           | `almacen@brucefire.pe`        |
 | Técnico de Planta | `tecnico.planta@brucefire.pe` |
-| Técnico de Campo | `tecnico.campo@brucefire.pe` |
+| Técnico de Campo  | `tecnico.campo@brucefire.pe`  |
 
 ### Facturación electrónica
 

@@ -1,25 +1,17 @@
 ﻿import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    AlertCircle,
     AlertTriangle,
     ArrowRight,
-    Boxes,
-    Building2,
     Calendar,
     CheckCircle2,
     Clock,
-    Factory,
-    Filter,
     PackageCheck,
     Search,
-    ShieldAlert,
-    User,
     Wrench,
     X,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,7 +27,7 @@ export type OrderItem = {
     sede?: string | null;
     tipo_servicio: string;
     fecha: string;
-    prioridad: 'normal' | 'alta' | 'urgente' | string;
+    prioridad: string;
     estado: string;
     estado_coarse: string;
     observaciones?: string | null;
@@ -96,7 +88,7 @@ function getEstadoBadge(estado: string) {
             );
         case 'esperando_autorizacion':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full border border-destructive/20 bg-destructive/10 px-2 py-0.5 text-[10.5px] font-bold text-destructive">
+                <span className="border-destructive/20 bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-bold">
                     <AlertTriangle className="size-3" />
                     Esperando Autorización
                 </span>
@@ -119,7 +111,7 @@ function getEstadoBadge(estado: string) {
             );
         default:
             return (
-                <span className="inline-flex items-center rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[10.5px] font-semibold text-muted-foreground">
+                <span className="border-border bg-muted/40 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold">
                     {estado.replace('_', ' ')}
                 </span>
             );
@@ -129,20 +121,20 @@ function getEstadoBadge(estado: string) {
 function getPrioridadBadge(prioridad: string) {
     if (prioridad === 'urgente') {
         return (
-            <span className="rounded-[6px] border border-destructive/20 bg-destructive/10 px-1.5 py-0.5 text-[9.5px] font-black text-destructive uppercase">
+            <span className="border-destructive/20 bg-destructive/10 text-destructive rounded-[6px] border px-1.5 py-0.5 text-[9.5px] font-black uppercase">
                 Urgente
             </span>
         );
     }
     if (prioridad === 'alta') {
         return (
-            <span className="rounded-[6px] border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-amber-600 dark:text-amber-400 uppercase">
+            <span className="rounded-[6px] border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-amber-600 uppercase dark:text-amber-400">
                 Alta
             </span>
         );
     }
     return (
-        <span className="rounded-[6px] border border-border bg-muted/40 px-1.5 py-0.5 text-[9.5px] font-semibold text-muted-foreground uppercase">
+        <span className="border-border bg-muted/40 text-muted-foreground rounded-[6px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase">
             Normal
         </span>
     );
@@ -184,10 +176,10 @@ export default function TecnicoPlantaDashboard({
                 {/* Greeting & Quick Action */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg font-black tracking-tight text-foreground">
+                        <h1 className="text-foreground text-lg font-black tracking-tight">
                             Cola Operativa de Taller
                         </h1>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[11px]">
                             Órdenes de servicio asignadas al departamento de
                             planta.
                         </p>
@@ -195,7 +187,7 @@ export default function TecnicoPlantaDashboard({
 
                     <Link
                         href={`/${teamSlug}/tecnico-planta/recepcion`}
-                        className="inline-flex items-center gap-1.5 rounded-[10px] bg-primary px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-primary/90 active:scale-95"
+                        className="bg-primary hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all active:scale-95"
                     >
                         <PackageCheck className="size-4" />
                         <span>Recepción</span>
@@ -219,10 +211,10 @@ export default function TecnicoPlantaDashboard({
                             </span>
                             <Clock className="size-4" />
                         </div>
-                        <div className="mt-2 text-2xl font-black text-foreground">
+                        <div className="text-foreground mt-2 text-2xl font-black">
                             {kpis.pendientes_recepcion}
                         </div>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground text-[10px]">
                             Por recibir
                         </span>
                     </button>
@@ -242,10 +234,10 @@ export default function TecnicoPlantaDashboard({
                             </span>
                             <Wrench className="size-4" />
                         </div>
-                        <div className="mt-2 text-2xl font-black text-foreground">
+                        <div className="text-foreground mt-2 text-2xl font-black">
                             {kpis.en_taller}
                         </div>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground text-[10px]">
                             En proceso
                         </span>
                     </button>
@@ -259,16 +251,16 @@ export default function TecnicoPlantaDashboard({
                                 : 'border-border bg-card hover:bg-muted/40'
                         }`}
                     >
-                        <div className="flex items-center justify-between text-destructive">
+                        <div className="text-destructive flex items-center justify-between">
                             <span className="text-[10.5px] font-bold tracking-wider uppercase">
                                 Por Autorizar
                             </span>
                             <AlertTriangle className="size-4" />
                         </div>
-                        <div className="mt-2 text-2xl font-black text-foreground">
+                        <div className="text-foreground mt-2 text-2xl font-black">
                             {kpis.esperando_autorizacion}
                         </div>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground text-[10px]">
                             Deficiencias
                         </span>
                     </button>
@@ -288,10 +280,10 @@ export default function TecnicoPlantaDashboard({
                             </span>
                             <CheckCircle2 className="size-4" />
                         </div>
-                        <div className="mt-2 text-2xl font-black text-foreground">
+                        <div className="text-foreground mt-2 text-2xl font-black">
                             {kpis.listas}
                         </div>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground text-[10px]">
                             Certif / Entrega
                         </span>
                     </button>
@@ -305,7 +297,7 @@ export default function TecnicoPlantaDashboard({
                         placeholder="Buscar por código OS o nombre de cliente..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="h-10 rounded-[10px] bg-card pr-8 pl-9 text-xs"
+                        className="bg-card h-10 rounded-[10px] pr-8 pl-9 text-xs"
                     />
                     {search && (
                         <button
@@ -343,7 +335,7 @@ export default function TecnicoPlantaDashboard({
                             className={`rounded-full px-3 py-1 text-[11px] font-bold whitespace-nowrap transition-all ${
                                 currentTab === t.id
                                     ? 'bg-foreground text-background shadow-xs'
-                                    : 'border border-border bg-card text-muted-foreground hover:bg-background'
+                                    : 'border-border bg-card text-muted-foreground hover:bg-background border'
                             }`}
                         >
                             {t.label}
@@ -354,14 +346,14 @@ export default function TecnicoPlantaDashboard({
                 {/* Order List: Mobile Cards (Never horizontal tables) */}
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
-                        <Card className="rounded-[14px] border border-dashed border-border bg-card p-8 text-center">
-                            <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-muted/30 text-destructive">
+                        <Card className="border-border bg-card rounded-[14px] border border-dashed p-8 text-center">
+                            <div className="bg-muted/30 text-destructive mx-auto mb-2 flex size-12 items-center justify-center rounded-full">
                                 <Wrench className="size-6" />
                             </div>
-                            <h3 className="text-sm font-bold text-foreground">
+                            <h3 className="text-foreground text-sm font-bold">
                                 No hay órdenes en esta cola
                             </h3>
-                            <p className="mt-1 text-xs text-muted-foreground">
+                            <p className="text-muted-foreground mt-1 text-xs">
                                 {search
                                     ? 'No se encontraron órdenes que coincidan con la búsqueda.'
                                     : 'Todas las órdenes de esta cola están atendidas o en otra etapa.'}
@@ -372,17 +364,17 @@ export default function TecnicoPlantaDashboard({
                             <Link
                                 key={order.id}
                                 href={`/${teamSlug}/tecnico-planta/ordenes/${order.id}`}
-                                className="block rounded-[14px] border border-border bg-card p-4 shadow-xs transition-all hover:border-destructive/20/40 hover:shadow-sm active:scale-[0.99]"
+                                className="border-border bg-card hover:border-destructive/20/40 block rounded-[14px] border p-4 shadow-xs transition-all hover:shadow-sm active:scale-[0.99]"
                             >
-                                <div className="mb-2.5 flex items-start justify-between gap-2 border-b border-border pb-2.5">
+                                <div className="border-border mb-2.5 flex items-start justify-between gap-2 border-b pb-2.5">
                                     <div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="font-mono text-xs font-black text-destructive">
+                                            <span className="text-destructive font-mono text-xs font-black">
                                                 {order.codigo}
                                             </span>
                                             {getPrioridadBadge(order.prioridad)}
                                         </div>
-                                        <h3 className="mt-0.5 line-clamp-1 text-sm leading-snug font-bold text-foreground">
+                                        <h3 className="text-foreground mt-0.5 line-clamp-1 text-sm leading-snug font-bold">
                                             {order.cliente}
                                         </h3>
                                     </div>
@@ -390,7 +382,7 @@ export default function TecnicoPlantaDashboard({
                                     <div>{getEstadoBadge(order.estado)}</div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                                <div className="text-muted-foreground grid grid-cols-2 gap-2 text-[11px]">
                                     <div className="flex items-center gap-1.5 truncate">
                                         <Wrench className="size-3.5 shrink-0 text-gray-400" />
                                         <span className="truncate capitalize">
@@ -406,7 +398,7 @@ export default function TecnicoPlantaDashboard({
 
                                 {/* Banner condicional si requiere autorización */}
                                 {order.requiere_autorizacion_count > 0 && (
-                                    <div className="mt-3 flex items-center justify-between rounded-[8px] border border-destructive/20 bg-destructive/10 px-2.5 py-1.5 text-[11px] text-destructive">
+                                    <div className="border-destructive/20 bg-destructive/10 text-destructive mt-3 flex items-center justify-between rounded-[8px] border px-2.5 py-1.5 text-[11px]">
                                         <div className="flex items-center gap-1.5 font-bold">
                                             <AlertTriangle className="size-3.5 shrink-0" />
                                             <span>
@@ -428,7 +420,7 @@ export default function TecnicoPlantaDashboard({
                 {/* Pagination */}
                 {orders.links.length > 3 && (
                     <div className="flex items-center justify-between pt-2">
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                             {orders.total} órdenes totales
                         </span>
                         <div className="flex gap-1">

@@ -18,14 +18,22 @@ export function ThemeToggle({ className = '' }: ThemeToggleProps) {
         <button
             type="button"
             onClick={toggleTheme}
-            className={`relative flex size-[38px] shrink-0 items-center justify-center rounded-[9px] border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground transition-colors ${className}`}
+            className={`border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-[38px] shrink-0 items-center justify-center rounded-[9px] border transition-colors ${className}`}
             title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-            aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-label={
+                isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+            }
         >
             {isDark ? (
-                <Sun className="size-4 text-amber-400 transition-transform hover:rotate-45" strokeWidth={2} />
+                <Sun
+                    className="size-4 text-amber-400 transition-transform hover:rotate-45"
+                    strokeWidth={2}
+                />
             ) : (
-                <Moon className="size-4 text-muted-foreground transition-transform hover:-rotate-12" strokeWidth={2} />
+                <Moon
+                    className="text-muted-foreground size-4 transition-transform hover:-rotate-12"
+                    strokeWidth={2}
+                />
             )}
         </button>
     );

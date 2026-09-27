@@ -28,7 +28,7 @@ type ClientRow = {
     codigo_interno: string;
     cliente: {
         razon_social: string;
-        tipo_documento: 'dni' | 'ruc' | string;
+        tipo_documento: string;
         avatar: string;
     };
     documento: string;
@@ -83,13 +83,6 @@ function initials(value: string) {
         .join('');
 }
 
-function sunatIsHealthy(client: ClientRow) {
-    return (
-        client.estado_sunat.estado_contribuyente === 'ACTIVO' &&
-        client.estado_sunat.condicion_domicilio === 'HABIDO'
-    );
-}
-
 function cleanPaginationLabel(label: string) {
     return label.replace('&laquo;', '<').replace('&raquo;', '>');
 }
@@ -103,7 +96,7 @@ function renderSunatBadge(client: ClientRow) {
 
     if (esDni) {
         return (
-            <span className="text-[11.5px] font-medium text-muted-foreground">
+            <span className="text-muted-foreground text-[11.5px] font-medium">
                 No aplica (DNI)
             </span>
         );
@@ -111,7 +104,7 @@ function renderSunatBadge(client: ClientRow) {
 
     if (esVarios) {
         return (
-            <span className="text-[11.5px] font-medium text-muted-foreground">
+            <span className="text-muted-foreground text-[11.5px] font-medium">
                 No aplica
             </span>
         );
@@ -142,7 +135,7 @@ function renderSunatBadge(client: ClientRow) {
 
     // Otro estado (rojo con el estado real)
     return (
-        <Badge className="rounded-full border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-[10.5px] font-bold text-destructive shadow-none">
+        <Badge className="border-destructive/20 bg-destructive/10 text-destructive rounded-full border px-2.5 py-1 text-[10.5px] font-bold shadow-none">
             {estado_contribuyente || 'No activo'} ·{' '}
             {condicion_domicilio || 'No habido'}
         </Badge>
@@ -237,7 +230,7 @@ export default function ClientesIndex({
                         return (
                             <Card
                                 key={item.label}
-                                className="flex-row items-center gap-3.5 rounded-[14px] border-border bg-card px-[18px] py-4 shadow-none"
+                                className="border-border bg-card flex-row items-center gap-3.5 rounded-[14px] px-[18px] py-4 shadow-none"
                             >
                                 <div
                                     className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}
@@ -248,10 +241,10 @@ export default function ClientesIndex({
                                     />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] font-bold tracking-[0.03em] text-muted-foreground uppercase">
+                                    <div className="text-muted-foreground text-[11px] font-bold tracking-[0.03em] uppercase">
                                         {item.label}
                                     </div>
-                                    <div className="font-['Oswald',sans-serif] text-[21px] leading-tight font-semibold text-foreground">
+                                    <div className="text-foreground font-['Oswald',sans-serif] text-[21px] leading-tight font-semibold">
                                         {item.value}
                                     </div>
                                 </div>
@@ -260,14 +253,14 @@ export default function ClientesIndex({
                     })}
                 </div>
 
-                <Card className="gap-0 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
                         <form
                             onSubmit={submitSearch}
-                            className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3"
+                            className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3"
                         >
                             <Search
-                                className="size-3.5 shrink-0 text-muted-foreground"
+                                className="text-muted-foreground size-3.5 shrink-0"
                                 strokeWidth={2}
                             />
                             <input
@@ -276,14 +269,14 @@ export default function ClientesIndex({
                                     setSearch(event.target.value)
                                 }
                                 placeholder="Buscar por nombre, razón social, RUC o DNI..."
-                                className="h-10 min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+                                className="text-foreground placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
                             />
                         </form>
 
                         <Button
                             asChild
                             variant="outline"
-                            className="h-10 rounded-[9px] border-border bg-card px-3.5 text-[12.5px] font-semibold text-foreground/80 shadow-none"
+                            className="border-border bg-card text-foreground/80 h-10 rounded-[9px] px-3.5 text-[12.5px] font-semibold shadow-none"
                         >
                             <a
                                 href={clientes.export.url(currentTeam.slug, {
@@ -301,7 +294,7 @@ export default function ClientesIndex({
                             onClick={() => {
                                 setDialogOpen(true);
                             }}
-                            className="h-10 rounded-[9px] bg-primary px-4 text-[13px] font-bold text-white shadow-none hover:bg-primary/90"
+                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             <Plus className="size-3.5" />
                             Agregar cliente
@@ -315,7 +308,7 @@ export default function ClientesIndex({
                                     {columns.map((column) => (
                                         <th
                                             key={column}
-                                            className="border-b border-border px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap text-muted-foreground uppercase"
+                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap uppercase"
                                         >
                                             {column}
                                         </th>
@@ -330,13 +323,11 @@ export default function ClientesIndex({
                                     />
                                 ) : (
                                     clients.data.map((client) => {
-                                        const healthy = sunatIsHealthy(client);
-
                                         return (
                                             <tr key={client.id}>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <div className="flex items-center gap-2.5">
-                                                        <div className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground/80">
+                                                        <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
                                                             {initials(
                                                                 client.cliente
                                                                     .razon_social,
@@ -345,7 +336,7 @@ export default function ClientesIndex({
                                                                     .avatar}
                                                         </div>
                                                         <div className="min-w-[180px]">
-                                                            <div className="flex items-center gap-1.5 font-bold text-foreground">
+                                                            <div className="text-foreground flex items-center gap-1.5 font-bold">
                                                                 <Link
                                                                     href={clientes.show(
                                                                         {
@@ -363,12 +354,12 @@ export default function ClientesIndex({
                                                                     }
                                                                 </Link>
                                                                 {!client.activo && (
-                                                                    <Badge className="rounded-full border-transparent bg-destructive/10 px-1.5 py-0 text-[9.5px] font-bold text-destructive shadow-none">
+                                                                    <Badge className="bg-destructive/10 text-destructive rounded-full border-transparent px-1.5 py-0 text-[9.5px] font-bold shadow-none">
                                                                         Inactivo
                                                                     </Badge>
                                                                 )}
                                                             </div>
-                                                            <div className="text-[11px] text-muted-foreground">
+                                                            <div className="text-muted-foreground text-[11px]">
                                                                 {
                                                                     client.codigo_interno
                                                                 }{' '}
@@ -378,29 +369,29 @@ export default function ClientesIndex({
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-muted-foreground">
+                                                <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
                                                     {client.documento}
                                                 </td>
-                                                <td className="max-w-[280px] border-b border-border px-2.5 py-[13px] text-muted-foreground">
+                                                <td className="border-border text-muted-foreground max-w-[280px] border-b px-2.5 py-[13px]">
                                                     <span className="line-clamp-2">
                                                         {client.direccion ??
                                                             '-'}
                                                     </span>
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     {renderSunatBadge(client)}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px] text-muted-foreground">
+                                                <td className="border-border text-muted-foreground border-b px-2.5 py-[13px]">
                                                     {client.ultima_compra ??
                                                         '-'}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <div className="flex gap-1.5">
                                                         <Button
                                                             asChild
                                                             variant="outline"
                                                             size="icon"
-                                                            className="size-7 rounded-[7px] border-border bg-card text-foreground/80 shadow-none"
+                                                            className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
                                                         >
                                                             <Link
                                                                 href={clientes.show(
@@ -424,7 +415,7 @@ export default function ClientesIndex({
                         </table>
                     </div>
 
-                    <div className="mt-3.5 flex flex-col gap-3 text-[11.5px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
                         <span>
                             Mostrando {clients.from ?? 0}-{clients.to ?? 0} de{' '}
                             {formatNumber(clients.total)} clientes
@@ -449,7 +440,7 @@ export default function ClientesIndex({
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
-                                        className="flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] text-muted-foreground"
+                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
                                     >
                                         {cleanPaginationLabel(link.label)}
                                     </span>

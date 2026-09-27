@@ -11,7 +11,6 @@ import {
     Wrench,
     ShieldAlert,
     UserCheck,
-    MessageSquare,
     PackageCheck,
 } from 'lucide-react';
 
@@ -173,7 +172,7 @@ export default function DeficienciasIndex({
                         className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.estado === 'todas' || !filters.estado
                                 ? 'bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         Todas ({counts.todas})
@@ -186,7 +185,7 @@ export default function DeficienciasIndex({
                         className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.estado === 'esperando_autorizacion'
                                 ? 'bg-amber-600 text-white shadow-xs'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         Por Autorizar ({counts.esperando_autorizacion})
@@ -197,7 +196,7 @@ export default function DeficienciasIndex({
                         className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.estado === 'autorizada'
                                 ? 'bg-emerald-600 text-white shadow-xs'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         Autorizadas ({counts.autorizada})
@@ -208,7 +207,7 @@ export default function DeficienciasIndex({
                         className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.estado === 'resuelta'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         Resueltas ({counts.resuelta})
@@ -222,7 +221,7 @@ export default function DeficienciasIndex({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar por componente, falla, orden, serie..."
-                        className="w-full rounded-xl border border-neutral-200 bg-card py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
@@ -236,7 +235,7 @@ export default function DeficienciasIndex({
                 {/* Deficiencies List */}
                 <div className="space-y-3">
                     {deficiencies.data.length === 0 ? (
-                        <div className="space-y-2 rounded-2xl border border-dashed border-neutral-200 bg-card p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
+                        <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
                             <ShieldAlert className="mx-auto h-8 w-8 text-neutral-400" />
                             <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                                 No se encontraron deficiencias en este filtro
@@ -246,7 +245,7 @@ export default function DeficienciasIndex({
                         deficiencies.data.map((d) => (
                             <div
                                 key={d.id}
-                                className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
+                                className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div>
@@ -368,7 +367,7 @@ export default function DeficienciasIndex({
                 {/* MODAL: Resolver Deficiencia */}
                 {resolveModalItem && (
                     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="w-full space-y-4 rounded-t-3xl border border-neutral-200 bg-card p-5 shadow-xl sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
+                        <div className="bg-card w-full space-y-4 rounded-t-3xl border border-neutral-200 p-5 shadow-xl sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
                             <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
                                 <div>
                                     <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">

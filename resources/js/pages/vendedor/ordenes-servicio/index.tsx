@@ -1,14 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import {
-    Calendar,
-    CheckCircle2,
-    Clock,
-    Eye,
-    Filter,
-    Plus,
-    Search,
-    Wrench,
-} from 'lucide-react';
+import { Eye, Plus, Wrench } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
@@ -40,7 +31,7 @@ export type ServiceOrderItem = {
     tipo_servicio: string;
     fecha: string;
     estado: string;
-    coarse_label: 'asignada' | 'en_proceso' | 'completada' | 'cerrada' | string;
+    coarse_label: string;
     departamento_tecnico?: string | null;
     prioridad: string;
 };
@@ -217,10 +208,10 @@ export default function ServiceOrdersIndex({
                 {/* Header toolbar */}
                 <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <div>
-                        <h2 className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
+                        <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
                             Órdenes de Servicio
                         </h2>
-                        <p className="text-[12.5px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[12.5px]">
                             Órdenes generadas a partir de tus ventas y
                             cotizaciones con servicio incluido.
                         </p>
@@ -229,7 +220,7 @@ export default function ServiceOrdersIndex({
                     <Button
                         type="button"
                         onClick={() => setDialogOpen(true)}
-                        className="h-9 rounded-[9px] bg-primary px-3.5 text-[12.5px] font-bold text-white shadow-none hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] px-3.5 text-[12.5px] font-bold text-white shadow-none"
                     >
                         <Plus className="mr-1.5 size-4" />
                         <span>Nueva orden</span>
@@ -237,7 +228,7 @@ export default function ServiceOrdersIndex({
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex w-fit rounded-[9px] bg-muted p-[3px]">
+                <div className="bg-muted flex w-fit rounded-[9px] p-[3px]">
                     {TABS.map((tab) => {
                         const active = currentEstado === tab.id;
                         return (
@@ -258,30 +249,30 @@ export default function ServiceOrdersIndex({
                 </div>
 
                 {/* Table Card */}
-                <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-[12.5px]">
                             <thead>
-                                <tr className="border-b border-border">
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                                <tr className="border-border border-b">
+                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                         N° Orden
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                         Cliente
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                         Servicio
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                         Técnico
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-center font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                                    <th className="text-muted-foreground px-2.5 py-2.5 text-center font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                         Progreso (4 pts)
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                         Estado
                                     </th>
-                                    <th className="px-2.5 py-2.5 text-right font-mono text-[9.5px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                                    <th className="text-muted-foreground px-2.5 py-2.5 text-right font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                         Acción
                                     </th>
                                 </tr>
@@ -291,15 +282,15 @@ export default function ServiceOrdersIndex({
                                     <tr>
                                         <td
                                             colSpan={7}
-                                            className="px-4 py-12 text-center text-muted-foreground"
+                                            className="text-muted-foreground px-4 py-12 text-center"
                                         >
                                             <div className="flex flex-col items-center justify-center gap-2">
-                                                <Wrench className="size-8 text-muted-foreground" />
-                                                <p className="text-xs font-semibold text-foreground">
+                                                <Wrench className="text-muted-foreground size-8" />
+                                                <p className="text-foreground text-xs font-semibold">
                                                     No se encontraron órdenes de
                                                     servicio
                                                 </p>
-                                                <p className="text-[11px] text-muted-foreground">
+                                                <p className="text-muted-foreground text-[11px]">
                                                     {currentEstado
                                                         ? 'No hay registros para este filtro.'
                                                         : 'Aún no se han registrado órdenes de servicio.'}
@@ -321,9 +312,9 @@ export default function ServiceOrdersIndex({
                                         return (
                                             <tr
                                                 key={order.id}
-                                                className="border-b border-border transition-colors hover:bg-muted/40"
+                                                className="border-border hover:bg-muted/40 border-b transition-colors"
                                             >
-                                                <td className="px-2.5 py-3.5 font-mono text-xs font-bold text-foreground">
+                                                <td className="text-foreground px-2.5 py-3.5 font-mono text-xs font-bold">
                                                     <Link
                                                         href={ServiceOrderController.show.url(
                                                             {
@@ -339,26 +330,26 @@ export default function ServiceOrdersIndex({
                                                     </Link>
                                                 </td>
 
-                                                <td className="px-2.5 py-3.5 font-semibold text-foreground">
+                                                <td className="text-foreground px-2.5 py-3.5 font-semibold">
                                                     {order.cliente}
                                                 </td>
 
-                                                <td className="px-2.5 py-3.5 text-foreground/80">
+                                                <td className="text-foreground/80 px-2.5 py-3.5">
                                                     <span className="line-clamp-1">
                                                         {order.tipo_servicio}
                                                     </span>
-                                                    <span className="font-mono text-[10px] text-muted-foreground">
+                                                    <span className="text-muted-foreground font-mono text-[10px]">
                                                         {order.fecha}
                                                     </span>
                                                 </td>
 
-                                                <td className="px-2.5 py-3.5 text-[12px] text-foreground/80">
+                                                <td className="text-foreground/80 px-2.5 py-3.5 text-[12px]">
                                                     <div>
                                                         {order.tecnico ||
                                                             'Por asignar'}
                                                     </div>
                                                     {order.departamento_tecnico && (
-                                                        <div className="font-mono text-[10px] text-muted-foreground capitalize">
+                                                        <div className="text-muted-foreground font-mono text-[10px] capitalize">
                                                             (
                                                             {
                                                                 order.departamento_tecnico
@@ -414,7 +405,7 @@ export default function ServiceOrdersIndex({
                                                         asChild
                                                         variant="outline"
                                                         size="icon"
-                                                        className="size-7 rounded-[7px] border-border bg-card text-foreground/80 shadow-none hover:bg-background"
+                                                        className="border-border bg-card text-foreground/80 hover:bg-background size-7 rounded-[7px] shadow-none"
                                                     >
                                                         <Link
                                                             href={ServiceOrderController.show.url(
@@ -440,7 +431,7 @@ export default function ServiceOrdersIndex({
 
                     {/* Pagination */}
                     {orders.links && orders.links.length > 3 && (
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-[11.5px] text-muted-foreground">
+                        <div className="border-border text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[11.5px]">
                             <span>
                                 Mostrando {orders.from ?? 0}-{orders.to ?? 0} de{' '}
                                 {orders.total} órdenes
@@ -455,7 +446,7 @@ export default function ServiceOrdersIndex({
                                             className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
                                                 link.active
                                                     ? 'bg-card font-bold text-white'
-                                                    : 'border border-border bg-card text-foreground/80 hover:bg-background'
+                                                    : 'border-border bg-card text-foreground/80 hover:bg-background border'
                                             }`}
                                             dangerouslySetInnerHTML={{
                                                 __html: link.label,
@@ -464,7 +455,7 @@ export default function ServiceOrdersIndex({
                                     ) : (
                                         <span
                                             key={idx}
-                                            className="inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs text-muted-foreground opacity-60"
+                                            className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs opacity-60"
                                             dangerouslySetInnerHTML={{
                                                 __html: link.label,
                                             }}
@@ -479,17 +470,17 @@ export default function ServiceOrdersIndex({
 
             {/* Dialog: Nueva Orden de Servicio */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-xl">
+                <DialogContent className="border-border bg-card max-h-[90vh] overflow-y-auto rounded-[16px] sm:max-w-xl">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-[10px] bg-destructive/10 text-primary">
+                            <div className="bg-destructive/10 text-primary flex size-9 items-center justify-center rounded-[10px]">
                                 <Wrench className="size-5" />
                             </div>
                             <div>
-                                <DialogTitle className="font-['Oswald',sans-serif] text-[18px] font-semibold text-foreground">
+                                <DialogTitle className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold">
                                     Nueva orden de servicio
                                 </DialogTitle>
-                                <DialogDescription className="text-xs text-muted-foreground">
+                                <DialogDescription className="text-muted-foreground text-xs">
                                     Para el taller de planta o un servicio en
                                     campo. Toda el área la ve; el responsable es
                                     opcional.
@@ -514,12 +505,12 @@ export default function ServiceOrdersIndex({
                         />
 
                         <div>
-                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Tipo de servicio *
                             </Label>
                             {createForm.data.tipo_servicio ? (
-                                <div className="mt-1 flex items-center justify-between rounded-[9px] border border-primary/40 bg-destructive/5 px-3 py-2">
-                                    <span className="text-[13px] font-bold text-foreground">
+                                <div className="border-primary/40 bg-destructive/5 mt-1 flex items-center justify-between rounded-[9px] border px-3 py-2">
+                                    <span className="text-foreground text-[13px] font-bold">
                                         {createForm.data.tipo_servicio}
                                     </span>
                                     <button
@@ -530,7 +521,7 @@ export default function ServiceOrdersIndex({
                                                 '',
                                             )
                                         }
-                                        className="text-[11.5px] font-semibold text-muted-foreground hover:text-foreground"
+                                        className="text-muted-foreground hover:text-foreground text-[11.5px] font-semibold"
                                     >
                                         Cambiar
                                     </button>
@@ -551,7 +542,7 @@ export default function ServiceOrdersIndex({
                                 </div>
                             )}
                             {createForm.errors.tipo_servicio && (
-                                <p className="mt-1 text-[11px] text-destructive">
+                                <p className="text-destructive mt-1 text-[11px]">
                                     {createForm.errors.tipo_servicio}
                                 </p>
                             )}
@@ -559,10 +550,10 @@ export default function ServiceOrdersIndex({
 
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Área
                                 </Label>
-                                <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                     {(
                                         [
                                             ['planta', 'Planta (taller)'],
@@ -587,7 +578,7 @@ export default function ServiceOrdersIndex({
                                 </div>
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Responsable
                                 </Label>
                                 <select
@@ -598,7 +589,7 @@ export default function ServiceOrdersIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"
+                                    className="border-border bg-card text-foreground mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none"
                                 >
                                     <option value="">
                                         Todo el área (sin asignar)
@@ -613,7 +604,7 @@ export default function ServiceOrdersIndex({
                                     ))}
                                 </select>
                                 {createForm.errors.tecnico_id && (
-                                    <p className="mt-1 text-[11px] text-destructive">
+                                    <p className="text-destructive mt-1 text-[11px]">
                                         {createForm.errors.tecnico_id}
                                     </p>
                                 )}
@@ -622,10 +613,10 @@ export default function ServiceOrdersIndex({
 
                         <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Para
                                 </Label>
-                                <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                     {(
                                         [
                                             ['local_cliente', 'Local'],
@@ -661,7 +652,7 @@ export default function ServiceOrdersIndex({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Fecha programada *
                                 </Label>
                                 <Input
@@ -674,11 +665,11 @@ export default function ServiceOrdersIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                                 />
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Prioridad
                                 </Label>
                                 <select
@@ -689,7 +680,7 @@ export default function ServiceOrdersIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"
+                                    className="border-border bg-card text-foreground mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none"
                                 >
                                     <option value="normal">Normal</option>
                                     <option value="alta">Alta</option>
@@ -699,7 +690,7 @@ export default function ServiceOrdersIndex({
                         </div>
 
                         <div>
-                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Instrucciones para el técnico
                             </Label>
                             <textarea
@@ -711,7 +702,7 @@ export default function ServiceOrdersIndex({
                                     )
                                 }
                                 placeholder="Ej. 7 extintores PQS 6 kg enumerados del 1 al 7, recoger en recepción."
-                                className="mt-1 min-h-[60px] w-full rounded-[8px] border border-border bg-card px-3 py-2 text-[13px] outline-none"
+                                className="border-border bg-card mt-1 min-h-[60px] w-full rounded-[8px] border px-3 py-2 text-[13px] outline-none"
                             />
                         </div>
 
@@ -720,14 +711,14 @@ export default function ServiceOrdersIndex({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setDialogOpen(false)}
-                                className="rounded-[8px] border-border text-xs font-semibold"
+                                className="border-border rounded-[8px] text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={createForm.processing}
-                                className="rounded-[8px] bg-primary text-xs font-bold text-white hover:bg-primary/90"
+                                className="bg-primary hover:bg-primary/90 rounded-[8px] text-xs font-bold text-white"
                             >
                                 Crear orden
                             </Button>

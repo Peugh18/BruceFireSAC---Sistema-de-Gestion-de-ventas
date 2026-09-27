@@ -97,7 +97,7 @@ export default function CambiarUnidadDialog({
             open={linea !== null}
             onOpenChange={(abierto) => !abierto && onClose()}
         >
-            <DialogContent className="max-h-[85vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-lg">
+            <DialogContent className="border-border bg-card max-h-[85vh] overflow-y-auto rounded-[16px] sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="font-['Oswald',sans-serif] text-[19px] font-semibold uppercase">
                         Cambiar extintor
@@ -116,8 +116,8 @@ export default function CambiarUnidadDialog({
                     onSubmit={(event) => cambiar(serie, event)}
                     className="flex gap-2"
                 >
-                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
-                        <ScanLine className="size-4 shrink-0 text-muted-foreground" />
+                    <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                        <ScanLine className="text-muted-foreground size-4 shrink-0" />
                         <input
                             autoFocus
                             value={serie}
@@ -129,7 +129,7 @@ export default function CambiarUnidadDialog({
                     <Button
                         type="submit"
                         disabled={guardando || !serie.trim()}
-                        className="h-10 rounded-[9px] bg-primary text-white shadow-none hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] text-white shadow-none"
                     >
                         {guardando ? (
                             <Loader2 className="size-4 animate-spin" />
@@ -139,37 +139,37 @@ export default function CambiarUnidadDialog({
                 </form>
 
                 {error ? (
-                    <p className="rounded-[9px] bg-destructive/10 px-3 py-2 text-[12px] font-semibold text-destructive">
+                    <p className="bg-destructive/10 text-destructive rounded-[9px] px-3 py-2 text-[12px] font-semibold">
                         {error}
                     </p>
                 ) : null}
 
-                <div className="text-[11px] font-bold text-foreground/80 uppercase">
+                <div className="text-foreground/80 text-[11px] font-bold uppercase">
                     O elige una disponible
                 </div>
                 {disponibles === null ? (
                     <div className="flex justify-center py-4">
-                        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                        <Loader2 className="text-muted-foreground size-5 animate-spin" />
                     </div>
                 ) : disponibles.length === 0 ? (
-                    <p className="text-[12.5px] text-muted-foreground">
+                    <p className="text-muted-foreground text-[12.5px]">
                         No hay otras unidades de este producto en el almacén de
                         la sede.
                     </p>
                 ) : (
-                    <div className="max-h-[260px] overflow-y-auto rounded-[10px] border border-border">
+                    <div className="border-border max-h-[260px] overflow-y-auto rounded-[10px] border">
                         {disponibles.map((unidad) => (
                             <button
                                 key={unidad.inventory_unit_id}
                                 type="button"
                                 disabled={guardando}
                                 onClick={() => cambiar(unidad.numero_serie)}
-                                className="flex w-full items-center gap-3 border-b border-border px-3 py-2 text-left last:border-b-0 hover:bg-muted/40"
+                                className="border-border hover:bg-muted/40 flex w-full items-center gap-3 border-b px-3 py-2 text-left last:border-b-0"
                             >
                                 <span className="font-['IBM_Plex_Mono',monospace] text-[12.5px] font-bold">
                                     {unidad.numero_serie}
                                 </span>
-                                <span className="text-[12px] text-muted-foreground">
+                                <span className="text-muted-foreground text-[12px]">
                                     {[
                                         unidad.capacidad,
                                         unidad.marca,

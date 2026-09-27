@@ -1,16 +1,12 @@
 ﻿import { router, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
-    Building2,
-    Calendar,
     CheckCircle2,
     Clock,
     Filter,
-    HelpCircle,
     MinusCircle,
     PlusCircle,
     TrendingDown,
-    User,
     Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -130,10 +126,10 @@ export default function CajasConsolidadasIndex() {
             <div className="space-y-6">
                 {/* Cabecera */}
                 <div>
-                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
+                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
                         Caja Consolidada & Control de Arqueos
                     </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-sm">
                         Supervisión de turnos de caja de todos los vendedores,
                         validación de diferencias y arqueos ciegos.
                     </p>
@@ -141,23 +137,23 @@ export default function CajasConsolidadasIndex() {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Turnos Hoy
                             </span>
                             <Clock className="size-4 text-blue-600" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.turnosHoy}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Aperturas registradas hoy
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Cajas Abiertas Ahora
                             </span>
@@ -166,13 +162,13 @@ export default function CajasConsolidadasIndex() {
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {kpis.turnosAbiertos}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Puntos de cobro activos
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Descuadres en el Mes
                             </span>
@@ -181,17 +177,17 @@ export default function CajasConsolidadasIndex() {
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
                             {kpis.turnosConDescuadreMes}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Cierres con faltante o sobrante
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Diferencia Neta Acumulada
                             </span>
-                            <TrendingDown className="size-4 text-primary" />
+                            <TrendingDown className="text-primary size-4" />
                         </div>
                         <div
                             className={`mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold ${
@@ -204,23 +200,23 @@ export default function CajasConsolidadasIndex() {
                         >
                             {formatCurrency(kpis.totalDiferenciasMes)}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Balance neto en el mes actual
                         </p>
                     </div>
                 </div>
 
                 {/* Filtros */}
-                <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-xs">
+                <div className="border-border bg-card space-y-3 rounded-xl border p-4 shadow-xs">
                     <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-5">
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Vendedor
                             </label>
                             <select
                                 value={vendedorId}
                                 onChange={(e) => setVendedorId(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
                             >
                                 <option value="">Todos los vendedores</option>
                                 {vendedores.map((v) => (
@@ -232,13 +228,13 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Sede
                             </label>
                             <select
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
                             >
                                 <option value="">Todas las sedes</option>
                                 {sedes.map((s) => (
@@ -250,13 +246,13 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Estado
                             </label>
                             <select
                                 value={estado}
                                 onChange={(e) => setEstado(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
                             >
                                 <option value="todos">Todos los estados</option>
                                 <option value="abierto">Solo Abiertas</option>
@@ -265,39 +261,39 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Fecha Desde
                             </label>
                             <input
                                 type="date"
                                 value={fechaDesde}
                                 onChange={(e) => setFechaDesde(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
                             />
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Fecha Hasta
                             </label>
                             <input
                                 type="date"
                                 value={fechaHasta}
                                 onChange={(e) => setFechaHasta(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
                             />
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-2">
-                        <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-foreground/80">
+                    <div className="border-border flex flex-wrap items-center justify-between gap-3 border-t pt-2">
+                        <label className="text-foreground/80 flex cursor-pointer items-center gap-2 text-xs font-medium">
                             <input
                                 type="checkbox"
                                 checked={conDiferencia}
                                 onChange={(e) =>
                                     setConDiferencia(e.target.checked)
                                 }
-                                className="rounded border-border text-primary"
+                                className="border-border text-primary rounded"
                             />
                             <span>
                                 Ver solo turnos con diferencia (faltante o
@@ -309,14 +305,14 @@ export default function CajasConsolidadasIndex() {
                             <button
                                 type="button"
                                 onClick={resetFilters}
-                                className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-background"
+                                className="border-border bg-card text-muted-foreground hover:bg-background rounded-lg border px-3 py-1.5 text-xs font-semibold"
                             >
                                 Limpiar
                             </button>
                             <button
                                 type="button"
                                 onClick={applyFilters}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-card px-4 py-1.5 text-xs font-semibold text-white hover:bg-foreground/90"
+                                className="bg-card hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold text-white"
                             >
                                 <Filter className="size-3.5" />
                                 <span>Aplicar Filtros</span>
@@ -326,10 +322,10 @@ export default function CajasConsolidadasIndex() {
                 </div>
 
                 {/* Tabla de Cajas */}
-                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+                <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
                                 <tr>
                                     <th className="px-4 py-3">Vendedor</th>
                                     <th className="px-4 py-3">Sede</th>
@@ -353,12 +349,12 @@ export default function CajasConsolidadasIndex() {
                                     <th className="px-4 py-3">Observación</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-border divide-y">
                                 {cajas.data.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={10}
-                                            className="py-8 text-center text-muted-foreground"
+                                            className="text-muted-foreground py-8 text-center"
                                         >
                                             No se encontraron turnos de caja
                                             registrados con estos filtros.
@@ -368,33 +364,33 @@ export default function CajasConsolidadasIndex() {
                                     cajas.data.map((c) => (
                                         <tr
                                             key={c.id}
-                                            className="transition-colors hover:bg-muted/40"
+                                            className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="px-4 py-3 font-semibold text-foreground">
+                                            <td className="text-foreground px-4 py-3 font-semibold">
                                                 {c.vendedor.name}
                                             </td>
-                                            <td className="px-4 py-3 text-muted-foreground">
+                                            <td className="text-muted-foreground px-4 py-3">
                                                 {c.sede}
                                             </td>
-                                            <td className="px-4 py-3 font-mono text-[11px] text-foreground/80">
+                                            <td className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
                                                 {c.fecha_apertura}
                                             </td>
-                                            <td className="px-4 py-3 font-mono text-[11px] text-foreground/80">
+                                            <td className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
                                                 {c.fecha_cierre || '—'}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono text-foreground">
+                                            <td className="text-foreground px-4 py-3 text-right font-mono">
                                                 {formatCurrency(
                                                     c.monto_apertura,
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono font-medium text-foreground">
+                                            <td className="text-foreground px-4 py-3 text-right font-mono font-medium">
                                                 {c.monto_contado_cierre !== null
                                                     ? formatCurrency(
                                                           c.monto_contado_cierre,
                                                       )
                                                     : '—'}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                                            <td className="text-muted-foreground px-4 py-3 text-right font-mono">
                                                 {c.monto_esperado_calculado !==
                                                 null
                                                     ? formatCurrency(
@@ -415,7 +411,7 @@ export default function CajasConsolidadasIndex() {
                                                     </span>
                                                 ) : c.tipo_diferencia ===
                                                   'faltante' ? (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 font-mono text-[11px] font-bold text-primary">
+                                                    <span className="text-primary inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 font-mono text-[11px] font-bold">
                                                         <MinusCircle className="size-3" />
                                                         {formatCurrency(
                                                             c.diferencia!,
@@ -442,7 +438,7 @@ export default function CajasConsolidadasIndex() {
                                                     {c.estado}
                                                 </span>
                                             </td>
-                                            <td className="max-w-xs truncate px-4 py-3 text-[11px] text-muted-foreground">
+                                            <td className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
                                                 {c.observacion || '—'}
                                             </td>
                                         </tr>
@@ -454,7 +450,7 @@ export default function CajasConsolidadasIndex() {
 
                     {/* Paginación */}
                     {cajas.links && cajas.links.length > 3 && (
-                        <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+                        <div className="border-border bg-muted/40 text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
                             <div>Total: {cajas.total} turnos registrados</div>
                             <div className="flex items-center gap-1">
                                 {cajas.links.map((link, i) => {

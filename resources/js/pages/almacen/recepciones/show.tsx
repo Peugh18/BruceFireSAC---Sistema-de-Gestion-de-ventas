@@ -1,20 +1,12 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
-    AlertTriangle,
     ArrowLeft,
     Barcode,
-    Building2,
-    Calendar,
     Check,
-    CheckCircle2,
     Edit3,
-    FileText,
-    Package,
-    Plus,
     ScanBarcode,
     Truck,
-    User,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
@@ -186,7 +178,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <Link
                         href={recepciones.index.url(teamSlug)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                     >
                         <ArrowLeft className="size-4" />
                         <span>Volver a recepciones</span>
@@ -198,7 +190,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                 href={`/${teamSlug}/almacen/recepciones/${reception.id}/stickers`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-[9px] border border-border bg-card px-3.5 py-2 text-xs font-bold text-foreground hover:bg-background"
+                                className="border-border bg-card text-foreground hover:bg-background inline-flex items-center gap-1.5 rounded-[9px] border px-3.5 py-2 text-xs font-bold"
                             >
                                 <Barcode className="size-4" />
                                 <span>Imprimir Stickers (PDF)</span>
@@ -223,7 +215,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
 
                 {/* Error Banner */}
                 {Object.keys(errors).length > 0 && (
-                    <div className="flex items-start gap-3 rounded-[12px] border border-destructive/20 bg-destructive/10 p-4 text-[13px] text-primary">
+                    <div className="border-destructive/20 bg-destructive/10 text-primary flex items-start gap-3 rounded-[12px] border p-4 text-[13px]">
                         <AlertCircle className="mt-0.5 size-5 shrink-0" />
                         <div>
                             <b>Hubo errores al actualizar la recepción:</b>
@@ -242,9 +234,9 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                         onSubmit={handleSaveUpdate}
                         className="flex flex-col gap-6"
                     >
-                        <Card className="rounded-[16px] border-border bg-card p-6 shadow-none">
-                            <div className="flex items-center justify-between border-b border-border pb-4">
-                                <h2 className="text-[14px] font-bold text-foreground">
+                        <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                            <div className="border-border flex items-center justify-between border-b pb-4">
+                                <h2 className="text-foreground text-[14px] font-bold">
                                     Modificar Datos de Recepción #{reception.id}
                                 </h2>
                                 <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-amber-600 dark:text-amber-400">
@@ -255,7 +247,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
 
                             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 <div>
-                                    <Label className="text-xs font-bold text-foreground/80">
+                                    <Label className="text-foreground/80 text-xs font-bold">
                                         Proveedor
                                     </Label>
                                     <Input
@@ -269,7 +261,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                 </div>
 
                                 <div>
-                                    <Label className="text-xs font-bold text-foreground/80">
+                                    <Label className="text-foreground/80 text-xs font-bold">
                                         Doc. Referencia
                                     </Label>
                                     <Input
@@ -285,7 +277,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                 </div>
 
                                 <div>
-                                    <Label className="text-xs font-bold text-foreground/80">
+                                    <Label className="text-foreground/80 text-xs font-bold">
                                         Fecha
                                     </Label>
                                     <Input
@@ -300,7 +292,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                 </div>
 
                                 <div className="sm:col-span-2 lg:col-span-3">
-                                    <Label className="text-xs font-bold text-foreground/80">
+                                    <Label className="text-foreground/80 text-xs font-bold">
                                         Observación General
                                     </Label>
                                     <Input
@@ -317,12 +309,12 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                             </div>
                         </Card>
 
-                        <Card className="rounded-[16px] border-border bg-card p-6 shadow-none">
-                            <h2 className="border-b border-border pb-4 text-[14px] font-bold text-foreground">
+                        <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                            <h2 className="border-border text-foreground border-b pb-4 text-[14px] font-bold">
                                 Ajuste de Cantidades y Conformidad por Línea
                             </h2>
 
-                            <div className="mt-3 flex flex-col divide-y divide-border">
+                            <div className="divide-border mt-3 flex flex-col divide-y">
                                 {data.items.map((it, idx) => {
                                     const orig = reception.items[idx];
                                     const diff =
@@ -337,7 +329,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                             className="flex flex-col gap-3 py-4"
                                         >
                                             <div className="flex items-center justify-between">
-                                                <div className="text-xs font-bold text-foreground">
+                                                <div className="text-foreground text-xs font-bold">
                                                     {orig.producto.nombre} (
                                                     {orig.producto.codigo})
                                                 </div>
@@ -354,7 +346,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
 
                                             <div className="grid gap-3 sm:grid-cols-3">
                                                 <div>
-                                                    <Label className="text-[11px] font-bold text-foreground/80">
+                                                    <Label className="text-foreground/80 text-[11px] font-bold">
                                                         Cant. Total
                                                     </Label>
                                                     <Input
@@ -377,7 +369,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                 </div>
 
                                                 <div>
-                                                    <Label className="text-[11px] font-bold text-foreground/80">
+                                                    <Label className="text-foreground/80 text-[11px] font-bold">
                                                         Cant. Conforme
                                                     </Label>
                                                     <Input
@@ -403,7 +395,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                 </div>
 
                                                 <div>
-                                                    <Label className="text-[11px] font-bold text-foreground/80">
+                                                    <Label className="text-foreground/80 text-[11px] font-bold">
                                                         Motivo no conforme (si
                                                         aplica)
                                                     </Label>
@@ -428,8 +420,8 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                             {/* Si aumentó conforme en serializado: capturar marca/año de las nuevas */}
                                             {diff > 0 &&
                                                 orig.producto.serializado && (
-                                                    <div className="mt-2 rounded-lg border border-border bg-muted/40 p-3">
-                                                        <div className="mb-2 text-[11px] font-bold text-foreground">
+                                                    <div className="border-border bg-muted/40 mt-2 rounded-lg border p-3">
+                                                        <div className="text-foreground mb-2 text-[11px] font-bold">
                                                             Datos de las {diff}{' '}
                                                             nuevas unidades
                                                             conformes a
@@ -554,7 +546,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                             <Button
                                 type="submit"
                                 disabled={processing}
-                                className="h-9 gap-1.5 bg-primary text-xs font-bold text-white hover:bg-primary/90"
+                                className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs font-bold text-white"
                             >
                                 <Check className="size-4" />
                                 <span>Guardar Corrección</span>
@@ -564,15 +556,15 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                 ) : (
                     <>
                         {/* Vista de solo lectura */}
-                        <Card className="rounded-[16px] border-border bg-card p-6 shadow-none">
-                            <div className="flex items-center justify-between border-b border-border pb-4">
+                        <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                            <div className="border-border flex items-center justify-between border-b pb-4">
                                 <div className="flex items-center gap-2">
-                                    <Truck className="size-4 text-primary" />
-                                    <h2 className="text-[14px] font-bold text-foreground">
+                                    <Truck className="text-primary size-4" />
+                                    <h2 className="text-foreground text-[14px] font-bold">
                                         Información de Recepción
                                     </h2>
                                 </div>
-                                <span className="font-mono text-xs text-muted-foreground">
+                                <span className="text-muted-foreground font-mono text-xs">
                                     Documento #{reception.id}
                                 </span>
                             </div>
@@ -582,7 +574,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                     <span className="text-muted-foreground">
                                         Proveedor:
                                     </span>
-                                    <div className="mt-0.5 text-sm font-bold text-foreground">
+                                    <div className="text-foreground mt-0.5 text-sm font-bold">
                                         {reception.proveedor}
                                     </div>
                                 </div>
@@ -591,7 +583,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                     <span className="text-muted-foreground">
                                         Doc. Referencia:
                                     </span>
-                                    <div className="mt-0.5 font-mono font-bold text-foreground">
+                                    <div className="text-foreground mt-0.5 font-mono font-bold">
                                         {reception.documento_referencia || '—'}
                                     </div>
                                 </div>
@@ -600,7 +592,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                     <span className="text-muted-foreground">
                                         Fecha de ingreso:
                                     </span>
-                                    <div className="mt-0.5 font-mono font-bold text-foreground">
+                                    <div className="text-foreground mt-0.5 font-mono font-bold">
                                         {reception.fecha}
                                     </div>
                                 </div>
@@ -609,14 +601,14 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                     <span className="text-muted-foreground">
                                         Sede Almacén:
                                     </span>
-                                    <div className="mt-0.5 font-bold text-foreground">
+                                    <div className="text-foreground mt-0.5 font-bold">
                                         {reception.sede.nombre}
                                     </div>
                                 </div>
 
                                 {reception.observacion && (
-                                    <div className="rounded-lg bg-muted/40 p-3 text-foreground/80 sm:col-span-2 lg:col-span-4">
-                                        <span className="font-bold text-foreground">
+                                    <div className="bg-muted/40 text-foreground/80 rounded-lg p-3 sm:col-span-2 lg:col-span-4">
+                                        <span className="text-foreground font-bold">
                                             Observación:{' '}
                                         </span>
                                         {reception.observacion}
@@ -626,15 +618,15 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                         </Card>
 
                         {/* Líneas Recibidas */}
-                        <Card className="rounded-[16px] border-border bg-card p-6 shadow-none">
-                            <h2 className="border-b border-border pb-4 text-[14px] font-bold text-foreground">
+                        <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                            <h2 className="border-border text-foreground border-b pb-4 text-[14px] font-bold">
                                 Líneas del Documento
                             </h2>
 
                             <div className="mt-3 overflow-x-auto">
                                 <table className="w-full text-left text-[12.5px]">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
                                             <th className="py-2 pr-3">Ítem</th>
                                             <th className="px-3 py-2 text-center">
                                                 Tipo
@@ -653,7 +645,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {reception.items.map((it) => {
                                             const noConforme =
                                                 it.cantidad -
@@ -662,10 +654,10 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                             return (
                                                 <tr key={it.id}>
                                                     <td className="py-3 pr-3">
-                                                        <div className="font-bold text-foreground">
+                                                        <div className="text-foreground font-bold">
                                                             {it.producto.nombre}
                                                         </div>
-                                                        <div className="font-mono text-[11px] text-muted-foreground">
+                                                        <div className="text-muted-foreground font-mono text-[11px]">
                                                             {it.producto.codigo}
                                                         </div>
                                                     </td>
@@ -677,12 +669,12 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                 Serializado
                                                             </span>
                                                         ) : (
-                                                            <span className="inline-flex items-center gap-1 rounded-[6px] border border-border bg-muted px-2 py-0.5 text-[10.5px] font-bold text-muted-foreground">
+                                                            <span className="border-border bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-[6px] border px-2 py-0.5 text-[10.5px] font-bold">
                                                                 No serializado
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td className="px-3 py-3 text-center font-mono font-bold text-foreground">
+                                                    <td className="text-foreground px-3 py-3 text-center font-mono font-bold">
                                                         {it.cantidad}
                                                     </td>
                                                     <td className="px-3 py-3 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
@@ -699,7 +691,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td className="py-3 pl-4 text-xs text-muted-foreground">
+                                                    <td className="text-muted-foreground py-3 pl-4 text-xs">
                                                         {it.observacion_item ||
                                                             '—'}
                                                     </td>
@@ -713,11 +705,11 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
 
                         {/* Unidades Serializadas Físicas Incorporadas */}
                         {reception.unidades_serializadas.length > 0 && (
-                            <Card className="rounded-[16px] border-border bg-card p-6 shadow-none">
-                                <div className="flex items-center justify-between border-b border-border pb-4">
+                            <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                                <div className="border-border flex items-center justify-between border-b pb-4">
                                     <div className="flex items-center gap-2">
                                         <ScanBarcode className="size-4 text-emerald-600 dark:text-emerald-400" />
-                                        <h2 className="text-[14px] font-bold text-foreground">
+                                        <h2 className="text-foreground text-[14px] font-bold">
                                             Unidades Físicas Serializadas
                                             Generadas (
                                             {
@@ -727,7 +719,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                             )
                                         </h2>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">
+                                    <span className="text-muted-foreground text-xs">
                                         Correlativo único BF-EQ-XXXXXX
                                     </span>
                                 </div>
@@ -737,14 +729,14 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                         (unit) => (
                                             <div
                                                 key={unit.id}
-                                                className="flex items-center justify-between rounded-xl border border-border bg-muted/40 p-3 text-xs"
+                                                className="border-border bg-muted/40 flex items-center justify-between rounded-xl border p-3 text-xs"
                                             >
                                                 <div>
-                                                    <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-foreground">
-                                                        <Barcode className="size-4 text-primary" />
+                                                    <div className="text-foreground flex items-center gap-1.5 font-mono text-sm font-bold">
+                                                        <Barcode className="text-primary size-4" />
                                                         {unit.numero_serie}
                                                     </div>
-                                                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
                                                         Cap.:{' '}
                                                         <b className="text-foreground/80">
                                                             {unit.capacidad ||
@@ -756,7 +748,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                 'N/A'}
                                                         </b>
                                                     </div>
-                                                    <div className="text-[11px] text-muted-foreground">
+                                                    <div className="text-muted-foreground text-[11px]">
                                                         Marca:{' '}
                                                         <b className="text-foreground/80">
                                                             {unit.marca ||

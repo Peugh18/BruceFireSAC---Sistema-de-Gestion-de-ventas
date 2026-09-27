@@ -72,7 +72,7 @@ export default function UnidadesDialog({
             open={producto !== null}
             onOpenChange={(open) => !open && onClose()}
         >
-            <DialogContent className="max-h-[85vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-lg">
+            <DialogContent className="border-border bg-card max-h-[85vh] overflow-y-auto rounded-[16px] sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="font-['Oswald',sans-serif] text-[19px] font-semibold uppercase">
                         {producto?.nombre}
@@ -86,15 +86,15 @@ export default function UnidadesDialog({
 
                 {unidades === null ? (
                     <div className="flex justify-center py-8">
-                        <Cargando className="size-5 text-muted-foreground" />
+                        <Cargando className="text-muted-foreground size-5" />
                     </div>
                 ) : unidades.length === 0 ? (
-                    <p className="py-6 text-center text-[13px] text-muted-foreground">
+                    <p className="text-muted-foreground py-6 text-center text-[13px]">
                         No hay unidades disponibles de este producto en tu
                         almacén.
                     </p>
                 ) : (
-                    <div className="overflow-hidden rounded-[10px] border border-border">
+                    <div className="border-border overflow-hidden rounded-[10px] border">
                         <button
                             type="button"
                             onClick={() =>
@@ -106,7 +106,7 @@ export default function UnidadesDialog({
                                           ),
                                 )
                             }
-                            className="w-full border-b border-border bg-muted/50 px-3 py-2 text-left text-[11.5px] font-bold text-foreground/80"
+                            className="border-border bg-muted/50 text-foreground/80 w-full border-b px-3 py-2 text-left text-[11.5px] font-bold"
                         >
                             {marcadas.length === unidades.length
                                 ? 'Desmarcar todas'
@@ -115,7 +115,7 @@ export default function UnidadesDialog({
                         {unidades.map((unidad) => (
                             <label
                                 key={unidad.inventory_unit_id}
-                                className="flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 last:border-b-0 hover:bg-muted/40"
+                                className="border-border hover:bg-muted/40 flex cursor-pointer items-center gap-3 border-b px-3 py-2 last:border-b-0"
                             >
                                 <input
                                     type="checkbox"
@@ -125,12 +125,12 @@ export default function UnidadesDialog({
                                     onChange={() =>
                                         alternar(unidad.inventory_unit_id)
                                     }
-                                    className="size-4 accent-primary"
+                                    className="accent-primary size-4"
                                 />
                                 <span className="font-['IBM_Plex_Mono',monospace] text-[12.5px] font-bold">
                                     {unidad.numero_serie}
                                 </span>
-                                <span className="text-[12px] text-muted-foreground">
+                                <span className="text-muted-foreground text-[12px]">
                                     {[
                                         unidad.capacidad,
                                         unidad.marca,
@@ -165,7 +165,7 @@ export default function UnidadesDialog({
                             );
                             onClose();
                         }}
-                        className="rounded-[9px] bg-primary font-bold text-white shadow-none hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
                     >
                         Agregar {marcadas.length || ''}
                     </Button>

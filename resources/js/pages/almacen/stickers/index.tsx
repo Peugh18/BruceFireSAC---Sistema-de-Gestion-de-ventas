@@ -49,10 +49,10 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
 
             <div className="flex flex-col gap-6">
                 <div>
-                    <h1 className="text-xl font-bold text-foreground">
+                    <h1 className="text-foreground text-xl font-bold">
                         Stickers de Código de Barras
                     </h1>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                         Recepciones con unidades serializadas listas para
                         imprimir su hoja de stickers. El PDF se genera por
                         recepción, con las unidades conformes que ingresaron en
@@ -60,11 +60,11 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                     </p>
                 </div>
 
-                <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                     {receptions.data.length === 0 ? (
                         <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                            <Barcode className="size-10 text-muted-foreground" />
-                            <p className="mt-2 text-sm font-medium text-muted-foreground">
+                            <Barcode className="text-muted-foreground size-10" />
+                            <p className="text-muted-foreground mt-2 text-sm font-medium">
                                 Aún no hay recepciones con unidades serializadas
                                 para imprimir stickers.
                             </p>
@@ -73,7 +73,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-[12.5px]">
                                 <thead>
-                                    <tr className="border-b border-border text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                                    <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
                                         <th className="py-2.5 pr-3">N° Doc.</th>
                                         <th className="px-3 py-2.5">Fecha</th>
                                         <th className="px-4 py-2.5">
@@ -90,31 +90,31 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-border divide-y">
                                     {receptions.data.map((rec) => (
                                         <tr
                                             key={rec.id}
-                                            className="transition-colors hover:bg-muted/40"
+                                            className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="py-3 pr-3 font-mono font-bold text-foreground">
+                                            <td className="text-foreground py-3 pr-3 font-mono font-bold">
                                                 #{rec.id}
                                             </td>
-                                            <td className="px-3 py-3 font-mono text-[11.5px] whitespace-nowrap text-foreground/80">
+                                            <td className="text-foreground/80 px-3 py-3 font-mono text-[11.5px] whitespace-nowrap">
                                                 {formatDate(rec.fecha)}
                                             </td>
-                                            <td className="px-4 py-3 font-bold text-foreground">
+                                            <td className="text-foreground px-4 py-3 font-bold">
                                                 {rec.proveedor}
                                             </td>
-                                            <td className="px-3 py-3 text-foreground/80">
+                                            <td className="text-foreground/80 px-3 py-3">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Building2 className="size-3.5 text-muted-foreground" />
+                                                    <Building2 className="text-muted-foreground size-3.5" />
                                                     <span>
                                                         {rec.sede_almacen
                                                             ?.nombre ?? '—'}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-3 py-3 text-center font-mono font-bold text-foreground">
+                                            <td className="text-foreground px-3 py-3 text-center font-mono font-bold">
                                                 {rec.unidades_count}
                                             </td>
                                             <td className="py-3 pl-4 text-right">
@@ -128,7 +128,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                                     rec.id,
                                                             },
                                                         )}
-                                                        className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground hover:bg-background"
+                                                        className="border-border bg-card text-foreground hover:bg-background inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold"
                                                     >
                                                         <FileText className="size-3.5" />
                                                         <span>Detalle</span>
@@ -144,7 +144,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                         )}
                                                         target="_blank"
                                                         rel="noreferrer"
-                                                        className="inline-flex items-center gap-1 rounded-md bg-card px-2.5 py-1 text-xs font-bold text-white hover:bg-foreground/90"
+                                                        className="bg-card hover:bg-foreground/90 inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold text-white"
                                                     >
                                                         <Printer className="size-3.5" />
                                                         <span>Imprimir</span>
@@ -157,7 +157,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                             </table>
 
                             {receptions.links.length > 3 && (
-                                <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+                                <div className="border-border text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-xs">
                                     <span>
                                         Mostrando{' '}
                                         <b>{receptions.data.length}</b> de{' '}

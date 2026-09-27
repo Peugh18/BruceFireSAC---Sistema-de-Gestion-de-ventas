@@ -12,10 +12,6 @@ import {
     ClipboardList,
     Wrench,
     ArrowRight,
-    AlertCircle,
-    CheckCircle2,
-    Clock,
-    Layers,
     Car,
 } from 'lucide-react';
 
@@ -159,7 +155,7 @@ export default function TecnicoCampoDashboard({
                         className={`rounded-2xl border p-3.5 text-left transition-all ${
                             filters.tab === 'todos' || !filters.tab
                                 ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm dark:bg-neutral-100 dark:text-neutral-900'
-                                : 'border-neutral-200 bg-card text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
+                                : 'bg-card border-neutral-200 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
                         }`}
                     >
                         <div className="text-[11px] font-semibold opacity-70">
@@ -176,7 +172,7 @@ export default function TecnicoCampoDashboard({
                         className={`rounded-2xl border p-3.5 text-left transition-all ${
                             filters.tab === 'pendientes'
                                 ? 'border-amber-600 bg-amber-600 text-white shadow-sm'
-                                : 'border-neutral-200 bg-card text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
+                                : 'bg-card border-neutral-200 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
                         }`}
                     >
                         <div className="text-[11px] font-semibold text-amber-500">
@@ -193,7 +189,7 @@ export default function TecnicoCampoDashboard({
                         className={`rounded-2xl border p-3.5 text-left transition-all ${
                             filters.tab === 'en_proceso'
                                 ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                                : 'border-neutral-200 bg-card text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
+                                : 'bg-card border-neutral-200 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
                         }`}
                     >
                         <div className="text-[11px] font-semibold text-blue-500">
@@ -210,7 +206,7 @@ export default function TecnicoCampoDashboard({
                         className={`rounded-2xl border p-3.5 text-left transition-all ${
                             filters.tab === 'finalizados'
                                 ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'
-                                : 'border-neutral-200 bg-card text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
+                                : 'bg-card border-neutral-200 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
                         }`}
                     >
                         <div className="text-[11px] font-semibold text-emerald-500">
@@ -230,7 +226,7 @@ export default function TecnicoCampoDashboard({
                         className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'todos' || !filters.tipo
                                 ? 'bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         Todos
@@ -241,7 +237,7 @@ export default function TecnicoCampoDashboard({
                         className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'recojos'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         <Truck className="h-3.5 w-3.5" />
@@ -253,7 +249,7 @@ export default function TecnicoCampoDashboard({
                         className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'entregas'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         <PackageCheck className="h-3.5 w-3.5" />
@@ -265,7 +261,7 @@ export default function TecnicoCampoDashboard({
                         className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'inspecciones'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         <ClipboardList className="h-3.5 w-3.5" />
@@ -277,7 +273,7 @@ export default function TecnicoCampoDashboard({
                         className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'instalaciones'
                                 ? 'bg-blue-600 text-white shadow-xs'
-                                : 'border border-neutral-200 bg-card text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
                         <Wrench className="h-3.5 w-3.5" />
@@ -292,7 +288,7 @@ export default function TecnicoCampoDashboard({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar cliente, dirección o código de orden..."
-                        className="w-full rounded-xl border border-neutral-200 bg-card py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
@@ -306,7 +302,7 @@ export default function TecnicoCampoDashboard({
                 {/* Orders Cards List */}
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
-                        <div className="space-y-2 rounded-2xl border border-dashed border-neutral-200 bg-card p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
+                        <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
                             <Truck className="mx-auto h-8 w-8 text-neutral-400" />
                             <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                                 No hay servicios programados en esta cola
@@ -321,7 +317,7 @@ export default function TecnicoCampoDashboard({
                             return (
                                 <div
                                     key={order.id}
-                                    className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
+                                    className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div>

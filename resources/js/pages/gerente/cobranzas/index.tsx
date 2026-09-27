@@ -1,15 +1,10 @@
 ﻿import { router, usePage } from '@inertiajs/react';
 import {
-    AlertTriangle,
     BadgeAlert,
     Calendar,
-    CheckCircle2,
-    CircleDollarSign,
     Clock,
-    CreditCard,
     Eye,
     Filter,
-    HelpCircle,
     Phone,
     Search,
     TrendingUp,
@@ -139,10 +134,10 @@ export default function CobranzasConsolidadasIndex() {
             <div className="space-y-6">
                 {/* Cabecera */}
                 <div>
-                    <h1 className="font-['Oswald',sans-serif] text-2xl font-bold tracking-wide text-foreground uppercase">
+                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
                         Cartera Consolidada de Cobranzas
                     </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-sm">
                         Seguimiento centralizado de cuentas por cobrar,
                         vencimientos de cuotas y abonos recibidos.
                     </p>
@@ -150,38 +145,38 @@ export default function CobranzasConsolidadasIndex() {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Por Cobrar Total
                             </span>
                             <Clock className="size-4 text-blue-600" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(kpis.totalPorCobrar)}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Saldo pendiente en cartera
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Vencido
                             </span>
-                            <BadgeAlert className="size-4 text-primary" />
+                            <BadgeAlert className="text-primary size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-primary">
+                        <div className="text-primary mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(kpis.vencidoTotal)}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Cuotas con fecha pasada
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Vence Esta Semana
                             </span>
@@ -190,13 +185,13 @@ export default function CobranzasConsolidadasIndex() {
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
                             {formatCurrency(kpis.venceEstaSemana)}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Vencimientos hasta domingo
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Cobrado en el Mes
                             </span>
@@ -205,54 +200,54 @@ export default function CobranzasConsolidadasIndex() {
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {formatCurrency(kpis.cobradoEsteMes)}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Abonos ingresados en el mes
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
                                 Clientes con Deuda
                             </span>
                             <Users className="size-4 text-purple-600" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-foreground">
+                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.clientesConDeuda}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                             Empresas en cartera activa
                         </p>
                     </div>
                 </div>
 
                 {/* Filtros */}
-                <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-xs">
+                <div className="border-border bg-card space-y-3 rounded-xl border p-4 shadow-xs">
                     <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
                         <div className="relative">
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Buscar
                             </label>
                             <div className="relative mt-1">
-                                <Search className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                                <Search className="text-muted-foreground absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                                 <input
                                     type="text"
                                     value={buscar}
                                     onChange={(e) => setBuscar(e.target.value)}
                                     placeholder="Cliente o N° de venta..."
-                                    className="w-full rounded-lg border border-border bg-muted/40 py-1.5 pr-3 pl-8 text-xs focus:border-primary focus:outline-none"
+                                    className="border-border bg-muted/40 focus:border-primary w-full rounded-lg border py-1.5 pr-3 pl-8 text-xs focus:outline-none"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Vendedor
                             </label>
                             <select
                                 value={vendedorId}
                                 onChange={(e) => setVendedorId(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
                             >
                                 <option value="">Todos los vendedores</option>
                                 {vendedores.map((v) => (
@@ -264,13 +259,13 @@ export default function CobranzasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Estado de Cuota
                             </label>
                             <select
                                 value={estado}
                                 onChange={(e) => setEstado(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
                             >
                                 <option value="todos">Todos los estados</option>
                                 <option value="vencido">Vencidos</option>
@@ -283,13 +278,13 @@ export default function CobranzasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="block font-semibold text-foreground/80">
+                            <label className="text-foreground/80 block font-semibold">
                                 Periodo / Vencimiento
                             </label>
                             <select
                                 value={periodo}
                                 onChange={(e) => setPeriodo(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
                             >
                                 <option value="todos">
                                     Todos los periodos
@@ -303,18 +298,18 @@ export default function CobranzasConsolidadasIndex() {
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 border-t border-border pt-2">
+                    <div className="border-border flex justify-end gap-2 border-t pt-2">
                         <button
                             type="button"
                             onClick={resetFilters}
-                            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-background"
+                            className="border-border bg-card text-muted-foreground hover:bg-background rounded-lg border px-3 py-1.5 text-xs font-semibold"
                         >
                             Limpiar
                         </button>
                         <button
                             type="button"
                             onClick={applyFilters}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-card px-4 py-1.5 text-xs font-semibold text-white hover:bg-foreground/90"
+                            className="bg-card hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold text-white"
                         >
                             <Filter className="size-3.5" />
                             <span>Aplicar Filtros</span>
@@ -323,10 +318,10 @@ export default function CobranzasConsolidadasIndex() {
                 </div>
 
                 {/* Tabla de Cuotas */}
-                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+                <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
                                 <tr>
                                     <th className="px-4 py-3">Venta / Cuota</th>
                                     <th className="px-4 py-3">Cliente</th>
@@ -349,12 +344,12 @@ export default function CobranzasConsolidadasIndex() {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-border divide-y">
                                 {cuotas.data.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={9}
-                                            className="py-8 text-center text-muted-foreground"
+                                            className="text-muted-foreground py-8 text-center"
                                         >
                                             No se encontraron cuotas con los
                                             filtros seleccionados.
@@ -369,21 +364,21 @@ export default function CobranzasConsolidadasIndex() {
                                         return (
                                             <tr
                                                 key={c.id}
-                                                className="transition-colors hover:bg-muted/40"
+                                                className="hover:bg-muted/40 transition-colors"
                                             >
                                                 <td className="px-4 py-3">
-                                                    <div className="font-mono font-bold text-foreground">
+                                                    <div className="text-foreground font-mono font-bold">
                                                         {c.sale_numero}
                                                     </div>
-                                                    <div className="text-[11px] text-muted-foreground">
+                                                    <div className="text-muted-foreground text-[11px]">
                                                         Cuota #{c.numero_cuota}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <div className="font-medium text-foreground">
+                                                    <div className="text-foreground font-medium">
                                                         {c.cliente.razon_social}
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                                    <div className="text-muted-foreground flex items-center gap-2 text-[11px]">
                                                         {c.cliente
                                                             .numero_documento && (
                                                             <span>
@@ -405,23 +400,23 @@ export default function CobranzasConsolidadasIndex() {
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 text-foreground/80">
+                                                <td className="text-foreground/80 px-4 py-3">
                                                     {c.vendedor.name}
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <div className="font-mono text-[11px] text-foreground">
+                                                    <div className="text-foreground font-mono text-[11px]">
                                                         {c.fecha_vencimiento}
                                                     </div>
                                                     {isVencido &&
                                                         c.estado !==
                                                             'pagado' && (
-                                                            <div className="text-[10px] font-bold text-primary">
+                                                            <div className="text-primary text-[10px] font-bold">
                                                                 {c.dias_vencido}{' '}
                                                                 días de mora
                                                             </div>
                                                         )}
                                                 </td>
-                                                <td className="px-4 py-3 text-right font-mono font-semibold text-foreground">
+                                                <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                     {formatCurrency(c.monto)}
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-mono text-emerald-700">
@@ -429,7 +424,7 @@ export default function CobranzasConsolidadasIndex() {
                                                         c.monto_pagado,
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3 text-right font-mono font-bold text-foreground">
+                                                <td className="text-foreground px-4 py-3 text-right font-mono font-bold">
                                                     {formatCurrency(
                                                         c.saldo_pendiente,
                                                     )}
@@ -442,7 +437,7 @@ export default function CobranzasConsolidadasIndex() {
                                                                 ? 'bg-emerald-100 text-emerald-800'
                                                                 : c.estado ===
                                                                     'vencido'
-                                                                  ? 'bg-red-100 text-primary'
+                                                                  ? 'text-primary bg-red-100'
                                                                   : c.estado ===
                                                                       'parcial'
                                                                     ? 'bg-amber-100 text-amber-800'
@@ -460,9 +455,9 @@ export default function CobranzasConsolidadasIndex() {
                                                                 c,
                                                             )
                                                         }
-                                                        className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-semibold text-foreground/80 hover:bg-background"
+                                                        className="border-border bg-card text-foreground/80 hover:bg-background inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold"
                                                     >
-                                                        <Eye className="size-3 text-muted-foreground" />
+                                                        <Eye className="text-muted-foreground size-3" />
                                                         <span>
                                                             {c.pagos.length}
                                                         </span>
@@ -478,7 +473,7 @@ export default function CobranzasConsolidadasIndex() {
 
                     {/* Paginación */}
                     {cuotas.links && cuotas.links.length > 3 && (
-                        <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+                        <div className="border-border bg-muted/40 text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
                             <div>Total: {cuotas.total} cuotas</div>
                             <div className="flex items-center gap-1">
                                 {cuotas.links.map((link, i) => {
@@ -523,14 +518,14 @@ export default function CobranzasConsolidadasIndex() {
                 {/* Modal Detalle de Pagos / Abonos */}
                 {viewingPayments && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl">
-                            <div className="flex items-center justify-between border-b border-border pb-3">
+                        <div className="border-border bg-card w-full max-w-lg rounded-xl border p-6 shadow-xl">
+                            <div className="border-border flex items-center justify-between border-b pb-3">
                                 <div>
-                                    <h3 className="font-['Oswald',sans-serif] text-base font-bold text-foreground uppercase">
+                                    <h3 className="text-foreground font-['Oswald',sans-serif] text-base font-bold uppercase">
                                         Historial de Pagos —{' '}
                                         {viewingPayments.sale_numero}
                                     </h3>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground text-xs">
                                         Cuota #{viewingPayments.numero_cuota} de{' '}
                                         {viewingPayments.cliente.razon_social}
                                     </p>
@@ -538,19 +533,19 @@ export default function CobranzasConsolidadasIndex() {
                                 <button
                                     type="button"
                                     onClick={() => setViewingPayments(null)}
-                                    className="rounded-md p-1 text-muted-foreground hover:bg-background"
+                                    className="text-muted-foreground hover:bg-background rounded-md p-1"
                                 >
                                     <X className="size-4" />
                                 </button>
                             </div>
 
                             <div className="mt-4 space-y-3">
-                                <div className="grid grid-cols-3 gap-2 rounded-lg bg-muted/40 p-3 text-xs">
+                                <div className="bg-muted/40 grid grid-cols-3 gap-2 rounded-lg p-3 text-xs">
                                     <div>
                                         <span className="text-muted-foreground">
                                             Total Cuota:
                                         </span>
-                                        <p className="font-mono font-bold text-foreground">
+                                        <p className="text-foreground font-mono font-bold">
                                             {formatCurrency(
                                                 viewingPayments.monto,
                                             )}
@@ -570,7 +565,7 @@ export default function CobranzasConsolidadasIndex() {
                                         <span className="text-muted-foreground">
                                             Saldo Restante:
                                         </span>
-                                        <p className="font-mono font-bold text-primary">
+                                        <p className="text-primary font-mono font-bold">
                                             {formatCurrency(
                                                 viewingPayments.saldo_pendiente,
                                             )}
@@ -578,9 +573,9 @@ export default function CobranzasConsolidadasIndex() {
                                     </div>
                                 </div>
 
-                                <div className="divide-y divide-border pt-2">
+                                <div className="divide-border divide-y pt-2">
                                     {viewingPayments.pagos.length === 0 ? (
-                                        <p className="py-6 text-center text-xs text-muted-foreground">
+                                        <p className="text-muted-foreground py-6 text-center text-xs">
                                             Aún no se han registrado abonos para
                                             esta cuota.
                                         </p>
@@ -591,18 +586,18 @@ export default function CobranzasConsolidadasIndex() {
                                                 className="flex items-center justify-between py-2 text-xs"
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-mono font-bold text-muted-foreground">
+                                                    <span className="text-muted-foreground font-mono font-bold">
                                                         #{idx + 1}
                                                     </span>
                                                     <div>
-                                                        <div className="font-semibold text-foreground uppercase">
+                                                        <div className="text-foreground font-semibold uppercase">
                                                             {p.forma_pago.replace(
                                                                 '_',
                                                                 ' ',
                                                             )}
                                                         </div>
                                                         {p.numero_operacion && (
-                                                            <div className="text-[10px] text-muted-foreground">
+                                                            <div className="text-muted-foreground text-[10px]">
                                                                 Op:{' '}
                                                                 {
                                                                     p.numero_operacion
@@ -618,7 +613,7 @@ export default function CobranzasConsolidadasIndex() {
                                                             p.monto,
                                                         )}
                                                     </div>
-                                                    <div className="text-[10px] text-muted-foreground">
+                                                    <div className="text-muted-foreground text-[10px]">
                                                         {p.fecha}
                                                     </div>
                                                 </div>
@@ -628,11 +623,11 @@ export default function CobranzasConsolidadasIndex() {
                                 </div>
                             </div>
 
-                            <div className="mt-6 flex justify-end border-t border-border pt-3">
+                            <div className="border-border mt-6 flex justify-end border-t pt-3">
                                 <button
                                     type="button"
                                     onClick={() => setViewingPayments(null)}
-                                    className="rounded-lg bg-card px-4 py-1.5 text-xs font-semibold text-white hover:bg-foreground/90"
+                                    className="bg-card hover:bg-foreground/90 rounded-lg px-4 py-1.5 text-xs font-semibold text-white"
                                 >
                                     Cerrar
                                 </button>

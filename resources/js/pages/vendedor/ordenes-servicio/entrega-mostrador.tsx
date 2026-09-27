@@ -22,7 +22,11 @@ type Props = {
     currentTeam: Team;
 };
 
-export default function CounterDelivery({ order, delivery, currentTeam }: Props) {
+export default function CounterDelivery({
+    order,
+    delivery,
+    currentTeam,
+}: Props) {
     const showUrl = `/${currentTeam.slug}/vendedor/ordenes-servicio/${order.id}`;
 
     return (
@@ -37,7 +41,7 @@ export default function CounterDelivery({ order, delivery, currentTeam }: Props)
 
                 <div>
                     <h1 className="text-2xl font-bold">Entrega en mostrador</h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                         {order.codigo} · {order.client.razon_social}
                     </p>
                 </div>
@@ -55,7 +59,8 @@ export default function CounterDelivery({ order, delivery, currentTeam }: Props)
                                         service_order: order.id,
                                     })}
                                 >
-                                    <Download className="mr-2 size-4" /> Descargar acta PDF
+                                    <Download className="mr-2 size-4" />{' '}
+                                    Descargar acta PDF
                                 </a>
                             </Button>
                         </div>
@@ -70,21 +75,58 @@ export default function CounterDelivery({ order, delivery, currentTeam }: Props)
                             {({ errors, processing }) => (
                                 <>
                                     <div className="space-y-2">
-                                        <Label htmlFor="receptor_nombre">Quién recibe</Label>
-                                        <Input id="receptor_nombre" name="receptor_nombre" required />
-                                        {errors.receptor_nombre && <p className="text-sm text-destructive">{errors.receptor_nombre}</p>}
+                                        <Label htmlFor="receptor_nombre">
+                                            Quién recibe
+                                        </Label>
+                                        <Input
+                                            id="receptor_nombre"
+                                            name="receptor_nombre"
+                                            required
+                                        />
+                                        {errors.receptor_nombre && (
+                                            <p className="text-destructive text-sm">
+                                                {errors.receptor_nombre}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="receptor_dni">DNI</Label>
-                                        <Input id="receptor_dni" name="receptor_dni" inputMode="numeric" maxLength={8} required />
-                                        {errors.receptor_dni && <p className="text-sm text-destructive">{errors.receptor_dni}</p>}
+                                        <Label htmlFor="receptor_dni">
+                                            DNI
+                                        </Label>
+                                        <Input
+                                            id="receptor_dni"
+                                            name="receptor_dni"
+                                            inputMode="numeric"
+                                            maxLength={8}
+                                            required
+                                        />
+                                        {errors.receptor_dni && (
+                                            <p className="text-destructive text-sm">
+                                                {errors.receptor_dni}
+                                            </p>
+                                        )}
                                     </div>
                                     <label className="flex items-start gap-3 text-sm">
-                                        <input type="checkbox" name="conformidad_aceptada" value="1" required className="mt-1" />
-                                        <span>El cliente recibió los equipos y está conforme con el servicio.</span>
+                                        <input
+                                            type="checkbox"
+                                            name="conformidad_aceptada"
+                                            value="1"
+                                            required
+                                            className="mt-1"
+                                        />
+                                        <span>
+                                            El cliente recibió los equipos y
+                                            está conforme con el servicio.
+                                        </span>
                                     </label>
-                                    {errors.conformidad_aceptada && <p className="text-sm text-destructive">{errors.conformidad_aceptada}</p>}
-                                    <Button type="submit" disabled={processing}>Registrar entrega conforme</Button>
+                                    {errors.conformidad_aceptada && (
+                                        <p className="text-destructive text-sm">
+                                            {errors.conformidad_aceptada}
+                                        </p>
+                                    )}
+                                    <Button type="submit" disabled={processing}>
+                                        Registrar entrega conforme
+                                    </Button>
                                 </>
                             )}
                         </Form>

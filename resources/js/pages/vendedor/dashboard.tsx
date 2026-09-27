@@ -163,7 +163,7 @@ export default function VendedorDashboard({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <Link
                         href={`/${teamSlug}/vendedor/ventas/nueva`}
-                        className="group flex items-center justify-between rounded-[16px] bg-primary p-4 text-white shadow-xs transition-all hover:bg-primary/90 hover:shadow-md"
+                        className="group bg-primary hover:bg-primary/90 flex items-center justify-between rounded-[16px] p-4 text-white shadow-xs transition-all hover:shadow-md"
                     >
                         <div className="flex items-center gap-3.5">
                             <div className="flex size-11 items-center justify-center rounded-[12px] bg-white/15 text-white">
@@ -183,42 +183,42 @@ export default function VendedorDashboard({
 
                     <Link
                         href={`/${teamSlug}/vendedor/cotizaciones/nueva`}
-                        className="group flex items-center justify-between rounded-[16px] border border-border bg-card p-4 text-foreground shadow-xs transition-all hover:border-primary/50 hover:bg-muted/40 hover:shadow-md"
+                        className="group border-border bg-card text-foreground hover:border-primary/50 hover:bg-muted/40 flex items-center justify-between rounded-[16px] border p-4 shadow-xs transition-all hover:shadow-md"
                     >
                         <div className="flex items-center gap-3.5">
                             <div className="flex size-11 items-center justify-center rounded-[12px] bg-amber-500/10 text-amber-600 dark:text-amber-400">
                                 <ClipboardList className="size-6" />
                             </div>
                             <div>
-                                <div className="font-['Oswald',sans-serif] text-[18px] font-bold tracking-wide text-foreground uppercase">
+                                <div className="text-foreground font-['Oswald',sans-serif] text-[18px] font-bold tracking-wide uppercase">
                                     Nueva cotización
                                 </div>
-                                <div className="text-[11.5px] text-muted-foreground">
+                                <div className="text-muted-foreground text-[11.5px]">
                                     Generar propuesta PDF
                                 </div>
                             </div>
                         </div>
-                        <ArrowRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                        <ArrowRight className="text-muted-foreground group-hover:text-primary size-5 transition-transform group-hover:translate-x-1" />
                     </Link>
 
                     <Link
                         href={`/${teamSlug}/vendedor/cobranzas`}
-                        className="group flex items-center justify-between rounded-[16px] border border-border bg-card p-4 text-foreground shadow-xs transition-all hover:border-primary/50 hover:bg-muted/40 hover:shadow-md"
+                        className="group border-border bg-card text-foreground hover:border-primary/50 hover:bg-muted/40 flex items-center justify-between rounded-[16px] border p-4 shadow-xs transition-all hover:shadow-md"
                     >
                         <div className="flex items-center gap-3.5">
                             <div className="flex size-11 items-center justify-center rounded-[12px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                 <CreditCard className="size-6" />
                             </div>
                             <div>
-                                <div className="font-['Oswald',sans-serif] text-[18px] font-bold tracking-wide text-foreground uppercase">
+                                <div className="text-foreground font-['Oswald',sans-serif] text-[18px] font-bold tracking-wide uppercase">
                                     Cobrar
                                 </div>
-                                <div className="text-[11.5px] text-muted-foreground">
+                                <div className="text-muted-foreground text-[11.5px]">
                                     Cobranzas y cuotas pendientes
                                 </div>
                             </div>
                         </div>
-                        <ArrowRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                        <ArrowRight className="text-muted-foreground group-hover:text-primary size-5 transition-transform group-hover:translate-x-1" />
                     </Link>
                 </div>
 
@@ -278,17 +278,17 @@ export default function VendedorDashboard({
                 {/* Alertas Operativas y de Servicios */}
                 {alertas_top && alertas_top.length > 0 && (
                     <div className="rounded-[16px] border border-amber-500/20 bg-amber-500/5 p-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-amber-500/10">
+                        <div className="flex items-center justify-between border-b border-amber-500/10 pb-3">
                             <div className="flex items-center gap-2">
                                 <AlertCircle className="size-4 text-amber-600 dark:text-amber-400" />
-                                <span className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                                <span className="text-xs font-bold tracking-wider text-amber-900 uppercase dark:text-amber-200">
                                     Atención prioritaria en Servicios (
                                     {alertas_top.length})
                                 </span>
                             </div>
                             <Link
                                 href={`/${teamSlug}/vendedor/ordenes-servicio`}
-                                className="text-xs font-semibold text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-1"
+                                className="flex items-center gap-1 text-xs font-semibold text-amber-700 hover:underline dark:text-amber-300"
                             >
                                 <span>Ir a Servicios</span>
                                 <ArrowRight className="size-3" />
@@ -299,21 +299,21 @@ export default function VendedorDashboard({
                                 <Link
                                     key={alerta.id}
                                     href={alerta.url}
-                                    className="flex flex-col justify-between rounded-xl border border-amber-500/20 bg-card p-3 shadow-xs hover:border-primary transition-all group"
+                                    className="bg-card hover:border-primary group flex flex-col justify-between rounded-xl border border-amber-500/20 p-3 shadow-xs transition-all"
                                 >
                                     <div>
                                         <div className="flex items-center justify-between gap-1">
-                                            <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                                            <span className="text-foreground group-hover:text-primary text-xs font-bold transition-colors">
                                                 {alerta.titulo}
                                             </span>
                                             <Badge
                                                 className={
                                                     alerta.urgencia === 'alta'
-                                                        ? 'border-none bg-red-500/10 text-red-600 text-[10px]'
+                                                        ? 'border-none bg-red-500/10 text-[10px] text-red-600'
                                                         : alerta.tipo ===
                                                             'lista_entrega'
-                                                          ? 'border-none bg-emerald-500/10 text-emerald-600 text-[10px]'
-                                                          : 'border-none bg-blue-500/10 text-blue-600 text-[10px]'
+                                                          ? 'border-none bg-emerald-500/10 text-[10px] text-emerald-600'
+                                                          : 'border-none bg-blue-500/10 text-[10px] text-blue-600'
                                                 }
                                             >
                                                 {alerta.urgencia === 'alta'
@@ -324,13 +324,13 @@ export default function VendedorDashboard({
                                                       : 'Por asignar'}
                                             </Badge>
                                         </div>
-                                        <p className="mt-1 text-[11.5px] text-muted-foreground line-clamp-2">
+                                        <p className="text-muted-foreground mt-1 line-clamp-2 text-[11.5px]">
                                             {alerta.mensaje}
                                         </p>
                                     </div>
-                                    <div className="mt-2 flex items-center justify-between text-[10.5px] text-muted-foreground">
+                                    <div className="text-muted-foreground mt-2 flex items-center justify-between text-[10.5px]">
                                         <span>{alerta.fecha}</span>
-                                        <span className="font-semibold text-primary group-hover:underline">
+                                        <span className="text-primary font-semibold group-hover:underline">
                                             Atender →
                                         </span>
                                     </div>
@@ -343,22 +343,22 @@ export default function VendedorDashboard({
                 {/* 3-Column Top Grid: Ventas Hoy, Cotizaciones Mes, Caja Hoy */}
                 <div className="grid gap-4 lg:grid-cols-3">
                     {/* 1. Ventas de Hoy */}
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center justify-between">
-                            <span className="text-[13.5px] font-bold text-foreground">
+                            <span className="text-foreground text-[13.5px] font-bold">
                                 Ventas de hoy
                             </span>
-                            <span className="text-[11.5px] font-medium text-muted-foreground">
+                            <span className="text-muted-foreground text-[11.5px] font-medium">
                                 Solo hoy
                             </span>
                         </div>
 
                         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
                             <div className="flex-1">
-                                <div className="font-['Oswald',sans-serif] text-[32px] leading-none font-semibold text-foreground">
+                                <div className="text-foreground font-['Oswald',sans-serif] text-[32px] leading-none font-semibold">
                                     {formatCurrency(ventas_hoy.total)}
                                 </div>
-                                <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-[11px]">
                                     <span className="inline-flex items-center gap-1 rounded-[6px] bg-emerald-500/10 px-2 py-0.5 font-bold text-emerald-600 dark:text-emerald-400">
                                         <TrendingUp className="size-3" />
                                         <span>{ventas_hoy.count} ventas</span>
@@ -368,19 +368,19 @@ export default function VendedorDashboard({
 
                                 <Link
                                     href={SaleController.index.url(teamSlug)}
-                                    className="mt-5 inline-flex items-center gap-1.5 rounded-[9px] bg-card px-3.5 py-2 text-[11.5px] font-bold text-white transition-colors hover:bg-foreground/90"
+                                    className="bg-card hover:bg-foreground/90 mt-5 inline-flex items-center gap-1.5 rounded-[9px] px-3.5 py-2 text-[11.5px] font-bold text-white transition-colors"
                                 >
                                     <span>Ver mis ventas</span>
                                     <ArrowRight className="size-3" />
                                 </Link>
                             </div>
 
-                            <div className="flex flex-1 flex-col divide-y divide-border border-t border-border pt-3 text-[12px] sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5">
+                            <div className="divide-border border-border flex flex-1 flex-col divide-y border-t pt-3 text-[12px] sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5">
                                 <div className="flex items-center justify-between pb-2">
                                     <span className="text-muted-foreground">
                                         N° de ventas
                                     </span>
-                                    <span className="font-bold text-foreground">
+                                    <span className="text-foreground font-bold">
                                         {ventas_hoy.count}
                                     </span>
                                 </div>
@@ -388,7 +388,7 @@ export default function VendedorDashboard({
                                     <span className="text-muted-foreground">
                                         Ticket promedio
                                     </span>
-                                    <span className="font-bold text-foreground">
+                                    <span className="text-foreground font-bold">
                                         {formatCurrency(
                                             ventas_hoy.ticket_promedio,
                                         )}
@@ -398,7 +398,7 @@ export default function VendedorDashboard({
                                     <span className="text-muted-foreground">
                                         Efectivo en caja
                                     </span>
-                                    <span className="font-bold text-foreground">
+                                    <span className="text-foreground font-bold">
                                         {formatCurrency(
                                             caja_hoy?.total_efectivo ?? 0,
                                         )}
@@ -409,12 +409,12 @@ export default function VendedorDashboard({
                     </Card>
 
                     {/* 2. Cotizaciones (Este Mes) */}
-                    <Card className="flex flex-col justify-between rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card flex flex-col justify-between rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center justify-between">
-                            <span className="text-[13.5px] font-bold text-foreground">
+                            <span className="text-foreground text-[13.5px] font-bold">
                                 Cotizaciones
                             </span>
-                            <span className="text-[11.5px] font-medium text-muted-foreground">
+                            <span className="text-muted-foreground text-[11.5px] font-medium">
                                 Este mes
                             </span>
                         </div>
@@ -471,10 +471,10 @@ export default function VendedorDashboard({
                                 )}
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                <span className="font-['Oswald',sans-serif] text-[22px] leading-tight font-semibold text-foreground">
+                                <span className="text-foreground font-['Oswald',sans-serif] text-[22px] leading-tight font-semibold">
                                     {cotTotal}
                                 </span>
-                                <span className="text-[9.5px] font-bold tracking-wider text-muted-foreground uppercase">
+                                <span className="text-muted-foreground text-[9.5px] font-bold tracking-wider uppercase">
                                     Total
                                 </span>
                             </div>
@@ -486,7 +486,7 @@ export default function VendedorDashboard({
                                 <span className="text-muted-foreground">
                                     Aceptadas
                                 </span>
-                                <span className="ml-auto font-bold text-foreground">
+                                <span className="text-foreground ml-auto font-bold">
                                     {cotAceptadas}
                                 </span>
                             </div>
@@ -495,16 +495,16 @@ export default function VendedorDashboard({
                                 <span className="text-muted-foreground">
                                     Pendientes
                                 </span>
-                                <span className="ml-auto font-bold text-foreground">
+                                <span className="text-foreground ml-auto font-bold">
                                     {cotPendientes}
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="size-2 rounded-[2px] bg-destructive" />
+                                <span className="bg-destructive size-2 rounded-[2px]" />
                                 <span className="text-muted-foreground">
                                     Vencidas
                                 </span>
-                                <span className="ml-auto font-bold text-foreground">
+                                <span className="text-foreground ml-auto font-bold">
                                     {cotVencidas}
                                 </span>
                             </div>
@@ -512,16 +512,16 @@ export default function VendedorDashboard({
                     </Card>
 
                     {/* 3. Caja de Hoy */}
-                    <Card className="flex flex-col justify-between rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card flex flex-col justify-between rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center justify-between">
-                            <span className="text-[13.5px] font-bold text-foreground">
+                            <span className="text-foreground text-[13.5px] font-bold">
                                 Caja de hoy
                             </span>
                             <Badge
                                 className={
                                     caja_hoy?.estado === 'abierto'
-                                        ? 'border-none bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                        : 'border-none bg-muted text-muted-foreground'
+                                        ? 'border border-none border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                        : 'bg-muted text-muted-foreground border-none'
                                 }
                             >
                                 {caja_hoy?.estado === 'abierto'
@@ -584,12 +584,12 @@ export default function VendedorDashboard({
                                         )}
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                        <span className="font-['Oswald',sans-serif] text-[17px] leading-tight font-semibold text-foreground">
+                                        <span className="text-foreground font-['Oswald',sans-serif] text-[17px] leading-tight font-semibold">
                                             {formatCurrency(
                                                 caja_hoy.total_esperado_corriente,
                                             )}
                                         </span>
-                                        <span className="text-[9.5px] font-bold tracking-wider text-muted-foreground uppercase">
+                                        <span className="text-muted-foreground text-[9.5px] font-bold tracking-wider uppercase">
                                             Esperado
                                         </span>
                                     </div>
@@ -601,7 +601,7 @@ export default function VendedorDashboard({
                                         <span className="text-muted-foreground">
                                             Efectivo
                                         </span>
-                                        <span className="ml-auto font-bold text-foreground">
+                                        <span className="text-foreground ml-auto font-bold">
                                             {formatCurrency(efec)}
                                         </span>
                                     </div>
@@ -610,7 +610,7 @@ export default function VendedorDashboard({
                                         <span className="text-muted-foreground">
                                             Transferencia
                                         </span>
-                                        <span className="ml-auto font-bold text-foreground">
+                                        <span className="text-foreground ml-auto font-bold">
                                             {formatCurrency(trans)}
                                         </span>
                                     </div>
@@ -619,7 +619,7 @@ export default function VendedorDashboard({
                                         <span className="text-muted-foreground">
                                             Tarjeta / Yape
                                         </span>
-                                        <span className="ml-auto font-bold text-foreground">
+                                        <span className="text-foreground ml-auto font-bold">
                                             {formatCurrency(yape)}
                                         </span>
                                     </div>
@@ -627,12 +627,12 @@ export default function VendedorDashboard({
                             </>
                         ) : (
                             <div className="flex flex-1 flex-col items-center justify-center gap-2.5 py-6 text-center">
-                                <Wallet className="size-8 text-muted-foreground" />
+                                <Wallet className="text-muted-foreground size-8" />
                                 <div>
-                                    <p className="text-xs font-semibold text-foreground">
+                                    <p className="text-foreground text-xs font-semibold">
                                         No hay turno abierto
                                     </p>
-                                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    <p className="text-muted-foreground mt-0.5 text-[11px]">
                                         Abre tu turno de hoy para registrar
                                         cobros
                                     </p>
@@ -641,7 +641,7 @@ export default function VendedorDashboard({
                                     href={CashRegisterController.show.url(
                                         teamSlug,
                                     )}
-                                    className="mt-1 rounded-[8px] bg-primary px-3 py-1.5 text-[11.5px] font-bold text-white transition-colors hover:bg-primary/90"
+                                    className="bg-primary hover:bg-primary/90 mt-1 rounded-[8px] px-3 py-1.5 text-[11.5px] font-bold text-white transition-colors"
                                 >
                                     Ir a Caja
                                 </Link>
@@ -651,21 +651,21 @@ export default function VendedorDashboard({
                 </div>
 
                 {/* Cobros Pendientes y Vencidos */}
-                <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                     <div className="flex items-center justify-between">
-                        <span className="text-[13.5px] font-bold text-foreground">
+                        <span className="text-foreground text-[13.5px] font-bold">
                             Cobros pendientes / vencidos
                         </span>
-                        <span className="text-[11.5px] font-medium text-muted-foreground">
+                        <span className="text-muted-foreground text-[11.5px] font-medium">
                             {cobros_pendientes.length} registros
                         </span>
                     </div>
 
-                    <div className="mt-3 divide-y divide-border">
+                    <div className="divide-border mt-3 divide-y">
                         {cobros_pendientes.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground">
+                            <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
                                 <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
-                                <p className="text-xs font-bold text-foreground">
+                                <p className="text-foreground text-xs font-bold">
                                     ¡Excelente! Sin cobros pendientes
                                 </p>
                                 <p className="text-[11px]">
@@ -695,23 +695,23 @@ export default function VendedorDashboard({
                                         key={inst.id}
                                         className="flex flex-col gap-2 py-3 first:pt-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                                     >
-                                        <div className="flex items-center gap-3 min-w-0">
+                                        <div className="flex min-w-0 items-center gap-3">
                                             <div
                                                 className={`flex size-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
                                                     isVencido
-                                                        ? 'bg-destructive/10 text-destructive border border-destructive/20'
-                                                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                                        ? 'bg-destructive/10 text-destructive border-destructive/20 border'
+                                                        : 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                                 }`}
                                             >
                                                 {initials(inst.cliente)}
                                             </div>
 
                                             <div className="min-w-0 flex-1">
-                                                <div className="truncate text-[12.5px] font-bold text-foreground">
+                                                <div className="text-foreground truncate text-[12.5px] font-bold">
                                                     {inst.cliente ||
                                                         'Cliente sin nombre'}
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                                <div className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
                                                     <span>
                                                         Cuota{' '}
                                                         {inst.numero_cuota}
@@ -720,7 +720,7 @@ export default function VendedorDashboard({
                                                     <span
                                                         className={
                                                             isVencido
-                                                                ? 'font-bold text-destructive'
+                                                                ? 'text-destructive font-bold'
                                                                 : 'text-amber-600 dark:text-amber-400'
                                                         }
                                                     >
@@ -736,8 +736,8 @@ export default function VendedorDashboard({
                                             <span
                                                 className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold whitespace-nowrap ${
                                                     isVencido
-                                                        ? 'bg-destructive/10 text-destructive border border-destructive/20'
-                                                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                                        ? 'bg-destructive/10 text-destructive border-destructive/20 border'
+                                                        : 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                                 }`}
                                             >
                                                 {formatCurrency(inst.monto)}
@@ -748,7 +748,7 @@ export default function VendedorDashboard({
                                                     href={`https://wa.me/${phoneClean}?text=${waText}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex h-7 items-center gap-1.5 rounded-[7px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400 transition-colors"
+                                                    className="inline-flex h-7 items-center gap-1.5 rounded-[7px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
                                                     title={`Enviar WhatsApp a ${phoneClean}`}
                                                 >
                                                     <MessageSquare className="size-3" />
@@ -763,10 +763,10 @@ export default function VendedorDashboard({
                     </div>
 
                     {cobros_pendientes.length > 0 && (
-                        <div className="mt-3 border-t border-border pt-2.5 text-center">
+                        <div className="border-border mt-3 border-t pt-2.5 text-center">
                             <Link
                                 href={CollectionController.index.url(teamSlug)}
-                                className="text-[12px] font-bold text-primary hover:underline"
+                                className="text-primary text-[12px] font-bold hover:underline"
                             >
                                 Ver todas las cobranzas &rarr;
                             </Link>
@@ -777,15 +777,15 @@ export default function VendedorDashboard({
                 {/* Bottom Row: Agenda de Hoy y Alertas Top (Elegant empty states as requested) */}
                 <div className="grid gap-4 lg:grid-cols-2">
                     {/* Agenda de hoy */}
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <Calendar className="size-4 text-muted-foreground" />
-                                <span className="text-[13.5px] font-bold text-foreground">
+                                <Calendar className="text-muted-foreground size-4" />
+                                <span className="text-foreground text-[13.5px] font-bold">
                                     Agenda de hoy
                                 </span>
                             </div>
-                            <span className="text-[11.5px] text-muted-foreground">
+                            <span className="text-muted-foreground text-[11.5px]">
                                 Visitas e inspecciones
                             </span>
                         </div>
@@ -799,46 +799,47 @@ export default function VendedorDashboard({
                                             current_team: teamSlug,
                                             service_order: orden.id,
                                         })}
-                                        className="flex items-center justify-between gap-3 rounded-xl border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted/40"
+                                        className="border-border hover:border-primary/40 hover:bg-muted/40 flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors"
                                     >
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-foreground">
+                                                <span className="text-foreground text-xs font-bold">
                                                     {orden.codigo}
                                                 </span>
-                                                {orden.prioridad === 'urgente' && (
+                                                {orden.prioridad ===
+                                                    'urgente' && (
                                                     <Badge className="border-none bg-red-500/10 text-[10px] text-red-600 dark:text-red-400">
                                                         Urgente
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <p className="truncate text-[11.5px] font-medium text-foreground">
+                                            <p className="text-foreground truncate text-[11.5px] font-medium">
                                                 {orden.cliente}
                                             </p>
-                                            <p className="truncate text-[11px] text-muted-foreground">
+                                            <p className="text-muted-foreground truncate text-[11px]">
                                                 {orden.tipo_servicio}
                                                 {orden.tecnico
                                                     ? ` · ${orden.tecnico}`
                                                     : ' · Sin técnico asignado'}
                                             </p>
                                         </div>
-                                        <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                                        <ArrowRight className="text-muted-foreground size-4 shrink-0" />
                                     </Link>
                                 ))}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground">
-                                <Clock className="size-7 text-muted-foreground" />
-                                <p className="text-xs font-semibold text-foreground">
+                            <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
+                                <Clock className="text-muted-foreground size-7" />
+                                <p className="text-foreground text-xs font-semibold">
                                     Sin visitas programadas para hoy
                                 </p>
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground text-[11px]">
                                     Tu agenda del día está despejada. Puedes
                                     consultar tus órdenes de servicio activas.
                                 </p>
                                 <Link
                                     href={`/${teamSlug}/vendedor/ordenes-servicio`}
-                                    className="mt-1 text-[11.5px] font-bold text-primary hover:underline"
+                                    className="text-primary mt-1 text-[11.5px] font-bold hover:underline"
                                 >
                                     Ver órdenes de servicio &rarr;
                                 </Link>
@@ -847,15 +848,15 @@ export default function VendedorDashboard({
                     </Card>
 
                     {/* Alertas Críticas de Equipos */}
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <Award className="size-4 text-muted-foreground" />
-                                <span className="text-[13.5px] font-bold text-foreground">
+                                <Award className="text-muted-foreground size-4" />
+                                <span className="text-foreground text-[13.5px] font-bold">
                                     Alertas de mantenimiento
                                 </span>
                             </div>
-                            <span className="text-[11.5px] text-muted-foreground">
+                            <span className="text-muted-foreground text-[11.5px]">
                                 Extintores y pruebas
                             </span>
                         </div>
@@ -865,19 +866,19 @@ export default function VendedorDashboard({
                                 {/* Lista de alertas si vinieran */}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground">
+                            <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
                                 <CheckCircle2 className="size-7 text-emerald-600 dark:text-emerald-400" />
-                                <p className="text-xs font-semibold text-foreground">
+                                <p className="text-foreground text-xs font-semibold">
                                     Equipos al día
                                 </p>
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground text-[11px]">
                                     No hay avisos de vencimiento críticos
                                     pendientes de revisión para tus clientes
                                     hoy.
                                 </p>
                                 <Link
                                     href={`/${teamSlug}/vendedor/alertas`}
-                                    className="mt-1 text-[11.5px] font-bold text-primary hover:underline"
+                                    className="text-primary mt-1 text-[11.5px] font-bold hover:underline"
                                 >
                                     Ver panel de alertas &rarr;
                                 </Link>

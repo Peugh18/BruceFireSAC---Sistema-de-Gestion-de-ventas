@@ -47,7 +47,7 @@ type Props = {
 
 function field(errors: Record<string, string>, name: string) {
     return errors[name] ? (
-        <p className="mt-1 text-[11.5px] text-destructive">{errors[name]}</p>
+        <p className="text-destructive mt-1 text-[11.5px]">{errors[name]}</p>
     ) : null;
 }
 
@@ -135,24 +135,24 @@ export default function EmpresaConfiguracion({
                     firmasPendientes={firmasPendientes}
                 />
                 <div className="flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-[11px] bg-destructive/10 text-primary">
+                    <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
                         <Building2 className="size-5" />
                     </div>
                     <div>
-                        <h1 className="font-['Oswald',sans-serif] text-[20px] font-semibold text-foreground uppercase">
+                        <h1 className="text-foreground font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
                             Datos de la empresa
                         </h1>
-                        <p className="text-[12px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[12px]">
                             Se usan en todos los comprobantes (Factura, Boleta,
                             Nota) y certificados.
                         </p>
                     </div>
                 </div>
 
-                <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                     <form onSubmit={submit} className="flex flex-col gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="flex size-20 items-center justify-center overflow-hidden rounded-[10px] border border-dashed border-border bg-muted/40">
+                            <div className="border-border bg-muted/40 flex size-20 items-center justify-center overflow-hidden rounded-[10px] border border-dashed">
                                 {logoPreview ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img
@@ -161,7 +161,7 @@ export default function EmpresaConfiguracion({
                                         className="max-h-full max-w-full object-contain"
                                     />
                                 ) : (
-                                    <span className="text-[10px] text-muted-foreground">
+                                    <span className="text-muted-foreground text-[10px]">
                                         Sin logo
                                     </span>
                                 )}
@@ -180,11 +180,11 @@ export default function EmpresaConfiguracion({
                                     onClick={() =>
                                         fileInputRef.current?.click()
                                     }
-                                    className="h-9 rounded-[9px] border-border bg-card text-foreground/80 shadow-none"
+                                    className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
                                 >
                                     <Upload className="size-3.5" /> Subir logo
                                 </Button>
-                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-1 text-[11px]">
                                     PNG o JPG, máx. 2MB.
                                 </p>
                             </div>
@@ -192,7 +192,7 @@ export default function EmpresaConfiguracion({
 
                         <div className="grid gap-3 md:grid-cols-2">
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Razón social
                                 </Label>
                                 <Input
@@ -207,7 +207,7 @@ export default function EmpresaConfiguracion({
                                 {field(form.errors, 'razon_social')}
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Nombre comercial
                                 </Label>
                                 <Input
@@ -221,7 +221,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     RUC
                                 </Label>
                                 <Input
@@ -234,7 +234,7 @@ export default function EmpresaConfiguracion({
                                 {field(form.errors, 'ruc')}
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Teléfono
                                 </Label>
                                 <Input
@@ -245,7 +245,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Dirección
                                 </Label>
                                 <Input
@@ -259,7 +259,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Ubigeo (6 dígitos SUNAT)
                                 </Label>
                                 <Input
@@ -271,7 +271,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Email
                                 </Label>
                                 <Input
@@ -282,7 +282,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Departamento
                                 </Label>
                                 <Input
@@ -296,7 +296,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Provincia
                                 </Label>
                                 <Input
@@ -310,7 +310,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Distrito
                                 </Label>
                                 <Input
@@ -321,7 +321,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Cuenta de detracción (Banco de la Nación)
                                 </Label>
                                 <Input
@@ -334,7 +334,7 @@ export default function EmpresaConfiguracion({
                                     }
                                     placeholder="00-000-000000"
                                 />
-                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                <p className="text-muted-foreground mt-1 text-[11px]">
                                     Obligatoria en comprobantes con detracción
                                     (servicios sobre S/ 700).
                                 </p>
@@ -342,7 +342,7 @@ export default function EmpresaConfiguracion({
                         </div>
 
                         <div>
-                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Leyenda de pie (opcional)
                             </Label>
                             <Textarea
@@ -359,7 +359,7 @@ export default function EmpresaConfiguracion({
                             <Button
                                 type="submit"
                                 disabled={form.processing}
-                                className="h-10 rounded-[9px] bg-card px-4 text-[13px] font-bold text-white shadow-none hover:bg-foreground/90"
+                                className="bg-card hover:bg-foreground/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                             >
                                 {form.processing
                                     ? 'Guardando…'
@@ -369,7 +369,7 @@ export default function EmpresaConfiguracion({
                     </form>
                 </Card>
 
-                <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                     <div className="flex items-center gap-2">
                         <CreditCard className="size-4 text-emerald-600 dark:text-emerald-400" />
                         <h2 className="font-['Oswald',sans-serif] text-[16px] font-semibold uppercase">
@@ -379,7 +379,7 @@ export default function EmpresaConfiguracion({
 
                     <div className="flex flex-col gap-2">
                         {bankAccounts.length === 0 ? (
-                            <p className="text-[12px] text-muted-foreground">
+                            <p className="text-muted-foreground text-[12px]">
                                 Sin cuentas registradas. Se imprimen en todos
                                 los comprobantes.
                             </p>
@@ -387,7 +387,7 @@ export default function EmpresaConfiguracion({
                             bankAccounts.map((account) => (
                                 <div
                                     key={account.id}
-                                    className="flex items-center justify-between rounded-[9px] border border-border px-3 py-2 text-[12px]"
+                                    className="border-border flex items-center justify-between rounded-[9px] border px-3 py-2 text-[12px]"
                                 >
                                     <div>
                                         <span className="font-bold">
@@ -406,7 +406,7 @@ export default function EmpresaConfiguracion({
                                         onClick={() =>
                                             deleteBankAccount(account.id)
                                         }
-                                        className="size-7 rounded-[7px] border-border bg-card text-destructive shadow-none"
+                                        className="border-border bg-card text-destructive size-7 rounded-[7px] shadow-none"
                                     >
                                         <Trash2 className="size-3.5" />
                                     </Button>
@@ -417,7 +417,7 @@ export default function EmpresaConfiguracion({
 
                     <form
                         onSubmit={addBankAccount}
-                        className="grid gap-2 border-t border-border pt-3 md:grid-cols-5"
+                        className="border-border grid gap-2 border-t pt-3 md:grid-cols-5"
                     >
                         <Input
                             placeholder="Banco (ej. BCP)"

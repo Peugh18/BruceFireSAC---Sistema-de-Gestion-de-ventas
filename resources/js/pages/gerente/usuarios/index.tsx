@@ -325,7 +325,7 @@ export default function UsuariosIndex() {
                                                     </select>
                                                     {u.role !== 'Gerente' &&
                                                     !u.sede_id ? (
-                                                        <p className="mt-1 text-[11px] font-bold text-destructive">
+                                                        <p className="text-destructive mt-1 text-[11px] font-bold">
                                                             Sin sede: no puede
                                                             entrar hasta que le
                                                             asignes una.

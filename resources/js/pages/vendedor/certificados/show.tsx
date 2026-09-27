@@ -247,7 +247,7 @@ export default function CertificadosShow({ certificate }: Props) {
                             ) : null}
                         </Card>
 
-                        <Card className="border-border bg-card gap-0 divide-y divide-border rounded-[16px] px-4 py-2 shadow-none">
+                        <Card className="border-border bg-card divide-border gap-0 divide-y rounded-[16px] px-4 py-2 shadow-none">
                             <Dato etiqueta="Cliente">
                                 {certificate.cliente ? (
                                     <Link

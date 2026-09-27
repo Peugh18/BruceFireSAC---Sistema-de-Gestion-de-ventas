@@ -122,28 +122,28 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                     <h1 className="font-['Oswald',sans-serif] text-[22px] font-semibold uppercase">
                         Seguimiento de taller
                     </h1>
-                    <p className="text-[12.5px] text-muted-foreground">
+                    <p className="text-muted-foreground text-[12.5px]">
                         {total} orden(es) de tu sede. Toca una para ver su
                         avance y dejar una nota al técnico.
                     </p>
                 </div>
 
-                <div className="grid gap-3 overflow-x-auto pb-1 [grid-template-columns:repeat(6,minmax(200px,1fr))]">
+                <div className="grid [grid-template-columns:repeat(6,minmax(200px,1fr))] gap-3 overflow-x-auto pb-1">
                     {columnas.map((columna) => (
                         <div
                             key={columna.clave}
-                            className="flex min-h-[140px] flex-col gap-2 rounded-[14px] bg-muted/40 p-2.5"
+                            className="bg-muted/40 flex min-h-[140px] flex-col gap-2 rounded-[14px] p-2.5"
                         >
                             <div className="flex items-center justify-between px-1">
-                                <span className="text-[11.5px] font-bold text-foreground/80 uppercase">
+                                <span className="text-foreground/80 text-[11.5px] font-bold uppercase">
                                     {columna.titulo}
                                 </span>
-                                <span className="rounded-full bg-card px-2 text-[11px] font-bold">
+                                <span className="bg-card rounded-full px-2 text-[11px] font-bold">
                                     {columna.ordenes.length}
                                 </span>
                             </div>
                             {columna.ordenes.length === 0 ? (
-                                <p className="px-1 text-[11.5px] text-muted-foreground">
+                                <p className="text-muted-foreground px-1 text-[11.5px]">
                                     Sin órdenes
                                 </p>
                             ) : null}
@@ -152,7 +152,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                     key={orden.id}
                                     type="button"
                                     onClick={() => abrir(orden.id)}
-                                    className={`rounded-[10px] border bg-card p-2.5 text-left transition-colors hover:border-primary/60 ${seleccionada?.id === orden.id ? 'border-primary' : 'border-border'}`}
+                                    className={`bg-card hover:border-primary/60 rounded-[10px] border p-2.5 text-left transition-colors ${seleccionada?.id === orden.id ? 'border-primary' : 'border-border'}`}
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="font-['IBM_Plex_Mono',monospace] text-[11px] font-bold">
@@ -162,18 +162,18 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                             <AlertTriangle className="size-3.5 text-amber-500" />
                                         ) : null}
                                     </div>
-                                    <div className="mt-0.5 truncate text-[12.5px] font-bold text-foreground">
+                                    <div className="text-foreground mt-0.5 truncate text-[12.5px] font-bold">
                                         {orden.cliente}
                                     </div>
-                                    <div className="truncate text-[11.5px] text-muted-foreground">
+                                    <div className="text-muted-foreground truncate text-[11.5px]">
                                         {orden.servicio}
                                     </div>
                                     <div className="mt-1 flex flex-wrap gap-1 text-[10.5px]">
-                                        <span className="rounded bg-muted px-1.5 py-0.5 capitalize">
+                                        <span className="bg-muted rounded px-1.5 py-0.5 capitalize">
                                             {orden.area}
                                         </span>
                                         {orden.prioridad !== 'normal' ? (
-                                            <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-destructive capitalize">
+                                            <span className="bg-destructive/10 text-destructive rounded px-1.5 py-0.5 capitalize">
                                                 {orden.prioridad}
                                             </span>
                                         ) : null}
@@ -192,19 +192,19 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                 {recargando ? (
                     <TarjetaCargando />
                 ) : seleccionada ? (
-                    <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <Wrench className="size-4 text-primary" />
+                                    <Wrench className="text-primary size-4" />
                                     <span className="font-['IBM_Plex_Mono',monospace] text-[13px] font-bold">
                                         {seleccionada.codigo}
                                     </span>
                                 </div>
-                                <h2 className="text-[16px] font-bold text-foreground">
+                                <h2 className="text-foreground text-[16px] font-bold">
                                     {seleccionada.cliente}
                                 </h2>
-                                <p className="text-[12.5px] text-muted-foreground">
+                                <p className="text-muted-foreground text-[12.5px]">
                                     {seleccionada.servicio}
                                     {seleccionada.referencia
                                         ? ` · ${seleccionada.referencia}`
@@ -276,7 +276,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                             )}
                                         </div>
                                         <span
-                                            className={`text-[11.5px] ${actual ? 'font-bold text-foreground' : 'text-muted-foreground'}`}
+                                            className={`text-[11.5px] ${actual ? 'text-foreground font-bold' : 'text-muted-foreground'}`}
                                         >
                                             {etapa}
                                         </span>
@@ -291,7 +291,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                         </div>
 
                         {seleccionada.observaciones ? (
-                            <p className="rounded-[10px] bg-muted/40 px-3 py-2 text-[12.5px]">
+                            <p className="bg-muted/40 rounded-[10px] px-3 py-2 text-[12.5px]">
                                 <b>Instrucciones:</b>{' '}
                                 {seleccionada.observaciones}
                             </p>
@@ -304,19 +304,19 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                     className={`rounded-[10px] border px-3 py-2 ${evento.de_ventas ? 'border-primary/30 bg-destructive/5' : 'border-border'}`}
                                 >
                                     <div className="flex items-center justify-between gap-2 text-[11.5px]">
-                                        <span className="font-bold text-foreground">
+                                        <span className="text-foreground font-bold">
                                             {evento.titulo}
-                                            <span className="font-normal text-muted-foreground">
+                                            <span className="text-muted-foreground font-normal">
                                                 {' '}
                                                 · {evento.autor}
                                             </span>
                                         </span>
-                                        <span className="font-['IBM_Plex_Mono',monospace] text-muted-foreground">
+                                        <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace]">
                                             {fecha(evento.fecha)}
                                         </span>
                                     </div>
                                     {evento.mensaje ? (
-                                        <p className="mt-0.5 text-[12.5px] text-foreground/90">
+                                        <p className="text-foreground/90 mt-0.5 text-[12.5px]">
                                             {evento.mensaje}
                                         </p>
                                     ) : null}
@@ -325,8 +325,8 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                         </div>
 
                         <form onSubmit={enviarNota} className="flex gap-2">
-                            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
-                                <MessageSquarePlus className="size-4 shrink-0 text-muted-foreground" />
+                            <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                                <MessageSquarePlus className="text-muted-foreground size-4 shrink-0" />
                                 <input
                                     value={nota}
                                     maxLength={500}
@@ -338,7 +338,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                             <Button
                                 type="submit"
                                 disabled={enviando || !nota.trim()}
-                                className="h-10 rounded-[9px] bg-primary text-white shadow-none hover:bg-primary/90"
+                                className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] text-white shadow-none"
                             >
                                 <Send className="size-4" />
                                 Enviar

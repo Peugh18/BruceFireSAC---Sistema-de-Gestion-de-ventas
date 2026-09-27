@@ -279,7 +279,7 @@ export default function FacturacionIndex({
                         return (
                             <Card
                                 key={item.label}
-                                className="flex-row items-center gap-3.5 rounded-[14px] border-border bg-card px-[18px] py-4 shadow-none"
+                                className="border-border bg-card flex-row items-center gap-3.5 rounded-[14px] px-[18px] py-4 shadow-none"
                             >
                                 <div
                                     className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}
@@ -290,10 +290,10 @@ export default function FacturacionIndex({
                                     />
                                 </div>
                                 <div>
-                                    <div className="text-[11px] font-bold tracking-[0.03em] text-muted-foreground uppercase">
+                                    <div className="text-muted-foreground text-[11px] font-bold tracking-[0.03em] uppercase">
                                         {item.label}
                                     </div>
-                                    <div className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
+                                    <div className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
                                         {item.value}
                                     </div>
                                 </div>
@@ -302,9 +302,9 @@ export default function FacturacionIndex({
                     })}
                 </div>
 
-                <Card className="gap-0 rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <div className="mb-4 flex flex-wrap items-center gap-2.5">
-                        <div className="flex rounded-[9px] bg-muted p-[3px]">
+                        <div className="bg-muted flex rounded-[9px] p-[3px]">
                             {TYPE_FILTERS.map((filter) => {
                                 const active =
                                     filter.value === ''
@@ -329,28 +329,28 @@ export default function FacturacionIndex({
                             onChange={(event) =>
                                 filtrar({ mes: event.target.value })
                             }
-                            className="h-10 rounded-[9px] border border-border bg-card px-3 text-[12.5px] outline-none"
+                            className="border-border bg-card h-10 rounded-[9px] border px-3 text-[12.5px] outline-none"
                             title="Filtrar por mes"
                         />
                         <div className="flex-1" />
                         <form
                             onSubmit={submitSearch}
-                            className="flex h-10 min-w-[230px] items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3"
+                            className="border-border bg-muted/40 flex h-10 min-w-[230px] items-center gap-2 rounded-[9px] border px-3"
                         >
-                            <Search className="size-3.5 shrink-0 text-muted-foreground" />
+                            <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
                                 value={search}
                                 onChange={(event) =>
                                     setSearch(event.target.value)
                                 }
                                 placeholder="F001-65, cliente o RUC..."
-                                className="min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+                                className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-[13px] outline-none"
                             />
                         </form>
                     </div>
 
-                    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border border-border bg-muted/30 px-3 py-2">
-                        <span className="text-[12px] font-semibold text-foreground">
+                    <div className="border-border bg-muted/30 mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border px-3 py-2">
+                        <span className="text-foreground text-[12px] font-semibold">
                             {cantidadSeleccionada > 0
                                 ? `${cantidadSeleccionada} comprobante(s) seleccionado(s)`
                                 : 'Marca comprobantes para descargarlos'}
@@ -361,7 +361,7 @@ export default function FacturacionIndex({
                             <button
                                 type="button"
                                 onClick={() => setTodoLoFiltrado(true)}
-                                className="text-[12px] font-semibold text-primary hover:underline"
+                                className="text-primary text-[12px] font-semibold hover:underline"
                             >
                                 Seleccionar los {totalFiltrados} del filtro
                             </button>
@@ -374,7 +374,7 @@ export default function FacturacionIndex({
                             >
                                 <input
                                     type="checkbox"
-                                    className="size-3.5 accent-primary"
+                                    className="accent-primary size-3.5"
                                     checked={incluir.includes(tipo)}
                                     onChange={() =>
                                         setIncluir(
@@ -403,7 +403,7 @@ export default function FacturacionIndex({
                                 )
                             }
                             size="sm"
-                            className="h-8 rounded-[8px] bg-primary text-white shadow-none hover:bg-primary/90"
+                            className="bg-primary hover:bg-primary/90 h-8 rounded-[8px] text-white shadow-none"
                         >
                             {descargando === 'zip' ? (
                                 <Spinner />
@@ -443,11 +443,11 @@ export default function FacturacionIndex({
                         <table className="w-full border-collapse text-[12.5px]">
                             <thead>
                                 <tr>
-                                    <th className="w-8 border-b border-border px-2.5 py-2.5">
+                                    <th className="border-border w-8 border-b px-2.5 py-2.5">
                                         <input
                                             type="checkbox"
                                             aria-label="Marcar la página"
-                                            className="size-3.5 accent-primary"
+                                            className="accent-primary size-3.5"
                                             checked={paginaMarcada}
                                             onChange={alternarPagina}
                                         />
@@ -463,7 +463,7 @@ export default function FacturacionIndex({
                                     ].map((h) => (
                                         <th
                                             key={h}
-                                            className="border-b border-border px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] text-muted-foreground uppercase"
+                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
                                         >
                                             {h}
                                         </th>
@@ -489,11 +489,11 @@ export default function FacturacionIndex({
                                                 key={document.id}
                                                 className="hover:bg-muted/40"
                                             >
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <input
                                                         type="checkbox"
                                                         aria-label={`Marcar ${number}`}
-                                                        className="size-3.5 accent-primary"
+                                                        className="accent-primary size-3.5"
                                                         checked={
                                                             todoLoFiltrado ||
                                                             marcados.includes(
@@ -507,8 +507,8 @@ export default function FacturacionIndex({
                                                         }
                                                     />
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
-                                                    <span className="mr-1.5 rounded-[5px] bg-muted px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold text-foreground/80 uppercase">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
+                                                    <span className="bg-muted text-foreground/80 mr-1.5 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">
                                                         {document.tipo}
                                                     </span>
                                                     {document.sale_id ? (
@@ -520,7 +520,7 @@ export default function FacturacionIndex({
                                                                     sale: document.sale_id,
                                                                 },
                                                             )}
-                                                            className="font-['IBM_Plex_Mono',monospace] font-bold hover:text-primary hover:underline"
+                                                            className="hover:text-primary font-['IBM_Plex_Mono',monospace] font-bold hover:underline"
                                                             title="Ver venta"
                                                         >
                                                             {number}
@@ -531,16 +531,16 @@ export default function FacturacionIndex({
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px] font-semibold text-foreground">
+                                                <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
                                                     {document.cliente}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px] text-foreground/80">
+                                                <td className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
                                                     {document.created_at ?? '-'}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                                <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
                                                     {money(document.total)}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <Badge
                                                         title={
                                                             document.sunat_mensaje ??
@@ -553,11 +553,11 @@ export default function FacturacionIndex({
                                                         )}
                                                     </Badge>
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px] text-muted-foreground">
+                                                <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px]">
                                                     {document.sunat_codigo_respuesta ??
                                                         '-'}
                                                 </td>
-                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-[13px]">
                                                     <div className="flex items-center gap-1.5">
                                                         {canResend && (
                                                             <Button
@@ -573,7 +573,7 @@ export default function FacturacionIndex({
                                                                 }
                                                                 variant="outline"
                                                                 size="icon"
-                                                                className="size-7 rounded-[7px] border-border bg-card text-amber-600 dark:text-amber-400 shadow-none"
+                                                                className="border-border bg-card size-7 rounded-[7px] text-amber-600 shadow-none dark:text-amber-400"
                                                             >
                                                                 {processingId ===
                                                                 document.id ? (
@@ -592,7 +592,7 @@ export default function FacturacionIndex({
                                                                         document.id,
                                                                 },
                                                             )}
-                                                            className="inline-flex h-[26px] items-center rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
+                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-[6px] border px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold no-underline"
                                                         >
                                                             XML
                                                         </a>
@@ -605,7 +605,7 @@ export default function FacturacionIndex({
                                                                         document.id,
                                                                 },
                                                             )}
-                                                            className="inline-flex h-[26px] items-center rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
+                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-[6px] border px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold no-underline"
                                                         >
                                                             CDR
                                                         </a>
@@ -618,7 +618,7 @@ export default function FacturacionIndex({
                                                                         document.id,
                                                                 },
                                                             )}
-                                                            className="inline-flex h-[26px] items-center gap-1 rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
+                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center gap-1 rounded-[6px] border px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold no-underline"
                                                         >
                                                             <FileDown className="size-3" />
                                                             PDF
@@ -633,7 +633,7 @@ export default function FacturacionIndex({
                         </table>
                     </div>
 
-                    <div className="mt-3.5 flex flex-col gap-3 text-[11.5px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
                         <span>
                             Mostrando {documents.from ?? 0}-{documents.to ?? 0}{' '}
                             de {documents.total ?? documents.data.length}{' '}
@@ -654,7 +654,7 @@ export default function FacturacionIndex({
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
-                                        className="flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] text-muted-foreground"
+                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
                                     >
                                         {cleanLabel(link.label)}
                                     </span>

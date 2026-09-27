@@ -36,9 +36,9 @@ export default function ReferenciaField({
 
     return (
         <div>
-            <div className="text-[11px] font-bold text-foreground/80 uppercase">
+            <div className="text-foreground/80 text-[11px] font-bold uppercase">
                 Referencia{' '}
-                <span className="font-normal text-muted-foreground normal-case">
+                <span className="text-muted-foreground font-normal normal-case">
                     ({esVehiculo ? 'placa' : 'sede u oficina del cliente'}, sale
                     impresa en el comprobante)
                 </span>
@@ -75,10 +75,10 @@ export default function ReferenciaField({
                         ? 'Ej. PLACA: AVR-833'
                         : 'Ej. SEDE: Oficina Chimbote (opcional)'
                 }
-                className="mt-1.5 h-10 rounded-[9px] border-border bg-card text-[13px]"
+                className="border-border bg-card mt-1.5 h-10 rounded-[9px] text-[13px]"
             />
             {error ? (
-                <p className="mt-1 text-[11px] font-semibold text-destructive">
+                <p className="text-destructive mt-1 text-[11px] font-semibold">
                     {error}
                 </p>
             ) : null}

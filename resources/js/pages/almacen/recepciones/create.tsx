@@ -12,7 +12,7 @@ import {
     Trash2,
     Truck,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -232,7 +232,7 @@ export default function RecepcionesCreate({
                 <div className="flex items-center justify-between">
                     <Link
                         href={recepciones.index.url(teamSlug)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                     >
                         <ArrowLeft className="size-4" />
                         <span>Volver a recepciones</span>
@@ -241,7 +241,7 @@ export default function RecepcionesCreate({
                     <Button
                         type="submit"
                         disabled={processing || data.items.length === 0}
-                        className="h-10 gap-2 bg-primary px-6 text-xs font-bold text-white hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 h-10 gap-2 px-6 text-xs font-bold text-white"
                     >
                         <Check className="size-4" />
                         <span>Confirmar Recepción</span>
@@ -250,7 +250,7 @@ export default function RecepcionesCreate({
 
                 {/* Error Banner General */}
                 {Object.keys(errors).length > 0 && (
-                    <div className="flex items-start gap-3 rounded-[12px] border border-destructive/20 bg-destructive/10 p-4 text-[13px] text-primary">
+                    <div className="border-destructive/20 bg-destructive/10 text-primary flex items-start gap-3 rounded-[12px] border p-4 text-[13px]">
                         <AlertCircle className="mt-0.5 size-5 shrink-0" />
                         <div>
                             <b>
@@ -266,17 +266,17 @@ export default function RecepcionesCreate({
                 )}
 
                 {/* Card 1: Datos de Cabecera */}
-                <Card className="rounded-[16px] border-border bg-card p-6 shadow-none">
-                    <div className="flex items-center gap-2 border-b border-border pb-4">
-                        <Truck className="size-4 text-primary" />
-                        <h2 className="text-[14px] font-bold text-foreground">
+                <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                    <div className="border-border flex items-center gap-2 border-b pb-4">
+                        <Truck className="text-primary size-4" />
+                        <h2 className="text-foreground text-[14px] font-bold">
                             Datos del Comprobante y Proveedor
                         </h2>
                     </div>
 
                     <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="sm:col-span-2">
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Proveedor / Razón Social{' '}
                                 <span className="text-primary">*</span>
                             </Label>
@@ -290,14 +290,14 @@ export default function RecepcionesCreate({
                                 required
                             />
                             {errors.proveedor && (
-                                <p className="mt-1 text-[11px] text-primary">
+                                <p className="text-primary mt-1 text-[11px]">
                                     {errors.proveedor}
                                 </p>
                             )}
                         </div>
 
                         <div>
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Doc. Referencia (Guía / Factura)
                             </Label>
                             <Input
@@ -314,7 +314,7 @@ export default function RecepcionesCreate({
                         </div>
 
                         <div>
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Fecha de Recepción{' '}
                                 <span className="text-primary">*</span>
                             </Label>
@@ -329,14 +329,14 @@ export default function RecepcionesCreate({
                                 required
                             />
                             {errors.fecha && (
-                                <p className="mt-1 text-[11px] text-primary">
+                                <p className="text-primary mt-1 text-[11px]">
                                     {errors.fecha}
                                 </p>
                             )}
                         </div>
 
                         <div className="sm:col-span-2">
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Sede de Almacén Destino{' '}
                                 <span className="text-primary">*</span>
                             </Label>
@@ -348,7 +348,7 @@ export default function RecepcionesCreate({
                                         Number(e.target.value),
                                     )
                                 }
-                                className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                                className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
                                 required
                             >
                                 {sedes.map((sede) => (
@@ -361,7 +361,7 @@ export default function RecepcionesCreate({
                         </div>
 
                         <div className="sm:col-span-2">
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Observación General de Recepción
                             </Label>
                             <Input
@@ -377,11 +377,11 @@ export default function RecepcionesCreate({
                 </Card>
 
                 {/* Card 2: Líneas de Mercadería Recibida */}
-                <Card className="rounded-[16px] border-border bg-card p-6 shadow-none">
-                    <div className="flex items-center justify-between border-b border-border pb-4">
+                <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                    <div className="border-border flex items-center justify-between border-b pb-4">
                         <div className="flex items-center gap-2">
-                            <Package className="size-4 text-primary" />
-                            <h2 className="text-[14px] font-bold text-foreground">
+                            <Package className="text-primary size-4" />
+                            <h2 className="text-foreground text-[14px] font-bold">
                                 Ítems y Unidades Recibidas
                             </h2>
                         </div>
@@ -390,7 +390,7 @@ export default function RecepcionesCreate({
                             type="button"
                             onClick={addLine}
                             size="sm"
-                            className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                            className="bg-foreground text-background hover:bg-foreground/90 h-8 gap-1.5"
                         >
                             <Plus className="size-3.5" />
                             <span>Agregar Ítem</span>
@@ -399,14 +399,14 @@ export default function RecepcionesCreate({
 
                     {data.items.length === 0 ? (
                         <div className="flex min-h-[160px] flex-col items-center justify-center text-center">
-                            <Package className="size-8 text-muted-foreground" />
-                            <p className="mt-2 text-xs font-medium text-muted-foreground">
+                            <Package className="text-muted-foreground size-8" />
+                            <p className="text-muted-foreground mt-2 text-xs font-medium">
                                 Presiona "Agregar Ítem" para añadir los
                                 productos recibidos en este lote.
                             </p>
                         </div>
                     ) : (
-                        <div className="mt-3 flex flex-col divide-y divide-border">
+                        <div className="divide-border mt-3 flex flex-col divide-y">
                             {data.items.map((item, index) => {
                                 const prod = products.find(
                                     (p) => p.id === item.product_id,
@@ -423,10 +423,10 @@ export default function RecepcionesCreate({
                                     >
                                         <div className="flex flex-wrap items-start justify-between gap-3">
                                             <div className="flex items-center gap-2">
-                                                <span className="flex size-6 items-center justify-center rounded-full bg-card text-[11px] font-bold text-white">
+                                                <span className="bg-card flex size-6 items-center justify-center rounded-full text-[11px] font-bold text-white">
                                                     {index + 1}
                                                 </span>
-                                                <span className="text-xs font-bold text-foreground">
+                                                <span className="text-foreground text-xs font-bold">
                                                     Línea de Producto
                                                 </span>
                                             </div>
@@ -436,7 +436,7 @@ export default function RecepcionesCreate({
                                                 onClick={() =>
                                                     removeLine(index)
                                                 }
-                                                className="p-1 text-muted-foreground hover:text-primary"
+                                                className="text-muted-foreground hover:text-primary p-1"
                                                 title="Eliminar línea"
                                             >
                                                 <Trash2 className="size-4" />
@@ -445,7 +445,7 @@ export default function RecepcionesCreate({
 
                                         <div className="grid gap-3 sm:grid-cols-4 lg:grid-cols-6">
                                             <div className="sm:col-span-2 lg:col-span-3">
-                                                <Label className="text-[11px] font-bold text-foreground/80">
+                                                <Label className="text-foreground/80 text-[11px] font-bold">
                                                     Producto{' '}
                                                     <span className="text-primary">
                                                         *
@@ -461,7 +461,7 @@ export default function RecepcionesCreate({
                                                             ),
                                                         )
                                                     }
-                                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                                                    className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
                                                 >
                                                     {products.map((p) => (
                                                         <option
@@ -479,7 +479,7 @@ export default function RecepcionesCreate({
                                             </div>
 
                                             <div>
-                                                <Label className="text-[11px] font-bold text-foreground/80">
+                                                <Label className="text-foreground/80 text-[11px] font-bold">
                                                     Cant. Recibida{' '}
                                                     <span className="text-primary">
                                                         *
@@ -503,7 +503,7 @@ export default function RecepcionesCreate({
                                             </div>
 
                                             <div>
-                                                <Label className="text-[11px] font-bold text-foreground/80">
+                                                <Label className="text-foreground/80 text-[11px] font-bold">
                                                     Cant. Conforme{' '}
                                                     <span className="text-primary">
                                                         *
@@ -532,7 +532,7 @@ export default function RecepcionesCreate({
                                             <div className="flex flex-col justify-end">
                                                 <div className="flex h-9 items-center">
                                                     {hasNoConforme ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-full border border-destructive/20 bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                                        <span className="border-destructive/20 bg-destructive/10 text-primary inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold">
                                                             <AlertTriangle className="size-3" />
                                                             <span>
                                                                 {item.cantidad -
@@ -571,7 +571,7 @@ export default function RecepcionesCreate({
                                                         )
                                                     }
                                                     placeholder="Ej. 2 unidades llegaron abolladas o sin precinto de fábrica."
-                                                    className="mt-1 h-8 border-border bg-card text-xs"
+                                                    className="border-border bg-card mt-1 h-8 text-xs"
                                                     required
                                                 />
                                             </div>
@@ -580,9 +580,9 @@ export default function RecepcionesCreate({
                                         {/* Sub-formulario para unidades serializadas */}
                                         {isSerializado &&
                                             item.cantidad_conforme > 0 && (
-                                                <div className="mt-1 rounded-[12px] border border-border bg-muted/40 p-4">
+                                                <div className="border-border bg-muted/40 mt-1 rounded-[12px] border p-4">
                                                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                                                        <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-foreground">
+                                                        <div className="text-foreground flex flex-wrap items-center gap-1.5 text-xs font-bold">
                                                             <ScanBarcode className="size-4 text-emerald-600 dark:text-emerald-400" />
                                                             <span>
                                                                 Captura de
@@ -593,7 +593,7 @@ export default function RecepcionesCreate({
                                                                 }{' '}
                                                                 conformes)
                                                             </span>
-                                                            <span className="text-[11px] font-normal text-muted-foreground">
+                                                            <span className="text-muted-foreground text-[11px] font-normal">
                                                                 — El código
                                                                 interno
                                                                 BF-EQ-XXXXXX se
@@ -621,10 +621,10 @@ export default function RecepcionesCreate({
                                                         )}
                                                     </div>
 
-                                                    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+                                                    <div className="border-border bg-card overflow-x-auto rounded-lg border">
                                                         <table className="w-full min-w-[560px] text-xs">
                                                             <thead>
-                                                                <tr className="bg-primary text-left text-[10px] font-bold tracking-wide text-primary-foreground uppercase">
+                                                                <tr className="bg-primary text-primary-foreground text-left text-[10px] font-bold tracking-wide uppercase">
                                                                     <th className="w-12 px-2 py-2 text-center">
                                                                         Ítem
                                                                     </th>
@@ -653,9 +653,9 @@ export default function RecepcionesCreate({
                                                                             key={
                                                                                 uIdx
                                                                             }
-                                                                            className="border-t border-border"
+                                                                            className="border-border border-t"
                                                                         >
-                                                                            <td className="px-2 py-1.5 text-center font-bold text-muted-foreground">
+                                                                            <td className="text-muted-foreground px-2 py-1.5 text-center font-bold">
                                                                                 {uIdx +
                                                                                     1}
                                                                             </td>

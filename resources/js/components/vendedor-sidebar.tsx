@@ -204,10 +204,10 @@ export function VendedorSidebar({ open, onClose }: VendedorSidebarProps) {
                         className="size-[30px] shrink-0"
                     />
                     <div className="min-w-0 flex-1">
-                        <div className="font-['Oswald',sans-serif] text-[13px] leading-none font-bold tracking-[0.02em] text-sidebar-foreground uppercase">
+                        <div className="text-sidebar-foreground font-['Oswald',sans-serif] text-[13px] leading-none font-bold tracking-[0.02em] uppercase">
                             BRUCE FIRE
                         </div>
-                        <div className="mt-1 font-['IBM_Plex_Mono',monospace] text-[8px] tracking-[0.1em] text-sidebar-foreground/60 uppercase">
+                        <div className="text-sidebar-foreground/60 mt-1 font-['IBM_Plex_Mono',monospace] text-[8px] tracking-[0.1em] uppercase">
                             Panel vendedor
                         </div>
                     </div>
@@ -215,17 +215,17 @@ export function VendedorSidebar({ open, onClose }: VendedorSidebarProps) {
                         type="button"
                         onClick={onClose}
                         aria-label="Cerrar menú"
-                        className="flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground lg:hidden transition-colors"
+                        className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground flex size-8 shrink-0 items-center justify-center rounded-md transition-colors lg:hidden"
                     >
                         <X className="size-4" />
                     </button>
                 </div>
 
-                <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-3.5 overscroll-contain">
+                <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-3 py-3.5">
                     {vendedorNavGroups.map((group, groupIndex) => (
                         <div key={group.label ?? `group-${groupIndex}`}>
                             {group.label && (
-                                <div className="px-2.5 pt-4 pb-1.5 font-['IBM_Plex_Mono',monospace] text-[9.5px] tracking-[0.1em] text-sidebar-foreground/50 uppercase">
+                                <div className="text-sidebar-foreground/50 px-2.5 pt-4 pb-1.5 font-['IBM_Plex_Mono',monospace] text-[9.5px] tracking-[0.1em] uppercase">
                                     {group.label}
                                 </div>
                             )}
@@ -282,15 +282,15 @@ export function VendedorSidebar({ open, onClose }: VendedorSidebarProps) {
                     ))}
                 </nav>
 
-                <div className="flex shrink-0 items-center gap-2.5 border-t border-sidebar-border px-5 py-4">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary text-xs font-bold text-primary-foreground shadow-xs">
+                <div className="border-sidebar-border flex shrink-0 items-center gap-2.5 border-t px-5 py-4">
+                    <div className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-[10px] text-xs font-bold shadow-xs">
                         {getInitials(auth.user.name)}
                     </div>
                     <div className="min-w-0">
-                        <div className="truncate text-[12.5px] font-bold whitespace-nowrap text-sidebar-foreground">
+                        <div className="text-sidebar-foreground truncate text-[12.5px] font-bold whitespace-nowrap">
                             {auth.user.name}
                         </div>
-                        <div className="font-['IBM_Plex_Mono',monospace] text-[9.5px] text-sidebar-foreground/60">
+                        <div className="text-sidebar-foreground/60 font-['IBM_Plex_Mono',monospace] text-[9.5px]">
                             {userRole}
                         </div>
                     </div>

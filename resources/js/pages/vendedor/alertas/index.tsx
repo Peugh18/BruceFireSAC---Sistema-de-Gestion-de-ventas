@@ -1,19 +1,9 @@
 ﻿import { Head, Link, usePage } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    Bell,
-    CheckCircle2,
-    Clock,
-    FilePlus2,
-    MessageSquare,
-    Search,
-    Send,
-} from 'lucide-react';
+import { CheckCircle2, FilePlus2, MessageSquare, Search } from 'lucide-react';
 import { useState } from 'react';
 
 import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
@@ -100,30 +90,30 @@ export default function AlertasIndex({ alerts }: Props) {
                 {/* Header title */}
                 <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
                     <div>
-                        <h2 className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
+                        <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
                             Extintores de tus clientes por vencer
                         </h2>
-                        <p className="text-[12.5px] text-muted-foreground">
+                        <p className="text-muted-foreground text-[12.5px]">
                             Ordenado por urgencia — aprovecha para ofrecer la
                             recarga o mantenimiento antes de que venza.
                         </p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <div className="flex h-9 w-[220px] items-center gap-2 rounded-[9px] border border-border bg-card px-3 text-[12.5px]">
-                            <Search className="size-3.5 text-muted-foreground" />
+                        <div className="border-border bg-card flex h-9 w-[220px] items-center gap-2 rounded-[9px] border px-3 text-[12.5px]">
+                            <Search className="text-muted-foreground size-3.5" />
                             <input
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Filtrar cliente o equipo..."
-                                className="w-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
+                                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
                             />
                         </div>
                     </div>
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex w-fit rounded-[9px] bg-muted p-[3px]">
+                <div className="bg-muted flex w-fit rounded-[9px] p-[3px]">
                     {tabs.map((tab) => {
                         const active = activeTab === tab.id;
                         return (
@@ -146,12 +136,12 @@ export default function AlertasIndex({ alerts }: Props) {
                 {/* List of Alerts */}
                 <div className="flex flex-col gap-3">
                     {currentList.length === 0 ? (
-                        <Card className="flex flex-col items-center justify-center gap-2 rounded-[16px] border-border bg-card p-12 text-center shadow-none">
+                        <Card className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-[16px] p-12 text-center shadow-none">
                             <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
-                            <p className="text-sm font-bold text-foreground">
+                            <p className="text-foreground text-sm font-bold">
                                 No hay alertas en esta categoría
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                                 {search
                                     ? 'No se encontraron resultados para tu búsqueda.'
                                     : 'Todos los equipos de tus clientes en este segmento están al día.'}
@@ -176,7 +166,7 @@ export default function AlertasIndex({ alerts }: Props) {
                             return (
                                 <div
                                     key={`${item.equipment_id ?? 'hist'}-${item.client_id}-${item.fecha}-${idx}`}
-                                    className={`flex flex-col gap-3 rounded-[14px] border border-border bg-card p-4 shadow-none transition-all sm:flex-row sm:items-center sm:gap-4 ${
+                                    className={`border-border bg-card flex flex-col gap-3 rounded-[14px] border p-4 shadow-none transition-all sm:flex-row sm:items-center sm:gap-4 ${
                                         isVencida
                                             ? 'border-l-[5px] border-l-[#B91C1C]'
                                             : isEstaSemana
@@ -188,9 +178,9 @@ export default function AlertasIndex({ alerts }: Props) {
                                     <div
                                         className={`flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                                             isVencida
-                                                ? 'bg-destructive/10 text-destructive border border-destructive/20'
+                                                ? 'bg-destructive/10 text-destructive border-destructive/20 border'
                                                 : isEstaSemana
-                                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                                  ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                                   : 'bg-muted text-foreground/80'
                                         }`}
                                     >
@@ -200,15 +190,15 @@ export default function AlertasIndex({ alerts }: Props) {
                                     {/* Details */}
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-[13.5px] font-bold text-foreground">
+                                            <span className="text-foreground text-[13.5px] font-bold">
                                                 {item.cliente}
                                             </span>
                                             <Badge
                                                 className={`rounded-full border-none px-2.5 py-0.5 text-[10.5px] font-bold ${
                                                     isVencida
-                                                        ? 'bg-destructive/10 text-destructive border border-destructive/20'
+                                                        ? 'bg-destructive/10 text-destructive border-destructive/20 border'
                                                         : isEstaSemana
-                                                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                                          ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                                           : 'bg-muted text-muted-foreground'
                                                 }`}
                                             >
@@ -229,9 +219,9 @@ export default function AlertasIndex({ alerts }: Props) {
                                             )}
                                         </div>
 
-                                        <div className="mt-1 text-[12px] text-muted-foreground">
+                                        <div className="text-muted-foreground mt-1 text-[12px]">
                                             {item.cantidad} extintor(es){' '}
-                                            <b className="font-semibold text-foreground/80">
+                                            <b className="text-foreground/80 font-semibold">
                                                 {item.equipo}
                                             </b>
                                             {item.numero_serie
@@ -252,7 +242,7 @@ export default function AlertasIndex({ alerts }: Props) {
                                                 href={`https://wa.me/${phoneClean}?text=${waText}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-emerald-500/20 bg-emerald-500/10 px-3.5 text-[12px] font-bold text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-500/10"
+                                                className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-emerald-500/20 bg-emerald-500/10 px-3.5 text-[12px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
                                             >
                                                 <MessageSquare className="size-3.5" />
                                                 <span>WhatsApp</span>
@@ -260,7 +250,7 @@ export default function AlertasIndex({ alerts }: Props) {
                                         ) : (
                                             <Link
                                                 href={`/${teamSlug}/vendedor/clientes`}
-                                                className="inline-flex h-9 items-center gap-1 rounded-[9px] border border-border bg-card px-3 text-[12px] font-semibold text-foreground/80 hover:bg-background"
+                                                className="border-border bg-card text-foreground/80 hover:bg-background inline-flex h-9 items-center gap-1 rounded-[9px] border px-3 text-[12px] font-semibold"
                                             >
                                                 <span>Ver cliente</span>
                                             </Link>
@@ -270,7 +260,7 @@ export default function AlertasIndex({ alerts }: Props) {
                                             href={QuoteController.index.url(
                                                 teamSlug,
                                             )}
-                                            className="inline-flex h-9 items-center gap-1.5 rounded-[9px] bg-primary px-3.5 text-[12px] font-bold text-white shadow-none transition-colors hover:bg-primary/90"
+                                            className="bg-primary hover:bg-primary/90 inline-flex h-9 items-center gap-1.5 rounded-[9px] px-3.5 text-[12px] font-bold text-white shadow-none transition-colors"
                                         >
                                             <FilePlus2 className="size-3.5" />
                                             <span>Crear cotización</span>

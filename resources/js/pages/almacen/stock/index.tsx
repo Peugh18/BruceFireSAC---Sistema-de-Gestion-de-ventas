@@ -1,25 +1,18 @@
 ﻿import { Head, router } from '@inertiajs/react';
 import {
-    ArrowUpDown,
     Boxes,
     Building2,
-    Calendar,
-    CheckCircle2,
-    Clock,
     Filter,
     History,
-    Layers,
     Package,
     RotateCcw,
     ScanBarcode,
     Search,
     TrendingDown,
-    User,
     Wrench,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -49,13 +42,7 @@ export type StockItem = {
 export type KardexItem = {
     id: number;
     fecha: string | null;
-    tipo:
-        | 'ingreso'
-        | 'salida_venta'
-        | 'salida_servicio'
-        | 'ajuste'
-        | 'traslado'
-        | string;
+    tipo: string;
     cantidad: number;
     producto: {
         id: number;
@@ -160,27 +147,32 @@ function getTipoMovimientoBadge(tipo: string): {
         case 'ingreso':
             return {
                 label: 'Ingreso',
-                className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border-emerald-500/20',
+                className:
+                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border-emerald-500/20',
             };
         case 'salida_venta':
             return {
                 label: 'Venta',
-                className: 'bg-destructive/10 text-primary border-destructive/20',
+                className:
+                    'bg-destructive/10 text-primary border-destructive/20',
             };
         case 'salida_servicio':
             return {
                 label: 'Consumo Taller',
-                className: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+                className:
+                    'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
             };
         case 'ajuste':
             return {
                 label: 'Ajuste',
-                className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                className:
+                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
             };
         case 'traslado':
             return {
                 label: 'Traslado',
-                className: 'bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20',
+                className:
+                    'bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20',
             };
         default:
             return {
@@ -302,38 +294,38 @@ export default function StockIndex({
             <div className="flex flex-col gap-6">
                 {/* 4 KPI Cards */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                        <div className="flex items-center justify-between text-muted-foreground">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Productos en catálogo
                             </span>
-                            <Package className="size-4 text-foreground" />
+                            <Package className="text-foreground size-4" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-foreground">
+                        <div className="text-foreground mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.total_productos}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 text-[11.5px]">
                             Productos físicos y repuestos
                         </div>
                     </Card>
 
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                        <div className="flex items-center justify-between text-muted-foreground">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Servicios en catálogo
                             </span>
                             <Wrench className="size-4 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-foreground">
+                        <div className="text-foreground mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.total_servicios}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 text-[11.5px]">
                             Recargas, pruebas y mantenimientos
                         </div>
                     </Card>
 
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                        <div className="flex items-center justify-between text-muted-foreground">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Unidades disponibles
                             </span>
@@ -342,29 +334,29 @@ export default function StockIndex({
                         <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-emerald-600 dark:text-emerald-400">
                             {kpis.unidades_en_stock}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 text-[11.5px]">
                             Total en todos los almacenes
                         </div>
                     </Card>
 
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                        <div className="flex items-center justify-between text-muted-foreground">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Bajo stock mínimo
                             </span>
-                            <TrendingDown className="size-4 text-primary" />
+                            <TrendingDown className="text-primary size-4" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-primary">
+                        <div className="text-primary mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.bajo_minimo}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 text-[11.5px]">
                             Requieren reabastecimiento
                         </div>
                     </Card>
                 </div>
 
                 {/* Tabs Switcher: [Stock Actual] | [Movimientos Kardex] */}
-                <div className="flex items-center gap-2 border-b border-border pb-2">
+                <div className="border-border flex items-center gap-2 border-b pb-2">
                     <button
                         type="button"
                         onClick={() => setActiveTab('stock')}
@@ -377,7 +369,7 @@ export default function StockIndex({
                     >
                         <Boxes className="size-4" />
                         <span>Stock de Productos y Servicios</span>
-                        <span className="rounded-full bg-card/20 px-2 py-0.5 text-[10.5px]">
+                        <span className="bg-card/20 rounded-full px-2 py-0.5 text-[10.5px]">
                             {items.total}
                         </span>
                     </button>
@@ -394,7 +386,7 @@ export default function StockIndex({
                     >
                         <History className="size-4" />
                         <span>Historial de Kardex</span>
-                        <span className="rounded-full bg-card/20 px-2 py-0.5 text-[10.5px]">
+                        <span className="bg-card/20 rounded-full px-2 py-0.5 text-[10.5px]">
                             {kardex.total}
                         </span>
                     </button>
@@ -402,18 +394,18 @@ export default function StockIndex({
 
                 {/* TAB 1: STOCK Y CATÁLOGO */}
                 {activeTab === 'stock' && (
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         {/* Filters Bar */}
                         <form
                             onSubmit={handleStockFilter}
-                            className="flex flex-wrap items-end gap-3 border-b border-border pb-5"
+                            className="border-border flex flex-wrap items-end gap-3 border-b pb-5"
                         >
                             <div className="min-w-[220px] flex-1">
-                                <Label className="text-xs font-bold text-foreground/80">
+                                <Label className="text-foreground/80 text-xs font-bold">
                                     Buscar ítem
                                 </Label>
                                 <div className="relative mt-1">
-                                    <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
+                                    <Search className="text-muted-foreground absolute top-2.5 left-3 size-4" />
                                     <Input
                                         value={stockSearch}
                                         onChange={(e) =>
@@ -426,7 +418,7 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[180px]">
-                                <Label className="text-xs font-bold text-foreground/80">
+                                <Label className="text-foreground/80 text-xs font-bold">
                                     Tipo de ítem
                                 </Label>
                                 <select
@@ -434,7 +426,7 @@ export default function StockIndex({
                                     onChange={(e) =>
                                         setStockTipo(e.target.value)
                                     }
-                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                                    className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
                                 >
                                     <option value="todos">
                                         Todos los tipos
@@ -452,7 +444,7 @@ export default function StockIndex({
                                 <Button
                                     type="submit"
                                     size="sm"
-                                    className="h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                                    className="bg-foreground text-background hover:bg-foreground/90 h-9 gap-1.5"
                                 >
                                     <Filter className="size-3.5" />
                                     <span>Filtrar</span>
@@ -464,7 +456,7 @@ export default function StockIndex({
                                         variant="outline"
                                         size="sm"
                                         onClick={handleResetStock}
-                                        className="h-9 gap-1.5 text-muted-foreground"
+                                        className="text-muted-foreground h-9 gap-1.5"
                                     >
                                         <RotateCcw className="size-3.5" />
                                         <span>Limpiar</span>
@@ -476,8 +468,8 @@ export default function StockIndex({
                         {/* Stock Table */}
                         {items.data.length === 0 ? (
                             <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                                <Package className="size-10 text-muted-foreground" />
-                                <p className="mt-2 text-sm font-medium text-muted-foreground">
+                                <Package className="text-muted-foreground size-10" />
+                                <p className="text-muted-foreground mt-2 text-sm font-medium">
                                     No se encontraron productos ni servicios con
                                     los filtros indicados.
                                 </p>
@@ -486,7 +478,7 @@ export default function StockIndex({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-[12.5px]">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
                                             <th className="py-2.5 pr-4">
                                                 Código
                                             </th>
@@ -508,7 +500,7 @@ export default function StockIndex({
                                                     className="px-3 py-2.5 text-center"
                                                 >
                                                     <div className="flex items-center justify-center gap-1">
-                                                        <Building2 className="size-3 text-muted-foreground" />
+                                                        <Building2 className="text-muted-foreground size-3" />
                                                         <span>
                                                             {sede.nombre}
                                                         </span>
@@ -520,7 +512,7 @@ export default function StockIndex({
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {items.data.map((item) => {
                                             const isBajoMinimo =
                                                 item.tipo === 'producto' &&
@@ -532,17 +524,17 @@ export default function StockIndex({
                                             return (
                                                 <tr
                                                     key={`${item.tipo}-${item.id}`}
-                                                    className="transition-colors hover:bg-muted/40"
+                                                    className="hover:bg-muted/40 transition-colors"
                                                 >
-                                                    <td className="py-3 pr-4 font-mono font-bold text-foreground">
+                                                    <td className="text-foreground py-3 pr-4 font-mono font-bold">
                                                         {item.codigo}
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <div className="font-bold text-foreground">
+                                                        <div className="text-foreground font-bold">
                                                             {item.nombre}
                                                         </div>
                                                         {item.serializado && (
-                                                            <div className="mt-0.5 flex items-center gap-1 text-[10.5px] text-muted-foreground">
+                                                            <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-[10.5px]">
                                                                 <ScanBarcode className="size-3 text-emerald-600 dark:text-emerald-400" />
                                                                 <span>
                                                                     Unidad
@@ -558,10 +550,10 @@ export default function StockIndex({
                                                             item.tipo,
                                                         )}
                                                     </td>
-                                                    <td className="px-3 py-3 text-center font-mono text-muted-foreground">
+                                                    <td className="text-muted-foreground px-3 py-3 text-center font-mono">
                                                         {item.unidad_medida}
                                                     </td>
-                                                    <td className="px-3 py-3 text-right font-mono font-medium text-foreground">
+                                                    <td className="text-foreground px-3 py-3 text-right font-mono font-medium">
                                                         {formatCurrency(
                                                             item.precio_venta,
                                                         )}
@@ -580,7 +572,7 @@ export default function StockIndex({
                                                             >
                                                                 {item.tipo ===
                                                                 'servicio' ? (
-                                                                    <span className="font-mono text-[11px] text-muted-foreground">
+                                                                    <span className="text-muted-foreground font-mono text-[11px]">
                                                                         N/A
                                                                     </span>
                                                                 ) : (
@@ -608,7 +600,7 @@ export default function StockIndex({
                                                     <td className="py-3 pl-4 text-center">
                                                         {item.tipo ===
                                                         'servicio' ? (
-                                                            <span className="font-mono text-[11px] text-muted-foreground">
+                                                            <span className="text-muted-foreground font-mono text-[11px]">
                                                                 N/A
                                                             </span>
                                                         ) : (
@@ -628,7 +620,7 @@ export default function StockIndex({
                                                                     null &&
                                                                     item.stock_minimo >
                                                                         0 && (
-                                                                        <span className="mt-0.5 text-[10px] text-muted-foreground">
+                                                                        <span className="text-muted-foreground mt-0.5 text-[10px]">
                                                                             Mín:{' '}
                                                                             {
                                                                                 item.stock_minimo
@@ -646,11 +638,10 @@ export default function StockIndex({
 
                                 {/* Paginador del catálogo */}
                                 {items.links.length > 3 && (
-                                    <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+                                    <div className="border-border text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-xs">
                                         <span>
-                                            Mostrando{' '}
-                                            <b>{items.data.length}</b> de{' '}
-                                            <b>{items.total}</b> ítems
+                                            Mostrando <b>{items.data.length}</b>{' '}
+                                            de <b>{items.total}</b> ítems
                                         </span>
                                         <div className="flex items-center gap-1">
                                             {items.links.map((link, idx) => (
@@ -693,14 +684,14 @@ export default function StockIndex({
 
                 {/* TAB 2: HISTORIAL DE KARDEX */}
                 {activeTab === 'kardex' && (
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         {/* Kardex Filters Bar */}
                         <form
                             onSubmit={handleKardexFilter}
-                            className="flex flex-wrap items-end gap-3 border-b border-border pb-5"
+                            className="border-border flex flex-wrap items-end gap-3 border-b pb-5"
                         >
                             <div className="w-[200px]">
-                                <Label className="text-xs font-bold text-foreground/80">
+                                <Label className="text-foreground/80 text-xs font-bold">
                                     Producto
                                 </Label>
                                 <select
@@ -708,7 +699,7 @@ export default function StockIndex({
                                     onChange={(e) =>
                                         setKProductId(e.target.value)
                                     }
-                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                                    className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
                                 >
                                     <option value="">
                                         Todos los productos
@@ -722,13 +713,13 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[160px]">
-                                <Label className="text-xs font-bold text-foreground/80">
+                                <Label className="text-foreground/80 text-xs font-bold">
                                     Sede / Almacén
                                 </Label>
                                 <select
                                     value={kSedeId}
                                     onChange={(e) => setKSedeId(e.target.value)}
-                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                                    className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
                                 >
                                     <option value="">Todas las sedes</option>
                                     {sedes.map((sede) => (
@@ -740,13 +731,13 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[150px]">
-                                <Label className="text-xs font-bold text-foreground/80">
+                                <Label className="text-foreground/80 text-xs font-bold">
                                     Tipo movimiento
                                 </Label>
                                 <select
                                     value={kTipo}
                                     onChange={(e) => setKTipo(e.target.value)}
-                                    className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                                    className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
                                 >
                                     <option value="todos">
                                         Todos los tipos
@@ -770,7 +761,7 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[130px]">
-                                <Label className="text-xs font-bold text-foreground/80">
+                                <Label className="text-foreground/80 text-xs font-bold">
                                     Desde
                                 </Label>
                                 <Input
@@ -784,7 +775,7 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[130px]">
-                                <Label className="text-xs font-bold text-foreground/80">
+                                <Label className="text-foreground/80 text-xs font-bold">
                                     Hasta
                                 </Label>
                                 <Input
@@ -801,7 +792,7 @@ export default function StockIndex({
                                 <Button
                                     type="submit"
                                     size="sm"
-                                    className="h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                                    className="bg-foreground text-background hover:bg-foreground/90 h-9 gap-1.5"
                                 >
                                     <Filter className="size-3.5" />
                                     <span>Filtrar</span>
@@ -816,7 +807,7 @@ export default function StockIndex({
                                         variant="outline"
                                         size="sm"
                                         onClick={handleResetKardex}
-                                        className="h-9 gap-1.5 text-muted-foreground"
+                                        className="text-muted-foreground h-9 gap-1.5"
                                     >
                                         <RotateCcw className="size-3.5" />
                                         <span>Limpiar</span>
@@ -828,8 +819,8 @@ export default function StockIndex({
                         {/* Kardex Records Table */}
                         {kardex.data.length === 0 ? (
                             <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                                <History className="size-10 text-muted-foreground" />
-                                <p className="mt-2 text-sm font-medium text-muted-foreground">
+                                <History className="text-muted-foreground size-10" />
+                                <p className="text-muted-foreground mt-2 text-sm font-medium">
                                     No se encontraron movimientos registrados en
                                     el Kardex con estos filtros.
                                 </p>
@@ -838,7 +829,7 @@ export default function StockIndex({
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-[12.5px]">
                                     <thead>
-                                        <tr className="border-b border-border text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
                                             <th className="py-2.5 pr-4">
                                                 Fecha
                                             </th>
@@ -865,7 +856,7 @@ export default function StockIndex({
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-border divide-y">
                                         {kardex.data.map((mov) => {
                                             const badge =
                                                 getTipoMovimientoBadge(
@@ -877,9 +868,9 @@ export default function StockIndex({
                                             return (
                                                 <tr
                                                     key={mov.id}
-                                                    className="transition-colors hover:bg-muted/40"
+                                                    className="hover:bg-muted/40 transition-colors"
                                                 >
-                                                    <td className="py-3 pr-4 font-mono text-[11.5px] whitespace-nowrap text-foreground/80">
+                                                    <td className="text-foreground/80 py-3 pr-4 font-mono text-[11.5px] whitespace-nowrap">
                                                         {formatDate(mov.fecha)}
                                                     </td>
                                                     <td className="px-3 py-3">
@@ -890,13 +881,13 @@ export default function StockIndex({
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <div className="font-bold text-foreground">
+                                                        <div className="text-foreground font-bold">
                                                             {
                                                                 mov.producto
                                                                     .nombre
                                                             }
                                                         </div>
-                                                        <div className="font-mono text-[11px] text-muted-foreground">
+                                                        <div className="text-muted-foreground font-mono text-[11px]">
                                                             Cód:{' '}
                                                             {
                                                                 mov.producto
@@ -906,19 +897,19 @@ export default function StockIndex({
                                                     </td>
                                                     <td className="px-3 py-3">
                                                         {mov.unidad_serie ? (
-                                                            <span className="flex items-center gap-1 font-mono text-[11.5px] font-bold text-foreground">
+                                                            <span className="text-foreground flex items-center gap-1 font-mono text-[11.5px] font-bold">
                                                                 <ScanBarcode className="size-3 text-emerald-600 dark:text-emerald-400" />
                                                                 {
                                                                     mov.unidad_serie
                                                                 }
                                                             </span>
                                                         ) : (
-                                                            <span className="text-[11px] text-muted-foreground">
+                                                            <span className="text-muted-foreground text-[11px]">
                                                                 —
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td className="px-3 py-3 text-foreground/80">
+                                                    <td className="text-foreground/80 px-3 py-3">
                                                         {mov.sede || '—'}
                                                     </td>
                                                     <td className="px-3 py-3 text-right font-mono text-[12.5px] font-bold">
@@ -933,18 +924,18 @@ export default function StockIndex({
                                                                 ? `-${mov.cantidad}`
                                                                 : `+${mov.cantidad}`}
                                                         </span>{' '}
-                                                        <span className="text-[10px] font-normal text-muted-foreground">
+                                                        <span className="text-muted-foreground text-[10px] font-normal">
                                                             {
                                                                 mov.producto
                                                                     .unidad_medida
                                                             }
                                                         </span>
                                                     </td>
-                                                    <td className="px-4 py-3 text-[11.5px] text-muted-foreground">
+                                                    <td className="text-muted-foreground px-4 py-3 text-[11.5px]">
                                                         {mov.usuario ||
                                                             'Sistema'}
                                                     </td>
-                                                    <td className="max-w-[200px] truncate py-3 pl-4 text-[11.5px] text-muted-foreground">
+                                                    <td className="text-muted-foreground max-w-[200px] truncate py-3 pl-4 text-[11.5px]">
                                                         {mov.observacion || '—'}
                                                     </td>
                                                 </tr>
@@ -955,7 +946,7 @@ export default function StockIndex({
 
                                 {/* Paginador del Kardex */}
                                 {kardex.links.length > 3 && (
-                                    <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+                                    <div className="border-border text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-xs">
                                         <span>
                                             Mostrando{' '}
                                             <b>{kardex.data.length}</b> de{' '}

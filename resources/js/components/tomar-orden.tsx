@@ -62,7 +62,7 @@ export default function TomarOrden({
     return (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-[12.5px]">
             <div>
-                <p className="font-bold text-foreground">
+                <p className="text-foreground font-bold">
                     Nadie tiene esta orden todavía
                 </p>
                 <p className="text-muted-foreground">

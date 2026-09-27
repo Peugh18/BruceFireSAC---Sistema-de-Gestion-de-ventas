@@ -11,7 +11,6 @@ import {
     RotateCcw,
     Search,
     Truck,
-    User,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
@@ -128,10 +127,10 @@ export default function RecepcionesIndex({
                 {/* Header Actions */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-xl font-bold text-foreground">
+                        <h1 className="text-foreground text-xl font-bold">
                             Recepciones de Mercadería
                         </h1>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                             Registro de ingresos de proveedores, captura de
                             unidades serializadas y control de no conformidades.
                         </p>
@@ -139,7 +138,7 @@ export default function RecepcionesIndex({
 
                     <Link
                         href={recepciones.create.url(teamSlug)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-[9px] bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 inline-flex items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors"
                     >
                         <Plus className="size-4" />
                         <span>Nueva Recepción</span>
@@ -148,23 +147,23 @@ export default function RecepcionesIndex({
 
                 {/* 3 KPI Cards */}
                 <div className="grid gap-4 sm:grid-cols-3">
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                        <div className="flex items-center justify-between text-muted-foreground">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Total recepciones
                             </span>
-                            <Truck className="size-4 text-foreground" />
+                            <Truck className="text-foreground size-4" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-foreground">
+                        <div className="text-foreground mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.total_recepciones}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 text-[11.5px]">
                             Historial completo acumulado
                         </div>
                     </Card>
 
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                        <div className="flex items-center justify-between text-muted-foreground">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Recepciones de hoy
                             </span>
@@ -173,13 +172,13 @@ export default function RecepcionesIndex({
                         <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-emerald-600 dark:text-emerald-400">
                             {kpis.recepciones_hoy}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 text-[11.5px]">
                             Ingresos registrados en la fecha
                         </div>
                     </Card>
 
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
-                        <div className="flex items-center justify-between text-muted-foreground">
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Unidades conformes (mes)
                             </span>
@@ -188,25 +187,25 @@ export default function RecepcionesIndex({
                         <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-blue-600 dark:text-blue-400">
                             {kpis.unidades_recibidas_mes}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-muted-foreground">
+                        <div className="text-muted-foreground mt-1 text-[11.5px]">
                             Incorporadas al stock disponible este mes
                         </div>
                     </Card>
                 </div>
 
                 {/* Table Card */}
-                <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                     {/* Filters Form */}
                     <form
                         onSubmit={handleFilter}
-                        className="flex flex-wrap items-end gap-3 border-b border-border pb-5"
+                        className="border-border flex flex-wrap items-end gap-3 border-b pb-5"
                     >
                         <div className="min-w-[200px] flex-1">
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Proveedor / Doc. Ref.
                             </Label>
                             <div className="relative mt-1">
-                                <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
+                                <Search className="text-muted-foreground absolute top-2.5 left-3 size-4" />
                                 <Input
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
@@ -217,13 +216,13 @@ export default function RecepcionesIndex({
                         </div>
 
                         <div className="w-[180px]">
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Sede almacén
                             </Label>
                             <select
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
-                                className="mt-1 h-9 w-full rounded-md border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                                className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
                             >
                                 <option value="">Todas las sedes</option>
                                 {sedes.map((s) => (
@@ -235,7 +234,7 @@ export default function RecepcionesIndex({
                         </div>
 
                         <div className="w-[130px]">
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Desde
                             </Label>
                             <Input
@@ -247,7 +246,7 @@ export default function RecepcionesIndex({
                         </div>
 
                         <div className="w-[130px]">
-                            <Label className="text-xs font-bold text-foreground/80">
+                            <Label className="text-foreground/80 text-xs font-bold">
                                 Hasta
                             </Label>
                             <Input
@@ -262,7 +261,7 @@ export default function RecepcionesIndex({
                             <Button
                                 type="submit"
                                 size="sm"
-                                className="h-9 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                                className="bg-foreground text-background hover:bg-foreground/90 h-9 gap-1.5"
                             >
                                 <Filter className="size-3.5" />
                                 <span>Filtrar</span>
@@ -276,7 +275,7 @@ export default function RecepcionesIndex({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleReset}
-                                    className="h-9 gap-1.5 text-muted-foreground"
+                                    className="text-muted-foreground h-9 gap-1.5"
                                 >
                                     <RotateCcw className="size-3.5" />
                                     <span>Limpiar</span>
@@ -288,8 +287,8 @@ export default function RecepcionesIndex({
                     {/* Receptions Table */}
                     {receptions.data.length === 0 ? (
                         <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                            <Truck className="size-10 text-muted-foreground" />
-                            <p className="mt-2 text-sm font-medium text-muted-foreground">
+                            <Truck className="text-muted-foreground size-10" />
+                            <p className="text-muted-foreground mt-2 text-sm font-medium">
                                 No se encontraron recepciones con los filtros
                                 indicados.
                             </p>
@@ -298,7 +297,7 @@ export default function RecepcionesIndex({
                         <div className="mt-4 overflow-x-auto">
                             <table className="w-full text-left text-[12.5px]">
                                 <thead>
-                                    <tr className="border-b border-border text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                                    <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
                                         <th className="py-2.5 pr-3">N° Doc.</th>
                                         <th className="px-3 py-2.5">Fecha</th>
                                         <th className="px-4 py-2.5">
@@ -324,32 +323,32 @@ export default function RecepcionesIndex({
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-border divide-y">
                                     {receptions.data.map((rec) => (
                                         <tr
                                             key={rec.id}
-                                            className="transition-colors hover:bg-muted/40"
+                                            className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="py-3 pr-3 font-mono font-bold text-foreground">
+                                            <td className="text-foreground py-3 pr-3 font-mono font-bold">
                                                 #{rec.id}
                                             </td>
-                                            <td className="px-3 py-3 font-mono text-[11.5px] whitespace-nowrap text-foreground/80">
+                                            <td className="text-foreground/80 px-3 py-3 font-mono text-[11.5px] whitespace-nowrap">
                                                 {formatDate(rec.fecha)}
                                             </td>
-                                            <td className="px-4 py-3 font-bold text-foreground">
+                                            <td className="text-foreground px-4 py-3 font-bold">
                                                 {rec.proveedor}
                                             </td>
-                                            <td className="px-3 py-3 font-mono text-[11.5px] text-muted-foreground">
+                                            <td className="text-muted-foreground px-3 py-3 font-mono text-[11.5px]">
                                                 {rec.documento_referencia ||
                                                     '—'}
                                             </td>
-                                            <td className="px-3 py-3 text-foreground/80">
+                                            <td className="text-foreground/80 px-3 py-3">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Building2 className="size-3.5 text-muted-foreground" />
+                                                    <Building2 className="text-muted-foreground size-3.5" />
                                                     <span>{rec.sede}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-3 py-3 text-center font-mono font-bold text-foreground">
+                                            <td className="text-foreground px-3 py-3 text-center font-mono font-bold">
                                                 {rec.total_recibido}
                                             </td>
                                             <td className="px-3 py-3 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
@@ -357,7 +356,7 @@ export default function RecepcionesIndex({
                                             </td>
                                             <td className="px-3 py-3 text-center">
                                                 {rec.tiene_no_conforme ? (
-                                                    <span className="inline-flex items-center gap-1 rounded-full border border-destructive/20 bg-destructive/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+                                                    <span className="border-destructive/20 bg-destructive/10 text-primary inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold">
                                                         <AlertTriangle className="size-3" />
                                                         <span>
                                                             {
@@ -381,7 +380,7 @@ export default function RecepcionesIndex({
                                                         current_team: teamSlug,
                                                         reception: rec.id,
                                                     })}
-                                                    className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground hover:bg-background"
+                                                    className="border-border bg-card text-foreground hover:bg-background inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold"
                                                 >
                                                     <FileText className="size-3.5" />
                                                     <span>Detalle</span>
@@ -394,7 +393,7 @@ export default function RecepcionesIndex({
 
                             {/* Paginador */}
                             {receptions.links.length > 3 && (
-                                <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+                                <div className="border-border text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-xs">
                                     <span>
                                         Mostrando{' '}
                                         <b>{receptions.data.length}</b> de{' '}
