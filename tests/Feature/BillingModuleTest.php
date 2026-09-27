@@ -246,7 +246,70 @@ test('el comprobante agrupa las unidades del mismo producto y precio en una sola
     expect($details)->toHaveCount(2)
         ->and($details[0]->getCodProducto())->toBe($extintor->codigo)
         ->and($details[0]->getCantidad())->toEqual(6.0)
-        ->and($details[0]->getMtoValorUnitario())->toEqual(65.0)
-        ->and($details[0]->getMtoValorVenta())->toEqual(390.0)
+        ->and($details[0]->getMtoPrecioUnitario())->toEqual(65.0)
+        ->and(round($details[0]->getMtoValorUnitario(), 4))->toEqual(55.0847)
+        ->and($details[0]->getMtoValorVenta())->toEqual(330.51)
+        ->and($details[0]->getIgv())->toEqual(59.49)
         ->and($details[1]->getCantidad())->toEqual(1.0);
+});
+
+test('la descarga masiva arma un zip con xml cdr y pdf solo de los comprobantes marcados del vendedor', function () {
+    Storage::fake('local');
+    $user = vendedorUser();
+    $marcado = ElectronicDocument::factory()->create([
+        'sale_id' => Sale::factory()->create(['vendedor_id' => $user->id])->id,
+        'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 7,
+        'xml_path' => 'xml/a.xml', 'cdr_path' => 'cdr/a.zip', 'pdf_path' => 'pdf/a.pdf',
+    ]);
+    ElectronicDocument::factory()->create([
+        'sale_id' => Sale::factory()->create()->id,
+        'xml_path' => 'xml/ajeno.xml',
+    ]);
+    Storage::disk('local')->put('xml/a.xml', '<xml/>');
+    Storage::disk('local')->put('cdr/a.zip', 'cdr');
+    Storage::disk('local')->put('pdf/a.pdf', '%PDF');
+    Storage::disk('local')->put('xml/ajeno.xml', '<ajeno/>');
+
+    $response = $this->actingAs($user)
+        ->get(route('vendedor.facturacion.descarga-masiva', ['current_team' => $user->currentTeam, 'ids' => [$marcado->id], 'incluir' => ['xml', 'pdf']]))
+        ->assertOk();
+
+    $zip = new PharData($response->baseResponse->getFile()->getPathname());
+    $archivos = collect(iterator_to_array(new RecursiveIteratorIterator($zip)))->keys()
+        ->map(fn ($ruta) => str($ruta)->after('.zip/')->toString())->sort()->values()->all();
+
+    expect($archivos)->toHaveCount(2)
+        ->and($archivos[0])->toStartWith('pdf/F-F001-00000007_')
+        ->and($archivos[1])->toStartWith('xml/F-F001-00000007_');
+});
+
+test('el registro de ventas en excel lista lo filtrado y la nota de credito resta', function () {
+    $user = vendedorUser();
+    $sale = Sale::factory()->create(['vendedor_id' => $user->id, 'subtotal' => 67.80, 'igv' => 12.20, 'total' => 80]);
+    $factura = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 65]);
+    ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'nota_credito', 'serie' => 'FC01', 'correlativo' => 1, 'importe' => 80, 'cpe_afectado_id' => $factura->id]);
+
+    $csv = $this->actingAs($user)
+        ->get(route('vendedor.facturacion.excel', ['current_team' => $user->currentTeam]))
+        ->assertOk()
+        ->streamedContent();
+
+    expect($csv)->toContain('F001;00000065')
+        ->toContain('67.80;12.20;80.00')
+        ->toContain('-67.80;-12.20;-80.00')
+        ->toContain('F001-65');
+});
+
+test('el buscador y el filtro de notas del listado de facturacion funcionan', function () {
+    $user = vendedorUser();
+    $sale = Sale::factory()->create(['vendedor_id' => $user->id]);
+    ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 65]);
+    ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'nota_credito', 'serie' => 'FC01', 'correlativo' => 1]);
+    $team = ['current_team' => $user->currentTeam];
+
+    $this->actingAs($user)->get(route('vendedor.facturacion.index', [...$team, 'buscar' => 'F001-65']))
+        ->assertInertia(fn ($page) => $page->where('totalFiltrados', 1));
+
+    $this->actingAs($user)->get(route('vendedor.facturacion.index', [...$team, 'tipo' => 'nota']))
+        ->assertInertia(fn ($page) => $page->where('totalFiltrados', 1)->where('documents.data.0.tipo', 'nota_credito'));
 });

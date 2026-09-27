@@ -10,7 +10,8 @@ Schedule::call(function () {
         ->delete();
 })->daily()->description('Delete expired team invitations');
 
-Schedule::command('quotes:expire')->daily();
+Schedule::command('quotes:expire')->daily()->withoutOverlapping();
 Schedule::command('alerts:recompute')->daily();
 Schedule::command('ml:score-clients')->daily();
 Schedule::command('billing:enviar-programados')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('ventas:descartar-borradores')->dailyAt('03:00');

@@ -8,7 +8,9 @@ use App\Models\Installment;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\SalePayment;
+use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Avisos\AvisosDelVendedor;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -126,15 +128,31 @@ class DashboardController extends Controller
                     'estado' => $inst->estado,
                     'dias_vencido' => $diasVencido,
                     'cliente' => $inst->sale?->client?->razon_social,
+                    'telefono' => $inst->sale?->client?->whatsapp ?: $inst->sale?->client?->telefono,
                 ];
             })
             ->all();
 
-        // TODO: alimentar desde AlertController cuando el módulo de Alertas esté integrado
-        $alertasTop = [];
+        $alertasTop = app(AvisosDelVendedor::class)->lista($user, $current_team->slug);
 
-        // TODO: alimentar desde ServiceOrder cuando el módulo de Agenda esté integrado
-        $agendaHoy = [];
+        $agendaHoy = ServiceOrder::query()
+            ->with(['client:id,razon_social', 'tecnico:id,name'])
+            ->when($user->sedeRestringidaId(), fn ($query, $sedeId) => $query->where('sede_id', $sedeId))
+            ->whereDate('fecha', today())
+            ->whereNotIn('estado', ['entregado', 'cerrado'])
+            ->orderBy('fecha')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ServiceOrder $orden) => [
+                'id' => $orden->id,
+                'codigo' => $orden->codigo,
+                'cliente' => $orden->client->razon_social,
+                'tipo_servicio' => $orden->tipo_servicio,
+                'tecnico' => $orden->tecnico?->name,
+                'estado' => $orden->estado,
+                'prioridad' => $orden->prioridad,
+            ])
+            ->all();
 
         return Inertia::render('vendedor/dashboard', [
             'ventas_hoy' => $ventasHoy,

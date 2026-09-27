@@ -1,4 +1,5 @@
-﻿import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import {
     AlertCircle,
     ArrowLeft,
@@ -66,6 +67,7 @@ type ServiceOrder = {
 };
 
 type Props = {
+    asignacion: AsignacionOrden;
     currentTeam?: Team | null;
     order: ServiceOrder;
     customerEquipments: Equipment[];
@@ -82,6 +84,7 @@ type InstalledItem = {
 };
 
 export default function InstalacionShow({
+    asignacion,
     currentTeam,
     order,
     customerEquipments,
@@ -198,6 +201,8 @@ export default function InstalacionShow({
                     {flash.success}
                 </div>
             )}
+
+            <TomarOrden asignacion={asignacion} />
 
             {/* Header Data Card (§25) */}
             <div className="mb-5 rounded-[14px] border border-border bg-card p-4 shadow-xs">

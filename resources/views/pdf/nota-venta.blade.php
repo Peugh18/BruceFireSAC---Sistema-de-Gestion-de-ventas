@@ -46,7 +46,10 @@
 
     <table class="info">
         <tr><td class="label">Cliente</td><td>{{ $sale->client->razon_social }}</td><td class="label">Fecha</td><td>{{ $sale->fecha->format('d/m/Y') }}</td></tr>
-        <tr><td class="label">Documento</td><td>{{ $sale->client->numero_documento }}</td><td class="label">Condición de pago</td><td>{{ $sale->condicion_pago === 'credito_30' ? 'Crédito 30 días' : 'Contado' }}</td></tr>
+        <tr><td class="label">Documento</td><td>{{ $sale->client->numero_documento }}</td><td class="label">Condición de pago</td><td>{{ $sale->esCredito() ? 'Crédito '.$sale->diasCredito().' días' : 'Contado'.($sale->medioPagoTexto() ? ' — '.$sale->medioPagoTexto() : '') }}</td></tr>
+        @if ($sale->referencia)
+            <tr><td class="label">Referencia</td><td colspan="3">{{ $sale->referencia }}</td></tr>
+        @endif
     </table>
 
     <table class="items">

@@ -12,6 +12,8 @@ export type User = {
 
 export type Auth = {
     user: User;
+    /** Roles de Spatie del usuario (Vendedor, Gerente, Almacen, TecnicoPlanta, TecnicoCampo). */
+    roles?: string[];
 };
 
 export type Passkey = {

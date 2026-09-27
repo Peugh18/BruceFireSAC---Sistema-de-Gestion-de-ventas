@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import ChispaWidget from '@/components/chispa-widget';
 import {
     AlertTriangle,
     LayoutDashboard,
@@ -140,7 +141,7 @@ export default function TecnicoPlantaLayout({
             </nav>
 
             {/* Main Content Area: único scroll, pb-28 para que la barra inferior móvil nunca tape contenido */}
-            <main className="mx-auto w-full max-w-2xl flex-1 overflow-y-auto px-4 py-5 pb-28 md:pb-8 overscroll-contain">
+            <main className="mx-auto w-full max-w-2xl flex-1 overflow-y-auto px-4 py-5 pb-48 md:pb-32 overscroll-contain">
                 {children}
             </main>
 
@@ -175,6 +176,7 @@ export default function TecnicoPlantaLayout({
                     );
                 })}
             </nav>
+            <ChispaWidget rol="tecnico" />
         </div>
     );
 }

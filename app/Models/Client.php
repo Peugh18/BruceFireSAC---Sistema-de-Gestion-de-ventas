@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -61,6 +62,36 @@ class Client extends Model
         );
     }
 
+    /**
+     * Busca por documento o código, o por todas las palabras del nombre en
+     * cualquier orden ("jose urcia" encuentra "URCIA GUEVARA JOSE").
+     *
+     * @param  Builder<Client>  $query
+     */
+    public function scopeBuscar(Builder $query, string $search): void
+    {
+        $search = trim($search);
+
+        if ($search === '') {
+            return;
+        }
+
+        $words = preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY);
+
+        $query->where(function (Builder $query) use ($search, $words) {
+            $query->where('numero_documento', 'like', "%{$search}%")
+                ->orWhere('codigo_interno', 'like', "%{$search}%")
+                ->orWhere(function (Builder $query) use ($words) {
+                    foreach ($words as $word) {
+                        $query->where(function (Builder $query) use ($word) {
+                            $query->where('razon_social', 'like', "%{$word}%")
+                                ->orWhere('nombre_comercial', 'like', "%{$word}%");
+                        });
+                    }
+                });
+        });
+    }
+
     public function esClientesVarios(): bool
     {
         return $this->tipo_documento === self::TIPO_DOCUMENTO_VARIOS;
@@ -93,6 +124,26 @@ class Client extends Model
     public function sales(): HasMany
     {
         return $this->hasMany(Sale::class);
+    }
+
+    public function quotes(): HasMany
+    {
+        return $this->hasMany(Quote::class);
+    }
+
+    public function equipment(): HasMany
+    {
+        return $this->hasMany(Equipment::class);
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function serviceOrders(): HasMany
+    {
+        return $this->hasMany(ServiceOrder::class);
     }
 
     /**

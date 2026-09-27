@@ -23,7 +23,17 @@ type SedeItem = {
     almacen_id: number | null;
     almacen_nombre: string | null;
     usuarios_count: number;
+    tiendas: string[];
+    trabajadores: { nombre: string; rol: string | null }[];
     activo: boolean;
+};
+
+const ROL_CORTO: Record<string, string> = {
+    Vendedor: 'Vendedor',
+    Almacen: 'Almacén',
+    TecnicoPlanta: 'Téc. planta',
+    TecnicoCampo: 'Téc. campo',
+    Gerente: 'Gerente',
 };
 
 type AlmacenOption = { id: number; nombre: string };
@@ -230,13 +240,59 @@ export default function SedesIndex() {
                                                 {sede.ciudad ?? '—'}
                                             </td>
                                             <td className="text-muted-foreground px-4 py-3">
-                                                {sede.tipo === 'tienda'
-                                                    ? (sede.almacen_nombre ??
-                                                      '—')
-                                                    : 'Propio'}
+                                                {sede.tipo === 'tienda' ? (
+                                                    <span>
+                                                        Del almacén{' '}
+                                                        <b className="text-foreground">
+                                                            {sede.almacen_nombre ??
+                                                                '—'}
+                                                        </b>
+                                                    </span>
+                                                ) : (
+                                                    <span>
+                                                        Propio
+                                                        {sede.tiendas.length >
+                                                        0 ? (
+                                                            <span className="block text-[11px]">
+                                                                Abastece y
+                                                                atiende a:{' '}
+                                                                {sede.tiendas.join(
+                                                                    ', ',
+                                                                )}
+                                                            </span>
+                                                        ) : null}
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="text-muted-foreground px-4 py-3">
-                                                {sede.usuarios_count}
+                                                {sede.trabajadores.length ===
+                                                0 ? (
+                                                    <span>Nadie asignado</span>
+                                                ) : (
+                                                    <ul className="space-y-0.5 text-[11.5px]">
+                                                        {sede.trabajadores.map(
+                                                            (trabajador) => (
+                                                                <li
+                                                                    key={
+                                                                        trabajador.nombre
+                                                                    }
+                                                                >
+                                                                    <span className="text-foreground">
+                                                                        {
+                                                                            trabajador.nombre
+                                                                        }
+                                                                    </span>{' '}
+                                                                    ·{' '}
+                                                                    {ROL_CORTO[
+                                                                        trabajador.rol ??
+                                                                            ''
+                                                                    ] ??
+                                                                        'Sin rol'}
+                                                                </li>
+                                                            ),
+                                                        )}
+                                                    </ul>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span
@@ -359,6 +415,11 @@ export default function SedesIndex() {
                                     <p className="text-muted-foreground mt-1">
                                         {TIPO_DESCRIPCION[form.data.tipo]}
                                     </p>
+                                    {form.errors.tipo && (
+                                        <p className="mt-1 text-red-600">
+                                            {form.errors.tipo}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {form.data.tipo === 'tienda' && (

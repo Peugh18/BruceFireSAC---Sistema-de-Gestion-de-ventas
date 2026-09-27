@@ -1,90 +1,159 @@
-﻿import { Head, Link, usePage } from '@inertiajs/react';
-import { AlertTriangle, Home, Lock, SearchX, ServerCrash } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowLeft, Home, LogIn, RotateCw } from 'lucide-react';
+
+import ChispaAvatar, { type ChispaPose } from '@/components/chispa-avatar';
+import { home, login } from '@/routes';
 
 type Props = {
     status: number;
 };
 
-type ErrorCopy = {
-    icon: LucideIcon;
-    title: string;
-    description: string;
+type Mensaje = {
+    pose: ChispaPose;
+    titulo: string;
+    descripcion: string;
+    /** Acción secundaria: volver a la página anterior o reintentar. */
+    secundaria: 'atras' | 'reintentar' | null;
 };
 
-const COPY: Record<number, ErrorCopy> = {
+const MENSAJES: Record<number, Mensaje> = {
     403: {
-        icon: Lock,
-        title: 'No tienes acceso a esta página',
-        description:
-            'Tu cuenta no tiene el rol necesario para ver este contenido. Si crees que es un error, contacta a tu gerente.',
+        pose: 'piensa',
+        titulo: 'Esta sección no es de tu rol',
+        descripcion:
+            'Tu cuenta no tiene acceso a esta página o a los datos de esta sede. Si la necesitas para tu trabajo, pídesela a tu gerente.',
+        secundaria: 'atras',
     },
     404: {
-        icon: SearchX,
-        title: 'Página no encontrada',
-        description:
-            'El enlace que abriste no existe o fue movido. Verifica la dirección o vuelve al inicio.',
+        pose: 'busca',
+        titulo: 'Chispa buscó esta página y no la encontró',
+        descripcion:
+            'Puede que el enlace esté mal escrito o que la página ya no exista. Revisa la dirección o vuelve a tu panel.',
+        secundaria: 'atras',
     },
     419: {
-        icon: AlertTriangle,
-        title: 'Tu sesión expiró',
-        description:
-            'Por seguridad, cerramos la página tras un tiempo de inactividad. Vuelve a iniciar sesión para continuar.',
+        pose: 'sentado',
+        titulo: 'Tu sesión se venció',
+        descripcion:
+            'Por seguridad cerramos la sesión después de un rato sin uso. Vuelve a entrar y sigue donde te quedaste.',
+        secundaria: null,
     },
     500: {
-        icon: ServerCrash,
-        title: 'Algo salió mal',
-        description:
-            'Ocurrió un error inesperado en el servidor. Ya quedó registrado — intenta de nuevo en unos minutos.',
+        pose: 'corre',
+        titulo: 'Algo falló de nuestro lado',
+        descripcion:
+            'El error ya quedó registrado. Intenta de nuevo en unos minutos; si se repite, avísale a tu gerente.',
+        secundaria: 'reintentar',
     },
     503: {
-        icon: ServerCrash,
-        title: 'Servicio en mantenimiento',
-        description:
-            'El sistema está en mantenimiento programado. Vuelve a intentarlo en unos minutos.',
+        pose: 'sentado',
+        titulo: 'Estamos en mantenimiento',
+        descripcion:
+            'El sistema vuelve en unos minutos. Lo que ya guardaste está a salvo.',
+        secundaria: 'reintentar',
     },
 };
 
+/** Nombre visible de cada rol de Spatie para el botón "Volver a mi panel". */
+const ROLES: Record<string, string> = {
+    Gerente: 'Gerente',
+    Vendedor: 'Vendedor',
+    Almacen: 'Almacén',
+    TecnicoPlanta: 'Técnico de planta',
+    TecnicoCampo: 'Técnico de campo',
+};
+
+/**
+ * Página de error de marca para 403, 404, 419, 500 y 503. Solo recibe el
+ * código: nunca muestra el detalle técnico de la excepción. "/" lleva al panel
+ * del rol si hay sesión o al login si no la hay.
+ */
 export default function ErrorPage({ status }: Props) {
     const { auth } = usePage().props;
-    const copy = COPY[status] ?? COPY[500];
-    const Icon = copy.icon;
+    const mensaje = MENSAJES[status] ?? MENSAJES[500];
+    const conSesion = Boolean(auth?.user);
+    const rol = auth?.roles?.map((nombre) => ROLES[nombre]).find(Boolean);
+    const botonPrincipal =
+        'inline-flex h-10 items-center justify-center gap-2 rounded-[10px] px-5 text-[13px] font-bold transition-transform duration-150 ease-out active:scale-[0.97]';
 
     return (
         <>
             <Head title={`Error ${status}`} />
-            <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center text-foreground">
-                <img
-                    src="/brand/logo-icon.png"
-                    alt="Bruce Fire"
-                    className="size-[52px]"
-                />
-                <div className="mt-3 font-['Oswald',sans-serif] text-[13px] font-bold tracking-[0.08em] text-muted-foreground uppercase">
-                    Bruce Fire
+            <main className="bg-background text-foreground flex min-h-dvh flex-col items-center px-4 py-8 text-center">
+                <div className="flex items-center gap-2">
+                    <img src="/brand/logo-icon.png" alt="" className="size-7" />
+                    <span className="text-muted-foreground font-['Oswald',sans-serif] text-[13px] font-bold tracking-[0.08em] uppercase">
+                        Bruce Fire
+                    </span>
                 </div>
 
-                <div className="mt-10 flex size-16 items-center justify-center rounded-full bg-destructive/10 text-primary">
-                    <Icon className="size-8" strokeWidth={1.75} />
+                <div className="flex w-full max-w-md flex-1 flex-col items-center justify-center py-10">
+                    <ChispaAvatar pose={mensaje.pose} size={168} animado />
+
+                    <div className="text-primary mt-6 font-['Oswald',sans-serif] text-[56px] leading-none font-semibold">
+                        {status}
+                    </div>
+                    <h1 className="mt-3 font-['Oswald',sans-serif] text-[22px] font-semibold text-balance uppercase sm:text-[24px]">
+                        {mensaje.titulo}
+                    </h1>
+                    <p className="text-muted-foreground mt-3 max-w-sm text-[13.5px] text-pretty">
+                        {mensaje.descripcion}
+                    </p>
+
+                    <div className="mt-8 flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row sm:justify-center">
+                        {mensaje.secundaria === 'atras' ? (
+                            <button
+                                type="button"
+                                onClick={() => window.history.back()}
+                                className={`${botonPrincipal} border-border bg-card text-foreground hover:bg-muted border`}
+                            >
+                                <ArrowLeft className="size-4" />
+                                Volver atrás
+                            </button>
+                        ) : null}
+                        {mensaje.secundaria === 'reintentar' ? (
+                            <button
+                                type="button"
+                                onClick={() => window.location.reload()}
+                                className={`${botonPrincipal} border-border bg-card text-foreground hover:bg-muted border`}
+                            >
+                                <RotateCw className="size-4" />
+                                Intentar de nuevo
+                            </button>
+                        ) : null}
+
+                        {status === 419 || !conSesion ? (
+                            <Link
+                                href={status === 419 ? login() : home()}
+                                className={`${botonPrincipal} bg-primary text-primary-foreground hover:bg-primary/90`}
+                            >
+                                {status === 419 ? (
+                                    <LogIn className="size-4" />
+                                ) : (
+                                    <Home className="size-4" />
+                                )}
+                                {status === 419
+                                    ? 'Volver a entrar'
+                                    : 'Ir al inicio'}
+                            </Link>
+                        ) : (
+                            <Link
+                                href={home()}
+                                className={`${botonPrincipal} bg-primary text-primary-foreground hover:bg-primary/90`}
+                            >
+                                <Home className="size-4" />
+                                {rol
+                                    ? `Volver a mi panel de ${rol}`
+                                    : 'Volver a mi panel'}
+                            </Link>
+                        )}
+                    </div>
                 </div>
 
-                <div className="mt-6 font-['IBM_Plex_Mono',monospace] text-[13px] font-bold tracking-[0.1em] text-primary uppercase">
+                <p className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[0.06em] uppercase">
                     Error {status}
-                </div>
-                <h1 className="mt-2 max-w-md font-['Oswald',sans-serif] text-[24px] font-semibold text-foreground">
-                    {copy.title}
-                </h1>
-                <p className="mt-3 max-w-sm text-[13.5px] text-muted-foreground">
-                    {copy.description}
                 </p>
-
-                <Link
-                    href={auth?.user ? '/' : '/login'}
-                    className="mt-8 inline-flex items-center gap-2 rounded-[9px] bg-foreground px-5 py-2.5 text-[13px] font-bold text-background hover:bg-foreground/90"
-                >
-                    <Home className="size-4" />
-                    {auth?.user ? 'Volver al inicio' : 'Ir al login'}
-                </Link>
-            </div>
+            </main>
         </>
     );
 }

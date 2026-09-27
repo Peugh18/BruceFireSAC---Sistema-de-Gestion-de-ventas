@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $unidad_medida
  * @property float $precio_venta
  * @property bool $aplica_igv
+ * @property int|null $certificate_type_id
  * @property bool $activo
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -31,6 +33,7 @@ use Illuminate\Support\Carbon;
     'unidad_medida',
     'precio_venta',
     'aplica_igv',
+    'certificate_type_id',
     'activo',
 ])]
 class Service extends Model
@@ -45,6 +48,14 @@ class Service extends Model
             'aplica_igv' => 'boolean',
             'activo' => 'boolean',
         ];
+    }
+
+    /**
+     * Certificado que genera este servicio (null si no genera ninguno).
+     */
+    public function certificateType(): BelongsTo
+    {
+        return $this->belongsTo(CertificateType::class);
     }
 
     public function quoteItems(): HasMany

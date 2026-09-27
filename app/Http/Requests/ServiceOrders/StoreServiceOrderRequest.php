@@ -21,6 +21,7 @@ class StoreServiceOrderRequest extends FormRequest
             'client_id' => ['required', 'integer', 'exists:clients,id'],
             'sede_id' => ['nullable', 'integer', 'exists:sedes,id'],
             'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
+            'referencia' => ['nullable', 'string', 'max:150'],
             'tipo_servicio' => ['required', 'string', 'max:255'],
             'fecha' => ['required', 'date'],
             'tecnico_id' => ['nullable', 'integer', 'exists:users,id'],

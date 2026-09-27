@@ -26,6 +26,21 @@ return [
         'token' => env('APISPERU_TOKEN'),
     ],
 
+    /*
+    | Asistente virtual "Chispa": proveedor intercambiable (gemini o groq).
+    */
+    'chispa' => [
+        'provider' => env('CHISPA_PROVIDER', 'gemini'),
+        'gemini' => [
+            'key' => env('GEMINI_API_KEY'),
+            'model' => env('GEMINI_MODEL', 'gemini-flash-latest'),
+        ],
+        'groq' => [
+            'key' => env('GROQ_API_KEY'),
+            'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+        ],
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

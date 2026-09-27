@@ -72,17 +72,17 @@ class GreenterService
 
         $details = $sale->lineasComprobante()->map(fn (SaleItem $item) => $this->buildDetail($item))->values()->all();
 
-        $esServicio = $sale->items->contains(fn (SaleItem $item) => $item->esServicio());
-        $detraccionCalc = $this->detraccionCalculator->calcular((float) $sale->total, $esServicio);
+        $detraccionCalc = $this->detraccionCalculator->paraVenta($sale, $document->tipo);
 
         $invoice = (new Invoice)
             ->setUblVersion('2.1')
-            ->setTipoOperacion('0101')
+            // 1001 = operación sujeta a detracción (catálogo 51).
+            ->setTipoOperacion($detraccionCalc['aplica'] ? '1001' : '0101')
             ->setTipoDoc($document->tipo === 'factura' ? '01' : '03')
             ->setSerie($document->serie)
             ->setCorrelativo((string) $document->correlativo)
             ->setFechaEmision($document->fecha_emision ?? $sale->fecha)
-            ->setFormaPago($this->buildFormaPago($sale))
+            ->setFormaPago($this->buildFormaPago($sale, $detraccionCalc['monto']))
             ->setTipoMoneda('PEN')
             ->setCompany($company)
             ->setClient($client)
@@ -99,18 +99,27 @@ class GreenterService
                     ->setValue($this->numeroEnLetras->convertir((float) $sale->total)),
             ]);
 
-        if ($sale->condicion_pago === 'credito_30') {
+        $observacion = collect([$sale->referencia, $sale->observaciones])->filter()->implode(' | ');
+
+        if ($observacion !== '') {
+            $invoice->setObservacion(mb_substr($observacion, 0, 250));
+        }
+
+        if ($sale->esCredito()) {
             $invoice->setCuotas(
-                $sale->installments->map(fn ($installment) => (new Cuota)
-                    ->setMoneda('PEN')
-                    ->setMonto((float) $installment->monto)
-                    ->setFechaPago($installment->fecha_vencimiento))->values()->all()
+                collect($this->cuotasNetas($sale, $detraccionCalc['monto']))
+                    ->map(fn (array $cuota) => (new Cuota)
+                        ->setMoneda('PEN')
+                        ->setMonto($cuota['monto'])
+                        ->setFechaPago($cuota['fecha']))
+                    ->all()
             );
         }
 
         if ($detraccionCalc['aplica']) {
             $invoice->setDetraccion(
                 (new Detraction)
+                    ->setCtaBanco($this->cuentaDetraccion())
                     ->setCodBienDetraccion($detraccionCalc['codigo_bien'])
                     ->setCodMedioPago((string) config('billing.detraccion.cod_medio_pago'))
                     ->setPercent((float) config('billing.detraccion.tasa') * 100)
@@ -275,9 +284,10 @@ class GreenterService
     protected function buildDetail(SaleItem $item): SaleDetail
     {
         $productOrService = $item->product ?? $item->service;
-        $valorVenta = (float) $item->subtotal;
-        $igvLinea = round($valorVenta * 0.18, 2);
-        $valorUnitario = (float) $item->precio_unitario;
+        // El subtotal de la línea ya incluye IGV: se separa en base e IGV.
+        ['base' => $valorVenta, 'igv' => $igvLinea] = PrecioConIgv::desglosar((float) $item->subtotal);
+        $precioUnitario = (float) $item->precio_unitario;
+        $valorUnitario = round($precioUnitario / (1 + PrecioConIgv::TASA), 10);
 
         $detail = (new SaleDetail)
             ->setCodProducto($productOrService->codigo)
@@ -291,29 +301,70 @@ class GreenterService
             ->setIgv($igvLinea)
             ->setTipAfeIgv('10')
             ->setTotalImpuestos($igvLinea)
-            ->setMtoPrecioUnitario(round($valorUnitario * 1.18, 2));
+            ->setMtoPrecioUnitario($precioUnitario);
 
         if ((float) $item->descuento > 0) {
             $detail->setDescuentos([
                 (new Charge)
                     ->setCodTipo('00')
-                    ->setMontoBase((float) $item->cantidad * $valorUnitario)
-                    ->setMonto((float) $item->descuento),
+                    ->setMontoBase(round((float) $item->cantidad * $valorUnitario, 2))
+                    ->setMonto(round((float) $item->descuento / (1 + PrecioConIgv::TASA), 2)),
             ]);
         }
 
         return $detail;
     }
 
-    protected function buildFormaPago(Sale $sale): FormaPagoContado|FormaPagoCredito
+    /**
+     * Contado o crédito (RS 193-2020). A crédito, el monto neto pendiente no
+     * incluye la detracción: esa parte el cliente la deposita en el Banco de
+     * la Nación.
+     */
+    protected function buildFormaPago(Sale $sale, float $detraccion = 0.0): FormaPagoContado|FormaPagoCredito
     {
-        if ($sale->condicion_pago !== 'credito_30') {
+        if (! $sale->esCredito()) {
             return new FormaPagoContado;
         }
 
-        $montoNetoPendiente = (float) $sale->total;
+        return new FormaPagoCredito(round((float) $sale->total - $detraccion, 2), 'PEN');
+    }
 
-        return new FormaPagoCredito($montoNetoPendiente, 'PEN');
+    /**
+     * Cuotas que van a SUNAT: deben sumar el monto neto pendiente, así que la
+     * detracción se descuenta desde la última cuota hacia atrás. Las cuotas
+     * internas de cobranza no cambian.
+     *
+     * @return list<array{monto: float, fecha: \DateTimeInterface}>
+     */
+    protected function cuotasNetas(Sale $sale, float $detraccion): array
+    {
+        $cuotas = $sale->installments
+            ->map(fn ($installment) => ['monto' => (float) $installment->monto, 'fecha' => $installment->fecha_vencimiento])
+            ->values()
+            ->all();
+        $porDescontar = round($detraccion, 2);
+
+        for ($i = count($cuotas) - 1; $i >= 0 && $porDescontar > 0; $i--) {
+            $descuento = min($cuotas[$i]['monto'], $porDescontar);
+            $cuotas[$i]['monto'] = round($cuotas[$i]['monto'] - $descuento, 2);
+            $porDescontar = round($porDescontar - $descuento, 2);
+        }
+
+        return array_values(array_filter($cuotas, fn (array $cuota) => $cuota['monto'] > 0));
+    }
+
+    /**
+     * Cuenta de detracciones del Banco de la Nación (va en el XML).
+     */
+    protected function cuentaDetraccion(): string
+    {
+        $cuenta = trim((string) CompanySetting::current()->cuenta_detraccion);
+
+        if ($cuenta === '') {
+            throw new RuntimeException('Falta la cuenta de detracción del Banco de la Nación: regístrala en Configuración > Datos de la empresa.');
+        }
+
+        return $cuenta;
     }
 
     protected function tipoDocCatalogo06(string $tipoDocumento): string

@@ -3,6 +3,7 @@
 namespace App\Actions\Cotizaciones;
 
 use App\Models\Quote;
+use App\Services\Billing\PrecioConIgv;
 use Illuminate\Support\Facades\DB;
 
 class CreateQuote
@@ -14,17 +15,14 @@ class CreateQuote
     public function handle(array $data, array $items, int $vendedorId): Quote
     {
         return DB::transaction(function () use ($data, $items, $vendedorId) {
-            $subtotal = 0.0;
-
-            $lineas = array_map(function (array $item) use (&$subtotal) {
+            // Precios con IGV incluido, igual que en la venta.
+            $lineas = array_map(function (array $item) {
                 $descuento = $item['descuento'] ?? 0;
-                $lineaSubtotal = ($item['cantidad'] * $item['precio_unitario']) - $descuento;
-                $subtotal += $lineaSubtotal;
 
-                return [...$item, 'descuento' => $descuento, 'subtotal' => $lineaSubtotal];
+                return [...$item, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
             }, $items);
 
-            $igv = round($subtotal * 0.18, 2);
+            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totales(array_column($lineas, 'subtotal'));
 
             $quote = Quote::create([
                 ...$data,
@@ -32,7 +30,7 @@ class CreateQuote
                 'vendedor_id' => $vendedorId,
                 'subtotal' => $subtotal,
                 'igv' => $igv,
-                'total' => $subtotal + $igv,
+                'total' => $total,
                 'estado' => 'borrador',
             ]);
 

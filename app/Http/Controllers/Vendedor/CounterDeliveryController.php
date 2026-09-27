@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Http\Controllers\Vendedor;
+
+use App\Http\Controllers\Controller;
+use App\Models\ServiceOrder;
+use App\Models\Team;
+use App\Services\Reports\ActaConformidadPdfService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class CounterDeliveryController extends Controller
+{
+    public function show(Team $current_team, ServiceOrder $service_order, Request $request): Response
+    {
+        $this->assertAccess($service_order, $request);
+        $service_order->load(['client', 'equipments', 'events' => fn ($query) => $query->latest()]);
+
+        return Inertia::render('vendedor/ordenes-servicio/entrega-mostrador', [
+            'order' => $service_order,
+            'delivery' => $this->deliveryEvent($service_order)?->payload,
+        ]);
+    }
+
+    public function store(Team $current_team, ServiceOrder $service_order, Request $request): RedirectResponse
+    {
+        $this->assertAccess($service_order, $request);
+        abort_unless(in_array($service_order->estado, ['listo_entrega', 'entregado'], true), 422, 'La orden todavía no está lista para entregar.');
+
+        $validated = $request->validate([
+            'receptor_nombre' => ['required', 'string', 'max:150'],
+            'receptor_dni' => ['required', 'digits:8'],
+            'conformidad_aceptada' => ['required', 'accepted'],
+        ]);
+
+        $service_order->events()->create([
+            'tipo' => 'entrega_registrada',
+            'user_id' => $request->user()->id,
+            'payload' => [
+                'accion' => 'entrega_final_realizada',
+                'eslabon_custodia' => 'entrega_mostrador',
+                'responsable_nombre' => $request->user()->name,
+                ...$validated,
+            ],
+        ]);
+        $service_order->update(['estado' => 'cerrado']);
+
+        return back()->with('success', 'Entrega conforme registrada. Ya puedes descargar el acta.');
+    }
+
+    public function pdf(Team $current_team, ServiceOrder $service_order, Request $request, ActaConformidadPdfService $pdfService): HttpResponse
+    {
+        $this->assertAccess($service_order, $request);
+        abort_unless($this->deliveryEvent($service_order), 404);
+
+        return $pdfService->generate($service_order)->stream("acta-conformidad-{$service_order->codigo}.pdf");
+    }
+
+    protected function assertAccess(ServiceOrder $serviceOrder, Request $request): void
+    {
+        $sedeId = $request->user()->sedeRestringidaId();
+        abort_if($sedeId !== null && (int) $serviceOrder->sede_id !== $sedeId, 404);
+    }
+
+    protected function deliveryEvent(ServiceOrder $serviceOrder): mixed
+    {
+        return $serviceOrder->events()->where('payload->accion', 'entrega_final_realizada')->where('payload->conformidad_aceptada', true)->latest()->first();
+    }
+}

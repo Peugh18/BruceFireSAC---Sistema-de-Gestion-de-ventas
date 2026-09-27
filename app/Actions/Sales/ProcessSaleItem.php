@@ -5,9 +5,11 @@ namespace App\Actions\Sales;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Sede;
+use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,12 +21,90 @@ class ProcessSaleItem
     public function handle(Sale $sale, array $itemData): SaleItem
     {
         return DB::transaction(function () use ($sale, $itemData) {
-            if ($itemData['tipo_linea'] === 'recarga_servicio') {
-                return $this->processServiceRecharge($sale, $itemData);
-            }
-
-            return $this->processNewUnit($sale, $itemData);
+            return match ($itemData['tipo_linea']) {
+                'recarga_servicio' => $this->processServiceRecharge($sale, $itemData),
+                'producto' => $this->processProducto($sale, $itemData),
+                'servicio' => $this->processServicio($sale, $itemData),
+                default => $this->processNewUnit($sale, $itemData),
+            };
         });
+    }
+
+    /**
+     * Producto sin serie (bases, soportes, repuestos): se vende por cantidad
+     * y descuenta ese stock del almacén de la sede con un movimiento de Kardex.
+     *
+     * @param  array<string, mixed>  $itemData
+     */
+    protected function processProducto(Sale $sale, array $itemData): SaleItem
+    {
+        $product = Product::query()->findOrFail($itemData['product_id']);
+
+        if ($product->serializado) {
+            throw ValidationException::withMessages([
+                'items' => "{$product->nombre} se vende por número de serie: escanea o elige cada unidad.",
+            ]);
+        }
+
+        if (! $sale->sede_id) {
+            throw ValidationException::withMessages([
+                'sede_id' => 'La sede de venta es obligatoria para vender productos con stock.',
+            ]);
+        }
+
+        $almacenId = Sede::find($sale->sede_id)?->almacenEfectivoId() ?? (int) $sale->sede_id;
+        $cantidad = (int) $itemData['cantidad'];
+        $stock = (int) InventoryMovement::query()
+            ->where('product_id', $product->id)
+            ->where('sede_id', $almacenId)
+            ->lockForUpdate()
+            ->sum('cantidad');
+
+        if ($stock < $cantidad) {
+            throw ValidationException::withMessages([
+                'items' => "Stock insuficiente de {$product->nombre}: hay {$stock} y se quieren vender {$cantidad}.",
+            ]);
+        }
+
+        $movement = new InventoryMovement;
+        $movement->product_id = $product->id;
+        $movement->sede_id = $almacenId;
+        $movement->tipo = 'salida_venta';
+        $movement->cantidad = -$cantidad;
+        $movement->referencia_type = $sale->getMorphClass();
+        $movement->referencia_id = $sale->id;
+        $movement->user_id = $sale->vendedor_id;
+        $movement->observacion = "Venta {$sale->numero_interno}";
+        $movement->save();
+
+        return $sale->items()->create([
+            'product_id' => $product->id,
+            'tipo_linea' => 'producto',
+            'cantidad' => $cantidad,
+            'precio_unitario' => $itemData['precio_unitario'],
+            'descuento' => $itemData['descuento'] ?? 0,
+            'subtotal' => $itemData['subtotal'],
+        ]);
+    }
+
+    /**
+     * Servicio suelto (instalación, recarga de equipos que el cliente trae
+     * sin registrar, capacitación): no mueve stock.
+     *
+     * @param  array<string, mixed>  $itemData
+     */
+    protected function processServicio(Sale $sale, array $itemData): SaleItem
+    {
+        $service = Service::query()->findOrFail($itemData['service_id']);
+
+        return $sale->items()->create([
+            'service_id' => $service->id,
+            'tipo_linea' => 'servicio',
+            'cantidad' => (int) $itemData['cantidad'],
+            'precio_unitario' => $itemData['precio_unitario'],
+            'descuento' => $itemData['descuento'] ?? 0,
+            'subtotal' => $itemData['subtotal'],
+        ]);
     }
 
     /**

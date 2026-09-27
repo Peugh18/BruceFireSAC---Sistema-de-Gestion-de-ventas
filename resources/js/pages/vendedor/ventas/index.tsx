@@ -1,17 +1,20 @@
-﻿import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Banknote,
     CheckCircle2,
     Eye,
     FileText,
+    PencilLine,
     Plus,
     ReceiptText,
     ShoppingCart,
 } from 'lucide-react';
 
+import { FilasCargando } from '@/components/cargando';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
@@ -23,9 +26,50 @@ type SaleRow = {
     cliente: string;
     fecha: string;
     comprobante_tipo: string;
+    comprobante?: string | null;
+    sunat_estado?: string | null;
     total: number | string;
     estado: string;
 };
+
+/**
+ * Estado del comprobante en SUNAT en palabras simples, y si todavía se puede
+ * editar (solo antes de enviarlo o si SUNAT lo rechazó).
+ */
+function estadoSunat(estado: string): {
+    texto: string;
+    clase: string;
+    editable: boolean;
+} {
+    switch (estado) {
+        case 'por_enviar':
+            return {
+                texto: 'Por enviar · editable',
+                clase: 'text-amber-600 dark:text-amber-400',
+                editable: true,
+            };
+        case 'aceptado':
+        case 'observado':
+            return {
+                texto: 'Aceptado por SUNAT',
+                clase: 'text-emerald-600 dark:text-emerald-400',
+                editable: false,
+            };
+        case 'rechazado':
+        case 'excepcion':
+            return {
+                texto: 'Rechazado · corregir',
+                clase: 'text-destructive',
+                editable: true,
+            };
+        default:
+            return {
+                texto: estado.replace('_', ' '),
+                clase: 'text-muted-foreground',
+                editable: false,
+            };
+    }
+}
 
 type PaginationLink = { url: string | null; label: string; active: boolean };
 
@@ -90,6 +134,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
         (typeof window !== 'undefined'
             ? window.location.pathname.split('/')[1]
             : '');
+    const recargando = useRecargando();
     const currentFilter = filters.estado ?? '';
 
     const currentComprobante = filters.comprobante ?? '';
@@ -262,59 +307,137 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {sales.data.map((sale) => (
-                                    <tr
-                                        key={sale.id}
-                                        className="hover:bg-muted/40"
-                                    >
-                                        <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
-                                            {sale.numero_interno}
-                                        </td>
-                                        <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
-                                            {sale.cliente}
-                                        </td>
-                                        <td className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
-                                            {sale.fecha}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
-                                            <span className="bg-muted text-foreground/80 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">
-                                                {sale.numero_nota_venta ??
-                                                    sale.comprobante_tipo.replace(
-                                                        '_',
-                                                        ' ',
-                                                    )}
-                                            </span>
-                                        </td>
-                                        <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
-                                            {money(sale.total)}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
-                                            <Badge
-                                                className={`rounded-full px-2.5 py-1 text-[10.5px] font-bold capitalize shadow-none ${statusBadge(sale.estado)}`}
-                                            >
-                                                <CheckCircle2 className="size-3" />
-                                                {sale.estado}
-                                            </Badge>
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
-                                            <Button
-                                                asChild
-                                                variant="outline"
-                                                size="icon"
-                                                className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
-                                            >
-                                                <Link
-                                                    href={ventas.show({
-                                                        current_team: teamSlug,
-                                                        sale: sale.id,
-                                                    })}
+                                {recargando ? (
+                                    <FilasCargando
+                                        columnas={7}
+                                        filas={sales.data.length}
+                                    />
+                                ) : (
+                                    sales.data.map((sale) => (
+                                        <tr
+                                            key={sale.id}
+                                            className="hover:bg-muted/40"
+                                        >
+                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                                {sale.numero_interno}
+                                            </td>
+                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
+                                                {sale.cliente}
+                                            </td>
+                                            <td className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
+                                                {sale.fecha}
+                                            </td>
+                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                                <span className="bg-muted text-foreground/80 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">
+                                                    {sale.comprobante ??
+                                                        sale.comprobante_tipo.replace(
+                                                            '_',
+                                                            ' ',
+                                                        )}
+                                                </span>
+                                                {sale.sunat_estado ? (
+                                                    <div
+                                                        className={`mt-1 text-[10.5px] font-bold ${estadoSunat(sale.sunat_estado).clase}`}
+                                                    >
+                                                        {
+                                                            estadoSunat(
+                                                                sale.sunat_estado,
+                                                            ).texto
+                                                        }
+                                                    </div>
+                                                ) : null}
+                                            </td>
+                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                                {money(sale.total)}
+                                            </td>
+                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                                <Badge
+                                                    className={`rounded-full px-2.5 py-1 text-[10.5px] font-bold capitalize shadow-none ${statusBadge(sale.estado)}`}
                                                 >
-                                                    <Eye className="size-3.5" />
-                                                </Link>
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                                    <CheckCircle2 className="size-3" />
+                                                    {sale.estado}
+                                                </Badge>
+                                            </td>
+                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                                <div className="flex gap-1.5">
+                                                    <Button
+                                                        asChild
+                                                        variant="outline"
+                                                        size="icon"
+                                                        title="Ver venta"
+                                                        className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
+                                                    >
+                                                        <Link
+                                                            href={ventas.show({
+                                                                current_team:
+                                                                    teamSlug,
+                                                                sale: sale.id,
+                                                            })}
+                                                        >
+                                                            <Eye className="size-3.5" />
+                                                        </Link>
+                                                    </Button>
+                                                    {sale.estado ===
+                                                    'borrador' ? (
+                                                        <Button
+                                                            asChild
+                                                            variant="outline"
+                                                            size="icon"
+                                                            title="Editar borrador"
+                                                            className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
+                                                        >
+                                                            <Link
+                                                                href={ventas.edit.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        sale: sale.id,
+                                                                    },
+                                                                )}
+                                                            >
+                                                                <PencilLine className="size-3.5" />
+                                                            </Link>
+                                                        </Button>
+                                                    ) : null}
+                                                    {sale.estado ===
+                                                        'confirmada' &&
+                                                    sale.sunat_estado ? (
+                                                        <Button
+                                                            asChild
+                                                            variant="outline"
+                                                            size="icon"
+                                                            title={
+                                                                estadoSunat(
+                                                                    sale.sunat_estado,
+                                                                ).editable
+                                                                    ? 'Editar comprobante'
+                                                                    : 'Corregir con nota de crédito'
+                                                            }
+                                                            className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
+                                                        >
+                                                            <Link
+                                                                href={ventas.show.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        sale: sale.id,
+                                                                    },
+                                                                    {
+                                                                        query: {
+                                                                            corregir: 1,
+                                                                        },
+                                                                    },
+                                                                )}
+                                                            >
+                                                                <PencilLine className="size-3.5" />
+                                                            </Link>
+                                                        </Button>
+                                                    ) : null}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

@@ -78,8 +78,41 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
-     * Sede a la que se acota lo operativo del usuario. El Gerente y los
-     * usuarios sin sede asignada ven todas las sedes (devuelve null).
+     * Dónde puede trabajar cada rol: el vendedor atiende en una tienda (o
+     * sede mixta); almacén y técnicos trabajan donde hay stock y taller. El
+     * Gerente puede estar en cualquiera o en ninguna.
+     *
+     * @var array<string, list<string>>
+     */
+    public const TIPOS_DE_SEDE_POR_ROL = [
+        'Vendedor' => ['tienda', 'mixta'],
+        'Almacen' => ['almacen', 'mixta'],
+        'TecnicoPlanta' => ['almacen', 'mixta'],
+        'TecnicoCampo' => ['almacen', 'mixta'],
+    ];
+
+    /**
+     * Tipos de sede permitidos para un rol; null si puede estar en cualquiera.
+     *
+     * @return list<string>|null
+     */
+    public static function tiposDeSedePara(?string $rol): ?array
+    {
+        return self::TIPOS_DE_SEDE_POR_ROL[$rol] ?? null;
+    }
+
+    /**
+     * Todos menos el Gerente necesitan una sede para trabajar.
+     */
+    public function necesitaSede(): bool
+    {
+        return ! $this->hasRole('Gerente');
+    }
+
+    /**
+     * Sede a la que se acota lo operativo del usuario. El Gerente ve todas
+     * las sedes (devuelve null); a los demás sin sede no se les deja entrar
+     * (middleware EnsureTieneSede).
      */
     public function sedeRestringidaId(): ?int
     {

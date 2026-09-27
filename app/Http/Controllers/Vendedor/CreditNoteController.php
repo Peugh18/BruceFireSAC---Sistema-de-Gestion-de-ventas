@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Vendedor;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\IssueCreditNote;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\Billing\StoreCreditNoteRequest;
 use App\Models\ElectronicDocument;
 use App\Models\Team;
@@ -13,9 +14,12 @@ use Throwable;
 
 class CreditNoteController extends Controller
 {
+    use AcotaPorSede;
+
     public function store(Team $current_team, StoreCreditNoteRequest $request, IssueCreditNote $action, EmitElectronicDocument $emit): RedirectResponse
     {
         $original = ElectronicDocument::findOrFail($request->integer('electronic_document_id'));
+        $this->asegurarSede($original->sale?->sede_id);
 
         $nota = $action->handle(
             $original,

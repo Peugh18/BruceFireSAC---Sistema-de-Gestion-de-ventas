@@ -11,6 +11,7 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,6 +48,7 @@ class ExecutionController extends Controller
             ->get();
 
         return Inertia::render('tecnico-planta/ejecucion/show', [
+            'asignacion' => $service_order->asignacionPara(request()->user()),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -137,14 +139,18 @@ class ExecutionController extends Controller
             'ph_realizada' => ['nullable', 'boolean'],
         ]);
 
-        $action->advanceState(
-            $service_order,
-            $validated['target_state'],
-            $request->user(),
-            [
-                'ph_realizada' => (bool) ($validated['ph_realizada'] ?? false),
-            ]
-        );
+        try {
+            $action->advanceState(
+                $service_order,
+                $validated['target_state'],
+                $request->user(),
+                [
+                    'ph_realizada' => (bool) ($validated['ph_realizada'] ?? false),
+                ]
+            );
+        } catch (\InvalidArgumentException $exception) {
+            throw ValidationException::withMessages(['target_state' => $exception->getMessage()]);
+        }
 
         $msg = $validated['target_state'] === 'listo_certificado'
             ? '¡Trabajo de taller finalizado y Certificados emitidos automáticamente!'

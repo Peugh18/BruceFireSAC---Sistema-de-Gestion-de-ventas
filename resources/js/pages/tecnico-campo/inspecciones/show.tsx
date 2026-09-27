@@ -1,4 +1,5 @@
-﻿import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import {
     AlertCircle,
     ArrowLeft,
@@ -17,6 +18,7 @@ import {
     Send,
     UserCheck,
     XCircle,
+    MessageSquare,
 } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -67,6 +69,13 @@ type ServiceOrder = {
     codigo: string;
     estado: string;
     tipo_servicio?: string;
+    observaciones?: string | null;
+    events?: Array<{
+        id: number;
+        tipo: string;
+        payload: any;
+        created_at: string;
+    }>;
     client_id: number;
     client: {
         id: number;
@@ -89,6 +98,7 @@ type ServiceOrder = {
 };
 
 type Props = {
+    asignacion: AsignacionOrden;
     currentTeam?: Team | null;
     order: ServiceOrder;
     customerEquipments: Equipment[];
@@ -96,6 +106,7 @@ type Props = {
 };
 
 export default function InspeccionShow({
+    asignacion,
     currentTeam,
     order,
     customerEquipments,
@@ -238,6 +249,67 @@ export default function InspeccionShow({
                     )}
                 </div>
             </div>
+
+            <TomarOrden asignacion={asignacion} />
+
+            {/* Indicaciones de Ventas / Notas de Coordinación */}
+            {(() => {
+                const notasVendedor = (order.events || []).filter(
+                    (ev) =>
+                        ev.payload?.origen === 'vendedor' ||
+                        ev.tipo === 'notificacion_vendedor' ||
+                        (ev.tipo === 'otro' && ev.payload?.mensaje),
+                );
+
+                if (!order.observaciones && notasVendedor.length === 0) {
+                    return null;
+                }
+
+                return (
+                    <div className="mb-6 rounded-[14px] border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
+                        <div className="flex items-center gap-2 font-bold text-xs text-blue-900 dark:text-blue-300">
+                            <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
+                            <span>Indicaciones de Ventas y Coordinación</span>
+                        </div>
+
+                        {order.observaciones && (
+                            <p className="mt-2 text-xs text-blue-800 dark:text-blue-200">
+                                <span className="font-semibold text-blue-950 dark:text-blue-100">
+                                    Observación inicial:{' '}
+                                </span>
+                                {order.observaciones}
+                            </p>
+                        )}
+
+                        {notasVendedor.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                                <span className="text-[11px] font-bold text-blue-900/70 uppercase dark:text-blue-300/70">
+                                    Notas de Ventas:
+                                </span>
+                                {notasVendedor.map((n) => (
+                                    <div
+                                        key={n.id}
+                                        className="rounded-xl border border-blue-100 bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:border-blue-800/40 dark:bg-neutral-900/80 dark:text-neutral-200"
+                                    >
+                                        <p className="font-medium">
+                                            {n.payload?.mensaje ||
+                                                n.payload?.descripcion ||
+                                                JSON.stringify(n.payload)}
+                                        </p>
+                                        <span className="mt-1 block text-[10.5px] text-neutral-400">
+                                            {n.created_at
+                                                ? new Date(
+                                                      n.created_at,
+                                                  ).toLocaleString('es-PE')
+                                                : ''}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
 
             {/* Extinguisher Cards Section (§24) */}
             <div className="mb-6">

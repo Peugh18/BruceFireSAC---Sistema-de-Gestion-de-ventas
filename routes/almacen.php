@@ -6,6 +6,7 @@ use App\Http\Controllers\Almacen\ReceptionStickerController;
 use App\Http\Controllers\Almacen\StockAdjustmentController;
 use App\Http\Controllers\Almacen\StockController;
 use App\Http\Controllers\Almacen\StockLookupController;
+use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
 
 // Rutas del rol Almacén. Se incluye desde routes/web.php dentro del grupo
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 // rol "Almacen" (spatie/laravel-permission).
 Route::prefix('almacen')
     ->name('almacen.')
-    ->middleware('role:Almacen')
+    ->middleware(['role:Almacen', EnsureTieneSede::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('stock', [StockController::class, 'index'])->name('stock.index');

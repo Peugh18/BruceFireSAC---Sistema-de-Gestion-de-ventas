@@ -23,9 +23,18 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'certificate_id',
     'equipment_id',
+    'orden',
+    'numero_cliente',
     'numero_serie_snapshot',
+    'capacidad',
+    'marca',
+    'tipo_agente',
+    'anio_fabricacion',
     'fecha_ultima_ph',
     'fecha_ultima_recarga',
+    'presion_ph',
+    'tiempo_ph',
+    'presion_trabajo',
 ])]
 class CertificateUnit extends Model
 {
@@ -44,5 +53,10 @@ class CertificateUnit extends Model
     public function certificate(): BelongsTo
     {
         return $this->belongsTo(Certificate::class, 'certificate_id');
+    }
+
+    public function equipment(): BelongsTo
+    {
+        return $this->belongsTo(Equipment::class);
     }
 }

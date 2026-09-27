@@ -105,20 +105,24 @@
                 <span class="label">RUC/DNI:</span> {{ $sale->client->numero_documento }}<br>
                 <span class="label">CLIENTE:</span> {{ $sale->client->razon_social }}<br>
                 <span class="label">DIRECCIÓN:</span> {{ $sale->client->direccion_fiscal ?? '-' }}
+                @if($sale->referencia)
+                    @php $etiquetaReferencia = str_contains($sale->referencia, ':') ? trim(strtoupper(strstr($sale->referencia, ':', true))) : 'REFERENCIA'; @endphp
+                    <br><span class="label">{{ $etiquetaReferencia }}:</span> {{ str_contains($sale->referencia, ':') ? trim(substr(strstr($sale->referencia, ':'), 1)) : $sale->referencia }}
+                @endif
             </td>
             <td class="info-right" style="width: 40%;">
                 @if($document->tipo === 'factura' || $document->tipo === 'boleta')
-                    <span class="label">CONDICIÓN DE PAGO:</span> {{ $sale->condicion_pago === 'credito_30' ? 'CREDITO 30 DIAS' : 'CONTADO' }}<br>
+                    <span class="label">CONDICIÓN DE PAGO:</span> {{ $sale->esCredito() ? 'CRÉDITO '.str_pad((string) $sale->diasCredito(), 2, '0', STR_PAD_LEFT).' DÍAS' : 'CONTADO'.($sale->medioPagoTexto() ? ' — '.mb_strtoupper($sale->medioPagoTexto()) : '') }}<br>
                 @endif
-                <span class="label">FECHA EMISIÓN:</span> {{ ($document->fecha_emision ?? $sale->fecha)->format('d/m/Y') }}
-                @if($sale->condicion_pago === 'credito_30' && $sale->installments->isNotEmpty())
+                <span class="label">FECHA EMISIÓN:</span> {{ ($document->fecha_emision ?? $sale->fecha)->format('d/m/Y') }} {{ $document->created_at?->format('H:i') }}
+                @if($sale->esCredito() && $sale->installments->isNotEmpty())
                     <br><span class="label">FECHA VENCIMIENTO:</span> {{ optional($sale->installments->last()->fecha_vencimiento)->format('d/m/Y') }}
                 @endif
             </td>
         </tr>
     </table>
 
-    @if($sale->destino === 'vehiculo' && $sale->vehicle)
+    @if(! $sale->referencia && $sale->destino === 'vehiculo' && $sale->vehicle)
         <div style="margin-top: 4px; font-size: 9px;"><span class="label">PLACA:</span> {{ $sale->vehicle->placa }}</div>
     @endif
 
@@ -164,9 +168,7 @@
         <tr>
             <td>
                 <div class="son">{{ $montoEnLetras }}</div>
-                @if($sale->observaciones)
-                    <div class="son">Obs: {{ $sale->observaciones }}</div>
-                @endif
+                <div class="son">Obs: {{ $sale->observaciones }}</div>
             </td>
             <td style="width: 190px;">
                 <table class="totals-box">
@@ -178,7 +180,7 @@
         </tr>
     </table>
 
-    @if($sale->condicion_pago === 'credito_30' && $sale->installments->isNotEmpty())
+    @if($sale->esCredito() && $sale->installments->isNotEmpty())
         <table class="cuotas-table">
             <thead>
                 <tr><th>Cuota</th><th>F.Vencimiento</th><th>Moneda</th><th>Importe</th></tr>

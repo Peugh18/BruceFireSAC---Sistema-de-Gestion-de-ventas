@@ -1,7 +1,8 @@
-﻿import { router, useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import { Building2, CreditCard, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 
+import { ConfiguracionTabs } from '@/components/configuracion-tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -38,7 +39,11 @@ type BankAccount = {
     activo: boolean;
 };
 
-type Props = { company: Company; bankAccounts: BankAccount[] };
+type Props = {
+    company: Company;
+    bankAccounts: BankAccount[];
+    firmasPendientes: number;
+};
 
 function field(errors: Record<string, string>, name: string) {
     return errors[name] ? (
@@ -46,7 +51,11 @@ function field(errors: Record<string, string>, name: string) {
     ) : null;
 }
 
-export default function EmpresaConfiguracion({ company, bankAccounts }: Props) {
+export default function EmpresaConfiguracion({
+    company,
+    bankAccounts,
+    firmasPendientes,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ??
@@ -120,6 +129,11 @@ export default function EmpresaConfiguracion({ company, bankAccounts }: Props) {
     return (
         <GerenteLayout title="Datos de la empresa">
             <div className="flex flex-col gap-5">
+                <ConfiguracionTabs
+                    teamSlug={teamSlug}
+                    activa="empresa"
+                    firmasPendientes={firmasPendientes}
+                />
                 <div className="flex items-center gap-3">
                     <div className="flex size-10 items-center justify-center rounded-[11px] bg-destructive/10 text-primary">
                         <Building2 className="size-5" />

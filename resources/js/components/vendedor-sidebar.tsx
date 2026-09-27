@@ -1,28 +1,24 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     Award,
-    ClipboardCheck,
     ClipboardList,
     CreditCard,
     LayoutDashboard,
-    MessageCircle,
     ReceiptText,
     ShoppingCart,
-    TriangleAlert,
     UsersRound,
+    Wallet,
     Wrench,
     X,
     type LucideIcon,
 } from 'lucide-react';
 
 import { dashboard } from '@/routes/vendedor';
-import alertas from '@/routes/vendedor/alertas';
+import caja from '@/routes/vendedor/caja';
 import certificados from '@/routes/vendedor/certificados';
 import clientes from '@/routes/vendedor/clientes';
 import cobranzas from '@/routes/vendedor/cobranzas';
-import comunicacion from '@/routes/vendedor/comunicacion';
 import cotizaciones from '@/routes/vendedor/cotizaciones';
-import deficiencias from '@/routes/vendedor/deficiencias';
 import facturacion from '@/routes/vendedor/facturacion';
 import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
 import ventas from '@/routes/vendedor/ventas';
@@ -34,6 +30,7 @@ type SidebarCounts = {
     cotizaciones: number;
     alertas: number;
     deficiencias: number;
+    servicios_alertas?: number;
 };
 
 type VendedorPageProps = {
@@ -73,7 +70,7 @@ function buildNavGroups(
         {
             items: [
                 {
-                    title: 'Dashboard',
+                    title: 'Inicio',
                     href: dashboard.url(teamSlug),
                     icon: LayoutDashboard,
                 },
@@ -86,7 +83,6 @@ function buildNavGroups(
                     title: 'Clientes',
                     href: clientes.index.url(teamSlug),
                     icon: UsersRound,
-                    count: counts?.clientes,
                 },
                 {
                     title: 'Cotizaciones',
@@ -104,45 +100,29 @@ function buildNavGroups(
                     href: cobranzas.index.url(teamSlug),
                     icon: CreditCard,
                 },
+                {
+                    title: 'Caja',
+                    href: caja.index.url(teamSlug),
+                    icon: Wallet,
+                },
             ],
         },
         {
             label: 'Operación',
             items: [
                 {
-                    title: 'Alertas de Vencimiento',
-                    href: alertas.index.url(teamSlug),
-                    icon: TriangleAlert,
-                    count: counts?.alertas,
-                },
-                {
-                    title: 'Órdenes de Servicio',
+                    title: 'Servicios',
                     href: ordenesServicio.index.url(teamSlug),
-                    icon: ClipboardCheck,
-                },
-                {
-                    title: 'Deficiencias y Adicionales',
-                    href: deficiencias.index.url(teamSlug),
                     icon: Wrench,
-                    count: counts?.deficiencias,
+                    count: counts?.servicios_alertas ?? counts?.deficiencias,
                 },
-                {
-                    title: 'Comunicación con Taller',
-                    href: comunicacion.index.url(teamSlug),
-                    icon: MessageCircle,
-                },
-            ],
-        },
-        {
-            label: 'Certificados y fiscal',
-            items: [
                 {
                     title: 'Certificados',
                     href: certificados.index.url(teamSlug),
                     icon: Award,
                 },
                 {
-                    title: 'Facturación Electrónica',
+                    title: 'Comprobantes SUNAT',
                     href: facturacion.index.url(teamSlug),
                     icon: ReceiptText,
                 },
@@ -163,10 +143,22 @@ function isActivePath(currentPath: string, href: string): boolean {
     const normalizedHref = normalizePath(href);
 
     if (
-        normalizedHref.endsWith('/vendedor/dashboard') &&
-        normalizedCurrentPath.endsWith('/vendedor')
+        (normalizedHref.endsWith('/vendedor/dashboard') ||
+            normalizedHref.endsWith('/vendedor')) &&
+        (normalizedCurrentPath.endsWith('/vendedor') ||
+            normalizedCurrentPath.endsWith('/vendedor/dashboard'))
     ) {
         return true;
+    }
+
+    if (normalizedHref.includes('/vendedor/ordenes-servicio')) {
+        if (
+            normalizedCurrentPath.includes('/vendedor/ordenes-servicio') ||
+            normalizedCurrentPath.includes('/vendedor/comunicacion') ||
+            normalizedCurrentPath.includes('/vendedor/deficiencias')
+        ) {
+            return true;
+        }
     }
 
     return (

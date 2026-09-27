@@ -1,4 +1,4 @@
-﻿import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     Calendar,
     CheckCircle2,
@@ -9,9 +9,13 @@ import {
     Search,
     Wrench,
 } from 'lucide-react';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
 
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
+import CatalogPicker from '@/components/catalog-picker';
+import ClientPicker, { type ClientFicha } from '@/components/client-picker';
+import ReferenciaField from '@/components/referencia-field';
+import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -47,10 +51,10 @@ export type PaginationLink = {
     active: boolean;
 };
 
-export type ClientOption = {
+export type TecnicoOption = {
     id: number;
-    razon_social: string;
-    numero_documento: string;
+    name: string;
+    departamento: 'planta' | 'campo';
 };
 
 export type Props = {
@@ -64,7 +68,7 @@ export type Props = {
     filters: {
         estado?: string;
     };
-    clients: ClientOption[];
+    tecnicos: TecnicoOption[];
 };
 
 const TABS = [
@@ -92,22 +96,33 @@ function getCoarseStep(coarseLabel: string): number {
 function getBadgeConfig(
     estado: string,
     coarseLabel: string,
+    tecnico?: string | null,
 ): { label: string; badgeClass: string } {
     switch (coarseLabel?.toLowerCase()) {
         case 'asignada':
+            if (!tecnico || tecnico === 'Por asignar') {
+                return {
+                    label: 'Por asignar',
+                    badgeClass:
+                        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                };
+            }
             return {
                 label: 'Asignada',
-                badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                badgeClass:
+                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
             };
         case 'en_proceso':
             return {
                 label: 'En proceso',
-                badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+                badgeClass:
+                    'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
             };
         case 'completada':
             return {
                 label: 'Completada',
-                badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                badgeClass:
+                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
             };
         case 'cerrada':
             return {
@@ -125,9 +140,12 @@ function getBadgeConfig(
 export default function ServiceOrdersIndex({
     orders,
     filters,
-    clients,
+    tecnicos,
 }: Props) {
-    const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    const { currentTeam, sidebarCounts } = usePage<{
+        currentTeam?: Team | null;
+        sidebarCounts?: { deficiencias?: number } | null;
+    }>().props;
     const teamSlug =
         currentTeam?.slug ||
         (typeof window !== 'undefined'
@@ -135,33 +153,28 @@ export default function ServiceOrdersIndex({
             : '');
 
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [clientSearch, setClientSearch] = useState('');
+    const [cliente, setCliente] = useState<ClientFicha | null>(null);
+    const [destino, setDestino] = useState<'local_cliente' | 'vehiculo'>(
+        'local_cliente',
+    );
     const currentEstado = filters?.estado || '';
 
     // Form para crear nueva orden
     const createForm = useForm({
         client_id: '',
-        tipo_servicio: 'Recarga y mantenimiento de extintores',
+        tipo_servicio: '',
         fecha: new Date().toISOString().split('T')[0],
-        departamento_tecnico: 'planta',
+        departamento_tecnico: 'planta' as 'planta' | 'campo',
+        tecnico_id: '',
+        referencia: '',
         prioridad: 'normal',
         observaciones: '',
     });
 
-    const selectedClient = clients.find(
-        (client) => client.id === Number(createForm.data.client_id),
+    const tecnicosDelArea = tecnicos.filter(
+        (tecnico) =>
+            tecnico.departamento === createForm.data.departamento_tecnico,
     );
-
-    const filteredClients = useMemo(() => {
-        const term = clientSearch.trim().toLowerCase();
-        if (!term) return clients.slice(0, 10);
-
-        return clients.filter(
-            (client) =>
-                client.razon_social.toLowerCase().includes(term) ||
-                client.numero_documento.includes(term),
-        );
-    }, [clientSearch, clients]);
 
     const submitCreate = (e: FormEvent) => {
         e.preventDefault();
@@ -169,7 +182,7 @@ export default function ServiceOrdersIndex({
             preserveScroll: true,
             onSuccess: () => {
                 setDialogOpen(false);
-                setClientSearch('');
+                setCliente(null);
                 createForm.reset();
             },
         });
@@ -195,6 +208,12 @@ export default function ServiceOrdersIndex({
             <Head title="Órdenes de Servicio" />
 
             <div className="flex flex-col gap-4">
+                <ServiciosTabs
+                    teamSlug={teamSlug}
+                    activa="ordenes"
+                    deficienciasPendientes={sidebarCounts?.deficiencias}
+                />
+
                 {/* Header toolbar */}
                 <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <div>
@@ -296,6 +315,7 @@ export default function ServiceOrdersIndex({
                                         const badgeConfig = getBadgeConfig(
                                             order.estado,
                                             order.coarse_label,
+                                            order.tecnico,
                                         );
 
                                         return (
@@ -459,7 +479,7 @@ export default function ServiceOrdersIndex({
 
             {/* Dialog: Nueva Orden de Servicio */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="rounded-[16px] border-border bg-card sm:max-w-lg">
+                <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[16px] border-border bg-card sm:max-w-xl">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
                             <div className="flex size-9 items-center justify-center rounded-[10px] bg-destructive/10 text-primary">
@@ -470,115 +490,173 @@ export default function ServiceOrdersIndex({
                                     Nueva orden de servicio
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-muted-foreground">
-                                    Registra una nueva orden para el taller de
-                                    planta o servicio en campo.
+                                    Para el taller de planta o un servicio en
+                                    campo. Toda el área la ve; el responsable es
+                                    opcional.
                                 </DialogDescription>
                             </div>
                         </div>
                     </DialogHeader>
 
-                    <form onSubmit={submitCreate} className="mt-3 space-y-3.5">
-                        <div>
-                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                                Cliente *
-                            </Label>
-                            <div className="mt-1 flex items-center gap-2 rounded-[8px] border border-border bg-card px-3">
-                                <Search className="size-3.5 shrink-0 text-muted-foreground" />
-                                <input
-                                    value={
-                                        selectedClient
-                                            ? selectedClient.razon_social
-                                            : clientSearch
-                                    }
-                                    onChange={(e) => {
-                                        setClientSearch(e.target.value);
-                                        createForm.setData('client_id', '');
-                                    }}
-                                    placeholder="Buscar por RUC, DNI o razón social..."
-                                    className="h-9 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
-                                />
-                            </div>
-                            {createForm.errors.client_id && (
-                                <p className="mt-1 text-[11px] text-destructive">
-                                    {createForm.errors.client_id}
-                                </p>
-                            )}
-
-                            {!selectedClient && (
-                                <div className="mt-1.5 max-h-[140px] overflow-y-auto rounded-[8px] border border-border">
-                                    {filteredClients.length === 0 ? (
-                                        <div className="px-3 py-3 text-[12px] text-muted-foreground">
-                                            Sin coincidencias.
-                                        </div>
-                                    ) : (
-                                        filteredClients.map((client) => (
-                                            <button
-                                                key={client.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    createForm.setData(
-                                                        'client_id',
-                                                        String(client.id),
-                                                    );
-                                                    setClientSearch('');
-                                                }}
-                                                className="flex w-full items-center justify-between gap-3 border-b border-border px-3 py-2 text-left last:border-b-0 hover:bg-muted/40"
-                                            >
-                                                <span>
-                                                    <span className="block text-[12.5px] font-bold text-foreground">
-                                                        {client.razon_social}
-                                                    </span>
-                                                    <span className="font-['IBM_Plex_Mono',monospace] text-[10.5px] text-muted-foreground">
-                                                        {
-                                                            client.numero_documento
-                                                        }
-                                                    </span>
-                                                </span>
-                                            </button>
-                                        ))
-                                    )}
-                                </div>
-                            )}
-
-                            {selectedClient && (
-                                <div className="mt-1.5 flex items-center justify-between rounded-[8px] bg-destructive/10 px-3 py-2">
-                                    <span className="text-[12.5px] font-bold text-foreground">
-                                        {selectedClient.razon_social}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            createForm.setData('client_id', '')
-                                        }
-                                        className="text-[11px] font-semibold text-muted-foreground hover:text-foreground"
-                                    >
-                                        Cambiar
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                    <form onSubmit={submitCreate} className="mt-3 space-y-4">
+                        <ClientPicker
+                            teamSlug={teamSlug}
+                            value={cliente}
+                            onChange={(ficha) => {
+                                setCliente(ficha);
+                                createForm.setData((data) => ({
+                                    ...data,
+                                    client_id: ficha ? String(ficha.id) : '',
+                                    referencia: '',
+                                }));
+                            }}
+                            error={createForm.errors.client_id}
+                        />
 
                         <div>
                             <Label className="text-[11px] font-bold text-foreground/80 uppercase">
                                 Tipo de servicio *
                             </Label>
-                            <Input
-                                required
-                                value={createForm.data.tipo_servicio}
-                                onChange={(e) =>
-                                    createForm.setData(
-                                        'tipo_servicio',
-                                        e.target.value,
-                                    )
-                                }
-                                placeholder="Ej. Recarga PQS 6kg, Prueba hidrostática..."
-                                className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
-                            />
+                            {createForm.data.tipo_servicio ? (
+                                <div className="mt-1 flex items-center justify-between rounded-[9px] border border-primary/40 bg-destructive/5 px-3 py-2">
+                                    <span className="text-[13px] font-bold text-foreground">
+                                        {createForm.data.tipo_servicio}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            createForm.setData(
+                                                'tipo_servicio',
+                                                '',
+                                            )
+                                        }
+                                        className="text-[11.5px] font-semibold text-muted-foreground hover:text-foreground"
+                                    >
+                                        Cambiar
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="mt-1">
+                                    <CatalogPicker
+                                        teamSlug={teamSlug}
+                                        soloServicios
+                                        onPick={(servicio) =>
+                                            createForm.setData(
+                                                'tipo_servicio',
+                                                servicio.nombre,
+                                            )
+                                        }
+                                        placeholder="Busca el servicio: recarga, prueba hidrostática, instalación..."
+                                    />
+                                </div>
+                            )}
                             {createForm.errors.tipo_servicio && (
                                 <p className="mt-1 text-[11px] text-destructive">
                                     {createForm.errors.tipo_servicio}
                                 </p>
                             )}
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                    Área
+                                </Label>
+                                <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                                    {(
+                                        [
+                                            ['planta', 'Planta (taller)'],
+                                            ['campo', 'Campo (in situ)'],
+                                        ] as const
+                                    ).map(([valor, texto]) => (
+                                        <button
+                                            key={valor}
+                                            type="button"
+                                            onClick={() =>
+                                                createForm.setData((data) => ({
+                                                    ...data,
+                                                    departamento_tecnico: valor,
+                                                    tecnico_id: '',
+                                                }))
+                                            }
+                                            className={`flex-1 rounded-[7px] px-2 py-1.5 text-xs font-bold transition-all ${createForm.data.departamento_tecnico === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            {texto}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                    Responsable
+                                </Label>
+                                <select
+                                    value={createForm.data.tecnico_id}
+                                    onChange={(e) =>
+                                        createForm.setData(
+                                            'tecnico_id',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"
+                                >
+                                    <option value="">
+                                        Todo el área (sin asignar)
+                                    </option>
+                                    {tecnicosDelArea.map((tecnico) => (
+                                        <option
+                                            key={tecnico.id}
+                                            value={tecnico.id}
+                                        >
+                                            {tecnico.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {createForm.errors.tecnico_id && (
+                                    <p className="mt-1 text-[11px] text-destructive">
+                                        {createForm.errors.tecnico_id}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
+                            <div>
+                                <Label className="text-[11px] font-bold text-foreground/80 uppercase">
+                                    Para
+                                </Label>
+                                <div className="mt-1 flex rounded-[9px] bg-muted p-[3px]">
+                                    {(
+                                        [
+                                            ['local_cliente', 'Local'],
+                                            ['vehiculo', 'Vehículo'],
+                                        ] as const
+                                    ).map(([valor, texto]) => (
+                                        <button
+                                            key={valor}
+                                            type="button"
+                                            onClick={() => {
+                                                setDestino(valor);
+                                                createForm.setData(
+                                                    'referencia',
+                                                    '',
+                                                );
+                                            }}
+                                            className={`flex-1 rounded-[7px] px-2 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            {texto}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <ReferenciaField
+                                cliente={cliente}
+                                destino={destino}
+                                value={createForm.data.referencia}
+                                onChange={(valor) =>
+                                    createForm.setData('referencia', valor)
+                                }
+                            />
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -599,56 +677,32 @@ export default function ServiceOrdersIndex({
                                     className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                                 />
                             </div>
-
                             <div>
                                 <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                                    Departamento
+                                    Prioridad
                                 </Label>
                                 <select
-                                    value={createForm.data.departamento_tecnico}
+                                    value={createForm.data.prioridad}
                                     onChange={(e) =>
                                         createForm.setData(
-                                            'departamento_tecnico',
+                                            'prioridad',
                                             e.target.value,
                                         )
                                     }
                                     className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"
                                 >
-                                    <option value="planta">
-                                        Planta (Taller)
-                                    </option>
-                                    <option value="campo">
-                                        Campo (In situ)
-                                    </option>
+                                    <option value="normal">Normal</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="urgente">Urgente</option>
                                 </select>
                             </div>
                         </div>
 
                         <div>
                             <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                                Prioridad
+                                Instrucciones para el técnico
                             </Label>
-                            <select
-                                value={createForm.data.prioridad}
-                                onChange={(e) =>
-                                    createForm.setData(
-                                        'prioridad',
-                                        e.target.value,
-                                    )
-                                }
-                                className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"
-                            >
-                                <option value="normal">Normal</option>
-                                <option value="alta">Alta</option>
-                                <option value="urgente">Urgente</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <Label className="text-[11px] font-bold text-foreground/80 uppercase">
-                                Observaciones / Instrucciones
-                            </Label>
-                            <Input
+                            <textarea
                                 value={createForm.data.observaciones}
                                 onChange={(e) =>
                                     createForm.setData(
@@ -656,8 +710,8 @@ export default function ServiceOrdersIndex({
                                         e.target.value,
                                     )
                                 }
-                                placeholder="Detalles para el técnico..."
-                                className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
+                                placeholder="Ej. 7 extintores PQS 6 kg enumerados del 1 al 7, recoger en recepción."
+                                className="mt-1 min-h-[60px] w-full rounded-[8px] border border-border bg-card px-3 py-2 text-[13px] outline-none"
                             />
                         </div>
 

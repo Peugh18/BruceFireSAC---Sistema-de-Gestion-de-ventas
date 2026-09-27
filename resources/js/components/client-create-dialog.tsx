@@ -1,7 +1,8 @@
 import { useHttp } from '@inertiajs/react';
-import { Loader2, UserRoundPlus } from 'lucide-react';
+import { UserRoundPlus } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 
+import { Cargando } from '@/components/cargando';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -124,7 +125,7 @@ function ClientFormFields({
                         className="mt-1 h-9 rounded-[8px] border-border bg-card text-[13px]"
                     />
                     {lookupLoading && (
-                        <Loader2 className="absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />
+                        <Cargando className="absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
                     )}
                 </div>
                 <FieldError message={errors.numero_documento} />
@@ -286,6 +287,8 @@ export default function ClientCreateDialog({
     const form = useHttp<ClientFormData, CreatedClient>(emptyClientForm);
     const [lookupLoading, setLookupLoading] = useState(false);
     const [lookupMessage, setLookupMessage] = useState<string | null>(null);
+    const [duplicateClient, setDuplicateClient] =
+        useState<CreatedClient | null>(null);
 
     // Al abrir desde un buscador con un RUC/DNI que no existe en la BD, el
     // número llega precargado y la consulta RENIEC/SUNAT se dispara sola.
@@ -301,6 +304,7 @@ export default function ClientCreateDialog({
             numero_documento: documento,
         });
         form.clearErrors();
+        setDuplicateClient(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, initialDocumento]);
 
@@ -310,6 +314,7 @@ export default function ClientCreateDialog({
         const numero = form.data.numero_documento.trim();
         const expectedLength = form.data.tipo_documento === 'dni' ? 8 : 11;
         setLookupMessage(null);
+        setDuplicateClient(null);
 
         if (!open || numero.length !== expectedLength) {
             return;
@@ -318,6 +323,22 @@ export default function ClientCreateDialog({
         const timeout = window.setTimeout(async () => {
             setLookupLoading(true);
             try {
+                const localResponse = await fetch(
+                    clientes.search.url(teamSlug, {
+                        query: { search: numero },
+                    }),
+                );
+                const localClients =
+                    (await localResponse.json()) as CreatedClient[];
+                const existingClient = localClients.find(
+                    (client) => client.numero_documento === numero,
+                );
+
+                if (existingClient) {
+                    setDuplicateClient(existingClient);
+                    return;
+                }
+
                 const response = await fetch(
                     rucLookup.url(teamSlug, {
                         query: { numero_documento: numero },
@@ -362,6 +383,10 @@ export default function ClientCreateDialog({
     const submitClient = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        if (duplicateClient) {
+            return;
+        }
+
         form.post(clientes.store.url(teamSlug), {
             onSuccess: (client) => {
                 onOpenChange(false);
@@ -393,6 +418,38 @@ export default function ClientCreateDialog({
                         lookupMessage={lookupMessage}
                     />
 
+                    {duplicateClient && (
+                        <div className="rounded-[10px] border border-amber-500/30 bg-amber-500/10 p-3">
+                            <p className="text-sm font-semibold text-foreground">
+                                Ya está registrado:{' '}
+                                {duplicateClient.razon_social}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                <Button
+                                    type="button"
+                                    onClick={() => {
+                                        onCreated(duplicateClient);
+                                        onOpenChange(false);
+                                    }}
+                                >
+                                    Usar este cliente
+                                </Button>
+                                <Button asChild type="button" variant="outline">
+                                    <a
+                                        href={clientes.show.url({
+                                            current_team: teamSlug,
+                                            client: duplicateClient.id,
+                                        })}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Ver ficha
+                                    </a>
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
                     <DialogFooter>
                         <Button
                             type="button"
@@ -404,7 +461,9 @@ export default function ClientCreateDialog({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={form.processing}
+                            disabled={
+                                form.processing || duplicateClient !== null
+                            }
                             className="rounded-[9px] bg-primary font-bold text-white shadow-none hover:bg-primary/90"
                         >
                             Guardar cliente

@@ -153,7 +153,7 @@ test('gerente desactiva y reactiva una sede sin dependencias', function () {
     expect($sede->fresh()->activo)->toBeTrue();
 });
 
-test('gerente asigna una única sede a un trabajador y puede quitársela', function () {
+test('gerente asigna una única sede a un trabajador y no puede dejarlo sin sede', function () {
     $gerente = createGerenteForSedeTest();
     $sede = Sede::factory()->mixta()->create();
     $trabajador = User::factory()->create();
@@ -164,8 +164,9 @@ test('gerente asigna una única sede a un trabajador y puede quitársela', funct
     expect($trabajador->fresh()->sede_id)->toBe($sede->id);
     expect(AuditLog::where('action', 'usuario.sede_actualizada')->exists())->toBeTrue();
 
-    $this->actingAs($gerente)->patch($url, ['sede_id' => null])->assertSessionHasNoErrors();
-    expect($trabajador->fresh()->sede_id)->toBeNull();
+    // Sin sede vería los datos de todas: solo el Gerente puede quedar sin sede.
+    $this->actingAs($gerente)->patch($url, ['sede_id' => null])->assertSessionHasErrors('sede_id');
+    expect($trabajador->fresh()->sede_id)->toBe($sede->id);
 });
 
 test('no se asigna a un trabajador una sede inactiva', function () {

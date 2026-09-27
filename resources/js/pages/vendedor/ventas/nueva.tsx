@@ -2,21 +2,31 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     Building2,
-    CheckCircle2,
+    CalendarClock,
     CreditCard,
     FileText,
-    Loader2,
+    MapPin,
+    Minus,
     Plus,
     ScanLine,
-    Search,
     Trash2,
     Truck,
-    UserRoundPlus,
 } from 'lucide-react';
-import { FormEvent, KeyboardEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
+import { Cargando } from '@/components/cargando';
+import CatalogPicker, {
+    type CatalogItem,
+    type CatalogUnit,
+} from '@/components/catalog-picker';
+import ClientPicker, {
+    type ClientFicha,
+    type ClientOption,
+} from '@/components/client-picker';
+import CreditoDialog, { type Cuota } from '@/components/credito-dialog';
+import ReferenciaField from '@/components/referencia-field';
+import UnidadesDialog from '@/components/unidades-dialog';
 import { Badge } from '@/components/ui/badge';
-import ClientCreateDialog from '@/components/client-create-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,46 +36,58 @@ import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
-type ClientOption = {
-    id: number;
-    tipo_documento?: string;
-    razon_social: string;
-    numero_documento: string;
-};
+type SedeOption = { id: number; nombre: string };
 
-type SedeOption = {
-    id: number;
-    nombre: string;
-};
-
-type LineType = 'unidad_nueva' | 'recarga_servicio';
+type LineType = 'unidad_nueva' | 'producto' | 'servicio';
 type Destination = 'local_cliente' | 'vehiculo';
-type PaymentCondition = 'contado' | 'credito_30';
+type PaymentCondition = 'contado' | 'credito';
 type DocumentType = 'factura' | 'boleta' | 'nota_venta';
 
-type SaleItemForm = {
+type SaleLine = {
+    key: string;
     tipo_linea: LineType;
-    numero_serie: string;
+    numero_serie?: string;
     product_id?: number;
     service_id?: number;
+    inventory_unit_id?: number;
+    nombre: string;
+    detalle?: string;
     cantidad: number;
     precio_unitario: number;
     descuento: number;
-    nombre: string;
-    inventory_unit_id?: number;
+    stock?: number | null;
 };
+
+type MedioPago =
+    'efectivo' | 'yape' | 'plin' | 'transferencia' | 'pos' | 'deposito';
+
+/** Cómo paga el cliente al contado. No va a SUNAT: registra el cobro en caja. */
+const MEDIOS_PAGO: { valor: MedioPago; texto: string }[] = [
+    { valor: 'efectivo', texto: 'Efectivo' },
+    { valor: 'yape', texto: 'Yape' },
+    { valor: 'plin', texto: 'Plin' },
+    { valor: 'transferencia', texto: 'Transferencia' },
+    { valor: 'pos', texto: 'Tarjeta' },
+    { valor: 'deposito', texto: 'Depósito' },
+];
+
+/** Ley 28194: desde S/ 2,000 el pago debe ir por banco para el crédito fiscal. */
+const LIMITE_BANCARIZACION = 2000;
 
 type SaleFormData = {
     client_id: number | '';
     sede_id: number | '';
-    vehicle_id: number | '';
     quote_id: number | '';
     fecha: string;
     destino: Destination;
+    referencia: string;
     condicion_pago: PaymentCondition;
+    medio_pago: MedioPago;
+    numero_operacion: string;
+    cuotas: Cuota[];
     comprobante_tipo: DocumentType;
     observaciones: string;
-    items: SaleItemForm[];
+    items: SaleLine[];
 };
 
 type QuoteLine = {
@@ -73,6 +95,8 @@ type QuoteLine = {
     product_id: number | null;
     service_id: number | null;
     nombre: string;
+    codigo: string | null;
+    serializado: boolean;
     cantidad: number;
     precio_unitario: number;
 };
@@ -82,22 +106,39 @@ type QuoteOption = {
     numero: string;
     client: ClientOption;
     items: QuoteLine[];
+    referencia: string | null;
+};
+
+/** Venta ya existente: su borrador para editar (con id) o una copia para rehacerla (sin id). */
+type VentaPrefill = {
+    id: number | null;
+    numero_interno: string;
+    client: ClientOption;
+    sede_id: number | null;
+    destino: Destination;
+    referencia: string | null;
+    condicion_pago: PaymentCondition;
+    medio_pago: MedioPago;
+    numero_operacion: string | null;
+    comprobante_tipo: DocumentType;
+    observaciones: string | null;
+    cuotas: Cuota[];
+    items: Omit<SaleLine, 'key'>[];
 };
 
 type Props = {
-    clients: ClientOption[];
     clientesVarios: ClientOption;
     limiteBoletaSinIdentificar: number;
     sedes: SedeOption[];
     quote: QuoteOption | null;
+    venta: VentaPrefill | null;
+    caja_abierta?: boolean;
 };
 
-type ScanResponse = {
-    inventory_unit_id: number;
-    numero_serie: string;
-    product_id: number;
-    nombre: string;
-    precio_venta: number | string;
+const NOMBRE_COMPROBANTE: Record<DocumentType, string> = {
+    factura: 'factura',
+    boleta: 'boleta',
+    nota_venta: 'nota de venta',
 };
 
 function today() {
@@ -138,7 +179,7 @@ function SegmentButton({
             onClick={onClick}
             disabled={disabled}
             title={title}
-            className={`rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+            className={`flex-1 rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                 active
                     ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                     : 'text-muted-foreground hover:text-foreground'
@@ -149,12 +190,41 @@ function SegmentButton({
     );
 }
 
+let secuencia = 0;
+const nuevaClave = () => `l${++secuencia}`;
+
+/**
+ * Los precios ya incluyen IGV: el total es lo que paga el cliente y la base
+ * e IGV se separan línea por línea, igual que en el backend.
+ */
+function desglosar(lineas: SaleLine[]) {
+    let base = 0;
+    let total = 0;
+
+    for (const linea of lineas) {
+        const t =
+            Math.round(
+                (linea.cantidad * linea.precio_unitario - linea.descuento) *
+                    100,
+            ) / 100;
+        base += Math.round((t / 1.18) * 100) / 100;
+        total += t;
+    }
+
+    return {
+        base: Math.round(base * 100) / 100,
+        igv: Math.round((total - base) * 100) / 100,
+        total: Math.round(total * 100) / 100,
+    };
+}
+
 export default function NuevaVenta({
-    clients,
     clientesVarios,
     limiteBoletaSinIdentificar,
     sedes,
     quote,
+    venta,
+    caja_abierta,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -163,199 +233,301 @@ export default function NuevaVenta({
             ? window.location.pathname.split('/')[1]
             : '');
 
+    // La sede es la del vendedor: si solo tiene una, se usa sola.
+    const sedeFija = sedes.length === 1 ? sedes[0] : null;
+
+    const editando = venta?.id != null;
+    const clienteInicial = venta?.client ?? quote?.client ?? null;
+
     const form = useForm<SaleFormData>({
-        client_id: quote?.client.id ?? '',
-        sede_id: '',
-        vehicle_id: '',
+        client_id: clienteInicial?.id ?? '',
+        sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
         quote_id: quote?.id ?? '',
         fecha: today(),
-        destino: 'local_cliente',
-        condicion_pago: 'contado',
-        comprobante_tipo: 'factura',
-        observaciones: '',
-        items: [],
+        destino: venta?.destino ?? 'local_cliente',
+        referencia: venta?.referencia ?? quote?.referencia ?? '',
+        condicion_pago: venta?.condicion_pago ?? 'contado',
+        medio_pago: venta?.medio_pago ?? 'efectivo',
+        numero_operacion: venta?.numero_operacion ?? '',
+        cuotas: venta?.cuotas ?? [],
+        comprobante_tipo: venta?.comprobante_tipo ?? 'factura',
+        observaciones: venta?.observaciones ?? '',
+        items: venta
+            ? venta.items.map((line) => ({ ...line, key: nuevaClave() }))
+            : (quote?.items ?? [])
+                  .filter((line) => !line.serializado)
+                  .map((line) => ({
+                      key: nuevaClave(),
+                      tipo_linea:
+                          line.tipo === 'service' ? 'servicio' : 'producto',
+                      product_id: line.product_id ?? undefined,
+                      service_id: line.service_id ?? undefined,
+                      nombre: line.nombre,
+                      cantidad: line.cantidad,
+                      precio_unitario: line.precio_unitario,
+                      descuento: 0,
+                  })),
     });
 
-    const [clientSearch, setClientSearch] = useState('');
-    const [clientDialogOpen, setClientDialogOpen] = useState(false);
-    const [searchedClients, setSearchedClients] = useState<
-        ClientOption[] | null
-    >(null);
-    const [clientSearchLoading, setClientSearchLoading] = useState(false);
-    const [selectedClientData, setSelectedClientData] =
-        useState<ClientOption | null>(quote?.client ?? null);
-    const [tipoLinea, setTipoLinea] = useState<LineType>('unidad_nueva');
-    const [scanValue, setScanValue] = useState('');
-    const [scanLoading, setScanLoading] = useState(false);
-    const [scanMessage, setScanMessage] = useState<string | null>(null);
+    const [cliente, setCliente] = useState<ClientFicha | null>(
+        clienteInicial ? { ...clienteInicial, vehiculos: [], sedes: [] } : null,
+    );
+    const [productoConSerie, setProductoConSerie] =
+        useState<CatalogItem | null>(null);
+    const [creditoAbierto, setCreditoAbierto] = useState(false);
+    const [aviso, setAviso] = useState<string | null>(null);
 
-    // Sin búsqueda activa: se muestran los clientes recientes que ya vienen
-    // en props. Con 2+ caracteres se busca en el servidor contra toda la
-    // tabla de clientes (miles de registros reales, no solo los 10 recientes).
-    const filteredClients = searchedClients ?? clients;
-    const clientNotFound =
-        searchedClients !== null && searchedClients.length === 0;
-
+    // Si viene de una cotización o de otra venta, completa la ficha (placas y sedes).
     useEffect(() => {
-        const term = clientSearch.trim();
-
-        if (term.length < 2) {
-            setSearchedClients(null);
+        if (!clienteInicial) {
             return;
         }
 
-        const timeout = window.setTimeout(async () => {
-            setClientSearchLoading(true);
-            try {
-                const response = await fetch(
-                    clientes.search.url(teamSlug, {
-                        query: { search: term },
-                    }),
-                );
-                const payload = (await response.json()) as ClientOption[];
-                setSearchedClients(payload);
-            } catch {
-                setSearchedClients([]);
-            } finally {
-                setClientSearchLoading(false);
-            }
-        }, 300);
+        void fetch(
+            clientes.ficha.url({
+                current_team: teamSlug,
+                client: clienteInicial.id,
+            }),
+        )
+            .then((r) => r.json())
+            .then((ficha: ClientFicha) => setCliente(ficha));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-        return () => window.clearTimeout(timeout);
-    }, [clientSearch, teamSlug]);
+    const { base, igv, total } = desglosar(form.data.items);
 
-    const selectedClient =
-        selectedClientData ??
-        clients.find((client) => client.id === form.data.client_id);
-
-    const subtotal = form.data.items.reduce(
-        (sum, item) =>
-            sum + item.cantidad * item.precio_unitario - item.descuento,
-        0,
-    );
-    const igv = subtotal * 0.18;
-    const total = subtotal + igv;
-
-    // SUNAT solo acepta factura a clientes con RUC (error 2800 con DNI) y
-    // la boleta a CLIENTES VARIOS solo hasta el límite sin identificar.
     const clienteSinRuc =
-        selectedClient !== undefined &&
-        selectedClient !== null &&
-        selectedClient.tipo_documento !== undefined &&
-        selectedClient.tipo_documento !== 'ruc';
-    const esClientesVarios = selectedClient?.id === clientesVarios.id;
+        cliente !== null &&
+        cliente.tipo_documento !== undefined &&
+        cliente.tipo_documento !== 'ruc';
+    const esClientesVarios = cliente?.id === clientesVarios.id;
     const boletaSuperaLimite =
         esClientesVarios &&
         form.data.comprobante_tipo === 'boleta' &&
         total > limiteBoletaSinIdentificar;
 
-    useEffect(() => {
-        if (clienteSinRuc && form.data.comprobante_tipo === 'factura') {
-            form.setData('comprobante_tipo', 'boleta');
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [clienteSinRuc, form.data.comprobante_tipo]);
-
-    const seleccionarClientesVarios = () => {
+    const elegirCliente = (ficha: ClientFicha | null) => {
+        setCliente(ficha);
         form.setData((data) => ({
             ...data,
-            client_id: clientesVarios.id,
+            client_id: ficha?.id ?? '',
+            referencia:
+                ficha && ficha.id === data.client_id ? data.referencia : '',
             comprobante_tipo:
+                ficha &&
+                ficha.tipo_documento !== 'ruc' &&
                 data.comprobante_tipo === 'factura'
                     ? 'boleta'
                     : data.comprobante_tipo,
         }));
-        setSelectedClientData(clientesVarios);
-        setClientSearch('');
     };
 
-    const setItems = (items: SaleItemForm[]) => form.setData('items', items);
+    const setItems = (items: SaleLine[]) => form.setData('items', items);
 
-    const scanSerial = async () => {
-        const numeroSerie = scanValue.trim();
-        const sedeAlmacenId = form.data.sede_id;
-        setScanMessage(null);
+    const actualizarLinea = (key: string, cambio: Partial<SaleLine>) =>
+        setItems(
+            form.data.items.map((l) => {
+                if (l.key !== key) return l;
+                const updated = { ...l, ...cambio };
+                const maxDescuento = updated.cantidad * updated.precio_unitario;
+                if (updated.descuento > maxDescuento) {
+                    updated.descuento = Math.max(0, maxDescuento);
+                }
+                return updated;
+            }),
+        );
 
-        if (!numeroSerie) {
-            setScanMessage('Ingresa o escanea un número de serie.');
-            return;
-        }
+    const precioCotizado = (productId?: number, serviceId?: number) =>
+        quote?.items.find(
+            (l) =>
+                (productId && l.product_id === productId) ||
+                (serviceId && l.service_id === serviceId),
+        )?.precio_unitario;
 
-        if (!sedeAlmacenId) {
-            setScanMessage('Ingresa la sede de almacén antes de escanear.');
-            return;
-        }
+    const agregarUnidades = (unidades: CatalogUnit[]) => {
+        const nuevas = unidades.filter(
+            (u) =>
+                !form.data.items.some((l) => l.numero_serie === u.numero_serie),
+        );
 
-        if (form.data.items.some((item) => item.numero_serie === numeroSerie)) {
-            setScanMessage('Esta serie ya está en la venta.');
-            return;
-        }
-
-        setScanLoading(true);
-        try {
-            const response = await fetch(
-                ventas.escanearSerie.url(teamSlug, {
-                    query: {
-                        numero_serie: numeroSerie,
-                        sede_almacen_id: sedeAlmacenId,
-                    },
-                }),
+        if (nuevas.length < unidades.length) {
+            setAviso(
+                'Algunas series ya estaban en la venta y no se repitieron.',
             );
-            const payload = (await response.json()) as ScanResponse & {
-                message?: string;
-            };
+        }
 
-            if (!response.ok) {
-                setScanMessage(
-                    payload.message ?? 'No se pudo resolver la serie.',
-                );
+        setItems([
+            ...form.data.items,
+            ...nuevas.map((u) => ({
+                key: nuevaClave(),
+                tipo_linea: 'unidad_nueva' as const,
+                numero_serie: u.numero_serie,
+                product_id: u.product_id,
+                inventory_unit_id: u.inventory_unit_id,
+                nombre: u.nombre,
+                detalle: [u.capacidad, u.marca].filter(Boolean).join(' · '),
+                cantidad: 1,
+                precio_unitario: precioCotizado(u.product_id) ?? u.precio_venta,
+                descuento: 0,
+            })),
+        ]);
+    };
+
+    const agregarItem = (item: CatalogItem) => {
+        setAviso(null);
+
+        if (item.tipo === 'product' && item.serializado) {
+            if (!form.data.sede_id) {
+                setAviso('Elige la sede antes de agregar productos con serie.');
                 return;
             }
+            setProductoConSerie(item);
+            return;
+        }
 
-            // Si la venta viene de una cotización, se respeta el precio cotizado.
-            const precioCotizado = quote?.items.find(
-                (line) => line.product_id === payload.product_id,
-            )?.precio_unitario;
+        const tipo: LineType =
+            item.tipo === 'service' ? 'servicio' : 'producto';
+        const existente = form.data.items.find(
+            (l) =>
+                l.tipo_linea === tipo &&
+                (tipo === 'servicio'
+                    ? l.service_id === item.id
+                    : l.product_id === item.id),
+        );
 
-            setItems([
-                ...form.data.items,
-                {
-                    tipo_linea: tipoLinea,
-                    numero_serie: payload.numero_serie,
-                    product_id: payload.product_id,
-                    cantidad: 1,
-                    precio_unitario:
-                        precioCotizado ?? (Number(payload.precio_venta) || 0),
-                    descuento: 0,
-                    nombre: payload.nombre,
-                    inventory_unit_id: payload.inventory_unit_id,
-                },
-            ]);
-            setScanValue('');
-        } catch {
-            setScanMessage('No se pudo conectar con el escáner de series.');
-        } finally {
-            setScanLoading(false);
+        if (existente) {
+            actualizarLinea(existente.key, {
+                cantidad: existente.cantidad + 1,
+            });
+            return;
+        }
+
+        setItems([
+            ...form.data.items,
+            {
+                key: nuevaClave(),
+                tipo_linea: tipo,
+                product_id: tipo === 'producto' ? item.id : undefined,
+                service_id: tipo === 'servicio' ? item.id : undefined,
+                nombre: item.nombre,
+                cantidad: 1,
+                precio_unitario:
+                    precioCotizado(
+                        tipo === 'producto' ? item.id : undefined,
+                        tipo === 'servicio' ? item.id : undefined,
+                    ) ?? item.precio_venta,
+                descuento: 0,
+                stock: item.stock,
+            },
+        ]);
+    };
+
+    const cambiarCondicion = (condicion: PaymentCondition) => {
+        form.setData('condicion_pago', condicion);
+
+        if (condicion === 'credito') {
+            setCreditoAbierto(true);
         }
     };
 
     const submitSale = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        // "Emitir" es el botón principal; "Guardar borrador" deja la venta sin emitir.
+        const emitir =
+            (event.nativeEvent as SubmitEvent).submitter?.dataset.accion !==
+            'borrador';
 
-        form.post(ventas.store.url(teamSlug), {
-            preserveScroll: true,
-        });
+        if (
+            form.data.condicion_pago === 'credito' &&
+            (creditoIncompleto || cuotasDesactualizadas)
+        ) {
+            setCreditoAbierto(true);
+            return;
+        }
+
+        if (
+            caja_abierta === false &&
+            emitir &&
+            form.data.condicion_pago === 'contado' &&
+            form.data.medio_pago === 'efectivo'
+        ) {
+            setAviso(
+                'No tienes una caja abierta. Abre tu turno en Caja o elige otro medio de pago para emitir la venta.',
+            );
+            return;
+        }
+
+        form.transform((data) => ({
+            ...data,
+            emitir,
+            cuotas: data.condicion_pago === 'credito' ? data.cuotas : [],
+            medio_pago:
+                data.condicion_pago === 'contado' ? data.medio_pago : null,
+            numero_operacion:
+                data.condicion_pago === 'contado' &&
+                data.medio_pago !== 'efectivo'
+                    ? data.numero_operacion
+                    : '',
+            items: data.items.map((l) => ({
+                tipo_linea: l.tipo_linea,
+                numero_serie: l.numero_serie ?? null,
+                product_id: l.product_id ?? null,
+                service_id: l.service_id ?? null,
+                cantidad: l.cantidad,
+                precio_unitario: l.precio_unitario,
+                descuento: l.descuento,
+            })),
+        }));
+        if (editando && venta?.id) {
+            form.put(
+                ventas.update.url({ current_team: teamSlug, sale: venta.id }),
+                { preserveScroll: true },
+            );
+
+            return;
+        }
+
+        form.post(ventas.store.url(teamSlug), { preserveScroll: true });
     };
 
-    const cancel = () => router.visit(ventas.index.url(teamSlug));
+    const creditoIncompleto =
+        form.data.condicion_pago === 'credito' && form.data.cuotas.length === 0;
+    const cuotasDesactualizadas =
+        form.data.condicion_pago === 'credito' &&
+        form.data.cuotas.length > 0 &&
+        Math.abs(form.data.cuotas.reduce((s, c) => s + c.monto, 0) - total) >=
+            0.01;
 
     return (
-        <VendedorLayout title="Nueva venta">
+        <VendedorLayout
+            title={
+                editando
+                    ? `Editar ${venta?.numero_interno ?? 'venta'}`
+                    : 'Nueva venta'
+            }
+        >
             <form
                 onSubmit={submitSale}
                 className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]"
             >
                 <div className="flex min-w-0 flex-col gap-4">
+                    {venta ? (
+                        <Card className="flex-row items-start gap-3 rounded-[16px] border-amber-500/30 bg-amber-500/5 p-4 shadow-none">
+                            <FileText className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                            <div className="text-[12.5px]">
+                                <p className="text-foreground font-bold">
+                                    {editando
+                                        ? `Editando el borrador ${venta.numero_interno}`
+                                        : `Copia de ${venta.numero_interno}`}
+                                </p>
+                                <p className="text-muted-foreground">
+                                    {editando
+                                        ? 'Cambia lo que haga falta y emite. La venta conserva su número.'
+                                        : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
+                                </p>
+                            </div>
+                        </Card>
+                    ) : null}
                     {quote ? (
                         <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
                             <div className="flex flex-wrap items-center gap-3">
@@ -367,26 +539,27 @@ export default function NuevaVenta({
                                         Desde la cotización {quote.numero}
                                     </h2>
                                     <p className="text-muted-foreground text-[12px]">
-                                        {quote.client.razon_social}. Elige la
-                                        sede y escanea la serie de cada producto
-                                        cotizado; se respeta el precio de la
-                                        cotización.
+                                        Los servicios y productos sin serie ya
+                                        se agregaron. Elige o escanea las
+                                        unidades de los productos con serie; se
+                                        respeta el precio cotizado.
                                     </p>
                                 </div>
                             </div>
                             <div className="border-border overflow-hidden rounded-[10px] border">
                                 {quote.items.map((line, index) => {
-                                    const escaneadas =
-                                        line.tipo === 'product'
-                                            ? form.data.items.filter(
-                                                  (item) =>
-                                                      item.product_id ===
+                                    const agregadas = line.serializado
+                                        ? form.data.items.filter(
+                                              (i) =>
+                                                  i.tipo_linea ===
+                                                      'unidad_nueva' &&
+                                                  i.product_id ===
                                                       line.product_id,
-                                              ).length
-                                            : null;
+                                          ).length
+                                        : null;
                                     const completa =
-                                        escaneadas !== null &&
-                                        escaneadas >= line.cantidad;
+                                        agregadas === null ||
+                                        agregadas >= line.cantidad;
 
                                     return (
                                         <div
@@ -398,23 +571,19 @@ export default function NuevaVenta({
                                                     {line.nombre}
                                                 </span>
                                                 <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
-                                                    {line.tipo === 'service'
-                                                        ? 'Servicio'
-                                                        : 'Producto'}{' '}
-                                                    · {line.cantidad} ×{' '}
+                                                    {line.cantidad} ×{' '}
                                                     {money(
                                                         line.precio_unitario,
                                                     )}
                                                 </span>
                                             </div>
-                                            {escaneadas !== null ? (
-                                                <Badge
-                                                    className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold ${completa ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
-                                                >
-                                                    {escaneadas} de{' '}
-                                                    {line.cantidad} escaneadas
-                                                </Badge>
-                                            ) : null}
+                                            <Badge
+                                                className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold ${completa ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
+                                            >
+                                                {agregadas === null
+                                                    ? 'Agregado'
+                                                    : `${agregadas} de ${line.cantidad} unidades`}
+                                            </Badge>
                                         </div>
                                     );
                                 })}
@@ -424,143 +593,37 @@ export default function NuevaVenta({
                     ) : null}
 
                     <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
-                                <Search className="size-5" />
-                            </div>
-                            <div>
-                                <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
-                                    Cliente y comprobante
-                                </h2>
-                                <p className="text-muted-foreground text-[12px]">
-                                    Selecciona un cliente existente antes de
-                                    emitir.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
-                            <div>
-                                <div className="flex items-center justify-between gap-2">
-                                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                        Buscar cliente
-                                    </Label>
-                                    {form.data.comprobante_tipo !==
-                                    'factura' ? (
+                        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+                            <ClientPicker
+                                teamSlug={teamSlug}
+                                value={cliente}
+                                onChange={elegirCliente}
+                                error={form.errors.client_id}
+                                autoFocus={!quote}
+                                headerExtra={
+                                    form.data.comprobante_tipo !== 'factura' &&
+                                    !cliente ? (
                                         <button
                                             type="button"
-                                            onClick={seleccionarClientesVarios}
-                                            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold transition-colors ${esClientesVarios ? 'border-primary bg-destructive/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                            onClick={() =>
+                                                elegirCliente({
+                                                    ...clientesVarios,
+                                                    vehiculos: [],
+                                                    sedes: [],
+                                                })
+                                            }
+                                            className="border-border text-muted-foreground hover:text-foreground rounded-full border px-2.5 py-0.5 text-[11px] font-bold transition-colors"
                                         >
                                             Clientes varios
                                         </button>
-                                    ) : null}
-                                </div>
-                                <div className="mt-1 flex items-stretch gap-2">
-                                    <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
-                                        <Search className="text-muted-foreground size-3.5 shrink-0" />
-                                        <input
-                                            value={clientSearch}
-                                            onChange={(event) =>
-                                                setClientSearch(
-                                                    event.target.value,
-                                                )
-                                            }
-                                            placeholder="RUC, DNI, nombre o razón social..."
-                                            className="placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
-                                        />
-                                        {clientSearchLoading ? (
-                                            <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
-                                        ) : null}
-                                    </div>
-                                    {clientNotFound ? (
-                                        <Button
-                                            type="button"
-                                            onClick={() =>
-                                                setClientDialogOpen(true)
-                                            }
-                                            className="h-auto shrink-0 rounded-[9px] bg-primary px-3.5 text-[12.5px] font-bold text-white shadow-none hover:bg-primary/90"
-                                        >
-                                            <UserRoundPlus className="size-3.5" />
-                                            Agregar cliente
-                                        </Button>
-                                    ) : null}
-                                </div>
-                                {fieldError(form.errors, 'client_id')}
-                                {esClientesVarios ? (
-                                    <p
-                                        className={`mt-1 text-[11px] font-semibold ${boletaSuperaLimite ? 'text-destructive' : 'text-muted-foreground'}`}
-                                    >
-                                        {boletaSuperaLimite
-                                            ? `La boleta a CLIENTES VARIOS no puede superar S/ ${limiteBoletaSinIdentificar.toFixed(2)}. Busca o registra el DNI del cliente.`
-                                            : `Venta a CLIENTES VARIOS: boleta hasta S/ ${limiteBoletaSinIdentificar.toFixed(2)}.`}
-                                    </p>
-                                ) : null}
+                                    ) : null
+                                }
+                            />
 
-                                <div className="border-border mt-2 max-h-[168px] overflow-y-auto rounded-[10px] border">
-                                    {filteredClients.length === 0 ? (
-                                        <div className="text-muted-foreground px-3 py-4 text-[12px]">
-                                            {searchedClients !== null
-                                                ? 'No está registrado en la base de datos. Usa "Agregar cliente" para registrarlo.'
-                                                : 'No hay clientes recientes. Escribe para buscar.'}
-                                        </div>
-                                    ) : (
-                                        filteredClients.map((client) => (
-                                            <button
-                                                key={client.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    form.setData(
-                                                        'client_id',
-                                                        client.id,
-                                                    );
-                                                    setSelectedClientData(
-                                                        client,
-                                                    );
-                                                }}
-                                                className={`border-border flex w-full items-center justify-between gap-3 border-b px-3 py-2.5 text-left last:border-b-0 ${form.data.client_id === client.id ? 'bg-destructive/10' : 'bg-card hover:bg-muted/40'}`}
-                                            >
-                                                <span>
-                                                    <span className="text-foreground block text-[13px] font-bold">
-                                                        {client.razon_social}
-                                                    </span>
-                                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
-                                                        {
-                                                            client.numero_documento
-                                                        }
-                                                    </span>
-                                                </span>
-                                                {form.data.client_id ===
-                                                client.id ? (
-                                                    <CheckCircle2 className="text-primary size-4" />
-                                                ) : null}
-                                            </button>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="grid gap-3">
+                            <div className="grid content-start gap-3">
                                 <div>
                                     <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                        Fecha
-                                    </Label>
-                                    <Input
-                                        type="date"
-                                        value={form.data.fecha}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'fecha',
-                                                event.target.value,
-                                            )
-                                        }
-                                        className="border-border bg-card mt-1 h-10 rounded-[9px] text-[13px]"
-                                    />
-                                    {fieldError(form.errors, 'fecha')}
-                                </div>
-                                <div>
-                                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                        Tipo comprobante
+                                        Comprobante
                                     </Label>
                                     <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                         <SegmentButton
@@ -612,10 +675,18 @@ export default function NuevaVenta({
                                             Nota de venta
                                         </SegmentButton>
                                     </div>
-                                    {clienteSinRuc ? (
+                                    {clienteSinRuc && !esClientesVarios ? (
                                         <p className="text-muted-foreground mt-1 text-[11px]">
-                                            Para factura, el cliente necesita
-                                            RUC. Se emite boleta.
+                                            Cliente con DNI: se emite boleta.
+                                        </p>
+                                    ) : null}
+                                    {esClientesVarios ? (
+                                        <p
+                                            className={`mt-1 text-[11px] font-semibold ${boletaSuperaLimite ? 'text-destructive' : 'text-muted-foreground'}`}
+                                        >
+                                            {boletaSuperaLimite
+                                                ? `Supera S/ ${limiteBoletaSinIdentificar.toFixed(2)}: registra el DNI del cliente.`
+                                                : `Clientes varios: boleta hasta S/ ${limiteBoletaSinIdentificar.toFixed(2)}.`}
                                         </p>
                                     ) : null}
                                     {fieldError(
@@ -623,15 +694,20 @@ export default function NuevaVenta({
                                         'comprobante_tipo',
                                     )}
                                 </div>
+                                <div className="text-muted-foreground flex items-center gap-2 text-[12px]">
+                                    <CalendarClock className="size-3.5" />
+                                    Emisión: hoy{' '}
+                                    {new Date().toLocaleDateString('es-PE')}
+                                </div>
                             </div>
                         </div>
                     </Card>
 
                     <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
-                        <div className="grid gap-4 lg:grid-cols-3">
+                        <div className="grid gap-4 lg:grid-cols-2">
                             <div>
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Destino
+                                    Destino de los equipos
                                 </Label>
                                 <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
                                     <SegmentButton
@@ -640,10 +716,11 @@ export default function NuevaVenta({
                                             'local_cliente'
                                         }
                                         onClick={() =>
-                                            form.setData(
-                                                'destino',
-                                                'local_cliente',
-                                            )
+                                            form.setData((data) => ({
+                                                ...data,
+                                                destino: 'local_cliente',
+                                                referencia: '',
+                                            }))
                                         }
                                     >
                                         <Building2 className="mr-1 inline size-3" />{' '}
@@ -654,13 +731,22 @@ export default function NuevaVenta({
                                             form.data.destino === 'vehiculo'
                                         }
                                         onClick={() =>
-                                            form.setData('destino', 'vehiculo')
+                                            form.setData((data) => ({
+                                                ...data,
+                                                destino: 'vehiculo',
+                                                referencia: '',
+                                            }))
                                         }
                                     >
                                         <Truck className="mr-1 inline size-3" />{' '}
                                         Vehículo
                                     </SegmentButton>
                                 </div>
+                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                    {form.data.destino === 'vehiculo'
+                                        ? 'Certificados: Operatividad y Garantía + Prueba Hidrostática.'
+                                        : 'Certificados: Operatividad y Garantía + Capacitación.'}
+                                </p>
                             </div>
                             <div>
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
@@ -673,10 +759,7 @@ export default function NuevaVenta({
                                             'contado'
                                         }
                                         onClick={() =>
-                                            form.setData(
-                                                'condicion_pago',
-                                                'contado',
-                                            )
+                                            cambiarCondicion('contado')
                                         }
                                     >
                                         <CreditCard className="mr-1 inline size-3" />{' '}
@@ -685,22 +768,138 @@ export default function NuevaVenta({
                                     <SegmentButton
                                         active={
                                             form.data.condicion_pago ===
-                                            'credito_30'
+                                            'credito'
                                         }
                                         onClick={() =>
-                                            form.setData(
-                                                'condicion_pago',
-                                                'credito_30',
-                                            )
+                                            cambiarCondicion('credito')
                                         }
                                     >
-                                        Crédito 30
+                                        Crédito
                                     </SegmentButton>
                                 </div>
+                                {form.data.condicion_pago === 'credito' ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCreditoAbierto(true)}
+                                        className={`mt-1 text-left text-[11.5px] font-semibold underline-offset-2 hover:underline ${creditoIncompleto || cuotasDesactualizadas ? 'text-destructive' : 'text-primary'}`}
+                                    >
+                                        {creditoIncompleto
+                                            ? 'Define las cuotas del crédito'
+                                            : cuotasDesactualizadas
+                                              ? 'El total cambió: ajusta las cuotas'
+                                              : `${form.data.cuotas.length} cuota(s), última el ${new Date(`${form.data.cuotas.at(-1)!.fecha_vencimiento}T00:00:00`).toLocaleDateString('es-PE')} · Editar`}
+                                    </button>
+                                ) : null}
+                                {fieldError(form.errors, 'cuotas')}
                             </div>
+                        </div>
+                        {form.data.condicion_pago === 'contado' ? (
+                            <div className="flex flex-col gap-1.5">
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                    ¿Cómo paga el cliente?
+                                </Label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {MEDIOS_PAGO.map((medio) => (
+                                        <button
+                                            key={medio.valor}
+                                            type="button"
+                                            aria-pressed={
+                                                form.data.medio_pago ===
+                                                medio.valor
+                                            }
+                                            onClick={() =>
+                                                form.setData(
+                                                    'medio_pago',
+                                                    medio.valor,
+                                                )
+                                            }
+                                            className={`rounded-full border px-3 py-1 text-[12px] font-bold transition-colors ${
+                                                form.data.medio_pago ===
+                                                medio.valor
+                                                    ? 'border-primary bg-primary text-primary-foreground'
+                                                    : 'border-border text-muted-foreground hover:border-primary/60 hover:text-primary'
+                                            }`}
+                                        >
+                                            {medio.texto}
+                                        </button>
+                                    ))}
+                                </div>
+                                {form.data.medio_pago !== 'efectivo' ? (
+                                    <Input
+                                        value={form.data.numero_operacion}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'numero_operacion',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="N.º de operación (opcional)"
+                                        maxLength={60}
+                                        className="max-w-[260px]"
+                                    />
+                                ) : null}
+                                {caja_abierta === false &&
+                                    form.data.medio_pago === 'efectivo' && (
+                                        <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-800 dark:text-amber-300">
+                                            <AlertCircle className="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                                            <div>
+                                                <p className="font-bold">
+                                                    No tienes una caja abierta
+                                                </p>
+                                                <p className="mt-0.5">
+                                                    Para registrar cobros en
+                                                    efectivo necesitas abrir tu
+                                                    turno de caja primero.{' '}
+                                                    <a
+                                                        href={`/${teamSlug}/vendedor/caja`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="font-bold underline underline-offset-2 hover:opacity-80"
+                                                    >
+                                                        Abrir caja aquí ↗
+                                                    </a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                {form.data.medio_pago === 'efectivo' &&
+                                total >= LIMITE_BANCARIZACION ? (
+                                    <p className="text-[11.5px] font-semibold text-amber-700 dark:text-amber-400">
+                                        Desde S/ 2,000 el pago debe ir por banco
+                                        (transferencia, depósito o tarjeta): en
+                                        efectivo el cliente pierde el crédito
+                                        fiscal.
+                                    </p>
+                                ) : (
+                                    <p className="text-muted-foreground text-[11px]">
+                                        El cobro se registra solo al emitir y
+                                        suma en tu caja.
+                                    </p>
+                                )}
+                                {fieldError(form.errors, 'medio_pago')}
+                            </div>
+                        ) : null}
+                        <ReferenciaField
+                            cliente={cliente}
+                            destino={form.data.destino}
+                            value={form.data.referencia}
+                            onChange={(valor) =>
+                                form.setData('referencia', valor)
+                            }
+                            error={form.errors.referencia}
+                        />
+                        {sedeFija ? (
+                            <div className="text-muted-foreground flex items-center gap-1.5 text-[12px]">
+                                <MapPin className="size-3.5" />
+                                Vendes desde{' '}
+                                <b className="text-foreground">
+                                    {sedeFija.nombre}
+                                </b>
+                            </div>
+                        ) : (
                             <div>
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Sede almacén
+                                    Sede de la venta
                                 </Label>
                                 <select
                                     value={form.data.sede_id}
@@ -725,7 +924,7 @@ export default function NuevaVenta({
                                 </select>
                                 {fieldError(form.errors, 'sede_id')}
                             </div>
-                        </div>
+                        )}
                     </Card>
 
                     <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
@@ -735,67 +934,26 @@ export default function NuevaVenta({
                             </div>
                             <div>
                                 <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
-                                    Escaneo de items
+                                    Productos y servicios
                                 </h2>
                                 <p className="text-muted-foreground text-[12px]">
-                                    El tipo seleccionado se aplicará al próximo
-                                    escaneo.
+                                    Escanea la serie o el código de barras, o
+                                    busca por nombre. Los precios incluyen IGV.
                                 </p>
-                            </div>
-                            <div className="flex-1" />
-                            <div className="bg-muted flex rounded-[9px] p-[3px]">
-                                <SegmentButton
-                                    active={tipoLinea === 'unidad_nueva'}
-                                    onClick={() => setTipoLinea('unidad_nueva')}
-                                >
-                                    Extintor nuevo
-                                </SegmentButton>
-                                <SegmentButton
-                                    active={tipoLinea === 'recarga_servicio'}
-                                    onClick={() =>
-                                        setTipoLinea('recarga_servicio')
-                                    }
-                                >
-                                    Recarga en planta
-                                </SegmentButton>
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                            <Input
-                                value={scanValue}
-                                onChange={(event) =>
-                                    setScanValue(event.target.value)
-                                }
-                                onKeyDown={(
-                                    event: KeyboardEvent<HTMLInputElement>,
-                                ) => {
-                                    if (event.key === 'Enter') {
-                                        event.preventDefault();
-                                        void scanSerial();
-                                    }
-                                }}
-                                placeholder="Escanear o escribir número de serie..."
-                                className="border-border bg-muted/40 h-11 rounded-[9px] text-[13px]"
-                            />
-                            <Button
-                                type="button"
-                                onClick={() => void scanSerial()}
-                                disabled={scanLoading}
-                                className="bg-card hover:bg-foreground/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
-                            >
-                                {scanLoading ? (
-                                    <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                    <Plus className="size-4" />
-                                )}
-                                Agregar
-                            </Button>
-                        </div>
-                        {scanMessage ? (
+                        <CatalogPicker
+                            teamSlug={teamSlug}
+                            sedeId={form.data.sede_id}
+                            onPick={agregarItem}
+                            onPickUnidad={(u) => agregarUnidades([u])}
+                            placeholder="Serie BF-EQ, código de barras o nombre del producto o servicio..."
+                        />
+                        {aviso ? (
                             <div className="flex items-center gap-2 rounded-[10px] bg-amber-500/10 px-3 py-2 text-[12px] font-semibold text-amber-600 dark:text-amber-400">
                                 <AlertCircle className="size-4" />
-                                {scanMessage}
+                                {aviso}
                             </div>
                         ) : null}
                         {fieldError(form.errors, 'items')}
@@ -805,13 +963,11 @@ export default function NuevaVenta({
                                 <thead>
                                     <tr>
                                         {[
-                                            'Item',
-                                            'Serie',
-                                            'Tipo',
+                                            'Ítem',
                                             'Cant.',
-                                            'P. Unit.',
+                                            'P. unit.',
                                             'Desc.',
-                                            'Subtotal',
+                                            'Total',
                                             '',
                                         ].map((h) => (
                                             <th
@@ -827,38 +983,104 @@ export default function NuevaVenta({
                                     {form.data.items.length === 0 ? (
                                         <tr>
                                             <td
-                                                colSpan={8}
+                                                colSpan={6}
                                                 className="text-muted-foreground px-2.5 py-10 text-center"
                                             >
-                                                Escanea una unidad para empezar
-                                                la venta.
+                                                Agrega un producto o servicio
+                                                para empezar.
                                             </td>
                                         </tr>
                                     ) : (
-                                        form.data.items.map((item, index) => (
-                                            <tr
-                                                key={`${item.numero_serie}-${index}`}
-                                            >
-                                                <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
-                                                    {item.nombre}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
-                                                    {item.numero_serie}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
-                                                    <Badge
-                                                        className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold ${item.tipo_linea === 'unidad_nueva' ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}
-                                                    >
+                                        form.data.items.map((item) => (
+                                            <tr key={item.key}>
+                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                    <span className="text-foreground block font-semibold">
+                                                        {item.nombre}
+                                                    </span>
+                                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
                                                         {item.tipo_linea ===
                                                         'unidad_nueva'
-                                                            ? 'Extintor nuevo'
-                                                            : 'Recarga en planta'}
-                                                    </Badge>
+                                                            ? `Serie ${item.numero_serie}${item.detalle ? ` · ${item.detalle}` : ''}`
+                                                            : item.tipo_linea ===
+                                                                'servicio'
+                                                              ? 'Servicio'
+                                                              : `Producto${item.stock !== undefined && item.stock !== null ? ` · stock ${item.stock}` : ''}`}
+                                                    </span>
                                                 </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
-                                                    {item.cantidad}
+                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                    {item.tipo_linea ===
+                                                    'unidad_nueva' ? (
+                                                        <span className="pl-2">
+                                                            1
+                                                        </span>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    actualizarLinea(
+                                                                        item.key,
+                                                                        {
+                                                                            cantidad:
+                                                                                Math.max(
+                                                                                    1,
+                                                                                    item.cantidad -
+                                                                                        1,
+                                                                                ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                            >
+                                                                <Minus className="size-3" />
+                                                            </button>
+                                                            <Input
+                                                                type="number"
+                                                                min={1}
+                                                                value={
+                                                                    item.cantidad
+                                                                }
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
+                                                                    actualizarLinea(
+                                                                        item.key,
+                                                                        {
+                                                                            cantidad:
+                                                                                Math.max(
+                                                                                    1,
+                                                                                    Number(
+                                                                                        event
+                                                                                            .target
+                                                                                            .value,
+                                                                                    ) ||
+                                                                                        1,
+                                                                                ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    actualizarLinea(
+                                                                        item.key,
+                                                                        {
+                                                                            cantidad:
+                                                                                item.cantidad +
+                                                                                1,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                            >
+                                                                <Plus className="size-3" />
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-2.5">
                                                     <Input
                                                         type="number"
                                                         min={0}
@@ -867,69 +1089,63 @@ export default function NuevaVenta({
                                                             item.precio_unitario
                                                         }
                                                         onChange={(event) =>
-                                                            setItems(
-                                                                form.data.items.map(
-                                                                    (
-                                                                        row,
-                                                                        rowIndex,
-                                                                    ) =>
-                                                                        rowIndex ===
-                                                                        index
-                                                                            ? {
-                                                                                  ...row,
-                                                                                  precio_unitario:
-                                                                                      Number(
-                                                                                          event
-                                                                                              .target
-                                                                                              .value,
-                                                                                      ),
-                                                                              }
-                                                                            : row,
-                                                                ),
+                                                            actualizarLinea(
+                                                                item.key,
+                                                                {
+                                                                    precio_unitario:
+                                                                        Number(
+                                                                            event
+                                                                                .target
+                                                                                .value,
+                                                                        ),
+                                                                },
                                                             )
                                                         }
                                                         className="border-border h-8 w-24 rounded-[7px] text-[12px]"
                                                     />
                                                 </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-2.5">
                                                     <Input
                                                         type="number"
                                                         min={0}
+                                                        max={
+                                                            item.cantidad *
+                                                            item.precio_unitario
+                                                        }
                                                         step="0.01"
                                                         value={item.descuento}
                                                         onChange={(event) =>
-                                                            setItems(
-                                                                form.data.items.map(
-                                                                    (
-                                                                        row,
-                                                                        rowIndex,
-                                                                    ) =>
-                                                                        rowIndex ===
-                                                                        index
-                                                                            ? {
-                                                                                  ...row,
-                                                                                  descuento:
-                                                                                      Number(
-                                                                                          event
-                                                                                              .target
-                                                                                              .value,
-                                                                                      ),
-                                                                              }
-                                                                            : row,
-                                                                ),
+                                                            actualizarLinea(
+                                                                item.key,
+                                                                {
+                                                                    descuento:
+                                                                        Math.min(
+                                                                            Math.max(
+                                                                                0,
+                                                                                Number(
+                                                                                    event
+                                                                                        .target
+                                                                                        .value,
+                                                                                ) ||
+                                                                                    0,
+                                                                            ),
+                                                                            item.cantidad *
+                                                                                item.precio_unitario,
+                                                                        ),
+                                                                },
                                                             )
                                                         }
-                                                        className="border-border h-8 w-24 rounded-[7px] text-[12px]"
+                                                        className="border-border h-8 w-20 rounded-[7px] text-[12px]"
                                                     />
                                                 </td>
-                                                <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                                <td className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold">
                                                     {money(
                                                         item.cantidad *
                                                             item.precio_unitario -
                                                             item.descuento,
                                                     )}
                                                 </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
+                                                <td className="border-border border-b px-2.5 py-2.5">
                                                     <Button
                                                         type="button"
                                                         variant="outline"
@@ -937,12 +1153,9 @@ export default function NuevaVenta({
                                                         onClick={() =>
                                                             setItems(
                                                                 form.data.items.filter(
-                                                                    (
-                                                                        _,
-                                                                        rowIndex,
-                                                                    ) =>
-                                                                        rowIndex !==
-                                                                        index,
+                                                                    (l) =>
+                                                                        l.key !==
+                                                                        item.key,
                                                                 ),
                                                             )
                                                         }
@@ -966,12 +1179,12 @@ export default function NuevaVenta({
                             <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
                                 <FileText className="size-5" />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
-                                    Panel fiscal
+                                    Resumen
                                 </h2>
-                                <p className="text-muted-foreground text-[12px]">
-                                    {selectedClient?.razon_social ??
+                                <p className="text-muted-foreground truncate text-[12px]">
+                                    {cliente?.razon_social ??
                                         'Cliente pendiente'}
                                 </p>
                             </div>
@@ -980,15 +1193,15 @@ export default function NuevaVenta({
                         <div className="bg-muted/40 space-y-2 rounded-[12px] p-4 text-[13px]">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
-                                    Subtotal
+                                    Gravado
                                 </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
-                                    {money(subtotal)}
+                                    {money(base)}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
-                                    IGV 18%
+                                    IGV 18% (incluido)
                                 </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
                                     {money(igv)}
@@ -1018,72 +1231,75 @@ export default function NuevaVenta({
                                         event.target.value,
                                     )
                                 }
-                                className="border-border bg-card mt-1 min-h-[86px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none"
+                                placeholder="Sale en el comprobante como Obs."
+                                className="border-border bg-card mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none"
                             />
                         </div>
 
                         <Button
                             type="submit"
-                            disabled={form.processing}
+                            disabled={
+                                form.processing ||
+                                boletaSuperaLimite ||
+                                creditoIncompleto ||
+                                cuotasDesactualizadas
+                            }
                             className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             {form.processing ? (
-                                <Loader2 className="size-4 animate-spin" />
+                                <Cargando className="size-4" />
                             ) : (
                                 <FileText className="size-4" />
                             )}
-                            Emitir comprobante
+                            Emitir{' '}
+                            {NOMBRE_COMPROBANTE[form.data.comprobante_tipo]}
+                        </Button>
+                        <Button
+                            type="submit"
+                            data-accion="borrador"
+                            variant="outline"
+                            disabled={form.processing}
+                            className="border-border bg-card text-foreground h-10 rounded-[9px] shadow-none"
+                        >
+                            Guardar borrador
                         </Button>
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={cancel}
+                            onClick={() =>
+                                router.visit(ventas.index.url(teamSlug))
+                            }
                             className="border-border bg-card text-foreground/80 h-10 rounded-[9px] shadow-none"
                         >
                             Cancelar
                         </Button>
                     </Card>
-
-                    <Card className="border-border bg-card gap-2 rounded-[16px] p-4 shadow-none">
-                        <div className="text-muted-foreground text-[11px] font-bold tracking-[0.05em] uppercase">
-                            Resumen operativo
-                        </div>
-                        <div className="flex justify-between text-[12.5px]">
-                            <span>Items</span>
-                            <span className="font-bold">
-                                {form.data.items.length}
-                            </span>
-                        </div>
-                        <div className="flex justify-between text-[12.5px]">
-                            <span>Destino</span>
-                            <span className="font-bold capitalize">
-                                {form.data.destino.replaceAll('_', ' ')}
-                            </span>
-                        </div>
-                        <div className="flex justify-between text-[12.5px]">
-                            <span>Pago</span>
-                            <span className="font-bold capitalize">
-                                {form.data.condicion_pago.replaceAll('_', ' ')}
-                            </span>
-                        </div>
-                    </Card>
                 </aside>
             </form>
 
-            <ClientCreateDialog
-                open={clientDialogOpen}
-                onOpenChange={setClientDialogOpen}
+            <UnidadesDialog
                 teamSlug={teamSlug}
-                initialDocumento={
-                    /^\d{8}$|^\d{11}$/.test(clientSearch.trim())
-                        ? clientSearch.trim()
-                        : ''
-                }
-                onCreated={(client) => {
-                    form.setData('client_id', client.id);
-                    setSelectedClientData(client);
-                    setSearchedClients([client]);
+                sedeId={form.data.sede_id}
+                producto={productoConSerie}
+                excluir={form.data.items
+                    .map((l) => l.numero_serie)
+                    .filter((s): s is string => Boolean(s))}
+                onClose={() => setProductoConSerie(null)}
+                onAgregar={agregarUnidades}
+            />
+
+            <CreditoDialog
+                open={creditoAbierto}
+                onOpenChange={setCreditoAbierto}
+                onCancel={() => {
+                    if (form.data.cuotas.length === 0) {
+                        form.setData('condicion_pago', 'contado');
+                    }
                 }}
+                total={total}
+                fecha={form.data.fecha}
+                cuotas={form.data.cuotas}
+                onSave={(cuotas) => form.setData('cuotas', cuotas)}
             />
         </VendedorLayout>
     );

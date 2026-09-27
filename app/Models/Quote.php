@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -35,7 +36,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, QuoteItem> $items
  */
 #[Fillable([
-    'numero', 'vendedor_id', 'client_id', 'sede_id', 'vehicle_id', 'fecha', 'vigencia_hasta',
+    'numero', 'vendedor_id', 'client_id', 'sede_id', 'vehicle_id', 'referencia', 'fecha', 'vigencia_hasta',
     'condicion_pago_propuesta', 'subtotal', 'igv', 'total', 'observaciones', 'estado',
 ])]
 class Quote extends Model
@@ -51,7 +52,7 @@ class Quote extends Model
      */
     public const TRANSITIONS = [
         'borrador' => ['emitida', 'anulada'],
-        'emitida' => ['enviada', 'anulada'],
+        'emitida' => ['enviada', 'vencida', 'anulada'],
         'enviada' => ['aceptada', 'rechazada', 'vencida', 'anulada'],
         'aceptada' => ['convertida'],
         'rechazada' => [],
@@ -94,6 +95,14 @@ class Quote extends Model
     public function items(): HasMany
     {
         return $this->hasMany(QuoteItem::class);
+    }
+
+    /**
+     * Venta en la que se convirtió la cotización.
+     */
+    public function sale(): HasOne
+    {
+        return $this->hasOne(Sale::class)->latestOfMany();
     }
 
     public function canTransitionTo(string $estado): bool

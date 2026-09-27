@@ -16,6 +16,12 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Todo trabajador que no es Gerente debe tener sede para entrar a su panel.
+    | Las pruebas antiguas crean usuarios sin sede y lo apagan en phpunit.xml.
+    */
+    'exigir_sede' => (bool) env('BRUCE_EXIGIR_SEDE', true),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

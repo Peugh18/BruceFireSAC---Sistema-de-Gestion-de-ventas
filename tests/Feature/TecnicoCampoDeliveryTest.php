@@ -130,7 +130,7 @@ test('delivery confirmation requires client conformity', function () {
         ->assertSessionHasErrors('conformidad_aceptada');
 });
 
-test('tecnico campo can download acta de conformidad PDF', function () {
+test('tecnico campo can download acta de conformidad PDF once the delivery is confirmed', function () {
     $client = Client::factory()->create();
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
@@ -143,6 +143,16 @@ test('tecnico campo can download acta de conformidad PDF', function () {
         'numero_serie' => 'EXT-PDF-01',
     ]);
     $order->equipments()->attach($equipment->id);
+    $ruta = ['current_team' => $this->team, 'service_order' => $order->id];
+
+    // Antes de la entrega no hay acta.
+    $this->actingAs($this->user)->get(route('tecnico-campo.entregas.pdf', $ruta))->assertNotFound();
+
+    $this->actingAs($this->user)->post(route('tecnico-campo.entregas.confirm', $ruta), [
+        'receptor_nombre' => 'María Del Carmen',
+        'receptor_dni' => '09483210',
+        'conformidad_aceptada' => true,
+    ]);
 
     $response = $this->actingAs($this->user)
         ->get(route('tecnico-campo.entregas.pdf', [

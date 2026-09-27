@@ -127,7 +127,7 @@ function buildNavGroups(
                     icon: Users,
                 },
                 {
-                    title: 'Configuración Empresa',
+                    title: 'Configuración',
                     href: `/${teamSlug}/gerente/configuracion/empresa`,
                     icon: Building2,
                 },
@@ -150,6 +150,14 @@ function isActivePath(currentPath: string, href: string): boolean {
     if (
         normalizedHref.endsWith('/gerente/dashboard') &&
         normalizedCurrentPath.endsWith('/gerente')
+    ) {
+        return true;
+    }
+
+    // Configuración agrupa sus pestañas (empresa, firmas y sellos).
+    if (
+        normalizedHref.endsWith('/gerente/configuracion/empresa') &&
+        normalizedCurrentPath.includes('/gerente/configuracion/')
     ) {
         return true;
     }

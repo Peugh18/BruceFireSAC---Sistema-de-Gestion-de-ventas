@@ -6,6 +6,8 @@ use App\Models\Client;
 use App\Models\Deficiency;
 use App\Models\Equipment;
 use App\Models\Quote;
+use App\Models\Team;
+use App\Services\Avisos\AvisosDelVendedor;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -70,8 +72,24 @@ class HandleInertiaRequests extends Middleware
                 'alertas' => Equipment::where(fn ($query) => $query
                     ->where('proxima_fecha_atencion', '<=', now()->addDays(7))
                     ->orWhere('proxima_prueba_hidrostatica', '<=', now()->addDays(7)))->count(),
-                'deficiencias' => Deficiency::where('estado', 'esperando_autorizacion')->count(),
+                'deficiencias' => Deficiency::where('estado', 'esperando_autorizacion')
+                    ->when($user->sedeRestringidaId(), fn ($query, $sedeId) => $query->whereHas('serviceOrder', fn ($orden) => $orden->where('sede_id', $sedeId)))
+                    ->count(),
+                'servicios_alertas' => app(AvisosDelVendedor::class)->contar($user),
             ] : null,
+            'alertasTop' => fn () => $user?->hasRole('Vendedor')
+                ? app(AvisosDelVendedor::class)->lista($user, self::slugDelEquipo($request))
+                : [],
         ];
+    }
+
+    /**
+     * Slug del equipo de la URL (puede llegar como modelo o como texto).
+     */
+    private static function slugDelEquipo(Request $request): string
+    {
+        $equipo = $request->route('current_team');
+
+        return (string) ($equipo instanceof Team ? $equipo->slug : ($equipo ?: $request->user()?->currentTeam?->slug));
     }
 }

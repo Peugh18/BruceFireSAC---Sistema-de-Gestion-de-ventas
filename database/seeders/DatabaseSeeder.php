@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        Sede::firstOrCreate(
+        $tienda = Sede::firstOrCreate(
             ['nombre' => 'Tienda Trujillo Centro'],
             [
                 'tipo' => 'tienda',
@@ -44,14 +44,16 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $vendedor->syncRoles(['Vendedor']);
+        // Cada trabajador pertenece a una sede: la venta toma su stock de ahí.
+        $vendedor->forceFill(['sede_id' => $tienda->id])->save();
 
         $team = $vendedor->currentTeam ?? app(CreateTeam::class)->handle($vendedor, 'BRUCE FIRE', isPersonal: false);
 
         $demoUsers = [
-            ['name' => 'Gerente Demo', 'email' => 'gerente@brucefire.pe', 'role' => 'Gerente'],
-            ['name' => 'Almacén Demo', 'email' => 'almacen@brucefire.pe', 'role' => 'Almacen'],
-            ['name' => 'Técnico Planta Demo', 'email' => 'tecnico.planta@brucefire.pe', 'role' => 'TecnicoPlanta'],
-            ['name' => 'Técnico Campo Demo', 'email' => 'tecnico.campo@brucefire.pe', 'role' => 'TecnicoCampo'],
+            ['name' => 'Gerente Demo', 'email' => 'gerente@brucefire.pe', 'role' => 'Gerente', 'sede_id' => null],
+            ['name' => 'Almacén Demo', 'email' => 'almacen@brucefire.pe', 'role' => 'Almacen', 'sede_id' => $almacen->id],
+            ['name' => 'Técnico Planta Demo', 'email' => 'tecnico.planta@brucefire.pe', 'role' => 'TecnicoPlanta', 'sede_id' => $almacen->id],
+            ['name' => 'Técnico Campo Demo', 'email' => 'tecnico.campo@brucefire.pe', 'role' => 'TecnicoCampo', 'sede_id' => $almacen->id],
         ];
 
         foreach ($demoUsers as $demo) {
@@ -66,7 +68,7 @@ class DatabaseSeeder extends Seeder
             if (! $user->belongsToTeam($team)) {
                 $team->members()->attach($user, ['role' => TeamRole::Admin->value]);
             }
-            $user->forceFill(['current_team_id' => $team->id])->save();
+            $user->forceFill(['current_team_id' => $team->id, 'sede_id' => $demo['sede_id']])->save();
         }
 
         $this->call(CertificateTypeSeeder::class);

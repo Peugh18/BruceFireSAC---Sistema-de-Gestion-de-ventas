@@ -10,7 +10,9 @@ use App\Http\Controllers\Gerente\ProductController;
 use App\Http\Controllers\Gerente\ReportController;
 use App\Http\Controllers\Gerente\SedeController;
 use App\Http\Controllers\Gerente\ServiceController;
+use App\Http\Controllers\Gerente\SignerController;
 use App\Http\Controllers\Gerente\UserController;
+use App\Http\Controllers\Vendedor\CollectionController as VendedorCollectionController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas del rol Gerente. Se incluye desde routes/web.php dentro del grupo
@@ -34,6 +36,7 @@ Route::prefix('gerente')
 
         // Cobranzas consolidadas (§32)
         Route::get('cobranzas', [CollectionConsolidatedController::class, 'index'])->name('cobranzas.index');
+        Route::delete('cobranzas/pagos/{payment}', [VendedorCollectionController::class, 'cancelPayment'])->name('cobranzas.pagos.anular');
 
         // Reportes Gerenciales (§34)
         Route::get('reportes', [ReportController::class, 'index'])->name('reportes.index');
@@ -58,4 +61,12 @@ Route::prefix('gerente')
         Route::post('configuracion/empresa/cuentas-bancarias', [CompanyBankAccountController::class, 'store'])->name('configuracion.cuentas-bancarias.store');
         Route::put('configuracion/empresa/cuentas-bancarias/{cuenta_bancaria}', [CompanyBankAccountController::class, 'update'])->name('configuracion.cuentas-bancarias.update');
         Route::delete('configuracion/empresa/cuentas-bancarias/{cuenta_bancaria}', [CompanyBankAccountController::class, 'destroy'])->name('configuracion.cuentas-bancarias.destroy');
+
+        // Firmas y sellos de quienes firman los certificados
+        Route::get('configuracion/firmas', [SignerController::class, 'index'])->name('configuracion.firmas.index');
+        Route::post('configuracion/firmas', [SignerController::class, 'store'])->name('configuracion.firmas.store');
+        Route::post('configuracion/firmas/{firmante}', [SignerController::class, 'update'])->name('configuracion.firmas.update');
+        Route::get('configuracion/firmas/vista-previa/{tipo:codigo}', [SignerController::class, 'vistaPrevia'])
+            ->withoutScopedBindings()
+            ->name('configuracion.firmas.vista-previa');
     });

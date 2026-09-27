@@ -61,6 +61,29 @@ class Sede extends Model
         return $this->hasMany(User::class);
     }
 
+    /**
+     * Sedes cuyas órdenes de servicio atiende el personal técnico de esta
+     * sede: ella misma y las tiendas que dependen de ella (una tienda manda
+     * sus extintores al taller de su almacén).
+     *
+     * @return list<int>
+     */
+    public static function idsAtendidosPor(int $sedeId): array
+    {
+        return [$sedeId, ...self::query()->where('almacen_id', $sedeId)->pluck('id')->map(fn ($id) => (int) $id)->all()];
+    }
+
+    /**
+     * Sedes cuyo personal técnico puede atender una orden de esta sede: la
+     * misma sede y, si es una tienda, su almacén.
+     *
+     * @return list<int>
+     */
+    public function idsQueAtienden(): array
+    {
+        return array_values(array_unique([$this->id, $this->almacenEfectivoId()]));
+    }
+
     public function esAlmacen(): bool
     {
         return in_array($this->tipo, ['almacen', 'mixta'], true);

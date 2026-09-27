@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\TechnicalOrderAssignmentController;
 use App\Http\Controllers\TecnicoCampo\CollectionController;
 use App\Http\Controllers\TecnicoCampo\DashboardController;
 use App\Http\Controllers\TecnicoCampo\DeliveryController;
 use App\Http\Controllers\TecnicoCampo\InspectionController;
 use App\Http\Controllers\TecnicoCampo\InstallationController;
+use App\Http\Middleware\EnsureTechnicalOrderAccess;
+use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
 
 // Rutas del rol Técnico de Campo (§85). Se incluye desde routes/web.php dentro
@@ -12,13 +15,14 @@ use Illuminate\Support\Facades\Route;
 // rol "TecnicoCampo" (spatie/laravel-permission).
 Route::prefix('tecnico-campo')
     ->name('tecnico-campo.')
-    ->middleware('role:TecnicoCampo')
+    ->middleware(['role:TecnicoCampo', EnsureTieneSede::class, EnsureTechnicalOrderAccess::class])
     ->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Recojo y Cadena de Custodia (§22.1, §22.4, Fase 7)
         Route::get('recojos', [CollectionController::class, 'index'])->name('recojos.index');
         Route::get('recojos/{service_order}', [CollectionController::class, 'show'])->name('recojos.show');
+        Route::post('ordenes/{service_order}/tomar', [TechnicalOrderAssignmentController::class, 'take'])->name('ordenes.tomar');
         Route::post('recojos/{service_order}', [CollectionController::class, 'store'])->name('recojos.store');
 
         // Inspecciones de Campo (§24, Fase 8)

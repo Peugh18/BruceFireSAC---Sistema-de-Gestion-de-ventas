@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
+    Award,
     Banknote,
     CalendarDays,
     Clock3,
@@ -9,11 +10,16 @@ import {
     ReceiptText,
     Send,
     TriangleAlert,
+    ShieldCheck,
     XCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { CargaLarga } from '@/components/cargando';
+import CambiarUnidadDialog, {
+    type LineaConSerie,
+} from '@/components/cambiar-unidad-dialog';
 import ComprobanteEditDialog, {
     type ComprobanteClient,
 } from '@/components/comprobante-edit-dialog';
@@ -28,6 +34,7 @@ import type { Team } from '@/types';
 
 type SaleItem = {
     id: number;
+    product_id?: number | null;
     tipo_linea?: string;
     numero_serie?: string;
     cantidad?: number;
@@ -66,6 +73,8 @@ type Sale = {
     fecha?: string;
     comprobante_tipo?: string;
     condicion_pago?: string;
+    referencia?: string | null;
+    sede_id?: number | null;
     destino?: string;
     subtotal?: number | string;
     igv?: number | string;
@@ -77,10 +86,24 @@ type Sale = {
     electronic_documents?: ElectronicDocument[];
 };
 
+type CertificadoVenta = {
+    id: number;
+    numero: string;
+    tipo: string;
+    tipo_codigo: string;
+    revision: number;
+    estado: string;
+    referencia: string | null;
+    unidades: number;
+};
+
 type Props = {
     sale: Sale;
     clientesVarios: ComprobanteClient;
     limiteBoletaSinIdentificar: number;
+    certificados: CertificadoVenta[];
+    tieneEquipos: boolean;
+    tiposServicio: { codigo: string; nombre: string }[];
 };
 
 function money(value?: number | string) {
@@ -88,6 +111,19 @@ function money(value?: number | string) {
         style: 'currency',
         currency: 'PEN',
     }).format(Number(value ?? 0) || 0);
+}
+
+const MEDIOS_PAGO: Record<string, string> = {
+    efectivo: 'Efectivo',
+    yape: 'Yape',
+    plin: 'Plin',
+    transferencia: 'Transferencia',
+    pos: 'Tarjeta',
+    deposito: 'Depósito',
+};
+
+function medioPago(value?: string) {
+    return value ? (MEDIOS_PAGO[value] ?? nice(value)) : '-';
 }
 
 function nice(value?: string) {
@@ -112,6 +148,9 @@ export default function VentasShow({
     sale,
     clientesVarios,
     limiteBoletaSinIdentificar,
+    certificados,
+    tieneEquipos,
+    tiposServicio,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -121,9 +160,14 @@ export default function VentasShow({
             : '');
     const [confirmando, setConfirmando] = useState(false);
     const [editando, setEditando] = useState(false);
-    const [procesando, setProcesando] = useState<'enviar' | 'anular' | null>(
+    const [lineaACambiar, setLineaACambiar] = useState<LineaConSerie | null>(
         null,
     );
+    const puedeCambiarExtintor =
+        sale.estado === 'borrador' || sale.estado === 'confirmada';
+    const [procesando, setProcesando] = useState<
+        'enviar' | 'anular' | 'corregir' | null
+    >(null);
     const documento = (sale.electronic_documents ?? [])
         .filter((d) => d.tipo === 'factura' || d.tipo === 'boleta')
         .at(-1);
@@ -132,20 +176,49 @@ export default function VentasShow({
         documento?.sunat_estado === 'rechazado' ||
         documento?.sunat_estado === 'excepcion';
     const ventaActiva = sale.estado === 'confirmada';
+    const aceptado =
+        documento?.sunat_estado === 'aceptado' ||
+        documento?.sunat_estado === 'observado';
+    const [abrirNotaCredito, setAbrirNotaCredito] = useState(0);
 
-    function accion(tipo: 'enviar' | 'anular') {
+    // Desde la lista, el lápiz llega con ?corregir=1: se abre directo lo que
+    // corresponde (editar si aún no se envió, nota de crédito si ya se aceptó).
+    useEffect(() => {
         if (
-            tipo === 'anular' &&
-            !window.confirm(
-                'Se anula la venta, las unidades vuelven al stock y el número del comprobante se libera. ¿Continuar?',
-            )
+            typeof window === 'undefined' ||
+            !new URLSearchParams(window.location.search).has('corregir')
         ) {
+            return;
+        }
+
+        if (porEnviar || rechazado) {
+            setEditando(true);
+        } else if (aceptado) {
+            setAbrirNotaCredito((n) => n + 1);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    function accion(tipo: 'enviar' | 'anular' | 'corregir') {
+        const avisos = {
+            anular: 'Se anula la venta, las unidades vuelven al stock y el número del comprobante se libera. ¿Continuar?',
+            corregir:
+                'Se anula este comprobante (aún no llegó a SUNAT, el número se libera) y se abre una copia con todo lleno para que corrijas productos o precios y vuelvas a emitir. ¿Continuar?',
+            enviar: null,
+        };
+        const aviso = avisos[tipo];
+
+        if (aviso && !window.confirm(aviso)) {
             return;
         }
 
         setProcesando(tipo);
         router.post(
-            (tipo === 'enviar' ? ventas.enviarSunat : ventas.anular).url({
+            {
+                enviar: ventas.enviarSunat,
+                anular: ventas.anular,
+                corregir: ventas.corregirProductos,
+            }[tipo].url({
                 current_team: teamSlug,
                 sale: sale.id,
             }),
@@ -158,6 +231,34 @@ export default function VentasShow({
                             'No se pudo completar la acción.',
                     ),
                 onFinish: () => setProcesando(null),
+            },
+        );
+    }
+
+    const [descartando, setDescartando] = useState(false);
+
+    function descartarVenta() {
+        const texto =
+            sale.estado === 'borrador'
+                ? 'Se descarta el borrador y sus unidades vuelven al stock. ¿Continuar?'
+                : 'Se anula la nota de venta, sus unidades vuelven al stock y sus certificados se anulan. ¿Continuar?';
+
+        if (!window.confirm(texto)) {
+            return;
+        }
+
+        setDescartando(true);
+        router.post(
+            ventas.descartar.url({ current_team: teamSlug, sale: sale.id }),
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo descartar la venta.',
+                    ),
+                onFinish: () => setDescartando(false),
             },
         );
     }
@@ -198,9 +299,43 @@ export default function VentasShow({
                         </h1>
                         <p className="text-muted-foreground text-[12.5px]">
                             {sale.client?.razon_social ?? 'Cliente sin datos'}
+                            {sale.referencia ? ` · ${sale.referencia}` : ''}
                         </p>
                     </div>
                     <div className="flex-1" />
+                    {sale.estado === 'borrador' ||
+                    (sale.estado === 'confirmada' &&
+                        sale.comprobante_tipo === 'nota_venta') ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={descartando}
+                            onClick={descartarVenta}
+                            className="border-border bg-card text-destructive h-9 rounded-[9px] shadow-none"
+                        >
+                            <XCircle className="size-4" />
+                            {sale.estado === 'borrador'
+                                ? 'Descartar borrador'
+                                : 'Anular nota de venta'}
+                        </Button>
+                    ) : null}
+                    {sale.estado === 'borrador' && (
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
+                        >
+                            <Link
+                                href={ventas.edit.url({
+                                    current_team: teamSlug,
+                                    sale: sale.id,
+                                })}
+                            >
+                                <PencilLine className="size-4" />
+                                Editar
+                            </Link>
+                        </Button>
+                    )}
                     {sale.estado === 'borrador' && (
                         <Button
                             onClick={confirmarVenta}
@@ -208,10 +343,25 @@ export default function VentasShow({
                             className="h-9 rounded-[9px] bg-emerald-600 text-white shadow-none hover:bg-emerald-700"
                         >
                             {confirmando
-                                ? 'Confirmando…'
+                                ? 'Emitiendo…'
                                 : sale.comprobante_tipo === 'nota_venta'
-                                  ? 'Confirmar nota de venta'
-                                  : 'Confirmar y emitir'}
+                                  ? 'Emitir nota de venta'
+                                  : `Emitir ${sale.comprobante_tipo === 'boleta' ? 'boleta' : 'factura'}`}
+                        </Button>
+                    )}
+                    {sale.estado === 'anulada' && (
+                        <Button
+                            asChild
+                            className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] text-white shadow-none"
+                        >
+                            <Link
+                                href={ventas.create.url(teamSlug, {
+                                    query: { rehacer: sale.id },
+                                })}
+                            >
+                                <PencilLine className="size-4" />
+                                Rehacer venta
+                            </Link>
                         </Button>
                     )}
                     <Badge className="rounded-full border-transparent bg-emerald-500/10 px-3 py-1 text-[10.5px] font-bold text-emerald-600 capitalize dark:text-emerald-400">
@@ -298,6 +448,16 @@ export default function VentasShow({
                                         type="button"
                                         variant="outline"
                                         disabled={procesando !== null}
+                                        onClick={() => accion('corregir')}
+                                        className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
+                                    >
+                                        <PencilLine className="size-4" />
+                                        Corregir productos o precios
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={procesando !== null}
                                         onClick={() => accion('anular')}
                                         className="border-border bg-card text-destructive h-9 rounded-[9px] shadow-none"
                                     >
@@ -318,6 +478,36 @@ export default function VentasShow({
                                 </>
                             ) : null}
                         </div>
+                    </Card>
+                ) : null}
+
+                {documento && ventaActiva && aceptado ? (
+                    <Card className="flex-row flex-wrap items-center justify-between gap-3 rounded-[14px] border-emerald-500/30 bg-emerald-500/5 p-4 shadow-none">
+                        <div className="flex items-start gap-3">
+                            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                            <div>
+                                <div className="text-foreground text-[13.5px] font-bold">
+                                    {documento.serie}-{documento.correlativo}{' '}
+                                    aceptada por SUNAT
+                                </div>
+                                <p className="text-muted-foreground text-[12px]">
+                                    Ya no se puede editar. Para corregir el
+                                    monto, el cliente o los productos se emite
+                                    una nota de crédito. Si solo cambias un
+                                    extintor por otro igual, usa «Cambiar» junto
+                                    a su serie: no necesita nota.
+                                </p>
+                            </div>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setAbrirNotaCredito((n) => n + 1)}
+                            className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
+                        >
+                            <PencilLine className="size-4" />
+                            Corregir con nota de crédito
+                        </Button>
                     </Card>
                 ) : null}
 
@@ -395,6 +585,31 @@ export default function VentasShow({
                                         </td>
                                         <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
                                             {item.numero_serie ?? '-'}
+                                            {puedeCambiarExtintor &&
+                                            item.tipo_linea ===
+                                                'unidad_nueva' &&
+                                            item.numero_serie &&
+                                            item.product_id ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setLineaACambiar({
+                                                            id: item.id,
+                                                            product_id:
+                                                                item.product_id!,
+                                                            nombre:
+                                                                item.product
+                                                                    ?.nombre ??
+                                                                '',
+                                                            numero_serie:
+                                                                item.numero_serie!,
+                                                        })
+                                                    }
+                                                    className="text-primary ml-2 font-sans text-[11.5px] font-semibold hover:underline"
+                                                >
+                                                    Cambiar
+                                                </button>
+                                            ) : null}
                                         </td>
                                         <td className="border-border border-b px-2.5 py-[13px] capitalize">
                                             {nice(item.tipo_linea)}
@@ -452,7 +667,7 @@ export default function VentasShow({
                                     (sale.payments ?? []).map((payment) => (
                                         <tr key={payment.id}>
                                             <td className="border-border border-b px-2.5 py-[13px] capitalize">
-                                                {nice(payment.forma_pago)}
+                                                {medioPago(payment.forma_pago)}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px]">
                                                 {payment.fecha_pago ?? '-'}
@@ -471,10 +686,135 @@ export default function VentasShow({
                     </div>
                 </Card>
 
+                {sale.estado === 'confirmada' || certificados.length > 0 ? (
+                    <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <Award className="text-primary size-5" />
+                                <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
+                                    Certificados
+                                </h2>
+                            </div>
+                            {sale.estado === 'confirmada' ? (
+                                <Button
+                                    asChild
+                                    className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] text-white shadow-none"
+                                >
+                                    <Link
+                                        href={ventas.certificados.create.url({
+                                            current_team: teamSlug,
+                                            sale: sale.id,
+                                        })}
+                                    >
+                                        <Award className="size-4" />
+                                        {certificados.some(
+                                            (c) => c.estado === 'vigente',
+                                        )
+                                            ? 'Ajustar orden o grupos'
+                                            : 'Armar certificados'}
+                                    </Link>
+                                </Button>
+                            ) : null}
+                        </div>
+                        {sale.estado === 'confirmada' &&
+                        tiposServicio.length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-muted-foreground text-[12px]">
+                                    Certificado de servicio:
+                                </span>
+                                {tiposServicio.map((tipo) => (
+                                    <Link
+                                        key={tipo.codigo}
+                                        href={ventas.certificadoServicio.create.url(
+                                            {
+                                                current_team: teamSlug,
+                                                sale: sale.id,
+                                                tipo: tipo.codigo,
+                                            },
+                                        )}
+                                        className="border-border hover:border-primary/60 hover:text-primary rounded-full border px-2.5 py-1 text-[11.5px] font-bold transition-colors"
+                                    >
+                                        {tipo.nombre}
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : null}
+                        {certificados.length === 0 ? (
+                            <p className="text-muted-foreground text-[12.5px]">
+                                {tieneEquipos
+                                    ? 'Salen solos al confirmar la venta: Operatividad y Garantía más Capacitación (local) o Prueba Hidrostática (vehículo).'
+                                    : 'Esta venta no tiene extintores con serie; puedes emitir el certificado de capacitación.'}
+                            </p>
+                        ) : (
+                            <div className="border-border overflow-hidden rounded-[10px] border">
+                                {certificados.map((c) => (
+                                    <div
+                                        key={c.id}
+                                        className={`border-border flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2.5 last:border-b-0 ${c.estado === 'vigente' ? '' : 'opacity-50'}`}
+                                    >
+                                        <div>
+                                            <span className="text-foreground font-['IBM_Plex_Mono',monospace] text-[12.5px] font-bold">
+                                                {c.numero}
+                                            </span>
+                                            <span className="text-muted-foreground ml-2 text-[12px]">
+                                                {c.tipo}
+                                                {c.referencia
+                                                    ? ` · ${c.referencia}`
+                                                    : ''}
+                                                {c.unidades > 0
+                                                    ? ` · ${c.unidades} extintor(es)`
+                                                    : ''}
+                                                {c.revision > 0
+                                                    ? ` · Rev. ${c.revision}`
+                                                    : ''}
+                                                {c.estado !== 'vigente'
+                                                    ? ` · ${c.estado}`
+                                                    : ''}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Button
+                                                asChild
+                                                variant="outline"
+                                                size="sm"
+                                                className="border-border bg-card h-8 rounded-[8px] shadow-none"
+                                            >
+                                                <a
+                                                    href={`/${teamSlug}/vendedor/certificados/${c.id}/pdf?inline=1`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    <FileText className="size-3.5" />
+                                                    Ver e imprimir
+                                                </a>
+                                            </Button>
+                                            <Button
+                                                asChild
+                                                variant="outline"
+                                                size="sm"
+                                                className="border-border bg-card h-8 rounded-[8px] shadow-none"
+                                                title="Descargar Word editable"
+                                            >
+                                                <a
+                                                    href={`/${teamSlug}/vendedor/certificados/${c.id}/word`}
+                                                >
+                                                    <FileText className="size-3.5 text-[#2b579a]" />
+                                                    Word
+                                                </a>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </Card>
+                ) : null}
+
                 <SaleNotesPanel
                     teamSlug={teamSlug}
                     documents={sale.electronic_documents ?? []}
                     saleEstado={sale.estado}
+                    abrirNotaCredito={abrirNotaCredito}
                 />
             </div>
 
@@ -494,6 +834,33 @@ export default function VentasShow({
                     rechazado={rechazado}
                 />
             ) : null}
+
+            <CargaLarga
+                activo={confirmando}
+                titulo={
+                    sale.comprobante_tipo === 'nota_venta'
+                        ? 'Confirmando la nota de venta'
+                        : 'Confirmando la venta y generando el comprobante'
+                }
+            />
+            <CargaLarga
+                activo={procesando === 'enviar'}
+                titulo="Enviando el comprobante a SUNAT"
+                detalle="Suele tardar menos de 10 segundos"
+            />
+            <CargaLarga
+                activo={procesando === 'anular'}
+                titulo="Anulando la venta"
+                detalle="Las unidades vuelven al stock"
+            />
+
+            <CambiarUnidadDialog
+                teamSlug={teamSlug}
+                saleId={sale.id}
+                sedeId={sale.sede_id ?? null}
+                linea={lineaACambiar}
+                onClose={() => setLineaACambiar(null)}
+            />
         </VendedorLayout>
     );
 }

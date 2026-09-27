@@ -10,7 +10,7 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
 
-test('vendedor can open the nueva cotizacion page with catalog data', function () {
+test('la nueva cotizacion no carga clientes ni catalogo: se buscan al escribir', function () {
     $user = vendedorUser();
     Client::factory()->create();
     Product::factory()->create(['activo' => true]);
@@ -20,10 +20,26 @@ test('vendedor can open the nueva cotizacion page with catalog data', function (
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('vendedor/cotizaciones/nueva')
-            ->has('clients')
-            ->has('products')
-            ->has('services')
+            ->missing('clients')
+            ->missing('products')
         );
+});
+
+test('la referencia de la cotizacion se guarda', function () {
+    $user = vendedorUser();
+    $item = Product::factory()->create(['precio_venta' => 100]);
+
+    $this->actingAs($user)
+        ->post(route('vendedor.cotizaciones.store', ['current_team' => $user->currentTeam]), [
+            'client_id' => Client::factory()->create()->id,
+            'fecha' => now()->toDateString(),
+            'vigencia_hasta' => now()->addDays(15)->toDateString(),
+            'referencia' => 'SEDE: Oficina Chimbote',
+            'items' => [['product_id' => $item->id, 'cantidad' => 1, 'precio_unitario' => 100]],
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect(Quote::first()->referencia)->toBe('SEDE: Oficina Chimbote');
 });
 
 test('vendedor creates a quote with items and totals are computed', function () {
@@ -46,9 +62,9 @@ test('vendedor creates a quote with items and totals are computed', function () 
 
     $quote = Quote::firstOrFail();
 
-    expect($quote->subtotal)->toEqual(200.0)
-        ->and($quote->igv)->toEqual(36.0)
-        ->and($quote->total)->toEqual(236.0)
+    expect((float) $quote->subtotal)->toEqual(169.49)
+        ->and((float) $quote->igv)->toEqual(30.51)
+        ->and((float) $quote->total)->toEqual(200.0)
         ->and($quote->estado)->toBe('borrador')
         ->and($quote->items)->toHaveCount(1);
 });

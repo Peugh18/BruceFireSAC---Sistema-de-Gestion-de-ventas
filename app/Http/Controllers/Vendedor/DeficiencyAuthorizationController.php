@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Vendedor;
 
+use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\Deficiencies\StoreDeficiencyAuthorizationRequest;
 use App\Models\Deficiency;
 use App\Models\Team;
@@ -12,8 +14,12 @@ use Illuminate\Validation\ValidationException;
 
 class DeficiencyAuthorizationController extends Controller
 {
-    public function store(Team $current_team, Deficiency $deficiency, StoreDeficiencyAuthorizationRequest $request): RedirectResponse
+    use AcotaPorSede;
+
+    public function store(Team $current_team, Deficiency $deficiency, StoreDeficiencyAuthorizationRequest $request, ExecuteAndCloseServiceOrder $action): RedirectResponse
     {
+        $this->asegurarSede($deficiency->serviceOrder?->sede_id);
+
         if ($deficiency->estado !== 'esperando_autorizacion') {
             throw ValidationException::withMessages([
                 'deficiency' => 'Esta deficiencia no está esperando autorización.',
@@ -23,6 +29,7 @@ class DeficiencyAuthorizationController extends Controller
         if (! $request->boolean('autorizado')) {
             $deficiency->update(['estado' => 'rechazada']);
             $this->recordEvent($deficiency, $request->user()->id, false);
+            $action->releaseFromAuthorizationHold($deficiency->serviceOrder, $request->user());
 
             AuditLogger::log(
                 action: 'deficiencia.autorizacion',

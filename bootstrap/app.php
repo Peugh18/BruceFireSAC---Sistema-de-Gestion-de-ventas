@@ -54,8 +54,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $status = $response->getStatusCode();
 
+            // Sesión vencida (token CSRF viejo): se vuelve a la página con un
+            // aviso visible; si ya no hay sesión, el login lo muestra tras el redirect.
             if ($status === 419) {
-                return back()->with(['message' => 'Tu sesión expiró, intenta de nuevo.']);
+                Inertia::flash('toast', ['type' => 'error', 'message' => 'Tu sesión se venció. Vuelve a intentarlo.']);
+
+                return back();
             }
 
             $renderBranded = in_array($status, [403, 404], true)

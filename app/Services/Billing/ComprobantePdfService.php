@@ -5,7 +5,6 @@ namespace App\Services\Billing;
 use App\Models\CompanyBankAccount;
 use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
-use App\Models\SaleItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,8 +26,7 @@ class ComprobantePdfService
         $sale = $document->sale;
         $company = CompanySetting::current();
 
-        $esServicio = $sale->items->contains(fn (SaleItem $item) => $item->esServicio());
-        $detraccion = $this->detraccionCalculator->calcular((float) $sale->total, $esServicio);
+        $detraccion = $this->detraccionCalculator->paraVenta($sale, $document->tipo);
 
         $pdf = Pdf::loadView('pdf.comprobante', [
             'document' => $document,

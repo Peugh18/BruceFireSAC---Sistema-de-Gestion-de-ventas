@@ -25,6 +25,7 @@ class DashboardController extends Controller
 
         // Query base para órdenes de Campo
         $query = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
                     ->orWhereNull('departamento_tecnico');

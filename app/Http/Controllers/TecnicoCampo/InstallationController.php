@@ -24,6 +24,7 @@ class InstallationController extends Controller
         $search = $request->query('q');
 
         $query = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
             ->with(['client', 'sede', 'equipments'])
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
@@ -99,6 +100,7 @@ class InstallationController extends Controller
             ->get(['id', 'codigo', 'nombre']);
 
         return Inertia::render('tecnico-campo/instalaciones/show', [
+            'asignacion' => $serviceOrder->asignacionPara(request()->user()),
             'order' => $serviceOrder,
             'customerEquipments' => $customerEquipments,
             'certificateTypes' => $certificateTypes,

@@ -27,7 +27,7 @@ use Illuminate\Support\Carbon;
  * @property-read Product $product
  */
 #[Fillable([
-    'client_id', 'product_id', 'numero_serie', 'fecha_venta', 'ubicacion_actual',
+    'client_id', 'product_id', 'numero_serie', 'numero_cliente', 'fecha_venta', 'ubicacion_actual',
     'estado', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica',
     'tipo_agente', 'capacidad', 'marca', 'serie_fabricante', 'anio_fabricacion',
     'foto_general_path', 'foto_placa_path', 'notas',

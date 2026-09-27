@@ -1,16 +1,8 @@
-import { Loader2Icon } from "lucide-react"
+import { Cargando } from "@/components/cargando"
 
-import { cn } from "@/lib/utils"
-
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
-  return (
-    <Loader2Icon
-      role="status"
-      aria-label="Loading"
-      className={cn("size-4 animate-spin", className)}
-      {...props}
-    />
-  )
+/** Alias del spinner único del sistema (components/cargando.tsx). */
+function Spinner({ className }: { className?: string }) {
+  return <Cargando className={className} />
 }
 
 export { Spinner }

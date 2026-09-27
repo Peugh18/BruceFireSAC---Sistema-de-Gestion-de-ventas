@@ -1,361 +1,351 @@
-﻿import { Head, Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
-    CheckCircle2,
-    Clock,
+    AlertTriangle,
+    Check,
     ExternalLink,
-    Info,
-    MessageCircle,
-    Search,
+    MessageSquarePlus,
+    Send,
     Wrench,
+    X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
 
-import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
-import { Badge } from '@/components/ui/badge';
+import { TarjetaCargando } from '@/components/cargando';
+import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import comunicacion from '@/routes/vendedor/comunicacion';
+import deficiencias from '@/routes/vendedor/deficiencias';
+import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
 import type { Team } from '@/types';
 
-export type CommunicationEvent = {
-    id: number;
-    tipo: string;
-    payload?: {
-        mensaje?: string;
-        resultado?: string;
-        deficiency_id?: number;
-        [key: string]: unknown;
-    };
-    created_at: string;
-    user?: {
-        name: string;
-    };
-};
-
-export type CommunicationOrder = {
+type Tarjeta = {
     id: number;
     codigo: string;
     cliente: string;
+    servicio: string;
+    tecnico: string | null;
+    area: string;
+    prioridad: string;
+    dias: number;
+    por_autorizar: boolean;
+};
+
+type Evento = {
+    id: number;
+    titulo: string;
+    mensaje: string | null;
+    autor: string;
+    de_ventas: boolean;
+    fecha: string | null;
+};
+
+type Detalle = Tarjeta & {
     estado: string;
-    ultimo_evento?: CommunicationEvent | null;
-    events?: CommunicationEvent[];
+    referencia: string | null;
+    observaciones: string | null;
+    etapas: string[];
+    etapa_actual: number;
+    eventos: Evento[];
 };
 
-export type PaginationLink = {
-    url: string | null;
-    label: string;
-    active: boolean;
+type Props = {
+    columnas: { clave: string; titulo: string; ordenes: Tarjeta[] }[];
+    seleccionada: Detalle | null;
 };
 
-export type Props = {
-    orders: {
-        data: CommunicationOrder[];
-        links?: PaginationLink[];
-        total?: number;
+function fecha(valor: string | null) {
+    return valor
+        ? new Intl.DateTimeFormat('es-PE', {
+              day: '2-digit',
+              month: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+          }).format(new Date(valor))
+        : '';
+}
+
+/**
+ * Seguimiento de taller: tablero de las órdenes de la sede por etapa y, al
+ * elegir una, su avance, historial y notas para el técnico.
+ */
+export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
+    const { currentTeam, sidebarCounts } = usePage<{
+        currentTeam?: Team | null;
+        sidebarCounts?: { deficiencias?: number } | null;
+    }>().props;
+    const teamSlug = currentTeam?.slug ?? '';
+    const [nota, setNota] = useState('');
+    const [enviando, setEnviando] = useState(false);
+    const recargando = useRecargando();
+
+    const abrir = (id: number | null) =>
+        router.get(
+            comunicacion.index.url(teamSlug, {
+                query: { orden: id ?? undefined },
+            }),
+            {},
+            { preserveScroll: true, preserveState: true },
+        );
+
+    const enviarNota = (event: FormEvent) => {
+        event.preventDefault();
+        if (!seleccionada || !nota.trim()) return;
+        setEnviando(true);
+        router.post(
+            comunicacion.nota.url({
+                current_team: teamSlug,
+                service_order: seleccionada.id,
+            }),
+            { mensaje: nota.trim() },
+            {
+                preserveScroll: true,
+                onSuccess: () => setNota(''),
+                onFinish: () => setEnviando(false),
+            },
+        );
     };
-};
 
-export default function ComunicacionIndex({ orders }: Props) {
-    const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
-    const teamSlug =
-        currentTeam?.slug ||
-        (typeof window !== 'undefined'
-            ? window.location.pathname.split('/')[1]
-            : '');
-
-    const orderList = orders?.data ?? [];
-    const [selectedOrderId, setSelectedOrderId] = useState<number | null>(
-        orderList[0]?.id ?? null,
-    );
-    const [search, setSearch] = useState('');
-
-    const filteredOrders = useMemo(() => {
-        if (!search.trim()) return orderList;
-        const q = search.toLowerCase();
-        return orderList.filter(
-            (o) =>
-                o.codigo.toLowerCase().includes(q) ||
-                o.cliente.toLowerCase().includes(q) ||
-                o.ultimo_evento?.payload?.mensaje?.toLowerCase().includes(q),
-        );
-    }, [orderList, search]);
-
-    const selectedOrder = useMemo(() => {
-        return (
-            orderList.find((o) => o.id === selectedOrderId) ||
-            orderList[0] ||
-            null
-        );
-    }, [orderList, selectedOrderId]);
+    const total = columnas.reduce((s, c) => s + c.ordenes.length, 0);
 
     return (
-        <VendedorLayout title="Comunicación con Taller">
-            <Head title="Comunicación con Taller" />
-
-            <div className="flex h-[calc(100vh-125px)] flex-col gap-3">
-                {/* Notice header */}
-                <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
-                    <div>
-                        <h2 className="font-['Oswald',sans-serif] text-[20px] font-semibold text-foreground">
-                            Comunicación con Taller y Planta
-                        </h2>
-                        <p className="text-xs text-muted-foreground">
-                            Bitácora y registro cronológico de eventos para cada
-                            orden de servicio activa.
-                        </p>
-                    </div>
+        <VendedorLayout title="Seguimiento de taller">
+            <div className="flex flex-col gap-4">
+                <ServiciosTabs
+                    teamSlug={teamSlug}
+                    activa="taller"
+                    deficienciasPendientes={sidebarCounts?.deficiencias}
+                />
+                <div>
+                    <h1 className="font-['Oswald',sans-serif] text-[22px] font-semibold uppercase">
+                        Seguimiento de taller
+                    </h1>
+                    <p className="text-[12.5px] text-muted-foreground">
+                        {total} orden(es) de tu sede. Toca una para ver su
+                        avance y dejar una nota al técnico.
+                    </p>
                 </div>
 
-                {/* 2-Panel Chat Layout */}
-                <Card className="flex flex-1 overflow-hidden rounded-[16px] border-border bg-card p-0 shadow-none">
-                    {/* Panel Izquierdo: Lista de Órdenes / Conversaciones (340px) */}
-                    <div className="flex w-full shrink-0 flex-col border-r border-border bg-card sm:w-[340px]">
-                        {/* Search header */}
-                        <div className="border-b border-border p-3">
-                            <div className="flex h-9 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3 text-[12.5px]">
-                                <Search className="size-3.5 text-muted-foreground" />
-                                <input
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Buscar por orden o cliente..."
-                                    className="w-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
-                                />
+                <div className="grid gap-3 overflow-x-auto pb-1 [grid-template-columns:repeat(6,minmax(200px,1fr))]">
+                    {columnas.map((columna) => (
+                        <div
+                            key={columna.clave}
+                            className="flex min-h-[140px] flex-col gap-2 rounded-[14px] bg-muted/40 p-2.5"
+                        >
+                            <div className="flex items-center justify-between px-1">
+                                <span className="text-[11.5px] font-bold text-foreground/80 uppercase">
+                                    {columna.titulo}
+                                </span>
+                                <span className="rounded-full bg-card px-2 text-[11px] font-bold">
+                                    {columna.ordenes.length}
+                                </span>
                             </div>
-                        </div>
-
-                        {/* Order list items */}
-                        <div className="flex-1 divide-y divide-border overflow-y-auto">
-                            {filteredOrders.length === 0 ? (
-                                <div className="p-8 text-center text-xs text-muted-foreground">
-                                    No hay órdenes registradas con eventos
-                                    recientes.
-                                </div>
-                            ) : (
-                                filteredOrders.map((order) => {
-                                    const isSelected =
-                                        selectedOrder?.id === order.id;
-                                    const previewText =
-                                        order.ultimo_evento?.payload?.mensaje ||
-                                        (order.ultimo_evento?.payload?.resultado
-                                            ? `Resultado: ${order.ultimo_evento.payload.resultado}`
-                                            : order.ultimo_evento?.tipo
-                                              ? `Evento: ${order.ultimo_evento.tipo.replace(/_/g, ' ')}`
-                                              : 'Sin mensajes registrados');
-
-                                    return (
-                                        <div
-                                            key={order.id}
-                                            onClick={() =>
-                                                setSelectedOrderId(order.id)
-                                            }
-                                            className={`cursor-pointer p-3.5 transition-colors ${
-                                                isSelected
-                                                    ? 'border-l-4 border-l-[#E31E24] bg-destructive/10'
-                                                    : 'hover:bg-muted/40'
-                                            }`}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-mono text-[11px] font-bold text-muted-foreground">
-                                                    {order.codigo}
-                                                </span>
-                                                <Badge
-                                                    className={`rounded-full border-none px-2 py-0.5 text-[9.5px] font-bold capitalize ${
-                                                        isSelected
-                                                            ? 'bg-primary text-white'
-                                                            : 'bg-muted text-muted-foreground'
-                                                    }`}
-                                                >
-                                                    {order.estado.replace(
-                                                        /_/g,
-                                                        ' ',
-                                                    )}
-                                                </Badge>
-                                            </div>
-
-                                            <div className="mt-1 truncate text-[13px] font-bold text-foreground">
-                                                {order.cliente}
-                                            </div>
-
-                                            <div className="mt-1 truncate text-[11.5px] text-muted-foreground">
-                                                {previewText}
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Panel Derecho: Bitácora de Eventos (Solo Lectura) */}
-                    <div className="flex min-w-0 flex-1 flex-col bg-background">
-                        {selectedOrder ? (
-                            <>
-                                {/* Header del Panel Derecho */}
-                                <div className="flex items-center justify-between border-b border-border bg-card px-6 py-3.5">
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-mono font-bold text-foreground">
-                                                {selectedOrder.codigo}
-                                            </span>
-                                            <span className="text-muted-foreground">
-                                                &bull;
-                                            </span>
-                                            <span className="truncate font-semibold text-foreground">
-                                                {selectedOrder.cliente}
-                                            </span>
-                                        </div>
-                                        <div className="text-[11.5px] text-muted-foreground">
-                                            Bitácora técnica de planta y taller
-                                        </div>
+                            {columna.ordenes.length === 0 ? (
+                                <p className="px-1 text-[11.5px] text-muted-foreground">
+                                    Sin órdenes
+                                </p>
+                            ) : null}
+                            {columna.ordenes.map((orden) => (
+                                <button
+                                    key={orden.id}
+                                    type="button"
+                                    onClick={() => abrir(orden.id)}
+                                    className={`rounded-[10px] border bg-card p-2.5 text-left transition-colors hover:border-primary/60 ${seleccionada?.id === orden.id ? 'border-primary' : 'border-border'}`}
+                                >
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="font-['IBM_Plex_Mono',monospace] text-[11px] font-bold">
+                                            {orden.codigo}
+                                        </span>
+                                        {orden.por_autorizar ? (
+                                            <AlertTriangle className="size-3.5 text-amber-500" />
+                                        ) : null}
                                     </div>
+                                    <div className="mt-0.5 truncate text-[12.5px] font-bold text-foreground">
+                                        {orden.cliente}
+                                    </div>
+                                    <div className="truncate text-[11.5px] text-muted-foreground">
+                                        {orden.servicio}
+                                    </div>
+                                    <div className="mt-1 flex flex-wrap gap-1 text-[10.5px]">
+                                        <span className="rounded bg-muted px-1.5 py-0.5 capitalize">
+                                            {orden.area}
+                                        </span>
+                                        {orden.prioridad !== 'normal' ? (
+                                            <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-destructive capitalize">
+                                                {orden.prioridad}
+                                            </span>
+                                        ) : null}
+                                        <span className="text-muted-foreground">
+                                            {orden.dias === 0
+                                                ? 'hoy'
+                                                : `hace ${orden.dias} d`}
+                                        </span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    ))}
+                </div>
 
+                {recargando ? (
+                    <TarjetaCargando />
+                ) : seleccionada ? (
+                    <Card className="gap-4 rounded-[16px] border-border bg-card p-5 shadow-none">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <Wrench className="size-4 text-primary" />
+                                    <span className="font-['IBM_Plex_Mono',monospace] text-[13px] font-bold">
+                                        {seleccionada.codigo}
+                                    </span>
+                                </div>
+                                <h2 className="text-[16px] font-bold text-foreground">
+                                    {seleccionada.cliente}
+                                </h2>
+                                <p className="text-[12.5px] text-muted-foreground">
+                                    {seleccionada.servicio}
+                                    {seleccionada.referencia
+                                        ? ` · ${seleccionada.referencia}`
+                                        : ''}
+                                    {' · '}
+                                    {seleccionada.tecnico ??
+                                        `Todo el área de ${seleccionada.area}`}
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {seleccionada.por_autorizar ? (
                                     <Button
                                         asChild
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 rounded-[8px] border-border bg-card text-xs font-semibold text-foreground/80 hover:bg-background"
+                                        className="h-9 rounded-[9px] bg-amber-500 text-white shadow-none hover:bg-amber-600"
                                     >
                                         <Link
-                                            href={ServiceOrderController.show.url(
-                                                {
-                                                    current_team: teamSlug,
-                                                    service_order:
-                                                        selectedOrder.id,
-                                                },
+                                            href={deficiencias.index.url(
+                                                teamSlug,
                                             )}
                                         >
-                                            <span>Ver orden completa</span>
-                                            <ExternalLink className="ml-1.5 size-3" />
+                                            <AlertTriangle className="size-4" />
+                                            Autorizar deficiencias
                                         </Link>
                                     </Button>
-                                </div>
-
-                                {/* Body con Burbujas de Eventos (Solo lectura) */}
-                                <div className="flex-1 space-y-4 overflow-y-auto p-6">
-                                    {/* Burbuja inicial: Creación de la orden */}
-                                    <div className="flex max-w-[80%] flex-col rounded-[12px] border border-border bg-card p-3.5 shadow-2xs">
-                                        <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
-                                            <span className="font-bold text-foreground">
-                                                Sistema Bruce Fire
-                                            </span>
-                                            <span>Inicio de orden</span>
-                                        </div>
-                                        <p className="mt-1 text-[13px] text-muted-foreground">
-                                            Orden de servicio creada para el
-                                            cliente{' '}
-                                            <b>{selectedOrder.cliente}</b>.
-                                        </p>
-                                    </div>
-
-                                    {/* Burbujas de los eventos reales */}
-                                    {selectedOrder.ultimo_evento ? (
-                                        <div
-                                            className={`flex max-w-[80%] flex-col rounded-[12px] p-3.5 shadow-2xs ${
-                                                selectedOrder.ultimo_evento
-                                                    .tipo ===
-                                                'autorizacion_registrada'
-                                                    ? 'self-end rounded-br-xs bg-primary text-white'
-                                                    : 'self-start rounded-bl-xs border border-border bg-card text-foreground'
-                                            }`}
-                                        >
-                                            <div
-                                                className={`flex items-center justify-between gap-3 text-[11px] ${
-                                                    selectedOrder.ultimo_evento
-                                                        .tipo ===
-                                                    'autorizacion_registrada'
-                                                        ? 'text-white/80'
-                                                        : 'text-muted-foreground'
-                                                }`}
-                                            >
-                                                <span className="font-bold capitalize">
-                                                    {selectedOrder.ultimo_evento
-                                                        .user?.name ||
-                                                        selectedOrder.ultimo_evento.tipo.replace(
-                                                            /_/g,
-                                                            ' ',
-                                                        )}
-                                                </span>
-                                                <span className="font-mono text-[10px]">
-                                                    {new Date(
-                                                        selectedOrder
-                                                            .ultimo_evento
-                                                            .created_at,
-                                                    ).toLocaleTimeString(
-                                                        'es-PE',
-                                                        {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        },
-                                                    )}
-                                                </span>
-                                            </div>
-
-                                            <div className="mt-1 text-[13px] leading-relaxed">
-                                                {selectedOrder.ultimo_evento
-                                                    .payload?.mensaje ||
-                                                    (selectedOrder.ultimo_evento
-                                                        .payload?.resultado
-                                                        ? `Resultado de autorización: ${selectedOrder.ultimo_evento.payload.resultado}`
-                                                        : `Evento registrado: ${selectedOrder.ultimo_evento.tipo.replace(/_/g, ' ')}`)}
-                                            </div>
-
-                                            <div
-                                                className={`mt-1 font-mono text-[9.5px] ${
-                                                    selectedOrder.ultimo_evento
-                                                        .tipo ===
-                                                    'autorizacion_registrada'
-                                                        ? 'text-white/70'
-                                                        : 'text-muted-foreground'
-                                                }`}
-                                            >
-                                                {new Date(
-                                                    selectedOrder.ultimo_evento
-                                                        .created_at,
-                                                ).toLocaleDateString('es-PE')}
-                                            </div>
-                                        </div>
-                                    ) : null}
-
-                                    {/* Indicador de estado actual */}
-                                    <div className="my-2 flex items-center justify-center">
-                                        <span className="rounded-full bg-muted/40 px-3 py-1 font-mono text-[10.5px] font-bold text-muted-foreground">
-                                            Estado actual:{' '}
-                                            {selectedOrder.estado
-                                                .replace(/_/g, ' ')
-                                                .toUpperCase()}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Footer de Solo Lectura (sin input editable) */}
-                                <div className="border-t border-border bg-card px-6 py-3 text-xs text-muted-foreground">
-                                    <div className="flex items-center gap-2">
-                                        <Info className="size-4 text-muted-foreground" />
-                                        <span>
-                                            <b>Bitácora de solo lectura:</b> Los
-                                            eventos se generan automáticamente
-                                            conforme los técnicos avanzan en
-                                            Planta o Campo. Para autorizaciones,
-                                            usa el módulo de Deficiencias y
-                                            Adicionales.
-                                        </span>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center text-muted-foreground">
-                                <MessageCircle className="size-9 text-muted-foreground" />
-                                <p className="text-sm font-semibold text-foreground">
-                                    Selecciona una orden de servicio
-                                </p>
-                                <p className="text-xs">
-                                    Haz clic en una orden del panel izquierdo
-                                    para consultar su bitácora de eventos.
-                                </p>
+                                ) : null}
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="h-9 rounded-[9px] shadow-none"
+                                >
+                                    <Link
+                                        href={ordenesServicio.show.url({
+                                            current_team: teamSlug,
+                                            service_order: seleccionada.id,
+                                        })}
+                                    >
+                                        <ExternalLink className="size-4" />
+                                        Ver orden
+                                    </Link>
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => abrir(null)}
+                                    className="h-9 rounded-[9px] shadow-none"
+                                >
+                                    <X className="size-4" />
+                                </Button>
                             </div>
-                        )}
-                    </div>
-                </Card>
+                        </div>
+
+                        <div className="flex items-center gap-1 overflow-x-auto">
+                            {seleccionada.etapas.map((etapa, i) => {
+                                const hecha = i < seleccionada.etapa_actual;
+                                const actual = i === seleccionada.etapa_actual;
+
+                                return (
+                                    <div
+                                        key={etapa}
+                                        className="flex min-w-[110px] flex-1 items-center gap-1"
+                                    >
+                                        <div
+                                            className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${hecha ? 'bg-emerald-500 text-white' : actual ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}
+                                        >
+                                            {hecha ? (
+                                                <Check className="size-3.5" />
+                                            ) : (
+                                                i + 1
+                                            )}
+                                        </div>
+                                        <span
+                                            className={`text-[11.5px] ${actual ? 'font-bold text-foreground' : 'text-muted-foreground'}`}
+                                        >
+                                            {etapa}
+                                        </span>
+                                        {i < seleccionada.etapas.length - 1 ? (
+                                            <div
+                                                className={`h-0.5 flex-1 ${hecha ? 'bg-emerald-500' : 'bg-border'}`}
+                                            />
+                                        ) : null}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {seleccionada.observaciones ? (
+                            <p className="rounded-[10px] bg-muted/40 px-3 py-2 text-[12.5px]">
+                                <b>Instrucciones:</b>{' '}
+                                {seleccionada.observaciones}
+                            </p>
+                        ) : null}
+
+                        <div className="space-y-2">
+                            {seleccionada.eventos.map((evento) => (
+                                <div
+                                    key={evento.id}
+                                    className={`rounded-[10px] border px-3 py-2 ${evento.de_ventas ? 'border-primary/30 bg-destructive/5' : 'border-border'}`}
+                                >
+                                    <div className="flex items-center justify-between gap-2 text-[11.5px]">
+                                        <span className="font-bold text-foreground">
+                                            {evento.titulo}
+                                            <span className="font-normal text-muted-foreground">
+                                                {' '}
+                                                · {evento.autor}
+                                            </span>
+                                        </span>
+                                        <span className="font-['IBM_Plex_Mono',monospace] text-muted-foreground">
+                                            {fecha(evento.fecha)}
+                                        </span>
+                                    </div>
+                                    {evento.mensaje ? (
+                                        <p className="mt-0.5 text-[12.5px] text-foreground/90">
+                                            {evento.mensaje}
+                                        </p>
+                                    ) : null}
+                                </div>
+                            ))}
+                        </div>
+
+                        <form onSubmit={enviarNota} className="flex gap-2">
+                            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border border-border bg-muted/40 px-3">
+                                <MessageSquarePlus className="size-4 shrink-0 text-muted-foreground" />
+                                <input
+                                    value={nota}
+                                    maxLength={500}
+                                    onChange={(e) => setNota(e.target.value)}
+                                    placeholder="Nota para el técnico (ej. el cliente recoge el viernes)"
+                                    className="h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
+                                />
+                            </div>
+                            <Button
+                                type="submit"
+                                disabled={enviando || !nota.trim()}
+                                className="h-10 rounded-[9px] bg-primary text-white shadow-none hover:bg-primary/90"
+                            >
+                                <Send className="size-4" />
+                                Enviar
+                            </Button>
+                        </form>
+                    </Card>
+                ) : null}
             </div>
         </VendedorLayout>
     );

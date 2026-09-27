@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\TechnicalOrderAssignmentController;
 use App\Http\Controllers\TecnicoPlanta\ChecklistController;
 use App\Http\Controllers\TecnicoPlanta\DashboardController;
 use App\Http\Controllers\TecnicoPlanta\DeficiencyController;
 use App\Http\Controllers\TecnicoPlanta\ExecutionController;
 use App\Http\Controllers\TecnicoPlanta\ReceptionController;
+use App\Http\Middleware\EnsureTechnicalOrderAccess;
+use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
 
 // Rutas del rol Técnico de Planta (§85). Se incluye desde routes/web.php dentro
@@ -12,13 +15,14 @@ use Illuminate\Support\Facades\Route;
 // rol "TecnicoPlanta" (spatie/laravel-permission).
 Route::prefix('tecnico-planta')
     ->name('tecnico-planta.')
-    ->middleware('role:TecnicoPlanta')
+    ->middleware(['role:TecnicoPlanta', EnsureTieneSede::class, EnsureTechnicalOrderAccess::class])
     ->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Recepciones y Alta Técnica Rápida (§18)
         Route::get('recepciones', [ReceptionController::class, 'index'])->name('recepciones.index');
         Route::get('recepciones/{service_order}', [ReceptionController::class, 'show'])->name('recepciones.show');
+        Route::post('ordenes/{service_order}/tomar', [TechnicalOrderAssignmentController::class, 'take'])->name('ordenes.tomar');
         Route::post('recepciones/{service_order}/confirmar', [ReceptionController::class, 'confirmReception'])->name('recepciones.confirm');
         Route::get('equipos/buscar', [ReceptionController::class, 'searchEquipment'])->name('equipos.search');
         Route::post('recepciones/{service_order}/equipos', [ReceptionController::class, 'storeEquipment'])->name('recepciones.equipos.store');

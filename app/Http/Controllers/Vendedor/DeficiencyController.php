@@ -17,6 +17,10 @@ class DeficiencyController extends Controller
 
         $deficiencies = Deficiency::query()
             ->with(['serviceOrder.client', 'authorization'])
+            ->whereHas('serviceOrder', fn ($query) => $query->when(
+                $request->user()->sedeRestringidaId(),
+                fn ($query, $sedeId) => $query->where('sede_id', $sedeId)
+            ))
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
             ->orderByDesc('created_at')
             ->paginate(15)

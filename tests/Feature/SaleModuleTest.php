@@ -49,9 +49,10 @@ test('vender una unidad nueva descuenta stock, crea kardex, equipo y calcula tot
         ],
     ], $user->id);
 
-    expect((float) $sale->subtotal)->toEqual(190.0)
-        ->and((float) $sale->igv)->toEqual(34.2)
-        ->and((float) $sale->total)->toEqual(224.2)
+    // Los precios incluyen IGV: 2 x 100 - 10 = S/ 190 que paga el cliente.
+    expect((float) $sale->subtotal)->toEqual(161.02)
+        ->and((float) $sale->igv)->toEqual(28.98)
+        ->and((float) $sale->total)->toEqual(190.0)
         ->and($unit->refresh()->estado)->toBe('vendido')
         ->and(InventoryMovement::where('referencia_type', $sale->getMorphClass())->where('referencia_id', $sale->id)->count())->toBe(1)
         ->and(Equipment::where('client_id', $client->id)->where('numero_serie', 'BF-SERIE-001')->exists())->toBeTrue();
@@ -222,14 +223,14 @@ test('crear una venta desde una cotizacion aceptada la marca como convertida', f
         ->and($sale->quote_id)->toBe($quote->id);
 });
 
-test('una cotizacion que no esta aceptada no se puede pasar a venta', function () {
+test('una cotizacion vencida no se puede pasar a venta', function () {
     $client = Client::factory()->create();
-    $quote = Quote::factory()->enviada()->create(['client_id' => $client->id]);
+    $quote = Quote::factory()->vencida()->create(['client_id' => $client->id]);
 
     expect(fn () => venderUnidadDesdeCotizacion($client->id, $quote))
-        ->toThrow(ValidationException::class, "La cotización {$quote->numero} no está aceptada; solo una cotización aceptada se puede pasar a venta.");
+        ->toThrow(ValidationException::class, "La cotización {$quote->numero} no se puede pasar a venta porque está vencida.");
 
-    expect($quote->refresh()->estado)->toBe('enviada')
+    expect($quote->refresh()->estado)->toBe('vencida')
         ->and(Sale::count())->toBe(0);
 });
 
@@ -262,9 +263,9 @@ test('la nueva venta desde una cotizacion aceptada precarga el cliente y los ite
         );
 });
 
-test('una cotizacion sin aceptar no se precarga en la nueva venta', function () {
+test('una cotizacion vencida no se precarga en la nueva venta', function () {
     $user = vendedorUser();
-    $quote = Quote::factory()->enviada()->create();
+    $quote = Quote::factory()->vencida()->create();
 
     $this->actingAs($user)
         ->get(route('vendedor.ventas.create', ['current_team' => $user->currentTeam, 'cotizacion' => $quote->id]))
@@ -364,9 +365,9 @@ test('un cliente con dni si puede recibir boleta', function () {
 test('la boleta a clientes varios se permite hasta el limite y se rechaza al superarlo', function () {
     $sale = ventaConUnaUnidad(Client::clientesVarios(), 'boleta', 500);
 
-    expect((float) $sale->total)->toEqual(590.0);
+    expect((float) $sale->total)->toEqual(500.0);
 
-    expect(fn () => ventaConUnaUnidad(Client::clientesVarios(), 'boleta', 600))
+    expect(fn () => ventaConUnaUnidad(Client::clientesVarios(), 'boleta', 750))
         ->toThrow(ValidationException::class, 'no puede superar S/ 700.00');
 });
 

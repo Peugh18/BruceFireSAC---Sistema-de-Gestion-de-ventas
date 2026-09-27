@@ -92,7 +92,7 @@ class ExecuteAndCloseServiceOrder
     /**
      * Avanza el estado técnico de la orden en Planta (§16.2, Fase 5).
      * Transiciones válidas:
-     * autorizado -> en_proceso -> trabajo_terminado -> pendiente_datos -> datos_completos -> listo_certificado.
+     * recibido_planta/autorizado -> en_proceso -> trabajo_terminado -> (pendiente_datos -> datos_completos ->) listo_certificado -> listo_entrega.
      * Al llegar a listo_certificado, dispara automáticamente la emisión del certificado.
      *
      * @param  array<string, mixed>  $extraData
@@ -105,6 +105,23 @@ class ExecuteAndCloseServiceOrder
     ): ServiceOrder {
         if (! in_array($targetState, ServiceOrder::ESTADOS, true)) {
             throw new InvalidArgumentException(sprintf('Estado "%s" no es válido en el sistema.', $targetState));
+        }
+
+        // Pasos permitidos desde cada estado (los mismos botones de la
+        // pantalla de ejecución). Los datos del certificado pueden estar
+        // completos desde antes, por eso se puede ir directo a certificado.
+        $permitidos = [
+            'recibido_planta' => ['en_proceso'],
+            'autorizado' => ['en_proceso'],
+            'en_proceso' => ['trabajo_terminado'],
+            'trabajo_terminado' => ['pendiente_datos', 'datos_completos', 'listo_certificado'],
+            'pendiente_datos' => ['datos_completos', 'listo_certificado'],
+            'datos_completos' => ['listo_certificado'],
+            'listo_certificado' => ['listo_entrega'],
+        ][$serviceOrder->estado] ?? [];
+
+        if (! in_array($targetState, $permitidos, true)) {
+            throw new InvalidArgumentException('Solo puedes avanzar a la siguiente etapa de la orden.');
         }
 
         return DB::transaction(function () use ($serviceOrder, $targetState, $user, $extraData) {

@@ -1,4 +1,4 @@
-﻿import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Check,
@@ -8,9 +8,10 @@ import {
     Clock,
     FileText,
     Inbox,
-    Loader2,
     Plus,
-    Send,
+    MessageCircle,
+    Receipt,
+    RotateCcw,
     ShoppingCart,
     X,
 } from 'lucide-react';
@@ -18,7 +19,9 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
+import { Cargando, FilasCargando } from '@/components/cargando';
 import { Button } from '@/components/ui/button';
+import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
@@ -30,7 +33,27 @@ export type QuoteItem = {
     total: number | string;
     vigencia_hasta: string;
     estado: string;
+    whatsapp: string | null;
+    enlace_pdf: string;
+    venta: { id: number; numero: string } | null;
 };
+
+/**
+ * Mensaje listo para WhatsApp con el enlace al PDF de la cotización. Si el
+ * cliente no tiene número guardado, WhatsApp deja elegir el contacto.
+ */
+function enlaceWhatsapp(quote: QuoteItem): string {
+    const monto = Number(quote.total).toLocaleString('es-PE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+    const vence = new Date(
+        `${quote.vigencia_hasta}T00:00:00`,
+    ).toLocaleDateString('es-PE');
+    const texto = `Hola ${quote.cliente}, le saludamos de Extintores Bruce Fire. Le enviamos la cotización ${quote.numero} por S/ ${monto}, válida hasta el ${vence}. Puede verla aquí: ${quote.enlace_pdf}`;
+
+    return `https://wa.me/${quote.whatsapp ?? ''}?text=${encodeURIComponent(texto)}`;
+}
 
 export type PaginationLink = {
     url: string | null;
@@ -83,10 +106,13 @@ export type CotizacionesIndexProps = {
 
 const FILTER_TABS = [
     { label: 'Todas', value: '' },
-    { label: 'Pendientes', value: 'enviada' },
+    { label: 'Borrador', value: 'borrador' },
+    { label: 'Enviada', value: 'enviada' },
     { label: 'Aceptadas', value: 'aceptada' },
+    { label: 'Vendidas', value: 'convertida' },
+    { label: 'Rechazadas', value: 'rechazada' },
     { label: 'Vencidas', value: 'vencida' },
-    { label: 'Borradores', value: 'borrador' },
+    { label: 'Anuladas', value: 'anulada' },
 ];
 
 function formatCurrency(amount: number | string): string {
@@ -166,15 +192,10 @@ function getStatusBadgeConfig(estado: string): {
                 dotClass: 'bg-muted-foreground',
             };
         case 'emitida':
-            return {
-                label: 'Emitida',
-                badgeClass:
-                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 border border-amber-500/20',
-                dotClass: 'bg-amber-600',
-            };
+        case 'pendiente':
         case 'enviada':
             return {
-                label: 'Pendiente',
+                label: 'Enviada',
                 badgeClass:
                     'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 border border-amber-500/20',
                 dotClass: 'bg-amber-600',
@@ -202,7 +223,7 @@ function getStatusBadgeConfig(estado: string): {
             };
         case 'convertida':
             return {
-                label: 'Convertida',
+                label: 'Vendida',
                 badgeClass:
                     'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 border border-blue-500/20',
                 dotClass: 'bg-blue-600',
@@ -235,6 +256,7 @@ export default function CotizacionesIndex({
             ? window.location.pathname.split('/')[1]
             : '');
 
+    const recargando = useRecargando();
     const [processingAction, setProcessingAction] = useState<{
         id: number;
         action: 'send' | 'accept' | 'reject';
@@ -281,8 +303,7 @@ export default function CotizacionesIndex({
 
     const mostrarError = (errors: Record<string, string>) => {
         toast.error(
-            Object.values(errors)[0] ??
-                'No se pudo actualizar la cotización.',
+            Object.values(errors)[0] ?? 'No se pudo actualizar la cotización.',
         );
     };
 
@@ -496,7 +517,12 @@ export default function CotizacionesIndex({
                                 </tr>
                             </thead>
                             <tbody>
-                                {quotes.data.length === 0 ? (
+                                {recargando ? (
+                                    <FilasCargando
+                                        columnas={6}
+                                        filas={quotes.data.length}
+                                    />
+                                ) : quotes.data.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={6}
@@ -555,8 +581,13 @@ export default function CotizacionesIndex({
                                             quote.estado === 'emitida';
                                         const canAcceptOrReject =
                                             quote.estado === 'enviada';
-                                        const canConvert =
-                                            quote.estado === 'aceptada';
+                                        const canConvert = [
+                                            'borrador',
+                                            'emitida',
+                                            'enviada',
+                                            'pendiente',
+                                            'aceptada',
+                                        ].includes(quote.estado);
 
                                         return (
                                             <tr
@@ -615,30 +646,63 @@ export default function CotizacionesIndex({
                                                 {/* Acciones */}
                                                 <td className="px-2.5 py-3.5">
                                                     <div className="flex items-center gap-1.5">
-                                                        {canSend && (
-                                                            <Button
-                                                                type="button"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    handleSend(
+                                                        <a
+                                                            href={QuoteController.pdf.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                    quote: quote.id,
+                                                                },
+                                                            )}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            title="Ver o imprimir el PDF"
+                                                            className="flex h-7 items-center gap-1 rounded-[7px] border border-border bg-card px-2 text-[11px] font-bold text-foreground/80 shadow-xs transition-colors hover:border-primary/60 hover:text-primary"
+                                                        >
+                                                            <FileText className="size-3" />
+                                                            <span>PDF</span>
+                                                        </a>
+                                                        {!quote.venta &&
+                                                            ![
+                                                                'rechazada',
+                                                                'vencida',
+                                                                'anulada',
+                                                                'convertida',
+                                                            ].includes(
+                                                                quote.estado,
+                                                            ) && (
+                                                                <a
+                                                                    href={enlaceWhatsapp(
                                                                         quote,
-                                                                    )
-                                                                }
-                                                                disabled={
-                                                                    isRowProcessing
-                                                                }
-                                                                className="flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] bg-foreground px-2.5 text-[11px] font-bold text-background shadow-xs transition-colors hover:bg-foreground/90 disabled:opacity-50"
-                                                            >
-                                                                {isSending ? (
-                                                                    <Loader2 className="size-3 animate-spin" />
-                                                                ) : (
-                                                                    <Send className="size-3" />
-                                                                )}
-                                                                <span>
-                                                                    Enviar
-                                                                </span>
-                                                            </Button>
-                                                        )}
+                                                                    )}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    onClick={() => {
+                                                                        if (
+                                                                            canSend
+                                                                        ) {
+                                                                            handleSend(
+                                                                                quote,
+                                                                            );
+                                                                        }
+                                                                    }}
+                                                                    title={
+                                                                        quote.whatsapp
+                                                                            ? 'Enviar por WhatsApp al cliente'
+                                                                            : 'El cliente no tiene celular guardado: elige el contacto en WhatsApp'
+                                                                    }
+                                                                    className="flex h-7 items-center gap-1.5 rounded-[7px] bg-[#25D366] px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-[#1ebe5a]"
+                                                                >
+                                                                    {isSending ? (
+                                                                        <Cargando className="size-3" />
+                                                                    ) : (
+                                                                        <MessageCircle className="size-3" />
+                                                                    )}
+                                                                    <span>
+                                                                        WhatsApp
+                                                                    </span>
+                                                                </a>
+                                                            )}
 
                                                         {canAcceptOrReject && (
                                                             <>
@@ -656,7 +720,7 @@ export default function CotizacionesIndex({
                                                                     className="flex h-7 cursor-pointer items-center gap-1 rounded-[7px] bg-emerald-600 px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-emerald-700 disabled:opacity-50"
                                                                 >
                                                                     {isAccepting ? (
-                                                                        <Loader2 className="size-3 animate-spin" />
+                                                                        <Cargando className="size-3" />
                                                                     ) : (
                                                                         <Check className="size-3 stroke-[2.5]" />
                                                                     )}
@@ -678,7 +742,7 @@ export default function CotizacionesIndex({
                                                                     className="flex h-7 cursor-pointer items-center gap-1 rounded-[7px] border border-border bg-card px-2.5 text-[11px] font-bold text-destructive shadow-xs transition-colors hover:bg-destructive/10 disabled:opacity-50"
                                                                 >
                                                                     {isRejecting ? (
-                                                                        <Loader2 className="size-3 animate-spin" />
+                                                                        <Cargando className="size-3" />
                                                                     ) : (
                                                                         <X className="size-3 stroke-[2.5]" />
                                                                     )}
@@ -710,13 +774,49 @@ export default function CotizacionesIndex({
                                                             </Link>
                                                         )}
 
-                                                        {!canSend &&
-                                                            !canAcceptOrReject &&
-                                                            !canConvert && (
-                                                                <span className="px-1 text-xs text-muted-foreground">
-                                                                    —
+                                                        {quote.estado ===
+                                                            'vencida' && (
+                                                            <Link
+                                                                href={QuoteController.create.url(
+                                                                    teamSlug,
+                                                                    {
+                                                                        query: {
+                                                                            renovar:
+                                                                                quote.id,
+                                                                        },
+                                                                    },
+                                                                )}
+                                                                className="flex h-7 items-center gap-1.5 rounded-[7px] bg-primary px-2.5 text-[11px] font-bold text-primary-foreground"
+                                                            >
+                                                                <RotateCcw className="size-3" />
+                                                                Renovar
+                                                            </Link>
+                                                        )}
+
+                                                        {quote.venta ? (
+                                                            <Link
+                                                                href={ventas.show.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        sale: quote
+                                                                            .venta
+                                                                            .id,
+                                                                    },
+                                                                )}
+                                                                className="flex h-7 items-center gap-1.5 rounded-[7px] border border-border bg-card px-2.5 text-[11px] font-bold text-foreground/80 shadow-xs transition-colors hover:border-primary/60 hover:text-primary"
+                                                            >
+                                                                <Receipt className="size-3" />
+                                                                <span>
+                                                                    Ver venta{' '}
+                                                                    {
+                                                                        quote
+                                                                            .venta
+                                                                            .numero
+                                                                    }
                                                                 </span>
-                                                            )}
+                                                            </Link>
+                                                        ) : null}
                                                     </div>
                                                 </td>
                                             </tr>

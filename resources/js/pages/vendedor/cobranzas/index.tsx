@@ -10,6 +10,7 @@ import {
     Lock,
     Unlock,
     Wallet,
+    XCircle,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
@@ -29,6 +30,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import pagos from '@/routes/vendedor/cobranzas/pagos';
 import type { Team } from '@/types';
 
 export type Sede = {
@@ -66,10 +68,18 @@ export type InstallmentItem = {
     sale_numero: string;
     numero_cuota: number;
     monto: number | string;
+    saldo: number | string;
     fecha_vencimiento: string;
     estado: string;
     dias_vencido: number;
     cliente: string;
+    pagos: {
+        id: number;
+        monto: number | string;
+        forma_pago: string;
+        fecha: string;
+        puede_anular: boolean;
+    }[];
 };
 
 export type PaginationLink = {
@@ -120,6 +130,10 @@ export default function CobranzasIndex({
     const [closeTurnoDialogOpen, setCloseTurnoDialogOpen] = useState(false);
     const [selectedInstallment, setSelectedInstallment] =
         useState<InstallmentItem | null>(null);
+    const [selectedPayment, setSelectedPayment] = useState<{
+        id: number;
+        monto: number | string;
+    } | null>(null);
 
     // Form: Abrir turno de caja
     const openForm = useForm({
@@ -173,9 +187,30 @@ export default function CobranzasIndex({
         setSelectedInstallment(inst);
         paymentForm.setData({
             forma_pago: 'efectivo',
-            monto: String(inst.monto),
+            monto: String(inst.saldo),
             numero_operacion: '',
         });
+    };
+
+    const cancelForm = useForm({ motivo: '' });
+
+    const submitCancelPayment = (event: FormEvent) => {
+        event.preventDefault();
+        if (!selectedPayment) return;
+
+        cancelForm.delete(
+            pagos.anular.url({
+                current_team: teamSlug,
+                payment: selectedPayment.id,
+            }),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSelectedPayment(null);
+                    cancelForm.reset();
+                },
+            },
+        );
     };
 
     const submitRegisterPayment = (e: FormEvent) => {
@@ -509,9 +544,17 @@ export default function CobranzasIndex({
                                                         </td>
 
                                                         <td className="px-2.5 py-3.5 font-bold text-foreground">
-                                                            {formatCurrency(
-                                                                inst.monto,
-                                                            )}
+                                                            <div>
+                                                                {formatCurrency(
+                                                                    inst.saldo,
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[10px] font-normal text-muted-foreground">
+                                                                Saldo de{' '}
+                                                                {formatCurrency(
+                                                                    inst.monto,
+                                                                )}
+                                                            </div>
                                                         </td>
 
                                                         <td className="px-2.5 py-3.5">
@@ -529,6 +572,30 @@ export default function CobranzasIndex({
                                                         </td>
 
                                                         <td className="px-2.5 py-3.5 text-right">
+                                                            {inst.pagos
+                                                                .filter(
+                                                                    (pago) =>
+                                                                        pago.puede_anular,
+                                                                )
+                                                                .map((pago) => (
+                                                                    <Button
+                                                                        key={
+                                                                            pago.id
+                                                                        }
+                                                                        type="button"
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            setSelectedPayment(
+                                                                                pago,
+                                                                            )
+                                                                        }
+                                                                        className="mr-1 h-7 rounded-[7px] px-2 text-[11px] text-destructive"
+                                                                    >
+                                                                        Anular
+                                                                        cobro
+                                                                    </Button>
+                                                                ))}
                                                             <Button
                                                                 type="button"
                                                                 size="sm"
@@ -536,6 +603,11 @@ export default function CobranzasIndex({
                                                                     handleOpenPaymentDialog(
                                                                         inst,
                                                                     )
+                                                                }
+                                                                disabled={
+                                                                    Number(
+                                                                        inst.saldo,
+                                                                    ) <= 0
                                                                 }
                                                                 className="h-7 rounded-[7px] bg-card px-3 text-[11px] font-bold text-white shadow-none transition-colors hover:bg-foreground/90"
                                                             >
@@ -850,6 +922,7 @@ export default function CobranzasIndex({
                                 type="number"
                                 step="0.01"
                                 min="0.01"
+                                max={selectedInstallment?.saldo}
                                 required
                                 value={paymentForm.data.monto}
                                 onChange={(e) =>
@@ -899,6 +972,66 @@ export default function CobranzasIndex({
                                 className="rounded-[8px] bg-card text-xs font-bold text-white hover:bg-foreground/90"
                             >
                                 Registrar pago
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={selectedPayment !== null}
+                onOpenChange={(open) => {
+                    if (!open) setSelectedPayment(null);
+                }}
+            >
+                <DialogContent className="rounded-[16px] border-border bg-card sm:max-w-md">
+                    <DialogHeader>
+                        <div className="flex items-center gap-2.5">
+                            <XCircle className="size-6 text-destructive" />
+                            <div>
+                                <DialogTitle>Anular cobro</DialogTitle>
+                                <DialogDescription>
+                                    Indica por qué se anula el cobro de{' '}
+                                    {formatCurrency(selectedPayment?.monto)}.
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+                    <form onSubmit={submitCancelPayment} className="space-y-3">
+                        <div>
+                            <Label htmlFor="motivo-anulacion">Motivo *</Label>
+                            <Input
+                                id="motivo-anulacion"
+                                value={cancelForm.data.motivo}
+                                onChange={(event) =>
+                                    cancelForm.setData(
+                                        'motivo',
+                                        event.target.value,
+                                    )
+                                }
+                                placeholder="Ej. Se registró dos veces"
+                                required
+                            />
+                            {cancelForm.errors.motivo && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {cancelForm.errors.motivo}
+                                </p>
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setSelectedPayment(null)}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                disabled={cancelForm.processing}
+                            >
+                                Anular cobro
                             </Button>
                         </DialogFooter>
                     </form>

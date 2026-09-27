@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import ChispaWidget from '@/components/chispa-widget';
 import {
     CalendarCheck,
     ClipboardCheck,
@@ -98,7 +99,8 @@ export default function TecnicoCampoLayout({
                             </span>
                         </div>
                         <p className="max-w-[140px] truncate text-[10px] leading-none font-medium text-muted-foreground">
-                            {page.props.currentTeam?.name ?? 'Operaciones de Campo'}
+                            {page.props.currentTeam?.name ??
+                                'Operaciones de Campo'}
                         </p>
                     </div>
                 </div>
@@ -151,7 +153,7 @@ export default function TecnicoCampoLayout({
             </nav>
 
             {/* Main Content Area: único scroll, pb-28 para que la barra inferior táctil nunca tape contenido */}
-            <main className="mx-auto w-full max-w-2xl flex-1 overflow-y-auto px-4 py-5 pb-28 md:pb-8 overscroll-contain">
+            <main className="mx-auto w-full max-w-2xl flex-1 overflow-y-auto px-4 py-5 pb-48 md:pb-32 overscroll-contain">
                 {children}
             </main>
 
@@ -186,6 +188,7 @@ export default function TecnicoCampoLayout({
                     );
                 })}
             </nav>
+            <ChispaWidget rol="tecnico" />
         </div>
     );
 }

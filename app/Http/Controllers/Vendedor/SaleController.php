@@ -5,21 +5,27 @@ namespace App\Http\Controllers\Vendedor;
 use App\Actions\Billing\AnularVentaPorEnviar;
 use App\Actions\Billing\CorregirComprobante;
 use App\Actions\Billing\EmitElectronicDocument;
+use App\Actions\Certificates\EmitirCertificadoDeServicio;
+use App\Actions\Sales\CambiarUnidadVendida;
 use App\Actions\Sales\ConfirmSale;
 use App\Actions\Sales\CreateSale;
+use App\Actions\Sales\DescartarVentaSinComprobante;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\CorregirComprobanteRequest;
 use App\Http\Requests\Sales\StoreSaleRequest;
+use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Sede;
 use App\Models\Team;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -34,7 +40,7 @@ class SaleController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         $sales = Sale::query()
-            ->with('client')
+            ->with(['client', 'electronicDocuments'])
             ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
             ->when($comprobante === 'nota_venta', fn ($query) => $query->where('comprobante_tipo', Sale::NOTA_VENTA))
@@ -49,6 +55,11 @@ class SaleController extends Controller
                 'cliente' => $sale->client->razon_social,
                 'fecha' => $sale->fecha->toDateString(),
                 'comprobante_tipo' => $sale->comprobante_tipo,
+                'comprobante' => $sale->numeroComprobante(),
+                'sunat_estado' => $sale->electronicDocuments
+                    ->whereIn('tipo', ['factura', 'boleta'])
+                    ->sortBy('id')
+                    ->last()?->sunat_estado,
                 'total' => $sale->total,
                 'estado' => $sale->estado,
             ]);
@@ -73,10 +84,10 @@ class SaleController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         return Inertia::render('vendedor/ventas/nueva', [
-            'clients' => Client::query()
-                ->orderByDesc('created_at')
-                ->limit(10)
-                ->get(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
+            'caja_abierta' => CashRegister::query()
+                ->where('user_id', $request->user()->id)
+                ->where('estado', 'abierto')
+                ->exists(),
             'clientesVarios' => Client::clientesVarios()->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             'limiteBoletaSinIdentificar' => Sale::LIMITE_BOLETA_SIN_IDENTIFICAR,
             'sedes' => Sede::query()
@@ -87,20 +98,162 @@ class SaleController extends Controller
             'quote' => $request->filled('cotizacion')
                 ? $this->cotizacionParaVenta($request->integer('cotizacion'), $sedeId)
                 : null,
+            'venta' => $request->filled('rehacer')
+                ? $this->ventaParaFormulario($request->integer('rehacer'), $sedeId, comoCopia: true)
+                : null,
         ]);
+    }
+
+    /**
+     * Editar una venta en borrador: el mismo formulario de nueva venta, ya
+     * lleno. Al guardar conserva su número.
+     */
+    public function edit(Team $current_team, Sale $sale, Request $request): Response|RedirectResponse
+    {
+        $this->assertSedeAccess($request, $sale);
+
+        if ($sale->estado !== 'borrador') {
+            Inertia::flash('toast', ['type' => 'error', 'message' => "La venta {$sale->numero_interno} ya se emitió: corrígela desde su detalle."]);
+
+            return redirect()->route('vendedor.ventas.show', ['current_team' => $current_team, 'sale' => $sale]);
+        }
+
+        $sedeId = $request->user()->sedeRestringidaId();
+
+        return Inertia::render('vendedor/ventas/nueva', [
+            'clientesVarios' => Client::clientesVarios()->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
+            'limiteBoletaSinIdentificar' => Sale::LIMITE_BOLETA_SIN_IDENTIFICAR,
+            'sedes' => Sede::query()
+                ->where('activo', true)
+                ->when($sedeId, fn ($query) => $query->where('id', $sedeId))
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']),
+            'quote' => null,
+            'venta' => $this->ventaParaFormulario($sale->id, $sedeId, comoCopia: false),
+        ]);
+    }
+
+    public function update(Team $current_team, Sale $sale, StoreSaleRequest $request, CreateSale $createSale, ConfirmSale $confirmSale): RedirectResponse
+    {
+        $this->assertSedeAccess($request, $sale);
+
+        $data = $request->safe()->except(['items', 'emitir']);
+        $items = $request->safe()->input('items');
+
+        if ($sedeId = $request->user()->sedeRestringidaId()) {
+            $data['sede_id'] = $sedeId;
+        }
+
+        $emitir = $request->boolean('emitir');
+
+        $sale = DB::transaction(function () use ($sale, $data, $items, $request, $createSale, $confirmSale, $emitir) {
+            $sale = $createSale->actualizar($sale, $data, $items, $request->user()->id);
+
+            return $emitir ? $confirmSale->handle($sale) : $sale;
+        });
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => $emitir
+            ? "Venta {$sale->numero_interno} corregida y emitida."
+            : "Borrador {$sale->numero_interno} actualizado."]);
+
+        return redirect()->route('vendedor.ventas.show', ['current_team' => $current_team, 'sale' => $sale]);
+    }
+
+    /**
+     * Precio o producto mal en un comprobante que aún no se envió a SUNAT:
+     * se anula (el número se libera) y se abre una copia lista para corregir.
+     */
+    public function corregirProductos(Team $current_team, Sale $sale, Request $request, AnularVentaPorEnviar $anularVentaPorEnviar): RedirectResponse
+    {
+        $this->assertSedeAccess($request, $sale);
+
+        $anularVentaPorEnviar->handle($sale);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Venta {$sale->numero_interno} anulada. Corrige los datos y vuelve a emitir."]);
+
+        return redirect()->route('vendedor.ventas.create', ['current_team' => $current_team, 'rehacer' => $sale->id]);
+    }
+
+    /**
+     * Datos de una venta para llenar el formulario: para editar su borrador
+     * o, como copia, para rehacerla después de anularla.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function ventaParaFormulario(int $saleId, ?int $sedeId, bool $comoCopia): ?array
+    {
+        $sale = Sale::query()
+            ->with('client', 'items.product', 'items.service', 'items.inventoryUnit', 'installments')
+            ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
+            ->find($saleId);
+
+        if (! $sale) {
+            return null;
+        }
+
+        return [
+            'id' => $comoCopia ? null : $sale->id,
+            'numero_interno' => $sale->numero_interno,
+            'client' => $sale->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
+            'sede_id' => $sale->sede_id,
+            'destino' => $sale->destino,
+            'referencia' => $sale->referencia,
+            'condicion_pago' => $sale->esCredito() ? 'credito' : 'contado',
+            'medio_pago' => $sale->medio_pago ?? 'efectivo',
+            'numero_operacion' => $sale->numero_operacion,
+            'comprobante_tipo' => $sale->comprobante_tipo,
+            'observaciones' => $sale->observaciones,
+            'cuotas' => $comoCopia ? [] : $sale->installments->map(fn ($cuota) => [
+                'fecha_vencimiento' => $cuota->fecha_vencimiento->toDateString(),
+                'monto' => (float) $cuota->monto,
+            ])->values()->all(),
+            'items' => $sale->items
+                ->reject(fn (SaleItem $item) => $item->tipo_linea === 'recarga_servicio' && ! $item->service_id)
+                ->map(fn (SaleItem $item) => match ($item->tipo_linea) {
+                    'unidad_nueva' => [
+                        'tipo_linea' => 'unidad_nueva',
+                        'numero_serie' => $item->inventoryUnit?->numero_serie,
+                        'product_id' => $item->product_id,
+                        'inventory_unit_id' => $item->inventory_unit_id,
+                        'nombre' => $item->product?->nombre,
+                        'detalle' => collect([$item->inventoryUnit?->capacidad, $item->inventoryUnit?->marca])->filter()->implode(' · '),
+                        'cantidad' => 1,
+                        'precio_unitario' => (float) $item->precio_unitario,
+                        'descuento' => (float) $item->descuento,
+                    ],
+                    'producto' => [
+                        'tipo_linea' => 'producto',
+                        'product_id' => $item->product_id,
+                        'nombre' => $item->product?->nombre,
+                        'cantidad' => (int) $item->cantidad,
+                        'precio_unitario' => (float) $item->precio_unitario,
+                        'descuento' => (float) $item->descuento,
+                    ],
+                    default => [
+                        'tipo_linea' => 'servicio',
+                        'service_id' => $item->service_id,
+                        'nombre' => $item->service?->nombre,
+                        'cantidad' => (int) $item->cantidad,
+                        'precio_unitario' => (float) $item->precio_unitario,
+                        'descuento' => (float) $item->descuento,
+                    ],
+                })
+                ->values()
+                ->all(),
+        ];
     }
 
     /**
      * Cotización aceptada que se pasa a venta: precarga el cliente y
      * muestra los ítems cotizados para escanear sus series.
      *
-     * @return array{id: int, numero: string, client: array{id: int, tipo_documento: string, razon_social: string, numero_documento: string}, items: list<array{tipo: string, product_id: int|null, service_id: int|null, nombre: string, cantidad: int, precio_unitario: float}>}|null
+     * @return array{id: int, numero: string, client: array{id: int, tipo_documento: string, razon_social: string, numero_documento: string}, items: list<array{tipo: string, product_id: int|null, service_id: int|null, nombre: string, codigo: string|null, serializado: bool, cantidad: int, precio_unitario: float}>, referencia: string|null}|null
      */
     protected function cotizacionParaVenta(int $quoteId, ?int $sedeId): ?array
     {
         $quote = Quote::query()
             ->with('client', 'items.product', 'items.service')
-            ->where('estado', 'aceptada')
+            ->whereIn('estado', ['borrador', 'emitida', 'enviada', 'pendiente', 'aceptada'])
             ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
             ->find($quoteId);
 
@@ -117,22 +270,37 @@ class SaleController extends Controller
                 'product_id' => $item->product_id,
                 'service_id' => $item->service_id,
                 'nombre' => $item->esServicio() ? $item->service?->nombre : $item->product?->nombre,
+                'codigo' => $item->esServicio() ? $item->service?->codigo : $item->product?->codigo,
+                'serializado' => (bool) $item->product?->serializado,
                 'cantidad' => (int) $item->cantidad,
                 'precio_unitario' => (float) $item->precio_unitario,
             ])->values()->all(),
+            'referencia' => $quote->referencia,
         ];
     }
 
     public function store(Team $current_team, StoreSaleRequest $request, CreateSale $createSale): RedirectResponse
     {
-        $data = $request->safe()->except('items');
+        $data = $request->safe()->except(['items', 'emitir']);
         $items = $request->safe()->input('items');
 
         if ($sedeId = $request->user()->sedeRestringidaId()) {
             $data['sede_id'] = $sedeId;
         }
 
-        $sale = $createSale->handle($data, $items, $request->user()->id);
+        // Emitir en el mismo paso: si algo falla (RUC, stock), no queda nada
+        // a medias y el error sale en el formulario.
+        $emitir = $request->boolean('emitir');
+
+        $sale = DB::transaction(function () use ($data, $items, $request, $createSale, $emitir) {
+            $sale = $createSale->handle($data, $items, $request->user()->id);
+
+            return $emitir ? app(ConfirmSale::class)->handle($sale) : $sale;
+        });
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => $emitir
+            ? "Venta {$sale->numero_interno} emitida."
+            : "Borrador {$sale->numero_interno} guardado. Emítelo cuando el cliente confirme."]);
 
         return redirect()->route('vendedor.ventas.show', [
             'current_team' => $current_team,
@@ -159,6 +327,11 @@ class SaleController extends Controller
             ],
             'clientesVarios' => Client::clientesVarios()->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             'limiteBoletaSinIdentificar' => Sale::LIMITE_BOLETA_SIN_IDENTIFICAR,
+            'certificados' => SaleCertificateController::certificados($sale),
+            'tieneEquipos' => $sale->items->contains(fn ($item) => $item->equipment_id !== null),
+            'tiposServicio' => EmitirCertificadoDeServicio::tiposDeServicio()
+                ->map(fn ($tipo) => ['codigo' => $tipo->codigo, 'nombre' => $tipo->nombre])
+                ->values(),
         ]);
     }
 
@@ -235,6 +408,39 @@ class SaleController extends Controller
         $anularVentaPorEnviar->handle($sale);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => "Venta {$sale->numero_interno} anulada; las unidades volvieron al stock."]);
+
+        return back();
+    }
+
+    /**
+     * Cambia el extintor de una línea por otro del mismo producto, sin nota
+     * de crédito (el comprobante no muestra la serie).
+     */
+    public function cambiarUnidad(Team $current_team, Sale $sale, SaleItem $item, Request $request, CambiarUnidadVendida $cambiar): RedirectResponse
+    {
+        $this->assertSedeAccess($request, $sale);
+
+        $datos = $request->validate(['numero_serie' => ['required', 'string', 'max:50']]);
+        $item = $cambiar->handle($sale, $item, $datos['numero_serie'], $request->user()->id);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Extintor cambiado por {$item->inventoryUnit->numero_serie}. Los certificados se corrigieron."]);
+
+        return back();
+    }
+
+    /**
+     * Descarta un borrador o anula una nota de venta (nunca fueron a SUNAT).
+     */
+    public function descartar(Team $current_team, Sale $sale, Request $request, DescartarVentaSinComprobante $descartar): RedirectResponse
+    {
+        $this->assertSedeAccess($request, $sale);
+
+        $esBorrador = $sale->estado === 'borrador';
+        $descartar->handle($sale);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => $esBorrador
+            ? "Borrador {$sale->numero_interno} descartado; las unidades volvieron al stock."
+            : "Nota de venta {$sale->numero_nota_venta} anulada; las unidades volvieron al stock."]);
 
         return back();
     }

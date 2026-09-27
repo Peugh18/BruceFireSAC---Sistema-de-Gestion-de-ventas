@@ -27,6 +27,7 @@ class InspectionController extends Controller
         $search = $request->query('q');
 
         $query = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
             ->with(['client', 'sede', 'equipments'])
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
@@ -101,6 +102,7 @@ class InspectionController extends Controller
             ->get();
 
         return Inertia::render('tecnico-campo/inspecciones/show', [
+            'asignacion' => $serviceOrder->asignacionPara(request()->user()),
             'order' => $serviceOrder,
             'customerEquipments' => $customerEquipments,
             'elementosChecklist' => ProcessChecklist::ELEMENTOS,

@@ -207,15 +207,37 @@ test('creating a client from the sale or quote modal returns it as json', functi
     ]);
 });
 
-test('client search endpoint requires at least 2 characters', function () {
+test('exportar clientes descarga un csv con los clientes de la busqueda actual', function () {
+    $user = vendedorUser();
+    Client::factory()->create(['razon_social' => 'EXTINTORES DEL NORTE S.A.C.', 'numero_documento' => '20600000001']);
+    Client::factory()->create(['razon_social' => 'OTRA EMPRESA S.A.C.']);
+
+    $response = $this->actingAs($user)
+        ->get(route('vendedor.clientes.export', ['current_team' => $user->currentTeam, 'search' => 'norte']))
+        ->assertOk()
+        ->assertDownload('clientes-'.now()->format('Y-m-d').'.csv');
+
+    $csv = $response->streamedContent();
+
+    expect($csv)->toContain('EXTINTORES DEL NORTE S.A.C.')
+        ->toContain('20600000001')
+        ->not->toContain('OTRA EMPRESA');
+});
+
+test('client search endpoint filters from the first letter and ignores blank searches', function () {
     $user = vendedorUser();
 
-    Client::factory()->create(['razon_social' => 'A S.A.C.']);
+    $cliente = Client::factory()->create(['razon_social' => 'ZAFIRO S.A.C.']);
 
     $this->actingAs($user)
-        ->getJson(route('vendedor.clientes.search', ['current_team' => $user->currentTeam, 'search' => 'A']))
+        ->getJson(route('vendedor.clientes.search', ['current_team' => $user->currentTeam, 'search' => 'Z']))
         ->assertOk()
-        ->assertJson([]);
+        ->assertJsonFragment(['id' => $cliente->id]);
+
+    $this->actingAs($user)
+        ->getJson(route('vendedor.clientes.search', ['current_team' => $user->currentTeam, 'search' => ' ']))
+        ->assertOk()
+        ->assertExactJson([]);
 });
 
 if (! function_exists('vendedorUser')) {

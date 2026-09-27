@@ -19,6 +19,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon $fecha_emision
  * @property Carbon $fecha_vigencia_hasta
  * @property string $estado
+ * @property int $revision
+ * @property string|null $anulado_motivo
+ * @property Carbon|null $anulado_at
+ * @property int|null $anulado_por
+ * @property int|null $certificate_type_version_id
  * @property string $qr_token
  * @property int|null $sale_id
  * @property int|null $service_order_id
@@ -27,15 +32,28 @@ use Illuminate\Support\Carbon;
  * @property-read CertificateType $certificateType
  * @property-read Client $client
  * @property-read ServiceOrder|null $serviceOrder
+ * @property-read Sale|null $sale
  * @property-read Collection<int, CertificateUnit> $certificateUnits
+ * @property-read Collection<int, CertificateParticipant> $participants
+ * @property-read Collection<int, CertificateRevision> $revisions
+ * @property-read CertificateTypeVersion|null $typeVersion
  */
 #[Fillable([
     'numero',
     'certificate_type_id',
     'client_id',
+    'referencia',
+    'direccion',
+    'tipo_atencion',
+    'datos',
     'fecha_emision',
     'fecha_vigencia_hasta',
     'estado',
+    'revision',
+    'anulado_motivo',
+    'anulado_at',
+    'anulado_por',
+    'certificate_type_version_id',
     'qr_token',
     'sale_id',
     'service_order_id',
@@ -48,9 +66,12 @@ class Certificate extends Model
     protected function casts(): array
     {
         return [
+            'datos' => 'array',
             'fecha_emision' => 'date',
             'fecha_vigencia_hasta' => 'date',
             'sale_id' => 'integer',
+            'revision' => 'integer',
+            'anulado_at' => 'datetime',
         ];
     }
 
@@ -69,8 +90,33 @@ class Certificate extends Model
         return $this->belongsTo(ServiceOrder::class, 'service_order_id');
     }
 
+    public function sale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class);
+    }
+
     public function certificateUnits(): HasMany
     {
         return $this->hasMany(CertificateUnit::class, 'certificate_id');
+    }
+
+    public function participants(): HasMany
+    {
+        return $this->hasMany(CertificateParticipant::class)->orderBy('orden');
+    }
+
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(CertificateRevision::class)->orderBy('numero_revision');
+    }
+
+    public function typeVersion(): BelongsTo
+    {
+        return $this->belongsTo(CertificateTypeVersion::class, 'certificate_type_version_id');
+    }
+
+    public function anuladoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anulado_por');
     }
 }

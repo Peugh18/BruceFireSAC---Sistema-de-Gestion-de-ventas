@@ -4,17 +4,18 @@ import {
     Clock3,
     Download,
     Eye,
-    Filter,
     Plus,
     Search,
     UsersRound,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
+import { FilasCargando } from '@/components/cargando';
 import ClientCreateDialog from '@/components/client-create-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import clientes from '@/routes/vendedor/clientes';
 
@@ -93,6 +94,61 @@ function cleanPaginationLabel(label: string) {
     return label.replace('&laquo;', '<').replace('&raquo;', '>');
 }
 
+function renderSunatBadge(client: ClientRow) {
+    const tipo = client.cliente.tipo_documento?.toLowerCase();
+    const esDni = tipo === 'dni';
+    const esVarios =
+        client.documento === '00000000' ||
+        client.cliente.razon_social?.toUpperCase().includes('VARIOS');
+
+    if (esDni) {
+        return (
+            <span className="text-[11.5px] font-medium text-muted-foreground">
+                No aplica (DNI)
+            </span>
+        );
+    }
+
+    if (esVarios) {
+        return (
+            <span className="text-[11.5px] font-medium text-muted-foreground">
+                No aplica
+            </span>
+        );
+    }
+
+    const { estado_contribuyente, condicion_domicilio } = client.estado_sunat;
+
+    // Sin verificar
+    if (!estado_contribuyente && !condicion_domicilio) {
+        return (
+            <Badge className="rounded-full border border-neutral-300 bg-neutral-100 px-2.5 py-1 text-[10.5px] font-bold text-neutral-600 shadow-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                Sin verificar
+            </Badge>
+        );
+    }
+
+    // Activo y Habido
+    const isActivo = estado_contribuyente?.toUpperCase() === 'ACTIVO';
+    const isHabido = condicion_domicilio?.toUpperCase() === 'HABIDO';
+
+    if (isActivo && isHabido) {
+        return (
+            <Badge className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10.5px] font-bold text-emerald-600 shadow-none dark:text-emerald-400">
+                Activo · Habido
+            </Badge>
+        );
+    }
+
+    // Otro estado (rojo con el estado real)
+    return (
+        <Badge className="rounded-full border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-[10.5px] font-bold text-destructive shadow-none">
+            {estado_contribuyente || 'No activo'} ·{' '}
+            {condicion_domicilio || 'No habido'}
+        </Badge>
+    );
+}
+
 export default function ClientesIndex({
     currentTeam,
     clients,
@@ -102,6 +158,7 @@ export default function ClientesIndex({
 }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [dialogOpen, setDialogOpen] = useState(false);
+    const recargando = useRecargando();
     const submitSearch = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -119,6 +176,26 @@ export default function ClientesIndex({
         );
     };
 
+    const rucClients = clients.data.filter(
+        (c) => c.cliente.tipo_documento?.toLowerCase() === 'ruc',
+    );
+    const rucTotal = rucClients.length;
+    const rucActivosHabidos = rucClients.filter(
+        (c) =>
+            c.estado_sunat.estado_contribuyente === 'ACTIVO' &&
+            c.estado_sunat.condicion_domicilio === 'HABIDO',
+    ).length;
+    const rucSinVerificar = rucClients.filter(
+        (c) =>
+            !c.estado_sunat.estado_contribuyente &&
+            !c.estado_sunat.condicion_domicilio,
+    ).length;
+
+    const rucKpiValue =
+        rucTotal > 0
+            ? `${rucActivosHabidos} de ${rucTotal} (${rucSinVerificar} sin verificar)`
+            : `${kpis.porcentaje_activo_habido}%`;
+
     const kpiItems = [
         {
             label: 'Total clientes',
@@ -135,8 +212,8 @@ export default function ClientesIndex({
             text: 'text-emerald-600 dark:text-emerald-400',
         },
         {
-            label: 'RUC activo y habido',
-            value: `${kpis.porcentaje_activo_habido}%`,
+            label: 'RUC activos y habidos',
+            value: rucKpiValue,
             icon: Clock3,
             bg: 'bg-amber-500/10',
             text: 'text-amber-600 dark:text-amber-400',
@@ -198,26 +275,26 @@ export default function ClientesIndex({
                                 onChange={(event) =>
                                     setSearch(event.target.value)
                                 }
-                                placeholder="Buscar por razon social, RUC o DNI..."
+                                placeholder="Buscar por nombre, razón social, RUC o DNI..."
                                 className="h-10 min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
                             />
                         </form>
 
                         <Button
-                            type="button"
+                            asChild
                             variant="outline"
                             className="h-10 rounded-[9px] border-border bg-card px-3.5 text-[12.5px] font-semibold text-foreground/80 shadow-none"
                         >
-                            <Filter className="size-3.5" />
-                            Filtros
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="h-10 rounded-[9px] border-border bg-card px-3.5 text-[12.5px] font-semibold text-foreground/80 shadow-none"
-                        >
-                            <Download className="size-3.5" />
-                            Exportar
+                            <a
+                                href={clientes.export.url(currentTeam.slug, {
+                                    query: {
+                                        search: filters.search || undefined,
+                                    },
+                                })}
+                            >
+                                <Download className="size-3.5" />
+                                Exportar
+                            </a>
                         </Button>
                         <Button
                             type="button"
@@ -246,97 +323,103 @@ export default function ClientesIndex({
                                 </tr>
                             </thead>
                             <tbody>
-                                {clients.data.map((client) => {
-                                    const healthy = sunatIsHealthy(client);
+                                {recargando ? (
+                                    <FilasCargando
+                                        columnas={columns.length}
+                                        filas={clients.data.length}
+                                    />
+                                ) : (
+                                    clients.data.map((client) => {
+                                        const healthy = sunatIsHealthy(client);
 
-                                    return (
-                                        <tr key={client.id}>
-                                            <td className="border-b border-border px-2.5 py-[13px]">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground/80">
-                                                        {initials(
-                                                            client.cliente
-                                                                .razon_social,
-                                                        ) ||
-                                                            client.cliente
-                                                                .avatar}
-                                                    </div>
-                                                    <div className="min-w-[180px]">
-                                                        <div className="flex items-center gap-1.5 font-bold text-foreground">
-                                                            {
+                                        return (
+                                            <tr key={client.id}>
+                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground/80">
+                                                            {initials(
                                                                 client.cliente
-                                                                    .razon_social
-                                                            }
-                                                            {!client.activo && (
-                                                                <Badge className="rounded-full border-transparent bg-destructive/10 px-1.5 py-0 text-[9.5px] font-bold text-destructive shadow-none">
-                                                                    Inactivo
-                                                                </Badge>
-                                                            )}
+                                                                    .razon_social,
+                                                            ) ||
+                                                                client.cliente
+                                                                    .avatar}
                                                         </div>
-                                                        <div className="text-[11px] text-muted-foreground">
-                                                            {
-                                                                client.codigo_interno
-                                                            }{' '}
-                                                            ·{' '}
-                                                            {client.cliente.tipo_documento.toUpperCase()}
+                                                        <div className="min-w-[180px]">
+                                                            <div className="flex items-center gap-1.5 font-bold text-foreground">
+                                                                <Link
+                                                                    href={clientes.show(
+                                                                        {
+                                                                            current_team:
+                                                                                currentTeam.slug,
+                                                                            client: client.id,
+                                                                        },
+                                                                    )}
+                                                                    className="hover:text-primary hover:underline"
+                                                                >
+                                                                    {
+                                                                        client
+                                                                            .cliente
+                                                                            .razon_social
+                                                                    }
+                                                                </Link>
+                                                                {!client.activo && (
+                                                                    <Badge className="rounded-full border-transparent bg-destructive/10 px-1.5 py-0 text-[9.5px] font-bold text-destructive shadow-none">
+                                                                        Inactivo
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[11px] text-muted-foreground">
+                                                                {
+                                                                    client.codigo_interno
+                                                                }{' '}
+                                                                ·{' '}
+                                                                {client.cliente.tipo_documento.toUpperCase()}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-muted-foreground">
-                                                {client.documento}
-                                            </td>
-                                            <td className="max-w-[280px] border-b border-border px-2.5 py-[13px] text-muted-foreground">
-                                                <span className="line-clamp-2">
-                                                    {client.direccion ?? '-'}
-                                                </span>
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px]">
-                                                <Badge
-                                                    className={[
-                                                        'rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold shadow-none',
-                                                        healthy
-                                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                                            : 'bg-destructive/10 text-destructive border border-destructive/20',
-                                                    ].join(' ')}
-                                                >
-                                                    {client.estado_sunat
-                                                        .estado_contribuyente ??
-                                                        '-'}{' '}
-                                                    ·{' '}
-                                                    {client.estado_sunat
-                                                        .condicion_domicilio ??
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-muted-foreground">
+                                                    {client.documento}
+                                                </td>
+                                                <td className="max-w-[280px] border-b border-border px-2.5 py-[13px] text-muted-foreground">
+                                                    <span className="line-clamp-2">
+                                                        {client.direccion ??
+                                                            '-'}
+                                                    </span>
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                    {renderSunatBadge(client)}
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px] text-muted-foreground">
+                                                    {client.ultima_compra ??
                                                         '-'}
-                                                </Badge>
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px] text-muted-foreground">
-                                                {client.ultima_compra ?? '-'}
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px]">
-                                                <div className="flex gap-1.5">
-                                                    <Button
-                                                        asChild
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="size-7 rounded-[7px] border-border bg-card text-foreground/80 shadow-none"
-                                                    >
-                                                        <Link
-                                                            href={clientes.show(
-                                                                {
-                                                                    current_team:
-                                                                        currentTeam.slug,
-                                                                    client: client.id,
-                                                                },
-                                                            )}
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                    <div className="flex gap-1.5">
+                                                        <Button
+                                                            asChild
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="size-7 rounded-[7px] border-border bg-card text-foreground/80 shadow-none"
                                                         >
-                                                            <Eye className="size-3.5" />
-                                                        </Link>
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
+                                                            <Link
+                                                                href={clientes.show(
+                                                                    {
+                                                                        current_team:
+                                                                            currentTeam.slug,
+                                                                        client: client.id,
+                                                                    },
+                                                                )}
+                                                            >
+                                                                <Eye className="size-3.5" />
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
                             </tbody>
                         </table>
                     </div>

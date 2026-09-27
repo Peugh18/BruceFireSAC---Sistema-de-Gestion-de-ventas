@@ -4,6 +4,7 @@ use App\Actions\Certificates\IssueCertificate;
 use App\Models\Certificate;
 use App\Models\CertificateType;
 use App\Models\Client;
+use Database\Seeders\CertificateTypeSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Str;
 
@@ -154,6 +155,30 @@ test('vendedor can download and print the certificate pdf', function () {
         ->assertHeader('Content-Disposition', "inline; filename=\"certificado-{$certificate->numero}.pdf\"");
 });
 
+test('vendedor can download the certificate as an editable word document', function () {
+    $user = vendedorUser();
+    $this->seed(CertificateTypeSeeder::class);
+    $tipo = CertificateType::where('codigo', 'luces_emergencia')->firstOrFail();
+    $certificate = app(IssueCertificate::class)->handle($tipo, Client::factory()->create(), []);
+
+    $response = $this->actingAs($user)->get(route('vendedor.certificados.word', [
+        'current_team' => $user->currentTeam,
+        'certificate' => $certificate,
+    ]));
+
+    $response->assertOk()
+        ->assertDownload("certificado-{$certificate->numero}.docx");
+
+    $zip = new ZipArchive;
+    $zip->open($response->getFile()->getPathname());
+    $documento = $zip->getFromName('word/document.xml');
+    $zip->close();
+
+    expect($documento)->toContain($certificate->numero)
+        ->toContain('LUCES DE EMERGENCIA')
+        ->toContain('Ing. Sixto Leiva Marín');
+});
+
 test('public route verifies certificate with valid token and returns 404 with invalid token without auth', function () {
     $tipo = CertificateType::factory()->create([
         'codigo' => 'operatividad_garantia',
@@ -167,7 +192,7 @@ test('public route verifies certificate with valid token and returns 404 with in
         'qr_token' => (string) Str::uuid(),
     ]);
 
-    $responseValid = $this->get(route('certificados.verificar', ['token' => $certificate->qr_token]));
+    $responseValid = $this->getJson(route('certificados.verificar', ['token' => $certificate->qr_token]));
     $responseValid->assertOk()
         ->assertJson([
             'numero' => $certificate->numero,
@@ -175,6 +200,6 @@ test('public route verifies certificate with valid token and returns 404 with in
             'cliente' => 'EMPRESA TEST SAC',
         ]);
 
-    $responseInvalid = $this->get(route('certificados.verificar', ['token' => 'token-inexistente-12345']));
+    $responseInvalid = $this->getJson(route('certificados.verificar', ['token' => 'token-inexistente-12345']));
     $responseInvalid->assertNotFound();
 });

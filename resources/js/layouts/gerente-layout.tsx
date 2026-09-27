@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import ChispaWidget from '@/components/chispa-widget';
 import { Bell, LogOut, Menu } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
@@ -82,11 +83,12 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
                     </header>
 
                     {/* Único contenedor de scroll vertical: sidebar y header quedan estáticos */}
-                    <main className="flex-1 overflow-y-auto p-4 lg:p-[30px] overscroll-contain">
+                    <main className="flex-1 overflow-y-auto p-4 pb-32 lg:p-[30px] lg:pb-32 overscroll-contain">
                         {children}
                     </main>
                 </div>
             </div>
+            <ChispaWidget rol="gerente" />
         </>
     );
 }

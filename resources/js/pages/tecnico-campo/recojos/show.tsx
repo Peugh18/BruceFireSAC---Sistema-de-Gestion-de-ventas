@@ -1,4 +1,5 @@
-﻿import React from 'react';
+import React from 'react';
+import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
@@ -13,6 +14,7 @@ import {
     Calendar,
     User,
     FileText,
+    MessageSquare,
 } from 'lucide-react';
 
 interface CustodyEventItem {
@@ -25,6 +27,7 @@ interface CustodyEventItem {
 }
 
 interface Props {
+    asignacion: AsignacionOrden;
     order: {
         id: number;
         codigo: string;
@@ -40,6 +43,11 @@ interface Props {
         prioridad: string;
         estado: string;
         observaciones: string | null;
+        notas_vendedor?: Array<{
+            id: number;
+            mensaje: string;
+            fecha: string;
+        }>;
         equipments: Array<{
             id: number;
             numero_serie: string;
@@ -51,7 +59,11 @@ interface Props {
     custodyEvents: CustodyEventItem[];
 }
 
-export default function RecojoShow({ order, custodyEvents }: Props) {
+export default function RecojoShow({
+    asignacion,
+    order,
+    custodyEvents,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
     const teamPrefix = `/${teamSlug}/tecnico-campo`;
@@ -146,6 +158,61 @@ export default function RecojoShow({ order, custodyEvents }: Props) {
                         )}
                     </div>
                 </div>
+
+                <TomarOrden asignacion={asignacion} />
+
+                {/* Indicaciones de Ventas / Notas de Coordinación */}
+                {(() => {
+                    const notas = order.notas_vendedor || [];
+                    if (!order.observaciones && notas.length === 0) {
+                        return null;
+                    }
+
+                    return (
+                        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
+                            <div className="flex items-center gap-2 font-bold text-xs text-blue-900 dark:text-blue-300">
+                                <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
+                                <span>
+                                    Indicaciones de Ventas y Coordinación
+                                </span>
+                            </div>
+
+                            {order.observaciones && (
+                                <p className="mt-2 text-xs text-blue-800 dark:text-blue-200">
+                                    <span className="font-semibold text-blue-950 dark:text-blue-100">
+                                        Observación inicial:{' '}
+                                    </span>
+                                    {order.observaciones}
+                                </p>
+                            )}
+
+                            {notas.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                    <span className="text-[11px] font-bold text-blue-900/70 uppercase dark:text-blue-300/70">
+                                        Notas de Ventas:
+                                    </span>
+                                    {notas.map((n) => (
+                                        <div
+                                            key={n.id}
+                                            className="rounded-xl border border-blue-100 bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:border-blue-800/40 dark:bg-neutral-900/80 dark:text-neutral-200"
+                                        >
+                                            <p className="font-medium">
+                                                {n.mensaje}
+                                            </p>
+                                            <span className="mt-1 block text-[10.5px] text-neutral-400">
+                                                {n.fecha
+                                                    ? new Date(
+                                                          n.fecha,
+                                                      ).toLocaleString('es-PE')
+                                                    : ''}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
 
                 {/* Cadena de Custodia Timeline (§22.4) */}
                 <div className="space-y-3 rounded-2xl border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">

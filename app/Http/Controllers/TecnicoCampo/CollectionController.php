@@ -21,6 +21,7 @@ class CollectionController extends Controller
         $search = trim((string) $request->input('search', ''));
 
         $query = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
                     ->orWhereNull('departamento_tecnico');
@@ -101,6 +102,7 @@ class CollectionController extends Controller
             ]);
 
         return Inertia::render('tecnico-campo/recojos/show', [
+            'asignacion' => $service_order->asignacionPara(request()->user()),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -116,6 +118,14 @@ class CollectionController extends Controller
                 'prioridad' => $service_order->prioridad,
                 'estado' => $service_order->estado,
                 'observaciones' => $service_order->observaciones,
+                'notas_vendedor' => $service_order->events
+                    ->filter(fn ($e) => ($e->payload['origen'] ?? null) === 'vendedor' || $e->tipo === 'notificacion_vendedor' || ($e->tipo === 'otro' && isset($e->payload['mensaje'])))
+                    ->values()
+                    ->map(fn ($e) => [
+                        'id' => $e->id,
+                        'mensaje' => $e->payload['mensaje'] ?? $e->payload['descripcion'] ?? '',
+                        'fecha' => $e->created_at?->toIso8601String(),
+                    ]),
                 'equipments' => $service_order->equipments->map(fn ($eq) => [
                     'id' => $eq->id,
                     'numero_serie' => $eq->numero_serie,

@@ -1,24 +1,32 @@
-﻿import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     CheckCircle2,
+    Download,
     FileDown,
+    FileSpreadsheet,
     RefreshCcw,
     Search,
     Send,
     XCircle,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { toast } from 'sonner';
 
+import { CargaLarga, Cargando, FilasCargando } from '@/components/cargando';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
+import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import facturacion from '@/routes/vendedor/facturacion';
+import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
 type DocumentRow = {
     id: number;
+    sale_id?: number;
     tipo: string;
     serie: string;
     correlativo: number | string;
@@ -26,6 +34,7 @@ type DocumentRow = {
     total: number | string;
     sunat_estado: string;
     sunat_codigo_respuesta: string | null;
+    sunat_mensaje?: string | null;
     created_at: string | null;
 };
 
@@ -40,7 +49,8 @@ type Paginated<T> = {
 
 type Props = {
     documents: Paginated<DocumentRow>;
-    filters: { tipo?: string; estado?: string; mes?: string };
+    filters: { tipo?: string; estado?: string; mes?: string; buscar?: string };
+    totalFiltrados: number;
     kpis: {
         emitidos_hoy: number;
         aceptados_hoy: number;
@@ -69,30 +79,66 @@ function cleanLabel(label: string) {
 
 function sunatBadge(estado: string) {
     const value = estado?.toLowerCase();
-    if (value === 'aceptado') return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
-    if (value === 'observado' || value === 'excepcion')
+    if (value === 'aceptado')
+        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+    if (value === 'observado')
         return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
-    if (value === 'rechazado') return 'bg-destructive/10 text-destructive border border-destructive/20';
+    if (value === 'rechazado' || value === 'excepcion')
+        return 'bg-destructive/10 text-destructive border border-destructive/20';
     return 'bg-muted text-muted-foreground';
 }
 
-export default function FacturacionIndex({ documents, filters, kpis }: Props) {
+function sunatEstadoLabel(document: DocumentRow) {
+    const estado = document.sunat_estado?.toLowerCase();
+    if (estado === 'excepcion' || estado === 'rechazado') {
+        const mensaje = document.sunat_mensaje?.trim();
+        if (mensaje) {
+            return `Rechazado: ${mensaje}`;
+        }
+        if (document.sunat_codigo_respuesta === '500') {
+            return 'Rechazado: Error de comunicación SUNAT';
+        }
+        if (document.sunat_codigo_respuesta) {
+            return `Rechazado (${document.sunat_codigo_respuesta})`;
+        }
+        return 'Rechazado';
+    }
+    if (estado === 'aceptado') return 'Aceptado';
+    if (estado === 'observado') return 'Observado';
+    if (estado === 'por_enviar') return 'Por enviar';
+    return document.sunat_estado || 'Pendiente';
+}
+
+export default function FacturacionIndex({
+    documents,
+    filters,
+    kpis,
+    totalFiltrados,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ??
         (typeof window !== 'undefined'
             ? window.location.pathname.split('/')[1]
             : '');
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(filters.buscar ?? '');
     const [processingId, setProcessingId] = useState<number | null>(null);
+    const recargando = useRecargando();
+    const [marcados, setMarcados] = useState<number[]>([]);
+    const [todoLoFiltrado, setTodoLoFiltrado] = useState(false);
+    const [incluir, setIncluir] = useState<string[]>(['xml', 'cdr', 'pdf']);
 
-    const changeType = (tipo: string) => {
+    const filtrar = (cambios: Partial<Props['filters']>) => {
+        const siguiente = { ...filters, ...cambios };
+        setMarcados([]);
+        setTodoLoFiltrado(false);
         router.get(
             facturacion.index.url(teamSlug, {
                 query: {
-                    tipo: tipo || undefined,
-                    estado: filters.estado || undefined,
-                    mes: filters.mes || undefined,
+                    tipo: siguiente.tipo || undefined,
+                    estado: siguiente.estado || undefined,
+                    mes: siguiente.mes || undefined,
+                    buscar: siguiente.buscar || undefined,
                 },
             }),
             {},
@@ -100,9 +146,86 @@ export default function FacturacionIndex({ documents, filters, kpis }: Props) {
         );
     };
 
+    const changeType = (tipo: string) => filtrar({ tipo });
+
     const submitSearch = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        filtrar({ buscar: search.trim() });
     };
+
+    const idsPagina = documents.data.map((d) => d.id);
+    const paginaMarcada =
+        idsPagina.length > 0 && idsPagina.every((id) => marcados.includes(id));
+    const cantidadSeleccionada = todoLoFiltrado
+        ? totalFiltrados
+        : marcados.length;
+
+    const alternar = (id: number) => {
+        setTodoLoFiltrado(false);
+        setMarcados((actual) =>
+            actual.includes(id)
+                ? actual.filter((x) => x !== id)
+                : [...actual, id],
+        );
+    };
+
+    const alternarPagina = () => {
+        setTodoLoFiltrado(false);
+        setMarcados(
+            paginaMarcada
+                ? marcados.filter((id) => !idsPagina.includes(id))
+                : Array.from(new Set([...marcados, ...idsPagina])),
+        );
+    };
+
+    const [descargando, setDescargando] = useState<'zip' | 'excel' | null>(
+        null,
+    );
+
+    /**
+     * Descarga en segundo plano para mostrar "Preparando…" mientras el
+     * servidor arma el archivo (un ZIP grande tarda varios segundos).
+     */
+    async function descargar(tipo: 'zip' | 'excel', url: string) {
+        setDescargando(tipo);
+
+        try {
+            const respuesta = await fetch(url, {
+                credentials: 'same-origin',
+            });
+
+            if (!respuesta.ok) {
+                throw new Error(String(respuesta.status));
+            }
+
+            const nombre =
+                /filename="?([^";]+)"?/.exec(
+                    respuesta.headers.get('Content-Disposition') ?? '',
+                )?.[1] ??
+                (tipo === 'zip' ? 'comprobantes.zip' : 'comprobantes.xlsx');
+            const enlace = document.createElement('a');
+            enlace.href = URL.createObjectURL(await respuesta.blob());
+            enlace.download = nombre;
+            enlace.click();
+            URL.revokeObjectURL(enlace.href);
+        } catch {
+            toast.error('No se pudo preparar la descarga. Inténtalo de nuevo.');
+        } finally {
+            setDescargando(null);
+        }
+    }
+
+    const urlDescarga = (ruta: typeof facturacion.descargaMasiva) =>
+        ruta.url(teamSlug, {
+            query: {
+                tipo: filters.tipo || undefined,
+                estado: filters.estado || undefined,
+                mes: filters.mes || undefined,
+                buscar: filters.buscar || undefined,
+                ...(todoLoFiltrado ? {} : { ids: marcados }),
+                incluir,
+            },
+        });
 
     const resend = (document: DocumentRow) => {
         setProcessingId(document.id);
@@ -200,6 +323,15 @@ export default function FacturacionIndex({ documents, filters, kpis }: Props) {
                                 );
                             })}
                         </div>
+                        <input
+                            type="month"
+                            value={filters.mes ?? ''}
+                            onChange={(event) =>
+                                filtrar({ mes: event.target.value })
+                            }
+                            className="h-10 rounded-[9px] border border-border bg-card px-3 text-[12.5px] outline-none"
+                            title="Filtrar por mes"
+                        />
                         <div className="flex-1" />
                         <form
                             onSubmit={submitSearch}
@@ -211,16 +343,115 @@ export default function FacturacionIndex({ documents, filters, kpis }: Props) {
                                 onChange={(event) =>
                                     setSearch(event.target.value)
                                 }
-                                placeholder="Buscar comprobante..."
+                                placeholder="F001-65, cliente o RUC..."
                                 className="min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
                             />
                         </form>
+                    </div>
+
+                    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border border-border bg-muted/30 px-3 py-2">
+                        <span className="text-[12px] font-semibold text-foreground">
+                            {cantidadSeleccionada > 0
+                                ? `${cantidadSeleccionada} comprobante(s) seleccionado(s)`
+                                : 'Marca comprobantes para descargarlos'}
+                        </span>
+                        {paginaMarcada &&
+                        !todoLoFiltrado &&
+                        totalFiltrados > idsPagina.length ? (
+                            <button
+                                type="button"
+                                onClick={() => setTodoLoFiltrado(true)}
+                                className="text-[12px] font-semibold text-primary hover:underline"
+                            >
+                                Seleccionar los {totalFiltrados} del filtro
+                            </button>
+                        ) : null}
+                        <div className="flex-1" />
+                        {(['xml', 'cdr', 'pdf'] as const).map((tipo) => (
+                            <label
+                                key={tipo}
+                                className="flex items-center gap-1 text-[12px] font-semibold uppercase"
+                            >
+                                <input
+                                    type="checkbox"
+                                    className="size-3.5 accent-primary"
+                                    checked={incluir.includes(tipo)}
+                                    onChange={() =>
+                                        setIncluir(
+                                            incluir.includes(tipo)
+                                                ? incluir.filter(
+                                                      (t) => t !== tipo,
+                                                  )
+                                                : [...incluir, tipo],
+                                        )
+                                    }
+                                />
+                                {tipo}
+                            </label>
+                        ))}
+                        <Button
+                            type="button"
+                            disabled={
+                                cantidadSeleccionada === 0 ||
+                                incluir.length === 0 ||
+                                descargando !== null
+                            }
+                            onClick={() =>
+                                descargar(
+                                    'zip',
+                                    urlDescarga(facturacion.descargaMasiva),
+                                )
+                            }
+                            size="sm"
+                            className="h-8 rounded-[8px] bg-primary text-white shadow-none hover:bg-primary/90"
+                        >
+                            {descargando === 'zip' ? (
+                                <Spinner />
+                            ) : (
+                                <Download className="size-3.5" />
+                            )}
+                            {descargando === 'zip'
+                                ? 'Preparando ZIP…'
+                                : 'Descargar ZIP'}
+                        </Button>
+                        <Button
+                            type="button"
+                            disabled={
+                                cantidadSeleccionada === 0 ||
+                                descargando !== null
+                            }
+                            onClick={() =>
+                                descargar(
+                                    'excel',
+                                    urlDescarga(facturacion.excel),
+                                )
+                            }
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-[8px] shadow-none"
+                        >
+                            {descargando === 'excel' ? (
+                                <Spinner />
+                            ) : (
+                                <FileSpreadsheet className="size-3.5" />
+                            )}
+                            {descargando === 'excel' ? 'Preparando…' : 'Excel'}
+                        </Button>
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-[12.5px]">
                             <thead>
                                 <tr>
+                                    <th className="w-8 border-b border-border px-2.5 py-2.5">
+                                        <input
+                                            type="checkbox"
+                                            aria-label="Marcar la página"
+                                            className="size-3.5 accent-primary"
+                                            checked={paginaMarcada}
+                                            onChange={alternarPagina}
+                                        />
+                                    </th>
                                     {[
                                         'Comprobante',
                                         'Cliente',
@@ -240,112 +471,164 @@ export default function FacturacionIndex({ documents, filters, kpis }: Props) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {documents.data.map((document) => {
-                                    const canResend = [
-                                        'observado',
-                                        'excepcion',
-                                    ].includes(document.sunat_estado);
-                                    const number = `${document.serie}-${String(document.correlativo).padStart(8, '0')}`;
+                                {recargando ? (
+                                    <FilasCargando
+                                        columnas={8}
+                                        filas={documents.data.length}
+                                    />
+                                ) : (
+                                    documents.data.map((document) => {
+                                        const canResend = [
+                                            'observado',
+                                            'excepcion',
+                                        ].includes(document.sunat_estado);
+                                        const number = `${document.serie}-${String(document.correlativo).padStart(8, '0')}`;
 
-                                    return (
-                                        <tr
-                                            key={document.id}
-                                            className="hover:bg-muted/40"
-                                        >
-                                            <td className="border-b border-border px-2.5 py-[13px]">
-                                                <span className="mr-1.5 rounded-[5px] bg-muted px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold text-foreground/80 uppercase">
-                                                    {document.tipo}
-                                                </span>
-                                                <span className="font-['IBM_Plex_Mono',monospace] font-bold">
-                                                    {number}
-                                                </span>
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px] font-semibold text-foreground">
-                                                {document.cliente}
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px] text-foreground/80">
-                                                {document.created_at ?? '-'}
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
-                                                {money(document.total)}
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px]">
-                                                <Badge
-                                                    className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold capitalize ${sunatBadge(document.sunat_estado)}`}
-                                                >
-                                                    {document.sunat_estado}
-                                                </Badge>
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px]">
-                                                {document.sunat_codigo_respuesta ??
-                                                    '-'}
-                                            </td>
-                                            <td className="border-b border-border px-2.5 py-[13px]">
-                                                <div className="flex items-center gap-1.5">
-                                                    {canResend && (
-                                                        <Button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                resend(document)
-                                                            }
-                                                            disabled={
-                                                                processingId ===
-                                                                document.id
-                                                            }
-                                                            variant="outline"
-                                                            size="icon"
-                                                            className="size-7 rounded-[7px] border-border bg-card text-amber-600 dark:text-amber-400 shadow-none"
+                                        return (
+                                            <tr
+                                                key={document.id}
+                                                className="hover:bg-muted/40"
+                                            >
+                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                    <input
+                                                        type="checkbox"
+                                                        aria-label={`Marcar ${number}`}
+                                                        className="size-3.5 accent-primary"
+                                                        checked={
+                                                            todoLoFiltrado ||
+                                                            marcados.includes(
+                                                                document.id,
+                                                            )
+                                                        }
+                                                        onChange={() =>
+                                                            alternar(
+                                                                document.id,
+                                                            )
+                                                        }
+                                                    />
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                    <span className="mr-1.5 rounded-[5px] bg-muted px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold text-foreground/80 uppercase">
+                                                        {document.tipo}
+                                                    </span>
+                                                    {document.sale_id ? (
+                                                        <Link
+                                                            href={ventas.show.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                    sale: document.sale_id,
+                                                                },
+                                                            )}
+                                                            className="font-['IBM_Plex_Mono',monospace] font-bold hover:text-primary hover:underline"
+                                                            title="Ver venta"
                                                         >
-                                                            <RefreshCcw
-                                                                className={`size-3.5 ${processingId === document.id ? 'animate-spin' : ''}`}
-                                                            />
-                                                        </Button>
+                                                            {number}
+                                                        </Link>
+                                                    ) : (
+                                                        <span className="font-['IBM_Plex_Mono',monospace] font-bold">
+                                                            {number}
+                                                        </span>
                                                     )}
-                                                    <a
-                                                        href={facturacion.xml.url(
-                                                            {
-                                                                current_team:
-                                                                    teamSlug,
-                                                                electronic_document:
-                                                                    document.id,
-                                                            },
-                                                        )}
-                                                        className="inline-flex h-[26px] items-center rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px] font-semibold text-foreground">
+                                                    {document.cliente}
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px] text-foreground/80">
+                                                    {document.created_at ?? '-'}
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                                    {money(document.total)}
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                    <Badge
+                                                        title={
+                                                            document.sunat_mensaje ??
+                                                            undefined
+                                                        }
+                                                        className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold ${sunatBadge(document.sunat_estado)}`}
                                                     >
-                                                        XML
-                                                    </a>
-                                                    <a
-                                                        href={facturacion.cdr.url(
-                                                            {
-                                                                current_team:
-                                                                    teamSlug,
-                                                                electronic_document:
-                                                                    document.id,
-                                                            },
+                                                        {sunatEstadoLabel(
+                                                            document,
                                                         )}
-                                                        className="inline-flex h-[26px] items-center rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
-                                                    >
-                                                        CDR
-                                                    </a>
-                                                    <a
-                                                        href={facturacion.pdf.url(
-                                                            {
-                                                                current_team:
-                                                                    teamSlug,
-                                                                electronic_document:
-                                                                    document.id,
-                                                            },
+                                                    </Badge>
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px] text-muted-foreground">
+                                                    {document.sunat_codigo_respuesta ??
+                                                        '-'}
+                                                </td>
+                                                <td className="border-b border-border px-2.5 py-[13px]">
+                                                    <div className="flex items-center gap-1.5">
+                                                        {canResend && (
+                                                            <Button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    resend(
+                                                                        document,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    processingId ===
+                                                                    document.id
+                                                                }
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="size-7 rounded-[7px] border-border bg-card text-amber-600 dark:text-amber-400 shadow-none"
+                                                            >
+                                                                {processingId ===
+                                                                document.id ? (
+                                                                    <Cargando className="size-3.5" />
+                                                                ) : (
+                                                                    <RefreshCcw className="size-3.5" />
+                                                                )}
+                                                            </Button>
                                                         )}
-                                                        className="inline-flex h-[26px] items-center gap-1 rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
-                                                    >
-                                                        <FileDown className="size-3" />
-                                                        PDF
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
+                                                        <a
+                                                            href={facturacion.xml.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                    electronic_document:
+                                                                        document.id,
+                                                                },
+                                                            )}
+                                                            className="inline-flex h-[26px] items-center rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
+                                                        >
+                                                            XML
+                                                        </a>
+                                                        <a
+                                                            href={facturacion.cdr.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                    electronic_document:
+                                                                        document.id,
+                                                                },
+                                                            )}
+                                                            className="inline-flex h-[26px] items-center rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
+                                                        >
+                                                            CDR
+                                                        </a>
+                                                        <a
+                                                            href={facturacion.pdf.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                    electronic_document:
+                                                                        document.id,
+                                                                },
+                                                            )}
+                                                            className="inline-flex h-[26px] items-center gap-1 rounded-[6px] border border-border bg-card px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold text-foreground/80 no-underline hover:border-border"
+                                                        >
+                                                            <FileDown className="size-3" />
+                                                            PDF
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -381,6 +664,12 @@ export default function FacturacionIndex({ documents, filters, kpis }: Props) {
                     </div>
                 </Card>
             </div>
+
+            <CargaLarga
+                activo={processingId !== null}
+                titulo="Reenviando el comprobante a SUNAT"
+                detalle="Suele tardar menos de 10 segundos"
+            />
         </VendedorLayout>
     );
 }

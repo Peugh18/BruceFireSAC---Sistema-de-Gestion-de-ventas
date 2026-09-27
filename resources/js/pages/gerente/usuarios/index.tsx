@@ -1,4 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { CheckCircle2, ShieldQuestion, Users } from 'lucide-react';
 import { useState } from 'react';
 
@@ -12,13 +13,14 @@ type UsuarioItem = {
     sede_id: number | null;
 };
 
-type SedeOption = { id: number; nombre: string };
+type SedeOption = { id: number; nombre: string; tipo: string };
 
 type PageProps = {
     currentTeam: { slug: string };
     usuarios: UsuarioItem[];
     roles: string[];
     sedes: SedeOption[];
+    tiposDeSedePorRol: Record<string, string[]>;
     matrizPermisos: Record<string, string[]>;
     flash?: { success?: string; error?: string };
     [key: string]: unknown;
@@ -101,8 +103,26 @@ function humanizePermission(permiso: string): string {
 }
 
 export default function UsuariosIndex() {
-    const { currentTeam, usuarios, roles, sedes, matrizPermisos, flash } =
-        usePage<PageProps>().props;
+    const {
+        currentTeam,
+        usuarios,
+        roles,
+        sedes,
+        tiposDeSedePorRol,
+        matrizPermisos,
+        flash,
+    } = usePage<PageProps>().props;
+
+    // Solo las sedes donde ese rol puede trabajar (el Gerente, todas).
+    const sedesPara = (rol: string | null) => {
+        const tipos = rol ? tiposDeSedePorRol[rol] : undefined;
+
+        return tipos
+            ? sedes.filter((sede) => tipos.includes(sede.tipo))
+            : sedes;
+    };
+    const mostrarError = (errors: Record<string, string>) =>
+        toast.error(Object.values(errors)[0] ?? 'No se pudo guardar.');
     const [tab, setTab] = useState<'usuarios' | 'matriz'>('usuarios');
     const [pendingUserId, setPendingUserId] = useState<number | null>(null);
 
@@ -117,6 +137,7 @@ export default function UsuariosIndex() {
             { role: newRole },
             {
                 preserveScroll: true,
+                onError: mostrarError,
                 onFinish: () => setPendingUserId(null),
             },
         );
@@ -129,6 +150,7 @@ export default function UsuariosIndex() {
             { sede_id: value === '' ? null : Number(value) },
             {
                 preserveScroll: true,
+                onError: mostrarError,
                 onFinish: () => setPendingUserId(null),
             },
         );
@@ -279,17 +301,36 @@ export default function UsuariosIndex() {
                                                         className="border-border bg-muted/40 focus:border-primary w-full max-w-[200px] rounded-lg border px-3 py-1.5 text-xs focus:outline-none disabled:opacity-50"
                                                     >
                                                         <option value="">
-                                                            Todas las sedes
+                                                            {u.role ===
+                                                            'Gerente'
+                                                                ? 'Todas las sedes'
+                                                                : 'Sin sede (no puede entrar)'}
                                                         </option>
-                                                        {sedes.map((sede) => (
-                                                            <option
-                                                                key={sede.id}
-                                                                value={sede.id}
-                                                            >
-                                                                {sede.nombre}
-                                                            </option>
-                                                        ))}
+                                                        {sedesPara(u.role).map(
+                                                            (sede) => (
+                                                                <option
+                                                                    key={
+                                                                        sede.id
+                                                                    }
+                                                                    value={
+                                                                        sede.id
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        sede.nombre
+                                                                    }
+                                                                </option>
+                                                            ),
+                                                        )}
                                                     </select>
+                                                    {u.role !== 'Gerente' &&
+                                                    !u.sede_id ? (
+                                                        <p className="mt-1 text-[11px] font-bold text-destructive">
+                                                            Sin sede: no puede
+                                                            entrar hasta que le
+                                                            asignes una.
+                                                        </p>
+                                                    ) : null}
                                                 </td>
                                             </tr>
                                         ))

@@ -24,6 +24,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property Carbon $fecha
  * @property string $destino
  * @property string $condicion_pago
+ * @property string|null $medio_pago
+ * @property string|null $numero_operacion
  * @property string $comprobante_tipo
  * @property float $subtotal
  * @property float $igv
@@ -44,7 +46,7 @@ use Illuminate\Support\Collection as SupportCollection;
  */
 #[Fillable([
     'numero_interno', 'numero_nota_venta', 'quote_id', 'client_id', 'sede_id', 'vehicle_id', 'vendedor_id', 'fecha',
-    'destino', 'condicion_pago', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones',
+    'destino', 'referencia', 'condicion_pago', 'medio_pago', 'numero_operacion', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones',
 ])]
 class Sale extends Model
 {
@@ -61,6 +63,45 @@ class Sale extends Model
     /**
      * Una nota de venta es una venta interna: no se envía a SUNAT.
      */
+    /**
+     * Cómo puede pagar el cliente al contado. No va a SUNAT (allí solo va
+     * contado o crédito): sirve para registrar el cobro y cuadrar la caja.
+     *
+     * @var array<string, string>
+     */
+    public const MEDIOS_PAGO = [
+        'efectivo' => 'Efectivo',
+        'yape' => 'Yape',
+        'plin' => 'Plin',
+        'transferencia' => 'Transferencia',
+        'pos' => 'Tarjeta',
+        'deposito' => 'Depósito',
+    ];
+
+    public function medioPagoTexto(): ?string
+    {
+        return $this->medio_pago ? (self::MEDIOS_PAGO[$this->medio_pago] ?? $this->medio_pago) : null;
+    }
+
+    public function esCredito(): bool
+    {
+        return in_array($this->condicion_pago, ['credito', 'credito_30'], true);
+    }
+
+    /**
+     * Plazo del crédito en días hasta la última cuota (ej. "CRÉDITO 07 DÍAS").
+     */
+    public function diasCredito(): ?int
+    {
+        if (! $this->esCredito()) {
+            return null;
+        }
+
+        $ultima = $this->installments->max('fecha_vencimiento');
+
+        return $ultima ? (int) $this->fecha->diffInDays($ultima) : 30;
+    }
+
     public function esNotaVenta(): bool
     {
         return $this->comprobante_tipo === self::NOTA_VENTA;
@@ -119,6 +160,26 @@ class Sale extends Model
     public function electronicDocuments(): HasMany
     {
         return $this->hasMany(ElectronicDocument::class);
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    /**
+     * Número del comprobante con que se vendió: la factura o boleta vigente
+     * (la última que no fue rechazada) o la nota de venta interna.
+     */
+    public function numeroComprobante(): ?string
+    {
+        $documento = $this->electronicDocuments
+            ->whereIn('tipo', ['factura', 'boleta'])
+            ->reject(fn (ElectronicDocument $documento) => $documento->fueRechazado())
+            ->sortBy('id')
+            ->last();
+
+        return $documento ? "{$documento->serie}-{$documento->correlativo}" : $this->numero_nota_venta;
     }
 
     /**

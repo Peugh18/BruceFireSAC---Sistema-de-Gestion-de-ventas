@@ -16,11 +16,11 @@ class RucLookupService
      *     condicion_domicilio: ?string
      * }
      */
-    public function lookup(string $numeroDocumento): array
+    public function lookup(string $numeroDocumento, bool $refresh = false): array
     {
         $client = Client::where('numero_documento', $numeroDocumento)->first();
 
-        if ($client) {
+        if ($client && ! $refresh) {
             return [
                 'razon_social' => $client->razon_social,
                 'direccion' => $client->direccion_fiscal,

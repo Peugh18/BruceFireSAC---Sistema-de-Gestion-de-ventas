@@ -24,6 +24,7 @@ class DeliveryController extends Controller
         $search = $request->query('q');
 
         $query = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
             ->with(['client', 'sede', 'equipments'])
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
@@ -92,6 +93,7 @@ class DeliveryController extends Controller
             ]);
 
         return Inertia::render('tecnico-campo/entregas/show', [
+            'asignacion' => $serviceOrder->asignacionPara(request()->user()),
             'order' => $serviceOrder,
             'custodyEvents' => $custodyEvents,
         ]);
@@ -155,6 +157,12 @@ class DeliveryController extends Controller
         ServiceOrder $serviceOrder,
         ActaConformidadPdfService $pdfService
     ): HttpResponse {
+        // El acta existe solo después de la entrega; entregar ya exige la
+        // conformidad del cliente, así que basta con que la entrega exista.
+        abort_unless($serviceOrder->events()
+            ->where('payload->accion', 'entrega_final_realizada')
+            ->exists(), 404);
+
         $dompdf = $pdfService->generate($serviceOrder);
 
         return $dompdf->stream("acta-conformidad-{$serviceOrder->codigo}.pdf");

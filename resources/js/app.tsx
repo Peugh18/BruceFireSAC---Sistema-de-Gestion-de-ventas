@@ -12,6 +12,10 @@ void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
+            case name.startsWith('publico/'):
+                // Páginas públicas (verificación de certificados por QR): sin
+                // sesión ni sidebar.
+                return null;
             case name.startsWith('errors/'):
                 // Página de error propia, sin marca del starter-kit ni
                 // sidebar genérico — debe verse igual sin sesión iniciada.
@@ -51,7 +55,10 @@ void createInertiaApp({
         );
     },
     progress: {
-        color: '#4B5563',
+        // Rojo de la marca; aparece solo si la visita tarda más de 250 ms.
+        color: '#D20404',
+        delay: 250,
+        showSpinner: false,
     },
 });
 

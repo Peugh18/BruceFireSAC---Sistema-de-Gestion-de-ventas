@@ -14,6 +14,7 @@ import { FormEvent, useState } from 'react';
 import DeficiencyAuthorizationController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyAuthorizationController';
 import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
+import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -97,31 +98,36 @@ function getStatusStyle(estado: string): {
         case 'esperando_autorizacion':
             return {
                 borderClass: 'border-l-[5px] border-l-[#B45309]',
-                badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                badgeClass:
+                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
                 label: 'Esperando autorización',
             };
         case 'autorizada':
             return {
                 borderClass: 'border-l-[5px] border-l-[#1E8E5A]',
-                badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                badgeClass:
+                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
                 label: 'Autorizada',
             };
         case 'rechazada':
             return {
                 borderClass: 'border-l-[5px] border-l-[#B91C1C] opacity-80',
-                badgeClass: 'bg-destructive/10 text-destructive border border-destructive/20',
+                badgeClass:
+                    'bg-destructive/10 text-destructive border border-destructive/20',
                 label: 'Rechazada',
             };
         case 'en_correccion':
             return {
                 borderClass: 'border-l-[5px] border-l-[#2563EB]',
-                badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+                badgeClass:
+                    'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
                 label: 'En corrección',
             };
         case 'resuelta':
             return {
                 borderClass: 'border-l-[5px] border-l-[#1E8E5A] opacity-75',
-                badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                badgeClass:
+                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
                 label: 'Resuelta',
             };
         default:
@@ -134,7 +140,10 @@ function getStatusStyle(estado: string): {
 }
 
 export default function DeficienciasIndex({ deficiencies, filters }: Props) {
-    const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    const { currentTeam, sidebarCounts } = usePage<{
+        currentTeam?: Team | null;
+        sidebarCounts?: { deficiencias?: number } | null;
+    }>().props;
     const teamSlug =
         currentTeam?.slug ||
         (typeof window !== 'undefined'
@@ -207,6 +216,12 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
             <Head title="Deficiencias y Adicionales" />
 
             <div className="flex flex-col gap-4">
+                <ServiciosTabs
+                    teamSlug={teamSlug}
+                    activa="deficiencias"
+                    deficienciasPendientes={sidebarCounts?.deficiencias}
+                />
+
                 {/* Header title */}
                 <div>
                     <h2 className="font-['Oswald',sans-serif] text-[22px] font-semibold text-foreground">
@@ -514,8 +529,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                         authForm.setData(
                                             'canal',
                                             e.target.value as
-                                                | 'whatsapp'
-                                                | 'presencial',
+                                                'whatsapp' | 'presencial',
                                         )
                                     }
                                     className="mt-1 h-9 w-full rounded-[8px] border border-border bg-card px-3 text-[13px] text-foreground outline-none"

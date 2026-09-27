@@ -1,6 +1,6 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, FilePlus2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,9 +64,16 @@ type Props = {
     teamSlug: string;
     documents: SaleDocument[];
     saleEstado?: string;
+    /** Cada vez que cambia, abre el formulario de nota de crédito. */
+    abrirNotaCredito?: number;
 };
 
-export function SaleNotesPanel({ teamSlug, documents, saleEstado }: Props) {
+export function SaleNotesPanel({
+    teamSlug,
+    documents,
+    saleEstado,
+    abrirNotaCredito = 0,
+}: Props) {
     const { flash } = usePage<{
         flash?: { success?: string; error?: string };
     }>().props;
@@ -92,6 +99,24 @@ export function SaleNotesPanel({ teamSlug, documents, saleEstado }: Props) {
         detalle: '',
         importe: '',
     });
+
+    useEffect(() => {
+        if (abrirNotaCredito > 0 && original) {
+            setKind('nota_credito');
+            form.clearErrors();
+            form.setData({
+                electronic_document_id: original.id,
+                motivo_catalogo: '01',
+                detalle: '',
+                importe: '',
+            });
+            setOpen(true);
+            document
+                .getElementById('notas-de-la-venta')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [abrirNotaCredito]);
 
     if (!original) {
         return null;
@@ -122,7 +147,10 @@ export function SaleNotesPanel({ teamSlug, documents, saleEstado }: Props) {
     };
 
     return (
-        <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
+        <Card
+            id="notas-de-la-venta"
+            className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none"
+        >
             <div className="mb-3 flex flex-wrap items-center gap-3">
                 <h2 className="font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                     Notas de crédito y débito

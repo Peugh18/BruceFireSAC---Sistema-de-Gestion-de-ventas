@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gerente;
 
+use App\Actions\Usuarios\ValidarSedeDelRol;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\UpdateUserRoleRequest;
 use App\Http\Requests\Gerente\UpdateUserSedeRequest;
@@ -45,7 +46,8 @@ class UserController extends Controller
         return Inertia::render('gerente/usuarios/index', [
             'usuarios' => $usuarios,
             'roles' => RolesAndPermissionsSeeder::BUSINESS_ROLES,
-            'sedes' => Sede::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
+            'sedes' => Sede::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'tipo']),
+            'tiposDeSedePorRol' => User::TIPOS_DE_SEDE_POR_ROL,
             'matrizPermisos' => $matrizPermisos,
         ]);
     }
@@ -57,6 +59,11 @@ class UserController extends Controller
     {
         $nuevoRol = $request->validated('role');
         $rolAnterior = $user->roles->first()?->name;
+
+        // Si ya tiene sede, el nuevo rol tiene que poder trabajar ahí.
+        if ($user->sede) {
+            app(ValidarSedeDelRol::class)->handle($nuevoRol, $user->sede, 'role');
+        }
 
         $user->syncRoles([$nuevoRol]);
 
@@ -74,13 +81,16 @@ class UserController extends Controller
     }
 
     /**
-     * Asigna la única sede del trabajador. Sin sede ve todas las sedes.
+     * Asigna la única sede del trabajador, según lo que permite su rol
+     * (solo el Gerente puede quedar sin sede).
      */
     public function updateSede(UpdateUserSedeRequest $request, Team $current_team, User $user): RedirectResponse
     {
         $sedeAnterior = $user->sede_id;
+        $sede = $request->validated('sede_id') ? Sede::find($request->validated('sede_id')) : null;
+        app(ValidarSedeDelRol::class)->handle($user->roles->first()?->name, $sede);
 
-        $user->update(['sede_id' => $request->validated('sede_id')]);
+        $user->update(['sede_id' => $sede?->id]);
 
         AuditLogger::log(
             action: 'usuario.sede_actualizada',

@@ -5,6 +5,8 @@ use App\Models\Installment;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\SalePayment;
+use App\Models\Sede;
+use App\Models\ServiceOrder;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
@@ -226,4 +228,49 @@ test('cotizaciones_mes solo cuenta por estado para el vendedor autenticado sin m
 
     expect($response->viewData('page')['props']['alertas_top'])->toBeArray()->toBeEmpty()
         ->and($response->viewData('page')['props']['agenda_hoy'])->toBeArray()->toBeEmpty();
+});
+
+test('agenda_hoy muestra solo las ordenes abiertas de hoy de la sede del vendedor', function () {
+    $sedeDelVendedor = Sede::factory()->create();
+    $otraSede = Sede::factory()->create();
+    $vendedor = vendedorUser();
+    $vendedor->update(['sede_id' => $sedeDelVendedor->id]);
+
+    $ordenDeHoy = ServiceOrder::factory()->create([
+        'sede_id' => $sedeDelVendedor->id,
+        'fecha' => today(),
+        'estado' => 'pendiente_recepcion',
+    ]);
+
+    $ordenDeOtraSede = ServiceOrder::factory()->create([
+        'sede_id' => $otraSede->id,
+        'fecha' => today(),
+        'estado' => 'pendiente_recepcion',
+    ]);
+
+    $ordenDeOtroDia = ServiceOrder::factory()->create([
+        'sede_id' => $sedeDelVendedor->id,
+        'fecha' => today()->addDay(),
+        'estado' => 'pendiente_recepcion',
+    ]);
+
+    $response = $this
+        ->actingAs($vendedor)
+        ->get(route('vendedor.dashboard', ['current_team' => $vendedor->currentTeam]));
+
+    $response->assertOk();
+
+    $agenda = collect($response->viewData('page')['props']['agenda_hoy']);
+
+    expect($agenda->pluck('id')->all())
+        ->toBe([$ordenDeHoy->id])
+        ->not->toContain($ordenDeOtraSede->id, $ordenDeOtroDia->id)
+        ->and($agenda->first())
+        ->toMatchArray([
+            'codigo' => $ordenDeHoy->codigo,
+            'cliente' => $ordenDeHoy->client->razon_social,
+            'tipo_servicio' => $ordenDeHoy->tipo_servicio,
+            'estado' => $ordenDeHoy->estado,
+            'prioridad' => $ordenDeHoy->prioridad,
+        ]);
 });

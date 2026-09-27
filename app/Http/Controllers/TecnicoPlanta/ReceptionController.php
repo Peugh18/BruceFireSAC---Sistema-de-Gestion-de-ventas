@@ -27,6 +27,7 @@ class ReceptionController extends Controller
         $filter = $request->string('filter', 'pendientes')->toString(); // pendientes | recibidas | todas
 
         $query = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'planta')
                     ->orWhereNull('departamento_tecnico');
@@ -105,6 +106,7 @@ class ReceptionController extends Controller
         ]);
 
         return Inertia::render('tecnico-planta/recepciones/show', [
+            'asignacion' => $service_order->asignacionPara(request()->user()),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,

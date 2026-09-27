@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('quotes:expire')]
-#[Description('Marca como vencidas las cotizaciones enviadas cuya vigencia ya pasó')]
+#[Description('Marca como vencidas las cotizaciones vigentes cuya fecha ya pasó')]
 class ExpireQuotes extends Command
 {
     /**
@@ -16,7 +16,7 @@ class ExpireQuotes extends Command
      */
     public function handle(): void
     {
-        $count = Quote::where('estado', 'enviada')
+        $count = Quote::whereIn('estado', ['borrador', 'emitida', 'enviada', 'pendiente', 'aceptada'])
             ->where('vigencia_hasta', '<', now()->toDateString())
             ->update(['estado' => 'vencida']);
 

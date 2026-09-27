@@ -34,6 +34,7 @@ class DeficiencyController extends Controller
                 $q->where('departamento_tecnico', 'planta')
                     ->orWhereNull('departamento_tecnico');
             })
+            ->whereHas('serviceOrder', fn ($query) => $query->accessibleToTechnician($request->user()))
             ->latest('id');
 
         if ($estado !== 'todas' && $estado !== '') {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\UpdateCompanySettingRequest;
 use App\Models\CompanyBankAccount;
 use App\Models\CompanySetting;
+use App\Models\Signer;
 use App\Models\Team;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -36,6 +37,7 @@ class CompanySettingController extends Controller
                 'logo_url' => $company->logoUrl(),
             ],
             'bankAccounts' => CompanyBankAccount::query()->orderBy('orden')->get(),
+            'firmasPendientes' => Signer::query()->where('activo', true)->whereNull('firma_path')->count(),
         ]);
     }
 

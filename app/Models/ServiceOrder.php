@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\ServiceOrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -41,7 +42,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ServiceOrderEvent> $events
  */
 #[Fillable([
-    'codigo', 'client_id', 'equipment_id', 'sede_id', 'vehicle_id', 'quote_id', 'sale_id', 'tipo_servicio',
+    'codigo', 'client_id', 'equipment_id', 'sede_id', 'vehicle_id', 'referencia', 'quote_id', 'sale_id', 'tipo_servicio',
     'fecha', 'tecnico_id', 'departamento_tecnico', 'prioridad', 'observaciones', 'estado',
 ])]
 class ServiceOrder extends Model
@@ -144,6 +145,42 @@ class ServiceOrder extends Model
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
+    }
+
+    /** @param Builder<ServiceOrder> $query */
+    public function scopeAccessibleToTechnician(Builder $query, User $user): void
+    {
+        $query->when($user->sede_id, fn (Builder $query) => $query->whereIn('sede_id', Sede::idsAtendidosPor((int) $user->sede_id)))
+            ->where(fn (Builder $query) => $query->whereNull('tecnico_id')->orWhere('tecnico_id', $user->id));
+    }
+
+    /**
+     * El técnico puede atender esta orden: es de su sede o de una tienda
+     * que depende de su sede, y no está asignada a otro técnico.
+     */
+    public function atendiblePor(User $user): bool
+    {
+        $deSuSede = ! $user->sede_id || in_array((int) $user->sede_id, $this->sede?->idsQueAtienden() ?? [(int) $this->sede_id], true);
+
+        return $deSuSede && ($this->tecnico_id === null || $this->tecnico_id === $user->id);
+    }
+
+    /**
+     * Quién tiene la orden a su cargo, para que el técnico sepa si puede
+     * tomarla.
+     *
+     * @return array{orden_id: int, area: string, tecnico: string|null, es_mia: bool}
+     */
+    public function asignacionPara(User $user): array
+    {
+        $this->loadMissing('tecnico:id,name');
+
+        return [
+            'orden_id' => $this->id,
+            'area' => $this->departamento_tecnico === 'campo' ? 'campo' : 'planta',
+            'tecnico' => $this->tecnico?->name,
+            'es_mia' => $this->tecnico_id === $user->id,
+        ];
     }
 
     public function coarseLabel(): string

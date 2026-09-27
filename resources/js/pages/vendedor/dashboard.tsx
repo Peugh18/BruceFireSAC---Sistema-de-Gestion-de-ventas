@@ -1,11 +1,15 @@
-﻿import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowRight,
     Award,
     Calendar,
     CheckCircle2,
+    ClipboardList,
     Clock,
+    CreditCard,
+    MessageSquare,
+    ShoppingCart,
     TrendingUp,
     Wallet,
     X,
@@ -16,6 +20,7 @@ import CashRegisterController from '@/actions/App/Http/Controllers/Vendedor/Cash
 import CollectionController from '@/actions/App/Http/Controllers/Vendedor/CollectionController';
 import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
 import SaleController from '@/actions/App/Http/Controllers/Vendedor/SaleController';
+import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
@@ -52,6 +57,27 @@ export type CobroPendiente = {
     estado: string;
     dias_vencido: number;
     cliente?: string;
+    telefono?: string | null;
+};
+
+export type AlertaItem = {
+    id: string;
+    tipo: string;
+    titulo: string;
+    mensaje: string;
+    url: string;
+    fecha: string;
+    urgencia: 'alta' | 'media' | 'baja';
+};
+
+export type AgendaItem = {
+    id: number;
+    codigo: string;
+    cliente: string;
+    tipo_servicio: string;
+    tecnico: string | null;
+    estado: string;
+    prioridad: string;
 };
 
 export type Props = {
@@ -59,8 +85,8 @@ export type Props = {
     caja_hoy: CajaHoy;
     cotizaciones_mes: Record<string, number>;
     cobros_pendientes: CobroPendiente[];
-    alertas_top: unknown[];
-    agenda_hoy: unknown[];
+    alertas_top: AlertaItem[];
+    agenda_hoy: AgendaItem[];
 };
 
 function formatCurrency(amount: number | string | null | undefined): string {
@@ -129,10 +155,73 @@ export default function VendedorDashboard({
     ).length;
 
     return (
-        <VendedorLayout title="Dashboard">
-            <Head title="Dashboard Vendedor" />
+        <VendedorLayout title="Inicio">
+            <Head title="Inicio - Vendedor" />
 
             <div className="flex flex-col gap-4">
+                {/* 3 Botones de acción rápida principales */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <Link
+                        href={`/${teamSlug}/vendedor/ventas/nueva`}
+                        className="group flex items-center justify-between rounded-[16px] bg-primary p-4 text-white shadow-xs transition-all hover:bg-primary/90 hover:shadow-md"
+                    >
+                        <div className="flex items-center gap-3.5">
+                            <div className="flex size-11 items-center justify-center rounded-[12px] bg-white/15 text-white">
+                                <ShoppingCart className="size-6" />
+                            </div>
+                            <div>
+                                <div className="font-['Oswald',sans-serif] text-[18px] font-bold tracking-wide uppercase">
+                                    Nueva venta
+                                </div>
+                                <div className="text-[11.5px] text-white/80">
+                                    Emitir boleta o factura
+                                </div>
+                            </div>
+                        </div>
+                        <ArrowRight className="size-5 opacity-70 transition-transform group-hover:translate-x-1 group-hover:opacity-100" />
+                    </Link>
+
+                    <Link
+                        href={`/${teamSlug}/vendedor/cotizaciones/nueva`}
+                        className="group flex items-center justify-between rounded-[16px] border border-border bg-card p-4 text-foreground shadow-xs transition-all hover:border-primary/50 hover:bg-muted/40 hover:shadow-md"
+                    >
+                        <div className="flex items-center gap-3.5">
+                            <div className="flex size-11 items-center justify-center rounded-[12px] bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                                <ClipboardList className="size-6" />
+                            </div>
+                            <div>
+                                <div className="font-['Oswald',sans-serif] text-[18px] font-bold tracking-wide text-foreground uppercase">
+                                    Nueva cotización
+                                </div>
+                                <div className="text-[11.5px] text-muted-foreground">
+                                    Generar propuesta PDF
+                                </div>
+                            </div>
+                        </div>
+                        <ArrowRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                    </Link>
+
+                    <Link
+                        href={`/${teamSlug}/vendedor/cobranzas`}
+                        className="group flex items-center justify-between rounded-[16px] border border-border bg-card p-4 text-foreground shadow-xs transition-all hover:border-primary/50 hover:bg-muted/40 hover:shadow-md"
+                    >
+                        <div className="flex items-center gap-3.5">
+                            <div className="flex size-11 items-center justify-center rounded-[12px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                <CreditCard className="size-6" />
+                            </div>
+                            <div>
+                                <div className="font-['Oswald',sans-serif] text-[18px] font-bold tracking-wide text-foreground uppercase">
+                                    Cobrar
+                                </div>
+                                <div className="text-[11.5px] text-muted-foreground">
+                                    Cobranzas y cuotas pendientes
+                                </div>
+                            </div>
+                        </div>
+                        <ArrowRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                    </Link>
+                </div>
+
                 {/* Banner de alerta si hay cobros vencidos o cotizaciones pendientes */}
                 {!bannerDismissed &&
                     (totalCobrosVencidos > 0 || cotPendientes > 0) && (
@@ -185,6 +274,71 @@ export default function VendedorDashboard({
                             </button>
                         </div>
                     )}
+
+                {/* Alertas Operativas y de Servicios */}
+                {alertas_top && alertas_top.length > 0 && (
+                    <div className="rounded-[16px] border border-amber-500/20 bg-amber-500/5 p-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-amber-500/10">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle className="size-4 text-amber-600 dark:text-amber-400" />
+                                <span className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                                    Atención prioritaria en Servicios (
+                                    {alertas_top.length})
+                                </span>
+                            </div>
+                            <Link
+                                href={`/${teamSlug}/vendedor/ordenes-servicio`}
+                                className="text-xs font-semibold text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-1"
+                            >
+                                <span>Ir a Servicios</span>
+                                <ArrowRight className="size-3" />
+                            </Link>
+                        </div>
+                        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                            {alertas_top.slice(0, 3).map((alerta) => (
+                                <Link
+                                    key={alerta.id}
+                                    href={alerta.url}
+                                    className="flex flex-col justify-between rounded-xl border border-amber-500/20 bg-card p-3 shadow-xs hover:border-primary transition-all group"
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between gap-1">
+                                            <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                                                {alerta.titulo}
+                                            </span>
+                                            <Badge
+                                                className={
+                                                    alerta.urgencia === 'alta'
+                                                        ? 'border-none bg-red-500/10 text-red-600 text-[10px]'
+                                                        : alerta.tipo ===
+                                                            'lista_entrega'
+                                                          ? 'border-none bg-emerald-500/10 text-emerald-600 text-[10px]'
+                                                          : 'border-none bg-blue-500/10 text-blue-600 text-[10px]'
+                                                }
+                                            >
+                                                {alerta.urgencia === 'alta'
+                                                    ? 'Urgente'
+                                                    : alerta.tipo ===
+                                                        'lista_entrega'
+                                                      ? 'Listo'
+                                                      : 'Por asignar'}
+                                            </Badge>
+                                        </div>
+                                        <p className="mt-1 text-[11.5px] text-muted-foreground line-clamp-2">
+                                            {alerta.mensaje}
+                                        </p>
+                                    </div>
+                                    <div className="mt-2 flex items-center justify-between text-[10.5px] text-muted-foreground">
+                                        <span>{alerta.fecha}</span>
+                                        <span className="font-semibold text-primary group-hover:underline">
+                                            Atender →
+                                        </span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* 3-Column Top Grid: Ventas Hoy, Cotizaciones Mes, Caja Hoy */}
                 <div className="grid gap-4 lg:grid-cols-3">
@@ -347,7 +501,9 @@ export default function VendedorDashboard({
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="size-2 rounded-[2px] bg-destructive" />
-                                <span className="text-muted-foreground">Vencidas</span>
+                                <span className="text-muted-foreground">
+                                    Vencidas
+                                </span>
                                 <span className="ml-auto font-bold text-foreground">
                                     {cotVencidas}
                                 </span>
@@ -494,39 +650,52 @@ export default function VendedorDashboard({
                     </Card>
                 </div>
 
-                {/* 2-Column Middle Grid: Cobros Pendientes + Quick Action Promos */}
-                <div className="grid gap-4 lg:grid-cols-12">
-                    {/* Cobros Pendientes (7 cols) */}
-                    <Card className="rounded-[16px] border-border bg-card p-5 shadow-none lg:col-span-7">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[13.5px] font-bold text-foreground">
-                                Cobros pendientes / vencidos
-                            </span>
-                            <span className="text-[11.5px] font-medium text-muted-foreground">
-                                {cobros_pendientes.length} registros
-                            </span>
-                        </div>
+                {/* Cobros Pendientes y Vencidos */}
+                <Card className="rounded-[16px] border-border bg-card p-5 shadow-none">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[13.5px] font-bold text-foreground">
+                            Cobros pendientes / vencidos
+                        </span>
+                        <span className="text-[11.5px] font-medium text-muted-foreground">
+                            {cobros_pendientes.length} registros
+                        </span>
+                    </div>
 
-                        <div className="mt-3 divide-y divide-border">
-                            {cobros_pendientes.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground">
-                                    <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
-                                    <p className="text-xs font-bold text-foreground">
-                                        ¡Excelente! Sin cobros pendientes
-                                    </p>
-                                    <p className="text-[11px]">
-                                        Todas las cuotas de tus clientes están
-                                        al día.
-                                    </p>
-                                </div>
-                            ) : (
-                                cobros_pendientes.slice(0, 5).map((inst) => {
-                                    const isVencido = inst.dias_vencido > 0;
-                                    return (
-                                        <div
-                                            key={inst.id}
-                                            className="flex items-center gap-3 py-2.5 first:pt-1"
-                                        >
+                    <div className="mt-3 divide-y divide-border">
+                        {cobros_pendientes.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground">
+                                <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
+                                <p className="text-xs font-bold text-foreground">
+                                    ¡Excelente! Sin cobros pendientes
+                                </p>
+                                <p className="text-[11px]">
+                                    Todas las cuotas de tus clientes están al
+                                    día.
+                                </p>
+                            </div>
+                        ) : (
+                            cobros_pendientes.slice(0, 6).map((inst) => {
+                                const isVencido = inst.dias_vencido > 0;
+                                const phone = inst.telefono;
+                                const phoneDigits = phone
+                                    ? phone.replace(/\D/g, '')
+                                    : null;
+                                const phoneClean = phoneDigits
+                                    ? phoneDigits.length === 9
+                                        ? `51${phoneDigits}`
+                                        : phoneDigits
+                                    : null;
+
+                                const waText = encodeURIComponent(
+                                    `Hola ${inst.cliente || ''}, le recordamos su cuota ${inst.numero_cuota} de ${formatCurrency(inst.monto)} que venció el ${inst.fecha_vencimiento}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
+                                );
+
+                                return (
+                                    <div
+                                        key={inst.id}
+                                        className="flex flex-col gap-2 py-3 first:pt-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
                                             <div
                                                 className={`flex size-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
                                                     isVencido
@@ -561,7 +730,9 @@ export default function VendedorDashboard({
                                                     </span>
                                                 </div>
                                             </div>
+                                        </div>
 
+                                        <div className="flex items-center gap-2 self-end sm:self-center">
                                             <span
                                                 className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold whitespace-nowrap ${
                                                     isVencido
@@ -571,63 +742,37 @@ export default function VendedorDashboard({
                                             >
                                                 {formatCurrency(inst.monto)}
                                             </span>
+
+                                            {isVencido && phoneClean ? (
+                                                <a
+                                                    href={`https://wa.me/${phoneClean}?text=${waText}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex h-7 items-center gap-1.5 rounded-[7px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400 transition-colors"
+                                                    title={`Enviar WhatsApp a ${phoneClean}`}
+                                                >
+                                                    <MessageSquare className="size-3" />
+                                                    <span>WhatsApp</span>
+                                                </a>
+                                            ) : null}
                                         </div>
-                                    );
-                                })
-                            )}
-                        </div>
-
-                        {cobros_pendientes.length > 0 && (
-                            <div className="mt-3 border-t border-border pt-2.5 text-center">
-                                <Link
-                                    href={CollectionController.index.url(
-                                        teamSlug,
-                                    )}
-                                    className="text-[12px] font-bold text-primary hover:underline"
-                                >
-                                    Ver todas las cobranzas &rarr;
-                                </Link>
-                            </div>
+                                    </div>
+                                );
+                            })
                         )}
-                    </Card>
-
-                    {/* Promos / Quick Actions (5 cols) */}
-                    <div className="flex flex-col gap-4 lg:col-span-5">
-                        <div className="flex min-h-[120px] flex-col justify-center rounded-[14px] bg-card p-5 text-white shadow-xs">
-                            <h4 className="text-[14px] font-bold">
-                                Arqueo de caja diario
-                            </h4>
-                            <p className="mt-1 text-[12px] text-muted-foreground">
-                                Registra tus montos de apertura y realiza el
-                                arqueo ciego antes del fin de turno.
-                            </p>
-                            <Link
-                                href={CashRegisterController.show.url(teamSlug)}
-                                className="mt-3 inline-flex self-start rounded-[8px] bg-card px-3.5 py-1.5 text-[11.5px] font-bold text-foreground transition-colors hover:bg-muted"
-                            >
-                                {caja_hoy?.estado === 'abierto'
-                                    ? 'Cerrar turno'
-                                    : 'Abrir turno'}
-                            </Link>
-                        </div>
-
-                        <div className="flex min-h-[120px] flex-col justify-center rounded-[14px] bg-blue-600 p-5 text-white shadow-xs">
-                            <h4 className="text-[14px] font-bold">
-                                Alertas de Vencimiento
-                            </h4>
-                            <p className="mt-1 text-[12px] text-blue-100">
-                                Revisa los extintores y pruebas hidrostáticas
-                                que están por vencer en tus clientes.
-                            </p>
-                            <Link
-                                href={`/${teamSlug}/vendedor/alertas`}
-                                className="mt-3 inline-flex self-start rounded-[8px] bg-card px-3.5 py-1.5 text-[11.5px] font-bold text-blue-600 dark:text-blue-400 transition-colors hover:bg-blue-50"
-                            >
-                                Ver alertas
-                            </Link>
-                        </div>
                     </div>
-                </div>
+
+                    {cobros_pendientes.length > 0 && (
+                        <div className="mt-3 border-t border-border pt-2.5 text-center">
+                            <Link
+                                href={CollectionController.index.url(teamSlug)}
+                                className="text-[12px] font-bold text-primary hover:underline"
+                            >
+                                Ver todas las cobranzas &rarr;
+                            </Link>
+                        </div>
+                    )}
+                </Card>
 
                 {/* Bottom Row: Agenda de Hoy y Alertas Top (Elegant empty states as requested) */}
                 <div className="grid gap-4 lg:grid-cols-2">
@@ -647,7 +792,39 @@ export default function VendedorDashboard({
 
                         {agenda_hoy && agenda_hoy.length > 0 ? (
                             <div className="mt-3 space-y-2">
-                                {/* Lista de eventos si vinieran */}
+                                {agenda_hoy.map((orden) => (
+                                    <Link
+                                        key={orden.id}
+                                        href={ServiceOrderController.show.url({
+                                            current_team: teamSlug,
+                                            service_order: orden.id,
+                                        })}
+                                        className="flex items-center justify-between gap-3 rounded-xl border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted/40"
+                                    >
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-foreground">
+                                                    {orden.codigo}
+                                                </span>
+                                                {orden.prioridad === 'urgente' && (
+                                                    <Badge className="border-none bg-red-500/10 text-[10px] text-red-600 dark:text-red-400">
+                                                        Urgente
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <p className="truncate text-[11.5px] font-medium text-foreground">
+                                                {orden.cliente}
+                                            </p>
+                                            <p className="truncate text-[11px] text-muted-foreground">
+                                                {orden.tipo_servicio}
+                                                {orden.tecnico
+                                                    ? ` · ${orden.tecnico}`
+                                                    : ' · Sin técnico asignado'}
+                                            </p>
+                                        </div>
+                                        <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                                    </Link>
+                                ))}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground">
