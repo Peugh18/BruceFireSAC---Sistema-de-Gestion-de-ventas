@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import GerenteLayout from '@/layouts/gerente-layout';
 
 type SedeTipo = 'tienda' | 'almacen' | 'mixta';
@@ -20,6 +21,7 @@ type SedeItem = {
     tipo: SedeTipo;
     ciudad: string | null;
     ubigeo: string | null;
+    ubicacion: UbigeoOption | null;
     almacen_id: number | null;
     almacen_nombre: string | null;
     usuarios_count: number;
@@ -62,7 +64,6 @@ const TIPO_DESCRIPCION: Record<SedeTipo, string> = {
 type SedeFormData = {
     nombre: string;
     tipo: SedeTipo;
-    ciudad: string;
     ubigeo: string;
     almacen_id: string;
     activo: boolean;
@@ -71,7 +72,6 @@ type SedeFormData = {
 const EMPTY_FORM: SedeFormData = {
     nombre: '',
     tipo: 'mixta',
-    ciudad: '',
     ubigeo: '',
     almacen_id: '',
     activo: true,
@@ -83,12 +83,14 @@ export default function SedesIndex() {
 
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState<SedeItem | null>(null);
+    const [ubicacion, setUbicacion] = useState<UbigeoOption | null>(null);
     const form = useForm<SedeFormData>(EMPTY_FORM);
 
     const almacenesElegibles = almacenes.filter((a) => a.id !== editing?.id);
 
     const openCreate = () => {
         setEditing(null);
+        setUbicacion(null);
         form.clearErrors();
         form.setData(EMPTY_FORM);
         setModalOpen(true);
@@ -96,11 +98,11 @@ export default function SedesIndex() {
 
     const openEdit = (sede: SedeItem) => {
         setEditing(sede);
+        setUbicacion(sede.ubicacion);
         form.clearErrors();
         form.setData({
             nombre: sede.nombre,
             tipo: sede.tipo,
-            ciudad: sede.ciudad ?? '',
             ubigeo: sede.ubigeo ?? '',
             almacen_id: sede.almacen_id ? String(sede.almacen_id) : '',
             activo: sede.activo,
@@ -455,46 +457,21 @@ export default function SedesIndex() {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-foreground/80 block font-semibold">
-                                            Ciudad
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={form.data.ciudad}
-                                            onChange={(e) =>
-                                                form.setData(
-                                                    'ciudad',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-foreground/80 block font-semibold">
-                                            Ubigeo
-                                        </label>
-                                        <input
-                                            type="text"
-                                            maxLength={6}
-                                            value={form.data.ubigeo}
-                                            onChange={(e) =>
-                                                form.setData(
-                                                    'ubigeo',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="150101"
-                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
-                                        />
-                                        {form.errors.ubigeo && (
-                                            <p className="mt-1 text-red-600">
-                                                {form.errors.ubigeo}
-                                            </p>
-                                        )}
-                                    </div>
+                                <div>
+                                    <label className="text-foreground/80 block font-semibold">
+                                        Ubicación (distrito)
+                                    </label>
+                                    <UbigeoPicker
+                                        value={ubicacion}
+                                        onChange={(ubigeo) => {
+                                            setUbicacion(ubigeo);
+                                            form.setData(
+                                                'ubigeo',
+                                                ubigeo?.codigo ?? '',
+                                            );
+                                        }}
+                                        error={form.errors.ubigeo}
+                                    />
                                 </div>
 
                                 <div className="border-border flex justify-end gap-2 border-t pt-4">

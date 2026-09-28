@@ -44,6 +44,7 @@ yarn-error.log
 /opencode.jsonc
 /storage/app/ml/*.csv
 *.csv
+!database/data/*.csv
 !/storage/app/ml/retention_model.json
 /.codex
 /skills-lock.json

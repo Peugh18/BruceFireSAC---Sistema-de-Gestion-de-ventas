@@ -30,7 +30,7 @@ class StockLookupController extends Controller
             ->where('activo', true)
             ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'tipo', 'ciudad']);
+            ->with('ubicacion')->get(['id', 'nombre', 'tipo', 'ubigeo']);
 
         $unitResult = null;
         $productResult = null;
@@ -47,7 +47,7 @@ class StockLookupController extends Controller
                 })
                 ->with([
                     'product:id,codigo,nombre,unidad_medida,serializado',
-                    'sedeAlmacen:id,nombre,tipo,ciudad',
+                    'sedeAlmacen:id,nombre,tipo,ubigeo', 'sedeAlmacen.ubicacion',
                 ])
                 ->first();
 

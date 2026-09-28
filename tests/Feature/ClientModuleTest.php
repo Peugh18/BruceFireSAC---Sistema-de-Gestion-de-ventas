@@ -24,9 +24,6 @@ test('creates a valid client for vendedor users', function () {
             'nombre_comercial' => 'Cliente Peru',
             'email' => 'cliente@example.com',
             'direccion_fiscal' => 'Av. America Norte 123, Trujillo',
-            'departamento' => 'La Libertad',
-            'provincia' => 'Trujillo',
-            'distrito' => 'Trujillo',
             'ubigeo' => '130101',
             'estado_contribuyente' => 'ACTIVO',
             'condicion_domicilio' => 'HABIDO',
@@ -92,6 +89,7 @@ test('ruc lookup returns local client data without sending an http request', fun
         'direccion' => 'Jr. Pizarro 456, Trujillo',
         'estado_contribuyente' => 'ACTIVO',
         'condicion_domicilio' => 'HABIDO',
+        'ubigeo' => '130101',
     ]);
 
     Http::assertNothingSent();
@@ -117,6 +115,7 @@ test('ruc lookup sends an http request when the document is not local', function
         'direccion' => 'Av. Industrial 789',
         'estado_contribuyente' => 'ACTIVO',
         'condicion_domicilio' => 'HABIDO',
+        'ubigeo' => null,
     ]);
 
     Http::assertSent(fn (Request $request) => $request->url() === 'https://dniruc.apisperu.com/api/v1/ruc/20601111222?token=test-token');

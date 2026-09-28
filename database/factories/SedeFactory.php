@@ -20,7 +20,7 @@ class SedeFactory extends Factory
         return [
             'nombre' => 'Sede '.fake()->unique()->city(),
             'tipo' => 'mixta',
-            'ciudad' => fake()->city(),
+            'ubigeo' => '130101',
             'activo' => true,
         ];
     }

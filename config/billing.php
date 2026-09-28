@@ -24,9 +24,6 @@ return [
         'razon_social' => env('BILLING_COMPANY_RAZON_SOCIAL', 'BRUCE FIRE S.A.C.'),
         'nombre_comercial' => env('BILLING_COMPANY_NOMBRE_COMERCIAL', 'BRUCE FIRE'),
         'ubigeo' => env('BILLING_COMPANY_UBIGEO'),
-        'departamento' => env('BILLING_COMPANY_DEPARTAMENTO'),
-        'provincia' => env('BILLING_COMPANY_PROVINCIA'),
-        'distrito' => env('BILLING_COMPANY_DISTRITO'),
         'direccion' => env('BILLING_COMPANY_DIRECCION'),
     ],
 

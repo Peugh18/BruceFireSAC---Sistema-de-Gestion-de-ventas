@@ -2,21 +2,24 @@
 
 namespace App\Models;
 
+use App\Concerns\TieneUbigeo;
 use Database\Factories\SedeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
  * @property string $nombre
  * @property string $tipo
  * @property string|null $ubigeo
- * @property string|null $ciudad
+ * @property-read string|null $ciudad
  * @property int|null $almacen_id
  * @property bool $activo
  * @property Carbon|null $created_at
@@ -24,17 +27,39 @@ use Illuminate\Support\Carbon;
  * @property-read Sede|null $almacen
  * @property-read Collection<int, Sede> $tiendas
  */
-#[Fillable(['nombre', 'tipo', 'ubigeo', 'ciudad', 'almacen_id', 'activo'])]
+#[Fillable(['nombre', 'tipo', 'ubigeo', 'almacen_id', 'activo'])]
 class Sede extends Model
 {
     /** @use HasFactory<SedeFactory> */
     use HasFactory;
+
+    use TieneUbigeo;
+
+    /**
+     * @var list<string>
+     */
+    protected $appends = ['ciudad'];
+
+    /**
+     * @var list<string>
+     */
+    protected $hidden = ['ubicacion'];
 
     protected function casts(): array
     {
         return [
             'activo' => 'boolean',
         ];
+    }
+
+    /**
+     * Ciudad de la sede: la provincia de su ubigeo ("Trujillo").
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function ciudad(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->ubicacion ? Str::title(Str::lower($this->ubicacion->provincia)) : null);
     }
 
     /**

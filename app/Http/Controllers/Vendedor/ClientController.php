@@ -9,6 +9,7 @@ use App\Http\Requests\Clientes\StoreClientRequest;
 use App\Http\Requests\Clientes\UpdateClientRequest;
 use App\Models\AuditLog;
 use App\Models\Client;
+use App\Models\ClientSite;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\Team;
@@ -152,7 +153,7 @@ class ClientController extends Controller
     public function show(Team $current_team, Client $client, Request $request): Response
     {
         $sedeId = $request->user()->sedeRestringidaId();
-        $client->load(['sites', 'vehicles']);
+        $client->load(['sites.ubicacion', 'vehicles', 'ubicacion']);
 
         $quotes = $client->quotes()->with('sale')->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->latest('fecha')->get();
         $sales = $client->sales()->with(['electronicDocuments', 'installments.payments'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->latest('fecha')->latest('id')->get();
@@ -168,8 +169,8 @@ class ClientController extends Controller
         $en30Dias = fn ($fecha) => $fecha && $fecha->between(today(), today()->addDays(30));
 
         return Inertia::render('vendedor/clientes/show', [
-            'client' => $client,
-            'sites' => $client->sites,
+            'client' => [...$client->makeHidden(['sites', 'ubicacion'])->toArray(), 'ubicacion' => $client->ubicacion?->paraFormulario()],
+            'sites' => $client->sites->map(fn (ClientSite $site) => [...$site->makeHidden('ubicacion')->toArray(), 'ubicacion' => $site->ubicacion?->paraFormulario()]),
             'vehicles' => $client->vehicles,
             'resumen' => [
                 'total_comprado' => round((float) $confirmadas->sum('total'), 2),
@@ -217,6 +218,7 @@ class ClientController extends Controller
             'estado_contribuyente' => $data['estado_contribuyente'],
             'condicion_domicilio' => $data['condicion_domicilio'],
             'direccion_fiscal' => $data['direccion'] ?: $client->direccion_fiscal,
+            'ubigeo' => $data['ubigeo'] ?? $client->ubigeo,
             'consultado_at' => now(),
         ]);
 

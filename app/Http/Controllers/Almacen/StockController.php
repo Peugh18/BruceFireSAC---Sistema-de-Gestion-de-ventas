@@ -33,7 +33,7 @@ class StockController extends Controller
             ->where('activo', true)
             ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
             ->orderBy('id')
-            ->get(['id', 'nombre', 'tipo', 'ciudad']);
+            ->with('ubicacion')->get(['id', 'nombre', 'tipo', 'ubigeo']);
 
         // 2a. Para productos serializados: conteo de InventoryUnit en estado 'disponible'
         $stockUnits = InventoryUnit::query()

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\TieneUbigeo;
 use Database\Factories\CompanySettingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,9 +16,6 @@ use Illuminate\Support\Facades\Storage;
  * @property string $ruc
  * @property string|null $direccion
  * @property string|null $ubigeo
- * @property string|null $departamento
- * @property string|null $provincia
- * @property string|null $distrito
  * @property string|null $telefono
  * @property string|null $email
  * @property string|null $logo_path
@@ -25,14 +23,16 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $cuenta_detraccion
  */
 #[Fillable([
-    'razon_social', 'nombre_comercial', 'ruc', 'direccion', 'ubigeo', 'departamento',
-    'distrito', 'provincia', 'telefono', 'email', 'logo_path', 'leyenda_pie', 'cuenta_detraccion',
+    'razon_social', 'nombre_comercial', 'ruc', 'direccion', 'ubigeo',
+    'telefono', 'email', 'logo_path', 'leyenda_pie', 'cuenta_detraccion',
     'instructor_capacitacion',
 ])]
 class CompanySetting extends Model
 {
     /** @use HasFactory<CompanySettingFactory> */
     use HasFactory;
+
+    use TieneUbigeo;
 
     /**
      * Configuración de empresa como fila única (singleton). Se crea con los
@@ -48,9 +48,6 @@ class CompanySetting extends Model
             'ruc' => (string) config('billing.company.ruc'),
             'direccion' => config('billing.company.direccion'),
             'ubigeo' => config('billing.company.ubigeo'),
-            'departamento' => config('billing.company.departamento'),
-            'provincia' => config('billing.company.provincia'),
-            'distrito' => config('billing.company.distrito'),
             'instructor_capacitacion' => 'Edgar Guevara Cabrera',
         ]);
     }

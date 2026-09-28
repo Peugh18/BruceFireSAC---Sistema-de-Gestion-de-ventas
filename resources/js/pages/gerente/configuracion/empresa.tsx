@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import cuentasBancarias from '@/routes/gerente/configuracion/cuentas-bancarias';
 import empresa from '@/routes/gerente/configuracion/empresa';
 import GerenteLayout from '@/layouts/gerente-layout';
@@ -19,9 +20,7 @@ type Company = {
     ruc: string;
     direccion: string | null;
     ubigeo: string | null;
-    departamento: string | null;
-    provincia: string | null;
-    distrito: string | null;
+    ubicacion: UbigeoOption | null;
     telefono: string | null;
     email: string | null;
     leyenda_pie: string | null;
@@ -67,15 +66,16 @@ export default function EmpresaConfiguracion({
     );
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const [ubicacion, setUbicacion] = useState<UbigeoOption | null>(
+        company.ubicacion,
+    );
+
     const form = useForm({
         razon_social: company.razon_social,
         nombre_comercial: company.nombre_comercial ?? '',
         ruc: company.ruc,
         direccion: company.direccion ?? '',
         ubigeo: company.ubigeo ?? '',
-        departamento: company.departamento ?? '',
-        provincia: company.provincia ?? '',
-        distrito: company.distrito ?? '',
         telefono: company.telefono ?? '',
         email: company.email ?? '',
         leyenda_pie: company.leyenda_pie ?? '',
@@ -260,14 +260,18 @@ export default function EmpresaConfiguracion({
                             </div>
                             <div>
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Ubigeo (6 dígitos SUNAT)
+                                    Ubigeo (distrito)
                                 </Label>
-                                <Input
-                                    value={form.data.ubigeo}
-                                    onChange={(e) =>
-                                        form.setData('ubigeo', e.target.value)
-                                    }
-                                    maxLength={6}
+                                <UbigeoPicker
+                                    value={ubicacion}
+                                    onChange={(ubigeo) => {
+                                        setUbicacion(ubigeo);
+                                        form.setData(
+                                            'ubigeo',
+                                            ubigeo?.codigo ?? '',
+                                        );
+                                    }}
+                                    error={form.errors.ubigeo}
                                 />
                             </div>
                             <div>
@@ -278,45 +282,6 @@ export default function EmpresaConfiguracion({
                                     value={form.data.email}
                                     onChange={(e) =>
                                         form.setData('email', e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Departamento
-                                </Label>
-                                <Input
-                                    value={form.data.departamento}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'departamento',
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
-                            <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Provincia
-                                </Label>
-                                <Input
-                                    value={form.data.provincia}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'provincia',
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
-                            <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Distrito
-                                </Label>
-                                <Input
-                                    value={form.data.distrito}
-                                    onChange={(e) =>
-                                        form.setData('distrito', e.target.value)
                                     }
                                 />
                             </div>

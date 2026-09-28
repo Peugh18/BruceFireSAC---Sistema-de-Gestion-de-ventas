@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\TieneUbigeo;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,9 +24,6 @@ use Illuminate\Support\Carbon;
  * @property string|null $whatsapp
  * @property string|null $email
  * @property string|null $direccion_fiscal
- * @property string|null $departamento
- * @property string|null $provincia
- * @property string|null $distrito
  * @property string|null $ubigeo
  * @property string|null $estado_contribuyente
  * @property string|null $condicion_domicilio
@@ -37,11 +35,13 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ClientSite> $sites
  * @property-read Collection<int, Vehicle> $vehicles
  */
-#[Fillable(['codigo_interno', 'tipo_documento', 'numero_documento', 'razon_social', 'nombre_comercial', 'telefono', 'whatsapp', 'email', 'direccion_fiscal', 'departamento', 'provincia', 'distrito', 'ubigeo', 'estado_contribuyente', 'condicion_domicilio', 'consultado_at', 'activo', 'observaciones'])]
+#[Fillable(['codigo_interno', 'tipo_documento', 'numero_documento', 'razon_social', 'nombre_comercial', 'telefono', 'whatsapp', 'email', 'direccion_fiscal', 'ubigeo', 'estado_contribuyente', 'condicion_domicilio', 'consultado_at', 'activo', 'observaciones'])]
 class Client extends Model
 {
     /** @use HasFactory<ClientFactory> */
     use HasFactory;
+
+    use TieneUbigeo;
 
     public const TIPO_DOCUMENTO_VARIOS = 'varios';
 

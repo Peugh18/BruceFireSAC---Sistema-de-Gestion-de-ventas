@@ -25,6 +25,7 @@ export type ClientFormData = {
     whatsapp: string;
     email: string;
     direccion_fiscal: string;
+    ubigeo: string;
     estado_contribuyente: string;
     condicion_domicilio: string;
     activo: boolean;
@@ -47,6 +48,7 @@ const emptyClientForm: ClientFormData = {
     whatsapp: '',
     email: '',
     direccion_fiscal: '',
+    ubigeo: '',
     estado_contribuyente: '',
     condicion_domicilio: '',
     activo: true,
@@ -358,6 +360,7 @@ export default function ClientCreateDialog({
                     razon_social: payload.razon_social ?? '',
                     direccion_fiscal:
                         payload.direccion ?? previous.direccion_fiscal,
+                    ubigeo: payload.ubigeo ?? previous.ubigeo,
                     ...(previous.tipo_documento === 'ruc'
                         ? {
                               estado_contribuyente:

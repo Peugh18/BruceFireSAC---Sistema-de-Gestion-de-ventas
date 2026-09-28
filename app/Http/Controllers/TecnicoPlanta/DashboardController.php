@@ -30,7 +30,7 @@ class DashboardController extends Controller
             ->where('estado', '!=', 'cerrado')
             ->with([
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento',
-                'sede:id,nombre,ciudad',
+                'sede:id,nombre,ubigeo', 'sede.ubicacion',
                 'deficiencies:id,service_order_id,componente,estado,requiere_autorizacion',
                 'events' => fn ($q) => $q->latest('id')->limit(1),
             ])

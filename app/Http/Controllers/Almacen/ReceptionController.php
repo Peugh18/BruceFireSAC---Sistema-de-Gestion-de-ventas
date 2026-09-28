@@ -33,7 +33,7 @@ class ReceptionController extends Controller
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
             ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
-            ->get(['id', 'nombre', 'ciudad']);
+            ->with('ubicacion')->get(['id', 'nombre', 'ubigeo']);
 
         $receptions = Reception::query()
             ->with(['sedeAlmacen:id,nombre', 'user:id,name', 'items.product:id,codigo,nombre,serializado'])
@@ -100,7 +100,7 @@ class ReceptionController extends Controller
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
             ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
-            ->get(['id', 'nombre', 'tipo', 'ciudad']);
+            ->with('ubicacion')->get(['id', 'nombre', 'tipo', 'ubigeo']);
 
         $products = Product::query()
             ->where('activo', true)
@@ -141,7 +141,7 @@ class ReceptionController extends Controller
     public function show(Team $current_team, Reception $reception): Response
     {
         $reception->load([
-            'sedeAlmacen:id,nombre,tipo,ciudad',
+            'sedeAlmacen:id,nombre,tipo,ubigeo', 'sedeAlmacen.ubicacion',
             'user:id,name',
             'items.product:id,codigo,nombre,unidad_medida,serializado',
             'movements.inventoryUnit:id,numero_serie,capacidad,serie_fabricante,marca,anio_fabricacion,estado',

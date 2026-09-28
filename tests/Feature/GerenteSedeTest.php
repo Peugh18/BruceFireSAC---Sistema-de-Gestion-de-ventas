@@ -50,7 +50,7 @@ test('gerente crea una sede almacén y queda auditada', function () {
         ->post(route('gerente.sedes.store', ['current_team' => $gerente->currentTeam]), [
             'nombre' => 'Almacén Trujillo',
             'tipo' => 'almacen',
-            'ciudad' => 'Trujillo',
+            'ubigeo' => '130101',
         ])
         ->assertRedirect();
 

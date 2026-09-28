@@ -26,7 +26,7 @@ class StockAdjustmentController extends Controller
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'tipo', 'ciudad']);
+            ->with('ubicacion')->get(['id', 'nombre', 'tipo', 'ubigeo']);
 
         $products = Product::query()
             ->where('activo', true)

@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'Almacén Central Trujillo'],
             [
                 'tipo' => 'mixta',
-                'ciudad' => 'Trujillo',
+                'ubigeo' => '130101',
                 'activo' => true,
             ]
         );
@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'Tienda Trujillo Centro'],
             [
                 'tipo' => 'tienda',
-                'ciudad' => 'Trujillo',
+                'ubigeo' => '130101',
                 'almacen_id' => $almacen->id,
                 'activo' => true,
             ]

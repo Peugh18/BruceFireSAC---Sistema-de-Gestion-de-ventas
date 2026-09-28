@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import clientes from '@/routes/vendedor/clientes';
 import sitesRoutes from '@/routes/vendedor/clientes/sites';
@@ -52,10 +53,8 @@ export type Client = {
     whatsapp: string | null;
     email: string | null;
     direccion_fiscal: string | null;
-    departamento: string | null;
-    provincia: string | null;
-    distrito: string | null;
     ubigeo: string | null;
+    ubicacion: UbigeoOption | null;
     estado_contribuyente: string | null;
     condicion_domicilio: string | null;
     activo: boolean;
@@ -68,6 +67,7 @@ export type ClientSite = {
     nombre: string;
     direccion: string;
     ubigeo: string | null;
+    ubicacion: UbigeoOption | null;
     referencia: string | null;
     contacto: string | null;
     telefono: string | null;
@@ -250,6 +250,7 @@ type ClientFormData = {
     whatsapp: string;
     email: string;
     direccion_fiscal: string;
+    ubigeo: string;
     estado_contribuyente: string;
     condicion_domicilio: string;
     activo: boolean;
@@ -353,12 +354,18 @@ export default function ClienteShow({
         whatsapp: client.whatsapp ?? '',
         email: client.email ?? '',
         direccion_fiscal: client.direccion_fiscal ?? '',
+        ubigeo: client.ubigeo ?? '',
         estado_contribuyente: client.estado_contribuyente ?? '',
         condicion_domicilio: client.condicion_domicilio ?? '',
         activo: client.activo,
         observaciones: client.observaciones ?? '',
     });
 
+    const [ubicacionCliente, setUbicacionCliente] =
+        useState<UbigeoOption | null>(client.ubicacion);
+    const [ubicacionSede, setUbicacionSede] = useState<UbigeoOption | null>(
+        null,
+    );
     const siteForm = useForm<SiteFormData>(emptySiteForm);
     const vehicleForm = useForm<VehicleFormData>(emptyVehicleForm);
 
@@ -391,11 +398,13 @@ export default function ClienteShow({
     const openCreateSite = () => {
         siteForm.reset();
         siteForm.setData(emptySiteForm);
+        setUbicacionSede(null);
         setEditingSiteId(null);
         setSiteDialogOpen(true);
     };
 
     const openEditSite = (site: ClientSite) => {
+        setUbicacionSede(site.ubicacion);
         siteForm.setData({
             tipo: site.tipo,
             nombre: site.nombre,
@@ -746,6 +755,8 @@ export default function ClienteShow({
                             <span className="truncate">
                                 {client.direccion_fiscal ||
                                     'Sin dirección fiscal registrada'}
+                                {client.ubicacion &&
+                                    ` · ${client.ubicacion.etiqueta}`}
                             </span>
                         </div>
                     </div>
@@ -2173,6 +2184,21 @@ export default function ClienteShow({
                         </div>
 
                         <div>
+                            <Label>Distrito (ubigeo)</Label>
+                            <UbigeoPicker
+                                value={ubicacionCliente}
+                                onChange={(ubigeo) => {
+                                    setUbicacionCliente(ubigeo);
+                                    editForm.setData(
+                                        'ubigeo',
+                                        ubigeo?.codigo ?? '',
+                                    );
+                                }}
+                                error={editForm.errors.ubigeo}
+                            />
+                        </div>
+
+                        <div>
                             <Label>Observaciones internas</Label>
                             <Input
                                 value={editForm.data.observaciones}
@@ -2265,6 +2291,21 @@ export default function ClienteShow({
                                 placeholder="Av. Principal 123..."
                                 className="mt-1 h-9 text-xs"
                                 required
+                            />
+                        </div>
+
+                        <div>
+                            <Label>Distrito (ubigeo)</Label>
+                            <UbigeoPicker
+                                value={ubicacionSede}
+                                onChange={(ubigeo) => {
+                                    setUbicacionSede(ubigeo);
+                                    siteForm.setData(
+                                        'ubigeo',
+                                        ubigeo?.codigo ?? '',
+                                    );
+                                }}
+                                error={siteForm.errors.ubigeo}
                             />
                         </div>
 

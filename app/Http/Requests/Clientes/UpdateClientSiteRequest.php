@@ -21,7 +21,7 @@ class UpdateClientSiteRequest extends FormRequest
             'tipo' => ['required', Rule::in(['oficina', 'tienda', 'planta', 'almacen', 'local', 'sucursal', 'otra'])],
             'nombre' => ['required', 'string', 'max:255'],
             'direccion' => ['required', 'string', 'max:255'],
-            'ubigeo' => ['nullable', 'string', 'size:6'],
+            'ubigeo' => ['nullable', 'string', 'size:6', 'exists:ubigeos,codigo'],
             'referencia' => ['nullable', 'string', 'max:255'],
             'contacto' => ['nullable', 'string', 'max:255'],
             'telefono' => ['nullable', 'string', 'max:255'],

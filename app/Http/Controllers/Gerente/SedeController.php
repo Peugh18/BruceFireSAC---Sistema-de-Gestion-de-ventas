@@ -23,7 +23,7 @@ class SedeController extends Controller
     public function index(Team $current_team): Response
     {
         $sedes = Sede::query()
-            ->with(['almacen:id,nombre', 'tiendas:id,nombre,almacen_id', 'usuarios' => fn ($query) => $query->with('roles:id,name')->orderBy('name')])
+            ->with(['ubicacion', 'almacen:id,nombre', 'tiendas:id,nombre,almacen_id', 'usuarios' => fn ($query) => $query->with('roles:id,name')->orderBy('name')])
             ->withCount('usuarios')
             ->orderByDesc('activo')
             ->orderBy('nombre')
@@ -34,6 +34,7 @@ class SedeController extends Controller
                 'tipo' => $sede->tipo,
                 'ciudad' => $sede->ciudad,
                 'ubigeo' => $sede->ubigeo,
+                'ubicacion' => $sede->ubicacion?->paraFormulario(),
                 'almacen_id' => $sede->almacen_id,
                 'almacen_nombre' => $sede->almacen?->nombre,
                 'usuarios_count' => $sede->usuarios_count,
@@ -67,7 +68,7 @@ class SedeController extends Controller
             action: 'sede.creada',
             entity: $sede,
             oldValues: [],
-            newValues: $sede->only(['nombre', 'tipo', 'ciudad', 'almacen_id']),
+            newValues: $sede->only(['nombre', 'tipo', 'ubigeo', 'almacen_id']),
             userId: $request->user()->id
         );
 
@@ -77,7 +78,7 @@ class SedeController extends Controller
 
     public function update(UpdateSedeRequest $request, Team $current_team, Sede $sede): RedirectResponse
     {
-        $anterior = $sede->only(['nombre', 'tipo', 'ciudad', 'almacen_id', 'activo']);
+        $anterior = $sede->only(['nombre', 'tipo', 'ubigeo', 'almacen_id', 'activo']);
         $this->validarCambioDeTipo($sede, $request->validated('tipo'));
 
         $sede->update($request->validated());
@@ -86,7 +87,7 @@ class SedeController extends Controller
             action: 'sede.actualizada',
             entity: $sede,
             oldValues: $anterior,
-            newValues: $sede->only(['nombre', 'tipo', 'ciudad', 'almacen_id', 'activo']),
+            newValues: $sede->only(['nombre', 'tipo', 'ubigeo', 'almacen_id', 'activo']),
             userId: $request->user()->id
         );
 

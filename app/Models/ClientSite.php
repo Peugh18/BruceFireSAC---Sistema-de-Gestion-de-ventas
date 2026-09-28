@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\TieneUbigeo;
 use Database\Factories\ClientSiteFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,6 +31,8 @@ class ClientSite extends Model
 {
     /** @use HasFactory<ClientSiteFactory> */
     use HasFactory;
+
+    use TieneUbigeo;
 
     /**
      * @return BelongsTo<Client, $this>

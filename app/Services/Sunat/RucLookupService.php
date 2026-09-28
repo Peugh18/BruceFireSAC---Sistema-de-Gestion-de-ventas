@@ -3,6 +3,7 @@
 namespace App\Services\Sunat;
 
 use App\Models\Client;
+use App\Models\Ubigeo;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -13,7 +14,8 @@ class RucLookupService
      *     razon_social: string,
      *     direccion: ?string,
      *     estado_contribuyente: ?string,
-     *     condicion_domicilio: ?string
+     *     condicion_domicilio: ?string,
+     *     ubigeo: ?string
      * }
      */
     public function lookup(string $numeroDocumento, bool $refresh = false): array
@@ -26,6 +28,7 @@ class RucLookupService
                 'direccion' => $client->direccion_fiscal,
                 'estado_contribuyente' => $client->estado_contribuyente,
                 'condicion_domicilio' => $client->condicion_domicilio,
+                'ubigeo' => $client->ubigeo,
             ];
         }
 
@@ -58,7 +61,7 @@ class RucLookupService
 
     /**
      * @param  array<string, mixed>  $data
-     * @return array{razon_social: string, direccion: ?string, estado_contribuyente: ?string, condicion_domicilio: ?string}
+     * @return array{razon_social: string, direccion: ?string, estado_contribuyente: ?string, condicion_domicilio: ?string, ubigeo: ?string}
      */
     protected function mapRucResponse(array $data): array
     {
@@ -67,12 +70,13 @@ class RucLookupService
             'direccion' => $this->nullableString($data['direccion'] ?? null),
             'estado_contribuyente' => $this->nullableString($data['estado'] ?? null),
             'condicion_domicilio' => $this->nullableString($data['condicion'] ?? null),
+            'ubigeo' => $this->ubigeoValido($data['ubigeo'] ?? null),
         ];
     }
 
     /**
      * @param  array<string, mixed>  $data
-     * @return array{razon_social: string, direccion: ?string, estado_contribuyente: ?string, condicion_domicilio: ?string}
+     * @return array{razon_social: string, direccion: ?string, estado_contribuyente: ?string, condicion_domicilio: ?string, ubigeo: ?string}
      */
     protected function mapDniResponse(array $data): array
     {
@@ -87,7 +91,18 @@ class RucLookupService
             'direccion' => null,
             'estado_contribuyente' => null,
             'condicion_domicilio' => null,
+            'ubigeo' => null,
         ];
+    }
+
+    /**
+     * Solo se acepta un código que exista en el catálogo del INEI.
+     */
+    protected function ubigeoValido(mixed $value): ?string
+    {
+        $codigo = $this->nullableString($value);
+
+        return $codigo !== null && Ubigeo::query()->whereKey($codigo)->exists() ? $codigo : null;
     }
 
     protected function nullableString(mixed $value): ?string
