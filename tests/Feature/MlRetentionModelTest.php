@@ -2,9 +2,11 @@
 
 use App\Models\Client;
 use App\Models\ClientRetentionScore;
+use App\Models\MlVentaHistorica;
 use App\Models\Sale;
 use App\Models\User;
 use App\Services\Ml\RetentionModel;
+use Carbon\Carbon;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -194,4 +196,76 @@ test('Dashboard del Gerente renderiza la sección de IA con scores activos', fun
             ->etc()
         )
     );
+});
+
+test('RetentionModel calcula un modelo XGBoost exportado y reparte la prediccion entre las variables', function () {
+    $path = storage_path('framework/testing/ml/test_xgboost.json');
+    File::ensureDirectoryExists(dirname($path));
+    File::put($path, json_encode([
+        'type' => 'xgboost',
+        'features' => ['recencia_dias', 'frecuencia_compras'],
+        'base_margin' => -0.5,
+        'trees' => [[
+            '0' => ['f' => 'recencia_dias', 't' => 90, 'yes' => 1, 'no' => 2, 'missing' => 1, 'ev' => 0.1],
+            '1' => ['f' => 'frecuencia_compras', 't' => 3, 'yes' => 3, 'no' => 4, 'missing' => 3, 'ev' => 0.4],
+            '2' => ['leaf' => -0.6, 'ev' => -0.6],
+            '3' => ['leaf' => 0.2, 'ev' => 0.2],
+            '4' => ['leaf' => 1.0, 'ev' => 1.0],
+        ]],
+    ]));
+
+    $model = new RetentionModel($path);
+
+    // Compró hace 30 días y 5 veces: hoja 1.0, margen -0.5 + 1.0 = 0.5.
+    $contribuciones = $model->contribuciones(['recencia_dias' => 30, 'frecuencia_compras' => 5]);
+    expect($contribuciones['base'])->toEqualWithDelta(-0.4, 0.0001)
+        ->and($contribuciones['contribuciones']['recencia_dias'])->toEqualWithDelta(0.3, 0.0001)
+        ->and($contribuciones['contribuciones']['frecuencia_compras'])->toEqualWithDelta(0.6, 0.0001)
+        ->and($model->predictProbability(['recencia_dias' => 30, 'frecuencia_compras' => 5]))->toEqualWithDelta(1 / (1 + exp(-0.5)), 0.0001);
+
+    // Sin comprar hace 200 días: hoja -0.6, margen -1.1.
+    expect($model->predictProbability(['recencia_dias' => 200, 'frecuencia_compras' => 5]))->toEqualWithDelta(1 / (1 + exp(1.1)), 0.0001);
+
+    File::delete($path);
+});
+
+test('las variables del cliente juntan el historico del sistema anterior con sus ventas nuevas', function () {
+    $client = Client::factory()->create(['numero_documento' => '20555555555']);
+    MlVentaHistorica::query()->insert([
+        ['fecha' => '2025-06-01', 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20555555555', 'nombre_cliente' => 'X', 'categoria' => 'recarga_mantenimiento', 'producto_original' => 'RECARGA PQS 6KG', 'cantidad' => 2, 'total' => 100, 'archivo_origen' => 'JUNIO.xlsx'],
+        ['fecha' => '2025-06-01', 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20555555555', 'nombre_cliente' => 'X', 'categoria' => 'seguridad', 'producto_original' => 'CONO', 'cantidad' => 1, 'total' => 20, 'archivo_origen' => 'JUNIO.xlsx'],
+        ['fecha' => '2025-06-01', 'tipo_doc' => 'F', 'comprobante' => 'F001-2', 'documento_cliente' => '20999999999', 'nombre_cliente' => 'OTRO', 'categoria' => 'seguridad', 'producto_original' => 'CONO', 'cantidad' => 1, 'total' => 999, 'archivo_origen' => 'JUNIO.xlsx'],
+    ]);
+    Sale::factory()->create(['client_id' => $client->id, 'fecha' => '2026-01-10', 'total' => 380, 'estado' => 'confirmada']);
+    Sale::factory()->create(['client_id' => $client->id, 'fecha' => '2026-01-20', 'total' => 500, 'estado' => 'borrador']);
+
+    $variables = app(RetentionModel::class)->extractFeaturesForClient($client->id, Carbon::parse('2026-02-09'));
+
+    expect($variables)->toMatchArray([
+        'frecuencia_compras' => 2,
+        'monto_total' => 500.0,
+        'recencia_dias' => 31,
+        'antiguedad_dias' => 254,
+        'diversidad_productos' => 2,
+        'compro_recarga' => 1,
+    ]);
+});
+
+test('el dataset de entrenamiento marca quien volvio a comprar despues de cada corte', function () {
+    MlVentaHistorica::query()->insert([
+        ['fecha' => '2025-01-10', 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20111111111', 'nombre_cliente' => 'VUELVE', 'categoria' => 'extintor', 'producto_original' => 'EXTINTOR', 'cantidad' => 1, 'total' => 70, 'archivo_origen' => 'a'],
+        ['fecha' => '2025-03-10', 'tipo_doc' => 'F', 'comprobante' => 'F001-2', 'documento_cliente' => '20111111111', 'nombre_cliente' => 'VUELVE', 'categoria' => 'recarga_mantenimiento', 'producto_original' => 'RECARGA', 'cantidad' => 1, 'total' => 55, 'archivo_origen' => 'a'],
+        ['fecha' => '2025-01-15', 'tipo_doc' => 'B', 'comprobante' => 'B001-1', 'documento_cliente' => '44556677', 'nombre_cliente' => 'NO VUELVE', 'categoria' => 'seguridad', 'producto_original' => 'CONO', 'cantidad' => 1, 'total' => 20, 'archivo_origen' => 'a'],
+    ]);
+    $path = storage_path('framework/testing/ml/dataset.csv');
+    File::ensureDirectoryExists(dirname($path));
+
+    $this->artisan('ml:export-retention-dataset', ['--cortes' => '2025-02-01', '--output' => $path])->assertSuccessful();
+
+    $filas = collect(array_map(fn (string $linea) => str_getcsv($linea, escape: ''), file($path, FILE_IGNORE_NEW_LINES)))->slice(1)->keyBy(0);
+    expect($filas)->toHaveCount(2)
+        ->and($filas['20111111111'][9])->toBe('1')
+        ->and($filas['44556677'][9])->toBe('0');
+
+    File::delete($path);
 });

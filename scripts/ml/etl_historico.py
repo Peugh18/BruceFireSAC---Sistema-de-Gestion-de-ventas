@@ -20,6 +20,11 @@ import sys
 
 import pandas as pd
 
+# Comprobantes que el negocio confirmó como errores de registro: no se usan.
+COMPROBANTES_CON_ERROR = {
+    'F001-10323': '851 extintores a INVERSIONES FREKA S.A.C. (S/ 72,335), confirmado como error el 28/09/2026',
+}
+
 COLUMNAS = ['fecha', 'tipo_doc', 'comprobante', 'documento_cliente', 'nombre_cliente',
             'categoria', 'producto_original', 'cantidad', 'total', 'archivo_origen']
 
@@ -78,10 +83,13 @@ def main() -> int:
         'archivo_origen': ventas['archivo_origen'],
     })[COLUMNAS]
 
+    con_error = salida['comprobante'].isin(COMPROBANTES_CON_ERROR.keys())
+    salida = salida[~con_error]
+
     salida.to_csv(args.salida, index=False, encoding='utf-8')
 
     print(f'Líneas leídas: {leidas}')
-    print(f'Descartadas: {int((~datos["Doc"].isin(["F", "B"])).sum())} de cotizaciones y notas de crédito, {sin_cliente} sin cliente identificable')
+    print(f'Descartadas: {int((~datos["Doc"].isin(["F", "B"])).sum())} de cotizaciones y notas de crédito, {sin_cliente} sin cliente identificable, {int(con_error.sum())} de comprobantes con error')
     print(f'Líneas de facturas y boletas: {len(salida)} | comprobantes: {salida["comprobante"].nunique()} | clientes: {salida["documento_cliente"].nunique()}')
     print(f'Periodo: {salida["fecha"].min()} a {salida["fecha"].max()} | total vendido: S/ {salida["total"].sum():,.2f}')
     print(salida['categoria'].value_counts().to_string())

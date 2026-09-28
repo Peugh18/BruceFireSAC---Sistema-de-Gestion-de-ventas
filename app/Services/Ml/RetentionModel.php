@@ -4,7 +4,6 @@ namespace App\Services\Ml;
 
 use App\Models\Client;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 
@@ -40,7 +39,11 @@ class RetentionModel
         $content = File::get($this->modelPath);
         $json = json_decode($content, true);
 
-        if (! is_array($json) || ! isset($json['coefficients'], $json['intercept'], $json['scaler'])) {
+        $completo = is_array($json) && (($json['type'] ?? 'logistic') === 'xgboost'
+            ? isset($json['trees'], $json['base_margin'])
+            : isset($json['coefficients'], $json['intercept'], $json['scaler']));
+
+        if (! $completo) {
             throw new RuntimeException("El archivo del modelo de IA está corrupto o incompleto en: {$this->modelPath}");
         }
 
@@ -58,31 +61,15 @@ class RetentionModel
     }
 
     /**
-     * Inferencia matemática pura: estandarización + producto punto + sigmoide.
+     * Inferencia matemática pura: el margen (log-odds) del modelo pasa por
+     * la sigmoide.
      *
      * @param  array<string, float|int|bool>  $features
      */
     public function predictProbability(array $features): float
     {
-        $model = $this->load();
-
-        $coefficients = $model['coefficients'];
-        $intercept = (float) $model['intercept'];
-        $scaler = $model['scaler'];
-
-        $logit = $intercept;
-
-        foreach ($coefficients as $featureName => $weight) {
-            $rawVal = isset($features[$featureName]) ? (float) $features[$featureName] : 0.0;
-            $mean = (float) ($scaler['mean'][$featureName] ?? 0.0);
-            $std = (float) ($scaler['std'][$featureName] ?? 1.0);
-
-            // Estandarización z = (x - mean) / std
-            $scaledVal = $std > 0.000001 ? ($rawVal - $mean) / $std : 0.0;
-
-            // Producto punto
-            $logit += ((float) $weight) * $scaledVal;
-        }
+        ['base' => $logit, 'contribuciones' => $contribuciones] = $this->contribuciones($features);
+        $logit += array_sum($contribuciones);
 
         // Función sigmoide: 1 / (1 + exp(-z))
         if ($logit > 45.0) {
@@ -119,24 +106,12 @@ class RetentionModel
      */
     public function explainFactors(array $features): array
     {
-        $model = $this->load();
-
-        $coefficients = $model['coefficients'];
-        $scaler = $model['scaler'];
-
         $contribuciones = [];
 
-        foreach ($coefficients as $featureName => $weight) {
-            $rawVal = isset($features[$featureName]) ? (float) $features[$featureName] : 0.0;
-            $mean = (float) ($scaler['mean'][$featureName] ?? 0.0);
-            $std = (float) ($scaler['std'][$featureName] ?? 1.0);
-
-            $scaledVal = $std > 0.000001 ? ($rawVal - $mean) / $std : 0.0;
-            $contribucion = ((float) $weight) * $scaledVal;
-
+        foreach ($this->contribuciones($features)['contribuciones'] as $featureName => $contribucion) {
             $contribuciones[$featureName] = [
                 'feature' => $featureName,
-                'raw_value' => $rawVal,
+                'raw_value' => isset($features[$featureName]) ? (float) $features[$featureName] : 0.0,
                 'contribution' => $contribucion,
                 'abs_contribution' => abs($contribucion),
             ];
@@ -173,6 +148,63 @@ class RetentionModel
             'positivos' => $positivos,
             'negativos' => $negativos,
         ];
+    }
+
+    /**
+     * Reparte el margen (log-odds) de la predicción entre las variables.
+     *
+     * Regresión logística: coeficiente × valor estandarizado (es el valor
+     * SHAP exacto de un modelo lineal). XGBoost: se recorre cada árbol y el
+     * cambio de valor esperado en cada división se atribuye a la variable que
+     * divide (aproximación de SHAP de Saabas, la misma que xgboost calcula con
+     * pred_contribs y approx_contribs=True).
+     *
+     * @param  array<string, float|int|bool>  $features
+     * @return array{base: float, contribuciones: array<string, float>}
+     */
+    public function contribuciones(array $features): array
+    {
+        $model = $this->load();
+        $valor = fn (string $feature): float => isset($features[$feature]) ? (float) $features[$feature] : 0.0;
+
+        if (($model['type'] ?? 'logistic') !== 'xgboost') {
+            $contribuciones = [];
+            foreach ($model['coefficients'] as $featureName => $weight) {
+                $mean = (float) ($model['scaler']['mean'][$featureName] ?? 0.0);
+                $std = (float) ($model['scaler']['std'][$featureName] ?? 1.0);
+                $contribuciones[$featureName] = (float) $weight * ($std > 0.000001 ? ($valor($featureName) - $mean) / $std : 0.0);
+            }
+
+            return ['base' => (float) $model['intercept'], 'contribuciones' => $contribuciones];
+        }
+
+        $contribuciones = array_fill_keys($model['features'] ?? [], 0.0);
+        $base = (float) $model['base_margin'];
+
+        foreach ($model['trees'] as $arbol) {
+            $nodo = $arbol['0'];
+            $base += (float) $nodo['ev'];
+
+            while (! isset($nodo['leaf'])) {
+                $x = $this->float32($valor($nodo['f']));
+                $siguiente = $arbol[(string) ($x < $this->float32((float) $nodo['t']) ? $nodo['yes'] : $nodo['no'])];
+                $contribuciones[$nodo['f']] = ($contribuciones[$nodo['f']] ?? 0.0) + (float) $siguiente['ev'] - (float) $nodo['ev'];
+                $nodo = $siguiente;
+            }
+        }
+
+        return ['base' => $base, 'contribuciones' => $contribuciones];
+    }
+
+    /**
+     * xgboost compara los valores en precisión simple (float32); se redondea
+     * igual para que un valor justo en el umbral vaya a la misma rama.
+     */
+    protected function float32(float $valor): float
+    {
+        $empaquetado = unpack('g', pack('g', $valor));
+
+        return $empaquetado === false ? $valor : (float) $empaquetado[1];
     }
 
     /**
@@ -233,58 +265,17 @@ class RetentionModel
      */
     public function extractFeaturesForClient(int $clientId, ?Carbon $asOf = null): ?array
     {
-        $asOf = $asOf ?: Carbon::today();
-        $asOfStr = $asOf->toDateString();
+        $documento = Client::query()->whereKey($clientId)->value('numero_documento');
 
-        $saleData = DB::table('sales')
-            ->where('client_id', $clientId)
-            ->where('estado', '!=', 'anulada')
-            ->where('fecha', '<=', $asOfStr)
-            ->selectRaw('
-                COUNT(id) as frecuencia,
-                SUM(total) as monto_total,
-                MIN(fecha) as primera_compra,
-                MAX(fecha) as ultima_compra
-            ')
-            ->first();
-
-        if (! $saleData || (int) $saleData->frecuencia === 0) {
+        if ($documento === null) {
             return null;
         }
 
-        $itemData = DB::table('sale_items')
-            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->leftJoin('services', 'services.id', '=', 'sale_items.service_id')
-            ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
-            ->where('sales.client_id', $clientId)
-            ->where('sales.estado', '!=', 'anulada')
-            ->where('sales.fecha', '<=', $asOfStr)
-            ->selectRaw('
-                COUNT(DISTINCT COALESCE(CONCAT("p_", sale_items.product_id), CONCAT("s_", sale_items.service_id))) as diversidad,
-                MAX(CASE WHEN UPPER(services.nombre) LIKE "%RECARGA%" OR products.categoria = "extintor" THEN 1 ELSE 0 END) as compro_recarga
-            ')
-            ->first();
+        $historial = app(HistorialCompras::class);
+        $compras = $historial->porDocumento([(string) $documento])->get((string) $documento);
 
-        $ultimaCompra = Carbon::parse($saleData->ultima_compra)->startOfDay();
-        $primeraCompra = Carbon::parse($saleData->primera_compra)->startOfDay();
-
-        $recenciaDias = max(0, (int) $ultimaCompra->diffInDays($asOf, false));
-        $antiguedadDias = max(0, (int) $primeraCompra->diffInDays($asOf, false));
-        $frecuencia = (int) $saleData->frecuencia;
-        $montoTotal = round((float) $saleData->monto_total, 2);
-        $ticketPromedio = $frecuencia > 0 ? round($montoTotal / $frecuencia, 2) : 0.0;
-        $diversidad = $itemData ? (int) $itemData->diversidad : 1;
-        $comproRecarga = $itemData ? (int) $itemData->compro_recarga : 0;
-
-        return [
-            'recencia_dias' => $recenciaDias,
-            'frecuencia_compras' => $frecuencia,
-            'monto_total' => $montoTotal,
-            'ticket_promedio' => $ticketPromedio,
-            'antiguedad_dias' => $antiguedadDias,
-            'diversidad_productos' => $diversidad,
-            'compro_recarga' => $comproRecarga,
-        ];
+        // Cuenta las compras de hasta el mismo día de $asOf.
+        return $compras ? $historial->variables($compras, ($asOf ?: Carbon::today())->copy()->startOfDay()->addDay()) : null;
     }
 
     /**
@@ -336,9 +327,10 @@ class RetentionModel
 
         return [
             'model_name' => $model['model_name'] ?? 'Logistic Regression',
+            'type' => $model['type'] ?? 'logistic',
             'version' => $model['version'] ?? '1.0.0',
             'trained_at' => $model['trained_at'] ?? null,
-            'cutoff_date' => $model['cutoff_date'] ?? null,
+            'cutoff_date' => $model['cutoff_date'] ?? (isset($model['cortes']) ? end($model['cortes']) : null),
             'metrics' => $model['metrics'] ?? [],
             'dataset_summary' => $model['dataset_summary'] ?? [],
         ];

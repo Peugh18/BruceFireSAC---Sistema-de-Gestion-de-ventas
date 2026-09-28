@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Client;
 use App\Models\ClientRetentionScore;
+use App\Models\MlVentaHistorica;
 use App\Services\Ml\RetentionModel;
 use Carbon\Carbon;
 use Illuminate\Console\Attributes\Description;
@@ -35,7 +36,9 @@ class ScoreClients extends Command
             ->where('activo', true)
             ->where('razon_social', 'not like', '%SIN DOCUMENTO%')
             ->where('numero_documento', '!=', '00000000000')
-            ->whereHas('sales', fn ($q) => $q->where('estado', '!=', 'anulada'))
+            ->where(fn ($q) => $q
+                ->whereHas('sales', fn ($ventas) => $ventas->where('estado', 'confirmada'))
+                ->orWhereIn('numero_documento', MlVentaHistorica::query()->select('documento_cliente')))
             ->select(['id', 'razon_social']);
 
         if ($limit) {
