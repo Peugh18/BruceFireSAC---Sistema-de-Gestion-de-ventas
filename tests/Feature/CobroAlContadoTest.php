@@ -56,7 +56,9 @@ test('al emitir una venta al contado el cobro queda registrado con su medio de p
 
     $pago = SalePayment::where('sale_id', $sale->id)->sole();
 
-    expect($sale->medio_pago)->toBe('yape')
+    expect($sale->medio_pago)->toBeNull()
+        ->and($sale->numero_operacion)->toBeNull()
+        ->and($sale->medioPagoTexto())->toBe('Yape')
         ->and($pago->forma_pago)->toBe('yape')
         ->and((float) $pago->monto)->toBe((float) $sale->total)
         ->and($pago->numero_operacion)->toBe('123456')

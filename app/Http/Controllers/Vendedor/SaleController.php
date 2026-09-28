@@ -89,7 +89,7 @@ class SaleController extends Controller
 
         return Inertia::render('vendedor/ventas/nueva', [
             'caja_abierta' => CashRegister::query()
-                ->where('user_id', $request->user()->id)
+                ->where('vendedor_id', $request->user()->id)
                 ->where('estado', 'abierto')
                 ->exists(),
             'clientesVarios' => Client::clientesVarios()->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
@@ -314,7 +314,7 @@ class SaleController extends Controller
                 $quote = Quote::query()->with(['items.service', 'equipments'])->findOrFail((int) $data['quote_id']);
                 $serviceItem = $quote->items->first(fn (QuoteItem $item): bool => $item->service_id !== null);
                 if ($serviceItem?->service) {
-                    $serviceOrder = ServiceOrder::create(['codigo' => $numberGenerator->next(), 'client_id' => $quote->client_id, 'sede_id' => $sale->sede_id, 'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'sale_id' => $sale->id, 'service_id' => $serviceItem->service_id, 'tipo_servicio' => $serviceItem->service->nombre, 'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'observaciones' => "Creada desde {$quote->numero}", 'estado' => 'pendiente_recepcion']);
+                    $serviceOrder = ServiceOrder::create(['codigo' => $numberGenerator->next(), 'client_id' => $quote->client_id, 'sede_id' => $sale->sede_id, 'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'sale_id' => $sale->id, 'service_id' => $serviceItem->service_id, 'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'observaciones' => "Creada desde {$quote->numero}", 'estado' => 'pendiente_recepcion']);
                     $serviceOrder->equipments()->sync($quote->equipments->modelKeys());
                 }
             }

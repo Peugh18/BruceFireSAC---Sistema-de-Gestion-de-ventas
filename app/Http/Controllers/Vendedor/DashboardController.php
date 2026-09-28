@@ -147,7 +147,7 @@ class DashboardController extends Controller
                 'id' => $orden->id,
                 'codigo' => $orden->codigo,
                 'cliente' => $orden->client->razon_social,
-                'tipo_servicio' => $orden->tipo_servicio,
+                'tipo_servicio' => $orden->service->nombre,
                 'tecnico' => $orden->tecnico?->name,
                 'estado' => $orden->estado,
                 'prioridad' => $orden->prioridad,

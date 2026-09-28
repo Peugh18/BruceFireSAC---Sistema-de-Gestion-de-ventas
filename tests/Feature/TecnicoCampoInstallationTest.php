@@ -4,6 +4,7 @@ use App\Enums\TeamRole;
 use App\Models\Certificate;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
@@ -22,10 +23,11 @@ beforeEach(function () {
 
 test('tecnico campo can view installations index with KPIs', function () {
     $client = Client::factory()->create();
+    $service = Service::factory()->create(['nombre' => 'Instalación']);
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'tipo_servicio' => 'instalacion',
         'estado' => 'en_revision',
     ]);
 
@@ -41,10 +43,11 @@ test('tecnico campo can view installations index with KPIs', function () {
 
 test('tecnico campo can view installation detail', function () {
     $client = Client::factory()->create();
+    $service = Service::factory()->create(['nombre' => 'Instalación']);
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'tipo_servicio' => 'instalacion',
         'estado' => 'en_revision',
     ]);
 
@@ -63,10 +66,11 @@ test('tecnico campo can view installation detail', function () {
 
 test('tecnico campo can register installation, creating client equipments and certificate', function () {
     $client = Client::factory()->create();
+    $service = Service::factory()->create(['nombre' => 'Instalación']);
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'tipo_servicio' => 'instalacion',
         'estado' => 'en_revision',
     ]);
 
@@ -125,10 +129,11 @@ test('tecnico campo can register installation, creating client equipments and ce
 
 test('installation requires customer conformity acceptance', function () {
     $client = Client::factory()->create();
+    $service = Service::factory()->create(['nombre' => 'Instalación']);
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'tipo_servicio' => 'instalacion',
         'estado' => 'en_revision',
     ]);
 

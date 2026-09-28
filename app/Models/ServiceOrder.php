@@ -25,7 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $vehicle_id
  * @property int|null $quote_id
  * @property int|null $sale_id
- * @property string $tipo_servicio
+ * @property int $service_id
  * @property Carbon $fecha
  * @property int|null $tecnico_id
  * @property string|null $departamento_tecnico
@@ -42,7 +42,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ServiceOrderEvent> $events
  */
 #[Fillable([
-    'codigo', 'client_id', 'sede_id', 'vehicle_id', 'referencia', 'quote_id', 'sale_id', 'service_id', 'tipo_servicio',
+    'codigo', 'client_id', 'sede_id', 'vehicle_id', 'referencia', 'quote_id', 'sale_id', 'service_id',
     'fecha', 'tecnico_id', 'departamento_tecnico', 'prioridad', 'observaciones', 'estado',
 ])]
 class ServiceOrder extends Model

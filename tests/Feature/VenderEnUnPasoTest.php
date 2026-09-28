@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Sales\DescartarVentaSinComprobante;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
 use App\Models\Equipment;
@@ -186,4 +187,21 @@ test('corregir productos anula el comprobante por enviar y abre una copia llena'
             ->where('venta.numero_interno', $sale->numero_interno)
             ->where('venta.comprobante_tipo', 'boleta')
             ->where('venta.items.0.numero_serie', $unit->numero_serie));
+});
+
+test('un extintor que volvio al stock por una venta anulada se puede vender de nuevo', function () {
+    $unit = unidadDisponible();
+    $this->actingAs($this->vendedor)->post(route('vendedor.ventas.store', $this->team), [...datosDeVenta(Client::factory()->create(), $unit), 'emitir' => true]);
+    $primera = Sale::sole();
+
+    app(DescartarVentaSinComprobante::class)->handle($primera, 'por prueba');
+    expect($unit->fresh()->estado)->toBe('disponible');
+
+    $this->actingAs($this->vendedor)
+        ->post(route('vendedor.ventas.store', $this->team), [...datosDeVenta(Client::factory()->create(), $unit), 'emitir' => true])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect(Sale::count())->toBe(2)
+        ->and($unit->fresh()->estado)->toBe('vendido');
 });

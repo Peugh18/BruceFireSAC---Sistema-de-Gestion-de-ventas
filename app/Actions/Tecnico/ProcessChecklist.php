@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tecnico;
 
+use App\Enums\EquipmentType;
 use App\Models\Deficiency;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
@@ -92,7 +93,7 @@ class ProcessChecklist
                         'componente' => $nombreElemento,
                         'condicion' => $itemData['condicion'] ?? 'Observado durante inspección técnica',
                         'foto_path' => $itemData['foto_path'] ?? null,
-                        'nota' => $itemData['nota'] ?? null,
+                        'nota' => trim(($itemData['nota'] ?? '')."\nCondición observada: ".($itemData['condicion'] ?? 'Observado durante inspección técnica')),
                         'accion_recomendada' => $itemData['accion_recomendada'] ?? null,
                         'repuesto_sugerido' => $itemData['repuesto_sugerido'] ?? null,
                         'requiere_autorizacion' => $requiereAuth,
@@ -111,7 +112,7 @@ class ProcessChecklist
                 'equipment_id' => $equipment->id,
                 'user_id' => $user->id,
                 'origen' => $origen,
-                'tipo_equipo' => $equipment->tipo_agente,
+                'tipo_equipo' => EquipmentType::fromDescription($equipment->tipo_agente)->value,
                 'items' => $checklistItems,
                 'resultado_general' => $resultadoGeneral,
                 'observaciones' => $data['observaciones'] ?? null,

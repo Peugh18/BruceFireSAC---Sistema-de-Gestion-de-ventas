@@ -113,7 +113,7 @@ test('gerente puede alternar el estado activo del servicio', function () {
     ]);
 });
 
-test('regla no negociable: no se puede eliminar un servicio con cotizaciones asociadas', function () {
+test('al eliminar un servicio con historial se desactiva y conserva sus registros', function () {
     $user = createGerenteUserForServiceTest();
     $service = Service::factory()->create();
 
@@ -126,12 +126,13 @@ test('regla no negociable: no se puede eliminar un servicio con cotizaciones aso
     $this->actingAs($user)
         ->delete(route('gerente.servicios.destroy', ['current_team' => $user->currentTeam, 'servicio' => $service]))
         ->assertRedirect()
-        ->assertSessionHas('error');
+        ->assertSessionHas('success');
 
-    $this->assertDatabaseHas('services', ['id' => $service->id]);
+    $this->assertDatabaseHas('services', ['id' => $service->id, 'activo' => false]);
+    $this->assertDatabaseHas('quote_items', ['quote_id' => $quote->id, 'service_id' => $service->id]);
 });
 
-test('se puede eliminar un servicio si no cuenta con historial', function () {
+test('al eliminar un servicio sin historial tambien se desactiva', function () {
     $user = createGerenteUserForServiceTest();
     $service = Service::factory()->create();
 
@@ -140,5 +141,5 @@ test('se puede eliminar un servicio si no cuenta con historial', function () {
         ->assertRedirect(route('gerente.servicios.index', ['current_team' => $user->currentTeam]))
         ->assertSessionHas('success');
 
-    $this->assertDatabaseMissing('services', ['id' => $service->id]);
+    $this->assertDatabaseHas('services', ['id' => $service->id, 'activo' => false]);
 });

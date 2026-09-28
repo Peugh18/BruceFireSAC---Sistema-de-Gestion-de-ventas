@@ -23,11 +23,10 @@ class StoreServiceOrderRequest extends FormRequest
             'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'referencia' => ['nullable', 'string', 'max:150'],
             'service_id' => ['required', 'integer', 'exists:services,id'],
-            'tipo_servicio' => ['nullable', 'string', 'max:255'],
             'fecha' => ['required', 'date'],
             'tecnico_id' => ['nullable', 'integer', 'exists:users,id'],
             'departamento_tecnico' => ['nullable', Rule::in(['planta', 'campo'])],
-            'prioridad' => ['nullable', 'string', 'max:255'],
+            'prioridad' => ['nullable', Rule::in(['normal', 'alta', 'urgente'])],
             'observaciones' => ['nullable', 'string'],
         ];
     }

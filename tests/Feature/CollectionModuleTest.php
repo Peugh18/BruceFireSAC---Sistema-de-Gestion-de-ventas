@@ -82,6 +82,7 @@ test('un installment vencido se actualiza a vencido al listar via CollectionCont
 
     $installmentVencido = Installment::factory()->create([
         'sale_id' => $sale->id,
+        'numero_cuota' => 1,
         'monto' => 150.00,
         'fecha_vencimiento' => now()->subDays(5)->toDateString(),
         'estado' => 'pendiente',
@@ -89,6 +90,7 @@ test('un installment vencido se actualiza a vencido al listar via CollectionCont
 
     $installmentFuturo = Installment::factory()->create([
         'sale_id' => $sale->id,
+        'numero_cuota' => 2,
         'monto' => 250.00,
         'fecha_vencimiento' => now()->addDays(10)->toDateString(),
         'estado' => 'pendiente',

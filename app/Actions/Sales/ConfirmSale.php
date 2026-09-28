@@ -119,6 +119,8 @@ class ConfirmSale
             'fecha' => today(),
         ]);
 
+        $sale->update(['medio_pago' => null, 'numero_operacion' => null]);
+
         if ($detraccion > 0) {
             SalePayment::create([
                 'sale_id' => $sale->id,

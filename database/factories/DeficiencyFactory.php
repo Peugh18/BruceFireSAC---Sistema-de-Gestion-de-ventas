@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\DeficiencyCondition;
 use App\Models\Deficiency;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
@@ -18,7 +19,7 @@ class DeficiencyFactory extends Factory
             'service_order_id' => ServiceOrder::factory(),
             'equipment_id' => Equipment::factory(),
             'componente' => fake()->randomElement(['Manómetro', 'Válvula', 'Manguera', 'Cilindro']),
-            'condicion' => fake()->randomElement(['Dañado', 'Vencido', 'Con fuga', 'Ausente']),
+            'condicion' => fake()->randomElement(DeficiencyCondition::values()),
             'nota' => fake()->optional()->sentence(),
             'accion_recomendada' => fake()->optional()->sentence(),
             'requiere_autorizacion' => true,

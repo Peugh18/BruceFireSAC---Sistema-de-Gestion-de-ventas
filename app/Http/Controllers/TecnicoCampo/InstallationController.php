@@ -28,7 +28,7 @@ class InstallationController extends Controller
             ->with(['client', 'sede', 'equipments'])
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
-                    ->orWhere('tipo_servicio', 'instalacion');
+                    ->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%'));
             })
             ->latest('id');
 
@@ -54,18 +54,18 @@ class InstallationController extends Controller
 
         $stats = [
             'total' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhere('tipo_servicio', 'instalacion'))
+                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
                 ->count(),
             'pendientes' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhere('tipo_servicio', 'instalacion'))
+                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
                 ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta'])
                 ->count(),
             'en_proceso' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhere('tipo_servicio', 'instalacion'))
+                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
                 ->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion'])
                 ->count(),
             'finalizadas' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhere('tipo_servicio', 'instalacion'))
+                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
                 ->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])
                 ->count(),
         ];

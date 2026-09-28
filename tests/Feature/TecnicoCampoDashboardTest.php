@@ -2,6 +2,7 @@
 
 use App\Enums\TeamRole;
 use App\Models\Client;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\User;
@@ -18,19 +19,21 @@ beforeEach(function () {
 
 test('tecnico campo dashboard renders kpis and service list', function () {
     $client = Client::factory()->create(['direccion_fiscal' => 'Av. Larco 123, Trujillo']);
+    $collectionService = Service::factory()->create(['nombre' => 'Recojo de extintores']);
+    $inspectionService = Service::factory()->create(['nombre' => 'Inspección técnica anual']);
 
     ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $collectionService->id,
         'codigo' => 'OS-CMP-0001',
-        'tipo_servicio' => 'Recojo de extintores',
         'estado' => 'pendiente_recepcion',
         'departamento_tecnico' => 'campo',
     ]);
 
     ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $inspectionService->id,
         'codigo' => 'OS-CMP-0002',
-        'tipo_servicio' => 'Inspección técnica anual',
         'estado' => 'en_proceso',
         'departamento_tecnico' => 'campo',
     ]);
@@ -52,19 +55,21 @@ test('tecnico campo dashboard renders kpis and service list', function () {
 
 test('tecnico campo dashboard filters by status tab and service type', function () {
     $client = Client::factory()->create();
+    $collectionService = Service::factory()->create(['nombre' => 'Recojo']);
+    $inspectionService = Service::factory()->create(['nombre' => 'Inspección técnica']);
 
     ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $collectionService->id,
         'codigo' => 'OS-CMP-1001',
-        'tipo_servicio' => 'Recojo',
         'estado' => 'pendiente_recepcion',
         'departamento_tecnico' => 'campo',
     ]);
 
     ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $inspectionService->id,
         'codigo' => 'OS-CMP-1002',
-        'tipo_servicio' => 'Inspección técnica',
         'estado' => 'en_proceso',
         'departamento_tecnico' => 'campo',
     ]);

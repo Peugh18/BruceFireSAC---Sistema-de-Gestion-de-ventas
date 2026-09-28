@@ -155,10 +155,11 @@ class ProcessSaleItem
 
         $unit->update(['estado' => 'vendido']);
 
-        $equipment = Equipment::create([
+        // Si la unidad ya se vendió antes y esa venta se anuló, su equipo
+        // quedó de baja con la misma serie: se reutiliza para el nuevo cliente.
+        $equipment = Equipment::updateOrCreate(['numero_serie' => $unit->numero_serie], [
             'client_id' => $sale->client_id,
             'product_id' => $unit->product_id,
-            'numero_serie' => $unit->numero_serie,
             'capacidad' => $unit->capacidad,
             'marca' => $unit->marca,
             'serie_fabricante' => $unit->serie_fabricante,

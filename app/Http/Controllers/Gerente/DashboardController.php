@@ -143,12 +143,13 @@ class DashboardController extends Controller
 
         // Servicios por tipo
         $serviciosPorTipo = ServiceOrder::query()
-            ->selectRaw('tipo_servicio, count(*) as cantidad')
-            ->groupBy('tipo_servicio')
+            ->join('services', 'services.id', '=', 'service_orders.service_id')
+            ->selectRaw('services.nombre as tipo_servicio, count(*) as cantidad')
+            ->groupBy('services.id', 'services.nombre')
             ->get()
             ->map(fn ($row) => [
-                'tipo' => ucfirst(str_replace('_', ' ', (string) $row->tipo_servicio)),
-                'cantidad' => (int) $row->cantidad,
+                'tipo' => ucfirst(str_replace('_', ' ', (string) $row->getAttribute('tipo_servicio'))),
+                'cantidad' => (int) $row->getAttribute('cantidad'),
             ])
             ->all();
 

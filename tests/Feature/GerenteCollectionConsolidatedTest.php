@@ -80,6 +80,7 @@ test('cuotas vencidas son actualizadas automaticamente y filtradas correctamente
     // Cuota vencida
     $vencida = Installment::factory()->create([
         'sale_id' => $sale->id,
+        'numero_cuota' => 1,
         'fecha_vencimiento' => today()->subDays(10),
         'estado' => 'pendiente',
     ]);
@@ -87,6 +88,7 @@ test('cuotas vencidas son actualizadas automaticamente y filtradas correctamente
     // Cuota futura
     $futura = Installment::factory()->create([
         'sale_id' => $sale->id,
+        'numero_cuota' => 2,
         'fecha_vencimiento' => today()->addDays(20),
         'estado' => 'pendiente',
     ]);

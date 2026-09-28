@@ -27,7 +27,6 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'razon_social', 'nombre_comercial', 'ruc', 'direccion', 'ubigeo', 'departamento',
     'distrito', 'provincia', 'telefono', 'email', 'logo_path', 'leyenda_pie', 'cuenta_detraccion',
-    'firma_tecnico_nombre', 'firma_administrador_nombre', 'firma_ingeniero_nombre', 'firma_ingeniero_cip',
     'instructor_capacitacion',
 ])]
 class CompanySetting extends Model
@@ -52,10 +51,6 @@ class CompanySetting extends Model
             'departamento' => config('billing.company.departamento'),
             'provincia' => config('billing.company.provincia'),
             'distrito' => config('billing.company.distrito'),
-            'firma_tecnico_nombre' => 'ANDER AVALOS C.',
-            'firma_administrador_nombre' => 'GROBER GUEVARA C.',
-            'firma_ingeniero_nombre' => 'T. HOMAR FLORES G.',
-            'firma_ingeniero_cip' => '293886',
             'instructor_capacitacion' => 'Edgar Guevara Cabrera',
         ]);
     }

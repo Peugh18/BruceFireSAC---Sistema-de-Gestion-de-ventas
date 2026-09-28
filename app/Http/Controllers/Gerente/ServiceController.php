@@ -80,18 +80,10 @@ class ServiceController extends Controller
 
     public function destroy(Team $current_team, Service $servicio): RedirectResponse
     {
-        // Regla no negociable (§86.4.2 y §60): nunca eliminar si tiene historial
-        $hasHistory = $servicio->quoteItems()->exists() || $servicio->saleItems()->exists();
-
-        if ($hasHistory) {
-            return redirect()->back()
-                ->with('error', 'No se puede eliminar el servicio porque cuenta con cotizaciones o ventas registradas. En su lugar, desactívelo.');
-        }
-
-        $servicio->delete();
+        $servicio->update(['activo' => false]);
 
         return redirect()->route('gerente.servicios.index', ['current_team' => $current_team])
-            ->with('success', 'Servicio eliminado exitosamente.');
+            ->with('success', 'Servicio desactivado. Su historial se conserva.');
     }
 
     public function toggleStatus(Team $current_team, Service $servicio): RedirectResponse

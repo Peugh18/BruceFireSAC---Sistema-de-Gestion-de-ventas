@@ -2,10 +2,12 @@
 
 namespace App\Actions\Sales;
 
+use App\Models\CertificateUnit;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -37,7 +39,15 @@ class LiberarBorrador
             ->delete();
 
         $sale->items()->delete();
-        Equipment::query()->whereIn('id', $equipos)->delete();
+
+        // El equipo que nació con este borrador se borra; si ya tenía historia
+        // (una venta anterior anulada o certificados), solo queda de baja.
+        foreach (Equipment::query()->whereIn('id', $equipos)->get() as $equipo) {
+            $conHistoria = SaleItem::query()->where('equipment_id', $equipo->id)->exists()
+                || CertificateUnit::query()->where('equipment_id', $equipo->id)->exists();
+
+            $conHistoria ? $equipo->update(['estado' => 'baja']) : $equipo->delete();
+        }
         $sale->installments()->delete();
     }
 }

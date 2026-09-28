@@ -125,7 +125,7 @@ class DeficiencyController extends Controller
             'equipment_id' => $equipmentId,
             'componente' => $validated['componente'],
             'condicion' => $validated['condicion'],
-            'nota' => $validated['nota'] ?? null,
+            'nota' => trim(($validated['nota'] ?? '')."\nCondición observada: {$validated['condicion']}"),
             'accion_recomendada' => $validated['accion_recomendada'] ?? null,
             'repuesto_sugerido' => $validated['repuesto_sugerido'] ?? null,
             'requiere_autorizacion' => $requiereAuth,

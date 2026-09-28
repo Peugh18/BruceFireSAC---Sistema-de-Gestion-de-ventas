@@ -51,7 +51,7 @@ class ChecklistController extends Controller
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
                 'cliente' => $service_order->client->nombre_comercial ?: $service_order->client->razon_social,
-                'tipo_servicio' => $service_order->tipo_servicio,
+                'tipo_servicio' => $service_order->service->nombre,
                 'estado' => $service_order->estado,
             ],
             'equipment' => [

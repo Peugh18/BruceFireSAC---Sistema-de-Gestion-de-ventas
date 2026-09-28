@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Client;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,7 +17,7 @@ class ServiceOrderFactory extends Factory
         return [
             'codigo' => 'OT-'.fake()->year().'-'.fake()->unique()->numerify('####'),
             'client_id' => Client::factory(),
-            'tipo_servicio' => fake()->randomElement(['Recarga y mantenimiento', 'Instalación', 'Inspección técnica']),
+            'service_id' => Service::factory(),
             'fecha' => fake()->dateTimeBetween('-1 month', 'now'),
             'prioridad' => 'normal',
             'estado' => 'pendiente_recepcion',

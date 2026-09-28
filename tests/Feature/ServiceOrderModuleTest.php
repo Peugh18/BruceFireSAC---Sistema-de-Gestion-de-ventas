@@ -67,7 +67,7 @@ test('el vendedor deja una nota al tecnico en la orden', function () {
 
     $evento = ServiceOrderEvent::where('service_order_id', $orden->id)->latest('id')->first();
 
-    expect($evento->payload)->toBe(['mensaje' => 'El cliente recoge el viernes.', 'origen' => 'vendedor'])
+    expect($evento->payload)->toEqual(['mensaje' => 'El cliente recoge el viernes.', 'origen' => 'vendedor'])
         ->and($evento->user_id)->toBe($user->id);
 });
 

@@ -269,7 +269,7 @@ test('agenda_hoy muestra solo las ordenes abiertas de hoy de la sede del vendedo
         ->toMatchArray([
             'codigo' => $ordenDeHoy->codigo,
             'cliente' => $ordenDeHoy->client->razon_social,
-            'tipo_servicio' => $ordenDeHoy->tipo_servicio,
+            'tipo_servicio' => $ordenDeHoy->service->nombre,
             'estado' => $ordenDeHoy->estado,
             'prioridad' => $ordenDeHoy->prioridad,
         ]);

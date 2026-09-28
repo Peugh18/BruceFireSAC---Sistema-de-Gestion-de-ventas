@@ -76,11 +76,14 @@ class Sale extends Model
         'transferencia' => 'Transferencia',
         'pos' => 'Tarjeta',
         'deposito' => 'Depósito',
+        'otro' => 'Otro',
     ];
 
     public function medioPagoTexto(): ?string
     {
-        return $this->medio_pago ? (self::MEDIOS_PAGO[$this->medio_pago] ?? $this->medio_pago) : null;
+        $method = $this->payments()->oldest('id')->value('forma_pago') ?? $this->medio_pago;
+
+        return $method ? (self::MEDIOS_PAGO[$method] ?? $method) : null;
     }
 
     public function esCredito(): bool

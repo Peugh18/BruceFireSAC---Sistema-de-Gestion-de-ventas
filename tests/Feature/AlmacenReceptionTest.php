@@ -300,7 +300,7 @@ test('rule 3: confirmed reception is editable and adjusts stock with new compens
     expect($compensatoryMovements->first()->observacion)->toContain('Corrección Recepción');
 
     // Net stock for this product in Kardex is now 10 - 2 = 8
-    $totalStock = InventoryMovement::where('product_id', $prodNoSerial->id)->sum('cantidad');
+    $totalStock = (int) InventoryMovement::where('product_id', $prodNoSerial->id)->sum('cantidad');
     expect($totalStock)->toBe(8);
 });
 

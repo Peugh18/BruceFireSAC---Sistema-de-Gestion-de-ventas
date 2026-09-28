@@ -67,7 +67,7 @@ class DashboardController extends Controller
                 'cliente_doc' => $order->client->numero_documento,
                 'telefono' => $order->client->telefono,
                 'sede' => $order->sede?->nombre,
-                'tipo_servicio' => $order->tipo_servicio,
+                'tipo_servicio' => $order->service->nombre,
                 'fecha' => $order->fecha->toDateString(),
                 'prioridad' => $order->prioridad,
                 'estado' => $order->estado,

@@ -125,6 +125,6 @@ test('flujo end-to-end de repuestos y componentes a granel (§84.11)', function 
         ->assertSessionHasNoErrors();
 
     // Stock final de válvulas en Kardex: 50 - 3 = 47
-    $stockFinalValvulas = InventoryMovement::where('product_id', $valvula->id)->sum('cantidad');
+    $stockFinalValvulas = (int) InventoryMovement::where('product_id', $valvula->id)->sum('cantidad');
     expect($stockFinalValvulas)->toBe(47);
 });

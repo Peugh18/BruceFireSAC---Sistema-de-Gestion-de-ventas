@@ -62,10 +62,10 @@ class DashboardController extends Controller
         // Filtro por Tipo de Servicio (§5.5)
         if ($tipoFiltro !== 'todos') {
             match ($tipoFiltro) {
-                'recojos' => $query->where(fn ($q) => $q->where('tipo_servicio', 'like', '%recojo%')->orWhere('estado', 'pendiente_recepcion')),
-                'entregas' => $query->where(fn ($q) => $q->where('tipo_servicio', 'like', '%entrega%')->orWhereIn('estado', ['listo_entrega', 'entregado'])),
-                'inspecciones' => $query->where('tipo_servicio', 'like', '%inspecci%'),
-                'instalaciones' => $query->where('tipo_servicio', 'like', '%instalac%'),
+                'recojos' => $query->where(fn ($q) => $q->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%recojo%'))->orWhere('estado', 'pendiente_recepcion')),
+                'entregas' => $query->where(fn ($q) => $q->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%entrega%'))->orWhereIn('estado', ['listo_entrega', 'entregado'])),
+                'inspecciones' => $query->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')),
+                'instalaciones' => $query->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')),
                 default => null,
             };
         }
@@ -75,8 +75,8 @@ class DashboardController extends Controller
             $accionSugerida = match (true) {
                 $order->estado === 'pendiente_recepcion' => 'recojo',
                 $order->estado === 'listo_entrega' || $order->estado === 'entregado' => 'entrega',
-                str_contains(strtolower($order->tipo_servicio), 'inspecci') => 'inspeccion',
-                str_contains(strtolower($order->tipo_servicio), 'instalac') => 'instalacion',
+                str_contains(strtolower($order->service->nombre), 'inspecci') => 'inspeccion',
+                str_contains(strtolower($order->service->nombre), 'instalac') => 'instalacion',
                 default => 'ver',
             };
 
@@ -88,7 +88,7 @@ class DashboardController extends Controller
                 'telefono' => $order->client->telefono,
                 'direccion' => $order->client->direccion_fiscal,
                 'sede' => $order->sede?->nombre,
-                'tipo_servicio' => $order->tipo_servicio,
+                'tipo_servicio' => $order->service->nombre,
                 'fecha' => $order->fecha->toDateString(),
                 'prioridad' => $order->prioridad,
                 'estado' => $order->estado,

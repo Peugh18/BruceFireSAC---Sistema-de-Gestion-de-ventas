@@ -3,6 +3,7 @@
 use App\Enums\TeamRole;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
@@ -22,10 +23,11 @@ beforeEach(function () {
 
 test('tecnico campo can view inspections index with KPIs and tabs', function () {
     $client = Client::factory()->create();
+    $service = Service::factory()->create(['nombre' => 'Inspección']);
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'tipo_servicio' => 'inspeccion',
         'estado' => 'en_revision',
     ]);
 
@@ -41,10 +43,11 @@ test('tecnico campo can view inspections index with KPIs and tabs', function () 
 
 test('tecnico campo can view inspection detail with touch equipment cards', function () {
     $client = Client::factory()->create();
+    $service = Service::factory()->create(['nombre' => 'Inspección']);
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'tipo_servicio' => 'inspeccion',
         'estado' => 'en_revision',
     ]);
 

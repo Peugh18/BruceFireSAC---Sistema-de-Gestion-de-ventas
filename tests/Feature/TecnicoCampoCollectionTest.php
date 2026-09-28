@@ -3,6 +3,7 @@
 use App\Enums\TeamRole;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
@@ -22,10 +23,11 @@ test('tecnico campo can view recojos list and detail with custody chain', functi
     $client = Client::factory()->create([
         'direccion_fiscal' => 'Jr. Pizarro 456, Trujillo',
     ]);
+    $service = Service::factory()->create(['nombre' => 'Recojo de extintores']);
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => $service->id,
         'codigo' => 'OS-RCJ-0001',
-        'tipo_servicio' => 'Recojo de extintores',
         'estado' => 'pendiente_recepcion',
         'departamento_tecnico' => 'campo',
     ]);

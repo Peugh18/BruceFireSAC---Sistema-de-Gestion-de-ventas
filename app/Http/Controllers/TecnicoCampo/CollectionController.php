@@ -30,7 +30,7 @@ class CollectionController extends Controller
                     ->orWhereNull('departamento_tecnico');
             })
             ->where(function ($q) {
-                $q->where('tipo_servicio', 'like', '%recojo%')
+                $q->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%recojo%'))
                     ->orWhere('estado', 'pendiente_recepcion');
             })
             ->with([
@@ -116,7 +116,7 @@ class CollectionController extends Controller
                     'telefono' => $service_order->client->telefono,
                 ],
                 'vehiculo' => $service_order->vehicle ? "{$service_order->vehicle->marca} {$service_order->vehicle->modelo} ({$service_order->vehicle->placa})" : null,
-                'tipo_servicio' => $service_order->tipo_servicio,
+                'tipo_servicio' => $service_order->service->nombre,
                 'fecha' => $service_order->fecha->toDateString(),
                 'prioridad' => $service_order->prioridad,
                 'estado' => $service_order->estado,

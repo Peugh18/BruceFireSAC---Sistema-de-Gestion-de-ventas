@@ -188,7 +188,7 @@
         <tr>
             <td class="info-label">Objeto del Servicio:</td>
             <td class="info-val" colspan="3">
-                {{ strtoupper(str_replace('_', ' ', $order->tipo_servicio ?: 'Recarga y Mantenimiento de Extintores Contra Incendios')) }}
+                {{ strtoupper(str_replace('_', ' ', $order->service?->nombre ?: 'Recarga y Mantenimiento de Extintores Contra Incendios')) }}
             </td>
         </tr>
     </table>

@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\DeficiencyCondition;
 use Database\Factories\DeficiencyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -48,6 +50,20 @@ class Deficiency extends Model
 {
     /** @use HasFactory<DeficiencyFactory> */
     use HasFactory;
+
+    /** @return Attribute<string, string> */
+    protected function condicion(): Attribute
+    {
+        return Attribute::set(function (string $value): string {
+            $condition = DeficiencyCondition::tryFrom($value);
+
+            if ($condition !== null) {
+                return $condition->value;
+            }
+
+            return DeficiencyCondition::fromDescription($value)->value;
+        });
+    }
 
     protected function casts(): array
     {

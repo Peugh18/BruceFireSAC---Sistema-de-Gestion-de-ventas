@@ -56,7 +56,7 @@ class ExecutionController extends Controller
                 'cliente_doc' => $service_order->client->numero_documento,
                 'telefono' => $service_order->client->telefono,
                 'sede' => $service_order->sede?->nombre,
-                'tipo_servicio' => $service_order->tipo_servicio,
+                'tipo_servicio' => $service_order->service->nombre,
                 'fecha' => $service_order->fecha->toDateString(),
                 'prioridad' => $service_order->prioridad,
                 'estado' => $service_order->estado,

@@ -104,22 +104,10 @@ class ProductController extends Controller
 
     public function destroy(Team $current_team, Product $producto): RedirectResponse
     {
-        // Regla no negociable (§86.4.2 y §60): nunca eliminar si tiene historial
-        $hasHistory = $producto->movements()->exists()
-            || $producto->units()->exists()
-            || $producto->equipment()->exists()
-            || $producto->saleItems()->exists()
-            || $producto->quoteItems()->exists();
-
-        if ($hasHistory) {
-            return redirect()->back()
-                ->with('error', 'No se puede eliminar el producto porque tiene historial de movimientos, ventas, cotizaciones o equipos. En su lugar, desactívelo.');
-        }
-
-        $producto->delete();
+        $producto->update(['activo' => false]);
 
         return redirect()->route('gerente.productos.index', ['current_team' => $current_team])
-            ->with('success', 'Producto eliminado exitosamente.');
+            ->with('success', 'Producto desactivado. Su historial se conserva.');
     }
 
     public function toggleStatus(Team $current_team, Product $producto): RedirectResponse

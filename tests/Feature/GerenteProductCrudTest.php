@@ -140,7 +140,7 @@ test('gerente puede alternar el estado activo del producto', function () {
     ]);
 });
 
-test('regla no negociable: no se puede eliminar un producto con historial de unidades o movimientos', function () {
+test('al eliminar un producto con historial se desactiva y conserva sus registros', function () {
     $user = createGerenteUserForProductTest();
     $product = Product::factory()->create();
 
@@ -152,12 +152,13 @@ test('regla no negociable: no se puede eliminar un producto con historial de uni
     $this->actingAs($user)
         ->delete(route('gerente.productos.destroy', ['current_team' => $user->currentTeam, 'producto' => $product]))
         ->assertRedirect()
-        ->assertSessionHas('error');
+        ->assertSessionHas('success');
 
-    $this->assertDatabaseHas('products', ['id' => $product->id]);
+    $this->assertDatabaseHas('products', ['id' => $product->id, 'activo' => false]);
+    $this->assertDatabaseHas('inventory_units', ['product_id' => $product->id]);
 });
 
-test('se puede eliminar un producto si no cuenta con historial asociado', function () {
+test('al eliminar un producto sin historial tambien se desactiva', function () {
     $user = createGerenteUserForProductTest();
     $product = Product::factory()->create();
 
@@ -166,5 +167,5 @@ test('se puede eliminar un producto si no cuenta con historial asociado', functi
         ->assertRedirect(route('gerente.productos.index', ['current_team' => $user->currentTeam]))
         ->assertSessionHas('success');
 
-    $this->assertDatabaseMissing('products', ['id' => $product->id]);
+    $this->assertDatabaseHas('products', ['id' => $product->id, 'activo' => false]);
 });

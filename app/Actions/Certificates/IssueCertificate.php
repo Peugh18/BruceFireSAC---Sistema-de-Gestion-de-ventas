@@ -111,7 +111,7 @@ class IssueCertificate
 
             $despues = $this->resumen($certificate->load('certificateUnits'));
 
-            if ($antes === $despues) {
+            if ($this->normalizar($antes) === $this->normalizar($despues)) {
                 return $certificate;
             }
 
@@ -158,6 +158,26 @@ class IssueCertificate
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * Los datos guardados como JSON vuelven de MySQL con otro orden de claves
+     * y los números como texto: se ordenan y se pasan a texto para comparar
+     * solo el contenido.
+     */
+    protected function normalizar(mixed $valor): mixed
+    {
+        if (! is_array($valor)) {
+            return $valor === null ? null : (string) $valor;
+        }
+
+        $normalizado = array_map(fn (mixed $item) => $this->normalizar($item), $valor);
+
+        if (! array_is_list($normalizado)) {
+            ksort($normalizado);
+        }
+
+        return $normalizado;
     }
 
     /**

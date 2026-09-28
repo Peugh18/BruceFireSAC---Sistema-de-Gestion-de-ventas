@@ -31,7 +31,7 @@ class ServiceOrderController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         $orders = ServiceOrder::query()
-            ->with(['client', 'tecnico'])
+            ->with(['client', 'service', 'tecnico'])
             ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
             ->when(isset($estadoMap[$estado]), fn ($query) => $query->whereIn('estado', $estadoMap[$estado]))
             ->orderByDesc('created_at')
@@ -42,7 +42,7 @@ class ServiceOrderController extends Controller
                 'codigo' => $order->codigo,
                 'cliente' => $order->client->razon_social,
                 'tecnico' => $order->tecnico?->name,
-                'tipo_servicio' => $order->tipo_servicio,
+                'tipo_servicio' => $order->service->nombre,
                 'fecha' => $order->fecha->toDateString(),
                 'estado' => $order->estado,
                 'coarse_label' => $order->coarseLabel(),
@@ -81,10 +81,8 @@ class ServiceOrderController extends Controller
             }
         }
 
-        $service = Service::query()->findOrFail($request->integer('service_id'));
         $order = ServiceOrder::create([
-            ...$request->safe()->except('tipo_servicio'),
-            'tipo_servicio' => $service->nombre,
+            ...$request->validated(),
             ...($request->user()->sedeRestringidaId() ? ['sede_id' => $request->user()->sedeRestringidaId()] : []),
             'codigo' => $numberGenerator->next(),
             'prioridad' => $request->input('prioridad', 'normal'),
@@ -168,8 +166,6 @@ class ServiceOrderController extends Controller
             throw ValidationException::withMessages(['departamento_tecnico' => 'La orden ya está en manos del técnico: no se puede cambiar de área.']);
         }
 
-        $service = Service::query()->findOrFail((int) $datos['service_id']);
-        $datos['tipo_servicio'] = $service->nombre;
         $antes = $service_order->only(['fecha', 'prioridad', 'departamento_tecnico', 'tecnico_id', 'observaciones', 'service_id']);
         $service_order->fill(collect($datos)->except('tecnico_id')->all());
 
