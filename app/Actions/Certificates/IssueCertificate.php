@@ -9,6 +9,7 @@ use App\Models\CertificateTypeVersion;
 use App\Models\CertificateUnit;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Services\AuditLogger;
 use App\Services\Certificates\CertificateDateCalculator;
@@ -17,6 +18,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class IssueCertificate
 {
@@ -46,6 +48,8 @@ class IssueCertificate
         ?int $serviceOrderId = null,
         array $extra = [],
     ): Certificate {
+        $this->asegurarMismoCliente($client, $saleId, $serviceOrderId);
+
         return DB::transaction(function () use ($tipo, $client, $unidades, $saleId, $serviceOrderId, $extra) {
             $numero = $this->numeros->siguiente($tipo);
 
@@ -135,6 +139,24 @@ class IssueCertificate
 
             return $certificate->refresh()->load('certificateUnits');
         });
+    }
+
+    /**
+     * El certificado guarda su cliente para listarlo rápido y porque hay
+     * certificados sin venta; si viene de una venta u orden, tiene que ser el
+     * mismo cliente de esa venta u orden (evita datos que no coinciden).
+     */
+    protected function asegurarMismoCliente(Client $client, ?int $saleId, ?int $serviceOrderId): void
+    {
+        $esperado = $saleId
+            ? Sale::query()->whereKey($saleId)->value('client_id')
+            : ($serviceOrderId ? ServiceOrder::query()->whereKey($serviceOrderId)->value('client_id') : null);
+
+        if ($esperado !== null && (int) $esperado !== $client->id) {
+            throw ValidationException::withMessages([
+                'client_id' => 'El certificado debe ser del mismo cliente de su venta u orden de servicio.',
+            ]);
+        }
     }
 
     /**

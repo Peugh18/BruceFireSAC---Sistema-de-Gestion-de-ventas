@@ -6,10 +6,14 @@ test('respuestas web incluyen cabeceras basicas de seguridad', function () {
     $this->get('/login')->assertHeader('X-Frame-Options', 'SAMEORIGIN')->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 });
 
-test('comando de respaldo crea una copia sqlite', function () {
-    $database = storage_path('framework/testing-backup.sqlite');
-    touch($database);
-    config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => $database]);
+test('comando de respaldo crea una copia de la base mysql', function () {
+    $antes = glob(storage_path('app/backups/bd_*.sql')) ?: [];
+
     expect(Artisan::call('backup:bd'))->toBe(0);
-    expect(collect(glob(storage_path('app/backups/bd_*.sqlite')) ?: [])->isNotEmpty())->toBeTrue();
+
+    $nuevos = array_diff(glob(storage_path('app/backups/bd_*.sql')) ?: [], $antes);
+    expect($nuevos)->not->toBeEmpty();
+
+    // La prueba no deja respaldos sueltos.
+    array_map('unlink', $nuevos);
 });

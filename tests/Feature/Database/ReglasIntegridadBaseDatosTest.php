@@ -1,7 +1,9 @@
 <?php
 
+use App\Actions\Certificates\IssueCertificate;
 use App\Actions\Sales\ProcessSaleItem;
 use App\Models\Certificate;
+use App\Models\CertificateType;
 use App\Models\CertificateUnit;
 use App\Models\Client;
 use App\Models\Equipment;
@@ -126,3 +128,12 @@ it('acepta todos los tipos de eventos declarados por el codigo', function (strin
     'entrega_registrada',
     'otro',
 ]);
+
+it('no emite un certificado para un cliente distinto al de su venta', function () {
+    $sale = Sale::factory()->create(['client_id' => Client::factory()->create()->id]);
+    $otroCliente = Client::factory()->create();
+    $tipo = CertificateType::factory()->create();
+
+    expect(fn () => app(IssueCertificate::class)->handle($tipo, $otroCliente, [], saleId: $sale->id))
+        ->toThrow(ValidationException::class, 'mismo cliente');
+});

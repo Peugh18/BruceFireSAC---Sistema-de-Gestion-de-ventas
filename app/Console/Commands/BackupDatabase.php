@@ -21,13 +21,7 @@ class BackupDatabase extends Command
         $configuration = config("database.connections.{$connection}");
         $timestamp = now()->format('Y-m-d_His');
 
-        if (($configuration['driver'] ?? null) === 'sqlite') {
-            $source = (string) $configuration['database'];
-            if (! $files->exists($source)) {
-                throw new RuntimeException('No se encontró el archivo SQLite configurado.');
-            }
-            $files->copy($source, "{$directory}/bd_{$timestamp}.sqlite");
-        } elseif (($configuration['driver'] ?? null) === 'mysql') {
+        if (($configuration['driver'] ?? null) === 'mysql') {
             $destination = "{$directory}/bd_{$timestamp}.sql";
             $process = new Process(['mysqldump', '--single-transaction', '--host='.$configuration['host'], '--port='.(string) $configuration['port'], '--user='.$configuration['username'], (string) $configuration['database']]);
             $process->setEnv(['MYSQL_PWD' => (string) ($configuration['password'] ?? '')]);
