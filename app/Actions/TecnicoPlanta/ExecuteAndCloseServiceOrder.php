@@ -3,6 +3,7 @@
 namespace App\Actions\TecnicoPlanta;
 
 use App\Actions\Certificates\IssueCertificate;
+use App\Actions\Equipment\RenewEquipmentAttentionDate;
 use App\Models\Certificate;
 use App\Models\CertificateType;
 use App\Models\Deficiency;
@@ -20,7 +21,8 @@ use InvalidArgumentException;
 class ExecuteAndCloseServiceOrder
 {
     public function __construct(
-        protected IssueCertificate $issueCertificate
+        protected IssueCertificate $issueCertificate,
+        protected RenewEquipmentAttentionDate $renewEquipmentAttentionDate,
     ) {}
 
     /**
@@ -134,6 +136,7 @@ class ExecuteAndCloseServiceOrder
             // Si llega a listo_certificado, disparo automático del certificado (§85, Fase 5)
             if ($targetState === 'listo_certificado') {
                 $this->triggerAutomaticCertificates($serviceOrder, $extraData);
+                $this->renewEquipmentAttentionDate->execute($serviceOrder->equipments()->get());
             }
 
             // Registrar evento append-only de transición
@@ -209,13 +212,9 @@ class ExecuteAndCloseServiceOrder
             return;
         }
 
-        $serviceOrder->loadMissing(['client', 'equipments']);
+        $serviceOrder->loadMissing(['client', 'equipments', 'service.certificateType']);
 
         $equipments = $serviceOrder->equipments;
-        if ($equipments->isEmpty() && $serviceOrder->equipment) {
-            $equipments = collect([$serviceOrder->equipment]);
-        }
-
         $unidades = $equipments->map(function (Equipment $eq) use ($extraData) {
             return [
                 'equipment_id' => $eq->id,
@@ -226,7 +225,7 @@ class ExecuteAndCloseServiceOrder
         })->all();
 
         // 1. Certificado principal de Operatividad y Garantía
-        $tipoOperatividad = CertificateType::firstOrCreate(
+        $tipoOperatividad = ($serviceOrder->service_id ? $serviceOrder->service->certificateType : null) ?? CertificateType::firstOrCreate(
             ['codigo' => 'operatividad_garantia'],
             [
                 'nombre' => 'Certificado de Operatividad y Garantía',
@@ -235,12 +234,17 @@ class ExecuteAndCloseServiceOrder
             ]
         );
 
-        $cert = $this->issueCertificate->handle(
+        $extra = $serviceOrder->service?->certificateType && ! empty($extraData['certificate_data'])
+            ? ['datos' => $extraData['certificate_data'], 'referencia' => $serviceOrder->referencia]
+            : [];
+
+        $this->issueCertificate->handle(
             $tipoOperatividad,
             $serviceOrder->client,
             $unidades,
             $serviceOrder->sale_id,
-            $serviceOrder->id
+            $serviceOrder->id,
+            $extra,
         );
 
         // 2. Si se realizó Prueba Hidrostática, generar también su certificado específico

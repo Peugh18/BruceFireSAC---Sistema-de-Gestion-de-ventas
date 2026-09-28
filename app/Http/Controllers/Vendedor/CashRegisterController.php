@@ -11,6 +11,7 @@ use App\Models\CashRegister;
 use App\Models\SalePayment;
 use App\Models\Sede;
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,7 +24,20 @@ class CashRegisterController extends Controller
      */
     public function show(Team $current_team, Request $request): Response
     {
-        $user = $request->user();
+        // Cobranzas y Caja son la misma pantalla: las dos llevan el turno y las cuotas.
+        return Inertia::render('vendedor/cobranzas/index', [
+            ...self::datosDeCaja($request->user()),
+            'installments' => CollectionController::cuotasPendientes($request->user()),
+        ]);
+    }
+
+    /**
+     * Turno abierto con lo cobrado por forma de pago, cierres pasados y sedes.
+     *
+     * @return array<string, mixed>
+     */
+    public static function datosDeCaja(User $user): array
+    {
 
         /** @var CashRegister|null $turnoActual */
         $turnoActual = CashRegister::query()
@@ -70,7 +84,7 @@ class CashRegisterController extends Controller
             ->when($sedeRestringida, fn ($q) => $q->where('id', $sedeRestringida))
             ->get(['id', 'nombre', 'tipo']);
 
-        return Inertia::render('vendedor/cobranzas/index', [
+        return [
             'turno_actual' => $turnoActual ? [
                 'id' => $turnoActual->id,
                 'sede' => $turnoActual->sede?->nombre,
@@ -82,7 +96,7 @@ class CashRegisterController extends Controller
             ] : null,
             'cierres' => $cierres,
             'sedes' => $sedes,
-        ]);
+        ];
     }
 
     /**

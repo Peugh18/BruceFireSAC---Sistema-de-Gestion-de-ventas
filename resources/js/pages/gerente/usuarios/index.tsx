@@ -5,6 +5,8 @@ import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
 
+import NuevoUsuarioDialog from './nuevo-usuario-dialog';
+
 type UsuarioItem = {
     id: number;
     name: string;
@@ -159,14 +161,21 @@ export default function UsuariosIndex() {
     return (
         <GerenteLayout title="Usuarios y Roles">
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
-                        Usuarios y Roles
-                    </h1>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                        Asignación de uno de los 5 roles fijos del sistema y
-                        consulta de la matriz de permisos efectivos.
-                    </p>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
+                            Usuarios y Roles
+                        </h1>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            Da de alta a tu personal, asígnale su rol y su sede.
+                        </p>
+                    </div>
+                    <NuevoUsuarioDialog
+                        teamSlug={currentTeam.slug}
+                        roles={roles}
+                        sedesPara={sedesPara}
+                        roleLabel={roleLabel}
+                    />
                 </div>
 
                 {flash?.success && (

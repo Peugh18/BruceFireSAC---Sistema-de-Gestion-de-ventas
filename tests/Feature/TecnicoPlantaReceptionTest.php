@@ -91,8 +91,7 @@ test('alta tecnica rapida caso A links existing equipment by barcode', function 
         ])
         ->assertRedirect();
 
-    expect($order->equipments()->where('equipment.id', $existingEquipment->id)->exists())->toBeTrue()
-        ->and($order->fresh()->equipment_id)->toBe($existingEquipment->id);
+    expect($order->equipments()->where('equipment.id', $existingEquipment->id)->exists())->toBeTrue();
 });
 
 test('alta tecnica rapida caso B creates new equipment with sequence generator and unreadable defaults', function () {

@@ -42,6 +42,7 @@ export type ServiceOrderDetails = {
     id: number;
     codigo: string;
     tipo_servicio: string;
+    service_id?: number | null;
     fecha: string;
     prioridad: string;
     departamento_tecnico?: string | null;
@@ -60,12 +61,21 @@ export type ServiceOrderDetails = {
         name: string;
         email?: string;
     } | null;
+    sale_id?: number | null;
+    equipments: Array<{
+        id: number;
+        numero_serie: string;
+        capacidad?: string;
+        tipo_agente?: string;
+        marca?: string;
+    }>;
     events: ServiceOrderEvent[];
 };
 
 export type Props = {
     serviceOrder: ServiceOrderDetails;
     tecnicos: { id: number; name: string }[];
+    services: { id: number; nombre: string }[];
 };
 
 /** Cada estado técnico dicho como lo entiende la vendedora. */
@@ -165,7 +175,11 @@ function getCoarseStep(estado: string): number {
     return map[estado] ?? 1;
 }
 
-export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
+export default function ServiceOrderShow({
+    serviceOrder,
+    tecnicos,
+    services,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
@@ -178,6 +192,9 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
     const [editando, setEditando] = useState(false);
     const [tecnicoElegido, setTecnicoElegido] = useState('');
     const edicion = useForm({
+        service_id: serviceOrder.service_id
+            ? String(serviceOrder.service_id)
+            : '',
         fecha: soloFecha(serviceOrder.fecha),
         prioridad: serviceOrder.prioridad || 'normal',
         departamento_tecnico: serviceOrder.departamento_tecnico || 'planta',
@@ -187,6 +204,14 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
         observaciones: serviceOrder.observaciones ?? '',
     });
     const nota = useForm({ mensaje: '' });
+    const equipo = useForm({
+        numero_serie: '',
+        tipo_agente: '',
+        capacidad: '',
+        marca: '',
+        serie_fabricante: '',
+        observaciones_recepcion: '',
+    });
     const ruta = { current_team: teamSlug, service_order: serviceOrder.id };
 
     function asignar() {
@@ -215,6 +240,14 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
             preserveScroll: true,
             onSuccess: () => nota.reset(),
         });
+    }
+
+    function agregarEquipo(event: React.FormEvent) {
+        event.preventDefault();
+        equipo.post(
+            `/${teamSlug}/vendedor/ordenes-servicio/${serviceOrder.id}/equipos`,
+            { preserveScroll: true, onSuccess: () => equipo.reset() },
+        );
     }
 
     return (
@@ -293,6 +326,120 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                         </Button>
                     </div>
                 </div>
+
+                <Card className="space-y-4 p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h3 className="font-bold">Extintores recibidos</h3>
+                            <p className="text-muted-foreground text-xs">
+                                Escanea un BF-EQ existente o registra uno nuevo.
+                            </p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button asChild variant="outline">
+                                <a
+                                    href={`/${teamSlug}/vendedor/ordenes-servicio/${serviceOrder.id}/constancia-recepcion`}
+                                >
+                                    Constancia PDF
+                                </a>
+                            </Button>
+                            {serviceOrder.sale_id ? (
+                                <Button asChild variant="outline">
+                                    <Link
+                                        href={`/${teamSlug}/vendedor/ventas/${serviceOrder.sale_id}`}
+                                    >
+                                        Ver venta
+                                    </Link>
+                                </Button>
+                            ) : (
+                                <Button asChild>
+                                    <Link
+                                        href={`/${teamSlug}/vendedor/ventas/nueva?orden_servicio=${serviceOrder.id}`}
+                                    >
+                                        Cobrar
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                        {serviceOrder.equipments.length ? (
+                            serviceOrder.equipments.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="rounded-lg border p-2"
+                                >
+                                    <strong>{item.numero_serie}</strong> ·{' '}
+                                    {item.capacidad} · {item.tipo_agente} ·{' '}
+                                    {item.marca}
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-muted-foreground">
+                                Aún no hay extintores registrados.
+                            </p>
+                        )}
+                    </div>
+                    {editable && (
+                        <form
+                            onSubmit={agregarEquipo}
+                            className="grid gap-2 sm:grid-cols-3"
+                        >
+                            <input
+                                className="rounded-md border p-2 text-sm"
+                                placeholder="Sticker BF-EQ (si existe)"
+                                value={equipo.data.numero_serie}
+                                onChange={(e) =>
+                                    equipo.setData(
+                                        'numero_serie',
+                                        e.target.value,
+                                    )
+                                }
+                            />
+                            <input
+                                className="rounded-md border p-2 text-sm"
+                                placeholder="Capacidad"
+                                value={equipo.data.capacidad}
+                                onChange={(e) =>
+                                    equipo.setData('capacidad', e.target.value)
+                                }
+                            />
+                            <input
+                                className="rounded-md border p-2 text-sm"
+                                placeholder="Agente"
+                                value={equipo.data.tipo_agente}
+                                onChange={(e) =>
+                                    equipo.setData(
+                                        'tipo_agente',
+                                        e.target.value,
+                                    )
+                                }
+                            />
+                            <input
+                                className="rounded-md border p-2 text-sm"
+                                placeholder="Marca"
+                                value={equipo.data.marca}
+                                onChange={(e) =>
+                                    equipo.setData('marca', e.target.value)
+                                }
+                            />
+                            <input
+                                className="rounded-md border p-2 text-sm"
+                                placeholder="Serie fabricante"
+                                value={equipo.data.serie_fabricante}
+                                onChange={(e) =>
+                                    equipo.setData(
+                                        'serie_fabricante',
+                                        e.target.value,
+                                    )
+                                }
+                            />
+                            <Button type="submit" disabled={equipo.processing}>
+                                Agregar extintor
+                            </Button>
+                        </form>
+                    )}
+                </Card>
 
                 {/* 4-Step Progress Tracker Banner */}
                 <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
@@ -607,6 +754,29 @@ export default function ServiceOrderShow({ serviceOrder, tecnicos }: Props) {
                         onSubmit={guardarEdicion}
                         className="flex flex-col gap-3 text-[13px]"
                     >
+                        <label className="flex flex-col gap-1">
+                            <span className="text-muted-foreground text-[11px] font-bold uppercase">
+                                Servicio del catálogo
+                            </span>
+                            <select
+                                value={edicion.data.service_id}
+                                onChange={(event) =>
+                                    edicion.setData(
+                                        'service_id',
+                                        event.target.value,
+                                    )
+                                }
+                                className="border-input bg-background h-9 rounded-md border px-3"
+                                required
+                            >
+                                <option value="">Seleccionar servicio</option>
+                                {services.map((service) => (
+                                    <option key={service.id} value={service.id}>
+                                        {service.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
                         <label className="flex flex-col gap-1">
                             <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                 Fecha programada

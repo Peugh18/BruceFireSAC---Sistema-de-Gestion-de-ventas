@@ -21,6 +21,7 @@ import certificados from '@/routes/vendedor/certificados';
 import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
+import { fechaCorta } from '@/lib/utils';
 
 type CertificateRow = {
     id: number;
@@ -370,8 +371,9 @@ export default function CertificadosIndex({
                                                 )}
                                             </td>
                                             <td className="border-border text-foreground/80 border-b px-2.5 py-[11px] whitespace-nowrap">
-                                                {certificate.fecha_vigencia_hasta ??
-                                                    '-'}
+                                                {fechaCorta(
+                                                    certificate.fecha_vigencia_hasta,
+                                                ) || '-'}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[11px]">
                                                 <Badge

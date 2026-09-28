@@ -35,6 +35,7 @@ type DocumentRow = {
     sunat_estado: string;
     sunat_codigo_respuesta: string | null;
     sunat_mensaje?: string | null;
+    sunat_mensaje_simple?: string | null;
     created_at: string | null;
 };
 
@@ -91,7 +92,9 @@ function sunatBadge(estado: string) {
 function sunatEstadoLabel(document: DocumentRow) {
     const estado = document.sunat_estado?.toLowerCase();
     if (estado === 'excepcion' || estado === 'rechazado') {
-        const mensaje = document.sunat_mensaje?.trim();
+        const mensaje = (
+            document.sunat_mensaje_simple ?? document.sunat_mensaje
+        )?.trim();
         if (mensaje) {
             return `Rechazado: ${mensaje}`;
         }
@@ -248,7 +251,7 @@ export default function FacturacionIndex({
             text: 'text-blue-600 dark:text-blue-400',
         },
         {
-            label: 'Aceptados',
+            label: 'Aceptados hoy',
             value: kpis.aceptados_hoy,
             icon: CheckCircle2,
             bg: 'bg-emerald-500/10',

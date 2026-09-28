@@ -62,6 +62,37 @@ test('con emitir la venta se registra y se emite en un solo paso', function () {
         ->and($sale->payments()->count())->toBe(1);
 });
 
+test('una venta al contado acepta el arreglo de cuotas vacio enviado por el formulario', function () {
+    $unit = unidadDisponible();
+
+    $this->actingAs($this->vendedor)
+        ->post(route('vendedor.ventas.store', $this->team), [
+            ...datosDeVenta(Client::factory()->create(), $unit),
+            'cuotas' => [],
+            'emitir' => true,
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect(Sale::sole()->estado)->toBe('confirmada');
+});
+
+test('una venta a credito explica que necesita al menos una cuota', function () {
+    $unit = unidadDisponible();
+
+    $this->actingAs($this->vendedor)
+        ->post(route('vendedor.ventas.store', $this->team), [
+            ...datosDeVenta(Client::factory()->create(), $unit),
+            'condicion_pago' => 'credito',
+            'cuotas' => [],
+        ])
+        ->assertSessionHasErrors([
+            'cuotas' => 'Define al menos una cuota para la venta a crédito.',
+        ]);
+
+    expect(Sale::count())->toBe(0);
+});
+
 test('si la emision falla no queda nada a medias y el error vuelve al formulario', function () {
     $unit = unidadDisponible();
     $conRucNoHabido = Client::factory()->create([

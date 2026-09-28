@@ -42,7 +42,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ServiceOrderEvent> $events
  */
 #[Fillable([
-    'codigo', 'client_id', 'equipment_id', 'sede_id', 'vehicle_id', 'referencia', 'quote_id', 'sale_id', 'tipo_servicio',
+    'codigo', 'client_id', 'sede_id', 'vehicle_id', 'referencia', 'quote_id', 'sale_id', 'service_id', 'tipo_servicio',
     'fecha', 'tecnico_id', 'departamento_tecnico', 'prioridad', 'observaciones', 'estado',
 ])]
 class ServiceOrder extends Model
@@ -139,11 +139,17 @@ class ServiceOrder extends Model
     }
 
     /**
-     * @return BelongsTo<Equipment, $this>
+     * @return BelongsTo<Sale, $this>
      */
-    public function equipment(): BelongsTo
+    public function sale(): BelongsTo
     {
-        return $this->belongsTo(Equipment::class);
+        return $this->belongsTo(Sale::class);
+    }
+
+    /** @return BelongsTo<Service, $this> */
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
     }
 
     /**

@@ -637,15 +637,21 @@ export default function InstalacionShow({
 
                         <button
                             type="submit"
-                            disabled={
-                                form.processing ||
-                                !form.data.conformidad_aceptada
-                            }
+                            disabled={form.processing}
                             className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
                             <span>Registrar y Guardar Instalación Técnica</span>
                         </button>
+                        {!form.data.conformidad_aceptada ? (
+                            <p
+                                className="text-center text-[11px] font-semibold text-red-500"
+                                role="alert"
+                            >
+                                Marca la conformidad del cliente antes de
+                                finalizar la instalación.
+                            </p>
+                        ) : null}
                     </div>
                 )}
             </form>

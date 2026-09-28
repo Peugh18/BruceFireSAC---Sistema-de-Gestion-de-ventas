@@ -1,9 +1,11 @@
 <?php
 
+use App\Models\CashRegister;
 use App\Models\Installment;
 use App\Models\Sale;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Inertia\Testing\AssertableInertia;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -111,4 +113,20 @@ test('un installment vencido se actualiza a vencido al listar via CollectionCont
         'id' => $installmentFuturo->id,
         'estado' => 'pendiente',
     ]);
+});
+
+test('cobranzas y caja muestran a la vez el turno abierto y las cuotas pendientes', function () {
+    $user = vendedorUser();
+    $sale = Sale::factory()->create(['vendedor_id' => $user->id]);
+    Installment::factory()->create(['sale_id' => $sale->id, 'monto' => 240, 'estado' => 'pendiente', 'fecha_vencimiento' => now()->addMonth()]);
+    CashRegister::factory()->create(['vendedor_id' => $user->id, 'estado' => 'abierto', 'monto_apertura' => 100]);
+
+    foreach (['vendedor.cobranzas.index', 'vendedor.caja.index'] as $ruta) {
+        $this->actingAs($user)
+            ->get(route($ruta, ['current_team' => $user->currentTeam]))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('turno_actual.estado', 'abierto')
+                ->has('installments.data', 1));
+    }
 });

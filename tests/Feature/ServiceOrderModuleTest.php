@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Models\Sede;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
@@ -18,7 +19,7 @@ test('crear service order standalone genera codigo y evento inicial', function (
     $this->actingAs($user)
         ->post(route('vendedor.ordenes-servicio.store', ['current_team' => $user->currentTeam]), [
             'client_id' => $client->id,
-            'tipo_servicio' => 'Recarga y mantenimiento',
+            'service_id' => Service::factory()->create(['nombre' => 'Recarga y mantenimiento'])->id,
             'fecha' => now()->toDateString(),
             'departamento_tecnico' => 'planta',
         ])
@@ -78,7 +79,7 @@ test('la orden se asigna a un tecnico del area elegida y guarda la referencia', 
     $tecnicoCampo->assignRole('TecnicoCampo');
     $datos = [
         'client_id' => Client::factory()->create()->id,
-        'tipo_servicio' => 'Recarga PQS 6 kg',
+        'service_id' => Service::factory()->create(['nombre' => 'Recarga PQS 6 kg'])->id,
         'fecha' => now()->toDateString(),
         'departamento_tecnico' => 'planta',
         'referencia' => 'PLACA: AVR-833',

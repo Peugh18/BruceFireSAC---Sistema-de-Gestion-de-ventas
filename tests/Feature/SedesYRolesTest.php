@@ -11,6 +11,7 @@ use App\Models\ServiceOrder;
 use App\Models\User;
 use App\Services\Avisos\AvisosDelVendedor;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Support\Facades\Hash;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -122,4 +123,51 @@ test('la vendedora no ve comprobantes, certificados ni avisos de otra tienda', f
         ->assertInertia(fn ($page) => $page->has('certificates.data', 0));
 
     expect(app(AvisosDelVendedor::class)->contar($vendedora))->toBe(1);
+});
+
+test('el gerente da de alta a un trabajador con su rol, su sede y acceso a la empresa', function () {
+    $this->actingAs($this->gerente)
+        ->post(rutaGerente($this->gerente, 'gerente.usuarios.store'), [
+            'name' => 'Karina Ríos',
+            'email' => 'Karina@BruceFire.pe',
+            'role' => 'Vendedor',
+            'sede_id' => $this->tienda->id,
+            'password' => 'clave-inicial-1',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    $karina = User::where('email', 'karina@brucefire.pe')->firstOrFail();
+
+    expect($karina->hasRole('Vendedor'))->toBeTrue()
+        ->and($karina->sede_id)->toBe($this->tienda->id)
+        ->and($karina->belongsToTeam($this->gerente->currentTeam))->toBeTrue()
+        ->and($karina->current_team_id)->toBe($this->gerente->currentTeam->id)
+        ->and(Hash::check('clave-inicial-1', $karina->password))->toBeTrue();
+});
+
+test('no se da de alta a un trabajador en una sede que no corresponde a su rol ni con correo repetido', function () {
+    $datos = ['name' => 'Luis', 'email' => 'luis@brucefire.pe', 'role' => 'TecnicoPlanta', 'password' => 'clave-inicial-1'];
+
+    $this->actingAs($this->gerente)
+        ->post(rutaGerente($this->gerente, 'gerente.usuarios.store'), [...$datos, 'sede_id' => $this->tienda->id])
+        ->assertSessionHasErrors(['sede_id' => 'Un técnico de planta trabaja en un almacén o una sede mixta; Tienda Centro es una tienda.']);
+
+    $this->actingAs($this->gerente)
+        ->post(rutaGerente($this->gerente, 'gerente.usuarios.store'), [...$datos, 'email' => $this->gerente->email, 'sede_id' => $this->almacen->id])
+        ->assertSessionHasErrors(['email' => 'Ya existe un usuario con ese correo.']);
+
+    expect(User::where('email', 'luis@brucefire.pe')->exists())->toBeFalse();
+});
+
+test('solo el gerente puede dar de alta trabajadores', function () {
+    $vendedor = conRol('Vendedor', $this->tienda);
+
+    $this->actingAs($vendedor)
+        ->post(route('gerente.usuarios.store', ['current_team' => $vendedor->currentTeam]), [
+            'name' => 'Intruso', 'email' => 'intruso@brucefire.pe', 'role' => 'Gerente', 'password' => 'clave-inicial-1',
+        ])
+        ->assertForbidden();
+
+    expect(User::where('email', 'intruso@brucefire.pe')->exists())->toBeFalse();
 });

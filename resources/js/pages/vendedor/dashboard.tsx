@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
+import { fechaCorta } from '@/lib/utils';
 
 export type VentasHoy = {
     total: number;
@@ -687,7 +688,7 @@ export default function VendedorDashboard({
                                     : null;
 
                                 const waText = encodeURIComponent(
-                                    `Hola ${inst.cliente || ''}, le recordamos su cuota ${inst.numero_cuota} de ${formatCurrency(inst.monto)} que venció el ${inst.fecha_vencimiento}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
+                                    `Hola ${inst.cliente || ''}, le recordamos su cuota ${inst.numero_cuota} de ${formatCurrency(inst.monto)} que venció el ${fechaCorta(inst.fecha_vencimiento)}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
                                 );
 
                                 return (
@@ -726,7 +727,7 @@ export default function VendedorDashboard({
                                                     >
                                                         {isVencido
                                                             ? `Vencido hace ${inst.dias_vencido} día(s)`
-                                                            : `Vence el ${inst.fecha_vencimiento}`}
+                                                            : `Vence el ${fechaCorta(inst.fecha_vencimiento)}`}
                                                     </span>
                                                 </div>
                                             </div>

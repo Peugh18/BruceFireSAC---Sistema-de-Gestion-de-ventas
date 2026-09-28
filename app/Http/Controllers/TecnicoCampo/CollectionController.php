@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\TecnicoCampo;
 
+use App\Actions\Equipment\QuickRegisterEquipment;
 use App\Actions\TecnicoCampo\RegisterCollection;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Reports\ServiceOrderReceiptPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class CollectionController extends Controller
 {
@@ -148,7 +151,6 @@ class CollectionController extends Controller
         RegisterCollection $action
     ): RedirectResponse {
         $validated = $request->validate([
-            'cantidad' => ['required', 'integer', 'min:1'],
             'contacto_nombre' => ['required', 'string', 'max:150'],
             'contacto_telefono' => ['nullable', 'string', 'max:50'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
@@ -157,7 +159,7 @@ class CollectionController extends Controller
         ]);
 
         $action->execute($service_order, $request->user(), [
-            'cantidad' => (int) $validated['cantidad'],
+            'cantidad' => $service_order->equipments()->count(),
             'contacto_nombre' => $validated['contacto_nombre'],
             'contacto_telefono' => $validated['contacto_telefono'] ?? null,
             'observaciones' => $validated['observaciones'] ?? null,
@@ -166,5 +168,33 @@ class CollectionController extends Controller
         ]);
 
         return back()->with('success', 'Recojo y cadena de custodia registrados exitosamente.');
+    }
+
+    public function storeEquipment(
+        Request $request,
+        Team $current_team,
+        ServiceOrder $service_order,
+        QuickRegisterEquipment $action,
+    ): RedirectResponse {
+        $data = $request->validate([
+            'numero_serie' => ['nullable', 'string', 'max:100'],
+            'tipo_agente' => ['required_without:numero_serie', 'nullable', 'string', 'max:100'],
+            'capacidad' => ['required_without:numero_serie', 'nullable', 'string', 'max:100'],
+            'marca' => ['nullable', 'string', 'max:100'],
+            'serie_fabricante' => ['nullable', 'string', 'max:100'],
+            'observaciones_recepcion' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $action->execute($service_order, [...$data, 'recibido' => false], $request->user());
+
+        return back()->with('success', 'Extintor agregado al recojo.');
+    }
+
+    public function receipt(
+        Team $current_team,
+        ServiceOrder $service_order,
+        ServiceOrderReceiptPdfService $service,
+    ): HttpResponse {
+        return $service->generate($service_order)->stream("constancia-recepcion-{$service_order->codigo}.pdf");
     }
 }

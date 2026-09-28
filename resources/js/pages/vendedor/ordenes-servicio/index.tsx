@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
+import { fechaCorta } from '@/lib/utils';
 
 export type ServiceOrderItem = {
     id: number;
@@ -153,6 +154,7 @@ export default function ServiceOrdersIndex({
     // Form para crear nueva orden
     const createForm = useForm({
         client_id: '',
+        service_id: '',
         tipo_servicio: '',
         fecha: new Date().toISOString().split('T')[0],
         departamento_tecnico: 'planta' as 'planta' | 'campo',
@@ -212,8 +214,8 @@ export default function ServiceOrdersIndex({
                             Órdenes de Servicio
                         </h2>
                         <p className="text-muted-foreground text-[12.5px]">
-                            Órdenes generadas a partir de tus ventas y
-                            cotizaciones con servicio incluido.
+                            Recargas, mantenimientos e inspecciones de tus
+                            clientes, en planta o en campo.
                         </p>
                     </div>
 
@@ -267,7 +269,7 @@ export default function ServiceOrdersIndex({
                                         Técnico
                                     </th>
                                     <th className="text-muted-foreground px-2.5 py-2.5 text-center font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
-                                        Progreso (4 pts)
+                                        Avance
                                     </th>
                                     <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                         Estado
@@ -339,7 +341,9 @@ export default function ServiceOrdersIndex({
                                                         {order.tipo_servicio}
                                                     </span>
                                                     <span className="text-muted-foreground font-mono text-[10px]">
-                                                        {order.fecha}
+                                                        {fechaCorta(
+                                                            order.fecha,
+                                                        )}
                                                     </span>
                                                 </td>
 
@@ -516,10 +520,11 @@ export default function ServiceOrdersIndex({
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            createForm.setData(
-                                                'tipo_servicio',
-                                                '',
-                                            )
+                                            createForm.setData((data) => ({
+                                                ...data,
+                                                service_id: '',
+                                                tipo_servicio: '',
+                                            }))
                                         }
                                         className="text-muted-foreground hover:text-foreground text-[11.5px] font-semibold"
                                     >
@@ -532,10 +537,11 @@ export default function ServiceOrdersIndex({
                                         teamSlug={teamSlug}
                                         soloServicios
                                         onPick={(servicio) =>
-                                            createForm.setData(
-                                                'tipo_servicio',
-                                                servicio.nombre,
-                                            )
+                                            createForm.setData((data) => ({
+                                                ...data,
+                                                service_id: String(servicio.id),
+                                                tipo_servicio: servicio.nombre,
+                                            }))
                                         }
                                         placeholder="Busca el servicio: recarga, prueba hidrostática, instalación..."
                                     />

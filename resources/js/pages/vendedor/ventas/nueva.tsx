@@ -38,7 +38,7 @@ import type { Team } from '@/types';
 
 type SedeOption = { id: number; nombre: string };
 
-type LineType = 'unidad_nueva' | 'producto' | 'servicio';
+type LineType = 'unidad_nueva' | 'recarga_servicio' | 'producto' | 'servicio';
 type Destination = 'local_cliente' | 'vehiculo';
 type PaymentCondition = 'contado' | 'credito';
 type DocumentType = 'factura' | 'boleta' | 'nota_venta';
@@ -80,6 +80,7 @@ const MEDIOS_PAGO: { valor: MedioPago; texto: string }[] = [
 const LIMITE_BANCARIZACION = 2000;
 
 type SaleFormData = {
+    service_order_id: number | '';
     client_id: number | '';
     sede_id: number | '';
     quote_id: number | '';
@@ -117,6 +118,7 @@ type QuoteOption = {
 /** Venta ya existente: su borrador para editar (con id) o una copia para rehacerla (sin id). */
 type VentaPrefill = {
     id: number | null;
+    service_order_id?: number;
     numero_interno: string;
     client: ClientOption;
     sede_id: number | null;
@@ -245,6 +247,7 @@ export default function NuevaVenta({
     const clienteInicial = venta?.client ?? quote?.client ?? null;
 
     const form = useForm<SaleFormData>({
+        service_order_id: venta?.service_order_id ?? '',
         client_id: clienteInicial?.id ?? '',
         sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
         quote_id: quote?.id ?? '',
@@ -255,7 +258,12 @@ export default function NuevaVenta({
         medio_pago: venta?.medio_pago ?? 'efectivo',
         numero_operacion: venta?.numero_operacion ?? '',
         cuotas: venta?.cuotas ?? [],
-        comprobante_tipo: venta?.comprobante_tipo ?? 'factura',
+        comprobante_tipo:
+            venta?.comprobante_tipo ??
+            (clienteInicial?.tipo_documento &&
+            clienteInicial.tipo_documento !== 'ruc'
+                ? 'boleta'
+                : 'factura'),
         observaciones: venta?.observaciones ?? '',
         items: venta
             ? venta.items.map((line) => ({ ...line, key: nuevaClave() }))
@@ -428,7 +436,13 @@ export default function NuevaVenta({
     };
 
     const cambiarCondicion = (condicion: PaymentCondition) => {
-        form.setData('condicion_pago', condicion);
+        form.setData((data) => ({
+            ...data,
+            condicion_pago: condicion,
+            cuotas: condicion === 'contado' ? [] : data.cuotas,
+            numero_operacion:
+                condicion === 'credito' ? '' : data.numero_operacion,
+        }));
 
         if (condicion === 'credito') {
             setCreditoAbierto(true);
@@ -442,11 +456,35 @@ export default function NuevaVenta({
             (event.nativeEvent as SubmitEvent).submitter?.dataset.accion !==
             'borrador';
 
+        const unidadFaltante = quote?.items
+            .filter((line) => line.serializado)
+            .map((line) => ({
+                nombre: line.nombre,
+                faltantes:
+                    line.cantidad -
+                    form.data.items.filter(
+                        (item) => item.product_id === line.product_id,
+                    ).length,
+            }))
+            .find((line) => line.faltantes > 0);
+
+        if (emitir && unidadFaltante) {
+            setAviso(
+                `Faltan ${unidadFaltante.faltantes} ${unidadFaltante.faltantes === 1 ? 'unidad' : 'unidades'} por escanear de ${unidadFaltante.nombre}.`,
+            );
+            return;
+        }
+
         if (
             form.data.condicion_pago === 'credito' &&
             (creditoIncompleto || cuotasDesactualizadas)
         ) {
             setCreditoAbierto(true);
+            setAviso(
+                creditoIncompleto
+                    ? 'Define al menos una cuota antes de emitir la venta a crédito.'
+                    : 'El total de las cuotas debe coincidir con el total de la venta.',
+            );
             return;
         }
 
@@ -709,8 +747,8 @@ export default function NuevaVenta({
                     </Card>
 
                     <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
-                        <div className="grid gap-4 lg:grid-cols-2">
-                            <div>
+                        <div className="grid gap-4">
+                            <div className="border-border rounded-[12px] border p-3">
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Destino de los equipos
                                 </Label>
@@ -799,7 +837,7 @@ export default function NuevaVenta({
                             </div>
                         </div>
                         {form.data.condicion_pago === 'contado' ? (
-                            <div className="flex flex-col gap-1.5">
+                            <div className="border-border bg-muted/20 flex flex-col gap-1.5 rounded-[12px] border p-3">
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     ¿Cómo paga el cliente?
                                 </Label>
@@ -1243,12 +1281,7 @@ export default function NuevaVenta({
 
                         <Button
                             type="submit"
-                            disabled={
-                                form.processing ||
-                                boletaSuperaLimite ||
-                                creditoIncompleto ||
-                                cuotasDesactualizadas
-                            }
+                            disabled={form.processing}
                             className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             {form.processing ? (
@@ -1259,6 +1292,29 @@ export default function NuevaVenta({
                             Emitir{' '}
                             {NOMBRE_COMPROBANTE[form.data.comprobante_tipo]}
                         </Button>
+                        {aviso ? (
+                            <p
+                                className="text-destructive text-[11.5px] font-semibold"
+                                role="alert"
+                            >
+                                {aviso}
+                            </p>
+                        ) : null}
+                        {!aviso &&
+                        (boletaSuperaLimite ||
+                            creditoIncompleto ||
+                            cuotasDesactualizadas) ? (
+                            <p
+                                className="text-destructive text-[11.5px] font-semibold"
+                                role="alert"
+                            >
+                                {boletaSuperaLimite
+                                    ? `Registra el DNI del cliente: la boleta supera S/ ${limiteBoletaSinIdentificar.toFixed(2)}.`
+                                    : creditoIncompleto
+                                      ? 'Define al menos una cuota antes de emitir.'
+                                      : 'Ajusta las cuotas: su suma debe coincidir con el total.'}
+                            </p>
+                        ) : null}
                         <Button
                             type="submit"
                             data-accion="borrador"

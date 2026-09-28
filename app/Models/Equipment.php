@@ -74,6 +74,12 @@ class Equipment extends Model
             ->withTimestamps();
     }
 
+    /** @return BelongsToMany<Quote, $this> */
+    public function quotes(): BelongsToMany
+    {
+        return $this->belongsToMany(Quote::class);
+    }
+
     /**
      * @return HasMany<TechnicalChecklist, $this>
      */

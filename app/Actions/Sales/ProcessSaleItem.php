@@ -2,6 +2,7 @@
 
 namespace App\Actions\Sales;
 
+use App\Actions\Equipment\RenewEquipmentAttentionDate;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
@@ -197,9 +198,7 @@ class ProcessSaleItem
             ]);
         }
 
-        $equipment->update([
-            'proxima_fecha_atencion' => $sale->fecha->copy()->addYear(),
-        ]);
+        app(RenewEquipmentAttentionDate::class)->execute(collect([$equipment]));
 
         return $sale->items()->create([
             'product_id' => null,

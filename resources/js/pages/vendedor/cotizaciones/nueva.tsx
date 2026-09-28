@@ -566,16 +566,10 @@ export default function NuevaCotizacion({
                                     </button>
                                 ))}
                             </div>
-                            <Input
-                                value={form.data.condicion_pago_propuesta}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'condicion_pago_propuesta',
-                                        e.target.value,
-                                    )
-                                }
-                                className="border-border bg-card mt-1.5 h-9 rounded-[9px] text-[13px]"
-                            />
+                            {fieldError(
+                                form.errors,
+                                'condicion_pago_propuesta',
+                            )}
                         </div>
 
                         <div>

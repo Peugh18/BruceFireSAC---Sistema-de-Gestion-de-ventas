@@ -42,6 +42,42 @@ test('la referencia de la cotizacion se guarda', function () {
     expect(Quote::first()->referencia)->toBe('SEDE: Oficina Chimbote');
 });
 
+test('la condicion de pago propuesta solo acepta las opciones de la pantalla', function (string $condicion) {
+    $user = vendedorUser();
+    $item = Product::factory()->create(['precio_venta' => 100]);
+
+    $this->actingAs($user)
+        ->post(route('vendedor.cotizaciones.store', ['current_team' => $user->currentTeam]), [
+            'client_id' => Client::factory()->create()->id,
+            'fecha' => now()->toDateString(),
+            'vigencia_hasta' => now()->addDays(15)->toDateString(),
+            'condicion_pago_propuesta' => $condicion,
+            'items' => [['product_id' => $item->id, 'cantidad' => 1, 'precio_unitario' => 100]],
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect(Quote::sole()->condicion_pago_propuesta)->toBe($condicion);
+})->with(['Contado', 'Crédito 7 días', 'Crédito 15 días', 'Crédito 30 días']);
+
+test('la condicion de pago propuesta rechaza texto libre con un mensaje claro', function () {
+    $user = vendedorUser();
+    $item = Product::factory()->create(['precio_venta' => 100]);
+
+    $this->actingAs($user)
+        ->post(route('vendedor.cotizaciones.store', ['current_team' => $user->currentTeam]), [
+            'client_id' => Client::factory()->create()->id,
+            'fecha' => now()->toDateString(),
+            'vigencia_hasta' => now()->addDays(15)->toDateString(),
+            'condicion_pago_propuesta' => 'ContadoDSADADA',
+            'items' => [['product_id' => $item->id, 'cantidad' => 1, 'precio_unitario' => 100]],
+        ])
+        ->assertSessionHasErrors([
+            'condicion_pago_propuesta' => 'Elige una condición de pago válida.',
+        ]);
+
+    expect(Quote::count())->toBe(0);
+});
+
 test('vendedor creates a quote with items and totals are computed', function () {
     $user = vendedorUser();
     $client = Client::factory()->create();

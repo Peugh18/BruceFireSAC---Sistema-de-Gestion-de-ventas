@@ -24,6 +24,8 @@ Route::prefix('tecnico-campo')
         Route::get('recojos/{service_order}', [CollectionController::class, 'show'])->name('recojos.show');
         Route::post('ordenes/{service_order}/tomar', [TechnicalOrderAssignmentController::class, 'take'])->name('ordenes.tomar');
         Route::post('recojos/{service_order}', [CollectionController::class, 'store'])->name('recojos.store');
+        Route::post('recojos/{service_order}/equipos', [CollectionController::class, 'storeEquipment'])->name('recojos.equipos.store');
+        Route::get('recojos/{service_order}/constancia-recepcion', [CollectionController::class, 'receipt'])->name('recojos.constancia-recepcion');
 
         // Inspecciones de Campo (§24, Fase 8)
         Route::get('inspecciones', [InspectionController::class, 'index'])->name('inspecciones.index');

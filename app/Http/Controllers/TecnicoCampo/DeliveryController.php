@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\TecnicoCampo;
 
+use App\Actions\Equipment\RenewEquipmentAttentionDate;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
@@ -105,7 +106,8 @@ class DeliveryController extends Controller
     public function confirm(
         Request $request,
         Team $current_team,
-        ServiceOrder $serviceOrder
+        ServiceOrder $serviceOrder,
+        RenewEquipmentAttentionDate $renewEquipmentAttentionDate,
     ): RedirectResponse {
         $validated = $request->validate([
             'receptor_nombre' => ['required', 'string', 'max:150'],
@@ -136,6 +138,9 @@ class DeliveryController extends Controller
         $serviceOrder->update([
             'estado' => $debeCerrar ? 'cerrado' : 'entregado',
         ]);
+        if ($debeCerrar) {
+            $renewEquipmentAttentionDate->execute($serviceOrder->equipments()->get());
+        }
 
         $msg = $debeCerrar
             ? 'Entrega final completada y orden de servicio cerrada exitosamente.'

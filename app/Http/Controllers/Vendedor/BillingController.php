@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Models\ElectronicDocument;
 use App\Models\Team;
+use App\Services\Billing\MensajeSunat;
 use App\Services\Billing\PrecioConIgv;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -53,7 +54,8 @@ class BillingController extends Controller
                 'sunat_estado' => $document->sunat_estado,
                 'sunat_codigo_respuesta' => $document->sunat_codigo_respuesta,
                 'sunat_mensaje' => $document->sunat_mensaje,
-                'created_at' => $document->created_at?->toDateTimeString(),
+                'sunat_mensaje_simple' => MensajeSunat::simple($document->sunat_mensaje, $document->sunat_codigo_respuesta),
+                'created_at' => $document->created_at?->format('d/m/Y H:i'),
             ]);
 
         // KPIs acotados al vendedor autenticado: misma regla que el Dashboard

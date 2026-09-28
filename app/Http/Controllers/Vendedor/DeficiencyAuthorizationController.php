@@ -50,6 +50,9 @@ class DeficiencyAuthorizationController extends Controller
             'vendedor_id' => $request->user()->id,
         ]);
         $deficiency->update(['estado' => 'autorizada']);
+        if ($deficiency->serviceOrder->sale_id) {
+            $deficiency->serviceOrder->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'payload' => ['accion' => 'saldo_adicional_pendiente', 'deficiency_id' => $deficiency->id, 'mensaje' => 'La orden ya fue cobrada; el adicional autorizado queda como saldo pendiente por cobrar.']]);
+        }
         $this->recordEvent($deficiency, $request->user()->id, true);
 
         AuditLogger::log(

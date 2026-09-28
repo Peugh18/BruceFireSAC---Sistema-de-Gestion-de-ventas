@@ -7,6 +7,7 @@ use App\Http\Requests\Cobranzas\StoreCollectionPaymentRequest;
 use App\Models\Installment;
 use App\Models\SalePayment;
 use App\Models\Team;
+use App\Models\User;
 use App\Services\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -24,14 +25,27 @@ class CollectionController extends Controller
      */
     public function index(Team $current_team, Request $request): Response
     {
+        // Cobranzas y Caja son la misma pantalla: las dos llevan el turno y las cuotas.
+        return Inertia::render('vendedor/cobranzas/pendientes', [
+            ...CashRegisterController::datosDeCaja($request->user()),
+            'installments' => self::cuotasPendientes($request->user()),
+        ]);
+    }
+
+    /**
+     * Cuotas pendientes, parciales o vencidas de las ventas del vendedor (y las
+     * pagadas hoy). Pasa a 'vencido' las cuotas cuya fecha ya quedó atrás.
+     *
+     * @return array<string, mixed>
+     */
+    public static function cuotasPendientes(User $user): array
+    {
         Installment::query()
             ->where('estado', 'pendiente')
             ->whereDate('fecha_vencimiento', '<', today())
             ->update(['estado' => 'vencido']);
 
-        $user = $request->user();
-
-        $installments = Installment::query()
+        return Installment::query()
             ->where(function ($query) {
                 $query->whereIn('estado', ['pendiente', 'parcial', 'vencido'])
                     ->orWhereHas('payments', fn ($payments) => $payments->whereDate('fecha', today()));
@@ -69,11 +83,8 @@ class CollectionController extends Controller
                         'puede_anular' => $user->hasRole('Gerente') || $payment->fecha->isToday(),
                     ])->values(),
                 ];
-            });
-
-        return Inertia::render('vendedor/cobranzas/pendientes', [
-            'installments' => $installments,
-        ]);
+            })
+            ->toArray();
     }
 
     /**

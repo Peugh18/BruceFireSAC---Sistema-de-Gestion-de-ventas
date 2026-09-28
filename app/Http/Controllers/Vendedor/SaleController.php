@@ -21,11 +21,15 @@ use App\Models\QuoteItem;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Sede;
+use App\Models\Service;
+use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -98,9 +102,11 @@ class SaleController extends Controller
             'quote' => $request->filled('cotizacion')
                 ? $this->cotizacionParaVenta($request->integer('cotizacion'), $sedeId)
                 : null,
-            'venta' => $request->filled('rehacer')
+            'venta' => $request->filled('orden_servicio')
+                ? $this->ordenParaCobro($request->integer('orden_servicio'), $sedeId)
+                : ($request->filled('rehacer')
                 ? $this->ventaParaFormulario($request->integer('rehacer'), $sedeId, comoCopia: true)
-                : null,
+                : null),
         ]);
     }
 
@@ -279,7 +285,7 @@ class SaleController extends Controller
         ];
     }
 
-    public function store(Team $current_team, StoreSaleRequest $request, CreateSale $createSale): RedirectResponse
+    public function store(Team $current_team, StoreSaleRequest $request, CreateSale $createSale, ServiceOrderNumberGenerator $numberGenerator): RedirectResponse
     {
         $data = $request->safe()->except(['items', 'emitir']);
         $items = $request->safe()->input('items');
@@ -292,8 +298,26 @@ class SaleController extends Controller
         // a medias y el error sale en el formulario.
         $emitir = $request->boolean('emitir');
 
-        $sale = DB::transaction(function () use ($data, $items, $request, $createSale, $emitir) {
+        $serviceOrderId = $request->integer('service_order_id') ?: null;
+        $sale = DB::transaction(function () use ($data, $items, $request, $createSale, $emitir, $serviceOrderId, $numberGenerator) {
+            $serviceOrder = $serviceOrderId ? ServiceOrder::lockForUpdate()->findOrFail($serviceOrderId) : null;
+            if ($serviceOrder?->sale_id) {
+                throw ValidationException::withMessages(['service_order_id' => 'Esta orden ya fue cobrada.']);
+            }
+            if ($serviceOrder && $serviceOrder->client_id !== (int) $data['client_id']) {
+                throw ValidationException::withMessages(['client_id' => 'La venta debe pertenecer al cliente de la orden.']);
+            }
             $sale = $createSale->handle($data, $items, $request->user()->id);
+            $serviceOrder?->update(['sale_id' => $sale->id]);
+
+            if (! $serviceOrder && ! empty($data['quote_id'])) {
+                $quote = Quote::query()->with(['items.service', 'equipments'])->findOrFail((int) $data['quote_id']);
+                $serviceItem = $quote->items->first(fn (QuoteItem $item): bool => $item->service_id !== null);
+                if ($serviceItem?->service) {
+                    $serviceOrder = ServiceOrder::create(['codigo' => $numberGenerator->next(), 'client_id' => $quote->client_id, 'sede_id' => $sale->sede_id, 'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'sale_id' => $sale->id, 'service_id' => $serviceItem->service_id, 'tipo_servicio' => $serviceItem->service->nombre, 'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'observaciones' => "Creada desde {$quote->numero}", 'estado' => 'pendiente_recepcion']);
+                    $serviceOrder->equipments()->sync($quote->equipments->modelKeys());
+                }
+            }
 
             return $emitir ? app(ConfirmSale::class)->handle($sale) : $sale;
         });
@@ -306,6 +330,32 @@ class SaleController extends Controller
             'current_team' => $current_team,
             'sale' => $sale,
         ]);
+    }
+
+    /** @return array<string, mixed>|null */
+    protected function ordenParaCobro(int $orderId, ?int $sedeId): ?array
+    {
+        $order = ServiceOrder::with(['client', 'equipments', 'service', 'deficiencies.authorization.cotizacionAdicional.items.product', 'deficiencies.authorization.cotizacionAdicional.items.service'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($orderId);
+        if (! $order || $order->sale_id) {
+            return null;
+        }
+
+        $services = Service::where('activo', true)->get();
+        $orderService = $order->service ?? $services->first();
+        $equipments = $order->equipments->isEmpty() ? collect([null]) : $order->equipments;
+        $items = $equipments->map(function ($equipment) use ($services, $orderService): array {
+            $service = $orderService ?? $services->first(fn (Service $service): bool => str_contains(mb_strtolower($service->nombre.' '.$service->descripcion), mb_strtolower((string) $equipment?->capacidad)), $services->first());
+
+            return ['tipo_linea' => $equipment ? 'recarga_servicio' : 'servicio', 'numero_serie' => $equipment?->numero_serie, 'service_id' => $service->id, 'nombre' => $service->nombre, 'cantidad' => 1, 'precio_unitario' => (float) $service->precio_venta, 'descuento' => 0];
+        });
+        $additionalItems = $order->deficiencies->where('estado', 'autorizada')->flatMap(function ($deficiency) {
+            $cotizacion = $deficiency->authorization?->cotizacionAdicional;
+
+            return $cotizacion === null ? [] : $cotizacion->items;
+        })->map(fn (QuoteItem $item): array => ['tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service_id ? $item->service->nombre : $item->product->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
+        $items = $items->concat($additionalItems)->values()->all();
+
+        return ['id' => null, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => 'local_cliente', 'referencia' => $order->codigo, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items];
     }
 
     public function show(Team $current_team, Sale $sale, Request $request): Response

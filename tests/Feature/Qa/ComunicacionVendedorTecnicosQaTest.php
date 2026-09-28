@@ -4,6 +4,7 @@ use App\Enums\TeamRole;
 use App\Models\Client;
 use App\Models\Deficiency;
 use App\Models\Sede;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
@@ -41,7 +42,7 @@ it('permite crear una orden sin técnico y la deja visible para el área elegida
     $this->actingAs($vendedor)
         ->post(route('vendedor.ordenes-servicio.store', ['current_team' => $vendedor->currentTeam]), [
             'client_id' => $client->id,
-            'tipo_servicio' => 'Recarga y mantenimiento',
+            'service_id' => Service::factory()->create(['nombre' => 'Recarga y mantenimiento'])->id,
             'fecha' => now()->toDateString(),
             'departamento_tecnico' => 'planta',
             'observaciones' => 'Coordinar recojo por la mañana.',

@@ -91,6 +91,11 @@ function buildNavGroups(
                     href: `/${teamSlug}/almacen/ajustes`,
                     icon: ArrowLeftRight,
                 },
+                {
+                    title: 'Traslados',
+                    href: `/${teamSlug}/almacen/traslados`,
+                    icon: ArrowLeftRight,
+                },
             ],
         },
         {

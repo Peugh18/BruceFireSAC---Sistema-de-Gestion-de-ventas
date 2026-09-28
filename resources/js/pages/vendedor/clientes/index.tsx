@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import clientes from '@/routes/vendedor/clientes';
+import { fechaCorta } from '@/lib/utils';
 
 type CurrentTeam = {
     slug: string;
@@ -382,8 +383,9 @@ export default function ClientesIndex({
                                                     {renderSunatBadge(client)}
                                                 </td>
                                                 <td className="border-border text-muted-foreground border-b px-2.5 py-[13px]">
-                                                    {client.ultima_compra ??
-                                                        '-'}
+                                                    {fechaCorta(
+                                                        client.ultima_compra,
+                                                    ) || '-'}
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-[13px]">
                                                     <div className="flex gap-1.5">

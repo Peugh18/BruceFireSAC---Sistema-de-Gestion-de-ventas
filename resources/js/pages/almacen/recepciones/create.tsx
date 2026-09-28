@@ -395,6 +395,14 @@ export default function RecepcionesCreate({
                             <Plus className="size-3.5" />
                             <span>Agregar Ítem</span>
                         </Button>
+                        {Object.values(errors)[0] ? (
+                            <p
+                                className="text-destructive text-[11px] font-semibold"
+                                role="alert"
+                            >
+                                {Object.values(errors)[0]}
+                            </p>
+                        ) : null}
                     </div>
 
                     {data.items.length === 0 ? (

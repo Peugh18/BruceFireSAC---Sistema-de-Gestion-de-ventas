@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Vendedor;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
 use App\Models\Sede;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,6 +53,7 @@ class ServiceOrderController extends Controller
         return Inertia::render('vendedor/ordenes-servicio/index', [
             'orders' => $orders,
             'filters' => ['estado' => $estado],
+            'services' => Service::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'precio_venta']),
             // Técnicos de la sede para asignar un responsable; toda el área
             // (planta o campo) ve la orden aunque no se elija a nadie.
             'tecnicos' => User::role(['TecnicoPlanta', 'TecnicoCampo'])
@@ -66,7 +69,7 @@ class ServiceOrderController extends Controller
         ]);
     }
 
-    public function store(Team $current_team, StoreServiceOrderRequest $request): RedirectResponse
+    public function store(Team $current_team, StoreServiceOrderRequest $request, ServiceOrderNumberGenerator $numberGenerator): RedirectResponse
     {
         if ($request->filled('tecnico_id')) {
             $rol = $request->input('departamento_tecnico') === 'campo' ? 'TecnicoCampo' : 'TecnicoPlanta';
@@ -78,10 +81,12 @@ class ServiceOrderController extends Controller
             }
         }
 
+        $service = Service::query()->findOrFail($request->integer('service_id'));
         $order = ServiceOrder::create([
-            ...$request->validated(),
+            ...$request->safe()->except('tipo_servicio'),
+            'tipo_servicio' => $service->nombre,
             ...($request->user()->sedeRestringidaId() ? ['sede_id' => $request->user()->sedeRestringidaId()] : []),
-            'codigo' => 'OT-'.now()->year.'-'.str_pad((string) (ServiceOrder::count() + 1), 4, '0', STR_PAD_LEFT),
+            'codigo' => $numberGenerator->next(),
             'prioridad' => $request->input('prioridad', 'normal'),
             'estado' => 'pendiente_recepcion',
         ]);
@@ -107,11 +112,15 @@ class ServiceOrderController extends Controller
             'sede',
             'tecnico',
             'events' => fn ($query) => $query->with('user')->orderBy('created_at'),
+            'equipments',
+            'sale',
+            'service',
         ]);
 
         return Inertia::render('vendedor/ordenes-servicio/show', [
             'serviceOrder' => $service_order,
             'tecnicos' => $this->tecnicosQueAtienden($service_order)->get(['id', 'name']),
+            'services' => Service::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
         ]);
     }
 
@@ -152,13 +161,16 @@ class ServiceOrderController extends Controller
             'departamento_tecnico' => ['required', 'in:planta,campo'],
             'tecnico_id' => ['nullable', 'integer'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
+            'service_id' => ['required', 'integer', 'exists:services,id'],
         ]);
 
         if ($datos['departamento_tecnico'] !== $service_order->departamento_tecnico && $service_order->estado !== 'pendiente_recepcion') {
             throw ValidationException::withMessages(['departamento_tecnico' => 'La orden ya está en manos del técnico: no se puede cambiar de área.']);
         }
 
-        $antes = $service_order->only(['fecha', 'prioridad', 'departamento_tecnico', 'tecnico_id', 'observaciones']);
+        $service = Service::query()->findOrFail((int) $datos['service_id']);
+        $datos['tipo_servicio'] = $service->nombre;
+        $antes = $service_order->only(['fecha', 'prioridad', 'departamento_tecnico', 'tecnico_id', 'observaciones', 'service_id']);
         $service_order->fill(collect($datos)->except('tecnico_id')->all());
 
         $tecnico = null;

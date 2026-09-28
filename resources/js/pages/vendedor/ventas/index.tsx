@@ -18,6 +18,7 @@ import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
+import { fechaCorta } from '@/lib/utils';
 
 type SaleRow = {
     id: number;
@@ -168,7 +169,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
             text: 'text-blue-600 dark:text-blue-400',
         },
         {
-            label: 'Pendientes',
+            label: 'Borradores',
             value: kpis.pendientes_confirmar,
             icon: FileText,
             bg: 'bg-amber-500/10',
@@ -325,7 +326,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                                 {sale.cliente}
                                             </td>
                                             <td className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
-                                                {sale.fecha}
+                                                {fechaCorta(sale.fecha)}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px]">
                                                 <span className="bg-muted text-foreground/80 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">

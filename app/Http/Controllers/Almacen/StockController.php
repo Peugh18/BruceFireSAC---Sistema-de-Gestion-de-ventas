@@ -7,7 +7,6 @@ use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\Sede;
-use App\Models\Service;
 use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -24,7 +23,7 @@ class StockController extends Controller
     public function index(Team $current_team, Request $request): Response
     {
         $search = $request->string('search')->toString();
-        $tipo = $request->string('tipo')->toString(); // 'todos', 'producto', 'servicio'
+        $tipo = $request->string('tipo')->toString();
 
         // 1. Sedes activas de tipo almacén o mixta
         $almacenId = $request->user()->almacenRestringidoId();
@@ -97,42 +96,7 @@ class StockController extends Controller
                 });
         }
 
-        // 4. Obtener Servicios
-        $services = collect();
-        if ($tipo === '' || $tipo === 'todos' || $tipo === 'servicio') {
-            $services = Service::query()
-                ->when($search !== '', function ($query) use ($search) {
-                    $query->where(function ($q) use ($search) {
-                        $q->where('codigo', 'like', "%{$search}%")
-                            ->orWhere('nombre', 'like', "%{$search}%");
-                    });
-                })
-                ->where('activo', true)
-                ->orderBy('nombre')
-                ->get()
-                ->map(function (Service $service) use ($sedes) {
-                    $stockPorSede = [];
-                    foreach ($sedes as $sede) {
-                        $stockPorSede[$sede->id] = null; // Servicios no manejan stock
-                    }
-
-                    return [
-                        'id' => $service->id,
-                        'tipo' => 'servicio',
-                        'codigo' => $service->codigo,
-                        'nombre' => $service->nombre,
-                        'unidad_medida' => $service->unidad_medida,
-                        'precio_venta' => (float) $service->precio_venta,
-                        'serializado' => false,
-                        'stock_minimo' => null,
-                        'stock_disponible_total' => null,
-                        'stock_por_sede' => $stockPorSede,
-                    ];
-                });
-        }
-
-        // 5. Unir y ordenar catálogo de ítems
-        $allItems = $products->concat($services)->sortBy('nombre')->values()->all();
+        $allItems = $products->sortBy('nombre')->values()->all();
 
         // El catálogo se arma en PHP a partir de dos fuentes (Productos +
         // Servicios) con stock por sede ya calculado, así que se pagina el
@@ -217,7 +181,6 @@ class StockController extends Controller
             'product_list' => $productList,
             'kpis' => [
                 'total_productos' => Product::where('activo', true)->count(),
-                'total_servicios' => Service::where('activo', true)->count(),
                 'unidades_en_stock' => InventoryUnit::where('estado', 'disponible')->count(),
                 'bajo_minimo' => Product::where('activo', true)
                     ->whereNotNull('stock_minimo')

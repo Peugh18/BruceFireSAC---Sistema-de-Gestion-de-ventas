@@ -448,6 +448,14 @@ export default function ChecklistCreate({
                             <span>Guardar Checklist Técnico</span>
                         </button>
                     </div>
+                    {Object.values(form.errors)[0] ? (
+                        <p
+                            className="text-center text-[11px] font-semibold text-red-500"
+                            role="alert"
+                        >
+                            {Object.values(form.errors)[0]}
+                        </p>
+                    ) : null}
                 </form>
             </div>
         </TecnicoPlantaLayout>

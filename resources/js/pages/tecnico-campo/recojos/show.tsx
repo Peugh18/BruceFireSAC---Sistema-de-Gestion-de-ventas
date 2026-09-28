@@ -65,11 +65,18 @@ export default function RecojoShow({
     const teamPrefix = `/${teamSlug}/tecnico-campo`;
 
     const form = useForm({
-        cantidad: order.equipments.length > 0 ? order.equipments.length : 1,
         contacto_nombre: '',
         contacto_telefono: order.cliente.telefono || '',
         observaciones: '',
         conformidad_cliente: false,
+    });
+
+    const equipmentForm = useForm({
+        numero_serie: '',
+        tipo_agente: '',
+        capacidad: '',
+        marca: '',
+        serie_fabricante: '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -262,28 +269,75 @@ export default function RecojoShow({
                         </h3>
 
                         <form
+                            className="space-y-2 rounded-xl border border-blue-200 bg-white/70 p-3 dark:border-blue-900/50 dark:bg-neutral-900/60"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                equipmentForm.post(
+                                    `${teamPrefix}/recojos/${order.id}/equipos`,
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => equipmentForm.reset(),
+                                    },
+                                );
+                            }}
+                        >
+                            <p className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                                Extintores recogidos ({order.equipments.length})
+                            </p>
+                            <input
+                                value={equipmentForm.data.numero_serie}
+                                onChange={(event) =>
+                                    equipmentForm.setData(
+                                        'numero_serie',
+                                        event.target.value,
+                                    )
+                                }
+                                placeholder="Escanear BF-EQ existente"
+                                className="w-full rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                                <input
+                                    value={equipmentForm.data.tipo_agente}
+                                    onChange={(event) =>
+                                        equipmentForm.setData(
+                                            'tipo_agente',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Agente (alta nueva)"
+                                    className="rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                />
+                                <input
+                                    value={equipmentForm.data.capacidad}
+                                    onChange={(event) =>
+                                        equipmentForm.setData(
+                                            'capacidad',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Capacidad"
+                                    className="rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={equipmentForm.processing}
+                                className="rounded-xl bg-neutral-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+                            >
+                                Agregar extintor
+                            </button>
+                            {equipmentForm.errors.numero_serie && (
+                                <p className="text-xs text-red-600">
+                                    {equipmentForm.errors.numero_serie}
+                                </p>
+                            )}
+                        </form>
+
+                        <form
                             onSubmit={handleSubmit}
                             className="space-y-3 pt-1"
                         >
                             <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
-                                        Cantidad Recogida *
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        value={form.data.cantidad}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'cantidad',
-                                                Number(e.target.value),
-                                            )
-                                        }
-                                        className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
-                                        required
-                                    />
-                                </div>
                                 <div>
                                     <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                         Teléfono Contacto
@@ -302,6 +356,15 @@ export default function RecojoShow({
                                     />
                                 </div>
                             </div>
+
+                            <a
+                                href={`${teamPrefix}/recojos/${order.id}/constancia-recepcion`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex text-xs font-bold text-blue-700 hover:underline dark:text-blue-300"
+                            >
+                                Descargar constancia para firma
+                            </a>
 
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
@@ -367,10 +430,7 @@ export default function RecojoShow({
 
                             <button
                                 type="submit"
-                                disabled={
-                                    form.processing ||
-                                    !form.data.conformidad_cliente
-                                }
+                                disabled={form.processing}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
                             >
                                 <CheckCircle2 className="h-4 w-4" />
@@ -378,6 +438,15 @@ export default function RecojoShow({
                                     Confirmar Recojo y Cadena de Custodia
                                 </span>
                             </button>
+                            {!form.data.conformidad_cliente ? (
+                                <p
+                                    className="text-center text-[11px] font-semibold text-red-500"
+                                    role="alert"
+                                >
+                                    Marca la conformidad del cliente antes de
+                                    registrar el recojo.
+                                </p>
+                            ) : null}
                         </form>
                     </div>
                 ) : (

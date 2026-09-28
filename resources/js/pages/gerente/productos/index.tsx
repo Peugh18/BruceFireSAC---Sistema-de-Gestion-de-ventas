@@ -823,6 +823,14 @@ export default function ProductosIndex() {
                                             ? 'Guardar Cambios'
                                             : 'Crear Producto'}
                                     </button>
+                                    {Object.values(form.errors)[0] ? (
+                                        <p
+                                            className="text-destructive text-[11px] font-semibold"
+                                            role="alert"
+                                        >
+                                            {Object.values(form.errors)[0]}
+                                        </p>
+                                    ) : null}
                                 </div>
                             </form>
                         </div>

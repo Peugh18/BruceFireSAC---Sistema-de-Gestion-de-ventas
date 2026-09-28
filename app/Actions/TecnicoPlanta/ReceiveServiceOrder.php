@@ -30,6 +30,7 @@ class ReceiveServiceOrder
         }
 
         return DB::transaction(function () use ($serviceOrder, $user, $observaciones, $equiposRecibidosCount, $diferencias) {
+            $serviceOrder->equipments()->newPivotStatement()->where('service_order_id', $serviceOrder->id)->update(['recibido' => true, 'updated_at' => now()]);
             $estadoAnterior = $serviceOrder->estado;
 
             $serviceOrder->update([

@@ -23,7 +23,7 @@ if (! function_exists('almacenUserForStockTest')) {
     }
 }
 
-test('almacen stock index lista productos y servicios con su stock por sede', function () {
+test('almacen stock index lista solo productos con su stock por sede', function () {
     $user = almacenUserForStockTest();
 
     $sedeA = Sede::factory()->create(['nombre' => 'Sede Lima', 'tipo' => 'almacen', 'activo' => true]);
@@ -61,23 +61,20 @@ test('almacen stock index lista productos y servicios con su stock por sede', fu
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('almacen/stock/index')
-        ->has('items.data', 2)
+        ->has('items.data', 1)
         ->has('sedes', 2)
         ->has('kardex.data')
     );
 
     $items = collect($response->viewData('page')['props']['items']['data']);
     $prodRow = $items->firstWhere('codigo', 'PROD-001');
-    $servRow = $items->firstWhere('codigo', 'SERV-001');
-
     expect($prodRow['stock_disponible_total'])->toBe(4)
         ->and($prodRow['stock_por_sede'][$sedeA->id])->toBe(3)
         ->and($prodRow['stock_por_sede'][$sedeB->id])->toBe(1)
-        ->and($servRow['stock_disponible_total'])->toBeNull()
-        ->and($servRow['stock_por_sede'][$sedeA->id])->toBeNull();
+        ->and($items->pluck('codigo'))->not->toContain($serv->codigo);
 });
 
-test('almacen stock index permite filtrar por search y por tipo de item', function () {
+test('almacen stock index permite buscar productos y nunca devuelve servicios', function () {
     $user = almacenUserForStockTest();
 
     Product::factory()->create(['codigo' => 'EXT-ABC', 'nombre' => 'Extintor PQS']);
@@ -94,7 +91,7 @@ test('almacen stock index permite filtrar por search y por tipo de item', functi
     $itemsProd = collect($resProd->viewData('page')['props']['items']['data']);
     expect($itemsProd->pluck('tipo')->unique()->all())->toBe(['producto']);
 
-    // Filtrar solo servicios
+    // El parámetro antiguo de servicios ya no los expone.
     $resServ = $this->actingAs($user)
         ->get(route('almacen.stock.index', [
             'current_team' => $user->currentTeam,
@@ -103,7 +100,7 @@ test('almacen stock index permite filtrar por search y por tipo de item', functi
         ->assertOk();
 
     $itemsServ = collect($resServ->viewData('page')['props']['items']['data']);
-    expect($itemsServ->pluck('tipo')->unique()->all())->toBe(['servicio']);
+    expect($itemsServ)->toBeEmpty();
 
     // Búsqueda por texto
     $resSearch = $this->actingAs($user)
@@ -114,8 +111,7 @@ test('almacen stock index permite filtrar por search y por tipo de item', functi
         ->assertOk();
 
     $itemsSearch = collect($resSearch->viewData('page')['props']['items']['data']);
-    expect($itemsSearch)->toHaveCount(1)
-        ->and($itemsSearch->first()['codigo'])->toBe('REC-PQS');
+    expect($itemsSearch)->toBeEmpty();
 });
 
 test('almacen kardex permite filtrar movimientos por producto, sede, fecha y tipo', function () {

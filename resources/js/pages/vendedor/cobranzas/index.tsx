@@ -27,6 +27,7 @@ import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import pagos from '@/routes/vendedor/cobranzas/pagos';
 import type { Team } from '@/types';
+import { fechaCorta } from '@/lib/utils';
 
 export type Sede = {
     id: number;
@@ -562,7 +563,7 @@ export default function CobranzasIndex({
                                                             >
                                                                 {isVencido
                                                                     ? `Vencido hace ${inst.dias_vencido}d`
-                                                                    : `Vence ${inst.fecha_vencimiento}`}
+                                                                    : `Vence ${fechaCorta(inst.fecha_vencimiento)}`}
                                                             </Badge>
                                                         </td>
 

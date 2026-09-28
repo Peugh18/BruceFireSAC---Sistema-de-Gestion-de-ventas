@@ -37,6 +37,7 @@ import clientes from '@/routes/vendedor/clientes';
 import sitesRoutes from '@/routes/vendedor/clientes/sites';
 import vehiclesRoutes from '@/routes/vendedor/clientes/vehiculos';
 import type { Team } from '@/types';
+import { fechaCorta } from '@/lib/utils';
 
 // ==================== TIPOS CONTRATO BRIEF ====================
 
@@ -800,7 +801,8 @@ export default function ClienteShow({
                                 </div>
                                 <div className="text-muted-foreground mt-0.5 text-[11px]">
                                     Última compra:{' '}
-                                    {resumen?.ultima_compra || 'Sin compras'}
+                                    {fechaCorta(resumen?.ultima_compra) ||
+                                        'Sin compras'}
                                 </div>
                             </Card>
 
@@ -1689,7 +1691,7 @@ export default function ClienteShow({
                                                 ).replace(/\D/g, '');
                                                 const waText =
                                                     encodeURIComponent(
-                                                        `Hola ${client.razon_social}, le recordamos su cuota ${cuota.numero_cuota} de ${money(cuota.monto)} con saldo pendiente de ${money(cuota.saldo)} que venció el ${cuota.fecha_vencimiento}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
+                                                        `Hola ${client.razon_social}, le recordamos su cuota ${cuota.numero_cuota} de ${money(cuota.monto)} con saldo pendiente de ${money(cuota.saldo)} que venció el ${fechaCorta(cuota.fecha_vencimiento)}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
                                                     );
 
                                                 return (

@@ -23,6 +23,8 @@ use App\Http\Controllers\Vendedor\SaleController;
 use App\Http\Controllers\Vendedor\SaleItemScanController;
 use App\Http\Controllers\Vendedor\ServiceCertificateController;
 use App\Http\Controllers\Vendedor\ServiceOrderController;
+use App\Http\Controllers\Vendedor\ServiceOrderEquipmentController;
+use App\Http\Controllers\Vendedor\ServiceOrderReceiptController;
 use App\Http\Controllers\Vendedor\VehicleController;
 use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
@@ -94,6 +96,8 @@ Route::prefix('vendedor')
         Route::get('ordenes-servicio/{service_order}', [ServiceOrderController::class, 'show'])->name('ordenes-servicio.show');
         Route::put('ordenes-servicio/{service_order}', [ServiceOrderController::class, 'update'])->name('ordenes-servicio.update');
         Route::post('ordenes-servicio/{service_order}/asignar-tecnico', [ServiceOrderController::class, 'assign'])->name('ordenes-servicio.asignar-tecnico');
+        Route::post('ordenes-servicio/{service_order}/equipos', [ServiceOrderEquipmentController::class, 'store'])->name('ordenes-servicio.equipos.store');
+        Route::get('ordenes-servicio/{service_order}/constancia-recepcion', ServiceOrderReceiptController::class)->name('ordenes-servicio.constancia-recepcion');
         Route::get('ordenes-servicio/{service_order}/entrega-mostrador', [CounterDeliveryController::class, 'show'])->name('ordenes-servicio.entrega-mostrador.show');
         Route::post('ordenes-servicio/{service_order}/entrega-mostrador', [CounterDeliveryController::class, 'store'])->name('ordenes-servicio.entrega-mostrador.store');
         Route::get('ordenes-servicio/{service_order}/entrega-mostrador/acta-pdf', [CounterDeliveryController::class, 'pdf'])->name('ordenes-servicio.entrega-mostrador.pdf');
@@ -105,6 +109,7 @@ Route::prefix('vendedor')
         Route::post('deficiencias/{deficiency}/autorizar', [DeficiencyAuthorizationController::class, 'store'])->name('deficiencias.autorizar');
 
         Route::get('alertas', [AlertController::class, 'index'])->name('alertas.index');
+        Route::post('alertas/ofrecer-recarga', [AlertController::class, 'offerRecharge'])->name('alertas.ofrecer-recarga');
 
         Route::get('certificados', [CertificateController::class, 'index'])->name('certificados.index');
         Route::get('certificados/{certificate}', [CertificateController::class, 'show'])->name('certificados.show');

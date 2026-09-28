@@ -698,7 +698,7 @@ export default function GerenteDashboard({
                                     <BrainCircuit className="text-primary size-5" />
                                 </div>
                                 <h2 className="text-foreground font-['Oswald',sans-serif] text-lg font-bold tracking-wide uppercase">
-                                    Predicción de Recompra — Modelo IA (§39.1)
+                                    Predicción de recompra
                                 </h2>
                                 <span className="border-primary/20 bg-primary/5 text-primary inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
                                     <Sparkles className="size-3" />
@@ -757,17 +757,14 @@ export default function GerenteDashboard({
                                 <BrainCircuit className="text-muted-foreground size-6" />
                             </div>
                             <h3 className="text-foreground mt-3 text-sm font-semibold">
-                                Modelo de IA no ejecutado aún
+                                La predicción aún no se ha calculado
                             </h3>
                             <p className="text-muted-foreground mt-1 max-w-md text-xs">
-                                El modelo predictivo de retención está listo
-                                para procesar la cartera. Ejecuta el comando de
-                                scoring para generar las probabilidades de los
-                                clientes.
+                                El sistema la calcula solo cada noche con el
+                                historial de ventas. Mañana verás aquí qué
+                                clientes tienen más probabilidad de volver a
+                                comprar.
                             </p>
-                            <code className="border-border bg-muted text-foreground mt-3 rounded border px-3 py-1 font-mono text-[11px]">
-                                php artisan ml:score-clients
-                            </code>
                         </div>
                     ) : (
                         <div className="mt-6 space-y-6">
@@ -1043,8 +1040,7 @@ export default function GerenteDashboard({
                                 <Info className="text-primary mt-0.5 size-4 shrink-0" />
                                 <div>
                                     <span className="text-foreground font-semibold">
-                                        Nota de apoyo a la decisión comercial
-                                        (§39.1):
+                                        Nota de apoyo a la decisión comercial:
                                     </span>{' '}
                                     Este modelo de regresión logística
                                     supervisado estima la probabilidad de
@@ -1054,7 +1050,7 @@ export default function GerenteDashboard({
                                     mantenimiento y recarga de extintores sigue
                                     rigiéndose por la norma técnica de recarga
                                     cada 12 meses, la cual opera como regla fija
-                                    del sistema (§39.5).
+                                    del sistema.
                                 </div>
                             </div>
                         </div>

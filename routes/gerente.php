@@ -52,6 +52,7 @@ Route::prefix('gerente')
 
         // Usuarios y roles (§36, §86.4.8)
         Route::get('usuarios', [UserController::class, 'index'])->name('usuarios.index');
+        Route::post('usuarios', [UserController::class, 'store'])->name('usuarios.store');
         Route::patch('usuarios/{user}/rol', [UserController::class, 'updateRole'])->name('usuarios.update-role');
         Route::patch('usuarios/{user}/sede', [UserController::class, 'updateSede'])->name('usuarios.update-sede');
 

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cotizaciones;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreQuoteRequest extends FormRequest
 {
@@ -22,7 +23,12 @@ class StoreQuoteRequest extends FormRequest
             'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'fecha' => ['required', 'date'],
             'vigencia_hasta' => ['required', 'date', 'after_or_equal:fecha'],
-            'condicion_pago_propuesta' => ['nullable', 'string', 'max:255'],
+            'condicion_pago_propuesta' => ['required', Rule::in([
+                'Contado',
+                'Crédito 7 días',
+                'Crédito 15 días',
+                'Crédito 30 días',
+            ])],
             'referencia' => ['nullable', 'string', 'max:150'],
             'observaciones' => ['nullable', 'string'],
 
@@ -33,6 +39,13 @@ class StoreQuoteRequest extends FormRequest
             'items.*.precio_unitario' => ['required', 'numeric', 'gt:0'],
             'items.*.descuento' => ['nullable', 'numeric', 'min:0'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('condicion_pago_propuesta')) {
+            $this->merge(['condicion_pago_propuesta' => 'Contado']);
+        }
     }
 
     protected function withValidator($validator): void
@@ -52,6 +65,7 @@ class StoreQuoteRequest extends FormRequest
     {
         return [
             'items.*.precio_unitario.gt' => 'El precio debe ser mayor a cero.',
+            'condicion_pago_propuesta.in' => 'Elige una condición de pago válida.',
         ];
     }
 }

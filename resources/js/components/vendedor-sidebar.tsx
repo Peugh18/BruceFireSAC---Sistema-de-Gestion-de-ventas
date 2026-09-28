@@ -1,8 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     Award,
+    BellRing,
     ClipboardList,
-    CreditCard,
     LayoutDashboard,
     ReceiptText,
     ShoppingCart,
@@ -14,10 +14,10 @@ import {
 } from 'lucide-react';
 
 import { dashboard } from '@/routes/vendedor';
+import alertas from '@/routes/vendedor/alertas';
 import caja from '@/routes/vendedor/caja';
 import certificados from '@/routes/vendedor/certificados';
 import clientes from '@/routes/vendedor/clientes';
-import cobranzas from '@/routes/vendedor/cobranzas';
 import cotizaciones from '@/routes/vendedor/cotizaciones';
 import facturacion from '@/routes/vendedor/facturacion';
 import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
@@ -85,6 +85,11 @@ function buildNavGroups(
                     icon: UsersRound,
                 },
                 {
+                    title: 'Por vencer',
+                    href: alertas.index.url(teamSlug),
+                    icon: BellRing,
+                },
+                {
                     title: 'Cotizaciones',
                     href: cotizaciones.index.url(teamSlug),
                     icon: ClipboardList,
@@ -96,12 +101,7 @@ function buildNavGroups(
                     icon: ShoppingCart,
                 },
                 {
-                    title: 'Cobranzas',
-                    href: cobranzas.index.url(teamSlug),
-                    icon: CreditCard,
-                },
-                {
-                    title: 'Caja',
+                    title: 'Caja y cobranzas',
                     href: caja.index.url(teamSlug),
                     icon: Wallet,
                 },

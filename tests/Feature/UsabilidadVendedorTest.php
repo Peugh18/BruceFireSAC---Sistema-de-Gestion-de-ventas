@@ -9,6 +9,15 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
+/**
+ * Código de una pantalla con los espacios y saltos de línea juntados, para que
+ * las pruebas no dependan de cómo el formateador parte las líneas.
+ */
+function codigoDePantalla(string $ruta): string
+{
+    return (string) preg_replace('/\s+/', ' ', (string) file_get_contents(resource_path($ruta)));
+}
+
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
@@ -123,3 +132,56 @@ test('el listado de facturacion incluye sale_id y sunat_mensaje para enlace a ve
             )
         );
 });
+
+test('el formulario de venta explica los bloqueos de emision y las unidades cotizadas faltantes', function () {
+    $source = codigoDePantalla('js/pages/vendedor/ventas/nueva.tsx');
+
+    expect($source)
+        ->toContain('Define al menos una cuota antes de emitir.')
+        ->toContain('Ajusta las cuotas: su suma debe coincidir con el total.')
+        ->toContain('por escanear de ${unidadFaltante.nombre}.')
+        ->toContain('disabled={form.processing}');
+});
+
+test('la cotizacion presenta la condicion de pago solo como opciones cerradas', function () {
+    $source = codigoDePantalla('js/pages/vendedor/cotizaciones/nueva.tsx');
+
+    expect($source)
+        ->toContain("'Crédito 7 días'")
+        ->toContain("'Crédito 15 días'")
+        ->toContain("'Crédito 30 días'")
+        ->not->toContain("form.setData( 'condicion_pago_propuesta', e.target.value");
+});
+
+test('los formularios operativos muestran una razon visible en lugar de bloquear acciones en silencio', function (string $archivo, string $mensaje) {
+    $source = codigoDePantalla($archivo);
+
+    expect($source)
+        ->toContain('role="alert"')
+        ->toContain($mensaje);
+})->with([
+    'entrega de tecnico campo' => [
+        'js/pages/tecnico-campo/entregas/show.tsx',
+        'Marca la conformidad del receptor antes de confirmar la entrega.',
+    ],
+    'instalacion de tecnico campo' => [
+        'js/pages/tecnico-campo/instalaciones/show.tsx',
+        'Marca la conformidad del cliente antes de finalizar la instalación.',
+    ],
+    'recojo de tecnico campo' => [
+        'js/pages/tecnico-campo/recojos/show.tsx',
+        'Marca la conformidad del cliente antes de registrar el recojo.',
+    ],
+]);
+
+test('los formularios de almacen planta y gerencia muestran errores anidados o no ubicados', function (string $archivo) {
+    $source = codigoDePantalla($archivo);
+
+    expect($source)
+        ->toContain('Object.values(')
+        ->toContain('role="alert"');
+})->with([
+    'recepcion de almacen' => ['js/pages/almacen/recepciones/create.tsx'],
+    'checklist de tecnico planta' => ['js/pages/tecnico-planta/checklist/create.tsx'],
+    'productos de gerente' => ['js/pages/gerente/productos/index.tsx'],
+]);

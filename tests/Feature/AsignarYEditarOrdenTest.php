@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Models\Sede;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -14,6 +15,7 @@ beforeEach(function () {
     $this->tienda = Sede::factory()->tienda()->create(['almacen_id' => $this->almacen->id]);
     $this->otraSede = Sede::factory()->mixta()->create();
 
+    $this->servicio = Service::factory()->create(['nombre' => 'Recarga y mantenimiento']);
     $this->vendedor = User::factory()->create(['sede_id' => $this->tienda->id]);
     $this->vendedor->assignRole('Vendedor');
     $this->tecnico = User::factory()->create(['sede_id' => $this->almacen->id, 'name' => 'Técnico del almacén']);
@@ -80,6 +82,7 @@ test('el tecnico toma la orden libre y queda en la bitacora', function () {
 test('la vendedora edita fecha, prioridad, tecnico e indicaciones y el tecnico lo ve en la bitacora', function () {
     $this->actingAs($this->vendedor)
         ->put(rutaDeOrden($this->vendedor, 'vendedor.ordenes-servicio.update', $this->orden), [
+            'service_id' => $this->servicio->id,
             'fecha' => '2026-10-05',
             'prioridad' => 'urgente',
             'departamento_tecnico' => 'planta',
@@ -98,7 +101,7 @@ test('la vendedora edita fecha, prioridad, tecnico e indicaciones y el tecnico l
 });
 
 test('ya recibida no cambia de area y entregada no se edita', function () {
-    $datos = ['fecha' => '2026-10-05', 'prioridad' => 'normal', 'departamento_tecnico' => 'campo', 'observaciones' => null];
+    $datos = ['service_id' => $this->servicio->id, 'fecha' => '2026-10-05', 'prioridad' => 'normal', 'departamento_tecnico' => 'campo', 'observaciones' => null];
 
     $this->orden->update(['estado' => 'en_proceso']);
     $this->actingAs($this->vendedor)

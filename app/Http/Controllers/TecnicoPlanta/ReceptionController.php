@@ -226,7 +226,7 @@ class ReceptionController extends Controller
             'observaciones_recepcion' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $equipment = $action->execute($service_order, $validated, $request->user());
+        $equipment = $action->execute($service_order, [...$validated, 'recibido' => true], $request->user());
 
         return back()->with('success', sprintf('Equipo %s registrado/vinculado exitosamente.', $equipment->numero_serie));
     }
@@ -240,10 +240,6 @@ class ReceptionController extends Controller
         StickerPdfService $stickerPdfService
     ): HttpResponse {
         $equipments = $service_order->equipments()->get();
-
-        if ($equipments->isEmpty() && $service_order->equipment) {
-            $equipments = collect([$service_order->equipment]);
-        }
 
         $pdf = $stickerPdfService->generateForEquipments($equipments, $service_order);
 

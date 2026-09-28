@@ -23,15 +23,16 @@ class StoreSaleRequest extends FormRequest
             'sede_id' => ['nullable', 'integer', 'exists:sedes,id'],
             'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'quote_id' => ['nullable', 'integer', 'exists:quotes,id'],
+            'service_order_id' => ['nullable', 'integer', 'exists:service_orders,id'],
             'fecha' => ['required', 'date'],
             'destino' => ['required', Rule::in(['local_cliente', 'vehiculo'])],
             'condicion_pago' => ['required', Rule::in(['contado', 'credito'])],
             'medio_pago' => ['required_if:condicion_pago,contado', 'nullable', Rule::in(array_keys(Sale::MEDIOS_PAGO))],
             'numero_operacion' => ['nullable', 'string', 'max:60'],
             'emitir' => ['sometimes', 'boolean'],
-            'cuotas' => ['required_if:condicion_pago,credito', 'array', 'min:1', 'max:36'],
-            'cuotas.*.fecha_vencimiento' => ['required', 'date', 'after:fecha'],
-            'cuotas.*.monto' => ['required', 'numeric', 'min:0.01'],
+            'cuotas' => ['exclude_unless:condicion_pago,credito', 'required', 'array', 'min:1', 'max:36'],
+            'cuotas.*.fecha_vencimiento' => ['exclude_unless:condicion_pago,credito', 'required', 'date', 'after:fecha'],
+            'cuotas.*.monto' => ['exclude_unless:condicion_pago,credito', 'required', 'numeric', 'min:0.01'],
             'referencia' => ['nullable', 'string', 'max:150'],
             'comprobante_tipo' => ['required', Rule::in(['factura', 'boleta', 'nota_venta'])],
             'observaciones' => ['nullable', 'string'],
@@ -81,6 +82,8 @@ class StoreSaleRequest extends FormRequest
         return [
             'items.*.precio_unitario.gt' => 'El precio debe ser mayor a cero.',
             'medio_pago.required_if' => 'Elige cómo paga el cliente (efectivo, Yape, transferencia…).',
+            'cuotas.required' => 'Define al menos una cuota para la venta a crédito.',
+            'cuotas.min' => 'Define al menos una cuota para la venta a crédito.',
         ];
     }
 }

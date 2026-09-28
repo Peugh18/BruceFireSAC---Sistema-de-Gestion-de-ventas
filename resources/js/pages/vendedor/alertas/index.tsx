@@ -1,8 +1,8 @@
 ﻿import { Head, Link, usePage } from '@inertiajs/react';
 import { CheckCircle2, FilePlus2, MessageSquare, Search } from 'lucide-react';
 import { useState } from 'react';
+import { router } from '@inertiajs/react';
 
-import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
@@ -256,15 +256,27 @@ export default function AlertasIndex({ alerts }: Props) {
                                             </Link>
                                         )}
 
-                                        <Link
-                                            href={QuoteController.index.url(
-                                                teamSlug,
-                                            )}
+                                        <button
+                                            type="button"
+                                            disabled={!item.equipment_id}
+                                            onClick={() =>
+                                                item.equipment_id &&
+                                                router.post(
+                                                    `/${teamSlug}/vendedor/alertas/ofrecer-recarga`,
+                                                    {
+                                                        client_id:
+                                                            item.client_id,
+                                                        equipment_ids: [
+                                                            item.equipment_id,
+                                                        ],
+                                                    },
+                                                )
+                                            }
                                             className="bg-primary hover:bg-primary/90 inline-flex h-9 items-center gap-1.5 rounded-[9px] px-3.5 text-[12px] font-bold text-white shadow-none transition-colors"
                                         >
                                             <FilePlus2 className="size-3.5" />
-                                            <span>Crear cotización</span>
-                                        </Link>
+                                            <span>Ofrecer recarga</span>
+                                        </button>
                                     </div>
                                 </div>
                             );

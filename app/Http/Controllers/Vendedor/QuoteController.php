@@ -53,11 +53,11 @@ class QuoteController extends Controller
             'quotes' => $quotes,
             'filters' => ['estado' => $estado],
             'kpis' => [
-                'activas' => $porSede(Quote::query())->whereIn('estado', ['borrador', 'emitida', 'enviada'])->count(),
+                'activas' => $porSede(Quote::query())->whereIn('estado', ['borrador', 'emitida', 'enviada', 'aceptada'])->count(),
                 'por_vencer' => $porSede(Quote::query())->where('estado', 'enviada')
                     ->whereBetween('vigencia_hasta', [now(), now()->addDays(7)])
                     ->count(),
-                'aceptadas_este_mes' => $porSede(Quote::query())->where('estado', 'aceptada')
+                'aceptadas_este_mes' => $porSede(Quote::query())->whereIn('estado', ['aceptada', 'convertida'])
                     ->whereBetween('updated_at', [now()->startOfMonth(), now()->endOfMonth()])
                     ->count(),
                 'vencidas' => $porSede(Quote::query())->where('estado', 'vencida')->count(),

@@ -6,6 +6,7 @@ use App\Http\Controllers\Almacen\ReceptionStickerController;
 use App\Http\Controllers\Almacen\StockAdjustmentController;
 use App\Http\Controllers\Almacen\StockController;
 use App\Http\Controllers\Almacen\StockLookupController;
+use App\Http\Controllers\Almacen\TransferController;
 use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
 
@@ -14,10 +15,12 @@ use Illuminate\Support\Facades\Route;
 // rol "Almacen" (spatie/laravel-permission).
 Route::prefix('almacen')
     ->name('almacen.')
-    ->middleware(['role:Almacen', EnsureTieneSede::class])
+    ->middleware(['role:Almacen|Gerente', EnsureTieneSede::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('stock', [StockController::class, 'index'])->name('stock.index');
+        Route::get('traslados', [TransferController::class, 'index'])->name('traslados.index');
+        Route::post('traslados', [TransferController::class, 'store'])->name('traslados.store');
 
         // Recepciones de proveedor (§84.8)
         Route::get('recepciones', [ReceptionController::class, 'index'])->name('recepciones.index');

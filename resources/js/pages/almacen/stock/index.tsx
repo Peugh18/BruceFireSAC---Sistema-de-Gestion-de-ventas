@@ -9,7 +9,6 @@ import {
     ScanBarcode,
     Search,
     TrendingDown,
-    Wrench,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
@@ -28,7 +27,7 @@ export type SedeInfo = {
 
 export type StockItem = {
     id: number;
-    tipo: 'producto' | 'servicio';
+    tipo: 'producto';
     codigo: string;
     nombre: string;
     unidad_medida: string;
@@ -97,7 +96,6 @@ export type StockPageProps = {
     product_list: Array<{ id: number; codigo: string; nombre: string }>;
     kpis: {
         total_productos: number;
-        total_servicios: number;
         unidades_en_stock: number;
         bajo_minimo: number;
     };
@@ -122,19 +120,10 @@ function formatDate(isoString: string | null): string {
     });
 }
 
-function getTipoBadge(tipo: 'producto' | 'servicio') {
-    if (tipo === 'producto') {
-        return (
-            <span className="inline-flex items-center gap-1 rounded-[6px] border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10.5px] font-bold text-blue-600 dark:text-blue-400">
-                <Package className="size-3" />
-                Producto
-            </span>
-        );
-    }
+function getTipoBadge() {
     return (
-        <span className="inline-flex items-center gap-1 rounded-[6px] border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[10.5px] font-bold text-purple-600 dark:text-purple-400">
-            <Wrench className="size-3" />
-            Servicio
+        <span className="inline-flex items-center gap-1 rounded-[6px] border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10.5px] font-bold text-blue-600 dark:text-blue-400">
+            <Package className="size-3" /> Producto
         </span>
     );
 }
@@ -293,7 +282,7 @@ export default function StockIndex({
 
             <div className="flex flex-col gap-6">
                 {/* 4 KPI Cards */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-3">
                     <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                         <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
@@ -306,21 +295,6 @@ export default function StockIndex({
                         </div>
                         <div className="text-muted-foreground mt-1 text-[11.5px]">
                             Productos físicos y repuestos
-                        </div>
-                    </Card>
-
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
-                        <div className="text-muted-foreground flex items-center justify-between">
-                            <span className="text-xs font-bold tracking-wider uppercase">
-                                Servicios en catálogo
-                            </span>
-                            <Wrench className="size-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div className="text-foreground mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
-                            {kpis.total_servicios}
-                        </div>
-                        <div className="text-muted-foreground mt-1 text-[11.5px]">
-                            Recargas, pruebas y mantenimientos
                         </div>
                     </Card>
 
@@ -434,9 +408,6 @@ export default function StockIndex({
                                     <option value="producto">
                                         Solo Productos
                                     </option>
-                                    <option value="servicio">
-                                        Solo Servicios
-                                    </option>
                                 </select>
                             </div>
 
@@ -470,8 +441,8 @@ export default function StockIndex({
                             <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
                                 <Package className="text-muted-foreground size-10" />
                                 <p className="text-muted-foreground mt-2 text-sm font-medium">
-                                    No se encontraron productos ni servicios con
-                                    los filtros indicados.
+                                    No se encontraron productos con los filtros
+                                    indicados.
                                 </p>
                             </div>
                         ) : (
@@ -546,9 +517,7 @@ export default function StockIndex({
                                                         )}
                                                     </td>
                                                     <td className="px-3 py-3">
-                                                        {getTipoBadge(
-                                                            item.tipo,
-                                                        )}
+                                                        {getTipoBadge()}
                                                     </td>
                                                     <td className="text-muted-foreground px-3 py-3 text-center font-mono">
                                                         {item.unidad_medida}
@@ -570,65 +539,47 @@ export default function StockIndex({
                                                                 key={sede.id}
                                                                 className="px-3 py-3 text-center"
                                                             >
-                                                                {item.tipo ===
-                                                                'servicio' ? (
-                                                                    <span className="text-muted-foreground font-mono text-[11px]">
-                                                                        N/A
-                                                                    </span>
-                                                                ) : (
-                                                                    <span
-                                                                        className={[
-                                                                            'font-mono font-bold text-[12px]',
-                                                                            qty &&
-                                                                            qty >
-                                                                                0
-                                                                                ? 'text-foreground'
-                                                                                : 'text-muted-foreground',
-                                                                        ].join(
-                                                                            ' ',
-                                                                        )}
-                                                                    >
-                                                                        {qty ??
-                                                                            0}
-                                                                    </span>
-                                                                )}
+                                                                <span
+                                                                    className={[
+                                                                        'font-mono font-bold text-[12px]',
+                                                                        qty &&
+                                                                        qty > 0
+                                                                            ? 'text-foreground'
+                                                                            : 'text-muted-foreground',
+                                                                    ].join(' ')}
+                                                                >
+                                                                    {qty ?? 0}
+                                                                </span>
                                                             </td>
                                                         );
                                                     })}
 
                                                     {/* Stock Total */}
                                                     <td className="py-3 pl-4 text-center">
-                                                        {item.tipo ===
-                                                        'servicio' ? (
-                                                            <span className="text-muted-foreground font-mono text-[11px]">
-                                                                N/A
+                                                        <div className="flex flex-col items-center">
+                                                            <span
+                                                                className={[
+                                                                    'inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[12px] font-bold',
+                                                                    isBajoMinimo
+                                                                        ? 'bg-destructive/10 text-primary border border-destructive/20'
+                                                                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border border-emerald-500/20',
+                                                                ].join(' ')}
+                                                            >
+                                                                {item.stock_disponible_total ??
+                                                                    0}
                                                             </span>
-                                                        ) : (
-                                                            <div className="flex flex-col items-center">
-                                                                <span
-                                                                    className={[
-                                                                        'inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[12px] font-bold',
-                                                                        isBajoMinimo
-                                                                            ? 'bg-destructive/10 text-primary border border-destructive/20'
-                                                                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border border-emerald-500/20',
-                                                                    ].join(' ')}
-                                                                >
-                                                                    {item.stock_disponible_total ??
-                                                                        0}
-                                                                </span>
-                                                                {item.stock_minimo !==
-                                                                    null &&
-                                                                    item.stock_minimo >
-                                                                        0 && (
-                                                                        <span className="text-muted-foreground mt-0.5 text-[10px]">
-                                                                            Mín:{' '}
-                                                                            {
-                                                                                item.stock_minimo
-                                                                            }
-                                                                        </span>
-                                                                    )}
-                                                            </div>
-                                                        )}
+                                                            {item.stock_minimo !==
+                                                                null &&
+                                                                item.stock_minimo >
+                                                                    0 && (
+                                                                    <span className="text-muted-foreground mt-0.5 text-[10px]">
+                                                                        Mín:{' '}
+                                                                        {
+                                                                            item.stock_minimo
+                                                                        }
+                                                                    </span>
+                                                                )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             );

@@ -118,7 +118,7 @@ class DeficiencyController extends Controller
         ]);
 
         $requiereAuth = (bool) ($validated['requiere_autorizacion'] ?? false);
-        $equipmentId = $validated['equipment_id'] ?? $service_order->equipment_id;
+        $equipmentId = $validated['equipment_id'] ?? $service_order->equipments()->value('equipment.id');
 
         $deficiency = Deficiency::create([
             'service_order_id' => $service_order->id,

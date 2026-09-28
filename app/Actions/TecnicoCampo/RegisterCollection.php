@@ -34,7 +34,10 @@ class RegisterCollection
         }
 
         return DB::transaction(function () use ($serviceOrder, $user, $data) {
-            $cantidad = (int) ($data['cantidad'] ?? 1);
+            $cantidad = $serviceOrder->equipments()->count();
+            if ($cantidad === 0) {
+                throw new InvalidArgumentException('Registra al menos un extintor antes de confirmar el recojo.');
+            }
             $contactoNombre = trim((string) ($data['contacto_nombre'] ?? ''));
             $contactoTelefono = $data['contacto_telefono'] ?? null;
             $observaciones = $data['observaciones'] ?? null;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Vendedor;
 
+use App\Actions\Equipment\RenewEquipmentAttentionDate;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\Team;
@@ -22,10 +23,11 @@ class CounterDeliveryController extends Controller
         return Inertia::render('vendedor/ordenes-servicio/entrega-mostrador', [
             'order' => $service_order,
             'delivery' => $this->deliveryEvent($service_order)?->payload,
+            'isPaid' => $service_order->sale_id !== null,
         ]);
     }
 
-    public function store(Team $current_team, ServiceOrder $service_order, Request $request): RedirectResponse
+    public function store(Team $current_team, ServiceOrder $service_order, Request $request, RenewEquipmentAttentionDate $renew): RedirectResponse
     {
         $this->assertAccess($service_order, $request);
         abort_unless(in_array($service_order->estado, ['listo_entrega', 'entregado'], true), 422, 'La orden todavía no está lista para entregar.');
@@ -47,6 +49,7 @@ class CounterDeliveryController extends Controller
             ],
         ]);
         $service_order->update(['estado' => 'cerrado']);
+        $renew->execute($service_order->equipments()->get());
 
         return back()->with('success', 'Entrega conforme registrada. Ya puedes descargar el acta.');
     }

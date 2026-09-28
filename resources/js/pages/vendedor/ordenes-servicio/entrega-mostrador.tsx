@@ -20,12 +20,14 @@ type Props = {
     order: Order;
     delivery: Record<string, unknown> | null;
     currentTeam: Team;
+    isPaid: boolean;
 };
 
 export default function CounterDelivery({
     order,
     delivery,
     currentTeam,
+    isPaid,
 }: Props) {
     const showUrl = `/${currentTeam.slug}/vendedor/ordenes-servicio/${order.id}`;
 
@@ -45,6 +47,16 @@ export default function CounterDelivery({
                         {order.codigo} · {order.client.razon_social}
                     </p>
                 </div>
+
+                {!isPaid && (
+                    <div
+                        role="alert"
+                        className="rounded-xl border border-amber-400 bg-amber-50 p-4 text-sm font-semibold text-amber-900"
+                    >
+                        Esta orden todavía no está cobrada. Puedes entregarla,
+                        pero registra el cobro pendiente.
+                    </div>
+                )}
 
                 <Card className="p-5">
                     {delivery ? (

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Gerente;
 
+use App\Actions\Usuarios\CrearTrabajador;
 use App\Actions\Usuarios\ValidarSedeDelRol;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Gerente\StoreUserRequest;
 use App\Http\Requests\Gerente\UpdateUserRoleRequest;
 use App\Http\Requests\Gerente\UpdateUserSedeRequest;
 use App\Models\Sede;
@@ -50,6 +52,27 @@ class UserController extends Controller
             'tiposDeSedePorRol' => User::TIPOS_DE_SEDE_POR_ROL,
             'matrizPermisos' => $matrizPermisos,
         ]);
+    }
+
+    /**
+     * Da de alta a un trabajador nuevo con su rol, su sede y una contraseña
+     * inicial que el Gerente le entrega (luego la cambia en su perfil).
+     */
+    public function store(StoreUserRequest $request, Team $current_team, CrearTrabajador $crearTrabajador): RedirectResponse
+    {
+        $user = $crearTrabajador->handle(
+            $current_team,
+            $request->string('name')->toString(),
+            $request->string('email')->toString(),
+            $request->string('role')->toString(),
+            $request->filled('sede_id') ? $request->integer('sede_id') : null,
+            $request->string('password')->toString(),
+            $request->user()->id,
+        );
+
+        return redirect()
+            ->route('gerente.usuarios.index', ['current_team' => $current_team])
+            ->with('success', "{$user->name} ya puede entrar con {$user->email}.");
     }
 
     /**
