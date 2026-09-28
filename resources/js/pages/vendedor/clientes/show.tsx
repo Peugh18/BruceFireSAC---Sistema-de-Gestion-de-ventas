@@ -32,6 +32,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    RecompraBadge,
+    RecompraRazones,
+    type Recompra,
+} from '@/components/recompra-badge';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import clientes from '@/routes/vendedor/clientes';
@@ -202,6 +207,7 @@ export type Props = {
     cobranzas?: CobranzasData;
     historial?: HistorialItem[];
     sunat?: SunatData;
+    recompra?: Recompra | null;
 };
 
 export type TabKey =
@@ -319,6 +325,7 @@ export default function ClienteShow({
     cobranzas = { cuotas: [], pagos: [] },
     historial = [],
     sunat,
+    recompra = null,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
@@ -761,6 +768,18 @@ export default function ClienteShow({
                         </div>
                     </div>
                 </Card>
+
+                {recompra && (
+                    <Card className="border-border bg-card rounded-[16px] p-4 shadow-none">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-foreground/80 text-[11px] font-bold uppercase">
+                                Probabilidad de volver a comprar (6 meses)
+                            </span>
+                            <RecompraBadge recompra={recompra} />
+                        </div>
+                        <RecompraRazones recompra={recompra} />
+                    </Card>
+                )}
 
                 {/* ================= BARRA DE PESTAÑAS (6 PESTAÑAS) ================= */}
                 <div className="border-border flex gap-1.5 overflow-x-auto border-b pb-1">

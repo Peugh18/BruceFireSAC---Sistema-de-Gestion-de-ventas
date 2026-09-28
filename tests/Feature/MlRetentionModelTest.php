@@ -248,6 +248,7 @@ test('las variables del cliente juntan el historico del sistema anterior con sus
         'antiguedad_dias' => 254,
         'diversidad_productos' => 2,
         'compro_recarga' => 1,
+        'compras_90d' => 1,
     ]);
 });
 
@@ -264,8 +265,51 @@ test('el dataset de entrenamiento marca quien volvio a comprar despues de cada c
 
     $filas = collect(array_map(fn (string $linea) => str_getcsv($linea, escape: ''), file($path, FILE_IGNORE_NEW_LINES)))->slice(1)->keyBy(0);
     expect($filas)->toHaveCount(2)
-        ->and($filas['20111111111'][9])->toBe('1')
-        ->and($filas['44556677'][9])->toBe('0');
+        ->and($filas['20111111111'][10])->toBe('1')
+        ->and($filas['44556677'][10])->toBe('0');
 
     File::delete($path);
+});
+
+test('el calculo diario arma la lista de clientes del historico para recuperar y Por vencer la muestra', function () {
+    $registrado = Client::factory()->create(['numero_documento' => '20555555555']);
+    MlVentaHistorica::query()->insert([
+        ['fecha' => now()->subMonths(2)->toDateString(), 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20444444444', 'nombre_cliente' => 'POR RECUPERAR SAC', 'categoria' => 'recarga_mantenimiento', 'producto_original' => 'RECARGA', 'cantidad' => 1, 'total' => 55, 'archivo_origen' => 'a'],
+        ['fecha' => now()->subMonths(2)->toDateString(), 'tipo_doc' => 'F', 'comprobante' => 'F001-2', 'documento_cliente' => '20555555555', 'nombre_cliente' => 'YA REGISTRADO SAC', 'categoria' => 'extintor', 'producto_original' => 'EXTINTOR', 'cantidad' => 1, 'total' => 70, 'archivo_origen' => 'a'],
+    ]);
+
+    $this->artisan('ml:score-clients')->assertSuccessful();
+
+    $vendedor = User::factory()->create();
+    $vendedor->assignRole('Vendedor');
+
+    $this->actingAs($vendedor)
+        ->get(route('vendedor.alertas.index', ['current_team' => $vendedor->currentTeam]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('vendedor/alertas/index')
+            ->has('paraRecuperar', 1)
+            ->where('paraRecuperar.0.documento', '20444444444')
+            ->where('paraRecuperar.0.nombre', 'POR RECUPERAR SAC')
+            ->has('paraRecuperar.0.porcentaje')
+            ->has('paraRecuperar.0.razones')
+        );
+
+    expect(ClientRetentionScore::query()->where('client_id', $registrado->id)->exists())->toBeTrue();
+});
+
+test('la ficha del cliente muestra su probabilidad de volver a comprar con sus razones', function () {
+    $vendedor = User::factory()->create();
+    $vendedor->assignRole('Vendedor');
+    $client = Client::factory()->create();
+    Sale::factory()->create(['client_id' => $client->id, 'fecha' => now()->subDays(10), 'total' => 300, 'estado' => 'confirmada']);
+
+    $this->actingAs($vendedor)
+        ->get(route('vendedor.clientes.show', ['current_team' => $vendedor->currentTeam, 'client' => $client]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('recompra.porcentaje', fn (int $porcentaje) => $porcentaje >= 1 && $porcentaje <= 99)
+            ->where('recompra.categoria', fn (string $categoria) => in_array($categoria, ['alta', 'media', 'baja'], true))
+            ->has('recompra.razones')
+        );
 });

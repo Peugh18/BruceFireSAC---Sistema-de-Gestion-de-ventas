@@ -13,6 +13,7 @@ use App\Models\ClientSite;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\Team;
+use App\Services\Ml\RetentionModel;
 use App\Services\Sunat\RucLookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -205,8 +206,28 @@ class ClientController extends Controller
             'historial' => AuditLog::query()->with('user:id,name')->where(function ($query) use ($client, $sales, $quotes) {
                 $query->where(fn ($query) => $query->where('auditable_type', Client::class)->where('auditable_id', $client->id))->orWhere(fn ($query) => $query->where('auditable_type', Sale::class)->whereIn('auditable_id', $sales->pluck('id')))->orWhere(fn ($query) => $query->where('auditable_type', Quote::class)->whereIn('auditable_id', $quotes->pluck('id')));
             })->latest('created_at')->limit(50)->get()->map(fn ($log) => ['fecha' => $log->created_at?->toIso8601String(), 'texto' => $this->textoDeHistorial($log), 'usuario' => $log->user?->name]),
+            'recompra' => $this->recompra($client),
             'sunat' => ['verificado' => $client->consultado_at !== null, 'estado' => $client->estado_contribuyente, 'condicion' => $client->condicion_domicilio, 'consultado_at' => $client->consultado_at?->toIso8601String()],
         ]);
+    }
+
+    /**
+     * Probabilidad de que el cliente vuelva a comprar en 6 meses, calculada
+     * al momento con su historial (sistema anterior + ventas nuevas).
+     *
+     * @return array{porcentaje: int, categoria: string, razones: list<array{texto: string, a_favor: bool}>}|null
+     */
+    protected function recompra(Client $client): ?array
+    {
+        $modelo = app(RetentionModel::class);
+
+        if (! $modelo->isAvailable()) {
+            return null;
+        }
+
+        $resultado = $modelo->predictForClient($client);
+
+        return $resultado ? RetentionModel::paraPantalla($resultado) : null;
     }
 
     public function verifySunat(Team $current_team, Client $client, RucLookupService $lookupService): RedirectResponse

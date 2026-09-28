@@ -87,7 +87,7 @@ class HistorialCompras
      * ese día): así el corte del entrenamiento no ve el futuro.
      *
      * @param  Collection<int, array{fecha: Carbon, total: float, recarga: bool, items: list<string>}>  $compras
-     * @return array{recencia_dias: int, frecuencia_compras: int, monto_total: float, ticket_promedio: float, antiguedad_dias: int, diversidad_productos: int, compro_recarga: int}|null
+     * @return array{recencia_dias: int, frecuencia_compras: int, monto_total: float, ticket_promedio: float, antiguedad_dias: int, diversidad_productos: int, compro_recarga: int, compras_90d: int}|null
      */
     public function variables(Collection $compras, Carbon $antesDe): ?array
     {
@@ -108,6 +108,7 @@ class HistorialCompras
             'antiguedad_dias' => (int) $previas->first()['fecha']->diffInDays($antesDe),
             'diversidad_productos' => max(1, $previas->flatMap(fn (array $compra) => $compra['items'])->unique()->count()),
             'compro_recarga' => $previas->contains(fn (array $compra) => $compra['recarga']) ? 1 : 0,
+            'compras_90d' => $previas->filter(fn (array $compra) => $compra['fecha']->gte($antesDe->copy()->subDays(90)))->count(),
         ];
     }
 

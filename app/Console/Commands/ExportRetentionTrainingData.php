@@ -40,7 +40,7 @@ class ExportRetentionTrainingData extends Command
             return self::FAILURE;
         }
 
-        fputcsv($file, ['documento', 'corte', 'recencia_dias', 'frecuencia_compras', 'monto_total', 'ticket_promedio', 'antiguedad_dias', 'diversidad_productos', 'compro_recarga', 'target']);
+        fputcsv($file, ['documento', 'corte', 'recencia_dias', 'frecuencia_compras', 'monto_total', 'ticket_promedio', 'antiguedad_dias', 'diversidad_productos', 'compro_recarga', 'compras_90d', 'target']);
 
         $resumen = [];
         foreach ($cortes as $corte) {

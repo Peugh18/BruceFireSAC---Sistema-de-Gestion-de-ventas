@@ -224,24 +224,28 @@ class RetentionModel
                 'detalle' => sprintf('%d compras registradas', (int) $value),
             ],
             'monto_total' => [
-                'titulo' => $isPositive ? 'Alto volumen de facturación' : 'Volumen facturado menor',
+                'titulo' => 'Monto comprado',
                 'detalle' => sprintf('S/ %s acumulados', number_format($value, 2)),
             ],
             'ticket_promedio' => [
-                'titulo' => $isPositive ? 'Ticket promedio elevado' : 'Ticket promedio bajo',
+                'titulo' => 'Ticket promedio',
                 'detalle' => sprintf('S/ %s por pedido', number_format($value, 2)),
             ],
             'antiguedad_dias' => [
-                'titulo' => $isPositive ? 'Cliente fidelizado (antiguo)' : 'Cliente de primer ciclo',
+                'titulo' => 'Tiempo como cliente',
                 'detalle' => sprintf('%d días de relación comercial', (int) $value),
             ],
             'diversidad_productos' => [
-                'titulo' => $isPositive ? 'Catálogo diversificado' : 'Compra concentrada en un ítem',
+                'titulo' => 'Variedad de productos',
                 'detalle' => sprintf('%d productos/servicios distintos', (int) $value),
             ],
             'compro_recarga' => [
                 'titulo' => $value > 0 ? 'Contrató servicio de recargas' : 'Sin servicio de recarga previo',
                 'detalle' => $value > 0 ? 'Mantiene extintores con ciclo de mantenimiento' : 'No ha contratado recargas aún',
+            ],
+            'compras_90d' => [
+                'titulo' => $value > 0 ? 'Compró en los últimos 3 meses' : 'Sin compras en los últimos 3 meses',
+                'detalle' => sprintf('%d compra(s) en los últimos 90 días', (int) $value),
             ],
             default => [
                 'titulo' => ucfirst(str_replace('_', ' ', $feature)),
@@ -260,7 +264,8 @@ class RetentionModel
      *     ticket_promedio: float,
      *     antiguedad_dias: int,
      *     diversidad_productos: int,
-     *     compro_recarga: int
+     *     compro_recarga: int,
+     *     compras_90d: int
      * }|null
      */
     public function extractFeaturesForClient(int $clientId, ?Carbon $asOf = null): ?array
@@ -309,6 +314,30 @@ class RetentionModel
             'categoria' => $categoria,
             'features' => $features,
             'factores' => $factores,
+        ];
+    }
+
+    /**
+     * Resumen para mostrar en pantalla: porcentaje, categoría y las razones
+     * que más pesaron (a favor primero).
+     *
+     * @param  array{probabilidad: float, categoria: string, factores?: array<string, mixed>|null}  $resultado
+     * @return array{porcentaje: int, categoria: string, razones: list<array{texto: string, a_favor: bool}>}
+     */
+    public static function paraPantalla(array $resultado): array
+    {
+        $razones = [];
+        foreach (['positivos' => true, 'negativos' => false] as $grupo => $aFavor) {
+            foreach ($resultado['factores'][$grupo] ?? [] as $factor) {
+                $razones[] = ['texto' => "{$factor['factor']}: {$factor['detalle']}", 'a_favor' => $aFavor];
+            }
+        }
+
+        return [
+            // Un modelo nunca está 100 % seguro: se muestra entre 1 y 99 %.
+            'porcentaje' => max(1, min(99, (int) round($resultado['probabilidad'] * 100))),
+            'categoria' => $resultado['categoria'],
+            'razones' => $razones,
         ];
     }
 

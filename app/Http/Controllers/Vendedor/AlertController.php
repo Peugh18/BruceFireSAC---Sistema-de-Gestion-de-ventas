@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Cotizaciones\CreateQuote;
+use App\Console\Commands\ScoreClients;
 use App\Http\Controllers\Controller;
+use App\Models\Client;
+use App\Models\ClientRetentionScore;
 use App\Models\Equipment;
 use App\Models\Service;
 use App\Models\Team;
+use App\Services\Ml\RetentionModel;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,12 +68,27 @@ class AlertController extends Controller
             ->take(100)
             ->values();
 
+        $scores = ClientRetentionScore::query()->whereIn('client_id', $rows->pluck('client_id')->unique())->get()->keyBy('client_id');
+        $conRecompra = fn (Collection $lista) => $lista->map(fn (array $row) => [
+            ...$row,
+            'recompra' => ($score = $scores->get($row['client_id']))
+                ? RetentionModel::paraPantalla(['probabilidad' => $score->probabilidad, 'categoria' => $score->categoria, 'factores' => $score->factores_json])
+                : null,
+        ])->values();
+
+        // Los que se registraron después del último cálculo ya no se ofrecen.
+        $registrados = Client::query()->pluck('numero_documento')->flip();
+        $paraRecuperar = collect(ScoreClients::clientesParaRecuperarGuardados())
+            ->reject(fn (array $cliente) => $registrados->has($cliente['documento']))
+            ->values();
+
         return Inertia::render('vendedor/alertas/index', [
             'alerts' => [
-                'vencidas' => $porSegmento('vencidas'),
-                'esta_semana' => $porSegmento('esta_semana'),
-                'este_mes' => $porSegmento('este_mes'),
+                'vencidas' => $conRecompra($porSegmento('vencidas')),
+                'esta_semana' => $conRecompra($porSegmento('esta_semana')),
+                'este_mes' => $conRecompra($porSegmento('este_mes')),
             ],
+            'paraRecuperar' => $paraRecuperar,
         ]);
     }
 

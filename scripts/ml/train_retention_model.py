@@ -37,6 +37,7 @@ FEATURE_COLUMNS = [
     'antiguedad_dias',
     'diversidad_productos',
     'compro_recarga',
+    'compras_90d',
 ]
 TARGET_COLUMN = 'target'
 MEJORA_MINIMA_AUC = 0.01
