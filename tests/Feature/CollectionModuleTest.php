@@ -76,7 +76,7 @@ test('registerPayment marca el installment como parcial cuando el pago es menor 
     ]);
 });
 
-test('un installment vencido se actualiza a vencido al listar via CollectionController index', function () {
+test('la tarea nocturna marca como vencidas las cuotas atrasadas y abrir cobranzas no cambia datos', function () {
     $user = vendedorUser();
     $sale = Sale::factory()->create(['vendedor_id' => $user->id]);
 
@@ -96,13 +96,13 @@ test('un installment vencido se actualiza a vencido al listar via CollectionCont
         'estado' => 'pendiente',
     ]);
 
-    $response = $this
-        ->actingAs($user)
-        ->get(route('vendedor.cobranzas.index', ['current_team' => $user->currentTeam]));
+    $this->actingAs($user)
+        ->get(route('vendedor.cobranzas.index', ['current_team' => $user->currentTeam]))
+        ->assertOk();
+    expect($installmentVencido->fresh()->estado)->toBe('pendiente');
 
-    $response->assertOk();
+    $this->artisan('alerts:recompute')->assertSuccessful();
 
-    // Verificamos que se haya actualizado en BD a 'vencido'
     expect($installmentVencido->fresh()->estado)->toBe('vencido')
         ->and($installmentFuturo->fresh()->estado)->toBe('pendiente');
 

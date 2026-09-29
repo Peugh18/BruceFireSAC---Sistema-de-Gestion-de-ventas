@@ -17,6 +17,15 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesAndPermissionsSeeder::class);
 
+        // En producción no se crean usuarios de demostración (su contraseña es
+        // conocida): el primer Gerente se crea con sistema:crear-gerente y él
+        // registra las sedes y al personal.
+        if (app()->environment('production')) {
+            $this->call(CertificateTypeSeeder::class);
+
+            return;
+        }
+
         $almacen = Sede::firstOrCreate(
             ['nombre' => 'Almacén Central Trujillo'],
             [

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Vendedor;
 use App\Actions\Cotizaciones\CreateQuote;
 use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\Cotizaciones\StoreQuoteRequest;
 use App\Models\Product;
 use App\Models\Quote;
@@ -21,6 +22,8 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class QuoteController extends Controller
 {
+    use AcotaPorSede;
+
     public function index(Request $request, QuotePdfService $pdf): Response
     {
         $estado = $request->string('estado')->toString();
@@ -194,6 +197,8 @@ class QuoteController extends Controller
 
     public function send(Team $current_team, Quote $quote): RedirectResponse
     {
+        $this->asegurarSede($quote->sede_id);
+
         $transitionQuoteState = app(TransitionQuoteState::class);
 
         DB::transaction(function () use ($quote, $transitionQuoteState) {
@@ -211,6 +216,8 @@ class QuoteController extends Controller
 
     public function accept(Team $current_team, Quote $quote): RedirectResponse
     {
+        $this->asegurarSede($quote->sede_id);
+
         app(TransitionQuoteState::class)->handle($quote, 'aceptada');
 
         Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} aceptada. Ya puedes pasarla a venta."]);
@@ -220,6 +227,8 @@ class QuoteController extends Controller
 
     public function reject(Team $current_team, Quote $quote): RedirectResponse
     {
+        $this->asegurarSede($quote->sede_id);
+
         app(TransitionQuoteState::class)->handle($quote, 'rechazada');
 
         Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} rechazada."]);

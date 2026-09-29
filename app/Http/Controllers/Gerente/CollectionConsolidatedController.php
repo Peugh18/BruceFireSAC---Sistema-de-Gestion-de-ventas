@@ -21,12 +21,6 @@ class CollectionConsolidatedController extends Controller
     {
         $hoy = today();
 
-        // 1. Actualizar a vencido las cuotas vencidas
-        Installment::query()
-            ->where('estado', 'pendiente')
-            ->whereDate('fecha_vencimiento', '<', $hoy)
-            ->update(['estado' => 'vencido']);
-
         $buscar = trim((string) $request->input('buscar', ''));
         $vendedorId = $request->input('vendedor_id');
         $estado = (string) $request->input('estado', 'todos');

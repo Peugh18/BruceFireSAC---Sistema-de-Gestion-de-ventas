@@ -8,6 +8,7 @@ use App\Models\ElectronicDocument;
 use App\Models\Equipment;
 use App\Models\Installment;
 use App\Models\InventoryMovement;
+use App\Models\MlEntrenamiento;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Sale;
@@ -16,6 +17,7 @@ use App\Models\SalePayment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Ml\RetentionModel;
+use App\Services\SaludDelSistema;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,7 +28,7 @@ class DashboardController extends Controller
      * Dashboard del rol Gerente (§5.1 y §86.4.1).
      * Métricas y gráficos gerenciales consolidados de toda la empresa.
      */
-    public function __invoke(Team $current_team, Request $request): Response
+    public function __invoke(Team $current_team, Request $request, SaludDelSistema $saludDelSistema): Response
     {
         $hoy = today();
         $inicioMes = now()->startOfMonth();
@@ -238,12 +240,20 @@ class DashboardController extends Controller
                 'topClientes' => $topRecompra,
                 'modelo' => [
                     'disponible' => true,
-                    'nombre' => 'Regresión Logística Calibrada (Entrenamiento Local)',
-                    'aucRoc' => $modelMetadata['metrics']['test']['roc_auc'] ?? 0.7372,
-                    'accuracy' => $modelMetadata['metrics']['test']['accuracy'] ?? 0.7572,
-                    'precision' => $modelMetadata['metrics']['test']['precision'] ?? 0.6724,
-                    'recall' => $modelMetadata['metrics']['test']['recall'] ?? 0.3000,
+                    'nombre' => ($modelMetadata['type'] ?? 'logistic') === 'xgboost' ? 'XGBoost' : 'Regresión logística',
+                    'aucRoc' => (float) ($modelMetadata['metrics']['test']['roc_auc'] ?? 0),
+                    'accuracy' => (float) ($modelMetadata['metrics']['test']['accuracy'] ?? 0),
+                    'precision' => (float) ($modelMetadata['metrics']['test']['precision'] ?? 0),
+                    'recall' => (float) ($modelMetadata['metrics']['test']['recall'] ?? 0),
                     'fechaEntrenamiento' => $modelMetadata['trained_at'] ?? null,
+                    // Precisión de cada reentrenamiento (ml:reentrenar), del más antiguo al último.
+                    'historial' => MlEntrenamiento::query()->latest('entrenado_at')->limit(12)->get()->reverse()->values()
+                        ->map(fn (MlEntrenamiento $entrenamiento) => [
+                            'fecha' => $entrenamiento->entrenado_at->toDateString(),
+                            'modelo' => $entrenamiento->modelo === 'xgboost' ? 'XGBoost' : 'Regresión logística',
+                            'aucRoc' => (float) $entrenamiento->roc_auc,
+                            'top100' => $entrenamiento->top_100_volvieron,
+                        ])->all(),
                 ],
             ];
         }
@@ -272,6 +282,7 @@ class DashboardController extends Controller
                 'productosMayorMovimiento' => $productosMayorMovimiento,
             ],
             'aiRetention' => $aiRetention,
+            'sistema' => $saludDelSistema->resumen(),
         ]);
     }
 }

@@ -73,7 +73,7 @@ test('vendedor no puede acceder al panel consolidado de cobranzas de gerente', f
         ->assertForbidden();
 });
 
-test('cuotas vencidas son actualizadas automaticamente y filtradas correctamente', function () {
+test('la tarea nocturna marca las cuotas vencidas y el filtro las muestra', function () {
     $gerente = createGerenteUserForCollectionTest();
     $sale = Sale::factory()->create();
 
@@ -93,6 +93,8 @@ test('cuotas vencidas son actualizadas automaticamente y filtradas correctamente
         'estado' => 'pendiente',
     ]);
 
+    $this->artisan('alerts:recompute')->assertSuccessful();
+
     $this->actingAs($gerente)
         ->get(route('gerente.cobranzas.index', ['current_team' => $gerente->currentTeam, 'estado' => 'vencido']))
         ->assertOk()
@@ -102,7 +104,7 @@ test('cuotas vencidas son actualizadas automaticamente y filtradas correctamente
             ->where('cuotas.data.0.id', $vencida->id)
         );
 
-    // Verificar en BD que el estado se actualizó automáticamente
+    // La cuota atrasada quedó vencida en la base de datos.
     $this->assertDatabaseHas('installments', [
         'id' => $vencida->id,
         'estado' => 'vencido',

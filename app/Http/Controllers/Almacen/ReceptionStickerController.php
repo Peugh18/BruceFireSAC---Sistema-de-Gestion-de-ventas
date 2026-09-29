@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reception;
 use App\Models\Team;
 use App\Services\Inventory\StickerPdfService;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -48,8 +49,11 @@ class ReceptionStickerController extends Controller
     public function show(
         Team $current_team,
         Reception $reception,
-        StickerPdfService $stickerPdfService
+        StickerPdfService $stickerPdfService,
+        Request $request,
     ): Response {
+        ReceptionController::asegurarAlmacen($request, $reception);
+
         $pdf = $stickerPdfService->generate($reception);
 
         return response($pdf->output(), 200, [

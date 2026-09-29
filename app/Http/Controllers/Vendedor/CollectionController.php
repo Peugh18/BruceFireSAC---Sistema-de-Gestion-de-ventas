@@ -40,10 +40,6 @@ class CollectionController extends Controller
      */
     public static function cuotasPendientes(User $user): array
     {
-        Installment::query()
-            ->where('estado', 'pendiente')
-            ->whereDate('fecha_vencimiento', '<', today())
-            ->update(['estado' => 'vencido']);
 
         return Installment::query()
             ->where(function ($query) {

@@ -21,7 +21,11 @@ import {
     Wrench,
 } from 'lucide-react';
 
+import SaludDelSistema, {
+    type SaludDelSistemaData,
+} from '@/components/salud-del-sistema';
 import GerenteLayout from '@/layouts/gerente-layout';
+import { fechaCorta } from '@/lib/utils';
 
 type DashboardMetrics = {
     ventasDia: number;
@@ -87,6 +91,12 @@ type AiRetentionData = {
         precision: number;
         recall: number;
         fechaEntrenamiento: string | null;
+        historial: {
+            fecha: string;
+            modelo: string;
+            aucRoc: number;
+            top100: number | null;
+        }[];
     };
 } | null;
 
@@ -94,6 +104,7 @@ type GerenteDashboardProps = {
     metrics: DashboardMetrics;
     charts: DashboardCharts;
     aiRetention?: AiRetentionData;
+    sistema: SaludDelSistemaData;
 };
 
 function formatCurrency(amount: number): string {
@@ -112,6 +123,7 @@ export default function GerenteDashboard({
     metrics,
     charts,
     aiRetention,
+    sistema,
 }: GerenteDashboardProps) {
     const maxVentaMensual = Math.max(
         ...charts.ventasMensuales.map((m) => m.monto),
@@ -156,6 +168,8 @@ export default function GerenteDashboard({
                         </div>
                     </div>
                 </div>
+
+                <SaludDelSistema salud={sistema} />
 
                 {/* Grid de 12 Tarjetas KPI */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -706,15 +720,33 @@ export default function GerenteDashboard({
                                 </span>
                             </div>
                             <p className="text-muted-foreground text-xs">
-                                Estimación probabilística de recompra en los
-                                próximos 6 meses mediante regresión logística
-                                entrenada con el histórico real de ventas
-                                pre-corte.
+                                Probabilidad de que cada cliente vuelva a
+                                comprar en los próximos 6 meses, calculada por
+                                un modelo entrenado con el historial real de
+                                ventas.
                             </p>
+                            {aiRetention &&
+                                aiRetention.modelo.historial.length > 0 && (
+                                    <p className="text-muted-foreground mt-1 text-[11px]">
+                                        Precisión por entrenamiento:{' '}
+                                        {aiRetention.modelo.historial
+                                            .map(
+                                                (entrenamiento) =>
+                                                    `${fechaCorta(entrenamiento.fecha)} ${Math.round(entrenamiento.aucRoc * 1000) / 10}%${entrenamiento.top100 !== null ? ` (${entrenamiento.top100}/100)` : ''}`,
+                                            )
+                                            .join(' · ')}
+                                    </p>
+                                )}
                         </div>
 
                         {aiRetention && (
                             <div className="flex flex-wrap items-center gap-2">
+                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium">
+                                    Modelo:{' '}
+                                    <b className="text-foreground">
+                                        {aiRetention.modelo.nombre}
+                                    </b>
+                                </span>
                                 <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium">
                                     ROC-AUC:{' '}
                                     <b className="font-bold text-emerald-600">

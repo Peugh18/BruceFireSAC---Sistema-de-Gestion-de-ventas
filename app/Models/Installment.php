@@ -36,6 +36,19 @@ class Installment extends Model
     }
 
     /**
+     * Pasa a "vencido" las cuotas pendientes cuya fecha ya pasó. Lo corre la
+     * tarea de cada noche (alerts:recompute); abrir una pantalla no cambia
+     * datos.
+     */
+    public static function marcarVencidas(): int
+    {
+        return self::query()
+            ->where('estado', 'pendiente')
+            ->whereDate('fecha_vencimiento', '<', today())
+            ->update(['estado' => 'vencido']);
+    }
+
+    /**
      * @return BelongsTo<Sale, $this>
      */
     public function sale(): BelongsTo
