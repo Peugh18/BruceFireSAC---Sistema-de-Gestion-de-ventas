@@ -2,11 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\MlVentaHistorica;
+use App\Services\Ml\CargaHistorico;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 #[Signature('ml:importar-historico {csvPath : CSV limpio generado por scripts/ml/etl_historico.py}')]
 #[Description('Carga el histórico de facturas y boletas 2025-2026 en la tabla de entrenamiento de la predicción (reemplaza la carga anterior)')]
@@ -18,7 +17,7 @@ class ImportarHistoricoMl extends Command
     private const COLUMNAS = ['fecha', 'tipo_doc', 'comprobante', 'documento_cliente', 'nombre_cliente',
         'categoria', 'producto_original', 'cantidad', 'total', 'archivo_origen'];
 
-    public function handle(): int
+    public function handle(CargaHistorico $cargaHistorico): int
     {
         $path = (string) $this->argument('csvPath');
         $lineas = is_file($path) ? file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : false;
@@ -38,24 +37,34 @@ class ImportarHistoricoMl extends Command
 
         $filas = [];
         foreach ($lineas as $linea) {
-            $valores = str_getcsv(rtrim($linea, "\r"), escape: '');
-            $fila = array_combine(self::COLUMNAS, $valores);
+            $valores = array_map(fn (?string $valor) => (string) $valor, str_getcsv(rtrim($linea, "\r"), escape: ''));
 
-            // Solo compras reales de clientes identificables.
-            if (! in_array($fila['tipo_doc'], ['F', 'B'], true) || ! preg_match('/^(\d{8}|\d{11})$/', $fila['documento_cliente'])) {
+            if (count($valores) !== count(self::COLUMNAS)) {
                 continue;
             }
 
-            $filas[] = $fila;
+            [$fecha, $tipoDoc, $comprobante, $documento, $nombre, $categoria, $producto, $cantidad, $total, $archivo] = $valores;
+
+            // Solo compras reales de clientes identificables.
+            if (! in_array($tipoDoc, ['F', 'B'], true) || ! preg_match('/^(\d{8}|\d{11})$/', $documento)) {
+                continue;
+            }
+
+            $filas[] = [
+                'fecha' => $fecha,
+                'tipo_doc' => $tipoDoc,
+                'comprobante' => $comprobante,
+                'documento_cliente' => $documento,
+                'nombre_cliente' => $nombre,
+                'categoria' => $categoria,
+                'producto_original' => $producto,
+                'cantidad' => $cantidad,
+                'total' => $total,
+                'archivo_origen' => $archivo,
+            ];
         }
 
-        DB::transaction(function () use ($filas): void {
-            MlVentaHistorica::query()->delete();
-
-            foreach (array_chunk($filas, 1000) as $lote) {
-                MlVentaHistorica::query()->insert($lote);
-            }
-        });
+        $cargaHistorico->reemplazar($filas);
 
         $this->info(count($filas).' líneas de facturas y boletas cargadas para el entrenamiento.');
 

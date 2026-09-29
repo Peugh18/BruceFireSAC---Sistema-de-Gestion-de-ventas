@@ -56,7 +56,8 @@ class AlertController extends Controller
                 'cantidad' => $group->count(),
             ])
             ->values()
-            ->concat($this->historicalRows($today));
+            ->concat($this->historicalRows($today))
+            ->concat($this->sistemaAnteriorRows($today));
 
         // Cada segmento se trunca por separado (no un límite global) para
         // que "vencidas" no quede vacío solo porque hay más volumen en
@@ -121,6 +122,84 @@ class AlertController extends Controller
             'whatsapp' => $equipment->client->whatsapp,
             'origen' => 'equipo_registrado',
         ];
+    }
+
+    /**
+     * Recarga estimada de clientes ya registrados que compraban en el sistema
+     * anterior (ml_lineas_historicas): su próxima atención es un año después
+     * de su última compra de extintores o de recarga/mantenimiento. Una
+     * alerta por cliente, con lo que llevó esa última vez. No aplica si el
+     * cliente ya tiene extintores registrados (esos avisan por sí mismos) ni
+     * si ya volvió a comprar en el sistema nuevo después de esa fecha.
+     *
+     * @return Collection<int, array{client_id: mixed, cliente: mixed, equipment_id: null, equipo: string, numero_serie: null, fecha: string, dias: int, segmento: string, cantidad: int, telefono: mixed, whatsapp: mixed, origen: string}>
+     */
+    protected function sistemaAnteriorRows(CarbonInterface $today): Collection
+    {
+        $lineas = DB::table('ml_lineas_historicas')
+            ->join('ml_comprobantes_historicos', 'ml_comprobantes_historicos.comprobante', '=', 'ml_lineas_historicas.comprobante')
+            ->join('ml_productos_historicos', 'ml_productos_historicos.id', '=', 'ml_lineas_historicas.ml_producto_id')
+            ->join('clients', 'clients.numero_documento', '=', 'ml_comprobantes_historicos.documento_cliente')
+            ->whereNotExists(fn ($query) => $query->select(DB::raw(1))->from('equipment')->whereColumn('equipment.client_id', 'clients.id'))
+            ->where(fn ($query) => $query
+                ->whereIn('ml_productos_historicos.categoria', ['recarga_mantenimiento', 'mantenimiento'])
+                ->orWhere('ml_productos_historicos.nombre', 'like', 'EXTINTOR%'))
+            ->get([
+                'clients.id as client_id', 'clients.razon_social', 'clients.telefono', 'clients.whatsapp',
+                'ml_comprobantes_historicos.fecha', 'ml_productos_historicos.nombre', 'ml_lineas_historicas.cantidad',
+            ]);
+
+        $ultimaVentaNueva = DB::table('sales')
+            ->where('estado', 'confirmada')
+            ->whereIn('client_id', $lineas->pluck('client_id')->unique())
+            ->groupBy('client_id')
+            ->selectRaw('client_id, MAX(fecha) as ultima')
+            ->pluck('ultima', 'client_id');
+
+        return $lineas
+            ->groupBy('client_id')
+            ->map(function (Collection $delCliente) use ($today, $ultimaVentaNueva): ?array {
+                $ultimaFecha = $delCliente->max('fecha');
+                $ultima = $delCliente->where('fecha', $ultimaFecha);
+                $primera = $ultima->first();
+                $ventaNueva = $ultimaVentaNueva->get($primera->client_id);
+
+                if ($ventaNueva && Carbon::parse($ventaNueva)->gt(Carbon::parse($ultimaFecha))) {
+                    return null;
+                }
+
+                $proximaFecha = Carbon::parse($ultimaFecha)->addYear();
+                $dias = (int) $today->diffInDays($proximaFecha, false);
+                $segmento = match (true) {
+                    $dias < 0 => 'vencidas',
+                    $dias <= 7 => 'esta_semana',
+                    $dias <= 30 => 'este_mes',
+                    default => null,
+                };
+
+                if (! $segmento) {
+                    return null;
+                }
+
+                $productos = $ultima->pluck('nombre')->unique()->values();
+
+                return [
+                    'client_id' => $primera->client_id,
+                    'cliente' => $primera->razon_social,
+                    'equipment_id' => null,
+                    'equipo' => $productos->first().($productos->count() > 1 ? ' y '.($productos->count() - 1).' más' : '').' (estimado)',
+                    'numero_serie' => null,
+                    'fecha' => $proximaFecha->toDateString(),
+                    'dias' => $dias,
+                    'segmento' => $segmento,
+                    'cantidad' => (int) round((float) $ultima->sum('cantidad')),
+                    'telefono' => $primera->telefono,
+                    'whatsapp' => $primera->whatsapp,
+                    'origen' => 'estimado_historico',
+                ];
+            })
+            ->filter()
+            ->values();
     }
 
     /**

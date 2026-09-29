@@ -2,9 +2,9 @@
 
 use App\Models\Client;
 use App\Models\ClientRetentionScore;
-use App\Models\MlVentaHistorica;
 use App\Models\Sale;
 use App\Models\User;
+use App\Services\Ml\CargaHistorico;
 use App\Services\Ml\RetentionModel;
 use Carbon\Carbon;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -231,7 +231,7 @@ test('RetentionModel calcula un modelo XGBoost exportado y reparte la prediccion
 
 test('las variables del cliente juntan el historico del sistema anterior con sus ventas nuevas', function () {
     $client = Client::factory()->create(['numero_documento' => '20555555555']);
-    MlVentaHistorica::query()->insert([
+    app(CargaHistorico::class)->reemplazar([
         ['fecha' => '2025-06-01', 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20555555555', 'nombre_cliente' => 'X', 'categoria' => 'recarga_mantenimiento', 'producto_original' => 'RECARGA PQS 6KG', 'cantidad' => 2, 'total' => 100, 'archivo_origen' => 'JUNIO.xlsx'],
         ['fecha' => '2025-06-01', 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20555555555', 'nombre_cliente' => 'X', 'categoria' => 'seguridad', 'producto_original' => 'CONO', 'cantidad' => 1, 'total' => 20, 'archivo_origen' => 'JUNIO.xlsx'],
         ['fecha' => '2025-06-01', 'tipo_doc' => 'F', 'comprobante' => 'F001-2', 'documento_cliente' => '20999999999', 'nombre_cliente' => 'OTRO', 'categoria' => 'seguridad', 'producto_original' => 'CONO', 'cantidad' => 1, 'total' => 999, 'archivo_origen' => 'JUNIO.xlsx'],
@@ -253,7 +253,7 @@ test('las variables del cliente juntan el historico del sistema anterior con sus
 });
 
 test('el dataset de entrenamiento marca quien volvio a comprar despues de cada corte', function () {
-    MlVentaHistorica::query()->insert([
+    app(CargaHistorico::class)->reemplazar([
         ['fecha' => '2025-01-10', 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20111111111', 'nombre_cliente' => 'VUELVE', 'categoria' => 'extintor', 'producto_original' => 'EXTINTOR', 'cantidad' => 1, 'total' => 70, 'archivo_origen' => 'a'],
         ['fecha' => '2025-03-10', 'tipo_doc' => 'F', 'comprobante' => 'F001-2', 'documento_cliente' => '20111111111', 'nombre_cliente' => 'VUELVE', 'categoria' => 'recarga_mantenimiento', 'producto_original' => 'RECARGA', 'cantidad' => 1, 'total' => 55, 'archivo_origen' => 'a'],
         ['fecha' => '2025-01-15', 'tipo_doc' => 'B', 'comprobante' => 'B001-1', 'documento_cliente' => '44556677', 'nombre_cliente' => 'NO VUELVE', 'categoria' => 'seguridad', 'producto_original' => 'CONO', 'cantidad' => 1, 'total' => 20, 'archivo_origen' => 'a'],
@@ -273,7 +273,7 @@ test('el dataset de entrenamiento marca quien volvio a comprar despues de cada c
 
 test('el calculo diario arma la lista de clientes del historico por registrar y Clientes la muestra', function () {
     $registrado = Client::factory()->create(['numero_documento' => '20555555555']);
-    MlVentaHistorica::query()->insert([
+    app(CargaHistorico::class)->reemplazar([
         ['fecha' => now()->subMonths(2)->toDateString(), 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20444444444', 'nombre_cliente' => 'POR RECUPERAR SAC', 'categoria' => 'recarga_mantenimiento', 'producto_original' => 'RECARGA', 'cantidad' => 1, 'total' => 55, 'archivo_origen' => 'a'],
         ['fecha' => now()->subMonths(2)->toDateString(), 'tipo_doc' => 'F', 'comprobante' => 'F001-2', 'documento_cliente' => '20555555555', 'nombre_cliente' => 'YA REGISTRADO SAC', 'categoria' => 'extintor', 'producto_original' => 'EXTINTOR', 'cantidad' => 1, 'total' => 70, 'archivo_origen' => 'a'],
     ]);

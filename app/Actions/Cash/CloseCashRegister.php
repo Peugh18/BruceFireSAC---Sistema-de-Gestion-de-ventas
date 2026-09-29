@@ -27,13 +27,11 @@ class CloseCashRegister
             ->sum('monto');
 
         $montoEsperadoCalculado = round((float) $cashRegister->monto_apertura + $totalEfectivo, 2);
-        $diferencia = round($montoContadoCierre - $montoEsperadoCalculado, 2);
 
         $cashRegister->update([
             'fecha_cierre' => $now,
             'monto_contado_cierre' => $montoContadoCierre,
             'monto_esperado_calculado' => $montoEsperadoCalculado,
-            'diferencia' => $diferencia,
             'observacion' => $observacion,
             'estado' => 'cerrado',
         ]);

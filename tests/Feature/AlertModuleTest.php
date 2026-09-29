@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
+use App\Services\Ml\CargaHistorico;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
 beforeEach(function () {
@@ -143,4 +144,40 @@ test('recompute alerts marca vencidos certificados pasados y no toca futuros', f
 
     expect($expired->refresh()->estado)->toBe('vencido')
         ->and($future->refresh()->estado)->toBe('vigente');
+});
+
+test('Por vencer estima la recarga de un cliente registrado con su compra mas reciente del sistema anterior', function () {
+    $user = vendedorUser();
+    $registrado = Client::factory()->create(['numero_documento' => '20111111111', 'razon_social' => 'ANTIGUO REGISTRADO SAC']);
+    $conExtintores = Client::factory()->create(['numero_documento' => '20222222222']);
+    Equipment::factory()->create(['client_id' => $conExtintores->id]);
+    $haceUnAnio = now()->subYear()->subDays(3)->toDateString();
+    $linea = fn (string $fecha, string $comprobante, string $documento, string $producto, string $categoria, int $cantidad) => [
+        'fecha' => $fecha, 'tipo_doc' => 'F', 'comprobante' => $comprobante, 'documento_cliente' => $documento, 'nombre_cliente' => 'X',
+        'categoria' => $categoria, 'producto_original' => $producto, 'cantidad' => $cantidad, 'total' => 100, 'archivo_origen' => 'a',
+    ];
+    app(CargaHistorico::class)->reemplazar([
+        $linea(now()->subYears(2)->toDateString(), 'F001-1', '20111111111', 'EXTINTOR PQS 6KG', 'extintor', 5),
+        $linea($haceUnAnio, 'F001-2', '20111111111', 'RECARGA Y MANTENIMIENTO PQS 6KG', 'recarga_mantenimiento', 3),
+        $linea($haceUnAnio, 'F001-2', '20111111111', 'CONO DE PVC', 'seguridad', 10),
+        $linea($haceUnAnio, 'F001-3', '20222222222', 'RECARGA Y MANTENIMIENTO PQS 6KG', 'recarga_mantenimiento', 1),
+        $linea($haceUnAnio, 'F001-4', '20333333333', 'RECARGA Y MANTENIMIENTO PQS 6KG', 'recarga_mantenimiento', 1),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]))
+        ->assertOk();
+
+    $estimadas = collect($response->viewData('page')['props']['alerts']['vencidas'])->where('origen', 'estimado_historico');
+
+    expect($estimadas)->toHaveCount(1)
+        ->and($estimadas->first()['client_id'])->toBe($registrado->id)
+        ->and($estimadas->first()['cantidad'])->toBe(3)
+        ->and($estimadas->first()['fecha'])->toBe(now()->subDays(3)->toDateString());
+
+    // Si vuelve a comprar en el sistema nuevo, manda su compra nueva.
+    Sale::factory()->create(['client_id' => $registrado->id, 'fecha' => now()->subDay()->toDateString(), 'estado' => 'confirmada']);
+
+    $response = $this->actingAs($user)->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]));
+    expect(collect($response->viewData('page')['props']['alerts']['vencidas'])->where('client_id', $registrado->id))->toBeEmpty();
 });

@@ -32,7 +32,6 @@ test('gerente puede consultar la lista consolidada de cajas de todos los vendedo
         'monto_apertura' => 100.00,
         'monto_contado_cierre' => 200.00,
         'monto_esperado_calculado' => 200.00,
-        'diferencia' => 0.00,
         'fecha_apertura' => today()->subHours(5),
         'fecha_cierre' => today()->subHour(),
     ]);
@@ -43,7 +42,6 @@ test('gerente puede consultar la lista consolidada de cajas de todos los vendedo
         'monto_apertura' => 150.00,
         'monto_contado_cierre' => 320.00,
         'monto_esperado_calculado' => 350.00,
-        'diferencia' => -30.00,
         'fecha_apertura' => today()->subHours(4),
         'fecha_cierre' => today()->subHour(),
     ]);
@@ -78,14 +76,16 @@ test('filtro con_diferencia devuelve unicamente turnos con sobrante o faltante',
     CashRegister::factory()->create([
         'vendedor_id' => $vendedor->id,
         'estado' => 'cerrado',
-        'diferencia' => 0.00,
+        'monto_contado_cierre' => 100.00,
+        'monto_esperado_calculado' => 100.00,
     ]);
 
     // Caja descuadrada (con faltante)
     CashRegister::factory()->create([
         'vendedor_id' => $vendedor->id,
         'estado' => 'cerrado',
-        'diferencia' => -25.00,
+        'monto_contado_cierre' => 75.00,
+        'monto_esperado_calculado' => 100.00,
     ]);
 
     $this->actingAs($gerente)

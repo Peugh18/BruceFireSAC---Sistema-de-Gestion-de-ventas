@@ -1,6 +1,7 @@
 <?php
 
-use App\Models\MlVentaHistorica;
+use App\Models\MlClienteHistorico;
+use App\Models\MlLineaHistorica;
 use App\Models\Sale;
 
 function csvHistorico(array $filas): string
@@ -24,7 +25,8 @@ test('carga solo facturas y boletas de clientes identificables y no toca las ven
 
     $this->artisan('ml:importar-historico', ['csvPath' => $path])->assertSuccessful();
 
-    expect(MlVentaHistorica::query()->pluck('comprobante')->sort()->values()->all())->toBe(['B001-1000', 'F001-11097'])
+    expect(MlLineaHistorica::query()->pluck('comprobante')->sort()->values()->all())->toBe(['B001-1000', 'F001-11097'])
+        ->and(MlClienteHistorico::query()->pluck('nombre', 'documento')->all())->toEqual(['20100077044' => 'HERMES S A', '44556677' => 'JUAN PEREZ'])
         ->and(Sale::query()->count())->toBe(0);
 
     unlink($path);
@@ -36,7 +38,7 @@ test('volver a cargar reemplaza la carga anterior sin duplicar', function () {
     $this->artisan('ml:importar-historico', ['csvPath' => $path])->assertSuccessful();
     $this->artisan('ml:importar-historico', ['csvPath' => $path])->assertSuccessful();
 
-    expect(MlVentaHistorica::query()->count())->toBe(1);
+    expect(MlLineaHistorica::query()->count())->toBe(1);
 
     unlink($path);
 });

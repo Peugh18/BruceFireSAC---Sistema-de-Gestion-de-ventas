@@ -16,14 +16,12 @@ class ReserveNextCorrelativo
         return DB::transaction(function () use ($tipoComprobante, $serie) {
             $documentSeries = $this->lockSerie($tipoComprobante, $serie);
 
-            $liberados = $documentSeries->correlativos_liberados ?? [];
+            $liberado = $documentSeries->correlativosLiberados()->orderBy('correlativo')->lockForUpdate()->first();
 
-            if ($liberados !== []) {
-                sort($liberados);
-                $correlativo = array_shift($liberados);
-                $documentSeries->update(['correlativos_liberados' => $liberados]);
+            if ($liberado) {
+                $liberado->delete();
 
-                return $correlativo;
+                return $liberado->correlativo;
             }
 
             $documentSeries->increment('correlativo_actual');
@@ -47,12 +45,7 @@ class ReserveNextCorrelativo
                 return;
             }
 
-            $documentSeries->update([
-                'correlativos_liberados' => array_values(array_unique([
-                    ...($documentSeries->correlativos_liberados ?? []),
-                    $correlativo,
-                ])),
-            ]);
+            $documentSeries->correlativosLiberados()->firstOrCreate(['correlativo' => $correlativo]);
         });
     }
 

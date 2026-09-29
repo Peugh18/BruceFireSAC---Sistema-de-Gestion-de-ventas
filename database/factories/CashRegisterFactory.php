@@ -21,7 +21,6 @@ class CashRegisterFactory extends Factory
             'fecha_cierre' => null,
             'monto_contado_cierre' => null,
             'monto_esperado_calculado' => null,
-            'diferencia' => null,
             'observacion' => null,
             'estado' => 'abierto',
         ];
@@ -33,7 +32,6 @@ class CashRegisterFactory extends Factory
             'fecha_cierre' => now(),
             'monto_contado_cierre' => 100.00,
             'monto_esperado_calculado' => 100.00,
-            'diferencia' => 0.00,
             'estado' => 'cerrado',
         ]);
     }

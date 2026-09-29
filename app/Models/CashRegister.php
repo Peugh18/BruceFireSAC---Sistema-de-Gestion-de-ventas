@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $fecha_cierre
  * @property float|null $monto_contado_cierre
  * @property float|null $monto_esperado_calculado
- * @property float|null $diferencia
+ * @property-read float|null $diferencia
  * @property string|null $observacion
  * @property string $estado
  * @property Carbon|null $created_at
@@ -34,7 +34,6 @@ use Illuminate\Support\Carbon;
     'fecha_cierre',
     'monto_contado_cierre',
     'monto_esperado_calculado',
-    'diferencia',
     'observacion',
     'estado',
 ])]

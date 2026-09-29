@@ -2,14 +2,13 @@
 
 namespace App\Services\Ml;
 
-use App\Models\MlVentaHistorica;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Compras de cada cliente para la predicción de recompra: junta el histórico
- * del sistema anterior (ml_ventas_historicas) con las ventas confirmadas del
+ * del sistema anterior (ml_lineas_historicas) con las ventas confirmadas del
  * sistema, unidas por el número de documento del cliente. Una compra es un
  * comprobante, no una línea.
  *
@@ -34,16 +33,18 @@ class HistorialCompras
         /** @var array<string, array{documento: string, fecha: Carbon, total: float, recarga: bool, items: array<string, true>}> $compras */
         $compras = [];
 
-        MlVentaHistorica::query()
-            ->when($documentos !== null, fn ($query) => $query->whereIn('documento_cliente', $documentos))
-            ->orderBy('id')
-            ->get(['documento_cliente', 'comprobante', 'fecha', 'categoria', 'producto_original', 'total'])
-            ->each(function (MlVentaHistorica $linea) use (&$compras): void {
+        DB::table('ml_lineas_historicas')
+            ->join('ml_comprobantes_historicos', 'ml_comprobantes_historicos.comprobante', '=', 'ml_lineas_historicas.comprobante')
+            ->join('ml_productos_historicos', 'ml_productos_historicos.id', '=', 'ml_lineas_historicas.ml_producto_id')
+            ->when($documentos !== null, fn ($query) => $query->whereIn('ml_comprobantes_historicos.documento_cliente', $documentos))
+            ->orderBy('ml_lineas_historicas.id')
+            ->get(['ml_comprobantes_historicos.documento_cliente', 'ml_lineas_historicas.comprobante', 'ml_comprobantes_historicos.fecha', 'ml_productos_historicos.categoria', 'ml_productos_historicos.nombre as producto', 'ml_lineas_historicas.total'])
+            ->each(function (object $linea) use (&$compras): void {
                 $clave = 'h:'.$linea->comprobante;
-                $compras[$clave] ??= ['documento' => $linea->documento_cliente, 'fecha' => $linea->fecha->copy()->startOfDay(), 'total' => 0.0, 'recarga' => false, 'items' => []];
+                $compras[$clave] ??= ['documento' => (string) $linea->documento_cliente, 'fecha' => Carbon::parse($linea->fecha)->startOfDay(), 'total' => 0.0, 'recarga' => false, 'items' => []];
                 $compras[$clave]['total'] += (float) $linea->total;
                 $compras[$clave]['recarga'] = $compras[$clave]['recarga'] || in_array($linea->categoria, self::CATEGORIAS_RECARGA, true);
-                $compras[$clave]['items'][$this->normalizarItem($linea->producto_original)] = true;
+                $compras[$clave]['items'][$this->normalizarItem((string) $linea->producto)] = true;
             });
 
         DB::table('sales')

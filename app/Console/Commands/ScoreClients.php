@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Client;
 use App\Models\ClientRetentionScore;
-use App\Models\MlVentaHistorica;
+use App\Models\MlClienteHistorico;
 use App\Services\Ml\HistorialCompras;
 use App\Services\Ml\RetentionModel;
 use Carbon\Carbon;
@@ -46,7 +46,7 @@ class ScoreClients extends Command
             ->where('numero_documento', '!=', '00000000000')
             ->where(fn ($q) => $q
                 ->whereHas('sales', fn ($ventas) => $ventas->where('estado', 'confirmada'))
-                ->orWhereIn('numero_documento', MlVentaHistorica::query()->select('documento_cliente')))
+                ->orWhereIn('numero_documento', MlClienteHistorico::query()->select('documento')))
             ->select(['id', 'razon_social']);
 
         if ($limit) {
@@ -191,7 +191,7 @@ class ScoreClients extends Command
     protected function clientesParaRecuperar(RetentionModel $retentionModel, HistorialCompras $historial, Carbon $today): array
     {
         $registrados = Client::query()->pluck('numero_documento')->flip();
-        $nombres = MlVentaHistorica::query()->orderBy('fecha')->pluck('nombre_cliente', 'documento_cliente');
+        $nombres = MlClienteHistorico::query()->pluck('nombre', 'documento');
         $manana = $today->copy()->addDay();
         $clientes = [];
 
