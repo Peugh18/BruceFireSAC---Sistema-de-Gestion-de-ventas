@@ -8,6 +8,7 @@ import {
     CreditCard,
     Edit3,
     History,
+    Lightbulb,
     Mail,
     MapPin,
     MessageSquare,
@@ -32,11 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    RecompraBadge,
-    RecompraRazones,
-    type Recompra,
-} from '@/components/recompra-badge';
+import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import clientes from '@/routes/vendedor/clientes';
@@ -777,7 +774,10 @@ export default function ClienteShow({
                             </span>
                             <RecompraBadge recompra={recompra} />
                         </div>
-                        <RecompraRazones recompra={recompra} />
+                        <p className="text-muted-foreground mt-1.5 flex items-start gap-2 text-[12.5px]">
+                            <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                            <span>{recompra.resumen}</span>
+                        </p>
                     </Card>
                 )}
 

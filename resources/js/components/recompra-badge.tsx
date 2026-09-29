@@ -3,6 +3,7 @@ import { TrendingUp } from 'lucide-react';
 export type Recompra = {
     porcentaje: number;
     categoria: 'alta' | 'media' | 'baja';
+    resumen: string;
     razones: { texto: string; a_favor: boolean }[];
 };
 
@@ -14,46 +15,16 @@ const estilos: Record<Recompra['categoria'], string> = {
 
 /**
  * Probabilidad de que el cliente vuelva a comprar en 6 meses (modelo de
- * recompra). Al pasar el mouse muestra las razones que más pesaron.
+ * recompra). Al pasar el mouse muestra el porqué en una frase.
  */
 export function RecompraBadge({ recompra }: { recompra: Recompra }) {
-    const detalle = recompra.razones
-        .map((razon) => `${razon.a_favor ? '▲' : '▼'} ${razon.texto}`)
-        .join('\n');
-
     return (
         <span
-            title={`Probabilidad de volver a comprar en 6 meses\n${detalle}`}
+            title={`Probabilidad de volver a comprar en 6 meses. ${recompra.resumen}`}
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10.5px] font-bold ${estilos[recompra.categoria]}`}
         >
             <TrendingUp className="size-3" />
             Recompra {recompra.categoria} · {recompra.porcentaje}%
         </span>
-    );
-}
-
-/**
- * Lista de razones del modelo: a favor en verde, en contra en gris.
- */
-export function RecompraRazones({ recompra }: { recompra: Recompra }) {
-    if (recompra.razones.length === 0) {
-        return null;
-    }
-
-    return (
-        <ul className="mt-1.5 flex flex-col gap-0.5 text-[11.5px]">
-            {recompra.razones.map((razon) => (
-                <li
-                    key={razon.texto}
-                    className={
-                        razon.a_favor
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : 'text-muted-foreground'
-                    }
-                >
-                    {razon.a_favor ? '▲' : '▼'} {razon.texto}
-                </li>
-            ))}
-        </ul>
     );
 }

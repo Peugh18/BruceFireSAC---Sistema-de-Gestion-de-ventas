@@ -10,6 +10,15 @@ use RuntimeException;
 class RetentionModel
 {
     /**
+     * Variables que se entienden solas como "en contra" en la frase simple.
+     * Monto, ticket, variedad y antigüedad pueden restar por un efecto
+     * estadístico (dependen de las demás) que confunde a quien lo lee.
+     *
+     * @var list<string>
+     */
+    private const EN_CONTRA_CLARAS = ['recencia_dias', 'frecuencia_compras', 'compras_90d', 'compro_recarga'];
+
+    /**
      * @var array<string, mixed>|null
      */
     protected ?array $modelData = null;
@@ -101,7 +110,8 @@ class RetentionModel
      * @param  array<string, float|int|bool>  $features
      * @return array{
      *     positivos: array<int, array{factor: string, impacto: string, detalle: string}>,
-     *     negativos: array<int, array{factor: string, impacto: string, detalle: string}>
+     *     negativos: array<int, array{factor: string, impacto: string, detalle: string}>,
+     *     resumen: string
      * }
      */
     public function explainFactors(array $features): array
@@ -121,6 +131,16 @@ class RetentionModel
 
         $positivos = [];
         $negativos = [];
+        $frasesAFavor = [];
+        $frasesEnContra = [];
+
+        foreach ($contribuciones as $item) {
+            if ($item['contribution'] > 0.05 && count($frasesAFavor) < 2) {
+                $frasesAFavor[] = $this->frase($item['feature'], $item['raw_value'], true);
+            } elseif ($item['contribution'] < -0.05 && count($frasesEnContra) < 1 && in_array($item['feature'], self::EN_CONTRA_CLARAS, true)) {
+                $frasesEnContra[] = $this->frase($item['feature'], $item['raw_value'], false);
+            }
+        }
 
         foreach ($contribuciones as $item) {
             $f = $item['feature'];
@@ -147,7 +167,72 @@ class RetentionModel
         return [
             'positivos' => $positivos,
             'negativos' => $negativos,
+            'resumen' => $this->unirFrases($frasesAFavor, $frasesEnContra),
         ];
+    }
+
+    /**
+     * La razón en una frase normal: "Compra seguido (42 compras) y es
+     * cliente hace 1 año y 7 meses, pero no compra hace 3 meses."
+     *
+     * @param  list<string>  $aFavor
+     * @param  list<string>  $enContra
+     */
+    protected function unirFrases(array $aFavor, array $enContra): string
+    {
+        $texto = implode(' y ', $aFavor);
+
+        if ($enContra !== []) {
+            $texto = $texto === '' ? implode(' y ', $enContra) : "{$texto}, pero ".implode(' y ', $enContra);
+        }
+
+        return $texto === '' ? 'No hay datos suficientes para explicar la predicción.' : mb_strtoupper(mb_substr($texto, 0, 1)).mb_substr($texto, 1).'.';
+    }
+
+    /**
+     * Una variable dicha en palabras simples.
+     */
+    protected function frase(string $feature, float $valor, bool $aFavor): string
+    {
+        $entero = (int) round($valor);
+
+        return match ($feature) {
+            'frecuencia_compras' => match (true) {
+                $aFavor => "compra seguido ({$entero} compras)",
+                $entero <= 1 => 'compró una sola vez',
+                default => "compra poco seguido ({$entero} compras)",
+            },
+            'recencia_dias' => $aFavor ? 'compró hace '.$this->tiempo($entero) : 'no compra hace '.$this->tiempo($entero),
+            'antiguedad_dias' => 'es cliente hace '.$this->tiempo($entero),
+            'compras_90d' => $entero > 0
+                ? "compró {$entero} ".($entero === 1 ? 'vez' : 'veces').' en los últimos 3 meses'
+                : 'no compra hace más de 3 meses',
+            'compro_recarga' => $entero > 0 ? 'recarga sus extintores con nosotros' : 'nunca ha recargado con nosotros',
+            'monto_total' => 'ha comprado S/ '.number_format($valor, 2).' en total',
+            'ticket_promedio' => 'gasta S/ '.number_format($valor, 2).' por pedido',
+            'diversidad_productos' => "compra {$entero} productos distintos",
+            default => str_replace('_', ' ', $feature),
+        };
+    }
+
+    /**
+     * "16 días", "5 meses", "1 año y 7 meses".
+     */
+    protected function tiempo(int $dias): string
+    {
+        if ($dias < 60) {
+            return $dias === 1 ? '1 día' : "{$dias} días";
+        }
+
+        if ($dias < 365) {
+            return (int) round($dias / 30).' meses';
+        }
+
+        $anios = intdiv($dias, 365);
+        $meses = (int) round(($dias - $anios * 365) / 30);
+        $textoAnios = $anios === 1 ? '1 año' : "{$anios} años";
+
+        return $meses > 0 && $meses < 12 ? "{$textoAnios} y {$meses} ".($meses === 1 ? 'mes' : 'meses') : $textoAnios;
     }
 
     /**
@@ -322,7 +407,7 @@ class RetentionModel
      * que más pesaron (a favor primero).
      *
      * @param  array{probabilidad: float, categoria: string, factores?: array<string, mixed>|null}  $resultado
-     * @return array{porcentaje: int, categoria: string, razones: list<array{texto: string, a_favor: bool}>}
+     * @return array{porcentaje: int, categoria: string, resumen: string, razones: list<array{texto: string, a_favor: bool}>}
      */
     public static function paraPantalla(array $resultado): array
     {
@@ -337,6 +422,7 @@ class RetentionModel
             // Un modelo nunca está 100 % seguro: se muestra entre 1 y 99 %.
             'porcentaje' => max(1, min(99, (int) round($resultado['probabilidad'] * 100))),
             'categoria' => $resultado['categoria'],
+            'resumen' => (string) ($resultado['factores']['resumen'] ?? implode('. ', array_column($razones, 'texto'))),
             'razones' => $razones,
         ];
     }

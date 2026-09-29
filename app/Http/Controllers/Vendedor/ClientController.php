@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Clientes\CreateClient;
 use App\Actions\Clientes\UpdateClient;
+use App\Console\Commands\ScoreClients;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Clientes\StoreClientRequest;
 use App\Http\Requests\Clientes\UpdateClientRequest;
@@ -18,6 +19,7 @@ use App\Services\Sunat\RucLookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -58,6 +60,8 @@ class ClientController extends Controller
 
         return Inertia::render('vendedor/clientes/index', [
             'clients' => $clients,
+            'vista' => $request->string('vista')->toString() === 'por-registrar' ? 'por-registrar' : 'clientes',
+            'porRegistrar' => $this->porRegistrar($request),
             'filters' => [
                 'search' => $search,
             ],
@@ -212,10 +216,50 @@ class ClientController extends Controller
     }
 
     /**
+     * Clientes del sistema anterior aún no registrados, de mayor a menor
+     * probabilidad de volver (la lista se calcula cada noche en
+     * ml:score-clients). Se filtra por nivel y búsqueda y se pagina aquí.
+     *
+     * @return array{conteo: array{todas: int, alta: int, media: int, baja: int}, filtros: array{nivel: string, buscar: string}, clientes: LengthAwarePaginator<int, array<mixed>>}
+     */
+    protected function porRegistrar(Request $request): array
+    {
+        $registrados = Client::query()->pluck('numero_documento')->flip();
+        $todos = collect(ScoreClients::clientesParaRecuperarGuardados())
+            ->reject(fn (array $cliente) => $registrados->has($cliente['documento']))
+            ->values();
+
+        $nivel = in_array($request->string('nivel')->toString(), ['alta', 'media', 'baja'], true) ? $request->string('nivel')->toString() : '';
+        $buscar = trim($request->string('buscar')->toString());
+        $filtrados = $todos
+            ->when($nivel !== '', fn ($clientes) => $clientes->where('categoria', $nivel))
+            ->when($buscar !== '', fn ($clientes) => $clientes->filter(fn (array $cliente) => str_contains(mb_strtoupper((string) $cliente['nombre']), mb_strtoupper($buscar))
+                || str_contains((string) $cliente['documento'], $buscar)))
+            ->values();
+
+        $pagina = max(1, $request->integer('pagina_registrar', 1));
+
+        return [
+            'conteo' => [
+                'todas' => $todos->count(),
+                'alta' => $todos->where('categoria', 'alta')->count(),
+                'media' => $todos->where('categoria', 'media')->count(),
+                'baja' => $todos->where('categoria', 'baja')->count(),
+            ],
+            'filtros' => ['nivel' => $nivel, 'buscar' => $buscar],
+            'clientes' => new LengthAwarePaginator($filtrados->forPage($pagina, 20)->values(), $filtrados->count(), 20, $pagina, [
+                'path' => $request->url(),
+                'pageName' => 'pagina_registrar',
+                'query' => $request->query(),
+            ]),
+        ];
+    }
+
+    /**
      * Probabilidad de que el cliente vuelva a comprar en 6 meses, calculada
      * al momento con su historial (sistema anterior + ventas nuevas).
      *
-     * @return array{porcentaje: int, categoria: string, razones: list<array{texto: string, a_favor: bool}>}|null
+     * @return array{porcentaje: int, categoria: string, resumen: string, razones: list<array{texto: string, a_favor: bool}>}|null
      */
     protected function recompra(Client $client): ?array
     {

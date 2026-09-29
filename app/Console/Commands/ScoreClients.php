@@ -19,8 +19,6 @@ class ScoreClients extends Command
 {
     public const CACHE_PARA_RECUPERAR = 'ml.clientes_para_recuperar';
 
-    private const MAXIMO_PARA_RECUPERAR = 150;
-
     /**
      * Execute the console command.
      */
@@ -188,7 +186,7 @@ class ScoreClients extends Command
      * Clientes del sistema anterior que todavía no están registrados,
      * ordenados por su probabilidad de volver a comprar: a quién llamar.
      *
-     * @return list<array{documento: string, nombre: string, ultima_compra: string, compras: int, monto_total: float, porcentaje: int, categoria: string, razones: list<array{texto: string, a_favor: bool}>}>
+     * @return list<array{documento: string, nombre: string, ultima_compra: string, compras: int, monto_total: float, porcentaje: int, categoria: string, resumen: string, razones: list<array{texto: string, a_favor: bool}>}>
      */
     protected function clientesParaRecuperar(RetentionModel $retentionModel, HistorialCompras $historial, Carbon $today): array
     {
@@ -222,6 +220,6 @@ class ScoreClients extends Command
 
         usort($clientes, fn (array $a, array $b) => $b['porcentaje'] <=> $a['porcentaje'] ?: strcmp($b['ultima_compra'], $a['ultima_compra']));
 
-        return array_slice($clientes, 0, self::MAXIMO_PARA_RECUPERAR);
+        return $clientes;
     }
 }

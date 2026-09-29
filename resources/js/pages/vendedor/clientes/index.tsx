@@ -12,6 +12,9 @@ import { FormEvent, useState } from 'react';
 
 import { FilasCargando } from '@/components/cargando';
 import ClientCreateDialog from '@/components/client-create-dialog';
+import ClientesPorRegistrar, {
+    type PorRegistrarData,
+} from '@/components/clientes-por-registrar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -63,6 +66,8 @@ type Props = {
         search?: string;
     };
     columns: string[];
+    vista: 'clientes' | 'por-registrar';
+    porRegistrar: PorRegistrarData;
     kpis: {
         total_clientes: number;
         nuevos_este_mes: number;
@@ -149,9 +154,23 @@ export default function ClientesIndex({
     filters,
     columns,
     kpis,
+    vista,
+    porRegistrar,
 }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [documentoARegistrar, setDocumentoARegistrar] = useState('');
+
+    const cambiarVista = (nueva: Props['vista']) =>
+        router.get(
+            clientes.index.url(currentTeam.slug, {
+                query: {
+                    vista: nueva === 'por-registrar' ? nueva : undefined,
+                },
+            }),
+            {},
+            { preserveScroll: true },
+        );
     const recargando = useRecargando();
     const submitSearch = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -255,201 +274,262 @@ export default function ClientesIndex({
                 </div>
 
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
-                    <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
-                        <form
-                            onSubmit={submitSearch}
-                            className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3"
-                        >
-                            <Search
-                                className="text-muted-foreground size-3.5 shrink-0"
-                                strokeWidth={2}
-                            />
-                            <input
-                                value={search}
-                                onChange={(event) =>
-                                    setSearch(event.target.value)
-                                }
-                                placeholder="Buscar por nombre, razón social, RUC o DNI..."
-                                className="text-foreground placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
-                            />
-                        </form>
-
-                        <Button
-                            asChild
-                            variant="outline"
-                            className="border-border bg-card text-foreground/80 h-10 rounded-[9px] px-3.5 text-[12.5px] font-semibold shadow-none"
-                        >
-                            <a
-                                href={clientes.export.url(currentTeam.slug, {
-                                    query: {
-                                        search: filters.search || undefined,
-                                    },
-                                })}
+                    <div className="border-border mb-4 flex gap-5 border-b text-[13px]">
+                        {(
+                            [
+                                [
+                                    'clientes',
+                                    'Mis clientes',
+                                    kpis.total_clientes,
+                                ],
+                                [
+                                    'por-registrar',
+                                    'Por registrar',
+                                    porRegistrar.conteo.todas,
+                                ],
+                            ] as const
+                        ).map(([clave, etiqueta, cantidad]) => (
+                            <button
+                                key={clave}
+                                type="button"
+                                onClick={() => cambiarVista(clave)}
+                                className={`-mb-px border-b-2 pb-2.5 font-semibold transition-colors ${
+                                    vista === clave
+                                        ? 'border-primary text-foreground'
+                                        : 'text-muted-foreground hover:text-foreground border-transparent'
+                                }`}
                             >
-                                <Download className="size-3.5" />
-                                Exportar
-                            </a>
-                        </Button>
-                        <Button
-                            type="button"
-                            onClick={() => {
+                                {etiqueta}{' '}
+                                <span className="text-muted-foreground font-normal">
+                                    {formatNumber(cantidad)}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {vista === 'por-registrar' ? (
+                        <ClientesPorRegistrar
+                            teamSlug={currentTeam.slug}
+                            datos={porRegistrar}
+                            onRegistrar={(documento) => {
+                                setDocumentoARegistrar(documento);
                                 setDialogOpen(true);
                             }}
-                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
-                        >
-                            <Plus className="size-3.5" />
-                            Agregar cliente
-                        </Button>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-[12.5px]">
-                            <thead>
-                                <tr>
-                                    {columns.map((column) => (
-                                        <th
-                                            key={column}
-                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap uppercase"
-                                        >
-                                            {column}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recargando ? (
-                                    <FilasCargando
-                                        columnas={columns.length}
-                                        filas={clients.data.length}
+                        />
+                    ) : (
+                        <>
+                            <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
+                                <form
+                                    onSubmit={submitSearch}
+                                    className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3"
+                                >
+                                    <Search
+                                        className="text-muted-foreground size-3.5 shrink-0"
+                                        strokeWidth={2}
                                     />
-                                ) : (
-                                    clients.data.map((client) => {
-                                        return (
-                                            <tr key={client.id}>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
-                                                            {initials(
-                                                                client.cliente
-                                                                    .razon_social,
-                                                            ) ||
-                                                                client.cliente
-                                                                    .avatar}
-                                                        </div>
-                                                        <div className="min-w-[180px]">
-                                                            <div className="text-foreground flex items-center gap-1.5 font-bold">
-                                                                <Link
-                                                                    href={clientes.show(
-                                                                        {
-                                                                            current_team:
-                                                                                currentTeam.slug,
-                                                                            client: client.id,
-                                                                        },
-                                                                    )}
-                                                                    className="hover:text-primary hover:underline"
-                                                                >
-                                                                    {
+                                    <input
+                                        value={search}
+                                        onChange={(event) =>
+                                            setSearch(event.target.value)
+                                        }
+                                        placeholder="Buscar por nombre, razón social, RUC o DNI..."
+                                        className="text-foreground placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
+                                    />
+                                </form>
+
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="border-border bg-card text-foreground/80 h-10 rounded-[9px] px-3.5 text-[12.5px] font-semibold shadow-none"
+                                >
+                                    <a
+                                        href={clientes.export.url(
+                                            currentTeam.slug,
+                                            {
+                                                query: {
+                                                    search:
+                                                        filters.search ||
+                                                        undefined,
+                                                },
+                                            },
+                                        )}
+                                    >
+                                        <Download className="size-3.5" />
+                                        Exportar
+                                    </a>
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={() => {
+                                        setDocumentoARegistrar('');
+                                        setDialogOpen(true);
+                                    }}
+                                    className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                                >
+                                    <Plus className="size-3.5" />
+                                    Agregar cliente
+                                </Button>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full border-collapse text-[12.5px]">
+                                    <thead>
+                                        <tr>
+                                            {columns.map((column) => (
+                                                <th
+                                                    key={column}
+                                                    className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap uppercase"
+                                                >
+                                                    {column}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recargando ? (
+                                            <FilasCargando
+                                                columnas={columns.length}
+                                                filas={clients.data.length}
+                                            />
+                                        ) : (
+                                            clients.data.map((client) => {
+                                                return (
+                                                    <tr key={client.id}>
+                                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
+                                                                    {initials(
                                                                         client
                                                                             .cliente
-                                                                            .razon_social
-                                                                    }
-                                                                </Link>
-                                                                {!client.activo && (
-                                                                    <Badge className="bg-destructive/10 text-destructive rounded-full border-transparent px-1.5 py-0 text-[9.5px] font-bold shadow-none">
-                                                                        Inactivo
-                                                                    </Badge>
-                                                                )}
+                                                                            .razon_social,
+                                                                    ) ||
+                                                                        client
+                                                                            .cliente
+                                                                            .avatar}
+                                                                </div>
+                                                                <div className="min-w-[180px]">
+                                                                    <div className="text-foreground flex items-center gap-1.5 font-bold">
+                                                                        <Link
+                                                                            href={clientes.show(
+                                                                                {
+                                                                                    current_team:
+                                                                                        currentTeam.slug,
+                                                                                    client: client.id,
+                                                                                },
+                                                                            )}
+                                                                            className="hover:text-primary hover:underline"
+                                                                        >
+                                                                            {
+                                                                                client
+                                                                                    .cliente
+                                                                                    .razon_social
+                                                                            }
+                                                                        </Link>
+                                                                        {!client.activo && (
+                                                                            <Badge className="bg-destructive/10 text-destructive rounded-full border-transparent px-1.5 py-0 text-[9.5px] font-bold shadow-none">
+                                                                                Inactivo
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-muted-foreground text-[11px]">
+                                                                        {
+                                                                            client.codigo_interno
+                                                                        }{' '}
+                                                                        ·{' '}
+                                                                        {client.cliente.tipo_documento.toUpperCase()}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div className="text-muted-foreground text-[11px]">
-                                                                {
-                                                                    client.codigo_interno
-                                                                }{' '}
-                                                                ·{' '}
-                                                                {client.cliente.tipo_documento.toUpperCase()}
+                                                        </td>
+                                                        <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
+                                                            {client.documento}
+                                                        </td>
+                                                        <td className="border-border text-muted-foreground max-w-[280px] border-b px-2.5 py-[13px]">
+                                                            <span className="line-clamp-2">
+                                                                {client.direccion ??
+                                                                    '-'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                                            {renderSunatBadge(
+                                                                client,
+                                                            )}
+                                                        </td>
+                                                        <td className="border-border text-muted-foreground border-b px-2.5 py-[13px]">
+                                                            {fechaCorta(
+                                                                client.ultima_compra,
+                                                            ) || '-'}
+                                                        </td>
+                                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                                            <div className="flex gap-1.5">
+                                                                <Button
+                                                                    asChild
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
+                                                                >
+                                                                    <Link
+                                                                        href={clientes.show(
+                                                                            {
+                                                                                current_team:
+                                                                                    currentTeam.slug,
+                                                                                client: client.id,
+                                                                            },
+                                                                        )}
+                                                                    >
+                                                                        <Eye className="size-3.5" />
+                                                                    </Link>
+                                                                </Button>
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
-                                                    {client.documento}
-                                                </td>
-                                                <td className="border-border text-muted-foreground max-w-[280px] border-b px-2.5 py-[13px]">
-                                                    <span className="line-clamp-2">
-                                                        {client.direccion ??
-                                                            '-'}
-                                                    </span>
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
-                                                    {renderSunatBadge(client)}
-                                                </td>
-                                                <td className="border-border text-muted-foreground border-b px-2.5 py-[13px]">
-                                                    {fechaCorta(
-                                                        client.ultima_compra,
-                                                    ) || '-'}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
-                                                    <div className="flex gap-1.5">
-                                                        <Button
-                                                            asChild
-                                                            variant="outline"
-                                                            size="icon"
-                                                            className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
-                                                        >
-                                                            <Link
-                                                                href={clientes.show(
-                                                                    {
-                                                                        current_team:
-                                                                            currentTeam.slug,
-                                                                        client: client.id,
-                                                                    },
-                                                                )}
-                                                            >
-                                                                <Eye className="size-3.5" />
-                                                            </Link>
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
-                        <span>
-                            Mostrando {clients.from ?? 0}-{clients.to ?? 0} de{' '}
-                            {formatNumber(clients.total)} clientes
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                            {clients.links.map((link, index) =>
-                                link.url ? (
-                                    <Link
-                                        key={`${link.label}-${index}`}
-                                        href={link.url}
-                                        preserveScroll
-                                        preserveState
-                                        className={[
-                                            'flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-["IBM_Plex_Mono",monospace] text-[11.5px] no-underline',
-                                            link.active
-                                                ? 'bg-primary font-bold text-white'
-                                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                                        ].join(' ')}
-                                    >
-                                        {cleanPaginationLabel(link.label)}
-                                    </Link>
-                                ) : (
-                                    <span
-                                        key={`${link.label}-${index}`}
-                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
-                                    >
-                                        {cleanPaginationLabel(link.label)}
-                                    </span>
-                                ),
-                            )}
-                        </div>
-                    </div>
+                            <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
+                                <span>
+                                    Mostrando {clients.from ?? 0}-
+                                    {clients.to ?? 0} de{' '}
+                                    {formatNumber(clients.total)} clientes
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {clients.links.map((link, index) =>
+                                        link.url ? (
+                                            <Link
+                                                key={`${link.label}-${index}`}
+                                                href={link.url}
+                                                preserveScroll
+                                                preserveState
+                                                className={[
+                                                    'flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-["IBM_Plex_Mono",monospace] text-[11.5px] no-underline',
+                                                    link.active
+                                                        ? 'bg-primary font-bold text-white'
+                                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                                                ].join(' ')}
+                                            >
+                                                {cleanPaginationLabel(
+                                                    link.label,
+                                                )}
+                                            </Link>
+                                        ) : (
+                                            <span
+                                                key={`${link.label}-${index}`}
+                                                className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
+                                            >
+                                                {cleanPaginationLabel(
+                                                    link.label,
+                                                )}
+                                            </span>
+                                        ),
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </Card>
             </div>
 
@@ -457,6 +537,7 @@ export default function ClientesIndex({
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
                 teamSlug={currentTeam.slug}
+                initialDocumento={documentoARegistrar}
                 onCreated={(client) =>
                     router.visit(
                         clientes.show.url({

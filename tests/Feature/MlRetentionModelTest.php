@@ -271,7 +271,7 @@ test('el dataset de entrenamiento marca quien volvio a comprar despues de cada c
     File::delete($path);
 });
 
-test('el calculo diario arma la lista de clientes del historico para recuperar y Por vencer la muestra', function () {
+test('el calculo diario arma la lista de clientes del historico por registrar y Clientes la muestra', function () {
     $registrado = Client::factory()->create(['numero_documento' => '20555555555']);
     MlVentaHistorica::query()->insert([
         ['fecha' => now()->subMonths(2)->toDateString(), 'tipo_doc' => 'F', 'comprobante' => 'F001-1', 'documento_cliente' => '20444444444', 'nombre_cliente' => 'POR RECUPERAR SAC', 'categoria' => 'recarga_mantenimiento', 'producto_original' => 'RECARGA', 'cantidad' => 1, 'total' => 55, 'archivo_origen' => 'a'],
@@ -284,16 +284,22 @@ test('el calculo diario arma la lista de clientes del historico para recuperar y
     $vendedor->assignRole('Vendedor');
 
     $this->actingAs($vendedor)
-        ->get(route('vendedor.alertas.index', ['current_team' => $vendedor->currentTeam]))
+        ->get(route('vendedor.clientes.index', ['current_team' => $vendedor->currentTeam, 'vista' => 'por-registrar']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('vendedor/alertas/index')
-            ->has('paraRecuperar', 1)
-            ->where('paraRecuperar.0.documento', '20444444444')
-            ->where('paraRecuperar.0.nombre', 'POR RECUPERAR SAC')
-            ->has('paraRecuperar.0.porcentaje')
-            ->has('paraRecuperar.0.razones')
+            ->component('vendedor/clientes/index')
+            ->where('vista', 'por-registrar')
+            ->where('porRegistrar.conteo.todas', 1)
+            ->has('porRegistrar.clientes.data', 1)
+            ->where('porRegistrar.clientes.data.0.documento', '20444444444')
+            ->where('porRegistrar.clientes.data.0.nombre', 'POR RECUPERAR SAC')
+            ->has('porRegistrar.clientes.data.0.porcentaje')
+            ->has('porRegistrar.clientes.data.0.resumen')
         );
+
+    $this->actingAs($vendedor)
+        ->get(route('vendedor.clientes.index', ['current_team' => $vendedor->currentTeam, 'vista' => 'por-registrar', 'buscar' => 'NADIE']))
+        ->assertInertia(fn (Assert $page) => $page->has('porRegistrar.clientes.data', 0));
 
     expect(ClientRetentionScore::query()->where('client_id', $registrado->id)->exists())->toBeTrue();
 });
@@ -310,6 +316,6 @@ test('la ficha del cliente muestra su probabilidad de volver a comprar con sus r
         ->assertInertia(fn (Assert $page) => $page
             ->where('recompra.porcentaje', fn (int $porcentaje) => $porcentaje >= 1 && $porcentaje <= 99)
             ->where('recompra.categoria', fn (string $categoria) => in_array($categoria, ['alta', 'media', 'baja'], true))
-            ->has('recompra.razones')
+            ->has('recompra.resumen')
         );
 });

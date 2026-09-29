@@ -1,20 +1,9 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import {
-    CheckCircle2,
-    FilePlus2,
-    MessageSquare,
-    Search,
-    UserRoundPlus,
-} from 'lucide-react';
+import { CheckCircle2, FilePlus2, MessageSquare, Search } from 'lucide-react';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 
-import ClientCreateDialog from '@/components/client-create-dialog';
-import {
-    RecompraBadge,
-    RecompraRazones,
-    type Recompra,
-} from '@/components/recompra-badge';
+import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
@@ -36,21 +25,12 @@ export type AlertItem = {
     recompra: Recompra | null;
 };
 
-export type ClienteParaRecuperar = Recompra & {
-    documento: string;
-    nombre: string;
-    ultima_compra: string;
-    compras: number;
-    monto_total: number;
-};
-
 export type Props = {
     alerts: {
         vencidas: AlertItem[];
         esta_semana: AlertItem[];
         este_mes: AlertItem[];
     };
-    paraRecuperar: ClienteParaRecuperar[];
 };
 
 function initials(value: string | undefined): string {
@@ -63,7 +43,7 @@ function initials(value: string | undefined): string {
         .join('');
 }
 
-export default function AlertasIndex({ alerts, paraRecuperar }: Props) {
+export default function AlertasIndex({ alerts }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
@@ -72,18 +52,9 @@ export default function AlertasIndex({ alerts, paraRecuperar }: Props) {
             : '');
 
     const [activeTab, setActiveTab] = useState<
-        'todas' | 'vencidas' | 'esta_semana' | 'este_mes' | 'recuperar'
+        'todas' | 'vencidas' | 'esta_semana' | 'este_mes'
     >('todas');
     const [search, setSearch] = useState('');
-    const [registrando, setRegistrando] = useState<string | null>(null);
-
-    const recuperar = search.trim()
-        ? paraRecuperar.filter(
-              (cliente) =>
-                  cliente.nombre.toLowerCase().includes(search.toLowerCase()) ||
-                  cliente.documento.includes(search.trim()),
-          )
-        : paraRecuperar;
 
     const vencidas = alerts?.vencidas ?? [];
     const estaSemana = alerts?.esta_semana ?? [];
@@ -111,11 +82,6 @@ export default function AlertasIndex({ alerts, paraRecuperar }: Props) {
         { id: 'vencidas', label: 'Vencidas', count: vencidas.length },
         { id: 'esta_semana', label: 'Esta semana', count: estaSemana.length },
         { id: 'este_mes', label: 'Este mes', count: esteMes.length },
-        {
-            id: 'recuperar',
-            label: 'Para recuperar',
-            count: paraRecuperar.length,
-        },
     ] as const;
 
     return (
@@ -169,80 +135,8 @@ export default function AlertasIndex({ alerts, paraRecuperar }: Props) {
                     })}
                 </div>
 
-                {activeTab === 'recuperar' && (
-                    <div className="flex flex-col gap-3">
-                        <p className="text-muted-foreground text-[12.5px]">
-                            Clientes que compraron en el sistema anterior y
-                            todavía no están registrados, ordenados por su
-                            probabilidad de volver a comprar en los próximos 6
-                            meses. Regístralos para verlos en tus ventas.
-                        </p>
-                        {recuperar.length === 0 ? (
-                            <Card className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-[16px] p-12 text-center shadow-none">
-                                <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
-                                <p className="text-foreground text-sm font-bold">
-                                    No hay clientes para recuperar
-                                </p>
-                                <p className="text-muted-foreground text-xs">
-                                    {search
-                                        ? 'No se encontraron resultados para tu búsqueda.'
-                                        : 'La lista se calcula cada noche con el historial de compras.'}
-                                </p>
-                            </Card>
-                        ) : (
-                            recuperar.map((cliente) => (
-                                <div
-                                    key={cliente.documento}
-                                    className="border-border bg-card flex flex-col gap-3 rounded-[14px] border p-4 sm:flex-row sm:items-center sm:gap-4"
-                                >
-                                    <div className="bg-muted text-foreground/80 flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold">
-                                        {initials(cliente.nombre)}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-foreground text-[13.5px] font-bold">
-                                                {cliente.nombre}
-                                            </span>
-                                            <RecompraBadge recompra={cliente} />
-                                        </div>
-                                        <div className="text-muted-foreground mt-1 text-[12px]">
-                                            <span className="font-mono">
-                                                {cliente.documento}
-                                            </span>
-                                            {' — '}
-                                            {cliente.compras} compra(s) por S/{' '}
-                                            {cliente.monto_total.toLocaleString(
-                                                'es-PE',
-                                                { minimumFractionDigits: 2 },
-                                            )}
-                                            {' — '}
-                                            Última compra:{' '}
-                                            <span className="font-mono">
-                                                {cliente.ultima_compra}
-                                            </span>
-                                        </div>
-                                        <RecompraRazones recompra={cliente} />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setRegistrando(cliente.documento)
-                                        }
-                                        className="bg-primary hover:bg-primary/90 inline-flex h-9 items-center gap-1.5 self-start rounded-[9px] px-3.5 text-[12px] font-bold text-white sm:self-center"
-                                    >
-                                        <UserRoundPlus className="size-3.5" />
-                                        <span>Registrar cliente</span>
-                                    </button>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                )}
-
                 {/* List of Alerts */}
-                <div
-                    className={`flex flex-col gap-3 ${activeTab === 'recuperar' ? 'hidden' : ''}`}
-                >
+                <div className="flex flex-col gap-3">
                     {currentList.length === 0 ? (
                         <Card className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-[16px] p-12 text-center shadow-none">
                             <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
@@ -397,16 +291,6 @@ export default function AlertasIndex({ alerts, paraRecuperar }: Props) {
                     )}
                 </div>
             </div>
-
-            <ClientCreateDialog
-                open={registrando !== null}
-                onOpenChange={(open) => !open && setRegistrando(null)}
-                teamSlug={teamSlug}
-                initialDocumento={registrando ?? ''}
-                onCreated={(client) =>
-                    router.visit(`/${teamSlug}/vendedor/clientes/${client.id}`)
-                }
-            />
         </VendedorLayout>
     );
 }
