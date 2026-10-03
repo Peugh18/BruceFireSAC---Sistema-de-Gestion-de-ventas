@@ -47,7 +47,9 @@ class CompanySetting extends Model
             'nombre_comercial' => config('billing.company.nombre_comercial', 'BRUCE FIRE'),
             'ruc' => (string) config('billing.company.ruc'),
             'direccion' => config('billing.company.direccion'),
-            'ubigeo' => config('billing.company.ubigeo'),
+            // Un BILLING_COMPANY_UBIGEO vacío (.env recién copiado del
+            // ejemplo) es "sin ubigeo", no el código '' que no existe.
+            'ubigeo' => config('billing.company.ubigeo') ?: null,
             'instructor_capacitacion' => 'Edgar Guevara Cabrera',
         ]);
     }
