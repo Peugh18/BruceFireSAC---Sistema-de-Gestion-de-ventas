@@ -81,7 +81,7 @@ export function SaleNotesPanel({
     const [kind, setKind] = useState<NoteKind>('nota_credito');
 
     // Solo un comprobante que SUNAT ya aceptó admite notas; antes de eso se
-    // corrige con "Editar comprobante".
+    // corrige con el botón "Editar" de la venta.
     const original = documents
         .filter(
             (d) =>

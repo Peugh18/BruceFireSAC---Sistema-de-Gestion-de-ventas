@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Billing\AnularVentaPorEnviar;
-use App\Actions\Billing\CorregirComprobante;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Certificates\EmitirCertificadoDeServicio;
 use App\Actions\Sales\CambiarUnidadVendida;
 use App\Actions\Sales\ConfirmSale;
 use App\Actions\Sales\CreateSale;
 use App\Actions\Sales\DescartarVentaSinComprobante;
+use App\Actions\Sales\EditarVentaEmitida;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Sales\CorregirComprobanteRequest;
 use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\CashRegister;
 use App\Models\Client;
@@ -66,6 +65,7 @@ class SaleController extends Controller
                     ->last()?->sunat_estado,
                 'total' => $sale->total,
                 'estado' => $sale->estado,
+                'editable' => $sale->sePuedeEditar(),
             ]);
 
         return Inertia::render('vendedor/ventas/index', [
@@ -111,15 +111,20 @@ class SaleController extends Controller
     }
 
     /**
-     * Editar una venta en borrador: el mismo formulario de nueva venta, ya
-     * lleno. Al guardar conserva su número.
+     * Único punto para editar una venta: el mismo formulario de nueva venta,
+     * ya lleno. Sirve para un borrador, una nota de venta y una factura o
+     * boleta que SUNAT aún no recibe o que rechazó. Al guardar conserva su
+     * número. Una aceptada por SUNAT se corrige con nota de crédito.
      */
     public function edit(Team $current_team, Sale $sale, Request $request): Response|RedirectResponse
     {
         $this->assertSedeAccess($request, $sale);
+        $sale->load('electronicDocuments');
 
-        if ($sale->estado !== 'borrador') {
-            Inertia::flash('toast', ['type' => 'error', 'message' => "La venta {$sale->numero_interno} ya se emitió: corrígela desde su detalle."]);
+        if (! $sale->sePuedeEditar()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $sale->estado === 'anulada'
+                ? "La venta {$sale->numero_interno} está anulada: usa «Rehacer venta»."
+                : "La venta {$sale->numero_interno} ya fue aceptada por SUNAT: corrígela con una nota de crédito."]);
 
             return redirect()->route('vendedor.ventas.show', ['current_team' => $current_team, 'sale' => $sale]);
         }
@@ -139,7 +144,7 @@ class SaleController extends Controller
         ]);
     }
 
-    public function update(Team $current_team, Sale $sale, StoreSaleRequest $request, CreateSale $createSale, ConfirmSale $confirmSale): RedirectResponse
+    public function update(Team $current_team, Sale $sale, StoreSaleRequest $request, CreateSale $createSale, ConfirmSale $confirmSale, EditarVentaEmitida $editarVentaEmitida): RedirectResponse
     {
         $this->assertSedeAccess($request, $sale);
 
@@ -148,6 +153,15 @@ class SaleController extends Controller
 
         if ($sedeId = $request->user()->sedeRestringidaId()) {
             $data['sede_id'] = $sedeId;
+        }
+
+        if ($sale->estado !== 'borrador') {
+            $sale = $editarVentaEmitida->handle($sale, $data, $items, $request->user()->id);
+            $numero = $sale->numeroComprobante() ?? $sale->numero_interno;
+
+            Inertia::flash('toast', ['type' => 'success', 'message' => "Venta {$sale->numero_interno} corregida: {$numero}."]);
+
+            return redirect()->route('vendedor.ventas.show', ['current_team' => $current_team, 'sale' => $sale]);
         }
 
         $emitir = $request->boolean('emitir');
@@ -166,21 +180,6 @@ class SaleController extends Controller
     }
 
     /**
-     * Precio o producto mal en un comprobante que aún no se envió a SUNAT:
-     * se anula (el número se libera) y se abre una copia lista para corregir.
-     */
-    public function corregirProductos(Team $current_team, Sale $sale, Request $request, AnularVentaPorEnviar $anularVentaPorEnviar): RedirectResponse
-    {
-        $this->assertSedeAccess($request, $sale);
-
-        $anularVentaPorEnviar->handle($sale);
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => "Venta {$sale->numero_interno} anulada. Corrige los datos y vuelve a emitir."]);
-
-        return redirect()->route('vendedor.ventas.create', ['current_team' => $current_team, 'rehacer' => $sale->id]);
-    }
-
-    /**
      * Datos de una venta para llenar el formulario: para editar su borrador
      * o, como copia, para rehacerla después de anularla.
      *
@@ -189,7 +188,7 @@ class SaleController extends Controller
     protected function ventaParaFormulario(int $saleId, ?int $sedeId, bool $comoCopia): ?array
     {
         $sale = Sale::query()
-            ->with('client', 'items.product', 'items.service', 'items.inventoryUnit', 'installments')
+            ->with('client', 'items.product', 'items.service', 'items.inventoryUnit', 'installments', 'payments', 'electronicDocuments')
             ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
             ->find($saleId);
 
@@ -197,16 +196,27 @@ class SaleController extends Controller
             return null;
         }
 
+        // Al emitirse, el medio de pago pasa al cobro registrado.
+        $medioPago = $sale->medio_pago
+            ?? $sale->payments->whereNull('installment_id')->where('forma_pago', '!=', 'deposito')->sortBy('id')->pluck('forma_pago')->first()
+            ?? 'efectivo';
+        $emitida = ! $comoCopia && $sale->estado === 'confirmada';
+
         return [
             'id' => $comoCopia ? null : $sale->id,
             'numero_interno' => $sale->numero_interno,
+            'emitida' => $emitida,
+            'comprobante' => $emitida ? $sale->numeroComprobante() : null,
+            'rechazado' => $emitida && (bool) $sale->comprobanteElectronico()?->fueRechazado(),
+            'fecha' => $emitida ? $sale->fecha->toDateString() : null,
             'client' => $sale->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             'sede_id' => $sale->sede_id,
             'destino' => $sale->destino,
             'referencia' => $sale->referencia,
             'condicion_pago' => $sale->esCredito() ? 'credito' : 'contado',
-            'medio_pago' => $sale->medio_pago ?? 'efectivo',
-            'numero_operacion' => $sale->numero_operacion,
+            'medio_pago' => $medioPago,
+            'numero_operacion' => $sale->numero_operacion
+                ?? $sale->payments->whereNull('installment_id')->where('forma_pago', $medioPago)->pluck('numero_operacion')->first(),
             'comprobante_tipo' => $sale->comprobante_tipo,
             'observaciones' => $sale->observaciones,
             'cuotas' => $comoCopia ? [] : $sale->installments->map(fn ($cuota) => [
@@ -375,8 +385,7 @@ class SaleController extends Controller
                 'fecha' => $sale->fecha->toDateString(),
                 'client' => $sale->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             ],
-            'clientesVarios' => Client::clientesVarios()->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
-            'limiteBoletaSinIdentificar' => Sale::LIMITE_BOLETA_SIN_IDENTIFICAR,
+            'editable' => $sale->sePuedeEditar(),
             'certificados' => SaleCertificateController::certificados($sale),
             'tieneEquipos' => $sale->items->contains(fn ($item) => $item->equipment_id !== null),
             'tiposServicio' => EmitirCertificadoDeServicio::tiposDeServicio()
@@ -411,26 +420,6 @@ class SaleController extends Controller
             'current_team' => $current_team,
             'sale' => $sale,
         ]);
-    }
-
-    /**
-     * Cambia factura ↔ boleta o el cliente de un comprobante que aún no se
-     * envió a SUNAT o que fue rechazado, sin nota de crédito.
-     */
-    public function corregirComprobante(Team $current_team, Sale $sale, CorregirComprobanteRequest $request, CorregirComprobante $corregirComprobante): RedirectResponse
-    {
-        $this->assertSedeAccess($request, $sale);
-
-        $documento = $corregirComprobante->handle(
-            $sale,
-            $request->validated('comprobante_tipo'),
-            (int) $request->validated('client_id'),
-            $request->user()->id,
-        );
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => "Comprobante corregido: {$documento->serie}-{$documento->correlativo}."]);
-
-        return back();
     }
 
     public function enviarSunat(Team $current_team, Sale $sale, Request $request, EmitElectronicDocument $emitElectronicDocument): RedirectResponse

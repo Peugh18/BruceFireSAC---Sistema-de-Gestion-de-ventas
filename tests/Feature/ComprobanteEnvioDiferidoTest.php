@@ -1,10 +1,10 @@
 <?php
 
 use App\Actions\Billing\AnularVentaPorEnviar;
-use App\Actions\Billing\CorregirComprobante;
 use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Sales\ConfirmSale;
 use App\Actions\Sales\CreateSale;
+use App\Actions\Sales\EditarVentaEmitida;
 use App\Contracts\SunatClientInterface;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
@@ -87,6 +87,33 @@ function ventaConfirmada(Client $client, string $comprobante = 'factura', ?User 
     return app(ConfirmSale::class)->handle($sale);
 }
 
+/**
+ * Edita una venta emitida con el mismo formulario: parte de lo que ya tiene
+ * y cambia solo lo indicado.
+ *
+ * @param  array<string, mixed>  $cambios
+ */
+function editarVenta(Sale $sale, array $cambios = [], ?array $items = null): Sale
+{
+    $sale->load('items.inventoryUnit');
+
+    return app(EditarVentaEmitida::class)->handle($sale, [
+        'client_id' => $sale->client_id,
+        'sede_id' => $sale->sede_id,
+        'destino' => $sale->destino,
+        'condicion_pago' => 'contado',
+        'medio_pago' => 'efectivo',
+        'comprobante_tipo' => $sale->comprobante_tipo,
+        ...$cambios,
+    ], $items ?? $sale->items->map(fn ($item) => [
+        'tipo_linea' => 'unidad_nueva',
+        'numero_serie' => $item->inventoryUnit->numero_serie,
+        'product_id' => $item->product_id,
+        'cantidad' => 1,
+        'precio_unitario' => (float) $item->precio_unitario,
+    ])->all(), $sale->vendedor_id);
+}
+
 function comprobanteDe(Sale $sale): ElectronicDocument
 {
     return $sale->electronicDocuments()->latest('id')->firstOrFail();
@@ -150,13 +177,22 @@ test('pasar una factura por enviar a boleta libera su numero para la siguiente f
     ventaConfirmada(Client::factory()->create(), vendedor: $user);
     $clienteDni = Client::factory()->dni()->create();
 
+    $equivocada->load('items.inventoryUnit');
+    $item = $equivocada->items->first();
+
     $this->actingAs($user)
-        ->put(route('vendedor.ventas.corregir-comprobante', ['current_team' => $user->currentTeam, 'sale' => $equivocada]), [
-            'comprobante_tipo' => 'boleta',
+        ->put(route('vendedor.ventas.update', ['current_team' => $user->currentTeam, 'sale' => $equivocada]), [
             'client_id' => $clienteDni->id,
+            'sede_id' => $equivocada->sede_id,
+            'fecha' => now()->toDateString(),
+            'destino' => 'local_cliente',
+            'condicion_pago' => 'contado',
+            'medio_pago' => 'efectivo',
+            'comprobante_tipo' => 'boleta',
+            'items' => [['tipo_linea' => 'unidad_nueva', 'numero_serie' => $item->inventoryUnit->numero_serie, 'product_id' => $item->product_id, 'cantidad' => 1, 'precio_unitario' => 65]],
         ])
         ->assertSessionHasNoErrors()
-        ->assertRedirect();
+        ->assertRedirect(route('vendedor.ventas.show', ['current_team' => $user->currentTeam, 'sale' => $equivocada]));
 
     $boleta = comprobanteDe($equivocada);
 
@@ -176,7 +212,7 @@ test('corregir solo el cliente de un comprobante por enviar mantiene su numero y
     $antes = comprobanteDe($sale);
     $otroRuc = Client::factory()->create();
 
-    $documento = app(CorregirComprobante::class)->handle($sale, 'factura', $otroRuc->id);
+    $documento = comprobanteDe(editarVenta($sale, ['client_id' => $otroRuc->id]));
 
     expect($documento->id)->toBe($antes->id)
         ->and($documento->correlativo)->toBe($antes->correlativo)
@@ -186,10 +222,56 @@ test('corregir solo el cliente de un comprobante por enviar mantiene su numero y
     Storage::disk('local')->assertExists($documento->pdf_path);
 });
 
+test('editar productos y precios de una factura por enviar conserva la venta y el numero', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $antes = comprobanteDe($sale);
+    $item = $sale->items()->with('inventoryUnit')->first();
+    $unidadAnterior = $item->inventoryUnit;
+    $otra = InventoryUnit::factory()->create([
+        'product_id' => $item->product_id,
+        'sede_almacen_id' => $unidadAnterior->sede_almacen_id,
+        'estado' => 'disponible',
+    ]);
+
+    $editada = editarVenta($sale, items: [[
+        'tipo_linea' => 'unidad_nueva',
+        'numero_serie' => $otra->numero_serie,
+        'product_id' => $item->product_id,
+        'cantidad' => 1,
+        'precio_unitario' => 80,
+    ]]);
+    $documento = comprobanteDe($editada);
+
+    expect($editada->id)->toBe($sale->id)
+        ->and($editada->estado)->toBe('confirmada')
+        ->and($editada->numero_interno)->toBe($sale->numero_interno)
+        ->and((float) $editada->total)->toBe(80.0)
+        ->and($documento->id)->toBe($antes->id)
+        ->and($documento->correlativo)->toBe($antes->correlativo)
+        ->and($documento->sunat_estado)->toBe('por_enviar')
+        ->and($unidadAnterior->fresh()->estado)->toBe('disponible')
+        ->and($otra->fresh()->estado)->toBe('vendido')
+        ->and((float) $editada->payments()->sum('monto'))->toBe(80.0)
+        ->and(Sale::count())->toBe(1);
+});
+
+test('una venta aceptada por SUNAT no se abre para editar', function () {
+    $user = vendedorUser();
+    $sale = ventaConfirmada(Client::factory()->create(), vendedor: $user);
+    $this->travel(7)->hours();
+    $this->artisan('billing:enviar-programados');
+
+    $this->actingAs($user)
+        ->get(route('vendedor.ventas.edit', ['current_team' => $user->currentTeam, 'sale' => $sale]))
+        ->assertRedirect(route('vendedor.ventas.show', ['current_team' => $user->currentTeam, 'sale' => $sale]));
+
+    expect($sale->fresh()->load('electronicDocuments')->sePuedeEditar())->toBeFalse();
+});
+
 test('no se puede corregir a factura para un cliente con dni', function () {
     $sale = ventaConfirmada(Client::factory()->dni()->create(), 'boleta');
 
-    expect(fn () => app(CorregirComprobante::class)->handle($sale, 'factura', $sale->client_id))
+    expect(fn () => editarVenta($sale, ['comprobante_tipo' => 'factura']))
         ->toThrow(ValidationException::class, 'La factura solo se emite a clientes con RUC');
 });
 
@@ -198,7 +280,7 @@ test('un comprobante ya aceptado por SUNAT solo se corrige con nota de credito',
     $this->travel(7)->hours();
     $this->artisan('billing:enviar-programados');
 
-    expect(fn () => app(CorregirComprobante::class)->handle($sale, 'boleta', Client::factory()->dni()->create()->id))
+    expect(fn () => editarVenta($sale, ['comprobante_tipo' => 'boleta', 'client_id' => Client::factory()->dni()->create()->id]))
         ->toThrow(ValidationException::class, 'nota de crédito');
 });
 
@@ -207,7 +289,7 @@ test('un comprobante rechazado se corrige emitiendo uno nuevo con otro numero y 
     $rechazado = comprobanteDe($sale);
     $rechazado->update(['sunat_estado' => 'rechazado', 'fecha_emision' => now()->subDays(5)]);
 
-    $nuevo = app(CorregirComprobante::class)->handle($sale, 'boleta', $sale->client_id);
+    $nuevo = comprobanteDe(editarVenta($sale));
 
     expect($nuevo->id)->not->toBe($rechazado->id)
         ->and($nuevo->correlativo)->toBe($rechazado->correlativo + 1)

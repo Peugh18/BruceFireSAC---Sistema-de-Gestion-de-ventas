@@ -53,13 +53,7 @@ class ConfirmSale
             return $this->confirmarNotaVenta($sale);
         }
 
-        $this->validarComprobanteCliente->handle($sale->client, $sale->comprobante_tipo, (float) $sale->total, exigirRucHabido: true);
-
-        if ($this->detraccion->paraVenta($sale)['aplica'] && trim((string) CompanySetting::current()->cuenta_detraccion) === '') {
-            throw ValidationException::withMessages([
-                'estado' => 'Esta factura lleva detracción y falta la cuenta del Banco de la Nación. Pídele al Gerente que la registre en Configuración > Datos de la empresa.',
-            ]);
-        }
+        $this->validarAntesDeEmitir($sale);
 
         return DB::transaction(function () use ($sale) {
             $sale->update(['estado' => 'confirmada']);
@@ -70,6 +64,22 @@ class ConfirmSale
 
             return $sale->refresh();
         });
+    }
+
+    /**
+     * Reglas de SUNAT que debe cumplir una factura o boleta antes de emitirse.
+     */
+    public function validarAntesDeEmitir(Sale $sale): void
+    {
+        $sale->loadMissing('client');
+
+        $this->validarComprobanteCliente->handle($sale->client, $sale->comprobante_tipo, (float) $sale->total, exigirRucHabido: true);
+
+        if ($this->detraccion->paraVenta($sale)['aplica'] && trim((string) CompanySetting::current()->cuenta_detraccion) === '') {
+            throw ValidationException::withMessages([
+                'estado' => 'Esta factura lleva detracción y falta la cuenta del Banco de la Nación. Pídele al Gerente que la registre en Configuración > Datos de la empresa.',
+            ]);
+        }
     }
 
     protected function confirmarNotaVenta(Sale $sale): Sale
@@ -101,7 +111,7 @@ class ConfirmSale
      * con el medio que eligió el cliente, así la caja cuadra sola. Las de
      * crédito se cobran por cuotas en Cobranzas.
      */
-    protected function registrarCobroAlContado(Sale $sale): void
+    public function registrarCobroAlContado(Sale $sale): void
     {
         if ($sale->esCredito() || ! $sale->medio_pago || $sale->payments()->exists()) {
             return;
