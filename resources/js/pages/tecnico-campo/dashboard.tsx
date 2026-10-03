@@ -178,7 +178,7 @@ export default function TecnicoCampoDashboard({
                         <div className="text-[11px] font-semibold text-amber-500">
                             Pendientes
                         </div>
-                        <div className="mt-1 text-2xl font-black text-amber-600 dark:text-amber-400">
+                        <div className="text-warning-strong mt-1 text-2xl font-black">
                             {kpis.pendientes}
                         </div>
                     </button>
@@ -212,7 +212,7 @@ export default function TecnicoCampoDashboard({
                         <div className="text-[11px] font-semibold text-emerald-500">
                             Finalizados
                         </div>
-                        <div className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        <div className="text-success-strong mt-1 text-2xl font-black">
                             {kpis.finalizados}
                         </div>
                     </button>
@@ -363,7 +363,7 @@ export default function TecnicoCampoDashboard({
                                         )}
                                         {order.telefono && (
                                             <div className="flex items-center gap-1.5">
-                                                <Phone className="h-3.5 w-3.5 flex-shrink-0 text-emerald-600" />
+                                                <Phone className="text-success-strong h-3.5 w-3.5 flex-shrink-0" />
                                                 <a
                                                     href={`tel:${order.telefono}`}
                                                     className="font-medium text-blue-600 hover:underline dark:text-blue-400"

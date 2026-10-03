@@ -90,7 +90,7 @@ export default function ErrorPage({ status }: Props) {
                 <div className="flex w-full max-w-md flex-1 flex-col items-center justify-center py-10">
                     <ChispaAvatar pose={mensaje.pose} size={168} animado />
 
-                    <div className="text-primary mt-6 font-['Oswald',sans-serif] text-[56px] leading-none font-semibold">
+                    <div className="text-primary-strong mt-6 font-['Oswald',sans-serif] text-[56px] leading-none font-semibold">
                         {status}
                     </div>
                     <h1 className="mt-3 font-['Oswald',sans-serif] text-[22px] font-semibold text-balance uppercase sm:text-[24px]">

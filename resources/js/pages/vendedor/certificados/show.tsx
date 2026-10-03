@@ -71,8 +71,8 @@ type Props = { certificate: Certificate };
 
 function badgeClass(estado: string) {
     return estado?.toLowerCase() === 'vigente'
-        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-        : 'bg-destructive/10 text-destructive border border-destructive/20';
+        ? 'bg-emerald-500/10 text-success-strong border border-emerald-500/20'
+        : 'bg-destructive/10 text-destructive-strong border border-destructive/20';
 }
 
 function Dato({
@@ -255,7 +255,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                             current_team: teamSlug,
                                             client: certificate.cliente.id,
                                         })}
-                                        className="hover:text-primary inline-flex items-center gap-1 hover:underline"
+                                        className="hover:text-primary-strong inline-flex items-center gap-1 hover:underline"
                                     >
                                         <User className="size-3.5" />
                                         {certificate.cliente.razon_social}
@@ -276,7 +276,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                             current_team: teamSlug,
                                             sale: certificate.venta.id,
                                         })}
-                                        className="hover:text-primary inline-flex items-center gap-1 hover:underline"
+                                        className="hover:text-primary-strong inline-flex items-center gap-1 hover:underline"
                                     >
                                         <Receipt className="size-3.5" />
                                         {certificate.venta.numero}

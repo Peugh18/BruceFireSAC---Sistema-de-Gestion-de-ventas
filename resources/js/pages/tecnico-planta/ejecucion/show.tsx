@@ -177,7 +177,7 @@ export default function EjecucionShow({
                                 className={
                                     order.estado === 'recibido_planta' ||
                                     order.estado === 'en_revision'
-                                        ? 'font-extrabold text-amber-600'
+                                        ? 'text-warning-strong font-extrabold'
                                         : ''
                                 }
                             >
@@ -187,7 +187,7 @@ export default function EjecucionShow({
                             <span
                                 className={
                                     order.estado === 'en_proceso'
-                                        ? 'font-extrabold text-amber-600'
+                                        ? 'text-warning-strong font-extrabold'
                                         : ''
                                 }
                             >
@@ -197,7 +197,7 @@ export default function EjecucionShow({
                             <span
                                 className={
                                     order.estado === 'trabajo_terminado'
-                                        ? 'font-extrabold text-amber-600'
+                                        ? 'text-warning-strong font-extrabold'
                                         : ''
                                 }
                             >
@@ -207,7 +207,7 @@ export default function EjecucionShow({
                             <span
                                 className={
                                     order.estado === 'listo_certificado'
-                                        ? 'font-extrabold text-emerald-600'
+                                        ? 'text-success-strong font-extrabold'
                                         : ''
                                 }
                             >
@@ -316,7 +316,7 @@ export default function EjecucionShow({
                                     onChange={(e) =>
                                         setPhRealizada(e.target.checked)
                                     }
-                                    className="h-4 w-4 rounded border-neutral-300 text-amber-600 focus:ring-amber-500"
+                                    className="text-warning-strong h-4 w-4 rounded border-neutral-300 focus:ring-amber-500"
                                 />
                                 <span>
                                     Se realizó Prueba Hidrostática (P.H.) en el
@@ -340,7 +340,7 @@ export default function EjecucionShow({
                         </div>
                     ) : (
                         <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-                            <ShieldCheck className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                            <ShieldCheck className="text-success-strong h-5 w-5 flex-shrink-0" />
                             <span>
                                 Trabajo de taller finalizado y certificado
                                 emitido.
@@ -353,7 +353,7 @@ export default function EjecucionShow({
                 {certificates.length > 0 && (
                     <div className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                         <div className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                            <FileCheck2 className="h-4 w-4 text-emerald-600" />
+                            <FileCheck2 className="text-success-strong h-4 w-4" />
                             <span>
                                 Certificados Emitidos ({certificates.length})
                             </span>
@@ -390,7 +390,7 @@ export default function EjecucionShow({
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <h3 className="flex items-center gap-1.5 text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                            <Wrench className="h-4 w-4 text-amber-600" />
+                            <Wrench className="text-warning-strong h-4 w-4" />
                             <span>
                                 Repuestos y Deficiencias (
                                 {order.deficiencies.length})

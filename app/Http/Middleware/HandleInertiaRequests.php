@@ -63,6 +63,7 @@ class HandleInertiaRequests extends Middleware
             // Sede activa (selector de header): por ahora la única sesión guardada;
             // se resuelve completamente cuando el selector de Sede se construya.
             'currentSedeId' => fn () => $request->session()->get('current_sede_id'),
+            'currentSede' => fn () => $user?->sede?->only(['id', 'nombre']),
             // Contadores del sidebar del Vendedor. Solo se calculan si el
             // usuario tiene ese rol (evita las consultas en páginas de otros
             // roles); antes eran placeholders fijos en el componente React.
@@ -71,7 +72,8 @@ class HandleInertiaRequests extends Middleware
                 'cotizaciones' => Quote::where('vendedor_id', $user->id)->where('estado', 'enviada')->count(),
                 'alertas' => Equipment::where(fn ($query) => $query
                     ->where('proxima_fecha_atencion', '<=', now()->addDays(7))
-                    ->orWhere('proxima_prueba_hidrostatica', '<=', now()->addDays(7)))->count(),
+                    ->orWhere('proxima_prueba_hidrostatica', '<=', now()->addDays(7))
+                    ->orWhereIn('estado', ['descargado', 'usado']))->count(),
                 'deficiencias' => Deficiency::where('estado', 'esperando_autorizacion')
                     ->when($user->sedeRestringidaId(), fn ($query, $sedeId) => $query->whereHas('serviceOrder', fn ($orden) => $orden->where('sede_id', $sedeId)))
                     ->count(),

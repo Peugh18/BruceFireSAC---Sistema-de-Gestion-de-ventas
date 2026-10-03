@@ -138,7 +138,7 @@ export default function ClientesPorRegistrar({
                             onClick={() => filtrar({ nivel: chip.nivel })}
                             className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors ${
                                 activo
-                                    ? 'border-primary/30 bg-primary/10 text-primary'
+                                    ? 'border-primary/30 bg-primary/10 text-primary-strong'
                                     : 'border-border text-muted-foreground hover:text-foreground'
                             }`}
                         >
@@ -151,7 +151,7 @@ export default function ClientesPorRegistrar({
                 })}
                 <form
                     onSubmit={buscarAhora}
-                    className="border-border bg-muted/40 ml-auto flex h-9 w-full items-center gap-2 rounded-[9px] border px-3 sm:w-[240px]"
+                    className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 ml-auto flex h-9 w-full items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px] sm:w-[240px]"
                 >
                     <Search className="text-muted-foreground size-3.5 shrink-0" />
                     <input

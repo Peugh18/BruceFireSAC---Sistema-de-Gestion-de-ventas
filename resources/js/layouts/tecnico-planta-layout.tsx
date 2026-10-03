@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { ReactNode } from 'react';
 
+import { MobileNavDock } from '@/components/mobile-nav-dock';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useInitials } from '@/hooks/use-initials';
 import { dashboard } from '@/routes/tecnico-planta';
@@ -82,7 +83,7 @@ export default function TecnicoPlantaLayout({
                             <span className="text-foreground text-xs font-black tracking-tight">
                                 BRUCE FIRE
                             </span>
-                            <span className="py-0.2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 text-[9.5px] font-black tracking-wide text-amber-600 dark:text-amber-400">
+                            <span className="py-0.2 text-warning-strong inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 text-[9.5px] font-black tracking-wide">
                                 PLANTA
                             </span>
                         </div>
@@ -109,7 +110,7 @@ export default function TecnicoPlantaLayout({
                         href="/logout"
                         method="post"
                         as="button"
-                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex size-8 items-center justify-center rounded-[8px] border transition-colors"
+                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive-strong flex size-8 items-center justify-center rounded-[8px] border transition-colors"
                         title="Cerrar sesión"
                     >
                         <LogOut className="size-3.5" />
@@ -144,37 +145,17 @@ export default function TecnicoPlantaLayout({
                 {children}
             </main>
 
-            {/* Mobile Bottom Navigation Bar (Fixed bottom, touch-friendly min 48px) */}
-            <nav className="border-border bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex h-16 items-center justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-md transition-colors md:hidden">
-                {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = currentPath.includes(item.activeMatch);
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex min-h-[44px] min-w-[64px] flex-col items-center justify-center rounded-[10px] px-2 py-1 transition-all ${
-                                isActive
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground hover:text-foreground active:scale-95'
-                            }`}
-                        >
-                            <div
-                                className={`rounded-[8px] p-1 ${isActive ? 'bg-primary/10' : ''}`}
-                            >
-                                <Icon
-                                    className={`size-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`}
-                                />
-                            </div>
-                            <span
-                                className={`text-[10px] tracking-tight ${isActive ? 'font-black' : 'font-semibold'}`}
-                            >
-                                {item.title}
-                            </span>
-                        </Link>
-                    );
-                })}
-            </nav>
+            {/* Mobile Bottom Navigation Bar (Floating Capsule Dock) */}
+            <MobileNavDock
+                items={navItems.map((item) => ({
+                    title: item.title,
+                    href: item.href,
+                    icon: item.icon,
+                    isActive: currentPath.includes(item.activeMatch),
+                    badge: item.badge,
+                }))}
+                roleBadge="PLANTA"
+            />
             <ChispaWidget rol="tecnico" />
         </div>
     );

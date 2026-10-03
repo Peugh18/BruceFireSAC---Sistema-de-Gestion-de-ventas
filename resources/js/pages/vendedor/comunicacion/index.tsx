@@ -11,6 +11,7 @@ import {
 import { FormEvent, useState } from 'react';
 
 import { TarjetaCargando } from '@/components/cargando';
+import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -111,22 +112,17 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
     const total = columnas.reduce((s, c) => s + c.ordenes.length, 0);
 
     return (
-        <VendedorLayout title="Seguimiento de taller">
+        <VendedorLayout title="Servicios">
             <div className="flex flex-col gap-4">
                 <ServiciosTabs
                     teamSlug={teamSlug}
                     activa="taller"
                     deficienciasPendientes={sidebarCounts?.deficiencias}
                 />
-                <div>
-                    <h1 className="font-['Oswald',sans-serif] text-[22px] font-semibold uppercase">
-                        Seguimiento de taller
-                    </h1>
-                    <p className="text-muted-foreground text-[12.5px]">
-                        {total} orden(es) de tu sede. Toca una para ver su
-                        avance y dejar una nota al técnico.
-                    </p>
-                </div>
+                <PageHeader
+                    title="Seguimiento de taller"
+                    description={`${total} ${total === 1 ? 'orden' : 'órdenes'} de tu sede. Toca una para ver su avance y dejar una nota al técnico.`}
+                />
 
                 <div className="grid [grid-template-columns:repeat(6,minmax(200px,1fr))] gap-3 overflow-x-auto pb-1">
                     {columnas.map((columna) => (
@@ -173,7 +169,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                             {orden.area}
                                         </span>
                                         {orden.prioridad !== 'normal' ? (
-                                            <span className="bg-destructive/10 text-destructive rounded px-1.5 py-0.5 capitalize">
+                                            <span className="bg-destructive/10 text-destructive-strong rounded px-1.5 py-0.5 capitalize">
                                                 {orden.prioridad}
                                             </span>
                                         ) : null}
@@ -196,7 +192,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <Wrench className="text-primary size-4" />
+                                    <Wrench className="text-primary-strong size-4" />
                                     <span className="font-['IBM_Plex_Mono',monospace] text-[13px] font-bold">
                                         {seleccionada.codigo}
                                     </span>
@@ -325,7 +321,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                         </div>
 
                         <form onSubmit={enviarNota} className="flex gap-2">
-                            <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                            <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                                 <MessageSquarePlus className="text-muted-foreground size-4 shrink-0" />
                                 <input
                                     value={nota}

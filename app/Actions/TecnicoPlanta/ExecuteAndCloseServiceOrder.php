@@ -135,8 +135,9 @@ class ExecuteAndCloseServiceOrder
 
             // Si llega a listo_certificado, disparo automático del certificado (§85, Fase 5)
             if ($targetState === 'listo_certificado') {
+                $phRealizada = ! empty($extraData['ph_realizada']);
                 $this->triggerAutomaticCertificates($serviceOrder, $extraData);
-                $this->renewEquipmentAttentionDate->execute($serviceOrder->equipments()->get());
+                $this->renewEquipmentAttentionDate->execute($serviceOrder->equipments()->get(), $phRealizada);
             }
 
             // Registrar evento append-only de transición

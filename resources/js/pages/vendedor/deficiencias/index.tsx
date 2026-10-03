@@ -1,10 +1,11 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { Check, CheckCircle2, Wrench, X } from 'lucide-react';
+import { Check, CheckCircle2, RotateCcw, Wrench, X } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 import DeficiencyAuthorizationController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyAuthorizationController';
 import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
+import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -83,21 +84,21 @@ function getStatusStyle(estado: string): {
             return {
                 borderClass: 'border-l-[5px] border-l-[#B45309]',
                 badgeClass:
-                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                    'bg-amber-500/10 text-warning-strong border border-amber-500/20',
                 label: 'Esperando autorización',
             };
         case 'autorizada':
             return {
                 borderClass: 'border-l-[5px] border-l-[#1E8E5A]',
                 badgeClass:
-                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20',
                 label: 'Autorizada',
             };
         case 'rechazada':
             return {
                 borderClass: 'border-l-[5px] border-l-[#B91C1C] opacity-80',
                 badgeClass:
-                    'bg-destructive/10 text-destructive border border-destructive/20',
+                    'bg-destructive/10 text-destructive-strong border border-destructive/20',
                 label: 'Rechazada',
             };
         case 'en_correccion':
@@ -111,7 +112,7 @@ function getStatusStyle(estado: string): {
             return {
                 borderClass: 'border-l-[5px] border-l-[#1E8E5A] opacity-75',
                 badgeClass:
-                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20',
                 label: 'Resuelta',
             };
         default:
@@ -196,8 +197,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
     };
 
     return (
-        <VendedorLayout title="Deficiencias y Adicionales">
-            <Head title="Deficiencias y Adicionales" />
+        <VendedorLayout title="Servicios">
+            <Head title="Deficiencias y adicionales" />
 
             <div className="flex flex-col gap-4">
                 <ServiciosTabs
@@ -206,20 +207,13 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                     deficienciasPendientes={sidebarCounts?.deficiencias}
                 />
 
-                {/* Header title */}
-                <div>
-                    <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
-                        Deficiencias y Adicionales
-                    </h2>
-                    <p className="text-muted-foreground mt-0.5 text-[12.5px]">
-                        Hallazgos que los técnicos reportaron en equipos de tus
-                        clientes. Si implica costo adicional, requiere
-                        autorización del cliente antes de proceder.
-                    </p>
-                </div>
+                <PageHeader
+                    title="Deficiencias y adicionales"
+                    description="Hallazgos que los técnicos reportaron en equipos de tus clientes. Si implica costo adicional, requiere autorización del cliente antes de proceder."
+                />
 
                 {/* Filter Tabs */}
-                <div className="bg-muted flex w-fit flex-wrap rounded-[9px] p-[3px]">
+                <div className="bg-muted flex w-fit max-w-full flex-wrap overflow-x-auto rounded-[9px] p-[3px]">
                     {TABS.map((tab) => {
                         const active = currentEstado === tab.id;
                         return (
@@ -243,15 +237,25 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                 <div className="flex flex-col gap-3">
                     {deficiencies.data.length === 0 ? (
                         <Card className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-[16px] p-12 text-center shadow-none">
-                            <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
+                            <CheckCircle2 className="text-success-strong size-10" />
                             <p className="text-foreground text-sm font-bold">
                                 No se encontraron deficiencias
                             </p>
-                            <p className="text-muted-foreground text-xs">
+                            <p className="text-muted-foreground max-w-sm text-xs">
                                 {currentEstado
                                     ? 'No hay registros bajo el estado seleccionado.'
-                                    : 'No hay deficiencias ni adicionales reportados por los técnicos.'}
+                                    : 'No hay deficiencias ni adicionales pendientes reportados por los técnicos.'}
                             </p>
+                            {currentEstado && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleFilterChange('todos')}
+                                    className="border-border bg-card text-foreground hover:bg-muted mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                                >
+                                    <RotateCcw className="size-3" />
+                                    <span>Ver todas las deficiencias</span>
+                                </button>
+                            )}
                         </Card>
                     ) : (
                         deficiencies.data.map((item) => {
@@ -301,14 +305,14 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                                 item.service_order_id,
                                                         },
                                                     )}
-                                                    className="text-foreground hover:text-primary font-mono font-bold underline"
+                                                    className="text-foreground hover:text-primary-strong font-mono font-bold underline"
                                                 >
                                                     {item.orden}
                                                 </Link>
                                             </span>
 
                                             {item.authorization && (
-                                                <span className="text-emerald-600 dark:text-emerald-400">
+                                                <span className="text-success-strong">
                                                     &bull; Autorizado por{' '}
                                                     <b>
                                                         {
@@ -338,7 +342,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                             false,
                                                         )
                                                     }
-                                                    className="border-destructive/20 bg-card text-destructive hover:bg-destructive/10 h-8 rounded-[8px] text-xs font-bold"
+                                                    className="border-destructive/20 bg-card text-destructive-strong hover:bg-destructive/10 h-8 rounded-[8px] text-xs font-bold"
                                                 >
                                                     <X className="mr-1 size-3.5 stroke-[2.5]" />
                                                     <span>Rechazar</span>
@@ -404,7 +408,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                         preserveScroll
                                         className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
                                             link.active
-                                                ? 'bg-card font-bold text-white'
+                                                ? 'bg-foreground text-background font-bold shadow-xs'
                                                 : 'border-border bg-card text-foreground/80 hover:bg-background border'
                                         }`}
                                         dangerouslySetInnerHTML={{
@@ -449,8 +453,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                             <div
                                 className={`flex size-9 items-center justify-center rounded-[10px] ${
                                     actionModal?.isApproving
-                                        ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                        : 'bg-destructive/10 text-destructive border-destructive/20 border'
+                                        ? 'text-success-strong border border-emerald-500/20 bg-emerald-500/10'
+                                        : 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
                                 }`}
                             >
                                 {actionModal?.isApproving ? (
@@ -496,7 +500,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
                             />
                             {authForm.errors.autorizado_por && (
-                                <p className="text-destructive mt-1 text-[11px]">
+                                <p className="text-destructive-strong mt-1 text-[11px]">
                                     {authForm.errors.autorizado_por}
                                 </p>
                             )}
@@ -517,7 +521,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                 | 'presencial',
                                         )
                                     }
-                                    className="border-border bg-card text-foreground mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none"
+                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                 >
                                     <option value="whatsapp">
                                         WhatsApp / Mensaje

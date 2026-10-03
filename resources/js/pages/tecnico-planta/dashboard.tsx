@@ -66,7 +66,7 @@ function getEstadoBadge(estado: string) {
     switch (estado) {
         case 'pendiente_recepcion':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10.5px] font-bold text-amber-600 dark:text-amber-400">
+                <span className="text-warning-strong inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10.5px] font-bold">
                     <Clock className="size-3" />
                     Pendiente Recepción
                 </span>
@@ -81,21 +81,21 @@ function getEstadoBadge(estado: string) {
         case 'en_revision':
         case 'en_proceso':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10.5px] font-bold text-amber-600 dark:text-amber-400">
+                <span className="text-warning-strong inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10.5px] font-bold">
                     <Wrench className="size-3" />
                     En Trabajo
                 </span>
             );
         case 'esperando_autorizacion':
             return (
-                <span className="border-destructive/20 bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-bold">
+                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-bold">
                     <AlertTriangle className="size-3" />
                     Esperando Autorización
                 </span>
             );
         case 'autorizado':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold">
                     <CheckCircle2 className="size-3" />
                     Autorizado
                 </span>
@@ -104,7 +104,7 @@ function getEstadoBadge(estado: string) {
         case 'listo_certificado':
         case 'listo_entrega':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold">
                     <CheckCircle2 className="size-3" />
                     Listo / Terminado
                 </span>
@@ -121,14 +121,14 @@ function getEstadoBadge(estado: string) {
 function getPrioridadBadge(prioridad: string) {
     if (prioridad === 'urgente') {
         return (
-            <span className="border-destructive/20 bg-destructive/10 text-destructive rounded-[6px] border px-1.5 py-0.5 text-[9.5px] font-black uppercase">
+            <span className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-[6px] border px-1.5 py-0.5 text-[9.5px] font-black uppercase">
                 Urgente
             </span>
         );
     }
     if (prioridad === 'alta') {
         return (
-            <span className="rounded-[6px] border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-amber-600 uppercase dark:text-amber-400">
+            <span className="text-warning-strong rounded-[6px] border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[9.5px] font-bold uppercase dark:text-amber-400">
                 Alta
             </span>
         );
@@ -205,7 +205,7 @@ export default function TecnicoPlantaDashboard({
                                 : 'border-border bg-card hover:bg-muted/40'
                         }`}
                     >
-                        <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
+                        <div className="text-warning-strong flex items-center justify-between">
                             <span className="text-[10.5px] font-bold tracking-wider uppercase">
                                 Pendientes
                             </span>
@@ -251,7 +251,7 @@ export default function TecnicoPlantaDashboard({
                                 : 'border-border bg-card hover:bg-muted/40'
                         }`}
                     >
-                        <div className="text-destructive flex items-center justify-between">
+                        <div className="text-destructive-strong flex items-center justify-between">
                             <span className="text-[10.5px] font-bold tracking-wider uppercase">
                                 Por Autorizar
                             </span>
@@ -274,7 +274,7 @@ export default function TecnicoPlantaDashboard({
                                 : 'border-border bg-card hover:bg-muted/40'
                         }`}
                     >
-                        <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                        <div className="text-success-strong flex items-center justify-between">
                             <span className="text-[10.5px] font-bold tracking-wider uppercase">
                                 Listas
                             </span>
@@ -347,7 +347,7 @@ export default function TecnicoPlantaDashboard({
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
                         <Card className="border-border bg-card rounded-[14px] border border-dashed p-8 text-center">
-                            <div className="bg-muted/30 text-destructive mx-auto mb-2 flex size-12 items-center justify-center rounded-full">
+                            <div className="bg-muted/30 text-destructive-strong mx-auto mb-2 flex size-12 items-center justify-center rounded-full">
                                 <Wrench className="size-6" />
                             </div>
                             <h3 className="text-foreground text-sm font-bold">
@@ -369,7 +369,7 @@ export default function TecnicoPlantaDashboard({
                                 <div className="border-border mb-2.5 flex items-start justify-between gap-2 border-b pb-2.5">
                                     <div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-destructive font-mono text-xs font-black">
+                                            <span className="text-destructive-strong font-mono text-xs font-black">
                                                 {order.codigo}
                                             </span>
                                             {getPrioridadBadge(order.prioridad)}
@@ -398,7 +398,7 @@ export default function TecnicoPlantaDashboard({
 
                                 {/* Banner condicional si requiere autorización */}
                                 {order.requiere_autorizacion_count > 0 && (
-                                    <div className="border-destructive/20 bg-destructive/10 text-destructive mt-3 flex items-center justify-between rounded-[8px] border px-2.5 py-1.5 text-[11px]">
+                                    <div className="border-destructive/20 bg-destructive/10 text-destructive-strong mt-3 flex items-center justify-between rounded-[8px] border px-2.5 py-1.5 text-[11px]">
                                         <div className="flex items-center gap-1.5 font-bold">
                                             <AlertTriangle className="size-3.5 shrink-0" />
                                             <span>

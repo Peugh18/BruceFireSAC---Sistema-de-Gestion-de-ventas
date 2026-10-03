@@ -143,13 +143,13 @@ export default function SedesIndex() {
             <div className="space-y-6">
                 {flash?.success && (
                     <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                        <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+                        <CheckCircle2 className="text-success-strong size-4 shrink-0" />
                         <span>{flash.success}</span>
                     </div>
                 )}
                 {flash?.error && (
                     <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                        <AlertTriangle className="text-primary size-4 shrink-0" />
+                        <AlertTriangle className="text-primary-strong size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
                 )}
@@ -229,7 +229,7 @@ export default function SedesIndex() {
                                         >
                                             <td className="text-foreground px-4 py-3 font-semibold">
                                                 <span className="flex items-center gap-1.5">
-                                                    <MapPin className="text-primary size-3.5" />
+                                                    <MapPin className="text-primary-strong size-3.5" />
                                                     {sede.nombre}
                                                 </span>
                                             </td>

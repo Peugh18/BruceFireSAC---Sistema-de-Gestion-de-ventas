@@ -7,6 +7,7 @@ import {
     Filter,
     Printer,
     Receipt,
+    RotateCcw,
     Search,
     Users,
 } from 'lucide-react';
@@ -14,6 +15,7 @@ import type { FormEvent } from 'react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
@@ -64,15 +66,15 @@ function cleanLabel(label: string) {
 function badgeClass(estado: string) {
     const e = estado?.toLowerCase();
     if (e === 'vigente') {
-        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+        return 'bg-emerald-500/10 text-success-strong border border-emerald-500/20';
     }
     if (e === 'anulado') {
         return 'bg-muted text-muted-foreground border border-border';
     }
     if (e === 'vencido') {
-        return 'bg-destructive/10 text-destructive border border-destructive/20';
+        return 'bg-destructive/10 text-destructive-strong border border-destructive/20';
     }
-    return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
+    return 'bg-amber-500/10 text-warning-strong border border-amber-500/20';
 }
 
 const accion =
@@ -125,10 +127,10 @@ export default function CertificadosIndex({
     return (
         <VendedorLayout title="Certificados">
             <div className="flex flex-col gap-4">
-                <p className="text-muted-foreground text-[12.5px]">
-                    Todos los certificados emitidos, con la venta de la que
-                    salieron. Toca uno para verlo.
-                </p>
+                <PageHeader
+                    title="Certificados"
+                    description="Todos los certificados emitidos, con la venta de la que salieron. Toca uno para verlo."
+                />
 
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     {/* Filtro por estado: Todos · Vigentes · Vencidos · Anulados */}
@@ -159,7 +161,7 @@ export default function CertificadosIndex({
                     <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
                         <form
                             onSubmit={submitSearch}
-                            className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3"
+                            className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]"
                         >
                             <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
@@ -172,9 +174,10 @@ export default function CertificadosIndex({
                             />
                         </form>
                         {tipos.length > 1 ? (
-                            <div className="border-border bg-card text-foreground/80 flex h-10 items-center gap-2 rounded-[9px] border px-3">
+                            <div className="border-border bg-card text-foreground/80 focus-within:border-ring focus-within:ring-ring/50 flex h-10 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                                 <Filter className="size-3.5" />
                                 <select
+                                    aria-label="Filtrar por tipo de certificado"
                                     value={tipo}
                                     onChange={(event) =>
                                         buscar({ tipo: event.target.value })
@@ -203,7 +206,21 @@ export default function CertificadosIndex({
                                     ? 'Ningún certificado coincide con la búsqueda'
                                     : 'Aún no hay certificados'}
                             </div>
-                            {filtrando ? null : (
+                            {filtrando ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch('');
+                                        router.get(
+                                            certificados.index.url(teamSlug),
+                                        );
+                                    }}
+                                    className="border-border bg-card text-foreground hover:bg-muted mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                                >
+                                    <RotateCcw className="size-3" />
+                                    <span>Limpiar filtros</span>
+                                </button>
+                            ) : (
                                 <p className="text-muted-foreground max-w-md text-[12.5px]">
                                     Salen solos al confirmar una venta con
                                     extintores. Los de servicios (luces, alarma,
@@ -230,7 +247,11 @@ export default function CertificadosIndex({
                                                 key={h}
                                                 className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
                                             >
-                                                {h}
+                                                {h || (
+                                                    <span className="sr-only">
+                                                        Acciones
+                                                    </span>
+                                                )}
                                             </th>
                                         ))}
                                     </tr>
@@ -251,7 +272,7 @@ export default function CertificadosIndex({
                                             <td className="border-border border-b px-2.5 py-[11px]">
                                                 <div className="flex items-center gap-2">
                                                     <div
-                                                        className={`flex size-[30px] shrink-0 items-center justify-center rounded-[8px] ${certificate.estado === 'vigente' ? 'bg-destructive/10 text-primary' : 'bg-muted text-muted-foreground'}`}
+                                                        className={`flex size-[30px] shrink-0 items-center justify-center rounded-[8px] ${certificate.estado === 'vigente' ? 'bg-destructive/10 text-primary-strong' : 'bg-muted text-muted-foreground'}`}
                                                     >
                                                         <Award className="size-4" />
                                                     </div>
@@ -279,7 +300,7 @@ export default function CertificadosIndex({
                                                         onClick={(event) =>
                                                             event.stopPropagation()
                                                         }
-                                                        className="text-foreground hover:text-primary font-semibold hover:underline"
+                                                        className="text-foreground hover:text-primary-strong font-semibold hover:underline"
                                                     >
                                                         {certificate.cliente}
                                                     </Link>
@@ -292,7 +313,7 @@ export default function CertificadosIndex({
                                                     </div>
                                                 ) : null}
                                             </td>
-                                            <td className="border-border border-b px-2.5 py-[11px]">
+                                            <td className="border-border border-b px-2.5 py-[11px] whitespace-nowrap">
                                                 {certificate.venta ? (
                                                     <Link
                                                         href={ventas.show.url({
@@ -306,7 +327,7 @@ export default function CertificadosIndex({
                                                         }
                                                         className="group inline-flex flex-col"
                                                     >
-                                                        <span className="group-hover:text-primary inline-flex items-center gap-1 font-['IBM_Plex_Mono',monospace] font-bold group-hover:underline">
+                                                        <span className="group-hover:text-primary-strong inline-flex items-center gap-1 font-['IBM_Plex_Mono',monospace] font-bold group-hover:underline">
                                                             <Receipt className="size-3" />
                                                             {certificate.venta
                                                                 .numero ??

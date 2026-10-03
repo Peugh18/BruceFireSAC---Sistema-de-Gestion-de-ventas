@@ -128,7 +128,10 @@ export default function Transfers({
                         />
                     </div>
                     {Object.values(form.errors).map((error) => (
-                        <p key={error} className="text-destructive text-xs">
+                        <p
+                            key={error}
+                            className="text-destructive-strong text-xs"
+                        >
                             {error}
                         </p>
                     ))}

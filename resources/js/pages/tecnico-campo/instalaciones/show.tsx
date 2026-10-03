@@ -192,7 +192,7 @@ export default function InstalacionShow({
             </div>
 
             {flash?.success && (
-                <div className="mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                <div className="text-success-strong mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
                     {flash.success}
                 </div>
             )}
@@ -238,14 +238,14 @@ export default function InstalacionShow({
                     {order.client.telefono && (
                         <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
-                                <Phone className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <Phone className="text-success-strong size-4 shrink-0" />
                                 <span className="text-foreground font-mono">
                                     {order.client.telefono}
                                 </span>
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Contactar
@@ -258,8 +258,8 @@ export default function InstalacionShow({
             {/* Emitted Certificates if any */}
             {order.certificates && order.certificates.length > 0 && (
                 <div className="mb-5 rounded-[14px] border border-emerald-500/20 bg-emerald-500/10 p-4">
-                    <h3 className="mb-2 flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
-                        <FileCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <h3 className="text-success-strong mb-2 flex items-center gap-1.5 text-xs font-black">
+                        <FileCheck className="text-success-strong size-4" />
                         Certificados Emitidos
                     </h3>
                     <div className="space-y-1.5">
@@ -272,7 +272,7 @@ export default function InstalacionShow({
                                     {cert.certificate_type?.nombre ||
                                         'Certificado'}
                                 </span>
-                                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                <span className="text-success-strong font-mono font-bold">
                                     {cert.numero}
                                 </span>
                             </div>
@@ -352,7 +352,7 @@ export default function InstalacionShow({
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                                <Flame className="size-4 text-amber-600 dark:text-amber-400" />
+                                <Flame className="text-warning-strong size-4" />
                                 2. Extintores / Unidades a Instalar (
                                 {equiposList.length})
                             </h2>
@@ -507,7 +507,7 @@ export default function InstalacionShow({
                 {/* 3. Certificado Aplicable (§25) */}
                 <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
                     <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                        <FileCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+                        <FileCheck className="text-success-strong size-4" />
                         3. Certificado Aplicable
                     </h2>
 

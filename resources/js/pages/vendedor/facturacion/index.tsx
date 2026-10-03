@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 
 import { CargaLarga, Cargando, FilasCargando } from '@/components/cargando';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -81,11 +82,11 @@ function cleanLabel(label: string) {
 function sunatBadge(estado: string) {
     const value = estado?.toLowerCase();
     if (value === 'aceptado')
-        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+        return 'bg-emerald-500/10 text-success-strong border border-emerald-500/20';
     if (value === 'observado')
-        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
+        return 'bg-amber-500/10 text-warning-strong border border-amber-500/20';
     if (value === 'rechazado' || value === 'excepcion')
-        return 'bg-destructive/10 text-destructive border border-destructive/20';
+        return 'bg-destructive/10 text-destructive-strong border border-destructive/20';
     return 'bg-muted text-muted-foreground';
 }
 
@@ -255,27 +256,31 @@ export default function FacturacionIndex({
             value: kpis.aceptados_hoy,
             icon: CheckCircle2,
             bg: 'bg-emerald-500/10',
-            text: 'text-emerald-600 dark:text-emerald-400',
+            text: 'text-success-strong',
         },
         {
             label: 'Observados',
             value: kpis.observados,
             icon: AlertTriangle,
             bg: 'bg-amber-500/10',
-            text: 'text-amber-600 dark:text-amber-400',
+            text: 'text-warning-strong',
         },
         {
             label: 'Rechazados',
             value: kpis.rechazados,
             icon: XCircle,
             bg: 'bg-destructive/10',
-            text: 'text-destructive',
+            text: 'text-destructive-strong',
         },
     ];
 
     return (
-        <VendedorLayout title="Facturación Electrónica">
+        <VendedorLayout title="Comprobantes SUNAT">
             <div className="flex flex-col gap-4">
+                <PageHeader
+                    title="Comprobantes SUNAT"
+                    description="Facturas, boletas y notas enviadas a SUNAT con su respuesta. Marca varios para descargarlos juntos."
+                />
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {kpiItems.map((item) => {
                         const Icon = item.icon;
@@ -307,7 +312,7 @@ export default function FacturacionIndex({
 
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <div className="mb-4 flex flex-wrap items-center gap-2.5">
-                        <div className="bg-muted flex rounded-[9px] p-[3px]">
+                        <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
                             {TYPE_FILTERS.map((filter) => {
                                 const active =
                                     filter.value === ''
@@ -332,13 +337,14 @@ export default function FacturacionIndex({
                             onChange={(event) =>
                                 filtrar({ mes: event.target.value })
                             }
-                            className="border-border bg-card h-10 rounded-[9px] border px-3 text-[12.5px] outline-none"
+                            className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 h-10 rounded-[9px] border px-3 text-[12.5px] outline-none focus-visible:ring-[3px]"
                             title="Filtrar por mes"
+                            aria-label="Filtrar por mes"
                         />
                         <div className="flex-1" />
                         <form
                             onSubmit={submitSearch}
-                            className="border-border bg-muted/40 flex h-10 min-w-[230px] items-center gap-2 rounded-[9px] border px-3"
+                            className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex h-10 min-w-[230px] items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]"
                         >
                             <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
@@ -364,7 +370,7 @@ export default function FacturacionIndex({
                             <button
                                 type="button"
                                 onClick={() => setTodoLoFiltrado(true)}
-                                className="text-primary text-[12px] font-semibold hover:underline"
+                                className="text-primary-strong text-[12px] font-semibold hover:underline"
                             >
                                 Seleccionar los {totalFiltrados} del filtro
                             </button>
@@ -523,7 +529,7 @@ export default function FacturacionIndex({
                                                                     sale: document.sale_id,
                                                                 },
                                                             )}
-                                                            className="hover:text-primary font-['IBM_Plex_Mono',monospace] font-bold hover:underline"
+                                                            className="hover:text-primary-strong font-['IBM_Plex_Mono',monospace] font-bold hover:underline"
                                                             title="Ver venta"
                                                         >
                                                             {number}
@@ -540,7 +546,7 @@ export default function FacturacionIndex({
                                                 <td className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
                                                     {document.created_at ?? '-'}
                                                 </td>
-                                                <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                                <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                     {money(document.total)}
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-[13px]">
@@ -549,14 +555,16 @@ export default function FacturacionIndex({
                                                             document.sunat_mensaje ??
                                                             undefined
                                                         }
-                                                        className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold ${sunatBadge(document.sunat_estado)}`}
+                                                        className={`max-w-[240px] justify-start rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold ${sunatBadge(document.sunat_estado)}`}
                                                     >
-                                                        {sunatEstadoLabel(
-                                                            document,
-                                                        )}
+                                                        <span className="truncate">
+                                                            {sunatEstadoLabel(
+                                                                document,
+                                                            )}
+                                                        </span>
                                                     </Badge>
                                                 </td>
-                                                <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px] whitespace-nowrap tabular-nums">
                                                     {document.sunat_codigo_respuesta ??
                                                         '-'}
                                                 </td>
@@ -576,7 +584,9 @@ export default function FacturacionIndex({
                                                                 }
                                                                 variant="outline"
                                                                 size="icon"
-                                                                className="border-border bg-card size-7 rounded-[7px] text-amber-600 shadow-none dark:text-amber-400"
+                                                                aria-label="Reenviar a SUNAT"
+                                                                title="Reenviar a SUNAT"
+                                                                className="border-border bg-card text-warning-strong size-7 rounded-[7px] shadow-none"
                                                             >
                                                                 {processingId ===
                                                                 document.id ? (

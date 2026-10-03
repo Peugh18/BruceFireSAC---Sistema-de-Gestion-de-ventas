@@ -1,4 +1,4 @@
-﻿import { Head, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     Boxes,
     Building2,
@@ -137,13 +137,13 @@ function getTipoMovimientoBadge(tipo: string): {
             return {
                 label: 'Ingreso',
                 className:
-                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border-emerald-500/20',
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20 border-emerald-500/20',
             };
         case 'salida_venta':
             return {
                 label: 'Venta',
                 className:
-                    'bg-destructive/10 text-primary border-destructive/20',
+                    'bg-destructive/10 text-primary-strong border-destructive/20',
             };
         case 'salida_servicio':
             return {
@@ -155,7 +155,7 @@ function getTipoMovimientoBadge(tipo: string): {
             return {
                 label: 'Ajuste',
                 className:
-                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                    'bg-amber-500/10 text-warning-strong border-amber-500/20',
             };
         case 'traslado':
             return {
@@ -303,9 +303,9 @@ export default function StockIndex({
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Unidades disponibles
                             </span>
-                            <Boxes className="size-4 text-emerald-600 dark:text-emerald-400" />
+                            <Boxes className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <div className="text-success-strong mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.unidades_en_stock}
                         </div>
                         <div className="text-muted-foreground mt-1 text-[11.5px]">
@@ -318,9 +318,9 @@ export default function StockIndex({
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Bajo stock mínimo
                             </span>
-                            <TrendingDown className="text-primary size-4" />
+                            <TrendingDown className="text-primary-strong size-4" />
                         </div>
-                        <div className="text-primary mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
+                        <div className="text-primary-strong mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.bajo_minimo}
                         </div>
                         <div className="text-muted-foreground mt-1 text-[11.5px]">
@@ -438,12 +438,29 @@ export default function StockIndex({
 
                         {/* Stock Table */}
                         {items.data.length === 0 ? (
-                            <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                                <Package className="text-muted-foreground size-10" />
-                                <p className="text-muted-foreground mt-2 text-sm font-medium">
-                                    No se encontraron productos con los filtros
-                                    indicados.
+                            <div className="flex min-h-[260px] flex-col items-center justify-center p-8 text-center">
+                                <Package className="text-muted-foreground/60 size-10" />
+                                <p className="text-foreground mt-2 text-sm font-semibold">
+                                    No se encontraron productos en el inventario
                                 </p>
+                                <p className="text-muted-foreground mt-1 max-w-sm text-xs">
+                                    {stockSearch || stockTipo !== 'todos'
+                                        ? 'No hay productos que coincidan con los filtros aplicados.'
+                                        : 'Aún no hay productos registrados en las sedes seleccionadas.'}
+                                </p>
+                                {(stockSearch !== '' ||
+                                    stockTipo !== 'todos') && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleResetStock}
+                                        className="border-border text-foreground hover:bg-muted mt-4 gap-1.5 text-xs font-semibold"
+                                    >
+                                        <RotateCcw className="size-3.5" />
+                                        <span>Limpiar filtros</span>
+                                    </Button>
+                                )}
                             </div>
                         ) : (
                             <div className="mt-4 overflow-x-auto">
@@ -506,7 +523,7 @@ export default function StockIndex({
                                                         </div>
                                                         {item.serializado && (
                                                             <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-[10.5px]">
-                                                                <ScanBarcode className="size-3 text-emerald-600 dark:text-emerald-400" />
+                                                                <ScanBarcode className="text-success-strong size-3" />
                                                                 <span>
                                                                     Unidad
                                                                     serializada
@@ -561,8 +578,8 @@ export default function StockIndex({
                                                                 className={[
                                                                     'inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[12px] font-bold',
                                                                     isBajoMinimo
-                                                                        ? 'bg-destructive/10 text-primary border border-destructive/20'
-                                                                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border border-emerald-500/20',
+                                                                        ? 'bg-destructive/10 text-primary-strong border border-destructive/20'
+                                                                        : 'bg-emerald-500/10 text-success-strong border border-emerald-500/20 border border-emerald-500/20',
                                                                 ].join(' ')}
                                                             >
                                                                 {item.stock_disponible_total ??
@@ -769,12 +786,36 @@ export default function StockIndex({
 
                         {/* Kardex Records Table */}
                         {kardex.data.length === 0 ? (
-                            <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                                <History className="text-muted-foreground size-10" />
-                                <p className="text-muted-foreground mt-2 text-sm font-medium">
-                                    No se encontraron movimientos registrados en
-                                    el Kardex con estos filtros.
+                            <div className="flex min-h-[260px] flex-col items-center justify-center p-8 text-center">
+                                <History className="text-muted-foreground/60 size-10" />
+                                <p className="text-foreground mt-2 text-sm font-semibold">
+                                    No se encontraron movimientos de Kardex
                                 </p>
+                                <p className="text-muted-foreground mt-1 max-w-sm text-xs">
+                                    {kProductId ||
+                                    kSedeId ||
+                                    kTipo !== 'todos' ||
+                                    kFechaDesde ||
+                                    kFechaHasta
+                                        ? 'No hay transacciones registradas con los filtros seleccionados.'
+                                        : 'Aún no se han registrado movimientos de entrada, salida o consumo.'}
+                                </p>
+                                {(kProductId !== '' ||
+                                    kSedeId !== '' ||
+                                    kTipo !== 'todos' ||
+                                    kFechaDesde !== '' ||
+                                    kFechaHasta !== '') && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleResetKardex}
+                                        className="border-border text-foreground hover:bg-muted mt-4 gap-1.5 text-xs font-semibold"
+                                    >
+                                        <RotateCcw className="size-3.5" />
+                                        <span>Limpiar filtros de Kardex</span>
+                                    </Button>
+                                )}
                             </div>
                         ) : (
                             <div className="mt-4 overflow-x-auto">
@@ -849,7 +890,7 @@ export default function StockIndex({
                                                     <td className="px-3 py-3">
                                                         {mov.unidad_serie ? (
                                                             <span className="text-foreground flex items-center gap-1 font-mono text-[11.5px] font-bold">
-                                                                <ScanBarcode className="size-3 text-emerald-600 dark:text-emerald-400" />
+                                                                <ScanBarcode className="text-success-strong size-3" />
                                                                 {
                                                                     mov.unidad_serie
                                                                 }
@@ -867,8 +908,8 @@ export default function StockIndex({
                                                         <span
                                                             className={
                                                                 isSalida
-                                                                    ? 'text-primary'
-                                                                    : 'text-emerald-600 dark:text-emerald-400'
+                                                                    ? 'text-primary-strong'
+                                                                    : 'text-success-strong'
                                                             }
                                                         >
                                                             {isSalida

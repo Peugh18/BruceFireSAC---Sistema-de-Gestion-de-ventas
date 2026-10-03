@@ -277,7 +277,7 @@ export default function ReportesIndex() {
                                     <span className="font-medium uppercase">
                                         Ventas Totales
                                     </span>
-                                    <CircleDollarSign className="size-4 text-emerald-600" />
+                                    <CircleDollarSign className="text-success-strong size-4" />
                                 </div>
                                 <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {formatCurrency(
@@ -326,7 +326,7 @@ export default function ReportesIndex() {
                                     <span className="font-medium uppercase">
                                         Conversión Cotizaciones
                                     </span>
-                                    <Percent className="size-4 text-amber-600" />
+                                    <Percent className="text-warning-strong size-4" />
                                 </div>
                                 <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteComercial.tasaConversion}%
@@ -439,7 +439,7 @@ export default function ReportesIndex() {
                                                     (c, i) => (
                                                         <tr key={c.cliente}>
                                                             <td className="text-foreground max-w-xs truncate px-3 py-2.5 font-medium">
-                                                                <b className="text-primary mr-1">
+                                                                <b className="text-primary-strong mr-1">
                                                                     #{i + 1}
                                                                 </b>{' '}
                                                                 {c.cliente}
@@ -502,7 +502,7 @@ export default function ReportesIndex() {
                                                 (item, i) => (
                                                     <tr key={item.nombre}>
                                                         <td className="text-foreground px-4 py-3 font-medium">
-                                                            <b className="text-primary mr-2">
+                                                            <b className="text-primary-strong mr-2">
                                                                 #{i + 1}
                                                             </b>{' '}
                                                             {item.nombre}
@@ -564,7 +564,7 @@ export default function ReportesIndex() {
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="border-border text-primary rounded"
+                                            className="border-border text-primary-strong rounded"
                                         />
                                         <span>
                                             Solo productos bajo stock mínimo
@@ -600,7 +600,7 @@ export default function ReportesIndex() {
                                     <span className="font-medium uppercase">
                                         Valorización Total
                                     </span>
-                                    <CircleDollarSign className="size-4 text-emerald-600" />
+                                    <CircleDollarSign className="text-success-strong size-4" />
                                 </div>
                                 <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {formatCurrency(
@@ -647,9 +647,9 @@ export default function ReportesIndex() {
                                     <span className="font-medium uppercase">
                                         Bajo Stock Mínimo
                                     </span>
-                                    <AlertTriangle className="text-primary size-4" />
+                                    <AlertTriangle className="text-primary-strong size-4" />
                                 </div>
-                                <div className="text-primary mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteInventario.totalBajoMinimo}
                                 </div>
                                 <p className="text-muted-foreground mt-0.5 text-[11px]">
@@ -744,12 +744,12 @@ export default function ReportesIndex() {
                                                             <span
                                                                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
                                                                     p.bajo_minimo
-                                                                        ? 'text-primary bg-red-100'
+                                                                        ? 'text-primary-strong bg-red-100'
                                                                         : 'bg-background text-foreground'
                                                                 }`}
                                                             >
                                                                 {p.bajo_minimo && (
-                                                                    <AlertTriangle className="text-primary size-3" />
+                                                                    <AlertTriangle className="text-primary-strong size-3" />
                                                                 )}
                                                                 {
                                                                     p.stock_disponible
@@ -765,7 +765,7 @@ export default function ReportesIndex() {
                                                             <span
                                                                 className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                                     p.bajo_minimo
-                                                                        ? 'text-primary bg-red-100'
+                                                                        ? 'text-primary-strong bg-red-100'
                                                                         : 'bg-emerald-100 text-emerald-800'
                                                                 }`}
                                                             >

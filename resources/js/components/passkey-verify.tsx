@@ -15,6 +15,8 @@ type Props = {
     label?: string;
     loadingLabel?: string;
     separator?: string;
+    separatorPosition?: 'before' | 'after';
+    className?: string;
 };
 
 export default function PasskeyVerify({
@@ -22,6 +24,8 @@ export default function PasskeyVerify({
     label,
     loadingLabel,
     separator,
+    separatorPosition = 'after',
+    className = '',
 }: Props = {}) {
     const { verify, isLoading, error, isSupported } = usePasskeyVerify({
         ...(routes && {
@@ -39,13 +43,27 @@ export default function PasskeyVerify({
         return null;
     }
 
+    const divider = (
+        <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+                <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background text-muted-foreground px-2">
+                    {separator ?? 'O continúa con email'}
+                </span>
+            </div>
+        </div>
+    );
+
     return (
         <>
+            {separatorPosition === 'before' && divider}
             <div className="grid gap-2">
                 <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className={`w-full ${className}`}
                     onClick={verify}
                     disabled={isLoading}
                 >
@@ -59,16 +77,7 @@ export default function PasskeyVerify({
                 )}
             </div>
 
-            <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background text-muted-foreground px-2">
-                        {separator ?? 'O continúa con email'}
-                    </span>
-                </div>
-            </div>
+            {separatorPosition === 'after' && divider}
         </>
     );
 }

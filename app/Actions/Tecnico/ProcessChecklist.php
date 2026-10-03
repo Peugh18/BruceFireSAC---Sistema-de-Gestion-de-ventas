@@ -68,6 +68,7 @@ class ProcessChecklist
             $checklistItems = [];
             $deficienciesCreated = [];
             $requiereAutorizacionGlobal = false;
+            $esDescargadoOUsado = false;
 
             foreach ($data['items'] as $clave => $itemData) {
                 $nombreElemento = self::ELEMENTOS[$clave] ?? ucfirst(str_replace('_', ' ', $clave));
@@ -82,6 +83,19 @@ class ProcessChecklist
 
                 // Si está observado, se genera la deficiencia (§19.2, §20)
                 if ($estado === 'observado') {
+                    $condicionLower = mb_strtolower(($itemData['condicion'] ?? '').' '.($itemData['nota'] ?? ''));
+                    if (str_contains($condicionLower, 'descargad')
+                        || str_contains($condicionLower, 'usad')
+                        || str_contains($condicionLower, 'sin presion')
+                        || str_contains($condicionLower, 'sin presión')
+                        || str_contains($condicionLower, 'despresurizad')
+                        || str_contains($condicionLower, 'percutad')
+                        || str_contains($condicionLower, 'vacio')
+                        || str_contains($condicionLower, 'vacío')
+                    ) {
+                        $esDescargadoOUsado = true;
+                    }
+
                     $requiereAuth = (bool) ($itemData['requiere_autorizacion'] ?? false);
                     if ($requiereAuth) {
                         $requiereAutorizacionGlobal = true;
@@ -103,6 +117,10 @@ class ProcessChecklist
 
                     $deficienciesCreated[] = $deficiency;
                 }
+            }
+
+            if ($esDescargadoOUsado) {
+                $equipment->update(['estado' => 'descargado']);
             }
 
             $resultadoGeneral = count($deficienciesCreated) > 0 ? 'observado' : 'conforme';

@@ -106,7 +106,9 @@ export default function UbigeoPicker({
                     </button>
                 </div>
                 {error && (
-                    <p className="text-destructive mt-1 text-xs">{error}</p>
+                    <p className="text-destructive-strong mt-1 text-xs">
+                        {error}
+                    </p>
                 )}
             </div>
         );
@@ -147,7 +149,9 @@ export default function UbigeoPicker({
                     )}
                 </div>
             )}
-            {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
+            {error && (
+                <p className="text-destructive-strong mt-1 text-xs">{error}</p>
+            )}
         </div>
     );
 }

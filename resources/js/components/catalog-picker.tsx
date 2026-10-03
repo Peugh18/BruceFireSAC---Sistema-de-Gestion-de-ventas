@@ -164,7 +164,7 @@ export default function CatalogPicker({
 
     return (
         <div className="relative">
-            <div className="border-border bg-muted/40 flex items-center gap-2 rounded-[9px] border px-3">
+            <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                 <ScanLine className="text-muted-foreground size-4 shrink-0" />
                 <input
                     ref={inputRef}
@@ -192,7 +192,7 @@ export default function CatalogPicker({
                                 <span className="text-foreground block text-[13px] font-bold">
                                     {respuesta.unidad.nombre}
                                 </span>
-                                <span className="font-['IBM_Plex_Mono',monospace] text-[11px] text-emerald-600 dark:text-emerald-400">
+                                <span className="text-success-strong font-['IBM_Plex_Mono',monospace] text-[11px]">
                                     Serie {respuesta.unidad.numero_serie}
                                     {respuesta.unidad.marca
                                         ? ` · ${respuesta.unidad.marca}`
@@ -241,7 +241,7 @@ export default function CatalogPicker({
                                 <span className="flex shrink-0 items-center gap-2">
                                     {item.stock !== null ? (
                                         <span
-                                            className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${sinStock ? 'bg-destructive/10 text-destructive' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'}`}
+                                            className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${sinStock ? 'bg-destructive/10 text-destructive-strong' : 'text-success-strong bg-emerald-500/10'}`}
                                         >
                                             Stock {item.stock}
                                         </span>

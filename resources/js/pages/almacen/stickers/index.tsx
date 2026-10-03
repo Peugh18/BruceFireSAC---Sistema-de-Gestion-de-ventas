@@ -1,4 +1,4 @@
-﻿import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Barcode, Building2, FileText, Printer } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
@@ -144,7 +144,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                         )}
                                                         target="_blank"
                                                         rel="noreferrer"
-                                                        className="bg-card hover:bg-foreground/90 inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold text-white"
+                                                        className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold shadow-xs transition-colors"
                                                     >
                                                         <Printer className="size-3.5" />
                                                         <span>Imprimir</span>
@@ -187,7 +187,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                 className={[
                                                     'h-8 min-w-[32px] rounded-md px-2 font-medium transition-colors',
                                                     link.active
-                                                        ? 'bg-card font-bold text-white'
+                                                        ? 'bg-foreground text-background font-bold shadow-xs'
                                                         : link.url
                                                           ? 'text-foreground hover:bg-muted'
                                                           : 'cursor-not-allowed opacity-40',

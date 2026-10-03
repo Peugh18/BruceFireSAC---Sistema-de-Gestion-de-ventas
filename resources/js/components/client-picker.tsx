@@ -153,7 +153,7 @@ export default function ClientPicker({
                                 </span>
                                 {tieneRuc && value.estado_contribuyente ? (
                                     <span
-                                        className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${rucHabido ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'}`}
+                                        className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${rucHabido ? 'text-success-strong bg-emerald-500/10' : 'bg-destructive/10 text-destructive-strong'}`}
                                     >
                                         {value.estado_contribuyente} ·{' '}
                                         {value.condicion_domicilio}
@@ -171,7 +171,7 @@ export default function ClientPicker({
                             {tieneRuc &&
                             value.estado_contribuyente &&
                             !rucHabido ? (
-                                <div className="text-destructive mt-1 text-[11.5px] font-semibold">
+                                <div className="text-destructive-strong mt-1 text-[11.5px] font-semibold">
                                     RUC no Activo y Habido: no se le puede
                                     emitir factura.
                                 </div>
@@ -210,7 +210,7 @@ export default function ClientPicker({
                                         0,
                                     );
                                 }}
-                                className="border-border bg-card text-destructive h-8 rounded-[8px] shadow-none"
+                                className="border-border bg-card text-destructive-strong h-8 rounded-[8px] shadow-none"
                                 title="Quitar cliente"
                             >
                                 <X className="size-3.5" />
@@ -222,7 +222,7 @@ export default function ClientPicker({
             ) : (
                 <div className="relative mt-1">
                     <div className="flex items-stretch gap-2">
-                        <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                        <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                             <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
                                 ref={inputRef}
@@ -284,7 +284,7 @@ export default function ClientPicker({
             )}
 
             {error ? (
-                <p className="text-destructive mt-1 text-[11px] font-semibold">
+                <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
                     {error}
                 </p>
             ) : null}

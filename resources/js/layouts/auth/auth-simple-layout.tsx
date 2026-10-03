@@ -1,4 +1,7 @@
 import { Link } from '@inertiajs/react';
+import { LockKeyhole, Package, Receipt, Wrench } from 'lucide-react';
+import ChispaAvatar from '@/components/chispa-avatar';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -8,39 +11,76 @@ export default function AuthSimpleLayout({
     description,
 }: AuthLayoutProps) {
     return (
-        <div className="bg-muted/40 flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div className="w-full max-w-sm">
-                <div className="flex flex-col gap-8">
-                    <div className="flex flex-col items-center gap-4">
-                        <Link
-                            href={home()}
-                            className="flex flex-col items-center gap-3"
-                        >
-                            <img
-                                src="/brand/logo-icon.png"
-                                alt="Bruce Fire"
-                                className="size-14 drop-shadow-sm"
-                            />
-                            <span className="text-foreground font-['Oswald',sans-serif] text-[13px] font-bold tracking-[0.1em] uppercase">
-                                Bruce Fire
+        <div className="bf-auth-shell">
+            <section className="bf-auth-brand" aria-label="Bruce Fire">
+                <div
+                    className="bf-auth-orbit bf-auth-orbit-outer"
+                    aria-hidden="true"
+                />
+                <div
+                    className="bf-auth-orbit bf-auth-orbit-inner"
+                    aria-hidden="true"
+                />
+                <Link href={home()} className="relative z-10 w-fit">
+                    <img
+                        src="/brand/logo-blanco.svg"
+                        alt="Extintores Bruce Fire"
+                        className="bf-auth-logo"
+                    />
+                </Link>
+                <div className="bf-auth-message">
+                    <h2>Tu seguridad, nuestro compromiso.</h2>
+                    <p>
+                        El sistema de gestión de Extintores Bruce Fire: ventas,
+                        servicios, almacén y certificados de tus sedes en un
+                        solo lugar.
+                    </p>
+                    <ul>
+                        <li>
+                            <span>
+                                <Receipt aria-hidden="true" />
                             </span>
-                        </Link>
-
-                        <div className="space-y-1.5 text-center">
-                            <h1 className="text-foreground text-xl font-semibold">
-                                {title}
-                            </h1>
-                            <p className="text-muted-foreground text-center text-sm">
-                                {description}
-                            </p>
+                            Ventas con comprobante electrónico SUNAT
+                        </li>
+                        <li>
+                            <span>
+                                <Wrench aria-hidden="true" />
+                            </span>
+                            Órdenes de servicio y certificados
+                        </li>
+                        <li>
+                            <span>
+                                <Package aria-hidden="true" />
+                            </span>
+                            Stock de extintores por sede
+                        </li>
+                    </ul>
+                </div>
+                <div className="bf-auth-mascot">
+                    <ChispaAvatar pose="saludo" size={300} tema="oscuro" />
+                </div>
+                <p className="bf-auth-footer">
+                    <LockKeyhole
+                        className="size-4 shrink-0"
+                        aria-hidden="true"
+                    />
+                    Acceso solo para el personal de Bruce Fire · Trujillo, Perú
+                </p>
+            </section>
+            <main className="bf-auth-main">
+                <div className="flex justify-end">
+                    <ThemeToggle showLabel />
+                </div>
+                <div className="bf-auth-form-area">
+                    <div className="bf-auth-form-column">
+                        <div className="bf-auth-heading">
+                            <h1>{title}</h1>
+                            <p>{description}</p>
                         </div>
-                    </div>
-
-                    <div className="border-border bg-card rounded-[14px] border p-6 shadow-sm">
                         {children}
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     );
 }

@@ -21,3 +21,18 @@ export function fechaCorta(valor: string | null | undefined): string {
         ? `${coincide[3]}/${coincide[2]}/${coincide[1]}`
         : (valor ?? '');
 }
+
+/**
+ * 1234.5 → "S/ 1,234.50". El espacio no se corta, así el monto no se parte
+ * en dos líneas dentro de una tabla angosta.
+ */
+export function soles(monto: number | string | null | undefined): string {
+    const numero = Number(monto ?? 0);
+
+    return new Intl.NumberFormat('es-PE', {
+        style: 'currency',
+        currency: 'PEN',
+    })
+        .format(Number.isFinite(numero) ? numero : 0)
+        .replace(/\s/u, '\u00a0');
+}

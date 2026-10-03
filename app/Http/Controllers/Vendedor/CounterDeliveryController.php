@@ -49,7 +49,8 @@ class CounterDeliveryController extends Controller
             ],
         ]);
         $service_order->update(['estado' => 'cerrado']);
-        $renew->execute($service_order->equipments()->get());
+        $phRealizada = $service_order->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
+        $renew->execute($service_order->equipments()->get(), $phRealizada);
 
         return back()->with('success', 'Entrega conforme registrada. Ya puedes descargar el acta.');
     }

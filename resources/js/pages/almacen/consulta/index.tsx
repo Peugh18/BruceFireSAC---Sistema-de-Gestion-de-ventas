@@ -96,14 +96,14 @@ function getEstadoBadge(estado: string) {
     switch (estado) {
         case 'disponible':
             return (
-                <span className="inline-flex items-center gap-1 rounded-[6px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="text-success-strong inline-flex items-center gap-1 rounded-[6px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold">
                     <span className="size-2 rounded-full bg-emerald-600" />
                     Disponible en Stock
                 </span>
             );
         case 'reservado':
             return (
-                <span className="inline-flex items-center gap-1 rounded-[6px] border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                <span className="text-warning-strong inline-flex items-center gap-1 rounded-[6px] border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-bold">
                     <span className="size-2 rounded-full bg-amber-600" />
                     Reservado
                 </span>
@@ -117,7 +117,7 @@ function getEstadoBadge(estado: string) {
             );
         case 'baja':
             return (
-                <span className="border-destructive/20 bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-[6px] border px-2.5 py-1 text-xs font-bold">
+                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex items-center gap-1 rounded-[6px] border px-2.5 py-1 text-xs font-bold">
                     <span className="bg-destructive size-2 rounded-full" />
                     Dado de Baja
                 </span>
@@ -193,7 +193,7 @@ export default function ConsultaIndex({
                         className="flex flex-col gap-3 md:flex-row"
                     >
                         <div className="relative flex-1">
-                            <ScanBarcode className="text-destructive absolute top-1/2 left-3.5 size-5 -translate-y-1/2" />
+                            <ScanBarcode className="text-destructive-strong absolute top-1/2 left-3.5 size-5 -translate-y-1/2" />
                             <Input
                                 autoFocus
                                 type="text"
@@ -257,7 +257,7 @@ export default function ConsultaIndex({
                         <Card className="border-border bg-card rounded-[14px] border-2 p-6 shadow-sm">
                             <div className="border-border mb-5 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-muted/30 text-destructive flex size-11 items-center justify-center rounded-[10px]">
+                                    <div className="bg-muted/30 text-destructive-strong flex size-11 items-center justify-center rounded-[10px]">
                                         <Barcode className="size-6" />
                                     </div>
                                     <div>
@@ -292,7 +292,7 @@ export default function ConsultaIndex({
                                         Ubicación Actual
                                     </span>
                                     <div className="text-foreground mt-0.5 flex items-center gap-1 text-xs font-bold">
-                                        <Building2 className="text-destructive size-3.5" />
+                                        <Building2 className="text-destructive-strong size-3.5" />
                                         <span>
                                             {unitResult.sede.nombre} (
                                             {unitResult.sede.tipo})
@@ -323,7 +323,7 @@ export default function ConsultaIndex({
                             {/* Auditoría Kardex: Últimos 5 Movimientos */}
                             <div className="mt-6">
                                 <div className="border-border text-foreground mb-3 flex items-center gap-2 border-b pb-2 text-xs font-bold">
-                                    <History className="text-destructive size-4" />
+                                    <History className="text-destructive-strong size-4" />
                                     <span>
                                         Historial de Kardex de esta Unidad
                                         (Últimos 5 movimientos)
@@ -346,8 +346,8 @@ export default function ConsultaIndex({
                                                     <span
                                                         className={`inline-flex items-center gap-1 rounded-[5px] px-2 py-0.5 text-[10.5px] font-black ${
                                                             m.cantidad > 0
-                                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                                                : 'bg-destructive/10 text-destructive'
+                                                                ? 'text-success-strong bg-emerald-500/10'
+                                                                : 'bg-destructive/10 text-destructive-strong'
                                                         }`}
                                                     >
                                                         {m.tipo.toUpperCase()}
@@ -377,7 +377,7 @@ export default function ConsultaIndex({
 
                             {/* Banner Informativo de frontera de rol */}
                             <div className="border-border bg-muted/40 text-muted-foreground mt-5 flex items-center gap-2 rounded-[8px] border p-3 text-[11.5px]">
-                                <Shield className="text-destructive size-4 shrink-0" />
+                                <Shield className="text-destructive-strong size-4 shrink-0" />
                                 <span>
                                     <b>Modo Consulta Auditora:</b> Esta pantalla
                                     es estrictamente informativa. Para despachos
@@ -480,7 +480,7 @@ export default function ConsultaIndex({
                 {/* EMPTY STATE */}
                 {!unitResult && !productResult && (
                     <Card className="border-border bg-muted/40 rounded-[14px] border border-dashed p-12 text-center">
-                        <div className="border-border bg-card text-destructive mx-auto mb-3 flex size-14 items-center justify-center rounded-full border shadow-sm">
+                        <div className="border-border bg-card text-destructive-strong mx-auto mb-3 flex size-14 items-center justify-center rounded-full border shadow-sm">
                             <Scan className="size-7" />
                         </div>
                         <h3 className="text-foreground text-base font-bold">

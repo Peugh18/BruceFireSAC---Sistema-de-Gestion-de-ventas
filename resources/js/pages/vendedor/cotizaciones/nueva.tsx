@@ -16,6 +16,7 @@ import { Cargando } from '@/components/cargando';
 import CatalogPicker, { type CatalogItem } from '@/components/catalog-picker';
 import ClientPicker, { type ClientFicha } from '@/components/client-picker';
 import ReferenciaField from '@/components/referencia-field';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -71,7 +72,7 @@ function money(value: number) {
 
 function fieldError(errors: Partial<Record<string, string>>, key: string) {
     return errors[key] ? (
-        <p className="text-destructive mt-1 text-[11px] font-semibold">
+        <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
             {errors[key]}
         </p>
     ) : null;
@@ -178,6 +179,12 @@ export default function NuevaCotizacion({
 
     return (
         <VendedorLayout title="Nueva cotización">
+            <div className="mb-4">
+                <PageHeader
+                    title="Nueva cotización"
+                    description="Elige el cliente y los productos. Al guardarla, queda lista para descargar en PDF o enviar por WhatsApp."
+                />
+            </div>
             {renovacion && (
                 <div className="text-foreground mb-4 rounded-[12px] border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
                     Estás renovando la cotización {renovacion.numero}. Revisa
@@ -316,7 +323,11 @@ export default function NuevaCotizacion({
                                                 key={h}
                                                 className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
                                             >
-                                                {h}
+                                                {h || (
+                                                    <span className="sr-only">
+                                                        Acciones
+                                                    </span>
+                                                )}
                                             </th>
                                         ))}
                                     </tr>
@@ -459,7 +470,7 @@ export default function NuevaCotizacion({
                                                         className="border-border h-8 w-20 rounded-[7px] text-[12px]"
                                                     />
                                                 </td>
-                                                <td className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold">
+                                                <td className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                     {money(
                                                         item.cantidad *
                                                             item.precio_unitario -
@@ -480,7 +491,7 @@ export default function NuevaCotizacion({
                                                                 ),
                                                             )
                                                         }
-                                                        className="border-border bg-card text-destructive size-7 rounded-[7px] shadow-none"
+                                                        className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </Button>
@@ -497,7 +508,7 @@ export default function NuevaCotizacion({
                 <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
                     <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center gap-3">
-                            <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
                                 <ClipboardList className="size-5" />
                             </div>
                             <div className="min-w-0">
@@ -560,7 +571,7 @@ export default function NuevaCotizacion({
                                                 opcion,
                                             )
                                         }
-                                        className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-bold ${form.data.condicion_pago_propuesta === opcion ? 'border-primary bg-destructive/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                        className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-bold ${form.data.condicion_pago_propuesta === opcion ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
                                     >
                                         {opcion}
                                     </button>
@@ -573,10 +584,14 @@ export default function NuevaCotizacion({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label
+                                htmlFor="cotizacion-observaciones"
+                                className="text-foreground/80 text-[11px] font-bold uppercase"
+                            >
                                 Observaciones
                             </Label>
                             <textarea
+                                id="cotizacion-observaciones"
                                 value={form.data.observaciones}
                                 onChange={(e) =>
                                     form.setData(
@@ -584,7 +599,7 @@ export default function NuevaCotizacion({
                                         e.target.value,
                                     )
                                 }
-                                className="border-border bg-card mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none"
+                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
                             />
                         </div>
 

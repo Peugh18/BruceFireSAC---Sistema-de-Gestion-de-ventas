@@ -11,6 +11,7 @@ use App\Models\SalePayment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Avisos\AvisosDelVendedor;
+use App\Services\Avisos\ExtintoresPorVencer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -161,6 +162,7 @@ class DashboardController extends Controller
             'cobros_pendientes' => $cobrosPendientes,
             'alertas_top' => $alertasTop,
             'agenda_hoy' => $agendaHoy,
+            'por_vencer_semana' => app(ExtintoresPorVencer::class)->segmentos(today(), 5)['esta_semana'],
         ]);
     }
 }

@@ -34,7 +34,7 @@ export default function TomarOrden({
     if (asignacion.tecnico) {
         return (
             <div className="flex items-center gap-2 rounded-[12px] border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 text-[12.5px]">
-                <UserCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+                <UserCheck className="text-success-strong size-4" />
                 <span className="text-foreground">
                     {asignacion.es_mia
                         ? 'Esta orden está a tu cargo.'

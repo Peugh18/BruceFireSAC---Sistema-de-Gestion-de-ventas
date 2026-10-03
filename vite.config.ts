@@ -14,7 +14,16 @@ export default defineConfig({
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
+                    weights: [400, 500, 600, 700],
+                }),
+                // Títulos y cifras grandes (DESIGN.md): sin cargarla, cada
+                // navegador mostraba otra letra.
+                bunny('Oswald', {
+                    weights: [500, 600, 700],
+                }),
+                // Códigos, números de documento y encabezados de tabla.
+                bunny('IBM Plex Mono', {
+                    weights: [400, 500, 600, 700],
                 }),
             ],
         }),

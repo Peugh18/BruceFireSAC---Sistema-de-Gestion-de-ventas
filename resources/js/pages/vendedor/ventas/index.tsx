@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import { FilasCargando } from '@/components/cargando';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -46,21 +47,21 @@ function estadoSunat(estado: string): {
         case 'por_enviar':
             return {
                 texto: 'Por enviar · editable',
-                clase: 'text-amber-600 dark:text-amber-400',
+                clase: 'text-warning-strong',
                 editable: true,
             };
         case 'aceptado':
         case 'observado':
             return {
                 texto: 'Aceptado por SUNAT',
-                clase: 'text-emerald-600 dark:text-emerald-400',
+                clase: 'text-success-strong',
                 editable: false,
             };
         case 'rechazado':
         case 'excepcion':
             return {
                 texto: 'Rechazado · corregir',
-                clase: 'text-destructive',
+                clase: 'text-destructive-strong',
                 editable: true,
             };
         default:
@@ -114,15 +115,15 @@ function statusBadge(estado: string) {
     const normalized = estado?.toLowerCase();
 
     if (normalized === 'confirmada' || normalized === 'emitida') {
-        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border-transparent';
+        return 'bg-emerald-500/10 text-success-strong border border-emerald-500/20 border-transparent';
     }
 
     if (normalized === 'borrador') {
-        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 border-transparent';
+        return 'bg-amber-500/10 text-warning-strong border border-amber-500/20 border-transparent';
     }
 
     if (normalized === 'anulada' || normalized === 'rechazada') {
-        return 'bg-destructive/10 text-destructive border border-destructive/20 border-transparent';
+        return 'bg-destructive/10 text-destructive-strong border border-destructive/20 border-transparent';
     }
 
     return 'bg-muted text-muted-foreground border-transparent';
@@ -159,7 +160,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
             value: money(kpis.ventas_del_mes),
             icon: Banknote,
             bg: 'bg-emerald-500/10',
-            text: 'text-emerald-600 dark:text-emerald-400',
+            text: 'text-success-strong',
         },
         {
             label: 'Comprobantes',
@@ -173,7 +174,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
             value: kpis.pendientes_confirmar,
             icon: FileText,
             bg: 'bg-amber-500/10',
-            text: 'text-amber-600 dark:text-amber-400',
+            text: 'text-warning-strong',
         },
         {
             label: 'Registros',
@@ -187,14 +188,29 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
     return (
         <VendedorLayout title="Ventas">
             <div className="flex flex-col gap-4">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <PageHeader
+                    title="Ventas"
+                    description="Tus ventas con su comprobante. Los borradores se pueden editar antes de emitirse."
+                    actions={
+                        <Button
+                            asChild
+                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                        >
+                            <Link href={ventas.create(teamSlug)}>
+                                <Plus className="size-3.5" />
+                                Nueva venta
+                            </Link>
+                        </Button>
+                    }
+                />
+                <div className="bf-summary border-border bg-card grid grid-cols-2 gap-0 overflow-hidden rounded-xl border lg:grid-cols-4">
                     {kpiItems.map((item) => {
                         const Icon = item.icon;
 
                         return (
                             <Card
                                 key={item.label}
-                                className="border-border bg-card flex-row items-center gap-3.5 rounded-[14px] px-[18px] py-4 shadow-none"
+                                className="border-border bg-card flex-row items-center gap-3.5 rounded-none border-0 border-r px-[18px] py-5 shadow-none last:border-r-0"
                             >
                                 <div
                                     className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}
@@ -205,10 +221,10 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                     />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-muted-foreground text-[11px] font-bold tracking-[0.03em] uppercase">
+                                    <div className="text-muted-foreground text-xs font-medium">
                                         {item.label}
                                     </div>
-                                    <div className="text-foreground font-['Oswald',sans-serif] text-[21px] leading-tight font-semibold">
+                                    <div className="text-foreground text-[26px] leading-tight font-semibold tracking-tight tabular-nums">
                                         {item.value}
                                     </div>
                                 </div>
@@ -219,7 +235,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
 
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <div className="mb-4 flex flex-wrap items-center gap-2.5">
-                        <div className="bg-muted flex rounded-[9px] p-[3px]">
+                        <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
                             {FILTERS.map((filter) => {
                                 const active =
                                     filter.value === ''
@@ -245,7 +261,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                 );
                             })}
                         </div>
-                        <div className="bg-muted flex rounded-[9px] p-[3px]">
+                        <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
                             {[
                                 { label: 'Todos', value: '' },
                                 { label: 'Con comprobante', value: 'sunat' },
@@ -257,6 +273,9 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                 <button
                                     key={option.label}
                                     type="button"
+                                    aria-pressed={
+                                        currentComprobante === option.value
+                                    }
                                     onClick={() =>
                                         changeFilter(
                                             currentFilter,
@@ -273,20 +292,13 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                 </button>
                             ))}
                         </div>
-                        <div className="flex-1" />
-                        <Button
-                            asChild
-                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
-                        >
-                            <Link href={ventas.create(teamSlug)}>
-                                <Plus className="size-3.5" />
-                                Nueva venta
-                            </Link>
-                        </Button>
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-[12.5px]">
+                            <caption className="sr-only">
+                                Ventas y estado de sus comprobantes
+                            </caption>
                             <thead>
                                 <tr>
                                     {[
@@ -300,7 +312,8 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                     ].map((column) => (
                                         <th
                                             key={column}
-                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap uppercase"
+                                            scope="col"
+                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left text-[11px] font-medium whitespace-nowrap"
                                         >
                                             {column}
                                         </th>
@@ -313,13 +326,66 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                         columnas={7}
                                         filas={sales.data.length}
                                     />
+                                ) : sales.data.length === 0 ? (
+                                    <tr>
+                                        <td
+                                            colSpan={7}
+                                            className="text-muted-foreground px-4 py-12 text-center"
+                                        >
+                                            <div className="flex flex-col items-center justify-center gap-2.5">
+                                                <div className="bg-muted/60 text-muted-foreground flex size-12 items-center justify-center rounded-2xl">
+                                                    <ShoppingCart className="size-6 opacity-75" />
+                                                </div>
+                                                <p className="text-foreground text-sm font-semibold">
+                                                    No se encontraron ventas
+                                                </p>
+                                                <p className="text-muted-foreground max-w-sm text-xs">
+                                                    {currentFilter &&
+                                                    currentFilter !== 'todas'
+                                                        ? 'No hay registros para el filtro seleccionado. Prueba limpiando los filtros.'
+                                                        : 'Aún no tienes ventas registradas en este período. Puedes emitir una nueva factura o boleta de inmediato.'}
+                                                </p>
+                                                {currentFilter &&
+                                                currentFilter !== 'todas' ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            router.get(
+                                                                ventas.index(
+                                                                    teamSlug,
+                                                                ),
+                                                            );
+                                                        }}
+                                                        className="text-primary mt-1 cursor-pointer text-xs font-semibold hover:underline"
+                                                    >
+                                                        Ver todas las ventas
+                                                    </button>
+                                                ) : (
+                                                    <Button
+                                                        asChild
+                                                        size="sm"
+                                                        className="mt-2 rounded-xl"
+                                                    >
+                                                        <Link
+                                                            href={ventas.create(
+                                                                teamSlug,
+                                                            )}
+                                                        >
+                                                            <Plus className="size-3.5" />
+                                                            Emitir primera venta
+                                                        </Link>
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
                                 ) : (
                                     sales.data.map((sale) => (
                                         <tr
                                             key={sale.id}
                                             className="hover:bg-muted/40"
                                         >
-                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                 {sale.numero_interno}
                                             </td>
                                             <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
@@ -348,7 +414,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                                     </div>
                                                 ) : null}
                                             </td>
-                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                 {money(sale.total)}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px]">

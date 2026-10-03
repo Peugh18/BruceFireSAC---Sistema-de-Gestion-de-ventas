@@ -1,11 +1,13 @@
-﻿import { router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     CheckCircle2,
     Clock,
     Filter,
+    Inbox,
     MinusCircle,
     PlusCircle,
+    RotateCcw,
     TrendingDown,
     Wallet,
 } from 'lucide-react';
@@ -157,7 +159,7 @@ export default function CajasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Cajas Abiertas Ahora
                             </span>
-                            <Wallet className="size-4 text-emerald-600" />
+                            <Wallet className="text-success-strong size-4" />
                         </div>
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {kpis.turnosAbiertos}
@@ -172,7 +174,7 @@ export default function CajasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Descuadres en el Mes
                             </span>
-                            <AlertCircle className="size-4 text-amber-600" />
+                            <AlertCircle className="text-warning-strong size-4" />
                         </div>
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
                             {kpis.turnosConDescuadreMes}
@@ -187,14 +189,14 @@ export default function CajasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Diferencia Neta Acumulada
                             </span>
-                            <TrendingDown className="text-primary size-4" />
+                            <TrendingDown className="text-primary-strong size-4" />
                         </div>
                         <div
                             className={`mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold ${
                                 kpis.totalDiferenciasMes < 0
-                                    ? 'text-primary'
+                                    ? 'text-primary-strong'
                                     : kpis.totalDiferenciasMes > 0
-                                      ? 'text-amber-600'
+                                      ? 'text-warning-strong'
                                       : 'text-emerald-700'
                             }`}
                         >
@@ -293,7 +295,7 @@ export default function CajasConsolidadasIndex() {
                                 onChange={(e) =>
                                     setConDiferencia(e.target.checked)
                                 }
-                                className="border-border text-primary rounded"
+                                className="border-border text-primary-strong rounded"
                             />
                             <span>
                                 Ver solo turnos con diferencia (faltante o
@@ -312,7 +314,7 @@ export default function CajasConsolidadasIndex() {
                             <button
                                 type="button"
                                 onClick={applyFilters}
-                                className="bg-card hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold text-white"
+                                className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold shadow-xs transition-colors"
                             >
                                 <Filter className="size-3.5" />
                                 <span>Aplicar Filtros</span>
@@ -354,10 +356,44 @@ export default function CajasConsolidadasIndex() {
                                     <tr>
                                         <td
                                             colSpan={10}
-                                            className="text-muted-foreground py-8 text-center"
+                                            className="text-muted-foreground py-12 text-center"
                                         >
-                                            No se encontraron turnos de caja
-                                            registrados con estos filtros.
+                                            <div className="flex flex-col items-center justify-center gap-2">
+                                                <div className="bg-muted/50 flex size-10 items-center justify-center rounded-full">
+                                                    <Inbox className="text-muted-foreground size-5" />
+                                                </div>
+                                                <p className="text-foreground text-sm font-semibold">
+                                                    No se encontraron turnos de
+                                                    caja
+                                                </p>
+                                                <p className="text-muted-foreground max-w-sm text-xs">
+                                                    {vendedorId ||
+                                                    sedeId ||
+                                                    estado !== 'todos' ||
+                                                    conDiferencia ||
+                                                    fechaDesde ||
+                                                    fechaHasta
+                                                        ? 'No hay registros que coincidan con los filtros aplicados.'
+                                                        : 'Aún no se han registrado turnos de caja para este periodo.'}
+                                                </p>
+                                                {(vendedorId ||
+                                                    sedeId ||
+                                                    estado !== 'todos' ||
+                                                    conDiferencia ||
+                                                    fechaDesde ||
+                                                    fechaHasta) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={resetFilters}
+                                                        className="border-border bg-card text-foreground hover:bg-muted mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                                                    >
+                                                        <RotateCcw className="size-3.5" />
+                                                        <span>
+                                                            Limpiar filtros
+                                                        </span>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : (
@@ -411,7 +447,7 @@ export default function CajasConsolidadasIndex() {
                                                     </span>
                                                 ) : c.tipo_diferencia ===
                                                   'faltante' ? (
-                                                    <span className="text-primary inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 font-mono text-[11px] font-bold">
+                                                    <span className="text-primary-strong inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 font-mono text-[11px] font-bold">
                                                         <MinusCircle className="size-3" />
                                                         {formatCurrency(
                                                             c.diferencia!,
@@ -481,7 +517,7 @@ export default function CajasConsolidadasIndex() {
                                             }}
                                             className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                                                 link.active
-                                                    ? 'bg-card font-bold text-white'
+                                                    ? 'bg-foreground text-background font-bold shadow-xs'
                                                     : 'text-foreground/80 hover:bg-muted/40'
                                             }`}
                                         />

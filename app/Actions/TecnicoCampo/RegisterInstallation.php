@@ -82,6 +82,8 @@ class RegisterInstallation
                             'ubicacion_actual' => $eqData['ubicacion_actual'] ?? $data['ubicacion_instalada'],
                             'estado' => 'operativo',
                             'fecha_venta' => now(),
+                            'proxima_fecha_atencion' => now()->addYear(),
+                            'proxima_prueba_hidrostatica' => now()->addYears(5),
                         ]);
                     }
 

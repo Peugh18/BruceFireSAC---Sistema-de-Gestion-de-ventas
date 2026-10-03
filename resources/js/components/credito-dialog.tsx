@@ -163,7 +163,7 @@ export default function CreditoDialog({
                                     generarCuotas(total, fecha, dias, numero),
                                 );
                             }}
-                            className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-bold ${plazo === dias ? 'border-primary bg-destructive/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                            className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-bold ${plazo === dias ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
                         >
                             {dias} días
                         </button>
@@ -232,7 +232,7 @@ export default function CreditoDialog({
                                                     ),
                                                 )
                                             }
-                                            className="text-destructive size-7 rounded-[7px] shadow-none"
+                                            className="text-destructive-strong size-7 rounded-[7px] shadow-none"
                                         >
                                             <Trash2 className="size-3.5" />
                                         </Button>
@@ -265,7 +265,7 @@ export default function CreditoDialog({
                         Agregar cuota
                     </Button>
                     <div
-                        className={`text-[12px] font-semibold ${Math.abs(diferencia) < 0.01 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
+                        className={`text-[12px] font-semibold ${Math.abs(diferencia) < 0.01 ? 'text-success-strong' : 'text-destructive-strong'}`}
                     >
                         Suma S/ {suma.toFixed(2)}
                         {Math.abs(diferencia) >= 0.01
@@ -274,7 +274,7 @@ export default function CreditoDialog({
                     </div>
                 </div>
                 {!fechasValidas ? (
-                    <p className="text-destructive text-[11.5px] font-semibold">
+                    <p className="text-destructive-strong text-[11.5px] font-semibold">
                         Cada cuota debe vencer después de la fecha de la venta.
                     </p>
                 ) : null}

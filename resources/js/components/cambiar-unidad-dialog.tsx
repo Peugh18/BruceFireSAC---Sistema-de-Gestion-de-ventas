@@ -116,7 +116,7 @@ export default function CambiarUnidadDialog({
                     onSubmit={(event) => cambiar(serie, event)}
                     className="flex gap-2"
                 >
-                    <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                    <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                         <ScanLine className="text-muted-foreground size-4 shrink-0" />
                         <input
                             autoFocus
@@ -139,7 +139,7 @@ export default function CambiarUnidadDialog({
                 </form>
 
                 {error ? (
-                    <p className="bg-destructive/10 text-destructive rounded-[9px] px-3 py-2 text-[12px] font-semibold">
+                    <p className="bg-destructive/10 text-destructive-strong rounded-[9px] px-3 py-2 text-[12px] font-semibold">
                         {error}
                     </p>
                 ) : null}

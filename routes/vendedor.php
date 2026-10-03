@@ -51,6 +51,7 @@ Route::prefix('vendedor')
         Route::get('clientes/{client}', [ClientController::class, 'show'])->name('clientes.show');
         Route::post('clientes/{client}/verificar-sunat', [ClientController::class, 'verifySunat'])->name('clientes.verificar-sunat');
         Route::put('clientes/{client}', [ClientController::class, 'update'])->name('clientes.update');
+        Route::post('clientes/{client}/extintores/{equipment}/reportar-uso', [ClientController::class, 'reportEquipmentUsed'])->name('clientes.extintores.reportar-uso');
 
         Route::post('clientes/{client}/sites', [ClientSiteController::class, 'store'])->name('clientes.sites.store');
         Route::put('clientes/{client}/sites/{site}', [ClientSiteController::class, 'update'])->name('clientes.sites.update');

@@ -185,7 +185,7 @@ export default function InspeccionShow({
             </div>
 
             {flash?.success && (
-                <div className="mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                <div className="text-success-strong mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
                     {flash.success}
                 </div>
             )}
@@ -228,14 +228,14 @@ export default function InspeccionShow({
                     {order.client.telefono && (
                         <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
-                                <Phone className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <Phone className="text-success-strong size-4 shrink-0" />
                                 <span className="text-foreground font-mono">
                                     {order.client.telefono}
                                 </span>
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -311,7 +311,7 @@ export default function InspeccionShow({
                 <div className="mb-3 flex items-center justify-between">
                     <div>
                         <h2 className="text-foreground flex items-center gap-1.5 text-sm font-black">
-                            <Flame className="size-4 text-amber-600 dark:text-amber-400" />
+                            <Flame className="text-warning-strong size-4" />
                             Extintores a Inspeccionar ({order.equipments.length}
                             )
                         </h2>
@@ -520,18 +520,18 @@ export default function InspeccionShow({
                                         {latestChecklist ? (
                                             latestChecklist.resultado_general ===
                                             'conforme' ? (
-                                                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold">
                                                     <CheckCircle2 className="size-3" />
                                                     Conforme
                                                 </span>
                                             ) : (
-                                                <span className="border-destructive/20 bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold">
+                                                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold">
                                                     <AlertCircle className="size-3" />
                                                     Con Observación
                                                 </span>
                                             )
                                         ) : (
-                                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                                            <span className="text-warning-strong rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold">
                                                 Pendiente
                                             </span>
                                         )}
@@ -589,8 +589,8 @@ export default function InspeccionShow({
             {/* Deficiencies summary if any */}
             {order.deficiencies && order.deficiencies.length > 0 && (
                 <div className="border-destructive/20 bg-destructive/10 mb-6 rounded-[14px] border p-4">
-                    <h3 className="text-destructive mb-2 flex items-center gap-1.5 text-xs font-black">
-                        <AlertCircle className="text-destructive size-4" />
+                    <h3 className="text-destructive-strong mb-2 flex items-center gap-1.5 text-xs font-black">
+                        <AlertCircle className="text-destructive-strong size-4" />
                         Deficiencias Detectadas ({order.deficiencies.length})
                     </h3>
                     <div className="space-y-2">
@@ -611,7 +611,7 @@ export default function InspeccionShow({
                                     {def.condicion}
                                 </p>
                                 {def.requiere_autorizacion && (
-                                    <span className="text-destructive mt-1 inline-block text-[9.5px] font-bold">
+                                    <span className="text-destructive-strong mt-1 inline-block text-[9.5px] font-bold">
                                         Requiere cotización/autorización
                                         comercial
                                     </span>
@@ -625,8 +625,8 @@ export default function InspeccionShow({
             {/* Certificates emitted if any */}
             {order.certificates && order.certificates.length > 0 && (
                 <div className="mb-6 rounded-[14px] border border-emerald-500/20 bg-emerald-500/10 p-4">
-                    <h3 className="mb-2 flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
-                        <FileCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <h3 className="text-success-strong mb-2 flex items-center gap-1.5 text-xs font-black">
+                        <FileCheck className="text-success-strong size-4" />
                         Certificados Emitidos
                     </h3>
                     <div className="space-y-1.5">
@@ -639,7 +639,7 @@ export default function InspeccionShow({
                                     {cert.certificateType?.nombre ||
                                         'Certificado'}
                                 </span>
-                                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                <span className="text-success-strong font-mono font-bold">
                                     {cert.numero}
                                 </span>
                             </div>
@@ -958,7 +958,7 @@ function InlineChecklistForm({
                                         }
                                         className="border-destructive/20 bg-destructive/10 w-full rounded-[6px] border p-1.5 text-xs"
                                     />
-                                    <label className="text-destructive flex items-center gap-1.5 text-[10.5px] font-semibold">
+                                    <label className="text-destructive-strong flex items-center gap-1.5 text-[10.5px] font-semibold">
                                         <input
                                             type="checkbox"
                                             checked={
@@ -972,7 +972,7 @@ function InlineChecklistForm({
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="border-destructive/20 text-destructive size-3.5 rounded"
+                                            className="border-destructive/20 text-destructive-strong size-3.5 rounded"
                                         />
                                         <span>
                                             Requiere cotización/autorización de

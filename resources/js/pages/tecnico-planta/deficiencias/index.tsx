@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -12,6 +12,7 @@ import {
     ShieldAlert,
     UserCheck,
     PackageCheck,
+    RotateCcw,
 } from 'lucide-react';
 
 interface DeficiencyItem {
@@ -237,9 +238,30 @@ export default function DeficienciasIndex({
                     {deficiencies.data.length === 0 ? (
                         <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
                             <ShieldAlert className="mx-auto h-8 w-8 text-neutral-400" />
-                            <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
+                            <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
                                 No se encontraron deficiencias en este filtro
                             </p>
+                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                                {search || filters.estado !== 'todos'
+                                    ? 'No hay registros que coincidan con la búsqueda o filtro aplicado.'
+                                    : 'No hay deficiencias registradas en este momento.'}
+                            </p>
+                            {(search || filters.estado !== 'todos') && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch('');
+                                        router.get(
+                                            `/${teamSlug}/tecnico-planta/deficiencias`,
+                                            { estado: 'todos' },
+                                        );
+                                    }}
+                                    className="border-border bg-card text-foreground hover:bg-muted mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                                >
+                                    <RotateCcw className="size-3" />
+                                    <span>Ver todas las deficiencias</span>
+                                </button>
+                            )}
                         </div>
                     ) : (
                         deficiencies.data.map((d) => (
@@ -254,7 +276,7 @@ export default function DeficienciasIndex({
                                                 {d.orden_codigo}
                                             </span>
                                             {d.equipo_serie && (
-                                                <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                                                <span className="text-warning-strong font-mono text-xs font-bold">
                                                     {d.equipo_serie}
                                                 </span>
                                             )}
@@ -296,7 +318,7 @@ export default function DeficienciasIndex({
                                 {/* Component & Condition */}
                                 <div className="space-y-1 rounded-xl bg-neutral-50 p-2.5 dark:bg-neutral-900/60">
                                     <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
-                                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                                        <AlertTriangle className="text-warning-strong h-3.5 w-3.5" />
                                         <span>{d.componente}</span>
                                     </div>
                                     <p className="text-xs text-neutral-700 dark:text-neutral-300">
@@ -335,7 +357,7 @@ export default function DeficienciasIndex({
                                 {d.authorization && (
                                     <div className="space-y-1 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-900 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300">
                                         <div className="flex items-center gap-1.5 font-bold">
-                                            <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
+                                            <UserCheck className="text-success-strong h-3.5 w-3.5" />
                                             <span>
                                                 Autorizado por{' '}
                                                 {d.authorization.autorizado_por}{' '}

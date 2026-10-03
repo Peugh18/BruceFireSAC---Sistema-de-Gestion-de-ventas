@@ -301,7 +301,7 @@ export default function VerificarCertificado({
                                             onClick={() =>
                                                 setTodosLosEquipos(true)
                                             }
-                                            className="text-primary mt-1 text-[13px] font-semibold"
+                                            className="text-primary-strong mt-1 text-[13px] font-semibold"
                                         >
                                             Ver los {equipos.length} equipos
                                         </button>

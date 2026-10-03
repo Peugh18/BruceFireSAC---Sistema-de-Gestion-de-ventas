@@ -234,10 +234,24 @@ export default function UsuariosIndex() {
                                         <tr>
                                             <td
                                                 colSpan={5}
-                                                className="text-muted-foreground py-8 text-center"
+                                                className="text-muted-foreground py-12 text-center"
                                             >
-                                                No hay usuarios en este team
-                                                todavía.
+                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                    <div className="bg-muted/50 flex size-10 items-center justify-center rounded-full">
+                                                        <Users className="text-muted-foreground size-5" />
+                                                    </div>
+                                                    <p className="text-foreground text-sm font-semibold">
+                                                        No hay usuarios
+                                                        registrados
+                                                    </p>
+                                                    <p className="text-muted-foreground max-w-sm text-xs">
+                                                        Los colaboradores
+                                                        vinculados al equipo
+                                                        aparecerán aquí para
+                                                        asignarles rol y sede de
+                                                        operaciones.
+                                                    </p>
+                                                </div>
                                             </td>
                                         </tr>
                                     ) : (
@@ -256,8 +270,8 @@ export default function UsuariosIndex() {
                                                     <span
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                             u.role
-                                                                ? 'bg-zinc-100 text-zinc-700'
-                                                                : 'bg-amber-100 text-amber-800'
+                                                                ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
+                                                                : 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
                                                         }`}
                                                     >
                                                         {roleLabel(u.role)}
@@ -334,7 +348,7 @@ export default function UsuariosIndex() {
                                                     </select>
                                                     {u.role !== 'Gerente' &&
                                                     !u.sede_id ? (
-                                                        <p className="text-destructive mt-1 text-[11px] font-bold">
+                                                        <p className="text-destructive-strong mt-1 text-[11px] font-bold">
                                                             Sin sede: no puede
                                                             entrar hasta que le
                                                             asignes una.

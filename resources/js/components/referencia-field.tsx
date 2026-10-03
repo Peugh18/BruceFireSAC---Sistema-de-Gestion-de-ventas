@@ -54,7 +54,7 @@ export default function ReferenciaField({
                                     value === opcion.texto ? '' : opcion.texto,
                                 )
                             }
-                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11.5px] font-bold transition-colors ${value === opcion.texto ? 'border-primary bg-destructive/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11.5px] font-bold transition-colors ${value === opcion.texto ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
                         >
                             {esVehiculo ? (
                                 <Truck className="size-3" />
@@ -78,7 +78,7 @@ export default function ReferenciaField({
                 className="border-border bg-card mt-1.5 h-10 rounded-[9px] text-[13px]"
             />
             {error ? (
-                <p className="text-destructive mt-1 text-[11px] font-semibold">
+                <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
                     {error}
                 </p>
             ) : null}

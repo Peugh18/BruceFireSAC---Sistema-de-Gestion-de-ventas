@@ -1,10 +1,11 @@
-﻿import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowRight,
     ChevronRight,
     Flame,
     MapPin,
     PackageCheck,
+    RotateCcw,
     Search,
 } from 'lucide-react';
 import React, { useState } from 'react';
@@ -73,7 +74,7 @@ const ESTADOS_MAP: Record<
     listo_entrega: {
         label: 'Lista para Entrega',
         bg: 'bg-amber-500/10',
-        text: 'text-amber-600 dark:text-amber-400',
+        text: 'text-warning-strong',
         border: 'border-amber-500/20',
     },
     en_ruta_entrega: {
@@ -85,7 +86,7 @@ const ESTADOS_MAP: Record<
     entregado: {
         label: 'Entregada',
         bg: 'bg-emerald-500/10',
-        text: 'text-emerald-600 dark:text-emerald-400',
+        text: 'text-success-strong',
         border: 'border-emerald-500/20',
     },
     cerrado: {
@@ -152,7 +153,7 @@ export default function EntregasIndex({
                     <span className="block text-[10px] font-bold uppercase opacity-80">
                         Listas
                     </span>
-                    <span className="text-lg font-black text-amber-600 dark:text-amber-400">
+                    <span className="text-warning-strong text-lg font-black">
                         {stats.listas}
                     </span>
                 </button>
@@ -182,7 +183,7 @@ export default function EntregasIndex({
                     <span className="block text-[10px] font-bold uppercase opacity-80">
                         Cerradas
                     </span>
-                    <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                    <span className="text-success-strong text-lg font-black">
                         {stats.cerradas}
                     </span>
                 </button>
@@ -224,8 +225,26 @@ export default function EntregasIndex({
                             No hay entregas en este filtro
                         </p>
                         <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Selecciona otra pestaña o busca por cliente.
+                            {searchTerm || currentTab !== 'todos'
+                                ? 'No se encontraron entregas que coincidan con los criterios.'
+                                : 'Aún no se han generado órdenes de entrega para campo.'}
                         </p>
+                        {(searchTerm || currentTab !== 'todos') && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    router.get(
+                                        `/${teamSlug}/tecnico-campo/entregas`,
+                                        { tab: 'todos' },
+                                    );
+                                }}
+                                className="border-border bg-card text-foreground hover:bg-muted mt-3 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                            >
+                                <RotateCcw className="size-3" />
+                                <span>Ver todas las entregas</span>
+                            </button>
+                        )}
                     </div>
                 ) : (
                     entregas.data.map((order) => {
@@ -278,7 +297,7 @@ export default function EntregasIndex({
 
                                 <div className="border-border flex items-center justify-between border-t pt-2.5">
                                     <div className="text-foreground flex items-center gap-1.5 text-[11px] font-medium">
-                                        <Flame className="size-3.5 text-amber-600 dark:text-amber-400" />
+                                        <Flame className="text-warning-strong size-3.5" />
                                         <span>
                                             {order.equipments?.length || 0}{' '}
                                             {order.equipments?.length === 1

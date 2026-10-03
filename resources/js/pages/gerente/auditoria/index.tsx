@@ -1,4 +1,4 @@
-﻿import { router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Activity, Filter, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 
@@ -126,7 +126,7 @@ export default function AuditoriaIndex() {
                             <span className="font-medium uppercase">
                                 Registros Hoy
                             </span>
-                            <Activity className="size-4 text-emerald-600" />
+                            <Activity className="text-success-strong size-4" />
                         </div>
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {kpis.registrosHoy}
@@ -213,7 +213,7 @@ export default function AuditoriaIndex() {
                         <button
                             type="button"
                             onClick={applyFilters}
-                            className="bg-card hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold text-white"
+                            className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold shadow-xs transition-colors"
                         >
                             <Filter className="size-3.5" />
                             <span>Aplicar Filtros</span>
@@ -317,7 +317,7 @@ export default function AuditoriaIndex() {
                                             }}
                                             className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                                                 link.active
-                                                    ? 'bg-card font-bold text-white'
+                                                    ? 'bg-foreground text-background font-bold shadow-xs'
                                                     : 'text-foreground/80 hover:bg-muted/40'
                                             }`}
                                         />

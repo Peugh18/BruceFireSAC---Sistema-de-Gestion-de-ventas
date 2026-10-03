@@ -1,3 +1,4 @@
+import * as Dialog from '@radix-ui/react-dialog';
 import { RotateCcw, Send, X } from 'lucide-react';
 import {
     FormEvent,
@@ -120,7 +121,12 @@ export default function ChispaWidget({
         } catch {
             // Sin almacenamiento disponible: la conversación dura solo en memoria.
         }
-        finRef.current?.scrollIntoView({ behavior: 'smooth' });
+        finRef.current?.scrollIntoView({
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)')
+                .matches
+                ? 'instant'
+                : 'smooth',
+        });
     }, [mensajes, abierto]);
 
     const preguntar = async (pregunta: string) => {
@@ -183,27 +189,30 @@ export default function ChispaWidget({
     };
 
     return (
-        <>
-            {abierto ? (
-                <div
-                    className={`border-border bg-card fixed right-4 bottom-20 z-50 flex max-h-[min(560px,calc(100vh-7rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[16px] border shadow-2xl ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:max-h-[calc(100dvh-11rem)]' : ''}`}
+        <Dialog.Root open={abierto} onOpenChange={setAbierto}>
+            <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20" />
+                <Dialog.Content
+                    className={`border-border bg-card fixed right-4 bottom-24 z-50 flex max-h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[16px] border shadow-2xl ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:max-h-[calc(100dvh-11rem)]' : ''}`}
                 >
-                    <div className="border-border bg-primary flex items-center gap-2.5 border-b px-4 py-3 text-white">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white">
-                            <ChispaAvatar size={32} pose="busto" tema="claro" />
+                    <div className="border-border flex items-center gap-2.5 border-b px-4 py-4">
+                        <span className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
+                            <ChispaAvatar size={32} pose="busto" />
                         </span>
                         <div className="flex-1">
-                            <div className="text-[14px] font-bold">Chispa</div>
-                            <div className="text-[11px] opacity-85">
+                            <Dialog.Title className="text-[15px] font-semibold">
+                                Chispa
+                            </Dialog.Title>
+                            <Dialog.Description className="text-muted-foreground text-[11px]">
                                 Te explico cómo usar el sistema, paso a paso
-                            </div>
+                            </Dialog.Description>
                         </div>
                         {mensajes.length > 0 ? (
                             <button
                                 type="button"
                                 onClick={() => setMensajes([])}
-                                title="Nueva conversación"
-                                className="rounded-[7px] p-1 hover:bg-white/15"
+                                aria-label="Nueva conversación"
+                                className="hover:bg-muted flex size-9 items-center justify-center rounded-lg"
                             >
                                 <RotateCcw className="size-4" />
                             </button>
@@ -211,21 +220,24 @@ export default function ChispaWidget({
                         <button
                             type="button"
                             onClick={() => setAbierto(false)}
-                            title="Cerrar"
-                            className="rounded-[7px] p-1 hover:bg-white/15"
+                            aria-label="Cerrar ayuda de Chispa"
+                            className="hover:bg-muted flex size-9 items-center justify-center rounded-lg"
                         >
                             <X className="size-4" />
                         </button>
                     </div>
 
-                    <div className="flex-1 space-y-2.5 overflow-y-auto p-3 text-[13px]">
+                    <div
+                        role="log"
+                        aria-label="Conversación con Chispa"
+                        className="flex-1 space-y-2.5 overflow-y-auto p-4 text-[13px]"
+                    >
                         {mensajes.length === 0 ? (
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3">
                                     <ChispaAvatar
                                         size={72}
                                         pose="saludo"
-                                        animado
                                         className="shrink-0"
                                     />
                                     <p className="text-muted-foreground">
@@ -287,47 +299,37 @@ export default function ChispaWidget({
                             value={texto}
                             onChange={(e) => setTexto(e.target.value)}
                             maxLength={500}
+                            aria-label="Tu pregunta para Chispa"
                             placeholder="Escribe tu duda…"
-                            className="border-border bg-muted/40 h-10 min-w-0 flex-1 rounded-[9px] border px-3 text-[13px] outline-none"
+                            className="border-border bg-muted/40 focus-visible:border-ring focus-visible:ring-ring/50 h-10 min-w-0 flex-1 rounded-[9px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                         />
                         <button
                             type="submit"
                             disabled={pensando || !texto.trim()}
                             className="bg-primary flex size-10 items-center justify-center rounded-[9px] text-white disabled:opacity-50"
-                            title="Enviar"
+                            aria-label="Enviar pregunta"
                         >
                             <Send className="size-4" />
                         </button>
                     </form>
-                </div>
-            ) : null}
-
-            {abierto ? (
+                </Dialog.Content>
+            </Dialog.Portal>
+            <Dialog.Trigger asChild>
                 <button
                     type="button"
-                    onClick={() => setAbierto(false)}
-                    aria-label="Cerrar la ayuda de Chispa"
-                    className={`bg-primary fixed right-4 bottom-4 z-50 flex size-12 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-150 ease-out active:scale-[0.97] ${conBarraInferior ? 'max-md:bottom-[calc(5rem+env(safe-area-inset-bottom))]' : ''}`}
-                >
-                    <X className="size-5" />
-                </button>
-            ) : (
-                <button
-                    type="button"
-                    onClick={() => setAbierto(true)}
                     aria-label="Abrir la ayuda de Chispa"
-                    data-globo={globo ? '' : undefined}
-                    className={`chispa-boton focus-visible:outline-primary fixed right-3 bottom-2 z-50 block origin-bottom-right rounded-[18px] transition-transform duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.97] max-sm:scale-[0.82] max-sm:active:scale-[0.8] ${conBarraInferior ? 'max-md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))]' : ''}`}
+                    data-globo={globo && !abierto ? '' : undefined}
+                    className={`bf-chispa-launcher chispa-boton border-border bg-card fixed right-5 bottom-5 z-40 flex size-16 items-center justify-center rounded-2xl border shadow-lg ${conBarraInferior ? 'max-md:bottom-[calc(5rem+env(safe-area-inset-bottom))]' : ''}`}
                 >
                     <span
                         aria-hidden
-                        className="chispa-globo border-border bg-card text-foreground absolute right-[calc(100%-6px)] bottom-16 rounded-[16px] rounded-br-[4px] border px-4 py-2 text-[14.5px] font-bold whitespace-nowrap shadow-lg"
+                        className="chispa-globo border-border bg-card text-foreground absolute right-[calc(100%+10px)] bottom-4 rounded-xl border px-3 py-2 text-xs font-medium whitespace-nowrap"
                     >
                         ¿Te ayudo?
                     </span>
-                    <ChispaAvatar pose="saludo" size={96} />
+                    <ChispaAvatar pose="busto" size={48} />
                 </button>
-            )}
-        </>
+            </Dialog.Trigger>
+        </Dialog.Root>
     );
 }

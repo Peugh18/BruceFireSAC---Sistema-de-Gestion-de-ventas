@@ -1,4 +1,4 @@
-﻿import { router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import {
     BadgeAlert,
     Calendar,
@@ -165,9 +165,9 @@ export default function CobranzasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Vencido
                             </span>
-                            <BadgeAlert className="text-primary size-4" />
+                            <BadgeAlert className="text-primary-strong size-4" />
                         </div>
-                        <div className="text-primary mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                        <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(kpis.vencidoTotal)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-[11px]">
@@ -180,7 +180,7 @@ export default function CobranzasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Vence Esta Semana
                             </span>
-                            <Calendar className="size-4 text-amber-600" />
+                            <Calendar className="text-warning-strong size-4" />
                         </div>
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
                             {formatCurrency(kpis.venceEstaSemana)}
@@ -195,7 +195,7 @@ export default function CobranzasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Cobrado en el Mes
                             </span>
-                            <TrendingUp className="size-4 text-emerald-600" />
+                            <TrendingUp className="text-success-strong size-4" />
                         </div>
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {formatCurrency(kpis.cobradoEsteMes)}
@@ -309,7 +309,7 @@ export default function CobranzasConsolidadasIndex() {
                         <button
                             type="button"
                             onClick={applyFilters}
-                            className="bg-card hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold text-white"
+                            className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold shadow-xs transition-colors"
                         >
                             <Filter className="size-3.5" />
                             <span>Aplicar Filtros</span>
@@ -410,7 +410,7 @@ export default function CobranzasConsolidadasIndex() {
                                                     {isVencido &&
                                                         c.estado !==
                                                             'pagado' && (
-                                                            <div className="text-primary text-[10px] font-bold">
+                                                            <div className="text-primary-strong text-[10px] font-bold">
                                                                 {c.dias_vencido}{' '}
                                                                 días de mora
                                                             </div>
@@ -437,7 +437,7 @@ export default function CobranzasConsolidadasIndex() {
                                                                 ? 'bg-emerald-100 text-emerald-800'
                                                                 : c.estado ===
                                                                     'vencido'
-                                                                  ? 'text-primary bg-red-100'
+                                                                  ? 'text-primary-strong bg-red-100'
                                                                   : c.estado ===
                                                                       'parcial'
                                                                     ? 'bg-amber-100 text-amber-800'
@@ -504,7 +504,7 @@ export default function CobranzasConsolidadasIndex() {
                                             }}
                                             className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                                                 link.active
-                                                    ? 'bg-card font-bold text-white'
+                                                    ? 'bg-foreground text-background font-bold shadow-xs'
                                                     : 'text-foreground/80 hover:bg-muted/40'
                                             }`}
                                         />
@@ -565,7 +565,7 @@ export default function CobranzasConsolidadasIndex() {
                                         <span className="text-muted-foreground">
                                             Saldo Restante:
                                         </span>
-                                        <p className="text-primary font-mono font-bold">
+                                        <p className="text-primary-strong font-mono font-bold">
                                             {formatCurrency(
                                                 viewingPayments.saldo_pendiente,
                                             )}
@@ -627,7 +627,7 @@ export default function CobranzasConsolidadasIndex() {
                                 <button
                                     type="button"
                                     onClick={() => setViewingPayments(null)}
-                                    className="bg-card hover:bg-foreground/90 rounded-lg px-4 py-1.5 text-xs font-semibold text-white"
+                                    className="bg-foreground text-background hover:bg-foreground/90 rounded-lg px-4 py-1.5 text-xs font-semibold shadow-xs transition-colors"
                                 >
                                     Cerrar
                                 </button>

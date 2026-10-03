@@ -215,7 +215,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
 
                 {/* Error Banner */}
                 {Object.keys(errors).length > 0 && (
-                    <div className="border-destructive/20 bg-destructive/10 text-primary flex items-start gap-3 rounded-[12px] border p-4 text-[13px]">
+                    <div className="border-destructive/20 bg-destructive/10 text-primary-strong flex items-start gap-3 rounded-[12px] border p-4 text-[13px]">
                         <AlertCircle className="mt-0.5 size-5 shrink-0" />
                         <div>
                             <b>Hubo errores al actualizar la recepción:</b>
@@ -239,7 +239,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                 <h2 className="text-foreground text-[14px] font-bold">
                                     Modificar Datos de Recepción #{reception.id}
                                 </h2>
-                                <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-amber-600 dark:text-amber-400">
+                                <span className="text-warning-strong rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-[10.5px] font-bold">
                                     Los cambios generarán movimientos
                                     compensatorios en Kardex
                                 </span>
@@ -559,7 +559,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                         <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
                             <div className="border-border flex items-center justify-between border-b pb-4">
                                 <div className="flex items-center gap-2">
-                                    <Truck className="text-primary size-4" />
+                                    <Truck className="text-primary-strong size-4" />
                                     <h2 className="text-foreground text-[14px] font-bold">
                                         Información de Recepción
                                     </h2>
@@ -664,7 +664,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                     <td className="px-3 py-3 text-center">
                                                         {it.producto
                                                             .serializado ? (
-                                                            <span className="inline-flex items-center gap-1 rounded-[6px] border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                            <span className="text-success-strong inline-flex items-center gap-1 rounded-[6px] border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold">
                                                                 <ScanBarcode className="size-3" />
                                                                 Serializado
                                                             </span>
@@ -677,12 +677,12 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                     <td className="text-foreground px-3 py-3 text-center font-mono font-bold">
                                                         {it.cantidad}
                                                     </td>
-                                                    <td className="px-3 py-3 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                                    <td className="text-success-strong px-3 py-3 text-center font-mono font-bold">
                                                         {it.cantidad_conforme}
                                                     </td>
                                                     <td className="px-3 py-3 text-center font-mono font-bold">
                                                         {noConforme > 0 ? (
-                                                            <span className="text-primary">
+                                                            <span className="text-primary-strong">
                                                                 {noConforme}
                                                             </span>
                                                         ) : (
@@ -708,7 +708,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                             <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
                                 <div className="border-border flex items-center justify-between border-b pb-4">
                                     <div className="flex items-center gap-2">
-                                        <ScanBarcode className="size-4 text-emerald-600 dark:text-emerald-400" />
+                                        <ScanBarcode className="text-success-strong size-4" />
                                         <h2 className="text-foreground text-[14px] font-bold">
                                             Unidades Físicas Serializadas
                                             Generadas (
@@ -733,7 +733,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                             >
                                                 <div>
                                                     <div className="text-foreground flex items-center gap-1.5 font-mono text-sm font-bold">
-                                                        <Barcode className="text-primary size-4" />
+                                                        <Barcode className="text-primary-strong size-4" />
                                                         {unit.numero_serie}
                                                     </div>
                                                     <div className="text-muted-foreground mt-0.5 text-[11px]">
@@ -767,7 +767,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                         'rounded-full px-2 py-0.5 font-mono text-[10.5px] font-bold',
                                                         unit.estado ===
                                                         'disponible'
-                                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                                            ? 'bg-emerald-500/10 text-success-strong border border-emerald-500/20'
                                                             : 'bg-muted text-muted-foreground',
                                                     ].join(' ')}
                                                 >

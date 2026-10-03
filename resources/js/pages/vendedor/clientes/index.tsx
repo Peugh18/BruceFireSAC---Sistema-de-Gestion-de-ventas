@@ -11,6 +11,7 @@ import {
 import { FormEvent, useState } from 'react';
 
 import { FilasCargando } from '@/components/cargando';
+import { PageHeader } from '@/components/page-header';
 import ClientCreateDialog from '@/components/client-create-dialog';
 import ClientesPorRegistrar, {
     type PorRegistrarData,
@@ -133,7 +134,7 @@ function renderSunatBadge(client: ClientRow) {
 
     if (isActivo && isHabido) {
         return (
-            <Badge className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10.5px] font-bold text-emerald-600 shadow-none dark:text-emerald-400">
+            <Badge className="text-success-strong rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10.5px] font-bold shadow-none dark:text-emerald-400">
                 Activo · Habido
             </Badge>
         );
@@ -141,7 +142,7 @@ function renderSunatBadge(client: ClientRow) {
 
     // Otro estado (rojo con el estado real)
     return (
-        <Badge className="border-destructive/20 bg-destructive/10 text-destructive rounded-full border px-2.5 py-1 text-[10.5px] font-bold shadow-none">
+        <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-full border px-2.5 py-1 text-[10.5px] font-bold shadow-none">
             {estado_contribuyente || 'No activo'} ·{' '}
             {condicion_domicilio || 'No habido'}
         </Badge>
@@ -222,27 +223,44 @@ export default function ClientesIndex({
             value: formatNumber(kpis.nuevos_este_mes),
             icon: Plus,
             bg: 'bg-emerald-500/10',
-            text: 'text-emerald-600 dark:text-emerald-400',
+            text: 'text-success-strong',
         },
         {
             label: 'RUC activos y habidos',
             value: rucKpiValue,
             icon: Clock3,
             bg: 'bg-amber-500/10',
-            text: 'text-amber-600 dark:text-amber-400',
+            text: 'text-warning-strong',
         },
         {
             label: 'Inactivos',
             value: formatNumber(kpis.inactivos),
             icon: AlertCircle,
             bg: 'bg-destructive/10',
-            text: 'text-destructive',
+            text: 'text-destructive-strong',
         },
     ];
 
     return (
         <VendedorLayout title="Clientes">
             <div className="flex flex-col gap-4">
+                <PageHeader
+                    title="Clientes"
+                    description="Tu cartera de clientes y los compradores del histórico que aún falta registrar."
+                    actions={
+                        <Button
+                            type="button"
+                            onClick={() => {
+                                setDocumentoARegistrar('');
+                                setDialogOpen(true);
+                            }}
+                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                        >
+                            <Plus className="size-3.5" />
+                            Agregar cliente
+                        </Button>
+                    }
+                />
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {kpiItems.map((item) => {
                         const Icon = item.icon;
@@ -321,7 +339,7 @@ export default function ClientesIndex({
                             <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
                                 <form
                                     onSubmit={submitSearch}
-                                    className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3"
+                                    className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]"
                                 >
                                     <Search
                                         className="text-muted-foreground size-3.5 shrink-0"
@@ -357,17 +375,6 @@ export default function ClientesIndex({
                                         <Download className="size-3.5" />
                                         Exportar
                                     </a>
-                                </Button>
-                                <Button
-                                    type="button"
-                                    onClick={() => {
-                                        setDocumentoARegistrar('');
-                                        setDialogOpen(true);
-                                    }}
-                                    className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
-                                >
-                                    <Plus className="size-3.5" />
-                                    Agregar cliente
                                 </Button>
                             </div>
 
@@ -417,7 +424,7 @@ export default function ClientesIndex({
                                                                                     client: client.id,
                                                                                 },
                                                                             )}
-                                                                            className="hover:text-primary hover:underline"
+                                                                            className="hover:text-primary-strong hover:underline"
                                                                         >
                                                                             {
                                                                                 client
@@ -426,7 +433,7 @@ export default function ClientesIndex({
                                                                             }
                                                                         </Link>
                                                                         {!client.activo && (
-                                                                            <Badge className="bg-destructive/10 text-destructive rounded-full border-transparent px-1.5 py-0 text-[9.5px] font-bold shadow-none">
+                                                                            <Badge className="bg-destructive/10 text-destructive-strong rounded-full border-transparent px-1.5 py-0 text-[9.5px] font-bold shadow-none">
                                                                                 Inactivo
                                                                             </Badge>
                                                                         )}
@@ -441,7 +448,7 @@ export default function ClientesIndex({
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
+                                                        <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
                                                             {client.documento}
                                                         </td>
                                                         <td className="border-border text-muted-foreground max-w-[280px] border-b px-2.5 py-[13px]">
@@ -476,6 +483,7 @@ export default function ClientesIndex({
                                                                                 client: client.id,
                                                                             },
                                                                         )}
+                                                                        aria-label={`Ver ficha de ${client.cliente.razon_social}`}
                                                                     >
                                                                         <Eye className="size-3.5" />
                                                                     </Link>

@@ -250,7 +250,7 @@ export default function RecepcionesCreate({
 
                 {/* Error Banner General */}
                 {Object.keys(errors).length > 0 && (
-                    <div className="border-destructive/20 bg-destructive/10 text-primary flex items-start gap-3 rounded-[12px] border p-4 text-[13px]">
+                    <div className="border-destructive/20 bg-destructive/10 text-primary-strong flex items-start gap-3 rounded-[12px] border p-4 text-[13px]">
                         <AlertCircle className="mt-0.5 size-5 shrink-0" />
                         <div>
                             <b>
@@ -268,7 +268,7 @@ export default function RecepcionesCreate({
                 {/* Card 1: Datos de Cabecera */}
                 <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
                     <div className="border-border flex items-center gap-2 border-b pb-4">
-                        <Truck className="text-primary size-4" />
+                        <Truck className="text-primary-strong size-4" />
                         <h2 className="text-foreground text-[14px] font-bold">
                             Datos del Comprobante y Proveedor
                         </h2>
@@ -278,7 +278,7 @@ export default function RecepcionesCreate({
                         <div className="sm:col-span-2">
                             <Label className="text-foreground/80 text-xs font-bold">
                                 Proveedor / Razón Social{' '}
-                                <span className="text-primary">*</span>
+                                <span className="text-primary-strong">*</span>
                             </Label>
                             <Input
                                 value={data.proveedor}
@@ -290,7 +290,7 @@ export default function RecepcionesCreate({
                                 required
                             />
                             {errors.proveedor && (
-                                <p className="text-primary mt-1 text-[11px]">
+                                <p className="text-primary-strong mt-1 text-[11px]">
                                     {errors.proveedor}
                                 </p>
                             )}
@@ -316,7 +316,7 @@ export default function RecepcionesCreate({
                         <div>
                             <Label className="text-foreground/80 text-xs font-bold">
                                 Fecha de Recepción{' '}
-                                <span className="text-primary">*</span>
+                                <span className="text-primary-strong">*</span>
                             </Label>
                             <Input
                                 type="date"
@@ -329,7 +329,7 @@ export default function RecepcionesCreate({
                                 required
                             />
                             {errors.fecha && (
-                                <p className="text-primary mt-1 text-[11px]">
+                                <p className="text-primary-strong mt-1 text-[11px]">
                                     {errors.fecha}
                                 </p>
                             )}
@@ -338,7 +338,7 @@ export default function RecepcionesCreate({
                         <div className="sm:col-span-2">
                             <Label className="text-foreground/80 text-xs font-bold">
                                 Sede de Almacén Destino{' '}
-                                <span className="text-primary">*</span>
+                                <span className="text-primary-strong">*</span>
                             </Label>
                             <select
                                 value={data.sede_almacen_id}
@@ -380,7 +380,7 @@ export default function RecepcionesCreate({
                 <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
                     <div className="border-border flex items-center justify-between border-b pb-4">
                         <div className="flex items-center gap-2">
-                            <Package className="text-primary size-4" />
+                            <Package className="text-primary-strong size-4" />
                             <h2 className="text-foreground text-[14px] font-bold">
                                 Ítems y Unidades Recibidas
                             </h2>
@@ -397,7 +397,7 @@ export default function RecepcionesCreate({
                         </Button>
                         {Object.values(errors)[0] ? (
                             <p
-                                className="text-destructive text-[11px] font-semibold"
+                                className="text-destructive-strong text-[11px] font-semibold"
                                 role="alert"
                             >
                                 {Object.values(errors)[0]}
@@ -431,7 +431,7 @@ export default function RecepcionesCreate({
                                     >
                                         <div className="flex flex-wrap items-start justify-between gap-3">
                                             <div className="flex items-center gap-2">
-                                                <span className="bg-card flex size-6 items-center justify-center rounded-full text-[11px] font-bold text-white">
+                                                <span className="bg-foreground text-background flex size-6 items-center justify-center rounded-full text-[11px] font-bold shadow-xs">
                                                     {index + 1}
                                                 </span>
                                                 <span className="text-foreground text-xs font-bold">
@@ -444,7 +444,7 @@ export default function RecepcionesCreate({
                                                 onClick={() =>
                                                     removeLine(index)
                                                 }
-                                                className="text-muted-foreground hover:text-primary p-1"
+                                                className="text-muted-foreground hover:text-primary-strong p-1"
                                                 title="Eliminar línea"
                                             >
                                                 <Trash2 className="size-4" />
@@ -455,7 +455,7 @@ export default function RecepcionesCreate({
                                             <div className="sm:col-span-2 lg:col-span-3">
                                                 <Label className="text-foreground/80 text-[11px] font-bold">
                                                     Producto{' '}
-                                                    <span className="text-primary">
+                                                    <span className="text-primary-strong">
                                                         *
                                                     </span>
                                                 </Label>
@@ -489,7 +489,7 @@ export default function RecepcionesCreate({
                                             <div>
                                                 <Label className="text-foreground/80 text-[11px] font-bold">
                                                     Cant. Recibida{' '}
-                                                    <span className="text-primary">
+                                                    <span className="text-primary-strong">
                                                         *
                                                     </span>
                                                 </Label>
@@ -513,7 +513,7 @@ export default function RecepcionesCreate({
                                             <div>
                                                 <Label className="text-foreground/80 text-[11px] font-bold">
                                                     Cant. Conforme{' '}
-                                                    <span className="text-primary">
+                                                    <span className="text-primary-strong">
                                                         *
                                                     </span>
                                                 </Label>
@@ -540,7 +540,7 @@ export default function RecepcionesCreate({
                                             <div className="flex flex-col justify-end">
                                                 <div className="flex h-9 items-center">
                                                     {hasNoConforme ? (
-                                                        <span className="border-destructive/20 bg-destructive/10 text-primary inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold">
+                                                        <span className="border-destructive/20 bg-destructive/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold">
                                                             <AlertTriangle className="size-3" />
                                                             <span>
                                                                 {item.cantidad -
@@ -549,7 +549,7 @@ export default function RecepcionesCreate({
                                                             </span>
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                        <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold">
                                                             <CheckCircle2 className="size-3" />
                                                             <span>
                                                                 100% Conforme
@@ -563,7 +563,7 @@ export default function RecepcionesCreate({
                                         {/* Motivo de no conformidad (obligatorio si cantidad_conforme < cantidad) */}
                                         {hasNoConforme && (
                                             <div className="rounded-[10px] border border-amber-500/20 bg-amber-500/10 p-3">
-                                                <Label className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                                                <Label className="text-warning-strong text-[11px] font-bold">
                                                     Motivo de no conformidad
                                                     (obligatorio para sustentar
                                                     reclamo al proveedor):
@@ -591,7 +591,7 @@ export default function RecepcionesCreate({
                                                 <div className="border-border bg-muted/40 mt-1 rounded-[12px] border p-4">
                                                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                                         <div className="text-foreground flex flex-wrap items-center gap-1.5 text-xs font-bold">
-                                                            <ScanBarcode className="size-4 text-emerald-600 dark:text-emerald-400" />
+                                                            <ScanBarcode className="text-success-strong size-4" />
                                                             <span>
                                                                 Captura de
                                                                 Unidades Físicas

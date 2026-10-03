@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Equipment\RenewEquipmentAttentionDate;
 use App\Models\Certificate;
 use App\Models\Client;
 use App\Models\Equipment;
@@ -180,4 +181,77 @@ test('Por vencer estima la recarga de un cliente registrado con su compra mas re
 
     $response = $this->actingAs($user)->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]));
     expect(collect($response->viewData('page')['props']['alerts']['vencidas'])->where('client_id', $registrado->id))->toBeEmpty();
+});
+
+test('extintor descargado o usado entra de inmediato en vencidas por regla de un solo uso', function () {
+    $user = vendedorUser();
+    $equipment = Equipment::factory()->create([
+        'estado' => 'descargado',
+        // Fechas a futuro: aun asi debe vencer de inmediato por ser de un solo uso
+        'proxima_fecha_atencion' => now()->addMonths(8)->toDateString(),
+        'proxima_prueba_hidrostatica' => now()->addYears(3)->toDateString(),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]))
+        ->assertOk();
+
+    $vencidas = collect($response->viewData('page')['props']['alerts']['vencidas']);
+    $item = $vencidas->firstWhere('equipment_id', $equipment->id);
+
+    expect($item)->not->toBeNull()
+        ->and($item['tipo_alerta'])->toBe('descargado_uso')
+        ->and($item['segmento'])->toBe('vencidas');
+});
+
+test('extintor con prueba hidrostatica por vencer se clasifica con ciclo de 5 anios', function () {
+    $user = vendedorUser();
+    $equipment = Equipment::factory()->create([
+        'estado' => 'activo',
+        'proxima_fecha_atencion' => now()->addMonths(6)->toDateString(),
+        'proxima_prueba_hidrostatica' => now()->addDays(4)->toDateString(),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]))
+        ->assertOk();
+
+    $estaSemana = collect($response->viewData('page')['props']['alerts']['esta_semana']);
+    $item = $estaSemana->firstWhere('equipment_id', $equipment->id);
+
+    expect($item)->not->toBeNull()
+        ->and($item['tipo_alerta'])->toBe('prueba_hidrostatica')
+        ->and($item['fecha'])->toBe($equipment->proxima_prueba_hidrostatica->toDateString());
+});
+
+test('vendedor puede reportar un extintor como descargado o usado', function () {
+    $user = vendedorUser();
+    $equipment = Equipment::factory()->create([
+        'estado' => 'activo',
+    ]);
+
+    $response = $this->actingAs($user)
+        ->post(route('vendedor.clientes.extintores.reportar-uso', [
+            'current_team' => $user->currentTeam,
+            'client' => $equipment->client_id,
+            'equipment' => $equipment->id,
+        ]));
+
+    $response->assertRedirect();
+    expect($equipment->refresh()->estado)->toBe('descargado');
+});
+
+test('atencion o cierre renueva recarga a 1 anio y ph a 5 anios si se realizo prueba hidrostatica', function () {
+    $equipment = Equipment::factory()->create([
+        'estado' => 'descargado',
+        'proxima_fecha_atencion' => now()->subDay()->toDateString(),
+        'proxima_prueba_hidrostatica' => now()->subDay()->toDateString(),
+    ]);
+
+    app(RenewEquipmentAttentionDate::class)->execute(collect([$equipment]), true);
+
+    $equipment->refresh();
+    expect($equipment->estado)->toBe('activo')
+        ->and($equipment->proxima_fecha_atencion->toDateString())->toBe(now()->addYear()->toDateString())
+        ->and($equipment->proxima_prueba_hidrostatica->toDateString())->toBe(now()->addYears(5)->toDateString());
 });

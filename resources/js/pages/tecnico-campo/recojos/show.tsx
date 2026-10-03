@@ -145,7 +145,7 @@ export default function RecojoShow({
                         )}
                         {order.cliente.telefono && (
                             <div className="flex items-center gap-1.5">
-                                <Phone className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                                <Phone className="text-success-strong h-4 w-4 flex-shrink-0" />
                                 <a
                                     href={`tel:${order.cliente.telefono}`}
                                     className="font-medium text-neutral-800 dark:text-neutral-200"
@@ -451,7 +451,7 @@ export default function RecojoShow({
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
-                        <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                        <CheckCircle2 className="text-success-strong h-5 w-5 flex-shrink-0" />
                         <span>
                             Recojo formalizado. Los equipos se encuentran en
                             custodia rumbo a Planta.

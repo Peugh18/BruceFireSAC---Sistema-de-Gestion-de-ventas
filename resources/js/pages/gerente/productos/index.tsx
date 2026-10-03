@@ -1,4 +1,4 @@
-﻿import { router, useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     CheckCircle2,
@@ -220,13 +220,13 @@ export default function ProductosIndex() {
                 {/* Alertas Flash */}
                 {flash?.success && (
                     <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                        <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+                        <CheckCircle2 className="text-success-strong size-4 shrink-0" />
                         <span>{flash.success}</span>
                     </div>
                 )}
                 {flash?.error && (
                     <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                        <AlertTriangle className="text-primary size-4 shrink-0" />
+                        <AlertTriangle className="text-primary-strong size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
                 )}
@@ -272,7 +272,7 @@ export default function ProductosIndex() {
                             <span className="font-medium uppercase">
                                 Productos Activos
                             </span>
-                            <CheckCircle2 className="size-4 text-emerald-600" />
+                            <CheckCircle2 className="text-success-strong size-4" />
                         </div>
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {kpis.totalActivos}
@@ -284,9 +284,9 @@ export default function ProductosIndex() {
                             <span className="font-medium uppercase">
                                 Bajo Stock Mínimo
                             </span>
-                            <AlertTriangle className="text-primary size-4" />
+                            <AlertTriangle className="text-primary-strong size-4" />
                         </div>
-                        <div className="text-primary mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                        <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.totalBajoMinimo}
                         </div>
                     </div>
@@ -448,12 +448,12 @@ export default function ProductosIndex() {
                                                     <span
                                                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
                                                             isBajoMinimo
-                                                                ? 'text-primary bg-red-100'
+                                                                ? 'text-primary-strong bg-red-100'
                                                                 : 'bg-background text-foreground'
                                                         }`}
                                                     >
                                                         {isBajoMinimo && (
-                                                            <AlertTriangle className="text-primary size-3" />
+                                                            <AlertTriangle className="text-primary-strong size-3" />
                                                         )}
                                                         {p.stock_disponible}
                                                     </span>
@@ -504,8 +504,8 @@ export default function ProductosIndex() {
                                                             }
                                                             className={`rounded-md p-1.5 transition-colors ${
                                                                 p.activo
-                                                                    ? 'text-amber-600 hover:bg-amber-50'
-                                                                    : 'text-emerald-600 hover:bg-emerald-50'
+                                                                    ? 'text-warning-strong hover:bg-amber-50'
+                                                                    : 'text-success-strong hover:bg-emerald-50'
                                                             }`}
                                                             title={
                                                                 p.activo
@@ -568,7 +568,7 @@ export default function ProductosIndex() {
                                             }}
                                             className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                                                 link.active
-                                                    ? 'bg-card font-bold text-white'
+                                                    ? 'bg-foreground text-background font-bold shadow-xs'
                                                     : 'text-foreground/80 hover:bg-muted/40'
                                             }`}
                                         />
@@ -764,7 +764,7 @@ export default function ProductosIndex() {
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="border-border text-primary rounded"
+                                            className="border-border text-primary-strong rounded"
                                         />
                                         <span className="text-foreground/80">
                                             Aplica IGV (18%)
@@ -781,7 +781,7 @@ export default function ProductosIndex() {
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="border-border text-primary rounded"
+                                            className="border-border text-primary-strong rounded"
                                         />
                                         <span className="text-foreground/80">
                                             Control por Serie (Serializado)
@@ -798,7 +798,7 @@ export default function ProductosIndex() {
                                                     e.target.checked,
                                                 )
                                             }
-                                            className="border-border text-primary rounded"
+                                            className="border-border text-primary-strong rounded"
                                         />
                                         <span className="text-foreground/80">
                                             Activo
@@ -825,7 +825,7 @@ export default function ProductosIndex() {
                                     </button>
                                     {Object.values(form.errors)[0] ? (
                                         <p
-                                            className="text-destructive text-[11px] font-semibold"
+                                            className="text-destructive-strong text-[11px] font-semibold"
                                             role="alert"
                                         >
                                             {Object.values(form.errors)[0]}

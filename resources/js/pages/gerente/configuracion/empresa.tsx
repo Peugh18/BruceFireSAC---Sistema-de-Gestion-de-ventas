@@ -46,7 +46,9 @@ type Props = {
 
 function field(errors: Record<string, string>, name: string) {
     return errors[name] ? (
-        <p className="text-destructive mt-1 text-[11.5px]">{errors[name]}</p>
+        <p className="text-destructive-strong mt-1 text-[11.5px]">
+            {errors[name]}
+        </p>
     ) : null;
 }
 
@@ -135,7 +137,7 @@ export default function EmpresaConfiguracion({
                     firmasPendientes={firmasPendientes}
                 />
                 <div className="flex items-center gap-3">
-                    <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
+                    <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
                         <Building2 className="size-5" />
                     </div>
                     <div>
@@ -324,7 +326,7 @@ export default function EmpresaConfiguracion({
                             <Button
                                 type="submit"
                                 disabled={form.processing}
-                                className="bg-card hover:bg-foreground/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                                className="bg-foreground text-background hover:bg-foreground/90 h-10 rounded-[9px] px-4 text-[13px] font-bold shadow-xs transition-colors"
                             >
                                 {form.processing
                                     ? 'Guardando…'
@@ -336,7 +338,7 @@ export default function EmpresaConfiguracion({
 
                 <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                     <div className="flex items-center gap-2">
-                        <CreditCard className="size-4 text-emerald-600 dark:text-emerald-400" />
+                        <CreditCard className="text-success-strong size-4" />
                         <h2 className="font-['Oswald',sans-serif] text-[16px] font-semibold uppercase">
                             Cuentas bancarias
                         </h2>
@@ -371,7 +373,7 @@ export default function EmpresaConfiguracion({
                                         onClick={() =>
                                             deleteBankAccount(account.id)
                                         }
-                                        className="border-border bg-card text-destructive size-7 rounded-[7px] shadow-none"
+                                        className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
                                     >
                                         <Trash2 className="size-3.5" />
                                     </Button>

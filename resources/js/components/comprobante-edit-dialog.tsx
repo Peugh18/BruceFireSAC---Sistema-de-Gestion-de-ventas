@@ -193,7 +193,7 @@ export default function ComprobanteEditDialog({
                                         onClick={() =>
                                             setCliente(clientesVarios)
                                         }
-                                        className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold transition-colors ${esClientesVarios ? 'border-primary bg-destructive/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                        className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold transition-colors ${esClientesVarios ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
                                     >
                                         Clientes varios
                                     </button>
@@ -209,17 +209,17 @@ export default function ComprobanteEditDialog({
                                         {cliente.numero_documento}
                                     </span>
                                 </span>
-                                <CheckCircle2 className="text-primary size-4 shrink-0" />
+                                <CheckCircle2 className="text-primary-strong size-4 shrink-0" />
                             </div>
                             {superaLimite ? (
-                                <p className="text-destructive mt-1 text-[11px] font-semibold">
+                                <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
                                     La boleta a CLIENTES VARIOS no puede superar
                                     S/ {limiteBoletaSinIdentificar.toFixed(2)}.
                                 </p>
                             ) : null}
 
                             <div className="mt-2 flex items-stretch gap-2">
-                                <div className="border-border bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                                <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                                     <Search className="text-muted-foreground size-3.5 shrink-0" />
                                     <input
                                         value={busqueda}
@@ -271,7 +271,7 @@ export default function ComprobanteEditDialog({
                         </div>
 
                         {error ? (
-                            <p className="bg-destructive/10 text-destructive rounded-[9px] px-3 py-2 text-[12px] font-semibold">
+                            <p className="bg-destructive/10 text-destructive-strong rounded-[9px] px-3 py-2 text-[12px] font-semibold">
                                 {error}
                             </p>
                         ) : null}

@@ -1,10 +1,17 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CheckCircle2, FilePlus2, MessageSquare, Search } from 'lucide-react';
+import {
+    CheckCircle2,
+    FilePlus2,
+    MessageSquare,
+    RotateCcw,
+    Search,
+} from 'lucide-react';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 
 import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
@@ -23,6 +30,12 @@ export type AlertItem = {
     whatsapp?: string;
     origen: 'equipo_registrado' | 'estimado_historico';
     recompra: Recompra | null;
+    tipo_alerta?:
+        | 'recarga_anual'
+        | 'prueba_hidrostatica'
+        | 'recarga_y_ph'
+        | 'descargado_uso';
+    motivo_alerta?: string;
 };
 
 export type Props = {
@@ -85,24 +98,16 @@ export default function AlertasIndex({ alerts }: Props) {
     ] as const;
 
     return (
-        <VendedorLayout title="Alertas de Vencimiento">
-            <Head title="Alertas de Vencimiento" />
+        <VendedorLayout title="Por vencer">
+            <Head title="Por vencer" />
 
             <div className="flex flex-col gap-4">
                 {/* Header title */}
-                <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-                    <div>
-                        <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
-                            Extintores de tus clientes por vencer
-                        </h2>
-                        <p className="text-muted-foreground text-[12.5px]">
-                            Ordenado por urgencia — aprovecha para ofrecer la
-                            recarga o mantenimiento antes de que venza.
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <div className="border-border bg-card flex h-9 w-[220px] items-center gap-2 rounded-[9px] border px-3 text-[12.5px]">
+                <PageHeader
+                    title="Por vencer"
+                    description="Extintores de tus clientes ordenados por urgencia. Ofrece la recarga o el mantenimiento antes de que venzan."
+                    actions={
+                        <div className="border-border bg-card focus-within:border-ring focus-within:ring-ring/50 flex h-9 w-[220px] items-center gap-2 rounded-[9px] border px-3 text-[12.5px] focus-within:ring-[3px]">
                             <Search className="text-muted-foreground size-3.5" />
                             <input
                                 value={search}
@@ -111,11 +116,11 @@ export default function AlertasIndex({ alerts }: Props) {
                                 className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
                             />
                         </div>
-                    </div>
-                </div>
+                    }
+                />
 
                 {/* Filter Tabs */}
-                <div className="bg-muted flex w-fit rounded-[9px] p-[3px]">
+                <div className="bg-muted flex w-fit max-w-full overflow-x-auto rounded-[9px] p-[3px]">
                     {tabs.map((tab) => {
                         const active = activeTab === tab.id;
                         return (
@@ -139,7 +144,7 @@ export default function AlertasIndex({ alerts }: Props) {
                 <div className="flex flex-col gap-3">
                     {currentList.length === 0 ? (
                         <Card className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-[16px] p-12 text-center shadow-none">
-                            <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
+                            <CheckCircle2 className="text-success-strong size-10" />
                             <p className="text-foreground text-sm font-bold">
                                 No hay alertas en esta categoría
                             </p>
@@ -148,6 +153,16 @@ export default function AlertasIndex({ alerts }: Props) {
                                     ? 'No se encontraron resultados para tu búsqueda.'
                                     : 'Todos los equipos de tus clientes en este segmento están al día.'}
                             </p>
+                            {search && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearch('')}
+                                    className="border-border bg-card text-foreground hover:bg-muted mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                                >
+                                    <RotateCcw className="size-3" />
+                                    <span>Limpiar búsqueda</span>
+                                </button>
+                            )}
                         </Card>
                     ) : (
                         currentList.map((item, idx) => {
@@ -162,7 +177,13 @@ export default function AlertasIndex({ alerts }: Props) {
                                 : null;
 
                             const waText = encodeURIComponent(
-                                `Hola, le saludamos de Bruce Fire. Le recordamos que su equipo (${item.equipo}) está próximo a vencer el ${item.fecha}. ¿Desea coordinar el servicio de recarga/mantenimiento?`,
+                                item.tipo_alerta === 'descargado_uso'
+                                    ? `Hola, le saludamos de Bruce Fire. Su extintor (${item.equipo}${item.numero_serie ? ` S/N ${item.numero_serie}` : ''}) se encuentra descargado/usado. Por ser equipo de un solo uso, requiere recarga inmediata para asegurar su operatividad. ¿Desea coordinar el servicio de recarga?`
+                                    : item.tipo_alerta === 'prueba_hidrostatica'
+                                      ? `Hola, le saludamos de Bruce Fire. Le recordamos que su equipo (${item.equipo}) cumple su ciclo obligatorio de 5 años para la Prueba Hidrostática (PH - NTP 350.043) el ${item.fecha}. ¿Desea coordinar la prueba hidrostática?`
+                                      : item.tipo_alerta === 'recarga_y_ph'
+                                        ? `Hola, le saludamos de Bruce Fire. Le recordamos que su equipo (${item.equipo}) tiene vencida tanto su recarga anual como su Prueba Hidrostática obligatoria (ciclo 5 años). ¿Desea coordinar el servicio completo en planta?`
+                                        : `Hola, le saludamos de Bruce Fire. Le recordamos que su equipo (${item.equipo}) está próximo a su recarga anual obligatoria el ${item.fecha}. ¿Desea coordinar el servicio de recarga/mantenimiento?`,
                             );
 
                             return (
@@ -180,9 +201,9 @@ export default function AlertasIndex({ alerts }: Props) {
                                     <div
                                         className={`flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                                             isVencida
-                                                ? 'bg-destructive/10 text-destructive border-destructive/20 border'
+                                                ? 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
                                                 : isEstaSemana
-                                                  ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                  ? 'text-warning-strong border border-amber-500/20 bg-amber-500/10'
                                                   : 'bg-muted text-foreground/80'
                                         }`}
                                     >
@@ -198,18 +219,50 @@ export default function AlertasIndex({ alerts }: Props) {
                                             <Badge
                                                 className={`rounded-full border-none px-2.5 py-0.5 text-[10.5px] font-bold ${
                                                     isVencida
-                                                        ? 'bg-destructive/10 text-destructive border-destructive/20 border'
+                                                        ? 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
                                                         : isEstaSemana
-                                                          ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                          ? 'text-warning-strong border border-amber-500/20 bg-amber-500/10'
                                                           : 'bg-muted text-muted-foreground'
                                                 }`}
                                             >
-                                                {isVencida
-                                                    ? `Vencido hace ${Math.abs(item.dias)} día(s)`
-                                                    : item.dias === 0
-                                                      ? 'Vence hoy'
-                                                      : `Vence en ${item.dias} días`}
+                                                {item.tipo_alerta ===
+                                                'descargado_uso'
+                                                    ? 'Descargado / Usado'
+                                                    : isVencida
+                                                      ? `Vencido hace ${Math.abs(item.dias)} día(s)`
+                                                      : item.dias === 0
+                                                        ? 'Vence hoy'
+                                                        : `Vence en ${item.dias} días`}
                                             </Badge>
+                                            {item.tipo_alerta ===
+                                                'prueba_hidrostatica' && (
+                                                <Badge
+                                                    title="Prueba Hidrostática periódica cada 5 años (Norma Técnica Peruana NTP 350.043)"
+                                                    className="rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-purple-700 dark:text-purple-300"
+                                                >
+                                                    P.H. (5 años)
+                                                </Badge>
+                                            )}
+                                            {item.tipo_alerta ===
+                                                'recarga_y_ph' && (
+                                                <Badge
+                                                    title="Requiere tanto recarga anual (1 año) como Prueba Hidrostática (5 años)"
+                                                    className="rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-red-700 dark:text-red-300"
+                                                >
+                                                    Recarga (1 año) + P.H. (5
+                                                    años)
+                                                </Badge>
+                                            )}
+                                            {item.tipo_alerta ===
+                                                'descargado_uso' && (
+                                                <Badge
+                                                    title="Extintor de un solo uso: al percutarse pierde presión y debe recargarse de inmediato"
+                                                    className="border-destructive/40 bg-destructive/15 text-destructive-strong rounded-full border px-2.5 py-0.5 text-[10.5px] font-bold"
+                                                >
+                                                    Un solo uso · Recarga
+                                                    obligatoria
+                                                </Badge>
+                                            )}
                                             {item.recompra && (
                                                 <RecompraBadge
                                                     recompra={item.recompra}
@@ -249,7 +302,7 @@ export default function AlertasIndex({ alerts }: Props) {
                                                 href={`https://wa.me/${phoneClean}?text=${waText}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-emerald-500/20 bg-emerald-500/10 px-3.5 text-[12px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
+                                                className="text-success-strong inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-emerald-500/20 bg-emerald-500/10 px-3.5 text-[12px] font-bold transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
                                             >
                                                 <MessageSquare className="size-3.5" />
                                                 <span>WhatsApp</span>

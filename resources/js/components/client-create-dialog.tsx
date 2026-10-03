@@ -61,7 +61,7 @@ function FieldError({ message }: { message?: string }) {
     }
 
     return (
-        <p className="text-destructive mt-1 text-[11px] font-semibold">
+        <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
             {message}
         </p>
     );
@@ -83,6 +83,12 @@ function ClientFormFields({
     lookupLoading: boolean;
     lookupMessage: string | null;
 }) {
+    const [whatsappDiferente, setWhatsappDiferente] = useState(
+        Boolean(
+            data.whatsapp && data.telefono && data.whatsapp !== data.telefono,
+        ),
+    );
+
     return (
         <div className="grid gap-3 sm:grid-cols-2">
             <div>
@@ -97,7 +103,7 @@ function ClientFormFields({
                             event.target.value as 'ruc' | 'dni',
                         )
                     }
-                    className="border-border bg-card mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none"
+                    className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                 >
                     <option value="ruc">RUC</option>
                     <option value="dni">DNI</option>
@@ -132,7 +138,7 @@ function ClientFormFields({
                 </div>
                 <FieldError message={errors.numero_documento} />
                 {lookupMessage && !lookupLoading && (
-                    <p className="mt-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                    <p className="text-warning-strong mt-1 text-[11px] font-semibold">
                         {lookupMessage}
                     </p>
                 )}
@@ -188,32 +194,59 @@ function ClientFormFields({
             </div>
 
             <div>
-                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                    Telefono
-                </Label>
+                <div className="flex items-center justify-between">
+                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                        Teléfono / WhatsApp
+                    </Label>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const nuevoEstado = !whatsappDiferente;
+                            setWhatsappDiferente(nuevoEstado);
+                            if (!nuevoEstado) {
+                                setData('whatsapp', data.telefono);
+                            }
+                        }}
+                        className="text-primary text-[10.5px] font-medium transition-colors hover:underline"
+                    >
+                        {whatsappDiferente
+                            ? 'Mismo número para ambos'
+                            : '¿WhatsApp diferente?'}
+                    </button>
+                </div>
                 <Input
+                    type="tel"
                     value={data.telefono}
-                    onChange={(event) =>
-                        setData('telefono', event.target.value)
-                    }
-                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                    placeholder="999 999 999"
+                    onChange={(event) => {
+                        const valor = event.target.value;
+                        setData('telefono', valor);
+                        if (!whatsappDiferente) {
+                            setData('whatsapp', valor);
+                        }
+                    }}
+                    className="border-border bg-card mt-1 h-9.5 rounded-xl text-[13px]"
                 />
                 <FieldError message={errors.telefono} />
             </div>
 
-            <div>
-                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                    WhatsApp
-                </Label>
-                <Input
-                    value={data.whatsapp}
-                    onChange={(event) =>
-                        setData('whatsapp', event.target.value)
-                    }
-                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
-                />
-                <FieldError message={errors.whatsapp} />
-            </div>
+            {whatsappDiferente ? (
+                <div>
+                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                        Número de WhatsApp
+                    </Label>
+                    <Input
+                        type="tel"
+                        value={data.whatsapp}
+                        placeholder="Ej. 988 888 888"
+                        onChange={(event) =>
+                            setData('whatsapp', event.target.value)
+                        }
+                        className="border-border bg-card mt-1 h-9.5 rounded-xl text-[13px]"
+                    />
+                    <FieldError message={errors.whatsapp} />
+                </div>
+            ) : null}
 
             <div className="sm:col-span-2">
                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
@@ -224,7 +257,7 @@ function ClientFormFields({
                     onChange={(event) =>
                         setData('direccion_fiscal', event.target.value)
                     }
-                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                    className="border-border bg-card mt-1 h-9.5 rounded-xl text-[13px]"
                 />
                 <FieldError message={errors.direccion_fiscal} />
             </div>
@@ -242,7 +275,7 @@ function ClientFormFields({
                             value={data.estado_contribuyente}
                             readOnly
                             disabled
-                            className="border-border bg-muted/40 mt-1 h-9 cursor-not-allowed rounded-[8px] text-[13px]"
+                            className="border-border bg-muted/40 mt-1 h-9.5 cursor-not-allowed rounded-xl text-[13px]"
                         />
                         <FieldError message={errors.estado_contribuyente} />
                     </div>
@@ -403,7 +436,7 @@ export default function ClientCreateDialog({
             <DialogContent className="border-border bg-card max-h-[88vh] overflow-y-auto rounded-[16px] sm:max-w-2xl">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
-                        <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
+                        <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
                             <UserRoundPlus className="size-5" />
                         </div>
                         <DialogTitle className="text-foreground font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">

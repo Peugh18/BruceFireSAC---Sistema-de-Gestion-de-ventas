@@ -5,17 +5,17 @@ import {
     Bell,
     CheckCircle2,
     Clock,
-    LogOut,
     Menu,
+    PanelLeftClose,
+    PanelLeftOpen,
+    MapPin,
     UserX,
     X,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import { ThemeToggle } from '@/components/theme-toggle';
 import { VendedorSidebar } from '@/components/vendedor-sidebar';
-import { useInitials } from '@/hooks/use-initials';
-import { logout } from '@/routes';
 import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
 import type { Auth } from '@/types';
 
@@ -35,6 +35,8 @@ type VendedorPageProps = {
     };
     alertasTop?: AlertaTopItem[];
     currentTeam?: { slug: string } | null;
+    currentSede?: { id: number; nombre: string } | null;
+    caja_hoy?: { estado: string; fecha_apertura: string | null } | null;
     [key: string]: unknown;
 };
 
@@ -48,41 +50,98 @@ export default function VendedorLayout({
     title,
 }: VendedorLayoutProps) {
     const {
-        auth,
         alertasTop = [],
         currentTeam,
+        currentSede,
+        caja_hoy,
     } = usePage<VendedorPageProps>().props;
-    const getInitials = useInitials();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notifsOpen, setNotifsOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const teamSlug = currentTeam?.slug ?? 'bruce-fire';
+
+    useEffect(() => {
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setSidebarOpen(false);
+                setNotifsOpen(false);
+            }
+        };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => window.removeEventListener('keydown', closeOnEscape);
+    }, []);
 
     return (
         <>
             <Head title={title} />
+            <a href="#contenido-vendedor" className="bf-skip-link">
+                Saltar al contenido
+            </a>
 
             {/* Shell con altura completa y desbordamiento controlado (sin scroll en el body) */}
-            <div className="bg-background text-foreground flex h-screen w-full overflow-hidden">
+            <div className="bf-workspace bg-background text-foreground flex h-dvh w-full overflow-hidden">
                 <VendedorSidebar
                     open={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
+                    collapsed={sidebarCollapsed}
                 />
 
                 <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-                    <header className="border-border bg-card relative z-30 flex h-[66px] shrink-0 items-center gap-2 border-b px-4 transition-colors sm:gap-3.5 lg:px-[30px]">
+                    <header className="border-border bg-background relative z-30 flex h-[76px] shrink-0 items-center gap-2 px-4 transition-colors sm:gap-3.5 lg:px-[30px]">
                         <button
                             type="button"
                             onClick={() => setSidebarOpen(true)}
                             aria-label="Abrir menú"
-                            className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-[9px] border transition-colors lg:hidden"
+                            aria-expanded={sidebarOpen}
+                            aria-controls="vendedor-navigation"
+                            className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 lg:hidden"
                         >
                             <Menu className="size-4" strokeWidth={2} />
                         </button>
 
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setSidebarCollapsed(!sidebarCollapsed)
+                            }
+                            aria-label={
+                                sidebarCollapsed
+                                    ? 'Expandir menú'
+                                    : 'Contraer menú'
+                            }
+                            aria-expanded={!sidebarCollapsed}
+                            aria-controls="vendedor-navigation"
+                            className="border-border bg-card text-muted-foreground hidden size-9 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 lg:flex"
+                        >
+                            {sidebarCollapsed ? (
+                                <PanelLeftOpen className="size-4" />
+                            ) : (
+                                <PanelLeftClose className="size-4" />
+                            )}
+                        </button>
+
                         <div className="text-muted-foreground min-w-0 flex-1 truncate text-xs">
-                            Panel
-                            <span className="mx-1.5 opacity-60">›</span>
-                            <b className="text-foreground font-bold">{title}</b>
+                            {currentSede ? (
+                                <span className="text-foreground inline-flex max-w-full items-center gap-2 font-medium">
+                                    <MapPin className="text-primary-strong size-4 shrink-0" />
+                                    <span className="truncate">
+                                        {currentSede.nombre}
+                                    </span>
+                                </span>
+                            ) : (
+                                <span className="text-foreground font-medium">
+                                    {title}
+                                </span>
+                            )}
+                            {caja_hoy && (
+                                <span className="text-success-strong ml-4 hidden items-center gap-1.5 text-[11px] sm:inline-flex">
+                                    <span className="size-1.5 rounded-full bg-current" />
+                                    Turno abierto
+                                    {caja_hoy.fecha_apertura
+                                        ? ` desde ${caja_hoy.fecha_apertura.slice(0, 10).split('-').reverse().join('/')}`
+                                        : ''}
+                                </span>
+                            )}
                         </div>
 
                         <ThemeToggle />
@@ -92,7 +151,7 @@ export default function VendedorLayout({
                             <button
                                 type="button"
                                 onClick={() => setNotifsOpen(!notifsOpen)}
-                                className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-[38px] shrink-0 items-center justify-center rounded-[9px] border transition-colors"
+                                className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-[38px] shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95"
                                 aria-label="Notificaciones"
                                 aria-expanded={notifsOpen}
                             >
@@ -110,15 +169,15 @@ export default function VendedorLayout({
                                         className="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"
                                         onClick={() => setNotifsOpen(false)}
                                     />
-                                    <div className="border-border bg-card animate-in fade-in-50 zoom-in-95 absolute top-full right-0 z-50 mt-2 w-80 rounded-2xl border p-4 shadow-xl sm:w-96">
+                                    <div className="border-border bg-card animate-in fade-in-50 zoom-in-95 absolute top-full right-0 z-50 mt-2 w-80 origin-top-right rounded-2xl border p-4 shadow-xl duration-150 ease-out sm:w-96">
                                         <div className="border-border flex items-center justify-between border-b pb-3">
                                             <div className="flex items-center gap-2">
-                                                <Bell className="text-primary size-4" />
+                                                <Bell className="text-primary-strong size-4" />
                                                 <h4 className="text-foreground text-xs font-bold tracking-wider uppercase">
                                                     Avisos y Pendientes
                                                 </h4>
                                                 {alertasTop.length > 0 && (
-                                                    <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold">
+                                                    <span className="bg-primary/10 text-primary-strong rounded-full px-2 py-0.5 text-[10px] font-bold">
                                                         {alertasTop.length}
                                                     </span>
                                                 )}
@@ -162,10 +221,10 @@ export default function VendedorLayout({
                                                             className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg ${
                                                                 alerta.urgencia ===
                                                                 'alta'
-                                                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                                    ? 'text-warning-strong bg-amber-500/10'
                                                                     : alerta.tipo ===
                                                                         'lista_entrega'
-                                                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                                      ? 'text-success-strong bg-emerald-500/10'
                                                                       : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
                                                             }`}
                                                         >
@@ -180,7 +239,7 @@ export default function VendedorLayout({
                                                             )}
                                                         </div>
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="text-foreground group-hover:text-primary text-xs font-bold transition-colors">
+                                                            <p className="text-foreground group-hover:text-primary-strong text-xs font-bold transition-colors">
                                                                 {alerta.titulo}
                                                             </p>
                                                             <p className="text-muted-foreground mt-0.5 line-clamp-2 text-[11px]">
@@ -208,7 +267,7 @@ export default function VendedorLayout({
                                                 onClick={() =>
                                                     setNotifsOpen(false)
                                                 }
-                                                className="text-primary text-[11px] font-semibold hover:underline"
+                                                className="text-primary-strong text-[11px] font-semibold hover:underline"
                                             >
                                                 Ver todas las órdenes de
                                                 servicio →
@@ -218,27 +277,15 @@ export default function VendedorLayout({
                                 </>
                             )}
                         </div>
-
-                        <div
-                            className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-[10px] text-xs font-bold shadow-xs"
-                            title={auth.user.name}
-                        >
-                            {getInitials(auth.user.name)}
-                        </div>
-
-                        <Link
-                            href={logout()}
-                            as="button"
-                            className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 flex size-9 shrink-0 items-center justify-center rounded-[9px] border transition-colors"
-                            title="Cerrar sesión"
-                        >
-                            <LogOut className="size-4" strokeWidth={2} />
-                        </Link>
                     </header>
 
                     {/* Único contenedor de scroll vertical: sidebar y header quedan estáticos */}
-                    <main className="flex-1 overflow-y-auto overscroll-contain px-4 pt-[22px] pb-32 lg:px-7">
-                        {children}
+                    <main
+                        id="contenido-vendedor"
+                        tabIndex={-1}
+                        className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 pb-32 outline-none lg:px-8"
+                    >
+                        <div className="w-full">{children}</div>
                     </main>
                 </div>
             </div>

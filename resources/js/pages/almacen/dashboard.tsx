@@ -1,4 +1,4 @@
-﻿import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     ArrowRight,
@@ -90,13 +90,13 @@ function getTipoMovimientoBadge(tipo: string): {
             return {
                 label: 'Ingreso',
                 className:
-                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border-emerald-500/20',
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20 border-emerald-500/20',
             };
         case 'salida_venta':
             return {
                 label: 'Venta',
                 className:
-                    'bg-destructive/10 text-primary border-destructive/20',
+                    'bg-destructive/10 text-primary-strong border-destructive/20',
             };
         case 'salida_servicio':
             return {
@@ -108,7 +108,7 @@ function getTipoMovimientoBadge(tipo: string): {
             return {
                 label: 'Ajuste',
                 className:
-                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                    'bg-amber-500/10 text-warning-strong border-amber-500/20',
             };
         case 'traslado':
             return {
@@ -154,7 +154,7 @@ export default function AlmacenDashboard({
                         </span>
                         <Link
                             href={`/${teamSlug}/almacen/stock`}
-                            className="bg-card/20 hover:bg-card/30 inline-flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-bold text-white transition-colors"
+                            className="inline-flex items-center gap-1.5 rounded-[8px] bg-white/20 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/30"
                         >
                             <span>Ver stock</span>
                             <ArrowRight className="size-3.5" />
@@ -215,7 +215,7 @@ export default function AlmacenDashboard({
                             <span className="text-foreground text-[13.5px] font-bold">
                                 Recepciones de hoy
                             </span>
-                            <div className="flex size-7 items-center justify-center rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                            <div className="text-success-strong flex size-7 items-center justify-center rounded-[8px] border border-emerald-500/20 bg-emerald-500/10">
                                 <Truck className="size-4" />
                             </div>
                         </div>
@@ -225,7 +225,7 @@ export default function AlmacenDashboard({
                                 {formatNumber(recepciones_hoy)}
                             </div>
                             <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-[11.5px]">
-                                <span className="inline-flex items-center gap-1 rounded-[6px] bg-emerald-500/10 px-2 py-0.5 font-bold text-emerald-600 dark:text-emerald-400">
+                                <span className="text-success-strong inline-flex items-center gap-1 rounded-[6px] bg-emerald-500/10 px-2 py-0.5 font-bold">
                                     <Calendar className="size-3" />
                                     <span>Hoy</span>
                                 </span>
@@ -236,7 +236,7 @@ export default function AlmacenDashboard({
                         <div className="border-border mt-5 border-t pt-4">
                             <Link
                                 href={`/${teamSlug}/almacen/recepciones`}
-                                className="text-primary inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
+                                className="text-primary-strong inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
                             >
                                 <span>Registrar nueva recepción</span>
                                 <ArrowRight className="size-3.5" />
@@ -250,13 +250,13 @@ export default function AlmacenDashboard({
                             <span className="text-foreground text-[13.5px] font-bold">
                                 Bajo stock mínimo
                             </span>
-                            <div className="bg-destructive/10 text-primary flex size-7 items-center justify-center rounded-[8px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-7 items-center justify-center rounded-[8px]">
                                 <TrendingDown className="size-4" />
                             </div>
                         </div>
 
                         <div className="mt-4">
-                            <div className="text-primary font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
+                            <div className="text-primary-strong font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
                                 {formatNumber(productos_bajo_minimo.length)}
                             </div>
                             <div className="text-muted-foreground mt-2 text-[11.5px]">
@@ -395,15 +395,15 @@ export default function AlmacenDashboard({
                                 <span className="text-foreground text-[14px] font-bold">
                                     Stock bajo el mínimo
                                 </span>
-                                <span className="bg-destructive/10 text-primary rounded-full px-2 py-0.5 text-[11px] font-bold">
+                                <span className="bg-destructive/10 text-primary-strong rounded-full px-2 py-0.5 text-[11px] font-bold">
                                     {productos_bajo_minimo.length}
                                 </span>
                             </div>
 
                             {productos_bajo_minimo.length === 0 ? (
                                 <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
-                                    <PackageCheck className="size-10 text-emerald-600 dark:text-emerald-400/40" />
-                                    <p className="mt-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                                    <PackageCheck className="text-success-strong size-10 dark:text-emerald-400/40" />
+                                    <p className="text-success-strong mt-2 text-sm font-medium">
                                         Todos los productos cumplen con el stock
                                         mínimo.
                                     </p>
@@ -419,7 +419,7 @@ export default function AlmacenDashboard({
                                                 <span className="text-foreground max-w-[180px] truncate font-bold">
                                                     {prod.nombre}
                                                 </span>
-                                                <span className="text-primary font-mono text-[11px] font-bold">
+                                                <span className="text-primary-strong font-mono text-[11px] font-bold">
                                                     Faltan {prod.diferencia}
                                                 </span>
                                             </div>

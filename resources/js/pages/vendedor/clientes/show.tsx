@@ -40,7 +40,7 @@ import clientes from '@/routes/vendedor/clientes';
 import sitesRoutes from '@/routes/vendedor/clientes/sites';
 import vehiclesRoutes from '@/routes/vendedor/clientes/vehiculos';
 import type { Team } from '@/types';
-import { fechaCorta } from '@/lib/utils';
+import { fechaCorta, soles } from '@/lib/utils';
 
 // ==================== TIPOS CONTRATO BRIEF ====================
 
@@ -130,6 +130,8 @@ export type ExtintorItem = {
     proxima_fecha_atencion: string | null;
     proxima_prueba_hidrostatica: string | null;
     vencido: boolean;
+    tipo_alerta?: string;
+    es_descargado?: boolean;
 };
 
 export type CertificadoItem = {
@@ -261,13 +263,6 @@ type ClientFormData = {
 };
 
 // ==================== HELPERS FORMATO ====================
-
-function money(amount: number | null | undefined): string {
-    return `S/ ${(amount ?? 0).toLocaleString('es-PE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`;
-}
 
 function initials(value: string | undefined): string {
     if (!value) return 'CL';
@@ -528,6 +523,27 @@ export default function ClienteShow({
         );
     };
 
+    const handleReportarUso = (extintor: ExtintorItem) => {
+        if (
+            window.confirm(
+                `¿Confirmas que el extintor ${extintor.numero_serie} fue percutado o usado?\n\nAl ser un equipo de un solo uso (norma NTP 350.043), pierde presión inmediatamente y pasará a estado DESCARGADO, requiriendo recarga obligatoria.`,
+            )
+        ) {
+            router.post(
+                `/${teamSlug}/vendedor/clientes/${client.id}/extintores/${extintor.id}/reportar-uso`,
+                {},
+                { preserveScroll: true },
+            );
+        }
+    };
+
+    const handleCotizarRecarga = (extintor: ExtintorItem) => {
+        router.post(`/${teamSlug}/vendedor/alertas/ofrecer-recarga`, {
+            client_id: client.id,
+            equipment_ids: [extintor.id],
+        });
+    };
+
     // Estado SUNAT render
     const esDni = client.tipo_documento?.toLowerCase() === 'dni';
     const esVarios =
@@ -577,7 +593,7 @@ export default function ClienteShow({
 
         if (isActivo && isHabido) {
             return (
-                <Badge className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 shadow-none dark:text-emerald-400">
+                <Badge className="text-success-strong rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold shadow-none dark:text-emerald-400">
                     <CheckCircle2 className="mr-1 inline size-3.5" />
                     Activo · Habido
                 </Badge>
@@ -585,7 +601,7 @@ export default function ClienteShow({
         }
 
         return (
-            <Badge className="border-destructive/20 bg-destructive/10 text-destructive rounded-full border px-3 py-1 text-xs font-bold shadow-none">
+            <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-full border px-3 py-1 text-xs font-bold shadow-none">
                 <AlertTriangle className="mr-1 inline size-3.5" />
                 {estadoContribuyente || 'No activo'} ·{' '}
                 {condicionDomicilio || 'No habido'}
@@ -634,7 +650,7 @@ export default function ClienteShow({
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                         {/* Identidad */}
                         <div className="flex items-start gap-4">
-                            <div className="bg-primary/10 text-primary flex size-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold">
+                            <div className="bg-primary/10 text-primary-strong flex size-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold">
                                 {initials(client.razon_social)}
                             </div>
                             <div className="min-w-0">
@@ -643,7 +659,7 @@ export default function ClienteShow({
                                         {client.razon_social}
                                     </h1>
                                     {!client.activo && (
-                                        <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
+                                        <Badge className="bg-destructive/10 text-destructive-strong border-destructive/20 text-xs">
                                             Inactivo
                                         </Badge>
                                     )}
@@ -741,7 +757,7 @@ export default function ClienteShow({
                     {/* Datos de contacto rápidos */}
                     <div className="border-border mt-5 grid grid-cols-1 gap-3 border-t pt-4 text-xs sm:grid-cols-2 lg:grid-cols-4">
                         <div className="text-muted-foreground flex items-center gap-2">
-                            <Phone className="text-primary size-3.5 shrink-0" />
+                            <Phone className="text-primary-strong size-3.5 shrink-0" />
                             <span className="truncate">
                                 {client.telefono ||
                                     client.whatsapp ||
@@ -749,13 +765,13 @@ export default function ClienteShow({
                             </span>
                         </div>
                         <div className="text-muted-foreground flex items-center gap-2">
-                            <Mail className="text-primary size-3.5 shrink-0" />
+                            <Mail className="text-primary-strong size-3.5 shrink-0" />
                             <span className="truncate">
                                 {client.email || 'Sin correo'}
                             </span>
                         </div>
                         <div className="text-muted-foreground col-span-1 flex items-center gap-2 sm:col-span-2">
-                            <MapPin className="text-primary size-3.5 shrink-0" />
+                            <MapPin className="text-primary-strong size-3.5 shrink-0" />
                             <span className="truncate">
                                 {client.direccion_fiscal ||
                                     'Sin dirección fiscal registrada'}
@@ -827,7 +843,7 @@ export default function ClienteShow({
                                     Total comprado
                                 </div>
                                 <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
-                                    {money(resumen?.total_comprado)}
+                                    {soles(resumen?.total_comprado)}
                                 </div>
                                 <div className="text-muted-foreground mt-0.5 text-[11px]">
                                     Última compra:{' '}
@@ -843,16 +859,16 @@ export default function ClienteShow({
                                 <div
                                     className={`mt-1 font-['Oswald',sans-serif] text-xl font-bold ${
                                         (resumen?.deuda_pendiente ?? 0) > 0
-                                            ? 'text-amber-600 dark:text-amber-400'
+                                            ? 'text-warning-strong'
                                             : 'text-foreground'
                                     }`}
                                 >
-                                    {money(resumen?.deuda_pendiente)}
+                                    {soles(resumen?.deuda_pendiente)}
                                 </div>
                                 <div className="text-muted-foreground mt-0.5 text-[11px]">
                                     {resumen?.cuotas_vencidas &&
                                     resumen.cuotas_vencidas > 0 ? (
-                                        <span className="text-destructive font-bold">
+                                        <span className="text-destructive-strong font-bold">
                                             {resumen.cuotas_vencidas} cuota(s)
                                             vencida(s)
                                         </span>
@@ -872,7 +888,7 @@ export default function ClienteShow({
                                 </div>
                                 <div className="text-muted-foreground mt-0.5 text-[11px]">
                                     {(resumen?.por_vencer_30_dias ?? 0) > 0 ? (
-                                        <span className="font-bold text-amber-600 dark:text-amber-400">
+                                        <span className="text-warning-strong font-bold">
                                             {resumen?.por_vencer_30_dias} por
                                             vencer en 30d
                                         </span>
@@ -908,7 +924,7 @@ export default function ClienteShow({
                             <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                                 <div className="border-border flex items-center justify-between border-b pb-3">
                                     <div className="text-foreground flex items-center gap-2 text-sm font-bold">
-                                        <ShoppingCart className="text-primary size-4" />
+                                        <ShoppingCart className="text-primary-strong size-4" />
                                         <span>Últimas ventas</span>
                                     </div>
                                     <button
@@ -917,7 +933,7 @@ export default function ClienteShow({
                                             setActiveTab('compras');
                                             setComprasSubtab('ventas');
                                         }}
-                                        className="text-primary text-xs font-bold hover:underline"
+                                        className="text-primary-strong text-xs font-bold hover:underline"
                                     >
                                         Ver todas &rarr;
                                     </button>
@@ -938,7 +954,7 @@ export default function ClienteShow({
                                                 <div>
                                                     <Link
                                                         href={`/${teamSlug}/vendedor/ventas/${v.id}`}
-                                                        className="text-foreground hover:text-primary font-bold"
+                                                        className="text-foreground hover:text-primary-strong font-bold"
                                                     >
                                                         {v.numero_interno}
                                                     </Link>
@@ -950,19 +966,19 @@ export default function ClienteShow({
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-foreground font-bold">
-                                                        {money(v.total)}
+                                                        {soles(v.total)}
                                                     </span>
                                                     <div className="text-[10.5px]">
                                                         {v.saldo_pendiente >
                                                         0 ? (
-                                                            <span className="font-semibold text-amber-600">
+                                                            <span className="text-warning-strong font-semibold">
                                                                 Saldo:{' '}
-                                                                {money(
+                                                                {soles(
                                                                     v.saldo_pendiente,
                                                                 )}
                                                             </span>
                                                         ) : (
-                                                            <span className="font-semibold text-emerald-600">
+                                                            <span className="text-success-strong font-semibold">
                                                                 Cancelado
                                                             </span>
                                                         )}
@@ -978,7 +994,7 @@ export default function ClienteShow({
                             <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                                 <div className="border-border flex items-center justify-between border-b pb-3">
                                     <div className="text-foreground flex items-center gap-2 text-sm font-bold">
-                                        <Award className="text-primary size-4" />
+                                        <Award className="text-primary-strong size-4" />
                                         <span>Extintores y Mantenimiento</span>
                                     </div>
                                     <button
@@ -987,7 +1003,7 @@ export default function ClienteShow({
                                             setActiveTab('extintores');
                                             setExtintoresSubtab('extintores');
                                         }}
-                                        className="text-primary text-xs font-bold hover:underline"
+                                        className="text-primary-strong text-xs font-bold hover:underline"
                                     >
                                         Ver parque &rarr;
                                     </button>
@@ -1016,11 +1032,11 @@ export default function ClienteShow({
                                                 </div>
                                                 <div className="text-right">
                                                     {ext.vencido ? (
-                                                        <Badge className="border-destructive/20 bg-destructive/10 text-destructive text-[10px]">
+                                                        <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-[10px]">
                                                             Vencido
                                                         </Badge>
                                                     ) : (
-                                                        <Badge className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-600">
+                                                        <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-[10px]">
                                                             Al día
                                                         </Badge>
                                                     )}
@@ -1135,7 +1151,7 @@ export default function ClienteShow({
                                                     <td className="text-foreground py-3 font-mono font-bold">
                                                         <Link
                                                             href={`/${teamSlug}/vendedor/ventas/${v.id}`}
-                                                            className="hover:text-primary hover:underline"
+                                                            className="hover:text-primary-strong hover:underline"
                                                         >
                                                             {v.numero_interno}
                                                         </Link>
@@ -1153,8 +1169,8 @@ export default function ClienteShow({
                                                                 className={`text-[10px] ${
                                                                     v.sunat_estado ===
                                                                     'aceptado'
-                                                                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600'
-                                                                        : 'border-amber-500/20 bg-amber-500/10 text-amber-600'
+                                                                        ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
+                                                                        : 'text-warning-strong border-amber-500/20 bg-amber-500/10'
                                                                 }`}
                                                             >
                                                                 {v.sunat_estado}
@@ -1172,18 +1188,18 @@ export default function ClienteShow({
                                                             : ''}
                                                     </td>
                                                     <td className="py-3 font-bold">
-                                                        {money(v.total)}
+                                                        {soles(v.total)}
                                                     </td>
                                                     <td className="py-3">
                                                         {v.saldo_pendiente >
                                                         0 ? (
-                                                            <span className="font-bold text-amber-600">
-                                                                {money(
+                                                            <span className="text-warning-strong font-bold">
+                                                                {soles(
                                                                     v.saldo_pendiente,
                                                                 )}
                                                             </span>
                                                         ) : (
-                                                            <span className="font-semibold text-emerald-600">
+                                                            <span className="text-success-strong font-semibold">
                                                                 Pagado
                                                             </span>
                                                         )}
@@ -1256,7 +1272,7 @@ export default function ClienteShow({
                                                             '-'}
                                                     </td>
                                                     <td className="py-3 font-bold">
-                                                        {money(c.total)}
+                                                        {soles(c.total)}
                                                     </td>
                                                     <td className="py-3">
                                                         <Badge
@@ -1270,7 +1286,7 @@ export default function ClienteShow({
                                                         {c.venta ? (
                                                             <Link
                                                                 href={`/${teamSlug}/vendedor/ventas/${c.venta.id}`}
-                                                                className="text-primary font-mono font-bold hover:underline"
+                                                                className="text-primary-strong font-mono font-bold hover:underline"
                                                             >
                                                                 {c.venta.numero}
                                                             </Link>
@@ -1352,13 +1368,16 @@ export default function ClienteShow({
                                             </th>
                                             <th className="py-2.5">F. Venta</th>
                                             <th className="py-2.5">
-                                                Próx. Recarga
+                                                Próx. Recarga (1 año)
                                             </th>
                                             <th className="py-2.5">
-                                                Próx. P. Hidrostática
+                                                Próx. P.H. (5 años)
+                                            </th>
+                                            <th className="py-2.5 text-center">
+                                                Semáforo
                                             </th>
                                             <th className="py-2.5 text-right">
-                                                Semáforo
+                                                Acciones
                                             </th>
                                         </tr>
                                     </thead>
@@ -1366,7 +1385,7 @@ export default function ClienteShow({
                                         {extintores.length === 0 ? (
                                             <tr>
                                                 <td
-                                                    colSpan={7}
+                                                    colSpan={8}
                                                     className="text-muted-foreground py-8 text-center"
                                                 >
                                                     No hay extintores
@@ -1402,16 +1421,81 @@ export default function ClienteShow({
                                                         {e.proxima_prueba_hidrostatica ||
                                                             '-'}
                                                     </td>
-                                                    <td className="py-3 text-right">
-                                                        {e.vencido ? (
-                                                            <Badge className="border-destructive/20 bg-destructive/10 text-destructive text-[10.5px]">
-                                                                Vencido
+                                                    <td className="py-3 text-center">
+                                                        {e.es_descargado ||
+                                                        e.estado ===
+                                                            'descargado' ||
+                                                        e.estado === 'usado' ? (
+                                                            <div className="inline-flex flex-col items-center gap-0.5">
+                                                                <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-[10.5px] font-bold">
+                                                                    Descargado /
+                                                                    Usado
+                                                                </Badge>
+                                                                <span className="text-destructive text-[10px] font-medium">
+                                                                    Un solo uso
+                                                                    · Requiere
+                                                                    recarga
+                                                                </span>
+                                                            </div>
+                                                        ) : e.tipo_alerta ===
+                                                          'recarga_y_ph' ? (
+                                                            <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-[10.5px] font-bold">
+                                                                Recarga + P.H.
+                                                                Vencidas
+                                                            </Badge>
+                                                        ) : e.tipo_alerta ===
+                                                          'prueba_hidrostatica' ? (
+                                                            <Badge className="border-purple-500/30 bg-purple-500/15 text-[10.5px] font-bold text-purple-700 dark:text-purple-300">
+                                                                P.H. Vencida (5
+                                                                años)
+                                                            </Badge>
+                                                        ) : e.vencido ? (
+                                                            <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-[10.5px] font-bold">
+                                                                Recarga Vencida
+                                                                (1 año)
                                                             </Badge>
                                                         ) : (
-                                                            <Badge className="border-emerald-500/20 bg-emerald-500/10 text-[10.5px] text-emerald-600">
+                                                            <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-[10.5px] font-semibold">
                                                                 Al día
+                                                                (Operativo)
                                                             </Badge>
                                                         )}
+                                                    </td>
+                                                    <td className="py-3 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            {e.vencido ||
+                                                            e.es_descargado ||
+                                                            e.estado ===
+                                                                'descargado' ||
+                                                            e.estado ===
+                                                                'usado' ? (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        handleCotizarRecarga(
+                                                                            e,
+                                                                        )
+                                                                    }
+                                                                    className="border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary rounded border px-2 py-1 text-[11px] font-bold transition-colors"
+                                                                    title="Generar cotización de recarga para este extintor"
+                                                                >
+                                                                    + Recarga
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        handleReportarUso(
+                                                                            e,
+                                                                        )
+                                                                    }
+                                                                    className="border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded border px-2 py-1 text-[11px] font-semibold transition-colors"
+                                                                    title="Marcar como usado/descargado. Por ser equipo de un solo uso, requiere recarga inmediata."
+                                                                >
+                                                                    Reportar uso
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
@@ -1474,8 +1558,8 @@ export default function ClienteShow({
                                                             className={`text-[10px] ${
                                                                 c.estado ===
                                                                 'vigente'
-                                                                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600'
-                                                                    : 'border-destructive/20 bg-destructive/10 text-destructive'
+                                                                    ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
+                                                                    : 'border-destructive/20 bg-destructive/10 text-destructive-strong'
                                                             }`}
                                                         >
                                                             {c.estado}
@@ -1485,7 +1569,7 @@ export default function ClienteShow({
                                                         {c.venta ? (
                                                             <Link
                                                                 href={`/${teamSlug}/vendedor/ventas/${c.venta.id}`}
-                                                                className="text-primary font-mono hover:underline"
+                                                                className="text-primary-strong font-mono hover:underline"
                                                             >
                                                                 {c.venta.numero}
                                                             </Link>
@@ -1608,7 +1692,7 @@ export default function ClienteShow({
                                                 </td>
                                                 <td className="text-muted-foreground py-3">
                                                     {s.tecnico || (
-                                                        <span className="font-semibold text-amber-600">
+                                                        <span className="text-warning-strong font-semibold">
                                                             Por asignar
                                                         </span>
                                                     )}
@@ -1721,7 +1805,7 @@ export default function ClienteShow({
                                                 ).replace(/\D/g, '');
                                                 const waText =
                                                     encodeURIComponent(
-                                                        `Hola ${client.razon_social}, le recordamos su cuota ${cuota.numero_cuota} de ${money(cuota.monto)} con saldo pendiente de ${money(cuota.saldo)} que venció el ${fechaCorta(cuota.fecha_vencimiento)}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
+                                                        `Hola ${client.razon_social}, le recordamos su cuota ${cuota.numero_cuota} de ${soles(cuota.monto)} con saldo pendiente de ${soles(cuota.saldo)} que venció el ${fechaCorta(cuota.fecha_vencimiento)}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
                                                     );
 
                                                 return (
@@ -1732,7 +1816,7 @@ export default function ClienteShow({
                                                         <td className="text-foreground py-3 font-mono font-bold">
                                                             <Link
                                                                 href={`/${teamSlug}/vendedor/ventas/${cuota.venta.id}`}
-                                                                className="hover:text-primary hover:underline"
+                                                                className="hover:text-primary-strong hover:underline"
                                                             >
                                                                 {
                                                                     cuota.venta
@@ -1745,10 +1829,10 @@ export default function ClienteShow({
                                                             {cuota.numero_cuota}
                                                         </td>
                                                         <td className="text-muted-foreground py-3">
-                                                            {money(cuota.monto)}
+                                                            {soles(cuota.monto)}
                                                         </td>
                                                         <td className="text-foreground py-3 font-bold">
-                                                            {money(cuota.saldo)}
+                                                            {soles(cuota.saldo)}
                                                         </td>
                                                         <td className="py-3 font-semibold">
                                                             {
@@ -1757,7 +1841,7 @@ export default function ClienteShow({
                                                             {isVencido &&
                                                                 cuota.dias_vencido >
                                                                     0 && (
-                                                                    <span className="text-destructive block text-[10px]">
+                                                                    <span className="text-destructive-strong block text-[10px]">
                                                                         Hace{' '}
                                                                         {
                                                                             cuota.dias_vencido
@@ -1770,8 +1854,8 @@ export default function ClienteShow({
                                                             <Badge
                                                                 className={`text-[10px] ${
                                                                     isVencido
-                                                                        ? 'border-destructive/20 bg-destructive/10 text-destructive'
-                                                                        : 'border-amber-500/20 bg-amber-500/10 text-amber-600'
+                                                                        ? 'border-destructive/20 bg-destructive/10 text-destructive-strong'
+                                                                        : 'text-warning-strong border-amber-500/20 bg-amber-500/10'
                                                                 }`}
                                                             >
                                                                 {cuota.estado}
@@ -1783,7 +1867,7 @@ export default function ClienteShow({
                                                                     href={`https://wa.me/${phoneClean}?text=${waText}`}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
-                                                                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
+                                                                    className="text-success-strong inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-bold hover:bg-emerald-500/20 dark:text-emerald-400"
                                                                 >
                                                                     <MessageSquare className="size-3" />
                                                                     WhatsApp
@@ -1842,13 +1926,13 @@ export default function ClienteShow({
                                                     <td className="text-foreground py-3 font-mono font-bold">
                                                         <Link
                                                             href={`/${teamSlug}/vendedor/ventas/${pago.venta.id}`}
-                                                            className="hover:text-primary hover:underline"
+                                                            className="hover:text-primary-strong hover:underline"
                                                         >
                                                             {pago.venta.numero}
                                                         </Link>
                                                     </td>
-                                                    <td className="py-3 font-bold text-emerald-600">
-                                                        {money(pago.monto)}
+                                                    <td className="text-success-strong py-3 font-bold">
+                                                        {soles(pago.monto)}
                                                     </td>
                                                     <td className="text-muted-foreground py-3 capitalize">
                                                         {pago.forma_pago}
@@ -1932,7 +2016,7 @@ export default function ClienteShow({
                                                         onClick={() =>
                                                             deleteSite(s.id)
                                                         }
-                                                        className="text-muted-foreground hover:text-destructive p-1"
+                                                        className="text-muted-foreground hover:text-destructive-strong p-1"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </button>
@@ -1996,7 +2080,7 @@ export default function ClienteShow({
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <Car className="text-primary size-4" />
+                                                    <Car className="text-primary-strong size-4" />
                                                     <h4 className="text-foreground font-mono text-base font-bold">
                                                         {v.placa}
                                                     </h4>
@@ -2016,7 +2100,7 @@ export default function ClienteShow({
                                                         onClick={() =>
                                                             deleteVehicle(v.id)
                                                         }
-                                                        className="text-muted-foreground hover:text-destructive p-1"
+                                                        className="text-muted-foreground hover:text-destructive-strong p-1"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </button>
@@ -2042,7 +2126,7 @@ export default function ClienteShow({
                         {/* Historial en línea de tiempo */}
                         <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
                             <div className="border-border flex items-center gap-2 border-b pb-3">
-                                <History className="text-primary size-4" />
+                                <History className="text-primary-strong size-4" />
                                 <h3 className="text-foreground text-base font-bold">
                                     Historial de actividad
                                 </h3>
@@ -2152,17 +2236,38 @@ export default function ClienteShow({
                                 <Label>Teléfono</Label>
                                 <Input
                                     value={editForm.data.telefono}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'telefono',
-                                            e.target.value,
-                                        )
-                                    }
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        const prevTel = editForm.data.telefono;
+                                        const prevWa = editForm.data.whatsapp;
+                                        editForm.setData('telefono', val);
+                                        if (!prevWa || prevWa === prevTel) {
+                                            editForm.setData('whatsapp', val);
+                                        }
+                                    }}
                                     className="mt-1 h-9 text-xs"
                                 />
                             </div>
                             <div>
-                                <Label>WhatsApp</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label>WhatsApp</Label>
+                                    {editForm.data.telefono &&
+                                        editForm.data.whatsapp !==
+                                            editForm.data.telefono && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    editForm.setData(
+                                                        'whatsapp',
+                                                        editForm.data.telefono,
+                                                    )
+                                                }
+                                                className="text-primary text-[10px] font-medium hover:underline"
+                                            >
+                                                Igual al teléfono
+                                            </button>
+                                        )}
+                                </div>
                                 <Input
                                     value={editForm.data.whatsapp}
                                     onChange={(e) =>

@@ -188,7 +188,7 @@ export default function AjustesIndex({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <Card className="border-border bg-card rounded-[12px] border p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="bg-muted/30 text-destructive flex size-10 items-center justify-center rounded-[9px]">
+                            <div className="bg-muted/30 text-destructive-strong flex size-10 items-center justify-center rounded-[9px]">
                                 <RotateCcw className="size-5" />
                             </div>
                             <div>
@@ -220,7 +220,7 @@ export default function AjustesIndex({
 
                     <Card className="border-border bg-card rounded-[12px] border p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="bg-destructive/10 text-destructive flex size-10 items-center justify-center rounded-[9px]">
+                            <div className="bg-destructive/10 text-destructive-strong flex size-10 items-center justify-center rounded-[9px]">
                                 <Trash2 className="size-5" />
                             </div>
                             <div>
@@ -240,7 +240,7 @@ export default function AjustesIndex({
                     <Card className="border-destructive/20/30 bg-card rounded-[14px] border-2 p-6 shadow-md transition-all">
                         <div className="border-border mb-5 flex items-center justify-between border-b pb-3">
                             <div className="text-foreground flex items-center gap-2 text-sm font-bold">
-                                <ShieldAlert className="text-primary size-5" />
+                                <ShieldAlert className="text-primary-strong size-5" />
                                 <span>
                                     Registrar Ajuste en Kardex (Aplicación
                                     Directa)
@@ -252,7 +252,7 @@ export default function AjustesIndex({
                         </div>
 
                         {Object.keys(errors).length > 0 && (
-                            <div className="border-destructive/20 bg-destructive/10 text-primary mb-4 flex items-start gap-2.5 rounded-[9px] border p-3 text-xs">
+                            <div className="border-destructive/20 bg-destructive/10 text-primary-strong mb-4 flex items-start gap-2.5 rounded-[9px] border p-3 text-xs">
                                 <AlertCircle className="mt-0.5 size-4 shrink-0" />
                                 <div>
                                     <p className="font-bold">
@@ -344,7 +344,7 @@ export default function AjustesIndex({
                                             className={`flex items-center justify-center gap-1.5 rounded-[8px] border py-2 text-xs font-bold transition-all ${
                                                 data.tipo_ajuste ===
                                                 'decremento'
-                                                    ? 'border-destructive/20 bg-destructive/10 text-destructive'
+                                                    ? 'border-destructive/20 bg-destructive/10 text-destructive-strong'
                                                     : 'border-border bg-card text-muted-foreground hover:bg-background'
                                             }`}
                                         >
@@ -363,7 +363,7 @@ export default function AjustesIndex({
                                             className={`flex items-center justify-center gap-1.5 rounded-[8px] border py-2 text-xs font-bold transition-all ${
                                                 data.tipo_ajuste ===
                                                 'incremento'
-                                                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                    ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
                                                     : 'border-border bg-card text-muted-foreground hover:bg-background'
                                             }`}
                                         >
@@ -419,7 +419,7 @@ export default function AjustesIndex({
                                             ))}
                                         </select>
                                         {availableUnits.length === 0 && (
-                                            <p className="text-destructive text-[11px]">
+                                            <p className="text-destructive-strong text-[11px]">
                                                 No hay unidades físicas
                                                 registradas en esta sede.
                                             </p>
@@ -533,7 +533,7 @@ export default function AjustesIndex({
                 <Card className="border-border bg-card overflow-hidden rounded-[12px] border shadow-sm">
                     <div className="border-border bg-muted/40 flex items-center justify-between border-b px-4 py-3">
                         <div className="text-foreground flex items-center gap-2 text-xs font-bold">
-                            <History className="text-destructive size-4" />
+                            <History className="text-destructive-strong size-4" />
                             <span>
                                 Historial de Ajustes de Stock Registrados
                             </span>
@@ -610,8 +610,8 @@ export default function AjustesIndex({
                                                     <span
                                                         className={`inline-flex items-center gap-1 rounded-[6px] border px-2 py-0.5 text-[11px] font-black ${
                                                             isPositive
-                                                                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                                                : 'border-destructive/20 bg-destructive/10 text-destructive'
+                                                                ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
+                                                                : 'border-destructive/20 bg-destructive/10 text-destructive-strong'
                                                         }`}
                                                     >
                                                         {isPositive ? (

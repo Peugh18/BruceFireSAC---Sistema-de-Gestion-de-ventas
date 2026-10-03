@@ -282,7 +282,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-300">
-                        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                        <CheckCircle2 className="text-success-strong h-4 w-4 flex-shrink-0" />
                         <span>
                             Esta orden ya ingresó formalmente al taller de
                             Planta.
@@ -358,7 +358,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="flex items-center gap-1.5 text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                                <QrCode className="h-4 w-4 text-amber-600" />
+                                <QrCode className="text-warning-strong h-4 w-4" />
                                 <span>
                                     Equipos en esta Orden (
                                     {order.equipments.length})
@@ -399,7 +399,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-mono text-sm font-extrabold text-amber-600 dark:text-amber-400">
+                                            <span className="text-warning-strong font-mono text-sm font-extrabold">
                                                 {eq.numero_serie}
                                             </span>
                                             <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
@@ -488,7 +488,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     onClick={() => setRegisterTab('new')}
                                     className={`flex-1 rounded-lg py-2 text-xs font-bold transition-colors ${
                                         registerTab === 'new'
-                                            ? 'bg-card text-amber-600 shadow-sm dark:bg-neutral-700 dark:text-amber-400'
+                                            ? 'bg-card text-warning-strong shadow-sm dark:bg-neutral-700 dark:text-amber-400'
                                             : 'text-neutral-600 dark:text-neutral-400'
                                     }`}
                                 >
@@ -499,7 +499,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     onClick={() => setRegisterTab('scan')}
                                     className={`flex-1 rounded-lg py-2 text-xs font-bold transition-colors ${
                                         registerTab === 'scan'
-                                            ? 'bg-card text-amber-600 shadow-sm dark:bg-neutral-700 dark:text-amber-400'
+                                            ? 'bg-card text-warning-strong shadow-sm dark:bg-neutral-700 dark:text-amber-400'
                                             : 'text-neutral-600 dark:text-neutral-400'
                                     }`}
                                 >
@@ -652,7 +652,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 onClick={() =>
                                                     setUnreadable('marca')
                                                 }
-                                                className="text-[10px] text-amber-600 hover:underline"
+                                                className="text-warning-strong text-[10px] hover:underline"
                                             >
                                                 No legible
                                             </button>
@@ -684,7 +684,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                             'serie_fabricante',
                                                         )
                                                     }
-                                                    className="text-[10px] text-amber-600 hover:underline"
+                                                    className="text-warning-strong text-[10px] hover:underline"
                                                 >
                                                     No legible
                                                 </button>
@@ -718,7 +718,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                             'anio_fabricacion',
                                                         )
                                                     }
-                                                    className="text-[10px] text-amber-600 hover:underline"
+                                                    className="text-warning-strong text-[10px] hover:underline"
                                                 >
                                                     No legible
                                                 </button>

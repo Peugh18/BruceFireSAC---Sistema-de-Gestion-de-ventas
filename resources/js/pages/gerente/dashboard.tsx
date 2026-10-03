@@ -158,7 +158,7 @@ export default function GerenteDashboard({
 
                     <div className="flex items-center gap-2">
                         <div className="border-border bg-card text-foreground/80 flex items-center gap-2 rounded-lg border px-3.5 py-1.5 text-xs font-semibold">
-                            <Calendar className="text-primary size-3.5" />
+                            <Calendar className="text-primary-strong size-3.5" />
                             <span>
                                 {new Date().toLocaleDateString('es-PE', {
                                     month: 'long',
@@ -180,7 +180,7 @@ export default function GerenteDashboard({
                                 Ventas de Hoy
                             </span>
                             <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <CircleDollarSign className="size-4 text-emerald-600" />
+                                <CircleDollarSign className="text-success-strong size-4" />
                             </div>
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
@@ -198,7 +198,7 @@ export default function GerenteDashboard({
                                 Ventas del Mes
                             </span>
                             <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <TrendingUp className="size-4 text-emerald-600" />
+                                <TrendingUp className="text-success-strong size-4" />
                             </div>
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
@@ -234,7 +234,7 @@ export default function GerenteDashboard({
                                 Monto Cobrado
                             </span>
                             <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <CheckCircle2 className="size-4 text-emerald-600" />
+                                <CheckCircle2 className="text-success-strong size-4" />
                             </div>
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
@@ -252,7 +252,7 @@ export default function GerenteDashboard({
                                 Por Cobrar Total
                             </span>
                             <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <Clock className="size-4 text-amber-600" />
+                                <Clock className="text-warning-strong size-4" />
                             </div>
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
@@ -270,10 +270,10 @@ export default function GerenteDashboard({
                                 Vencido por Cobrar
                             </span>
                             <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <BadgeAlert className="text-primary size-4" />
+                                <BadgeAlert className="text-primary-strong size-4" />
                             </div>
                         </div>
-                        <div className="text-primary mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                        <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(metrics.vencidoPorCobrar)}
                         </div>
                         <p className="text-muted-foreground mt-1 text-[11px]">
@@ -378,10 +378,10 @@ export default function GerenteDashboard({
                                 SUNAT con Error
                             </span>
                             <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <ShieldAlert className="text-primary size-4" />
+                                <ShieldAlert className="text-primary-strong size-4" />
                             </div>
                         </div>
-                        <div className="text-primary mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                        <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatNumber(metrics.documentosSunatError)}
                         </div>
                         <p className="text-muted-foreground mt-1 text-[11px]">
@@ -529,7 +529,7 @@ export default function GerenteDashboard({
                                         <div key={item.nombre} className="py-3">
                                             <div className="flex items-center justify-between text-xs">
                                                 <span className="text-foreground truncate font-medium">
-                                                    <b className="text-primary mr-2 font-mono">
+                                                    <b className="text-primary-strong mr-2 font-mono">
                                                         #{idx + 1}
                                                     </b>{' '}
                                                     {item.nombre}
@@ -627,7 +627,7 @@ export default function GerenteDashboard({
                                         className="flex items-center justify-between py-3"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="bg-card flex size-6 items-center justify-center rounded-full font-mono text-[10px] font-bold text-white">
+                                            <div className="bg-foreground text-background flex size-6 items-center justify-center rounded-full font-mono text-[10px] font-bold shadow-xs">
                                                 {idx + 1}
                                             </div>
                                             <span className="text-foreground text-xs font-medium">
@@ -708,13 +708,13 @@ export default function GerenteDashboard({
                     <div className="border-border flex flex-col justify-between gap-4 border-b pb-5 lg:flex-row lg:items-center">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2.5">
-                                <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
-                                    <BrainCircuit className="text-primary size-5" />
+                                <div className="bg-primary/10 text-primary-strong flex size-8 items-center justify-center rounded-lg">
+                                    <BrainCircuit className="text-primary-strong size-5" />
                                 </div>
                                 <h2 className="text-foreground font-['Oswald',sans-serif] text-lg font-bold tracking-wide uppercase">
                                     Predicción de recompra
                                 </h2>
-                                <span className="border-primary/20 bg-primary/5 text-primary inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
+                                <span className="border-primary/20 bg-primary/5 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
                                     <Sparkles className="size-3" />
                                     ML Local
                                 </span>
@@ -749,7 +749,7 @@ export default function GerenteDashboard({
                                 </span>
                                 <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium">
                                     ROC-AUC:{' '}
-                                    <b className="font-bold text-emerald-600">
+                                    <b className="text-success-strong font-bold">
                                         {Math.round(
                                             aiRetention.modelo.aucRoc * 1000,
                                         ) / 10}
@@ -1069,7 +1069,7 @@ export default function GerenteDashboard({
 
                             {/* Aviso de Responsabilidad y Apoyo a la Decisión (§39.1 y §39.5) */}
                             <div className="border-border bg-muted/40 text-muted-foreground flex items-start gap-2.5 rounded-lg border p-3.5 text-xs">
-                                <Info className="text-primary mt-0.5 size-4 shrink-0" />
+                                <Info className="text-primary-strong mt-0.5 size-4 shrink-0" />
                                 <div>
                                     <span className="text-foreground font-semibold">
                                         Nota de apoyo a la decisión comercial:

@@ -11,6 +11,7 @@ use App\Http\Requests\Clientes\UpdateClientRequest;
 use App\Models\AuditLog;
 use App\Models\Client;
 use App\Models\ClientSite;
+use App\Models\Equipment;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\Team;
@@ -200,7 +201,35 @@ class ClientController extends Controller
                 'medio_pago' => $sale->medioPagoTexto(),
                 'saldo_pendiente' => $sale->estado === 'confirmada' && $sale->esCredito() ? round((float) $sale->installments->sum($saldoDe), 2) : 0.0,
             ]),
-            'extintores' => $equipos->map(fn ($equipment) => ['id' => $equipment->id, 'numero_serie' => $equipment->numero_serie, 'producto' => $equipment->product?->nombre, 'capacidad' => $equipment->capacidad, 'marca' => $equipment->marca, 'estado' => $equipment->estado, 'fecha_venta' => $equipment->fecha_venta?->toDateString(), 'proxima_fecha_atencion' => $equipment->proxima_fecha_atencion?->toDateString(), 'proxima_prueba_hidrostatica' => $equipment->proxima_prueba_hidrostatica?->toDateString(), 'vencido' => ($equipment->proxima_fecha_atencion?->isPast() ?? false) || ($equipment->proxima_prueba_hidrostatica?->isPast() ?? false)]),
+            'extintores' => $equipos->map(function ($equipment) {
+                $esDescargado = in_array($equipment->estado, ['descargado', 'usado'], true);
+                $phVencida = $equipment->proxima_prueba_hidrostatica?->isPast() ?? false;
+                $recargaVencida = $equipment->proxima_fecha_atencion?->isPast() ?? false;
+                $vencido = $esDescargado || $phVencida || $recargaVencida;
+
+                $tipoAlerta = match (true) {
+                    $esDescargado => 'descargado_uso',
+                    $recargaVencida && $phVencida => 'recarga_y_ph',
+                    $phVencida => 'prueba_hidrostatica',
+                    $recargaVencida => 'recarga_anual',
+                    default => 'operativo',
+                };
+
+                return [
+                    'id' => $equipment->id,
+                    'numero_serie' => $equipment->numero_serie,
+                    'producto' => $equipment->product?->nombre,
+                    'capacidad' => $equipment->capacidad,
+                    'marca' => $equipment->marca,
+                    'estado' => $equipment->estado,
+                    'fecha_venta' => $equipment->fecha_venta?->toDateString(),
+                    'proxima_fecha_atencion' => $equipment->proxima_fecha_atencion?->toDateString(),
+                    'proxima_prueba_hidrostatica' => $equipment->proxima_prueba_hidrostatica?->toDateString(),
+                    'vencido' => $vencido,
+                    'tipo_alerta' => $tipoAlerta,
+                    'es_descargado' => $esDescargado,
+                ];
+            }),
             'certificados' => $certificates->map(fn ($certificate) => ['id' => $certificate->id, 'numero' => $certificate->numero, 'tipo' => $certificate->certificateType->nombre, 'fecha_emision' => $certificate->fecha_emision?->toDateString(), 'fecha_vigencia_hasta' => $certificate->fecha_vigencia_hasta?->toDateString(), 'estado' => $certificate->estado, 'venta' => $certificate->sale ? ['id' => $certificate->sale->id, 'numero' => $certificate->sale->numero_interno] : null]),
             'servicios' => $serviceOrders->map(fn ($order) => ['id' => $order->id, 'numero' => $order->codigo, 'servicio' => $order->service->nombre, 'area' => $order->departamento_tecnico, 'estado' => $order->estado, 'estado_texto' => $order->coarseLabel(), 'tecnico' => $order->tecnico?->name, 'fecha' => $order->fecha?->toDateString()]),
             'cobranzas' => [
@@ -331,5 +360,20 @@ class ClientController extends Controller
             ->count();
 
         return round(($activeAndLocated / $total) * 100, 2);
+    }
+
+    /**
+     * Reportar que un extintor fue usado o descargado.
+     * Por principio de un solo uso (NTP 350.043), pierde presión y requiere recarga inmediata.
+     */
+    public function reportEquipmentUsed(Team $current_team, Client $client, Equipment $equipment): RedirectResponse
+    {
+        abort_unless($equipment->client_id === $client->id, 404);
+
+        $equipment->update([
+            'estado' => 'descargado',
+        ]);
+
+        return back()->with('success', "Extintor {$equipment->numero_serie} marcado como descargado/usado. Por ser equipo de un solo uso, requiere recarga inmediata.");
     }
 }

@@ -167,7 +167,7 @@ class ProcessSaleItem
             'fecha_venta' => $sale->fecha,
             'estado' => 'activo',
             'proxima_fecha_atencion' => $sale->fecha->copy()->addYear(),
-            'proxima_prueba_hidrostatica' => null,
+            'proxima_prueba_hidrostatica' => $sale->fecha->copy()->addYears(5),
         ]);
 
         return $sale->items()->create([
@@ -199,7 +199,17 @@ class ProcessSaleItem
             ]);
         }
 
-        app(RenewEquipmentAttentionDate::class)->execute(collect([$equipment]));
+        $service = ! empty($itemData['service_id'])
+            ? Service::with('certificateType')->whereKey($itemData['service_id'])->first()
+            : null;
+
+        $esPH = $service && (
+            $service->certificateType?->codigo === 'prueba_hidrostatica'
+            || str_contains(mb_strtoupper($service->nombre), 'PRUEBA HIDROST')
+            || str_contains(mb_strtoupper($service->nombre), 'P.H.')
+        );
+
+        app(RenewEquipmentAttentionDate::class)->execute(collect([$equipment]), (bool) $esPH);
 
         return $sale->items()->create([
             'product_id' => null,

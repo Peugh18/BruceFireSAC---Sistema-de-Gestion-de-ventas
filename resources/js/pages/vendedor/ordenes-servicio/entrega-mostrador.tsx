@@ -96,7 +96,7 @@ export default function CounterDelivery({
                                             required
                                         />
                                         {errors.receptor_nombre && (
-                                            <p className="text-destructive text-sm">
+                                            <p className="text-destructive-strong text-sm">
                                                 {errors.receptor_nombre}
                                             </p>
                                         )}
@@ -113,7 +113,7 @@ export default function CounterDelivery({
                                             required
                                         />
                                         {errors.receptor_dni && (
-                                            <p className="text-destructive text-sm">
+                                            <p className="text-destructive-strong text-sm">
                                                 {errors.receptor_dni}
                                             </p>
                                         )}
@@ -132,7 +132,7 @@ export default function CounterDelivery({
                                         </span>
                                     </label>
                                     {errors.conformidad_aceptada && (
-                                        <p className="text-destructive text-sm">
+                                        <p className="text-destructive-strong text-sm">
                                             {errors.conformidad_aceptada}
                                         </p>
                                     )}

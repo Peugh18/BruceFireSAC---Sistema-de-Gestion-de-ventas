@@ -302,7 +302,7 @@ export default function CertificadoServicio({
                                             {c.titulo}
                                             {c.unidad ? ` (${c.unidad})` : ''}
                                             {c.obligatorio ? (
-                                                <span className="text-destructive">
+                                                <span className="text-destructive-strong">
                                                     {' '}
                                                     *
                                                 </span>
@@ -402,7 +402,7 @@ export default function CertificadoServicio({
                                                         />
                                                     )}
                                                     {aviso ? (
-                                                        <div className="mt-0.5 text-[10.5px] text-amber-600">
+                                                        <div className="text-warning-strong mt-0.5 text-[10.5px]">
                                                             Fuera de rango (
                                                             {rango(
                                                                 c.minimo,
@@ -413,7 +413,7 @@ export default function CertificadoServicio({
                                                         </div>
                                                     ) : null}
                                                     {error ? (
-                                                        <div className="text-destructive mt-0.5 text-[10.5px]">
+                                                        <div className="text-destructive-strong mt-0.5 text-[10.5px]">
                                                             {error}
                                                         </div>
                                                     ) : null}
@@ -458,7 +458,7 @@ export default function CertificadoServicio({
                                                             ),
                                                         )
                                                     }
-                                                    className="border-border text-destructive hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border disabled:opacity-40"
+                                                    className="border-border text-destructive-strong hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border disabled:opacity-40"
                                                 >
                                                     <Trash2 className="size-3" />
                                                 </button>
@@ -558,7 +558,7 @@ export default function CertificadoServicio({
                             value={observaciones}
                             maxLength={1000}
                             onChange={(e) => setObservaciones(e.target.value)}
-                            className="border-border bg-card mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] font-normal normal-case outline-none"
+                            className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] font-normal normal-case outline-none focus-visible:ring-[3px]"
                         />
                     </label>
                 </Card>

@@ -1,11 +1,12 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { Eye, Plus, Wrench } from 'lucide-react';
+import { Eye, Plus, RotateCcw, Wrench } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
 import CatalogPicker from '@/components/catalog-picker';
 import ClientPicker, { type ClientFicha } from '@/components/client-picker';
 import ReferenciaField from '@/components/referencia-field';
+import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -96,13 +97,13 @@ function getBadgeConfig(
                 return {
                     label: 'Por asignar',
                     badgeClass:
-                        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                        'bg-amber-500/10 text-warning-strong border border-amber-500/20',
                 };
             }
             return {
                 label: 'Asignada',
                 badgeClass:
-                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                    'bg-amber-500/10 text-warning-strong border border-amber-500/20',
             };
         case 'en_proceso':
             return {
@@ -114,7 +115,7 @@ function getBadgeConfig(
             return {
                 label: 'Completada',
                 badgeClass:
-                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20',
             };
         case 'cerrada':
             return {
@@ -197,8 +198,8 @@ export default function ServiceOrdersIndex({
     };
 
     return (
-        <VendedorLayout title="Órdenes de Servicio">
-            <Head title="Órdenes de Servicio" />
+        <VendedorLayout title="Servicios">
+            <Head title="Órdenes de servicio" />
 
             <div className="flex flex-col gap-4">
                 <ServiciosTabs
@@ -208,29 +209,23 @@ export default function ServiceOrdersIndex({
                 />
 
                 {/* Header toolbar */}
-                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                    <div>
-                        <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
-                            Órdenes de Servicio
-                        </h2>
-                        <p className="text-muted-foreground text-[12.5px]">
-                            Recargas, mantenimientos e inspecciones de tus
-                            clientes, en planta o en campo.
-                        </p>
-                    </div>
-
-                    <Button
-                        type="button"
-                        onClick={() => setDialogOpen(true)}
-                        className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] px-3.5 text-[12.5px] font-bold text-white shadow-none"
-                    >
-                        <Plus className="mr-1.5 size-4" />
-                        <span>Nueva orden</span>
-                    </Button>
-                </div>
+                <PageHeader
+                    title="Órdenes de servicio"
+                    description="Recargas, mantenimientos e inspecciones de tus clientes, en planta o en campo."
+                    actions={
+                        <Button
+                            type="button"
+                            onClick={() => setDialogOpen(true)}
+                            className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] px-3.5 text-[12.5px] font-bold text-white shadow-none"
+                        >
+                            <Plus className="mr-1.5 size-4" />
+                            <span>Nueva orden</span>
+                        </Button>
+                    }
+                />
 
                 {/* Filter Tabs */}
-                <div className="bg-muted flex w-fit rounded-[9px] p-[3px]">
+                <div className="bg-muted flex w-fit max-w-full overflow-x-auto rounded-[9px] p-[3px]">
                     {TABS.map((tab) => {
                         const active = currentEstado === tab.id;
                         return (
@@ -287,16 +282,49 @@ export default function ServiceOrdersIndex({
                                             className="text-muted-foreground px-4 py-12 text-center"
                                         >
                                             <div className="flex flex-col items-center justify-center gap-2">
-                                                <Wrench className="text-muted-foreground size-8" />
+                                                <div className="bg-muted/50 flex size-10 items-center justify-center rounded-full">
+                                                    <Wrench className="text-muted-foreground size-5" />
+                                                </div>
                                                 <p className="text-foreground text-xs font-semibold">
                                                     No se encontraron órdenes de
                                                     servicio
                                                 </p>
-                                                <p className="text-muted-foreground text-[11px]">
+                                                <p className="text-muted-foreground max-w-sm text-[11px]">
                                                     {currentEstado
-                                                        ? 'No hay registros para este filtro.'
-                                                        : 'Aún no se han registrado órdenes de servicio.'}
+                                                        ? 'No hay registros que coincidan con el estado seleccionado.'
+                                                        : 'Aún no se han emitido órdenes de servicio en esta sede.'}
                                                 </p>
+                                                {currentEstado ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            router.get(
+                                                                `/${teamSlug}/vendedor/ordenes-servicio`,
+                                                            )
+                                                        }
+                                                        className="border-border bg-card text-foreground hover:bg-muted mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                                                    >
+                                                        <RotateCcw className="size-3" />
+                                                        <span>
+                                                            Ver todas las
+                                                            órdenes
+                                                        </span>
+                                                    </button>
+                                                ) : (
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            setDialogOpen(true)
+                                                        }
+                                                        className="bg-primary hover:bg-primary/90 mt-2 h-8 gap-1.5 rounded-[8px] text-xs font-bold text-white shadow-xs"
+                                                    >
+                                                        <Plus className="size-3.5" />
+                                                        <span>
+                                                            Crear primera orden
+                                                        </span>
+                                                    </Button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -326,7 +354,7 @@ export default function ServiceOrdersIndex({
                                                                     order.id,
                                                             },
                                                         )}
-                                                        className="hover:text-primary hover:underline"
+                                                        className="hover:text-primary-strong hover:underline"
                                                     >
                                                         {order.codigo}
                                                     </Link>
@@ -420,6 +448,7 @@ export default function ServiceOrdersIndex({
                                                                         order.id,
                                                                 },
                                                             )}
+                                                            aria-label={`Ver orden ${order.codigo}`}
                                                         >
                                                             <Eye className="size-3.5" />
                                                         </Link>
@@ -449,7 +478,7 @@ export default function ServiceOrdersIndex({
                                             preserveScroll
                                             className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
                                                 link.active
-                                                    ? 'bg-card font-bold text-white'
+                                                    ? 'bg-foreground text-background font-bold shadow-xs'
                                                     : 'border-border bg-card text-foreground/80 hover:bg-background border'
                                             }`}
                                             dangerouslySetInnerHTML={{
@@ -477,7 +506,7 @@ export default function ServiceOrdersIndex({
                 <DialogContent className="border-border bg-card max-h-[90vh] overflow-y-auto rounded-[16px] sm:max-w-xl">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="bg-destructive/10 text-primary flex size-9 items-center justify-center rounded-[10px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-9 items-center justify-center rounded-[10px]">
                                 <Wrench className="size-5" />
                             </div>
                             <div>
@@ -548,7 +577,7 @@ export default function ServiceOrdersIndex({
                                 </div>
                             )}
                             {createForm.errors.tipo_servicio && (
-                                <p className="text-destructive mt-1 text-[11px]">
+                                <p className="text-destructive-strong mt-1 text-[11px]">
                                     {createForm.errors.tipo_servicio}
                                 </p>
                             )}
@@ -595,7 +624,7 @@ export default function ServiceOrdersIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="border-border bg-card text-foreground mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none"
+                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                 >
                                     <option value="">
                                         Todo el área (sin asignar)
@@ -610,7 +639,7 @@ export default function ServiceOrdersIndex({
                                     ))}
                                 </select>
                                 {createForm.errors.tecnico_id && (
-                                    <p className="text-destructive mt-1 text-[11px]">
+                                    <p className="text-destructive-strong mt-1 text-[11px]">
                                         {createForm.errors.tecnico_id}
                                     </p>
                                 )}
@@ -686,7 +715,7 @@ export default function ServiceOrdersIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="border-border bg-card text-foreground mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none"
+                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                 >
                                     <option value="normal">Normal</option>
                                     <option value="alta">Alta</option>
@@ -708,7 +737,7 @@ export default function ServiceOrdersIndex({
                                     )
                                 }
                                 placeholder="Ej. 7 extintores PQS 6 kg enumerados del 1 al 7, recoger en recepción."
-                                className="border-border bg-card mt-1 min-h-[60px] w-full rounded-[8px] border px-3 py-2 text-[13px] outline-none"
+                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[60px] w-full rounded-[8px] border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
                             />
                         </div>
 

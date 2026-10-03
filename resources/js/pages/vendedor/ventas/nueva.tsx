@@ -26,6 +26,7 @@ import ClientPicker, {
 import CreditoDialog, { type Cuota } from '@/components/credito-dialog';
 import ReferenciaField from '@/components/referencia-field';
 import UnidadesDialog from '@/components/unidades-dialog';
+import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -161,7 +162,7 @@ function money(value: number) {
 
 function fieldError(errors: Partial<Record<string, string>>, key: string) {
     return errors[key] ? (
-        <p className="text-destructive mt-1 text-[11px] font-semibold">
+        <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
             {errors[key]}
         </p>
     ) : null;
@@ -549,6 +550,16 @@ export default function NuevaVenta({
                     : 'Nueva venta'
             }
         >
+            <div className="mb-4">
+                <PageHeader
+                    title={
+                        editando
+                            ? `Editar ${venta?.numero_interno ?? 'venta'}`
+                            : 'Nueva venta'
+                    }
+                    description="Elige el cliente, agrega los productos o servicios y emite el comprobante."
+                />
+            </div>
             <form
                 onSubmit={submitSale}
                 className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]"
@@ -556,7 +567,7 @@ export default function NuevaVenta({
                 <div className="flex min-w-0 flex-col gap-4">
                     {venta ? (
                         <Card className="flex-row items-start gap-3 rounded-[16px] border-amber-500/30 bg-amber-500/5 p-4 shadow-none">
-                            <FileText className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                            <FileText className="text-warning-strong mt-0.5 size-5 shrink-0" />
                             <div className="text-[12.5px]">
                                 <p className="text-foreground font-bold">
                                     {editando
@@ -574,7 +585,7 @@ export default function NuevaVenta({
                     {quote ? (
                         <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
                             <div className="flex flex-wrap items-center gap-3">
-                                <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
+                                <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
                                     <FileText className="size-5" />
                                 </div>
                                 <div className="min-w-0">
@@ -621,7 +632,7 @@ export default function NuevaVenta({
                                                 </span>
                                             </div>
                                             <Badge
-                                                className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold ${completa ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
+                                                className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold ${completa ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10' : 'text-warning-strong border-amber-500/20 bg-amber-500/10'}`}
                                             >
                                                 {agregadas === null
                                                     ? 'Agregado'
@@ -725,7 +736,7 @@ export default function NuevaVenta({
                                     ) : null}
                                     {esClientesVarios ? (
                                         <p
-                                            className={`mt-1 text-[11px] font-semibold ${boletaSuperaLimite ? 'text-destructive' : 'text-muted-foreground'}`}
+                                            className={`mt-1 text-[11px] font-semibold ${boletaSuperaLimite ? 'text-destructive-strong' : 'text-muted-foreground'}`}
                                         >
                                             {boletaSuperaLimite
                                                 ? `Supera S/ ${limiteBoletaSinIdentificar.toFixed(2)}: registra el DNI del cliente.`
@@ -824,7 +835,7 @@ export default function NuevaVenta({
                                     <button
                                         type="button"
                                         onClick={() => setCreditoAbierto(true)}
-                                        className={`mt-1 text-left text-[11.5px] font-semibold underline-offset-2 hover:underline ${creditoIncompleto || cuotasDesactualizadas ? 'text-destructive' : 'text-primary'}`}
+                                        className={`mt-1 text-left text-[11.5px] font-semibold underline-offset-2 hover:underline ${creditoIncompleto || cuotasDesactualizadas ? 'text-destructive-strong' : 'text-primary-strong'}`}
                                     >
                                         {creditoIncompleto
                                             ? 'Define las cuotas del crédito'
@@ -860,7 +871,7 @@ export default function NuevaVenta({
                                                 form.data.medio_pago ===
                                                 medio.valor
                                                     ? 'border-primary bg-primary text-primary-foreground'
-                                                    : 'border-border text-muted-foreground hover:border-primary/60 hover:text-primary'
+                                                    : 'border-border text-muted-foreground hover:border-primary/60 hover:text-primary-strong'
                                             }`}
                                         >
                                             {medio.texto}
@@ -884,7 +895,7 @@ export default function NuevaVenta({
                                 {caja_abierta === false &&
                                     form.data.medio_pago === 'efectivo' && (
                                         <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-800 dark:text-amber-300">
-                                            <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                                            <AlertCircle className="text-warning-strong mt-0.5 size-4 shrink-0" />
                                             <div>
                                                 <p className="font-bold">
                                                     No tienes una caja abierta
@@ -954,7 +965,7 @@ export default function NuevaVenta({
                                                 : '',
                                         )
                                     }
-                                    className="border-border bg-card mt-1 h-10 w-full rounded-[9px] border px-3 text-[13px] outline-none"
+                                    className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-10 w-full rounded-[9px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                 >
                                     <option value="">
                                         Selecciona una sede...
@@ -994,7 +1005,7 @@ export default function NuevaVenta({
                             placeholder="Serie BF-EQ, código de barras o nombre del producto o servicio..."
                         />
                         {aviso ? (
-                            <div className="flex items-center gap-2 rounded-[10px] bg-amber-500/10 px-3 py-2 text-[12px] font-semibold text-amber-600 dark:text-amber-400">
+                            <div className="text-warning-strong flex items-center gap-2 rounded-[10px] bg-amber-500/10 px-3 py-2 text-[12px] font-semibold">
                                 <AlertCircle className="size-4" />
                                 {aviso}
                             </div>
@@ -1017,7 +1028,11 @@ export default function NuevaVenta({
                                                 key={h}
                                                 className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
                                             >
-                                                {h}
+                                                {h || (
+                                                    <span className="sr-only">
+                                                        Acciones
+                                                    </span>
+                                                )}
                                             </th>
                                         ))}
                                     </tr>
@@ -1181,7 +1196,7 @@ export default function NuevaVenta({
                                                         className="border-border h-8 w-20 rounded-[7px] text-[12px]"
                                                     />
                                                 </td>
-                                                <td className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold">
+                                                <td className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                     {money(
                                                         item.cantidad *
                                                             item.precio_unitario -
@@ -1202,7 +1217,7 @@ export default function NuevaVenta({
                                                                 ),
                                                             )
                                                         }
-                                                        className="border-border bg-card text-destructive size-7 rounded-[7px] shadow-none"
+                                                        className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </Button>
@@ -1219,7 +1234,7 @@ export default function NuevaVenta({
                 <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
                     <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
                         <div className="flex items-center gap-3">
-                            <div className="bg-destructive/10 text-primary flex size-10 items-center justify-center rounded-[11px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
                                 <FileText className="size-5" />
                             </div>
                             <div className="min-w-0">
@@ -1275,7 +1290,7 @@ export default function NuevaVenta({
                                     )
                                 }
                                 placeholder="Sale en el comprobante como Obs."
-                                className="border-border bg-card mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none"
+                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
                             />
                         </div>
 
@@ -1294,7 +1309,7 @@ export default function NuevaVenta({
                         </Button>
                         {aviso ? (
                             <p
-                                className="text-destructive text-[11.5px] font-semibold"
+                                className="text-destructive-strong text-[11.5px] font-semibold"
                                 role="alert"
                             >
                                 {aviso}
@@ -1305,7 +1320,7 @@ export default function NuevaVenta({
                             creditoIncompleto ||
                             cuotasDesactualizadas) ? (
                             <p
-                                className="text-destructive text-[11.5px] font-semibold"
+                                className="text-destructive-strong text-[11.5px] font-semibold"
                                 role="alert"
                             >
                                 {boletaSuperaLimite

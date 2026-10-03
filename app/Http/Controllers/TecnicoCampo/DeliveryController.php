@@ -139,7 +139,8 @@ class DeliveryController extends Controller
             'estado' => $debeCerrar ? 'cerrado' : 'entregado',
         ]);
         if ($debeCerrar) {
-            $renewEquipmentAttentionDate->execute($serviceOrder->equipments()->get());
+            $phRealizada = $serviceOrder->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
+            $renewEquipmentAttentionDate->execute($serviceOrder->equipments()->get(), $phRealizada);
         }
 
         $msg = $debeCerrar

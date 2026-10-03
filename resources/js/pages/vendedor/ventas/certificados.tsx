@@ -370,7 +370,7 @@ export default function ArmarCertificados({
                         >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <h2 className="flex items-center gap-2 font-['Oswald',sans-serif] text-[17px] font-semibold uppercase">
-                                    <Award className="text-primary size-4" />
+                                    <Award className="text-primary-strong size-4" />
                                     Grupo {gIndex + 1}
                                     <span className="text-muted-foreground text-[12px] font-normal normal-case">
                                         {filasDelGrupo.length} extintor(es)
@@ -382,7 +382,7 @@ export default function ArmarCertificados({
                                         variant="outline"
                                         size="sm"
                                         onClick={() => quitarGrupo(grupo.id)}
-                                        className="text-destructive rounded-[8px] shadow-none"
+                                        className="text-destructive-strong rounded-[8px] shadow-none"
                                     >
                                         <Trash2 className="size-3.5" />
                                         Quitar grupo
@@ -519,7 +519,7 @@ export default function ArmarCertificados({
                                                         modo: valor,
                                                     })
                                                 }
-                                                className={`rounded-[9px] border px-3 py-2 text-[12px] font-semibold ${grupo.modo === valor ? 'border-primary bg-primary/10 text-primary' : 'border-border'}`}
+                                                className={`rounded-[9px] border px-3 py-2 text-[12px] font-semibold ${grupo.modo === valor ? 'border-primary bg-primary/10 text-primary-strong' : 'border-border'}`}
                                             >
                                                 {texto}
                                             </button>
@@ -871,7 +871,7 @@ export default function ArmarCertificados({
                                                                     : ''}
                                                             </span>
                                                         </td>
-                                                        <td className="px-2.5 py-1.5 font-['IBM_Plex_Mono',monospace]">
+                                                        <td className="px-2.5 py-1.5 font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
                                                             {fila.serie_fabricante ??
                                                                 '—'}
                                                         </td>

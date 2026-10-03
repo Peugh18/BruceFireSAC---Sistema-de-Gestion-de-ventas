@@ -20,9 +20,11 @@ import { toast } from 'sonner';
 
 import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
 import { Cargando, FilasCargando } from '@/components/cargando';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import { soles } from '@/lib/utils';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
@@ -115,15 +117,6 @@ const FILTER_TABS = [
     { label: 'Anuladas', value: 'anulada' },
 ];
 
-function formatCurrency(amount: number | string): string {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    if (isNaN(num)) return 'S/ 0.00';
-    return `S/ ${num.toLocaleString('es-PE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`;
-}
-
 function formatVigencia(dateStr: string): {
     label: string;
     subLabel?: string;
@@ -197,28 +190,28 @@ function getStatusBadgeConfig(estado: string): {
             return {
                 label: 'Enviada',
                 badgeClass:
-                    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 border border-amber-500/20',
+                    'bg-amber-500/10 text-warning-strong border border-amber-500/20 border border-amber-500/20',
                 dotClass: 'bg-amber-600',
             };
         case 'aceptada':
             return {
                 label: 'Aceptada',
                 badgeClass:
-                    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 border border-emerald-500/20',
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20 border border-emerald-500/20',
                 dotClass: 'bg-emerald-600',
             };
         case 'rechazada':
             return {
                 label: 'Rechazada',
                 badgeClass:
-                    'bg-destructive/10 text-destructive border border-destructive/20 border border-destructive/20',
+                    'bg-destructive/10 text-destructive-strong border border-destructive/20 border border-destructive/20',
                 dotClass: 'bg-destructive',
             };
         case 'vencida':
             return {
                 label: 'Vencida',
                 badgeClass:
-                    'bg-destructive/10 text-destructive border border-destructive/20 border border-destructive/20',
+                    'bg-destructive/10 text-destructive-strong border border-destructive/20 border border-destructive/20',
                 dotClass: 'bg-destructive',
             };
         case 'convertida':
@@ -383,8 +376,27 @@ export default function CotizacionesIndex({
             <Head title="Cotizaciones" />
 
             <div className="flex flex-col gap-4">
+                <PageHeader
+                    title="Cotizaciones"
+                    description="Propuestas enviadas a tus clientes. Una cotización aceptada pasa a venta con un clic."
+                    actions={
+                        <Button
+                            asChild
+                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                        >
+                            <Link
+                                href={QuoteController.create.url({
+                                    current_team: teamSlug,
+                                })}
+                            >
+                                <Plus className="size-3.5" />
+                                Nueva cotización
+                            </Link>
+                        </Button>
+                    }
+                />
                 {/* KPI Cards Row */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {/* Activas */}
                     <div className="border-border bg-card flex items-center gap-3.5 rounded-[14px] border p-[16px_18px] shadow-xs">
                         <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
@@ -402,7 +414,7 @@ export default function CotizacionesIndex({
 
                     {/* Por vencer (7 días) */}
                     <div className="border-border bg-card flex items-center gap-3.5 rounded-[14px] border p-[16px_18px] shadow-xs">
-                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        <div className="text-warning-strong flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border border-amber-500/20 bg-amber-500/10">
                             <Clock className="size-5 stroke-[2]" />
                         </div>
                         <div>
@@ -417,7 +429,7 @@ export default function CotizacionesIndex({
 
                     {/* Aceptadas este mes */}
                     <div className="border-border bg-card flex items-center gap-3.5 rounded-[14px] border p-[16px_18px] shadow-xs">
-                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <div className="text-success-strong flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border border-emerald-500/20 bg-emerald-500/10">
                             <CheckCircle2 className="size-5 stroke-[2]" />
                         </div>
                         <div>
@@ -432,7 +444,7 @@ export default function CotizacionesIndex({
 
                     {/* Vencidas */}
                     <div className="border-border bg-card flex items-center gap-3.5 rounded-[14px] border p-[16px_18px] shadow-xs">
-                        <div className="bg-destructive/10 text-destructive border-destructive/20 flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border">
+                        <div className="bg-destructive/10 text-destructive-strong border-destructive/20 flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border">
                             <AlertTriangle className="size-5 stroke-[2]" />
                         </div>
                         <div>
@@ -451,7 +463,7 @@ export default function CotizacionesIndex({
                     {/* Toolbar */}
                     <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2.5">
                         {/* Status Filter Tabs */}
-                        <div className="bg-muted flex rounded-[9px] p-[3px]">
+                        <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
                             {FILTER_TABS.map((tab) => {
                                 const active = isTabActive(tab.value);
                                 return (
@@ -471,23 +483,6 @@ export default function CotizacionesIndex({
                                     </button>
                                 );
                             })}
-                        </div>
-
-                        {/* Actions Right */}
-                        <div className="flex items-center gap-2">
-                            <Button
-                                asChild
-                                className="bg-primary hover:bg-primary/90 flex h-10 cursor-pointer items-center gap-1.5 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-xs transition-colors"
-                            >
-                                <Link
-                                    href={QuoteController.create.url({
-                                        current_team: teamSlug,
-                                    })}
-                                >
-                                    <Plus className="size-3.5 stroke-[2.5]" />
-                                    <span>Nueva cotización</span>
-                                </Link>
-                            </Button>
                         </div>
                     </div>
 
@@ -547,11 +542,30 @@ export default function CotizacionesIndex({
                                                                 '',
                                                             )
                                                         }
-                                                        className="text-primary mt-2 cursor-pointer text-xs font-semibold hover:underline"
+                                                        className="text-primary-strong mt-2 cursor-pointer text-xs font-semibold hover:underline"
                                                     >
                                                         Limpiar filtros
                                                     </button>
-                                                ) : null}
+                                                ) : (
+                                                    <Button
+                                                        asChild
+                                                        size="sm"
+                                                        className="mt-2 rounded-xl"
+                                                    >
+                                                        <Link
+                                                            href={QuoteController.create.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                },
+                                                            )}
+                                                        >
+                                                            <Plus className="size-3.5" />
+                                                            Crear primera
+                                                            cotización
+                                                        </Link>
+                                                    </Button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -606,9 +620,7 @@ export default function CotizacionesIndex({
 
                                                 {/* Monto */}
                                                 <td className="text-foreground px-2.5 py-3.5 font-bold">
-                                                    {formatCurrency(
-                                                        quote.total,
-                                                    )}
+                                                    {soles(quote.total)}
                                                 </td>
 
                                                 {/* Vigencia */}
@@ -616,9 +628,9 @@ export default function CotizacionesIndex({
                                                     <span
                                                         className={`text-xs ${
                                                             vigencia.isExpired
-                                                                ? 'text-destructive font-medium'
+                                                                ? 'text-destructive-strong font-medium'
                                                                 : vigencia.isUrgent
-                                                                  ? 'font-medium text-amber-600 dark:text-amber-400'
+                                                                  ? 'text-warning-strong font-medium'
                                                                   : 'text-foreground/80'
                                                         }`}
                                                     >
@@ -657,7 +669,7 @@ export default function CotizacionesIndex({
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             title="Ver o imprimir el PDF"
-                                                            className="border-border bg-card text-foreground/80 hover:border-primary/60 hover:text-primary flex h-7 items-center gap-1 rounded-[7px] border px-2 text-[11px] font-bold shadow-xs transition-colors"
+                                                            className="border-border bg-card text-foreground/80 hover:border-primary/60 hover:text-primary-strong flex h-7 items-center gap-1 rounded-[7px] border px-2 text-[11px] font-bold shadow-xs transition-colors"
                                                         >
                                                             <FileText className="size-3" />
                                                             <span>PDF</span>
@@ -691,7 +703,7 @@ export default function CotizacionesIndex({
                                                                             ? 'Enviar por WhatsApp al cliente'
                                                                             : 'El cliente no tiene celular guardado: elige el contacto en WhatsApp'
                                                                     }
-                                                                    className="flex h-7 items-center gap-1.5 rounded-[7px] bg-[#25D366] px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-[#1ebe5a]"
+                                                                    className="flex h-7 items-center gap-1.5 rounded-[7px] bg-green-700 px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-green-800"
                                                                 >
                                                                     {isSending ? (
                                                                         <Cargando className="size-3" />
@@ -739,7 +751,7 @@ export default function CotizacionesIndex({
                                                                     disabled={
                                                                         isRowProcessing
                                                                     }
-                                                                    className="border-border bg-card text-destructive hover:bg-destructive/10 flex h-7 cursor-pointer items-center gap-1 rounded-[7px] border px-2.5 text-[11px] font-bold shadow-xs transition-colors disabled:opacity-50"
+                                                                    className="border-border bg-card text-destructive-strong hover:bg-destructive/10 flex h-7 cursor-pointer items-center gap-1 rounded-[7px] border px-2.5 text-[11px] font-bold shadow-xs transition-colors disabled:opacity-50"
                                                                 >
                                                                     {isRejecting ? (
                                                                         <Cargando className="size-3" />
@@ -764,7 +776,7 @@ export default function CotizacionesIndex({
                                                                         },
                                                                     },
                                                                 )}
-                                                                className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-7 cursor-pointer items-center gap-1.5 rounded-[7px] px-2.5 text-[11px] font-bold shadow-xs transition-colors"
+                                                                className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-[7px] px-2.5 text-[11px] font-bold whitespace-nowrap shadow-xs transition-colors"
                                                             >
                                                                 <ShoppingCart className="size-3" />
                                                                 <span>
@@ -804,7 +816,7 @@ export default function CotizacionesIndex({
                                                                             .id,
                                                                     },
                                                                 )}
-                                                                className="border-border bg-card text-foreground/80 hover:border-primary/60 hover:text-primary flex h-7 items-center gap-1.5 rounded-[7px] border px-2.5 text-[11px] font-bold shadow-xs transition-colors"
+                                                                className="border-border bg-card text-foreground/80 hover:border-primary/60 hover:text-primary-strong flex h-7 items-center gap-1.5 rounded-[7px] border px-2.5 text-[11px] font-bold shadow-xs transition-colors"
                                                             >
                                                                 <Receipt className="size-3" />
                                                                 <span>

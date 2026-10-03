@@ -459,7 +459,7 @@ export default function ServiceOrderShow({
                                         isCurrent
                                             ? 'border border-blue-500/20 bg-blue-500/10 text-blue-600 ring-1 ring-blue-300 dark:text-blue-400'
                                             : isDone
-                                              ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                              ? 'text-success-strong border border-emerald-500/20 bg-emerald-500/10'
                                               : 'bg-muted/40 text-muted-foreground'
                                     }`}
                                 >
@@ -891,7 +891,7 @@ export default function ServiceOrderShow({
                             />
                         </label>
                         {Object.values(edicion.errors)[0] ? (
-                            <p className="text-destructive text-[11.5px]">
+                            <p className="text-destructive-strong text-[11.5px]">
                                 {Object.values(edicion.errors)[0]}
                             </p>
                         ) : null}

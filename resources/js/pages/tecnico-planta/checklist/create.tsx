@@ -148,7 +148,7 @@ export default function ChecklistCreate({
                 {/* Equipment Master Data Header (§19.2) */}
                 <div className="bg-card space-y-2.5 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
                     <div className="flex items-center justify-between">
-                        <span className="font-mono text-base font-extrabold text-amber-600 dark:text-amber-400">
+                        <span className="text-warning-strong font-mono text-base font-extrabold">
                             {equipment.numero_serie}
                         </span>
                         <span className="text-xs font-semibold text-neutral-500">
@@ -379,7 +379,7 @@ export default function ChecklistCreate({
                                                                         .checked,
                                                                 )
                                                             }
-                                                            className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                                                            className="text-warning-strong h-4 w-4 rounded border-amber-400 focus:ring-amber-500"
                                                         />
                                                         <span>
                                                             Requiere

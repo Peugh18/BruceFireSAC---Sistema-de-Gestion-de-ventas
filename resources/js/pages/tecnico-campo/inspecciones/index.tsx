@@ -1,10 +1,11 @@
-﻿import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowRight,
     ChevronRight,
     ClipboardCheck,
     Flame,
     MapPin,
+    RotateCcw,
     Search,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -74,7 +75,7 @@ const ESTADOS_MAP: Record<
     pendiente_recojo: {
         label: 'Por Iniciar',
         bg: 'bg-amber-500/10',
-        text: 'text-amber-600 dark:text-amber-400',
+        text: 'text-warning-strong',
         border: 'border-amber-500/20',
     },
     registrado: {
@@ -98,13 +99,13 @@ const ESTADOS_MAP: Record<
     esperando_autorizacion: {
         label: 'Con Deficiencias',
         bg: 'bg-destructive/10',
-        text: 'text-destructive',
+        text: 'text-destructive-strong',
         border: 'border-destructive/20',
     },
     listo_entrega: {
         label: 'Inspeccionado',
         bg: 'bg-emerald-500/10',
-        text: 'text-emerald-600 dark:text-emerald-400',
+        text: 'text-success-strong',
         border: 'border-emerald-500/20',
     },
     cerrado: {
@@ -186,7 +187,7 @@ export default function InspeccionesIndex({
                     <span className="block text-[10px] font-bold uppercase opacity-80">
                         Por Iniciar
                     </span>
-                    <span className="text-lg font-black text-amber-600 dark:text-amber-400">
+                    <span className="text-warning-strong text-lg font-black">
                         {stats.pendientes}
                     </span>
                 </button>
@@ -216,7 +217,7 @@ export default function InspeccionesIndex({
                     <span className="block text-[10px] font-bold uppercase opacity-80">
                         Completas
                     </span>
-                    <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                    <span className="text-success-strong text-lg font-black">
                         {stats.finalizadas}
                     </span>
                 </button>
@@ -245,9 +246,26 @@ export default function InspeccionesIndex({
                             No hay inspecciones en este filtro
                         </p>
                         <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Selecciona otro estado o busca por nombre de
-                            cliente.
+                            {searchTerm || currentTab !== 'todos'
+                                ? 'No se encontraron inspecciones programadas para los filtros indicados.'
+                                : 'Aún no se han registrado órdenes de inspección técnica.'}
                         </p>
+                        {(searchTerm || currentTab !== 'todos') && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    router.get(
+                                        `/${teamSlug}/tecnico-campo/inspecciones`,
+                                        { tab: 'todos' },
+                                    );
+                                }}
+                                className="border-border bg-card text-foreground hover:bg-muted mt-3 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                            >
+                                <RotateCcw className="size-3" />
+                                <span>Ver todas las inspecciones</span>
+                            </button>
+                        )}
                     </div>
                 ) : (
                     inspecciones.data.map((order) => {
@@ -299,7 +317,7 @@ export default function InspeccionesIndex({
 
                                 <div className="border-border flex items-center justify-between border-t pt-2.5">
                                     <div className="text-foreground flex items-center gap-1.5 text-[11px] font-medium">
-                                        <Flame className="size-3.5 text-amber-600 dark:text-amber-400" />
+                                        <Flame className="text-warning-strong size-3.5" />
                                         <span>
                                             {order.equipments?.length || 0}{' '}
                                             {order.equipments?.length === 1

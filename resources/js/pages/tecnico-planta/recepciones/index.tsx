@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -10,6 +10,7 @@ import {
     ArrowRight,
     PackageOpen,
     AlertCircle,
+    RotateCcw,
 } from 'lucide-react';
 
 interface OrderItem {
@@ -148,9 +149,26 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                                 No hay órdenes en esta lista
                             </p>
                             <p className="mt-1 text-xs text-neutral-400">
-                                Las órdenes asignadas a Planta aparecerán aquí
-                                para su recepción física
+                                {search || filters.filter !== 'pendientes'
+                                    ? 'No se encontraron órdenes con los criterios aplicados.'
+                                    : 'Las órdenes asignadas a Planta aparecerán aquí para su recepción física.'}
                             </p>
+                            {(search || filters.filter !== 'pendientes') && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch('');
+                                        router.get(
+                                            `/${teamSlug}/tecnico-planta/recepciones`,
+                                            { filter: 'pendientes' },
+                                        );
+                                    }}
+                                    className="border-border bg-card text-foreground hover:bg-muted mt-3 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                                >
+                                    <RotateCcw className="size-3" />
+                                    <span>Ver órdenes pendientes</span>
+                                </button>
+                            )}
                         </div>
                     ) : (
                         orders.data.map((order) => {
@@ -191,7 +209,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
 
                                     <div className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-neutral-700/60 dark:text-neutral-400">
                                         <div className="flex items-center gap-1.5">
-                                            <QrCode className="h-3.5 w-3.5 text-amber-600" />
+                                            <QrCode className="text-warning-strong h-3.5 w-3.5" />
                                             <span>
                                                 {order.equipos_count > 0
                                                     ? `${order.equipos_count} equipo(s)`

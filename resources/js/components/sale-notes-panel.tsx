@@ -50,14 +50,14 @@ function money(value?: number | string | null) {
 
 function estadoClass(estado?: string) {
     if (estado === 'aceptado') {
-        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+        return 'bg-emerald-500/10 text-success-strong';
     }
 
     if (estado === 'pendiente') {
-        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+        return 'bg-amber-500/10 text-warning-strong';
     }
 
-    return 'bg-destructive/10 text-destructive';
+    return 'bg-destructive/10 text-destructive-strong';
 }
 
 type Props = {

@@ -167,9 +167,9 @@ export default function RecepcionesIndex({
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Recepciones de hoy
                             </span>
-                            <Calendar className="size-4 text-emerald-600 dark:text-emerald-400" />
+                            <Calendar className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <div className="text-success-strong mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.recepciones_hoy}
                         </div>
                         <div className="text-muted-foreground mt-1 text-[11.5px]">
@@ -351,12 +351,12 @@ export default function RecepcionesIndex({
                                             <td className="text-foreground px-3 py-3 text-center font-mono font-bold">
                                                 {rec.total_recibido}
                                             </td>
-                                            <td className="px-3 py-3 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                            <td className="text-success-strong px-3 py-3 text-center font-mono font-bold">
                                                 {rec.total_conforme}
                                             </td>
                                             <td className="px-3 py-3 text-center">
                                                 {rec.tiene_no_conforme ? (
-                                                    <span className="border-destructive/20 bg-destructive/10 text-primary inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold">
+                                                    <span className="border-destructive/20 bg-destructive/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold">
                                                         <AlertTriangle className="size-3" />
                                                         <span>
                                                             {
@@ -366,7 +366,7 @@ export default function RecepcionesIndex({
                                                         </span>
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                    <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold">
                                                         <CheckCircle2 className="size-3" />
                                                         <span>
                                                             100% Conforme

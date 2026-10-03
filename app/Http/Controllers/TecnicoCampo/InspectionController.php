@@ -143,6 +143,8 @@ class InspectionController extends Controller
                 'ubicacion_actual' => $validated['ubicacion_actual'] ?? 'Sede cliente',
                 'estado' => 'operativo',
                 'fecha_venta' => now(),
+                'proxima_fecha_atencion' => now()->addYear(),
+                'proxima_prueba_hidrostatica' => now()->addYears(5),
             ]);
         }
 

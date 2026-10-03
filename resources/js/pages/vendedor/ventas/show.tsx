@@ -311,7 +311,7 @@ export default function VentasShow({
                             variant="outline"
                             disabled={descartando}
                             onClick={descartarVenta}
-                            className="border-border bg-card text-destructive h-9 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-destructive-strong h-9 rounded-[9px] shadow-none"
                         >
                             <XCircle className="size-4" />
                             {sale.estado === 'borrador'
@@ -364,7 +364,7 @@ export default function VentasShow({
                             </Link>
                         </Button>
                     )}
-                    <Badge className="rounded-full border-transparent bg-emerald-500/10 px-3 py-1 text-[10.5px] font-bold text-emerald-600 capitalize dark:text-emerald-400">
+                    <Badge className="text-success-strong rounded-full border-transparent bg-emerald-500/10 px-3 py-1 text-[10.5px] font-bold capitalize dark:text-emerald-400">
                         {sale.estado ?? 'registrada'}
                     </Badge>
                     {sale.numero_nota_venta && (
@@ -413,9 +413,9 @@ export default function VentasShow({
                     >
                         <div className="flex flex-1 items-start gap-3">
                             {rechazado ? (
-                                <TriangleAlert className="text-destructive mt-0.5 size-5 shrink-0" />
+                                <TriangleAlert className="text-destructive-strong mt-0.5 size-5 shrink-0" />
                             ) : (
-                                <Clock3 className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                                <Clock3 className="text-warning-strong mt-0.5 size-5 shrink-0" />
                             )}
                             <div>
                                 <div className="text-foreground text-[13.5px] font-bold">
@@ -459,7 +459,7 @@ export default function VentasShow({
                                         variant="outline"
                                         disabled={procesando !== null}
                                         onClick={() => accion('anular')}
-                                        className="border-border bg-card text-destructive h-9 rounded-[9px] shadow-none"
+                                        className="border-border bg-card text-destructive-strong h-9 rounded-[9px] shadow-none"
                                     >
                                         <XCircle className="size-4" />
                                         Anular venta
@@ -484,7 +484,7 @@ export default function VentasShow({
                 {documento && ventaActiva && aceptado ? (
                     <Card className="flex-row flex-wrap items-center justify-between gap-3 rounded-[14px] border-emerald-500/30 bg-emerald-500/5 p-4 shadow-none">
                         <div className="flex items-start gap-3">
-                            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                            <ShieldCheck className="text-success-strong mt-0.5 size-5 shrink-0" />
                             <div>
                                 <div className="text-foreground text-[13.5px] font-bold">
                                     {documento.serie}-{documento.correlativo}{' '}
@@ -513,7 +513,7 @@ export default function VentasShow({
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
-                        <CalendarDays className="size-5 text-amber-600 dark:text-amber-400" />
+                        <CalendarDays className="text-warning-strong size-5" />
                         <div className="text-muted-foreground text-[11px] font-bold uppercase">
                             Fecha
                         </div>
@@ -531,7 +531,7 @@ export default function VentasShow({
                         </div>
                     </Card>
                     <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
-                        <Banknote className="size-5 text-emerald-600 dark:text-emerald-400" />
+                        <Banknote className="text-success-strong size-5" />
                         <div className="text-muted-foreground text-[11px] font-bold uppercase">
                             Condición
                         </div>
@@ -583,7 +583,7 @@ export default function VentasShow({
                                                 item.service?.nombre ??
                                                 '-'}
                                         </td>
-                                        <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace]">
+                                        <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
                                             {item.numero_serie ?? '-'}
                                             {puedeCambiarExtintor &&
                                             item.tipo_linea ===
@@ -605,7 +605,7 @@ export default function VentasShow({
                                                                 item.numero_serie!,
                                                         })
                                                     }
-                                                    className="text-primary ml-2 font-sans text-[11.5px] font-semibold hover:underline"
+                                                    className="text-primary-strong ml-2 font-sans text-[11.5px] font-semibold hover:underline"
                                                 >
                                                     Cambiar
                                                 </button>
@@ -690,7 +690,7 @@ export default function VentasShow({
                     <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
-                                <Award className="text-primary size-5" />
+                                <Award className="text-primary-strong size-5" />
                                 <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                                     Certificados
                                 </h2>
@@ -732,7 +732,7 @@ export default function VentasShow({
                                                 tipo: tipo.codigo,
                                             },
                                         )}
-                                        className="border-border hover:border-primary/60 hover:text-primary rounded-full border px-2.5 py-1 text-[11.5px] font-bold transition-colors"
+                                        className="border-border hover:border-primary/60 hover:text-primary-strong rounded-full border px-2.5 py-1 text-[11.5px] font-bold transition-colors"
                                     >
                                         {tipo.nombre}
                                     </Link>

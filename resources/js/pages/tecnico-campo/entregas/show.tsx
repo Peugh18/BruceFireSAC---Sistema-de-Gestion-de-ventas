@@ -93,17 +93,17 @@ const ESLABONES_MAP: Record<
     recepcion_planta: {
         label: 'Recepción en Planta',
         icon: PackageCheck,
-        color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10',
+        color: 'text-warning-strong bg-amber-500/10',
     },
     procesado_planta: {
         label: 'Taller / Recarga',
         icon: Flame,
-        color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10',
+        color: 'text-warning-strong bg-amber-500/10',
     },
     instalacion_campo: {
         label: 'Instalación en Sitio',
         icon: ShieldCheck,
-        color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10',
+        color: 'text-success-strong bg-emerald-500/10',
     },
     inspeccion_campo: {
         label: 'Inspección en Sitio',
@@ -113,7 +113,7 @@ const ESLABONES_MAP: Record<
     entrega_campo: {
         label: 'Entrega al Cliente',
         icon: UserCheck,
-        color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10',
+        color: 'text-success-strong bg-emerald-500/10',
     },
 };
 
@@ -163,7 +163,7 @@ export default function EntregaShow({
             </div>
 
             {flash?.success && (
-                <div className="mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                <div className="text-success-strong mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
                     {flash.success}
                 </div>
             )}
@@ -188,7 +188,7 @@ export default function EntregaShow({
                         className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${
                             isCerrada
                                 ? 'border-border bg-muted text-muted-foreground'
-                                : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                : 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
                         }`}
                     >
                         {order.estado.replace('_', ' ').toUpperCase()}
@@ -213,14 +213,14 @@ export default function EntregaShow({
                     {order.client.telefono && (
                         <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
-                                <Phone className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <Phone className="text-success-strong size-4 shrink-0" />
                                 <span className="text-foreground font-mono">
                                     {order.client.telefono}
                                 </span>
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -367,7 +367,7 @@ export default function EntregaShow({
             {/* Equipments Table/Cards (§23) */}
             <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
                 <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                    <Flame className="size-4 text-amber-600 dark:text-amber-400" />
+                    <Flame className="text-warning-strong size-4" />
                     Equipos Entregados ({order.equipments.length})
                 </h2>
 
@@ -391,7 +391,7 @@ export default function EntregaShow({
                                     {eq.ubicacion_actual || 'Sede cliente'}
                                 </p>
                             </div>
-                            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400">
+                            <span className="text-success-strong rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9.5px] font-bold">
                                 Conforme
                             </span>
                         </div>

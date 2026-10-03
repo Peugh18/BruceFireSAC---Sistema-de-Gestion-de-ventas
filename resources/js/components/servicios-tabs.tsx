@@ -41,7 +41,7 @@ export function ServiciosTabs({
     ];
 
     return (
-        <div className="border-border flex gap-1 border-b">
+        <div className="border-border flex flex-wrap gap-0.5 border-b sm:gap-1">
             {pestanas.map((pestana) => {
                 const Icono = pestana.icono;
                 const activo = pestana.clave === activa;
@@ -51,7 +51,7 @@ export function ServiciosTabs({
                         key={pestana.clave}
                         href={pestana.href}
                         preserveScroll
-                        className={`-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2.5 text-[13px] font-bold transition-colors ${
+                        className={`-mb-px inline-flex items-center gap-2 border-b-2 px-2.5 py-2.5 text-[13px] font-bold whitespace-nowrap transition-colors sm:px-3 ${
                             activo
                                 ? 'border-primary text-foreground'
                                 : 'text-muted-foreground hover:text-foreground border-transparent'
