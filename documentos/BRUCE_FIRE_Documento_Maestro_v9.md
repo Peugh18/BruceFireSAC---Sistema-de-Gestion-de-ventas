@@ -5017,11 +5017,11 @@ cada cosa que queremos editar".
 
 **Antes** había tres caminos distintos para corregir una venta:
 
-| Botón | Qué permitía | Dónde |
-|---|---|---|
-| Editar (borrador) | todo, con el formulario de venta | solo borradores |
-| Editar comprobante / Corregir y reemitir | solo factura↔boleta y cliente (modal) | por enviar o rechazado |
-| Corregir productos o precios | anulaba la venta y abría una copia (otro número interno) | por enviar |
+| Botón                                    | Qué permitía                                             | Dónde                  |
+| ---------------------------------------- | -------------------------------------------------------- | ---------------------- |
+| Editar (borrador)                        | todo, con el formulario de venta                         | solo borradores        |
+| Editar comprobante / Corregir y reemitir | solo factura↔boleta y cliente (modal)                    | por enviar o rechazado |
+| Corregir productos o precios             | anulaba la venta y abría una copia (otro número interno) | por enviar             |
 
 **Ahora** hay un único botón **Editar** (en el detalle y como lápiz en la
 lista) que abre el mismo formulario de venta, ya lleno, y deja cambiar
