@@ -5008,3 +5008,46 @@ directamente omitido hasta que corresponda su fase.
    que `ServiceOrderEvent::create()` ya usado en todo Planta/Campo),
    más predecible y más fácil de auditar el propio código que
    observers automáticos que capturan de más.
+
+# 87. Un solo botón «Editar» para la venta (2026-10-03)
+
+**Pedido del usuario:** "debería ser solo un botón para poder editar la
+boleta, factura o nota de venta en general; no vamos a tener un botón por
+cada cosa que queremos editar".
+
+**Antes** había tres caminos distintos para corregir una venta:
+
+| Botón | Qué permitía | Dónde |
+|---|---|---|
+| Editar (borrador) | todo, con el formulario de venta | solo borradores |
+| Editar comprobante / Corregir y reemitir | solo factura↔boleta y cliente (modal) | por enviar o rechazado |
+| Corregir productos o precios | anulaba la venta y abría una copia (otro número interno) | por enviar |
+
+**Ahora** hay un único botón **Editar** (en el detalle y como lápiz en la
+lista) que abre el mismo formulario de venta, ya lleno, y deja cambiar
+todo: cliente, tipo de comprobante, productos/extintores, precios,
+condición y medio de pago. Regla única en `Sale::sePuedeEditar()`:
+
+- **Borrador** → se edita como siempre (puede guardarse o emitirse).
+- **Nota de venta emitida** → se edita; conserva su número NV. Si pasa a
+  factura/boleta, el número NV se libera y se programa el comprobante.
+- **Factura/boleta por enviar** (SUNAT aún no la recibe) → se regenera
+  con el **mismo número**; si cambia de tipo, el número vuelve a su serie
+  y toma uno de la otra; conserva fecha y hora de envío programada.
+- **Factura/boleta rechazada** → se emite una nueva con otro número y
+  fecha de hoy (SUNAT no permite reutilizar el número).
+- **Aceptada por SUNAT** → no se edita (regla §76.5: nunca editar algo
+  que ya corrió); el lápiz de la lista lleva a la **nota de crédito**.
+- **Anulada** → no se edita; se usa «Rehacer venta».
+
+La venta conserva siempre su número interno (ya no se crea otra venta).
+Al guardar: las unidades sacadas vuelven al stock y las nuevas salen
+(Kardex limpio), el cobro al contado se recalcula manteniendo su fecha de
+caja, los equipos pasan al cliente nuevo y los certificados se corrigen
+(conservan su número con una revisión) o se anulan si ya no hay
+extintores. No se puede editar si ya hay cuotas cobradas.
+
+Código: `app/Actions/Sales/EditarVentaEmitida.php` (reemplaza a
+`CorregirComprobante` y a la ruta `corregir-productos`),
+`SaleController::edit/update`, `resources/js/pages/vendedor/ventas/`
+(`show.tsx`, `index.tsx`, `nueva.tsx`).

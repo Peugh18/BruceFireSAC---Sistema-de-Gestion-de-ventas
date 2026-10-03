@@ -20,9 +20,6 @@ import { CargaLarga } from '@/components/cargando';
 import CambiarUnidadDialog, {
     type LineaConSerie,
 } from '@/components/cambiar-unidad-dialog';
-import ComprobanteEditDialog, {
-    type ComprobanteClient,
-} from '@/components/comprobante-edit-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,6 +28,13 @@ import VendedorLayout from '@/layouts/vendedor-layout';
 import facturacion from '@/routes/vendedor/facturacion';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
+
+type ComprobanteClient = {
+    id: number;
+    tipo_documento?: string;
+    razon_social: string;
+    numero_documento: string;
+};
 
 type SaleItem = {
     id: number;
@@ -99,8 +103,7 @@ type CertificadoVenta = {
 
 type Props = {
     sale: Sale;
-    clientesVarios: ComprobanteClient;
-    limiteBoletaSinIdentificar: number;
+    editable: boolean;
     certificados: CertificadoVenta[];
     tieneEquipos: boolean;
     tiposServicio: { codigo: string; nombre: string }[];
@@ -146,8 +149,7 @@ function horaDeEnvio(value?: string | null) {
 
 export default function VentasShow({
     sale,
-    clientesVarios,
-    limiteBoletaSinIdentificar,
+    editable,
     certificados,
     tieneEquipos,
     tiposServicio,
@@ -159,15 +161,14 @@ export default function VentasShow({
             ? window.location.pathname.split('/')[1]
             : '');
     const [confirmando, setConfirmando] = useState(false);
-    const [editando, setEditando] = useState(false);
     const [lineaACambiar, setLineaACambiar] = useState<LineaConSerie | null>(
         null,
     );
     const puedeCambiarExtintor =
         sale.estado === 'borrador' || sale.estado === 'confirmada';
-    const [procesando, setProcesando] = useState<
-        'enviar' | 'anular' | 'corregir' | null
-    >(null);
+    const [procesando, setProcesando] = useState<'enviar' | 'anular' | null>(
+        null,
+    );
     const documento = (sale.electronic_documents ?? [])
         .filter((d) => d.tipo === 'factura' || d.tipo === 'boleta')
         .at(-1);
@@ -181,8 +182,13 @@ export default function VentasShow({
         documento?.sunat_estado === 'observado';
     const [abrirNotaCredito, setAbrirNotaCredito] = useState(0);
 
-    // Desde la lista, el lápiz llega con ?corregir=1: se abre directo lo que
-    // corresponde (editar si aún no se envió, nota de crédito si ya se aceptó).
+    const urlEditar = ventas.edit.url({
+        current_team: teamSlug,
+        sale: sale.id,
+    });
+
+    // Desde la lista, el lápiz de una venta ya aceptada por SUNAT llega con
+    // ?corregir=1: se abre directo la nota de crédito.
     useEffect(() => {
         if (
             typeof window === 'undefined' ||
@@ -191,19 +197,15 @@ export default function VentasShow({
             return;
         }
 
-        if (porEnviar || rechazado) {
-            setEditando(true);
-        } else if (aceptado) {
+        if (aceptado) {
             setAbrirNotaCredito((n) => n + 1);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    function accion(tipo: 'enviar' | 'anular' | 'corregir') {
+    function accion(tipo: 'enviar' | 'anular') {
         const avisos = {
             anular: 'Se anula la venta, las unidades vuelven al stock y el número del comprobante se libera. ¿Continuar?',
-            corregir:
-                'Se anula este comprobante (aún no llegó a SUNAT, el número se libera) y se abre una copia con todo lleno para que corrijas productos o precios y vuelvas a emitir. ¿Continuar?',
             enviar: null,
         };
         const aviso = avisos[tipo];
@@ -217,7 +219,6 @@ export default function VentasShow({
             {
                 enviar: ventas.enviarSunat,
                 anular: ventas.anular,
-                corregir: ventas.corregirProductos,
             }[tipo].url({
                 current_team: teamSlug,
                 sale: sale.id,
@@ -319,18 +320,13 @@ export default function VentasShow({
                                 : 'Anular nota de venta'}
                         </Button>
                     ) : null}
-                    {sale.estado === 'borrador' && (
+                    {editable && (
                         <Button
                             asChild
                             variant="outline"
                             className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
                         >
-                            <Link
-                                href={ventas.edit.url({
-                                    current_team: teamSlug,
-                                    sale: sale.id,
-                                })}
-                            >
+                            <Link href={urlEditar}>
                                 <PencilLine className="size-4" />
                                 Editar
                             </Link>
@@ -425,35 +421,14 @@ export default function VentasShow({
                                 </div>
                                 <p className="text-muted-foreground text-[12px]">
                                     {rechazado
-                                        ? documento.sunat_mensaje
-                                        : `Se envía automáticamente el ${horaDeEnvio(documento.enviar_desde)}. Hasta entonces puedes corregirlo sin nota de crédito.`}
+                                        ? `${documento.sunat_mensaje ?? ''} Corrígelo con «Editar»: se emite uno nuevo con otro número y la fecha de hoy.`
+                                        : `Se envía automáticamente el ${horaDeEnvio(documento.enviar_desde)}. Hasta entonces puedes cambiar lo que sea con «Editar», sin nota de crédito.`}
                                 </p>
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setEditando(true)}
-                                className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
-                            >
-                                <PencilLine className="size-4" />
-                                {rechazado
-                                    ? 'Corregir y reemitir'
-                                    : 'Editar comprobante'}
-                            </Button>
                             {porEnviar ? (
                                 <>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        disabled={procesando !== null}
-                                        onClick={() => accion('corregir')}
-                                        className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
-                                    >
-                                        <PencilLine className="size-4" />
-                                        Corregir productos o precios
-                                    </Button>
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -817,23 +792,6 @@ export default function VentasShow({
                     abrirNotaCredito={abrirNotaCredito}
                 />
             </div>
-
-            {documento && (porEnviar || rechazado) ? (
-                <ComprobanteEditDialog
-                    open={editando}
-                    onOpenChange={setEditando}
-                    teamSlug={teamSlug}
-                    saleId={sale.id}
-                    total={Number(sale.total ?? 0)}
-                    tipoActual={
-                        documento.tipo === 'factura' ? 'factura' : 'boleta'
-                    }
-                    clienteActual={sale.client}
-                    clientesVarios={clientesVarios}
-                    limiteBoletaSinIdentificar={limiteBoletaSinIdentificar}
-                    rechazado={rechazado}
-                />
-            ) : null}
 
             <CargaLarga
                 activo={confirmando}

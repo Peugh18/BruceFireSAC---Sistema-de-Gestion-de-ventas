@@ -79,10 +79,8 @@ Route::prefix('vendedor')
         Route::get('ventas/{sale}', [SaleController::class, 'show'])->name('ventas.show');
         Route::get('ventas/{sale}/editar', [SaleController::class, 'edit'])->name('ventas.edit');
         Route::put('ventas/{sale}', [SaleController::class, 'update'])->name('ventas.update');
-        Route::post('ventas/{sale}/corregir-productos', [SaleController::class, 'corregirProductos'])->name('ventas.corregir-productos');
         Route::get('ventas/{sale}/nota-venta-pdf', [SaleController::class, 'notaVentaPdf'])->name('ventas.nota-venta-pdf');
         Route::post('ventas/{sale}/confirmar', [SaleController::class, 'confirm'])->name('ventas.confirmar');
-        Route::put('ventas/{sale}/comprobante', [SaleController::class, 'corregirComprobante'])->name('ventas.corregir-comprobante');
         Route::post('ventas/{sale}/enviar-sunat', [SaleController::class, 'enviarSunat'])->name('ventas.enviar-sunat');
         Route::post('ventas/{sale}/anular', [SaleController::class, 'anular'])->name('ventas.anular');
         Route::post('ventas/{sale}/descartar', [SaleController::class, 'descartar'])->name('ventas.descartar');

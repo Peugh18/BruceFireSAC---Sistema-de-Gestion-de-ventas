@@ -110,6 +110,43 @@ class Sale extends Model
         return $this->comprobante_tipo === self::NOTA_VENTA;
     }
 
+    /**
+     * La factura o boleta más reciente de la venta (la vigente o la última
+     * que SUNAT rechazó), sin contar notas de crédito o débito.
+     */
+    public function comprobanteElectronico(): ?ElectronicDocument
+    {
+        return $this->electronicDocuments
+            ->whereIn('tipo', ['factura', 'boleta'])
+            ->sortBy('id')
+            ->last();
+    }
+
+    /**
+     * Si todavía se puede editar todo (cliente, comprobante, productos,
+     * precios, pago) con el mismo formulario de la venta: un borrador, una
+     * nota de venta (es interna) o una factura/boleta que SUNAT aún no recibe
+     * o que rechazó. Una aceptada solo se corrige con nota de crédito.
+     */
+    public function sePuedeEditar(): bool
+    {
+        if ($this->estado === 'borrador') {
+            return true;
+        }
+
+        if ($this->estado !== 'confirmada') {
+            return false;
+        }
+
+        if ($this->esNotaVenta()) {
+            return true;
+        }
+
+        $documento = $this->comprobanteElectronico();
+
+        return $documento !== null && ($documento->estaPorEnviar() || $documento->fueRechazado());
+    }
+
     protected function casts(): array
     {
         return [

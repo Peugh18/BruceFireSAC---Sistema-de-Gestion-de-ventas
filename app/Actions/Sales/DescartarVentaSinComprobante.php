@@ -28,7 +28,7 @@ class DescartarVentaSinComprobante
             throw ValidationException::withMessages([
                 'estado' => $sale->estado === 'anulada'
                     ? 'Esta venta ya está anulada.'
-                    : 'Solo se descarta un borrador o se anula una nota de venta. Una factura o boleta se corrige con "Editar comprobante" o con nota de crédito.',
+                    : 'Solo se descarta un borrador o se anula una nota de venta. Una factura o boleta se corrige con «Editar» o, si SUNAT ya la aceptó, con nota de crédito.',
             ]);
         }
 

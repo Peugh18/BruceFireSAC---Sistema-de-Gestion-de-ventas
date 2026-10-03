@@ -32,43 +32,38 @@ type SaleRow = {
     sunat_estado?: string | null;
     total: number | string;
     estado: string;
+    editable: boolean;
 };
 
 /**
- * Estado del comprobante en SUNAT en palabras simples, y si todavía se puede
- * editar (solo antes de enviarlo o si SUNAT lo rechazó).
+ * Estado del comprobante en SUNAT en palabras simples.
  */
 function estadoSunat(estado: string): {
     texto: string;
     clase: string;
-    editable: boolean;
 } {
     switch (estado) {
         case 'por_enviar':
             return {
                 texto: 'Por enviar · editable',
                 clase: 'text-warning-strong',
-                editable: true,
             };
         case 'aceptado':
         case 'observado':
             return {
                 texto: 'Aceptado por SUNAT',
                 clase: 'text-success-strong',
-                editable: false,
             };
         case 'rechazado':
         case 'excepcion':
             return {
                 texto: 'Rechazado · corregir',
                 clase: 'text-destructive-strong',
-                editable: true,
             };
         default:
             return {
                 texto: estado.replace('_', ' '),
                 clase: 'text-muted-foreground',
-                editable: false,
             };
     }
 }
@@ -190,7 +185,7 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
             <div className="flex flex-col gap-4">
                 <PageHeader
                     title="Ventas"
-                    description="Tus ventas con su comprobante. Los borradores se pueden editar antes de emitirse."
+                    description="Tus ventas con su comprobante. Se editan con el lápiz mientras SUNAT no las haya aceptado."
                     actions={
                         <Button
                             asChild
@@ -444,13 +439,12 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                                             <Eye className="size-3.5" />
                                                         </Link>
                                                     </Button>
-                                                    {sale.estado ===
-                                                    'borrador' ? (
+                                                    {sale.editable ? (
                                                         <Button
                                                             asChild
                                                             variant="outline"
                                                             size="icon"
-                                                            title="Editar borrador"
+                                                            title="Editar"
                                                             className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
                                                         >
                                                             <Link
@@ -465,21 +459,14 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                                                 <PencilLine className="size-3.5" />
                                                             </Link>
                                                         </Button>
-                                                    ) : null}
-                                                    {sale.estado ===
-                                                        'confirmada' &&
-                                                    sale.sunat_estado ? (
+                                                    ) : sale.estado ===
+                                                          'confirmada' &&
+                                                      sale.sunat_estado ? (
                                                         <Button
                                                             asChild
                                                             variant="outline"
                                                             size="icon"
-                                                            title={
-                                                                estadoSunat(
-                                                                    sale.sunat_estado,
-                                                                ).editable
-                                                                    ? 'Editar comprobante'
-                                                                    : 'Corregir con nota de crédito'
-                                                            }
+                                                            title="Corregir con nota de crédito"
                                                             className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
                                                         >
                                                             <Link

@@ -29,7 +29,7 @@ class IssueCreditNote
 
         if (! in_array($original->sunat_estado, ['aceptado', 'observado'], true)) {
             throw ValidationException::withMessages([
-                'electronic_document_id' => 'La nota de crédito solo se emite sobre un comprobante aceptado por SUNAT. Si aún está por enviar o fue rechazado, corrígelo con "Editar comprobante".',
+                'electronic_document_id' => 'La nota de crédito solo se emite sobre un comprobante aceptado por SUNAT. Si aún está por enviar o fue rechazado, corrígelo con «Editar» desde la venta.',
             ]);
         }
 

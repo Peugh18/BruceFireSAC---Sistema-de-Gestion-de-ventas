@@ -116,11 +116,18 @@ type QuoteOption = {
     referencia: string | null;
 };
 
-/** Venta ya existente: su borrador para editar (con id) o una copia para rehacerla (sin id). */
+/**
+ * Venta ya existente: para editarla (con id; un borrador o una ya emitida
+ * que SUNAT aún no aceptó) o una copia para rehacerla (sin id).
+ */
 type VentaPrefill = {
     id: number | null;
     service_order_id?: number;
     numero_interno: string;
+    emitida?: boolean;
+    comprobante?: string | null;
+    rechazado?: boolean;
+    fecha?: string | null;
     client: ClientOption;
     sede_id: number | null;
     destino: Destination;
@@ -245,6 +252,7 @@ export default function NuevaVenta({
     const sedeFija = sedes.length === 1 ? sedes[0] : null;
 
     const editando = venta?.id != null;
+    const editandoEmitida = editando && venta?.emitida === true;
     const clienteInicial = venta?.client ?? quote?.client ?? null;
 
     const form = useForm<SaleFormData>({
@@ -252,7 +260,7 @@ export default function NuevaVenta({
         client_id: clienteInicial?.id ?? '',
         sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
         quote_id: quote?.id ?? '',
-        fecha: today(),
+        fecha: venta?.fecha ?? today(),
         destino: venta?.destino ?? 'local_cliente',
         referencia: venta?.referencia ?? quote?.referencia ?? '',
         condicion_pago: venta?.condicion_pago ?? 'contado',
@@ -454,8 +462,9 @@ export default function NuevaVenta({
         event.preventDefault();
         // "Emitir" es el botón principal; "Guardar borrador" deja la venta sin emitir.
         const emitir =
+            editandoEmitida ||
             (event.nativeEvent as SubmitEvent).submitter?.dataset.accion !==
-            'borrador';
+                'borrador';
 
         const unidadFaltante = quote?.items
             .filter((line) => line.serializado)
@@ -570,14 +579,20 @@ export default function NuevaVenta({
                             <FileText className="text-warning-strong mt-0.5 size-5 shrink-0" />
                             <div className="text-[12.5px]">
                                 <p className="text-foreground font-bold">
-                                    {editando
-                                        ? `Editando el borrador ${venta.numero_interno}`
-                                        : `Copia de ${venta.numero_interno}`}
+                                    {editandoEmitida
+                                        ? `Editando ${venta.comprobante ?? venta.numero_interno}`
+                                        : editando
+                                          ? `Editando el borrador ${venta.numero_interno}`
+                                          : `Copia de ${venta.numero_interno}`}
                                 </p>
                                 <p className="text-muted-foreground">
-                                    {editando
-                                        ? 'Cambia lo que haga falta y emite. La venta conserva su número.'
-                                        : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
+                                    {editandoEmitida
+                                        ? venta.rechazado
+                                            ? 'SUNAT lo rechazó: corrige lo que haga falta y al guardar se emite uno nuevo con otro número y la fecha de hoy.'
+                                            : 'Cambia cliente, comprobante, productos, precios o pago. Al guardar se vuelve a generar con el mismo número (si pasas de factura a boleta o al revés, toma el número de la otra serie).'
+                                        : editando
+                                          ? 'Cambia lo que haga falta y emite. La venta conserva su número.'
+                                          : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
                                 </p>
                             </div>
                         </Card>
@@ -1304,8 +1319,9 @@ export default function NuevaVenta({
                             ) : (
                                 <FileText className="size-4" />
                             )}
-                            Emitir{' '}
-                            {NOMBRE_COMPROBANTE[form.data.comprobante_tipo]}
+                            {editandoEmitida
+                                ? 'Guardar cambios'
+                                : `Emitir ${NOMBRE_COMPROBANTE[form.data.comprobante_tipo]}`}
                         </Button>
                         {aviso ? (
                             <p
@@ -1330,20 +1346,29 @@ export default function NuevaVenta({
                                       : 'Ajusta las cuotas: su suma debe coincidir con el total.'}
                             </p>
                         ) : null}
-                        <Button
-                            type="submit"
-                            data-accion="borrador"
-                            variant="outline"
-                            disabled={form.processing}
-                            className="border-border bg-card text-foreground h-10 rounded-[9px] shadow-none"
-                        >
-                            Guardar borrador
-                        </Button>
+                        {editandoEmitida ? null : (
+                            <Button
+                                type="submit"
+                                data-accion="borrador"
+                                variant="outline"
+                                disabled={form.processing}
+                                className="border-border bg-card text-foreground h-10 rounded-[9px] shadow-none"
+                            >
+                                Guardar borrador
+                            </Button>
+                        )}
                         <Button
                             type="button"
                             variant="outline"
                             onClick={() =>
-                                router.visit(ventas.index.url(teamSlug))
+                                router.visit(
+                                    editando && venta?.id
+                                        ? ventas.show.url({
+                                              current_team: teamSlug,
+                                              sale: venta.id,
+                                          })
+                                        : ventas.index.url(teamSlug),
+                                )
                             }
                             className="border-border bg-card text-foreground/80 h-10 rounded-[9px] shadow-none"
                         >

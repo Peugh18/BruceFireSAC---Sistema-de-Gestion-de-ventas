@@ -48,15 +48,15 @@
 3. Puedes cambiar la fecha y el monto de cada cuota, agregar o quitar cuotas. La suma debe ser igual al total.
 4. Pulsa **Guardar crédito**. Las cuotas salen en la factura y en **Cobranzas**.
 
-## Comprobante "por enviar" y corregir sin nota de crédito
+## Editar una venta: un solo botón
 
-- Al confirmar, la factura o boleta queda **por enviar** 6 horas y luego se envía sola a SUNAT.
-- Mientras está por enviar, en el detalle de la venta puedes:
-    - **Editar comprobante**: cambiar factura ↔ boleta o el cliente.
-    - **Enviar ya**: mandarla a SUNAT en el momento.
-    - **Anular venta**: si hubo un error de ítems; las unidades vuelven al stock.
-- Si SUNAT la **rechaza**, usa **Corregir y reemitir**: sale un comprobante nuevo con otro número.
-- Una vez **aceptada** por SUNAT solo se corrige con **nota de crédito** (en el mismo detalle de la venta).
+- En la lista de ventas (lápiz) o en el detalle de la venta, el botón **Editar** abre el mismo formulario de la venta, ya lleno. Ahí cambias todo: cliente, factura/boleta/nota de venta, productos, extintores, precios, condición y medio de pago.
+- Sirve para un **borrador**, una **nota de venta** y una factura o boleta que SUNAT **aún no recibe** o que **rechazó**. La venta conserva su número.
+    - Por enviar: se vuelve a generar con el **mismo número** (si pasas de factura a boleta o al revés, toma el número de la otra serie).
+    - Rechazada: sale un comprobante nuevo con otro número y la fecha de hoy.
+    - Nota de venta: conserva su número NV.
+- Al confirmar, la factura o boleta queda **por enviar** 6 horas y luego se envía sola a SUNAT. Mientras tanto también puedes **Enviar ya** o **Anular venta**.
+- Una vez **aceptada** por SUNAT ya no se edita: se corrige con **nota de crédito** (el lápiz de la lista te lleva directo a ella).
 
 ## Certificados de una venta
 

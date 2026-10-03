@@ -72,7 +72,7 @@ Sistema web a medida para **Bruce Fire S.A.C.**, empresa de Trujillo (Perú) ded
 
 ## 🏗️ Arquitectura
 
-- **Acciones de dominio** (`app/Actions/*`): cada operación de negocio vive en su propia clase —`CreateSale`, `ConfirmSale`, `EmitElectronicDocument`, `CorregirComprobante`, `CreateReception`…— para mantener los controladores delgados y la lógica testeable.
+- **Acciones de dominio** (`app/Actions/*`): cada operación de negocio vive en su propia clase —`CreateSale`, `ConfirmSale`, `EmitElectronicDocument`, `EditarVentaEmitida`, `CreateReception`…— para mantener los controladores delgados y la lógica testeable.
 - **Servicios** (`app/Services/*`): integración con SUNAT, generación de PDF, cálculo de detracciones y clasificación de respuestas.
 - **Rutas por rol** (`routes/vendedor.php`, `routes/almacen.php`, `routes/gerente.php`, …) con permisos por equipo y restricción por sede.
 - **Frontend SPA sin API REST**: Inertia renderiza páginas React desde los controladores; Wayfinder genera funciones TypeScript tipadas para cada ruta.
