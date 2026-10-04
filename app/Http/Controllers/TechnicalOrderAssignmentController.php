@@ -13,8 +13,14 @@ class TechnicalOrderAssignmentController extends Controller
     {
         abort_if($service_order->tecnico_id !== null && $service_order->tecnico_id !== $request->user()->id, 404);
 
-        $expectedRole = $service_order->departamento_tecnico === 'campo' ? 'TecnicoCampo' : 'TecnicoPlanta';
-        abort_unless($request->user()->hasRole($expectedRole), 403);
+        // Una orden sin área asignada la puede tomar cualquier técnico (las
+        // dos pantallas la muestran).
+        $roles = match ($service_order->departamento_tecnico) {
+            'campo' => ['TecnicoCampo'],
+            'planta' => ['TecnicoPlanta'],
+            default => ['TecnicoCampo', 'TecnicoPlanta'],
+        };
+        abort_unless($request->user()->hasAnyRole($roles), 403);
 
         $service_order->update(['tecnico_id' => $request->user()->id]);
         $service_order->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'payload' => ['accion' => 'orden_tomada', 'mensaje' => "Orden tomada por {$request->user()->name}."]]);

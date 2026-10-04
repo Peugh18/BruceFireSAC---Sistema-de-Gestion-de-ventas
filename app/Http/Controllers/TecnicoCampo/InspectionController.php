@@ -4,13 +4,13 @@ namespace App\Http\Controllers\TecnicoCampo;
 
 use App\Actions\Certificates\IssueCertificate;
 use App\Actions\Tecnico\ProcessChecklist;
+use App\Actions\TecnicoCampo\EquipoDeLaOrden;
 use App\Http\Controllers\Controller;
 use App\Models\CertificateType;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
-use App\Services\Inventory\InventorySequenceGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -112,7 +112,7 @@ class InspectionController extends Controller
     /**
      * Registra o vincula un extintor a la inspección en campo (§24).
      */
-    public function storeEquipment(Request $request, Team $current_team, ServiceOrder $serviceOrder): RedirectResponse
+    public function storeEquipment(Request $request, Team $current_team, ServiceOrder $serviceOrder, EquipoDeLaOrden $equipoDeLaOrden): RedirectResponse
     {
         $validated = $request->validate([
             'equipment_id' => ['nullable', 'exists:equipment,id'],
@@ -125,28 +125,11 @@ class InspectionController extends Controller
             'serie_fabricante' => ['nullable', 'string', 'max:50'],
         ]);
 
-        if (! empty($validated['equipment_id'])) {
-            $equipment = Equipment::findOrFail($validated['equipment_id']);
-        } else {
-            $serial = ! empty($validated['numero_serie'])
-                ? $validated['numero_serie']
-                : app(InventorySequenceGenerator::class)->nextEquipmentSerial();
+        EquipoDeLaOrden::asegurarAbierta($serviceOrder);
 
-            $equipment = Equipment::create([
-                'client_id' => $serviceOrder->client_id,
-                'numero_serie' => $serial,
-                'tipo_agente' => $validated['tipo_agente'] ?? 'PQS',
-                'capacidad' => $validated['capacidad'] ?? '6 kg',
-                'marca' => $validated['marca'] ?? 'Genérica / Sin marca',
-                'serie_fabricante' => $validated['serie_fabricante'] ?? null,
-                'anio_fabricacion' => $validated['anio_fabricacion'] ?? null,
-                'ubicacion_actual' => $validated['ubicacion_actual'] ?? 'Sede cliente',
-                'estado' => 'operativo',
-                'fecha_venta' => now(),
-                'proxima_fecha_atencion' => now()->addYear(),
-                'proxima_prueba_hidrostatica' => now()->addYears(5),
-            ]);
-        }
+        // Uno ya registrado del mismo cliente (también por su serie) o uno
+        // nuevo sin fechas inventadas: solo se inspecciona.
+        $equipment = $equipoDeLaOrden->resolver($serviceOrder, $validated, instalado: false);
 
         if (! $serviceOrder->equipments()->where('equipment_id', $equipment->id)->exists()) {
             $serviceOrder->equipments()->attach($equipment->id, [
@@ -185,6 +168,8 @@ class InspectionController extends Controller
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+
         $processChecklist->execute($serviceOrder, $equipment, $request->user(), [
             'origen' => 'campo',
             'items' => $validated['items'],
@@ -207,8 +192,11 @@ class InspectionController extends Controller
             'observaciones_generales' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $responsable = $validated['responsable'] ?: $request->user()->name;
-        $cargo = $validated['cargo'] ?: 'Técnico de Campo';
+        // Finalizar dos veces duplicaría el certificado.
+        EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+
+        $responsable = ($validated['responsable'] ?? null) ?: $request->user()->name;
+        $cargo = ($validated['cargo'] ?? null) ?: 'Técnico de Campo';
 
         // Evento de inspección completada con eslabón de custodia (§22.4, §24, §85.6.3)
         ServiceOrderEvent::create([
@@ -239,28 +227,35 @@ class InspectionController extends Controller
         } else {
             $serviceOrder->update(['estado' => 'listo_entrega']);
 
-            // Si el cliente no tiene observaciones pendientes, auto emitir certificado si aplica
+            // El certificado solo lleva los extintores cuyo último checklist
+            // de esta orden salió conforme: un observado, descargado o sin
+            // revisar no se certifica como operativo.
+            $conformes = $serviceOrder->equipments()
+                ->where('equipment.estado', '!=', 'descargado')
+                ->get()
+                ->filter(fn (Equipment $eq) => $serviceOrder->checklists()->where('equipment_id', $eq->id)->latest('id')->value('resultado_general') === 'conforme')
+                ->values();
+
             $certType = CertificateType::where('codigo', 'operatividad_garantia')->first();
-            if ($certType) {
-                $serviceOrder->loadMissing(['client', 'equipments']);
-                $unidades = $serviceOrder->equipments->map(function (Equipment $eq) {
-                    return [
-                        'equipment_id' => $eq->id,
-                        'numero_serie' => $eq->numero_serie,
-                        'fecha_ultima_recarga' => now()->toDateString(),
-                    ];
-                })->all();
+            if ($certType && $conformes->isNotEmpty()) {
+                $serviceOrder->loadMissing('client');
 
                 app(IssueCertificate::class)->handle(
                     $certType,
                     $serviceOrder->client,
-                    $unidades,
+                    $conformes->map(fn (Equipment $eq) => [
+                        'equipment_id' => $eq->id,
+                        'numero_serie' => $eq->numero_serie,
+                    ])->all(),
                     $serviceOrder->sale_id,
-                    $serviceOrder->id
+                    $serviceOrder->id,
+                    ['tipo_atencion' => 'inspeccion'],
                 );
             }
 
-            $msg = 'Inspección finalizada con éxito y certificado de operatividad emitido.';
+            $msg = $conformes->isNotEmpty()
+                ? "Inspección finalizada y certificado de operatividad emitido para {$conformes->count()} extintor(es) conforme(s)."
+                : 'Inspección finalizada. Ningún extintor salió conforme: no se emitió certificado.';
         }
 
         return redirect()

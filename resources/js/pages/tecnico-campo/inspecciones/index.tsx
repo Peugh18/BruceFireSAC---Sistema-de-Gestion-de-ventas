@@ -16,15 +16,9 @@ import type { Team } from '@/types';
 type Customer = {
     id: number;
     razon_social: string;
-    ruc?: string;
+    numero_documento?: string;
     telefono?: string;
-    direccion?: string;
-};
-
-type Branch = {
-    id: number;
-    nombre: string;
-    direccion?: string;
+    direccion_fiscal?: string;
 };
 
 type Equipment = {
@@ -41,8 +35,7 @@ type ServiceOrder = {
     tipo_servicio?: string;
     departamento_tecnico?: string;
     fecha_programada?: string;
-    customer: Customer;
-    branch?: Branch;
+    client: Customer;
     equipments: Equipment[];
 };
 
@@ -295,11 +288,11 @@ export default function InspeccionesIndex({
                                             </span>
                                         </div>
                                         <h2 className="text-foreground mt-0.5 line-clamp-1 text-sm font-bold">
-                                            {order.customer?.razon_social}
+                                            {order.client?.razon_social}
                                         </h2>
-                                        {order.customer?.ruc && (
+                                        {order.client?.numero_documento && (
                                             <span className="text-muted-foreground font-mono text-[11px]">
-                                                RUC: {order.customer.ruc}
+                                                {order.client.numero_documento}
                                             </span>
                                         )}
                                     </div>
@@ -309,9 +302,8 @@ export default function InspeccionesIndex({
                                 <div className="text-muted-foreground mb-3 flex items-center gap-1 text-[11px]">
                                     <MapPin className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400" />
                                     <span className="line-clamp-1">
-                                        {order.branch?.direccion ||
-                                            order.customer?.direccion ||
-                                            'Dirección de sede cliente'}
+                                        {order.client?.direccion_fiscal ||
+                                            'Sin dirección registrada'}
                                     </span>
                                 </div>
 
