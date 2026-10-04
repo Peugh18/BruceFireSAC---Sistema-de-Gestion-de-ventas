@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Kardex: un registro por cada entrada/salida/ajuste/traslado de stock,
@@ -70,5 +71,33 @@ class InventoryMovement extends Model
     public function referencia(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Saldo de un producto sin serie en un almacén (suma de su Kardex). Con
+     * $bloquear se toma el saldo dentro de la transacción para que dos
+     * salidas a la vez no dejen el stock en negativo.
+     */
+    public static function saldo(int $productId, int $sedeId, bool $bloquear = false): int
+    {
+        return (int) self::query()
+            ->where('product_id', $productId)
+            ->where('sede_id', $sedeId)
+            ->when($bloquear, fn ($query) => $query->lockForUpdate())
+            ->sum('cantidad');
+    }
+
+    /**
+     * Corta una salida que dejaría el stock en negativo.
+     */
+    public static function exigirSaldo(Product $product, int $sedeId, int $cantidad, string $campo = 'cantidad'): void
+    {
+        $saldo = self::saldo($product->id, $sedeId, bloquear: true);
+
+        if ($saldo < $cantidad) {
+            throw ValidationException::withMessages([
+                $campo => "Stock insuficiente de {$product->nombre}: hay {$saldo} y se quieren sacar {$cantidad}.",
+            ]);
+        }
     }
 }

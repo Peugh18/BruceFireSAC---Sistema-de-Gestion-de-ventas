@@ -8,15 +8,14 @@ use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
-use App\Services\Inventory\InventorySequenceGenerator;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class RegisterInstallation
 {
     public function __construct(
-        protected InventorySequenceGenerator $sequenceGenerator,
-        protected IssueCertificate $issueCertificate
+        protected IssueCertificate $issueCertificate,
+        protected EquipoDeLaOrden $equipoDeLaOrden,
     ) {}
 
     /**
@@ -56,36 +55,21 @@ class RegisterInstallation
             throw new InvalidArgumentException('La instalación en campo requiere la conformidad expresa del cliente en sitio.');
         }
 
+        // Registrarla dos veces duplicaría equipos y certificados.
+        EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+
         return DB::transaction(function () use ($serviceOrder, $user, $data) {
             $equiposCreados = [];
 
             if (! empty($data['equipos']) && is_array($data['equipos'])) {
                 foreach ($data['equipos'] as $eqData) {
-                    if (! empty($eqData['equipment_id'])) {
-                        $equipment = Equipment::findOrFail($eqData['equipment_id']);
-                        $equipment->update([
-                            'ubicacion_actual' => $eqData['ubicacion_actual'] ?? $data['ubicacion_instalada'],
-                        ]);
-                    } else {
-                        $serial = ! empty($eqData['numero_serie'])
-                            ? $eqData['numero_serie']
-                            : $this->sequenceGenerator->nextEquipmentSerial();
-
-                        $equipment = Equipment::create([
-                            'client_id' => $serviceOrder->client_id,
-                            'numero_serie' => $serial,
-                            'tipo_agente' => $eqData['tipo_agente'] ?? 'PQS',
-                            'capacidad' => $eqData['capacidad'] ?? '6 kg',
-                            'marca' => $eqData['marca'] ?? 'Genérica / Bruce Fire',
-                            'serie_fabricante' => $eqData['serie_fabricante'] ?? null,
-                            'anio_fabricacion' => $eqData['anio_fabricacion'] ?? (int) date('Y'),
-                            'ubicacion_actual' => $eqData['ubicacion_actual'] ?? $data['ubicacion_instalada'],
-                            'estado' => 'operativo',
-                            'fecha_venta' => now(),
-                            'proxima_fecha_atencion' => now()->addYear(),
-                            'proxima_prueba_hidrostatica' => now()->addYears(5),
-                        ]);
-                    }
+                    // Del mismo cliente (también por su serie) o uno nuevo con su
+                    // primera recarga en un año: nunca el de otro cliente.
+                    $equipment = $this->equipoDeLaOrden->resolver($serviceOrder, [
+                        ...$eqData,
+                        'ubicacion_actual' => $eqData['ubicacion_actual'] ?? $data['ubicacion_instalada'],
+                    ], instalado: true);
+                    $equipment->update(['ubicacion_actual' => $eqData['ubicacion_actual'] ?? $data['ubicacion_instalada']]);
 
                     if (! $serviceOrder->equipments()->where('equipment_id', $equipment->id)->exists()) {
                         $serviceOrder->equipments()->attach($equipment->id, [

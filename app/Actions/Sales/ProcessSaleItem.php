@@ -231,7 +231,8 @@ class ProcessSaleItem
         $movement->product_id = $unit->product_id;
         $movement->sede_id = $unit->sede_almacen_id;
         $movement->tipo = 'salida_venta';
-        $movement->cantidad = 1;
+        // Las salidas restan, como en el resto del Kardex.
+        $movement->cantidad = -1;
         $movement->referencia_type = $sale->getMorphClass();
         $movement->referencia_id = $sale->id;
         $movement->user_id = $sale->vendedor_id;

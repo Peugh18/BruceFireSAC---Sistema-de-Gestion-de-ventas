@@ -99,7 +99,8 @@ class CambiarUnidadVendida
         $movement->product_id = $unit->product_id;
         $movement->sede_id = $unit->sede_almacen_id;
         $movement->tipo = $tipo;
-        $movement->cantidad = 1;
+        // La unidad que sale resta y la que vuelve suma.
+        $movement->cantidad = $tipo === 'salida_venta' ? -1 : 1;
         $movement->referencia_type = $sale->getMorphClass();
         $movement->referencia_id = $sale->id;
         $movement->user_id = $userId ?? $sale->vendedor_id;

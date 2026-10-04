@@ -22,9 +22,13 @@ class StockAdjustmentController extends Controller
      */
     public function index(Request $request, Team $current_team): Response
     {
+        // El almacenero ve y ajusta solo su almacén; el Gerente, todos.
+        $almacenId = $request->user()->almacenRestringidoId();
+
         $sedes = Sede::query()
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
+            ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
             ->orderBy('nombre')
             ->with('ubicacion')->get(['id', 'nombre', 'tipo', 'ubigeo']);
 
@@ -36,6 +40,7 @@ class StockAdjustmentController extends Controller
         // Unidades serializadas existentes en stock o de baja para el selector contextual
         $units = InventoryUnit::query()
             ->whereIn('estado', ['disponible', 'baja'])
+            ->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))
             ->with(['product:id,codigo,nombre', 'sedeAlmacen:id,nombre'])
             ->orderBy('numero_serie')
             ->get(['id', 'product_id', 'sede_almacen_id', 'numero_serie', 'marca', 'estado']);
@@ -43,6 +48,7 @@ class StockAdjustmentController extends Controller
         // Historial de ajustes del Kardex
         $ajustes = InventoryMovement::query()
             ->where('tipo', 'ajuste')
+            ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
             ->with([
                 'product:id,codigo,nombre,unidad_medida,serializado',
                 'sede:id,nombre',
@@ -59,11 +65,12 @@ class StockAdjustmentController extends Controller
             'products' => $products,
             'units' => $units,
             'kpis' => [
-                'total_ajustes' => InventoryMovement::where('tipo', 'ajuste')->count(),
+                'total_ajustes' => InventoryMovement::where('tipo', 'ajuste')->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))->count(),
                 'ajustes_mes' => InventoryMovement::where('tipo', 'ajuste')
+                    ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
                     ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                     ->count(),
-                'unidades_dadas_de_baja' => InventoryUnit::where('estado', 'baja')->count(),
+                'unidades_dadas_de_baja' => InventoryUnit::where('estado', 'baja')->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))->count(),
             ],
         ]);
     }

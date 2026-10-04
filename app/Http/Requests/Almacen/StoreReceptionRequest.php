@@ -56,6 +56,13 @@ class StoreReceptionRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
+                // Cada almacenero recibe mercadería en su almacén.
+                $almacenPropio = $this->user()?->almacenRestringidoId();
+                if ($almacenPropio !== null && (int) $this->input('sede_almacen_id') !== $almacenPropio) {
+                    $validator->errors()->add('sede_almacen_id', 'Solo puedes registrar recepciones en tu almacén.');
+                }
+            },
+            function (Validator $validator): void {
                 $items = $this->input('items', []);
                 if (! is_array($items)) {
                     return;

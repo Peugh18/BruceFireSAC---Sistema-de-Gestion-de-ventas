@@ -102,7 +102,9 @@ class ExtintoresPorVencer
     {
         $registrados = Equipment::query()
             ->with('product')
-            ->whereIn('estado', ['activo', 'descargado', 'usado'])
+            // 'operativo' es el que quedó en el local del cliente tras una
+            // inspección o instalación de campo.
+            ->whereIn('estado', ['activo', 'operativo', 'descargado', 'usado'])
             ->get()
             ->map(function (Equipment $equipo) use ($today): array {
                 $descargado = in_array($equipo->estado, ['descargado', 'usado'], true);

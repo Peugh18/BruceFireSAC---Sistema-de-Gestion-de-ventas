@@ -103,8 +103,8 @@ class StockLookupController extends Controller
                                 ->sum('cantidad');
                         }
 
-                        $stockPorSede[$s->id] = max(0, $qty);
-                        $totalStock += max(0, $qty);
+                        $stockPorSede[$s->id] = $qty;
+                        $totalStock += $qty;
                     }
 
                     $ultimosMovimientos = InventoryMovement::query()

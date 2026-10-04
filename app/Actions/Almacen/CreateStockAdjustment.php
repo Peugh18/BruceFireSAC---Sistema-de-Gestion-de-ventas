@@ -4,6 +4,7 @@ namespace App\Actions\Almacen;
 
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
+use App\Models\Product;
 use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,12 @@ class CreateStockAdjustment
             $motivo = trim((string) $data['motivo']);
             $observacion = ! empty($data['observacion']) ? trim((string) $data['observacion']) : null;
             $textoKardex = $observacion ? "{$motivo} - {$observacion}" : $motivo;
+
+            // Revalida el saldo con bloqueo: dos bajas a la vez no dejan el
+            // stock en negativo.
+            if ($tipoAjuste === 'decremento' && ! $unitId) {
+                InventoryMovement::exigirSaldo(Product::findOrFail($productId), $sedeId, $rawCantidad);
+            }
 
             $movement = InventoryMovement::create([
                 'inventory_unit_id' => $unitId,

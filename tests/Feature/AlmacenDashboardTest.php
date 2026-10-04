@@ -3,6 +3,7 @@
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\Reception;
 use App\Models\Sede;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -57,53 +58,21 @@ test('dashboard de almacen expone los KPIs de unidades disponibles por sede', fu
         ->and($porSede->firstWhere('sede_id', $sedeB->id)['unidades_disponibles'])->toBe(1);
 });
 
-test('dashboard de almacen cuenta correctamente las recepciones de hoy', function () {
+test('dashboard de almacen cuenta las recepciones de hoy, no los movimientos', function () {
     $user = almacenUserForDashboardTest();
     $sede = Sede::factory()->create(['tipo' => 'almacen']);
     $product = Product::factory()->create();
+    $recepcion = fn ($creada) => tap(Reception::create(['proveedor' => 'Proveedor SAC', 'fecha' => today(), 'sede_almacen_id' => $sede->id, 'user_id' => $user->id]))
+        ->forceFill(['created_at' => $creada])->saveQuietly();
 
-    // 2 ingresos hoy
-    $mov1 = new InventoryMovement([
-        'product_id' => $product->id,
-        'sede_id' => $sede->id,
-        'tipo' => 'ingreso',
-        'cantidad' => 10,
-        'user_id' => $user->id,
-    ]);
-    $mov1->created_at = today()->setHour(9);
-    $mov1->save();
+    // 2 recepciones hoy (aunque traigan varios productos) y 1 de ayer.
+    $recepcion(today()->setHour(9));
+    $recepcion(today()->setHour(11));
+    $recepcion(today()->subDay());
 
-    $mov2 = new InventoryMovement([
-        'product_id' => $product->id,
-        'sede_id' => $sede->id,
-        'tipo' => 'ingreso',
-        'cantidad' => 5,
-        'user_id' => $user->id,
-    ]);
-    $mov2->created_at = today()->setHour(11);
-    $mov2->save();
-
-    // 1 salida hoy (no es recepción)
-    $mov3 = new InventoryMovement([
-        'product_id' => $product->id,
-        'sede_id' => $sede->id,
-        'tipo' => 'salida_venta',
-        'cantidad' => 1,
-        'user_id' => $user->id,
-    ]);
-    $mov3->created_at = today()->setHour(12);
-    $mov3->save();
-
-    // 1 ingreso de ayer (no es de hoy)
-    $mov4 = new InventoryMovement([
-        'product_id' => $product->id,
-        'sede_id' => $sede->id,
-        'tipo' => 'ingreso',
-        'cantidad' => 20,
-        'user_id' => $user->id,
-    ]);
-    $mov4->created_at = today()->subDay();
-    $mov4->save();
+    // Una anulación de venta devuelve stock como ingreso, pero no es recepción.
+    $devolucion = new InventoryMovement(['product_id' => $product->id, 'sede_id' => $sede->id, 'tipo' => 'ingreso', 'cantidad' => 1, 'user_id' => $user->id]);
+    $devolucion->save();
 
     $response = $this->actingAs($user)
         ->get(route('almacen.dashboard', ['current_team' => $user->currentTeam]))

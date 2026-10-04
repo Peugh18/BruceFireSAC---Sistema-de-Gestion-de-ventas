@@ -109,6 +109,10 @@ class DeliveryController extends Controller
         ServiceOrder $serviceOrder,
         RenewEquipmentAttentionDate $renewEquipmentAttentionDate,
     ): RedirectResponse {
+        // Se entrega una sola vez y solo lo que ya está listo.
+        abort_unless(in_array($serviceOrder->estado, ServiceOrder::ESTADOS_LISTOS, true), 422, 'La orden todavía no está lista para entregar.');
+        abort_if($serviceOrder->events()->where('payload->accion', 'entrega_final_realizada')->exists(), 422, 'Esta orden ya se entregó.');
+
         $validated = $request->validate([
             'receptor_nombre' => ['required', 'string', 'max:150'],
             'receptor_dni' => ['nullable', 'string', 'max:20'],
@@ -116,6 +120,8 @@ class DeliveryController extends Controller
             'conformidad_aceptada' => ['required', 'accepted'],
             'cerrar_orden' => ['nullable', 'boolean'],
         ]);
+
+        $yaRenovadas = $serviceOrder->events()->where('tipo', 'trabajo_completado')->exists();
 
         // Registrar eslabón final de custodia (§22.4, §85.6.3)
         ServiceOrderEvent::create([
@@ -138,9 +144,16 @@ class DeliveryController extends Controller
         $serviceOrder->update([
             'estado' => $debeCerrar ? 'cerrado' : 'entregado',
         ]);
-        if ($debeCerrar) {
+
+        // Si el trabajo ya se registró (certificado del taller, inspección o
+        // instalación), las fechas ya quedaron como corresponden: entregar no
+        // las vuelve a mover. Un extintor descargado sigue avisando.
+        if ($debeCerrar && ! $yaRenovadas) {
             $phRealizada = $serviceOrder->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
-            $renewEquipmentAttentionDate->execute($serviceOrder->equipments()->get(), $phRealizada);
+            $renewEquipmentAttentionDate->execute(
+                $serviceOrder->equipments()->whereNotIn('equipment.estado', ['descargado', 'usado'])->get(),
+                $phRealizada,
+            );
         }
 
         $msg = $debeCerrar

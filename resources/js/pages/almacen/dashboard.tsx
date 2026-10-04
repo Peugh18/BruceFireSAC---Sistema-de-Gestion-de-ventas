@@ -354,9 +354,9 @@ export default function AlmacenDashboard({
 
                                                 <div className="flex shrink-0 items-center justify-between gap-1 text-[11.5px] sm:flex-col sm:items-end">
                                                     <span className="text-foreground font-mono font-bold">
-                                                        {mov.tipo ===
-                                                        'salida_venta'
-                                                            ? `-${mov.cantidad}`
+                                                        {Number(mov.cantidad) <
+                                                        0
+                                                            ? `${mov.cantidad}`
                                                             : `+${mov.cantidad}`}{' '}
                                                         <span className="text-muted-foreground text-[10px] font-normal">
                                                             {
