@@ -4,6 +4,7 @@ use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Sales\ConfirmSale;
 use App\Actions\Sales\CreateSale;
 use App\Models\AuditLog;
+use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\DocumentSeries;
 use App\Models\ElectronicDocument;
@@ -104,6 +105,7 @@ test('emitir un documento electrónico para una nota de venta lanza excepción',
 
 test('el vendedor registra una nota de venta desde el formulario y descarga su pdf', function () {
     $vendedor = vendedorUser();
+    CashRegister::factory()->create(['vendedor_id' => $vendedor->id]);
     $client = Client::factory()->create();
     $sede = Sede::factory()->almacen()->create();
     $product = Product::factory()->create(['precio_venta' => 100]);

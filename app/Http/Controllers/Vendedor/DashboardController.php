@@ -8,7 +8,6 @@ use App\Models\ElectronicDocument;
 use App\Models\Installment;
 use App\Models\Quote;
 use App\Models\Sale;
-use App\Models\SalePayment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Avisos\AvisosDelVendedor;
@@ -55,24 +54,20 @@ class DashboardController extends Controller
 
         $cajaHoy = null;
         if ($turnoActual !== null) {
-            // Pagos recibidos hoy durante el turno del vendedor
-            $pagosHoy = SalePayment::query()
-                ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id))
-                ->where(function ($query) use ($turnoActual) {
-                    $query->whereBetween('created_at', [$turnoActual->fecha_apertura, now()->addMinute()])
-                        ->orWhereDate('fecha', today());
-                })
-                ->get();
+            // Lo que entró en este turno (menos devoluciones), igual que el
+            // cierre de caja: solo desde la apertura, no todo el día.
+            $porForma = collect($turnoActual->movimientosPorFormaDePago());
+            $sumar = fn (array $formas) => (float) $porForma->only($formas)->sum();
 
             // Agrupación de formas de pago:
             // - efectivo: dinero en efectivo físico
             // - transferencia: transferencias bancarias y depósitos
             // - tarjeta_yape: POS, Yape, Plin y tarjetas digitales
             // - otros: cheques, notas u otras formas no clasificadas
-            $efectivo = (float) $pagosHoy->where('forma_pago', 'efectivo')->sum('monto');
-            $transferencia = (float) $pagosHoy->whereIn('forma_pago', ['transferencia', 'deposito'])->sum('monto');
-            $tarjetaYape = (float) $pagosHoy->whereIn('forma_pago', ['pos', 'yape', 'plin'])->sum('monto');
-            $otros = (float) $pagosHoy->whereNotIn('forma_pago', ['efectivo', 'transferencia', 'deposito', 'pos', 'yape', 'plin'])->sum('monto');
+            $efectivo = $sumar(['efectivo']);
+            $transferencia = $sumar(['transferencia', 'deposito']);
+            $tarjetaYape = $sumar(['pos', 'yape', 'plin']);
+            $otros = (float) $porForma->except(['efectivo', 'transferencia', 'deposito', 'pos', 'yape', 'plin'])->sum();
 
             $montoApertura = (float) $turnoActual->monto_apertura;
             $totalEsperadoCorriente = round($montoApertura + $efectivo, 2);
@@ -106,10 +101,11 @@ class DashboardController extends Controller
         // 4. Cobros pendientes / vencidos del vendedor autenticado. Abrir el
         // Inicio no cambia datos: la tarea nocturna (alerts:recompute) marca
         // las cuotas vencidas; aquí solo se muestran según su fecha.
+        // Las parciales también se deben (por su saldo); solo de ventas emitidas.
         $cobrosPendientes = Installment::query()
-            ->whereIn('estado', ['pendiente', 'vencido'])
-            ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id))
-            ->with(['sale.client'])
+            ->whereIn('estado', ['pendiente', 'parcial', 'vencido'])
+            ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id)->where('estado', 'confirmada'))
+            ->with(['sale.client', 'payments'])
             ->orderBy('fecha_vencimiento')
             ->limit(10)
             ->get()
@@ -124,9 +120,9 @@ class DashboardController extends Controller
                     'sale_id' => $inst->sale_id,
                     'sale_numero' => $inst->sale?->numero_interno,
                     'numero_cuota' => $inst->numero_cuota,
-                    'monto' => (float) $inst->monto,
+                    'monto' => max(0, round((float) $inst->monto - (float) $inst->payments->sum('monto'), 2)),
                     'fecha_vencimiento' => $fechaVenc->toDateString(),
-                    'estado' => $inst->estado === 'pendiente' && $diasVencido > 0 ? 'vencido' : $inst->estado,
+                    'estado' => $diasVencido > 0 ? 'vencido' : $inst->estado,
                     'dias_vencido' => $diasVencido,
                     'cliente' => $inst->sale?->client?->razon_social,
                     'telefono' => $inst->sale?->client?->whatsapp ?: $inst->sale?->client?->telefono,
@@ -207,7 +203,7 @@ class DashboardController extends Controller
                 ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
                 ->count(),
             'cuotas_vencidas' => Installment::query()
-                ->whereIn('estado', ['pendiente', 'vencido'])
+                ->whereIn('estado', ['pendiente', 'parcial', 'vencido'])
                 ->whereDate('fecha_vencimiento', '<', today())
                 ->whereHas('sale', fn ($query) => $query->where('vendedor_id', $vendedorId)->where('estado', 'confirmada'))
                 ->count(),

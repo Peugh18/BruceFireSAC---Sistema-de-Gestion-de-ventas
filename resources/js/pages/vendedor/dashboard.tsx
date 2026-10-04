@@ -242,12 +242,10 @@ export default function VendedorDashboard({
             detail: `${cobros_pendientes.length} cuotas mostradas · ${cuotasVencidas} vencidas`,
         },
         {
-            label: 'Efectivo esperado en caja',
-            value: caja_hoy
-                ? soles(caja_hoy.total_esperado_corriente)
-                : 'Sin turno',
+            label: 'Caja',
+            value: caja_hoy ? 'Abierta' : 'Sin turno',
             detail: caja_hoy
-                ? 'Fondo inicial más cobros en efectivo del turno'
+                ? `Fondo inicial ${soles(caja_hoy.monto_apertura)} · el esperado se ve al cerrar`
                 : 'Abre tu caja para comenzar el turno',
         },
     ];
@@ -638,9 +636,8 @@ export default function VendedorDashboard({
                                         . Fondo inicial:{' '}
                                         {soles(caja_hoy.monto_apertura)}.
                                     </p>
-                                    <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                    <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                                         {[
-                                            ['Efectivo', pagos.efectivo],
                                             [
                                                 'Transferencia',
                                                 pagos.transferencia,

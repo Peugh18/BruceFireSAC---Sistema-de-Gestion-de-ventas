@@ -167,8 +167,8 @@ test('las cotizaciones y las órdenes de servicio se acotan a la sede del trabaj
 
 test('las cobranzas del vendedor solo incluyen cuotas de ventas de su sede', function () {
     $vendedor = vendedorEnSede($this->sedeA);
-    $propia = Sale::factory()->create(['sede_id' => $this->sedeA->id, 'vendedor_id' => $vendedor->id]);
-    $ajena = Sale::factory()->create(['sede_id' => $this->sedeB->id, 'vendedor_id' => $vendedor->id]);
+    $propia = Sale::factory()->create(['estado' => 'confirmada', 'sede_id' => $this->sedeA->id, 'vendedor_id' => $vendedor->id]);
+    $ajena = Sale::factory()->create(['estado' => 'confirmada', 'sede_id' => $this->sedeB->id, 'vendedor_id' => $vendedor->id]);
     Installment::factory()->create(['sale_id' => $propia->id, 'estado' => 'pendiente']);
     Installment::factory()->create(['sale_id' => $ajena->id, 'estado' => 'pendiente']);
 

@@ -8,12 +8,28 @@ use App\Models\SalePayment;
 use App\Models\Team;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CollectionConsolidatedController extends Controller
 {
+    /** Cuotas que todavía se deben (del todo o en parte). */
+    public const DEBEN = ['pendiente', 'parcial', 'vencido'];
+
+    /**
+     * Lo que falta cobrar de las cuotas: su monto menos lo ya pagado.
+     *
+     * @param  Builder<Installment>  $cuotas
+     */
+    public static function saldo(Builder $cuotas): float
+    {
+        $ids = (clone $cuotas)->pluck('installments.id');
+
+        return round((float) (clone $cuotas)->sum('installments.monto') - (float) SalePayment::query()->whereIn('installment_id', $ids)->sum('monto'), 2);
+    }
+
     /**
      * Cartera consolidada de cobranzas cruzando todos los vendedores (§32).
      */
@@ -26,10 +42,14 @@ class CollectionConsolidatedController extends Controller
         $estado = (string) $request->input('estado', 'todos');
         $periodo = (string) $request->input('periodo', 'todos');
 
+        // Solo cuotas de ventas emitidas: un borrador o una venta anulada no
+        // es deuda del cliente.
         $query = Installment::query()
+            ->whereHas('sale', fn ($sq) => $sq->where('estado', 'confirmada'))
             ->with([
                 'sale.client:id,razon_social,numero_documento,telefono',
                 'sale.vendedor:id,name',
+                'payments' => fn ($pq) => $pq->orderBy('fecha'),
             ])
             ->when($buscar !== '', function ($q) use ($buscar) {
                 $q->whereHas('sale', function ($sq) use ($buscar) {
@@ -44,7 +64,9 @@ class CollectionConsolidatedController extends Controller
                 $q->whereHas('sale', fn ($sq) => $sq->where('vendedor_id', $vendedorId));
             })
             ->when($estado !== 'todos', fn ($q) => $q->where('estado', $estado))
-            ->when($periodo === 'vencido', fn ($q) => $q->where('estado', 'vencido'))
+            // Vencida es la que ya pasó su fecha y no se terminó de pagar,
+            // aunque tenga un pago parcial.
+            ->when($periodo === 'vencido', fn ($q) => $q->whereIn('estado', self::DEBEN)->whereDate('fecha_vencimiento', '<', $hoy))
             ->when($periodo === 'vence_semana', function ($q) use ($hoy) {
                 $q->whereIn('estado', ['pendiente', 'parcial'])
                     ->whereBetween('fecha_vencimiento', [$hoy, $hoy->copy()->endOfWeek()]);
@@ -60,11 +82,7 @@ class CollectionConsolidatedController extends Controller
                 ? (int) $fechaVenc->diffInDays($hoy)
                 : 0;
 
-            // Pagos registrados
-            $pagos = SalePayment::query()
-                ->where('installment_id', $inst->id)
-                ->orderBy('fecha')
-                ->get()
+            $pagos = $inst->payments
                 ->map(fn (SalePayment $p) => [
                     'id' => $p->id,
                     'forma_pago' => $p->forma_pago,
@@ -72,6 +90,7 @@ class CollectionConsolidatedController extends Controller
                     'numero_operacion' => $p->numero_operacion,
                     'fecha' => $p->fecha?->toDateString(),
                 ])
+                ->values()
                 ->all();
 
             $totalPagado = array_sum(array_column($pagos, 'monto'));
@@ -102,27 +121,24 @@ class CollectionConsolidatedController extends Controller
             ];
         });
 
-        // KPIs consolidados (§32)
-        $totalPorCobrar = (float) Installment::query()
-            ->whereIn('estado', ['pendiente', 'parcial', 'vencido'])
-            ->sum('monto');
+        // KPIs consolidados (§32): por el saldo que falta cobrar, no por el
+        // monto original de la cuota (las parciales ya tienen algo pagado).
+        $deuda = fn () => Installment::query()
+            ->whereIn('installments.estado', self::DEBEN)
+            ->whereHas('sale', fn ($sq) => $sq->where('estado', 'confirmada'));
 
-        $vencidoTotal = (float) Installment::query()
-            ->where('estado', 'vencido')
-            ->sum('monto');
-
-        $venceEstaSemana = (float) Installment::query()
-            ->whereIn('estado', ['pendiente', 'parcial'])
-            ->whereBetween('fecha_vencimiento', [$hoy, $hoy->copy()->endOfWeek()])
-            ->sum('monto');
+        $totalPorCobrar = self::saldo($deuda());
+        $vencidoTotal = self::saldo($deuda()->whereDate('fecha_vencimiento', '<', $hoy));
+        $venceEstaSemana = self::saldo($deuda()->whereBetween('fecha_vencimiento', [$hoy, $hoy->copy()->endOfWeek()]));
 
         $cobradoEsteMes = (float) SalePayment::query()
             ->whereBetween('fecha', [now()->startOfMonth(), now()->endOfMonth()])
             ->sum('monto');
 
         $clientesConDeuda = Installment::query()
-            ->whereIn('installments.estado', ['pendiente', 'parcial', 'vencido'])
+            ->whereIn('installments.estado', self::DEBEN)
             ->join('sales', 'sales.id', '=', 'installments.sale_id')
+            ->where('sales.estado', 'confirmada')
             ->distinct('sales.client_id')
             ->count('sales.client_id');
 

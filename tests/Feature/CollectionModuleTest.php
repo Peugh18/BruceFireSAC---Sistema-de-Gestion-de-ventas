@@ -23,7 +23,8 @@ if (! function_exists('vendedorUser')) {
 
 test('registerPayment marca el installment como parcial cuando el pago es menor y pagado cuando cubre el total', function () {
     $user = vendedorUser();
-    $sale = Sale::factory()->create(['vendedor_id' => $user->id]);
+    CashRegister::factory()->create(['vendedor_id' => $user->id]);
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $user->id]);
 
     $installment = Installment::factory()->create([
         'sale_id' => $sale->id,
@@ -78,7 +79,7 @@ test('registerPayment marca el installment como parcial cuando el pago es menor 
 
 test('la tarea nocturna marca como vencidas las cuotas atrasadas y abrir cobranzas no cambia datos', function () {
     $user = vendedorUser();
-    $sale = Sale::factory()->create(['vendedor_id' => $user->id]);
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $user->id]);
 
     $installmentVencido = Installment::factory()->create([
         'sale_id' => $sale->id,
@@ -119,7 +120,7 @@ test('la tarea nocturna marca como vencidas las cuotas atrasadas y abrir cobranz
 
 test('cobranzas y caja muestran a la vez el turno abierto y las cuotas pendientes', function () {
     $user = vendedorUser();
-    $sale = Sale::factory()->create(['vendedor_id' => $user->id]);
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $user->id]);
     Installment::factory()->create(['sale_id' => $sale->id, 'monto' => 240, 'estado' => 'pendiente', 'fecha_vencimiento' => now()->addMonth()]);
     CashRegister::factory()->create(['vendedor_id' => $user->id, 'estado' => 'abierto', 'monto_apertura' => 100]);
 
@@ -131,4 +132,34 @@ test('cobranzas y caja muestran a la vez el turno abierto y las cuotas pendiente
                 ->where('turno_actual.estado', 'abierto')
                 ->has('installments.data', 1));
     }
+});
+
+test('las cuotas de un borrador o de una venta anulada no aparecen ni se cobran', function () {
+    $user = vendedorUser();
+    $team = ['current_team' => $user->currentTeam];
+
+    foreach (['borrador' => 'borrador', 'anulada' => 'anulada'] as $estado) {
+        $sale = Sale::factory()->create(['estado' => $estado, 'vendedor_id' => $user->id]);
+        $cuota = Installment::factory()->create(['sale_id' => $sale->id, 'monto' => 50, 'estado' => 'parcial', 'fecha_vencimiento' => now()->subDay()]);
+
+        $this->actingAs($user)
+            ->post(route('vendedor.cobranzas.pagar', [...$team, 'installment' => $cuota]), ['monto' => 10, 'forma_pago' => 'yape', 'numero_operacion' => '123'])
+            ->assertSessionHasErrors('monto');
+    }
+
+    $this->actingAs($user)
+        ->get(route('vendedor.cobranzas.index', $team))
+        ->assertInertia(fn (AssertableInertia $page) => $page->has('installments.data', 0));
+});
+
+test('sin caja abierta no se cobra una cuota en efectivo pero si por transferencia', function () {
+    $user = vendedorUser();
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $user->id]);
+    $cuota = Installment::factory()->create(['sale_id' => $sale->id, 'monto' => 50, 'estado' => 'pendiente', 'fecha_vencimiento' => now()->addDays(5)]);
+    $pagar = fn (array $datos) => $this->actingAs($user)->post(route('vendedor.cobranzas.pagar', ['current_team' => $user->currentTeam, 'installment' => $cuota]), $datos);
+
+    $pagar(['monto' => 20, 'forma_pago' => 'efectivo'])->assertSessionHasErrors('forma_pago');
+    $pagar(['monto' => 20, 'forma_pago' => 'transferencia', 'numero_operacion' => '998877'])->assertSessionHasNoErrors();
+
+    expect($cuota->fresh()->estado)->toBe('parcial');
 });

@@ -6,6 +6,7 @@ use App\Actions\Sales\ConfirmSale;
 use App\Actions\Sales\CreateSale;
 use App\Actions\Sales\EditarVentaEmitida;
 use App\Contracts\SunatClientInterface;
+use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
@@ -99,6 +100,11 @@ function editarVenta(Sale $sale, array $cambios = [], ?array $items = null): Sal
 {
     $sale->load('items.inventoryUnit');
 
+    // Al contado en efectivo se cobra con la caja abierta.
+    if (! CashRegister::abiertaDe((int) $sale->vendedor_id)) {
+        CashRegister::factory()->create(['vendedor_id' => $sale->vendedor_id]);
+    }
+
     return app(EditarVentaEmitida::class)->handle($sale, [
         'client_id' => $sale->client_id,
         'sede_id' => $sale->sede_id,
@@ -175,6 +181,7 @@ test('enviar ya manda el comprobante a SUNAT sin esperar la ventana', function (
 
 test('pasar una factura por enviar a boleta libera su numero para la siguiente factura', function () {
     $user = vendedorUser();
+    CashRegister::factory()->create(['vendedor_id' => $user->id]);
     $equivocada = ventaConfirmada(Client::factory()->create(), vendedor: $user);
     ventaConfirmada(Client::factory()->create(), vendedor: $user);
     $clienteDni = Client::factory()->dni()->create();

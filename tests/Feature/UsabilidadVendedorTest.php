@@ -76,6 +76,7 @@ test('el dashboard incluye el telefono del cliente en cobros_pendientes para wha
     ]);
 
     $sale = Sale::factory()->create([
+        'estado' => 'confirmada',
         'vendedor_id' => $user->id,
         'client_id' => $client->id,
         'sede_id' => $sede->id,

@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Sales\DescartarVentaSinComprobante;
+use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
@@ -18,6 +19,8 @@ beforeEach(function () {
     $this->product = Product::factory()->create(['precio_venta' => 100]);
     $this->vendedor = User::factory()->create();
     $this->vendedor->assignRole('Vendedor');
+    // Las ventas al contado en efectivo se cobran con la caja abierta.
+    CashRegister::factory()->create(['vendedor_id' => $this->vendedor->id]);
     $this->team = ['current_team' => $this->vendedor->currentTeam];
 });
 

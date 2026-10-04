@@ -5,9 +5,11 @@ namespace App\Actions\Sales;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\ReserveNextCorrelativo;
 use App\Actions\Certificates\EmitirCertificadosDeVenta;
+use App\Models\CashRegister;
 use App\Models\Certificate;
 use App\Models\ElectronicDocument;
 use App\Models\Sale;
+use App\Models\SalePayment;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -67,10 +69,23 @@ class EditarVentaEmitida
                 'equipos' => $sale->items->pluck('equipment_id')->filter()->sort()->values()->all(),
             ];
 
-            // Se deshace lo que hizo la emisión (el cobro al contado) y la
-            // venta vuelve a llenarse como un borrador; la fecha no cambia.
-            $fechaCobro = $sale->payments()->whereNull('installment_id')->oldest('id')->value('fecha');
-            $sale->payments()->whereNull('installment_id')->delete();
+            // El cobro al contado: si se hizo en el turno que sigue abierto se
+            // rehace igual que al emitir; si es de un turno anterior se deja
+            // donde está y solo se registra hoy la diferencia (lo que el
+            // cliente paga de más o se le devuelve), así ningún arqueo
+            // descuadra.
+            $pagosAntes = $sale->payments()->whereNull('installment_id')->get();
+            $turno = CashRegister::abiertaDe((int) $sale->vendedor_id);
+            $rehacerCobro = $pagosAntes->isEmpty() || ($turno !== null && $pagosAntes->every(
+                fn (SalePayment $pago) => $pago->created_at !== null && $pago->created_at->gte($turno->fecha_apertura),
+            ));
+            $fechaCobro = $pagosAntes->sortBy('id')->first()?->fecha;
+
+            if ($rehacerCobro) {
+                $sale->payments()->whereNull('installment_id')->delete();
+            }
+
+            // La venta vuelve a llenarse como un borrador; la fecha no cambia.
             $sale->update(['estado' => 'borrador']);
 
             $sale = $this->createSale->actualizar(
@@ -88,11 +103,21 @@ class EditarVentaEmitida
 
             $this->emitirDeNuevo($sale, $documento, $antes['comprobante_tipo']);
             $this->actualizarCertificados($sale->refresh()->load('items'), $antes, $userId);
-            $this->confirmSale->registrarCobroAlContado($sale);
+            if ($rehacerCobro) {
+                $this->confirmSale->registrarCobroAlContado($sale);
 
-            // El cobro sigue en la caja del día en que se hizo.
-            if ($fechaCobro) {
-                $sale->payments()->whereNull('installment_id')->update(['fecha' => $fechaCobro]);
+                // El cobro sigue con la fecha del día en que se hizo.
+                if ($fechaCobro) {
+                    $sale->payments()->whereNull('installment_id')->update(['fecha' => $fechaCobro]);
+                }
+            } else {
+                $diferencias = $this->confirmSale->cobrosAlContado($sale);
+
+                foreach ($pagosAntes as $pago) {
+                    $diferencias[$pago->forma_pago] = round(($diferencias[$pago->forma_pago] ?? 0) - (float) $pago->monto, 2);
+                }
+
+                $this->confirmSale->registrarCobros($sale, $diferencias, 'Ajuste por edición de la venta');
             }
 
             $sale->refresh()->load('electronicDocuments');

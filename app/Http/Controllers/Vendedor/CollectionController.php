@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cobranzas\StoreCollectionPaymentRequest;
+use App\Models\CashRegister;
 use App\Models\Installment;
 use App\Models\SalePayment;
 use App\Models\Team;
@@ -21,7 +22,6 @@ class CollectionController extends Controller
 {
     /**
      * Lista de cuotas pendientes, parciales o vencidas para el vendedor autenticado.
-     * Actualiza automáticamente a 'vencido' las cuotas cuya fecha de vencimiento sea anterior a hoy.
      */
     public function index(Team $current_team, Request $request): Response
     {
@@ -33,8 +33,8 @@ class CollectionController extends Controller
     }
 
     /**
-     * Cuotas pendientes, parciales o vencidas de las ventas del vendedor (y las
-     * pagadas hoy). Pasa a 'vencido' las cuotas cuya fecha ya quedó atrás.
+     * Cuotas pendientes, parciales o vencidas de las ventas emitidas del
+     * vendedor (y las pagadas hoy).
      *
      * @return array<string, mixed>
      */
@@ -46,7 +46,9 @@ class CollectionController extends Controller
                 $query->whereIn('estado', ['pendiente', 'parcial', 'vencido'])
                     ->orWhereHas('payments', fn ($payments) => $payments->whereDate('fecha', today()));
             })
+            // Solo ventas emitidas: un borrador o una venta anulada no se cobra.
             ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id)
+                ->where('estado', 'confirmada')
                 ->when($user->sedeRestringidaId(), fn ($sq, $sedeId) => $sq->where('sede_id', $sedeId)))
             ->with(['sale.client', 'payments' => fn ($query) => $query->latest('id')])
             ->orderBy('fecha_vencimiento')
@@ -92,6 +94,18 @@ class CollectionController extends Controller
         StoreCollectionPaymentRequest $request
     ): RedirectResponse {
         $this->assertInstallmentAccess($request, $installment);
+
+        if ($installment->sale->estado !== 'confirmada') {
+            throw ValidationException::withMessages([
+                'monto' => $installment->sale->estado === 'anulada'
+                    ? 'Esta venta está anulada: su cuota ya no se cobra.'
+                    : 'Esta venta todavía es un borrador: emítela antes de cobrar sus cuotas.',
+            ]);
+        }
+
+        if ($request->validated('forma_pago') === 'efectivo') {
+            CashRegister::exigirAbiertaParaEfectivo((int) $installment->sale->vendedor_id, 'forma_pago');
+        }
 
         DB::transaction(function () use ($installment, $request): void {
             $installment = Installment::query()->lockForUpdate()->findOrFail($installment->id);

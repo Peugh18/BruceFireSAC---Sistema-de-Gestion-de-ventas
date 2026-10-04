@@ -29,6 +29,7 @@ test('gerente puede consultar la cartera consolidada de cobranzas con kpis', fun
     $client = Client::factory()->create(['razon_social' => 'EMPRESA CLIENTE S.A.']);
 
     $sale = Sale::factory()->create([
+        'estado' => 'confirmada',
         'client_id' => $client->id,
         'vendedor_id' => $vendedor->id,
         'total' => 1000.00,
@@ -75,7 +76,7 @@ test('vendedor no puede acceder al panel consolidado de cobranzas de gerente', f
 
 test('la tarea nocturna marca las cuotas vencidas y el filtro las muestra', function () {
     $gerente = createGerenteUserForCollectionTest();
-    $sale = Sale::factory()->create();
+    $sale = Sale::factory()->create(['estado' => 'confirmada']);
 
     // Cuota vencida
     $vencida = Installment::factory()->create([

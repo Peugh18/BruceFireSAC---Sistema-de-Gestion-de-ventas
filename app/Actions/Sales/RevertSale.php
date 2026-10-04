@@ -6,6 +6,7 @@ use App\Models\Certificate;
 use App\Models\InventoryMovement;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SaleRefund;
 use App\Services\AuditLogger;
 
 class RevertSale
@@ -61,12 +62,29 @@ class RevertSale
 
         $sale->installments()->whereIn('estado', ['pendiente', 'vencido'])->delete();
 
-        // El cobro al contado se devuelve con la venta: sale de la caja.
+        // El cobro al contado se devuelve con la venta: se registra hoy como
+        // una devolución, así sale de la caja del turno en que se entrega el
+        // dinero y el arqueo del turno original no cambia.
         $cobroDevuelto = 0.0;
 
         if (! $sale->esCredito()) {
-            $cobroDevuelto = (float) $sale->payments()->whereNull('installment_id')->sum('monto');
-            $sale->payments()->whereNull('installment_id')->delete();
+            $devoluciones = $sale->payments()->whereNull('installment_id')->get()
+                ->groupBy('forma_pago')
+                ->map(fn ($pagos) => round((float) $pagos->sum('monto'), 2))
+                ->filter(fn (float $monto) => $monto > 0);
+
+            foreach ($devoluciones as $forma => $monto) {
+                SaleRefund::create([
+                    'sale_id' => $sale->id,
+                    'forma_pago' => $forma,
+                    'monto' => $monto,
+                    'motivo' => "Anulación de la venta {$motivo}",
+                    'user_id' => auth()->id(),
+                    'fecha' => today(),
+                ]);
+            }
+
+            $cobroDevuelto = round((float) $devoluciones->sum(), 2);
         }
 
         $sale->update(['estado' => 'anulada']);
