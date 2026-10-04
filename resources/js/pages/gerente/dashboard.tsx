@@ -509,7 +509,8 @@ export default function GerenteDashboard({
                                     Top Productos / Servicios por Venta
                                 </h2>
                                 <p className="text-muted-foreground text-xs">
-                                    Ítems con mayor facturación en ventas
+                                    Ítems con mayor facturación · últimos 12
+                                    meses
                                 </p>
                             </div>
                             <Award className="text-muted-foreground size-5" />
@@ -609,7 +610,7 @@ export default function GerenteDashboard({
                                     Top 5 Clientes en Facturación
                                 </h2>
                                 <p className="text-muted-foreground text-xs">
-                                    Clientes con mayor volumen acumulado
+                                    Mayor facturación · últimos 12 meses
                                 </p>
                             </div>
                             <Users className="text-muted-foreground size-5" />

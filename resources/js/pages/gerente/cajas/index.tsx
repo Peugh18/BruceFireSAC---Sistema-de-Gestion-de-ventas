@@ -59,7 +59,8 @@ type CashFilters = {
 type CashKpis = {
     turnosHoy: number;
     turnosAbiertos: number;
-    totalDiferenciasMes: number;
+    faltantesMes: number;
+    sobrantesMes: number;
     turnosConDescuadreMes: number;
 };
 
@@ -187,23 +188,23 @@ export default function CajasConsolidadasIndex() {
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
                         <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
-                                Diferencia Neta Acumulada
+                                Faltantes de caja
                             </span>
                             <TrendingDown className="text-primary-strong size-4" />
                         </div>
                         <div
                             className={`mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold ${
-                                kpis.totalDiferenciasMes < 0
+                                kpis.faltantesMes > 0
                                     ? 'text-primary-strong'
-                                    : kpis.totalDiferenciasMes > 0
-                                      ? 'text-warning-strong'
-                                      : 'text-emerald-700'
+                                    : 'text-emerald-700'
                             }`}
                         >
-                            {formatCurrency(kpis.totalDiferenciasMes)}
+                            {formatCurrency(kpis.faltantesMes)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Balance neto en el mes actual
+                            Faltantes del mes · sobrantes{' '}
+                            {formatCurrency(kpis.sobrantesMes)} (no se
+                            compensan)
                         </p>
                     </div>
                 </div>

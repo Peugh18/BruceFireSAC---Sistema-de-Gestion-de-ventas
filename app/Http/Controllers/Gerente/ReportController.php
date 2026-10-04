@@ -11,6 +11,7 @@ use App\Models\Sede;
 use App\Models\Team;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
@@ -98,11 +99,16 @@ class ReportController extends Controller
         $fechaHastaInput = $request->input('fecha_hasta', today()->toDateString());
         $vendedorId = $request->input('vendedor_id');
 
-        $fechaDesde = Carbon::parse($fechaDesdeInput)->startOfDay();
-        $fechaHasta = Carbon::parse($fechaHastaInput)->endOfDay();
+        // Una fecha mal escrita en la dirección no rompe el reporte: se usa
+        // el mes en curso.
+        $fecha = fn (mixed $valor, CarbonInterface $porDefecto): CarbonInterface => is_string($valor) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor) === 1 && checkdate((int) substr($valor, 5, 2), (int) substr($valor, 8, 2), (int) substr($valor, 0, 4))
+            ? Carbon::createFromFormat('Y-m-d', $valor)
+            : $porDefecto;
+        $fechaDesde = $fecha($fechaDesdeInput, now()->startOfMonth())->startOfDay();
+        $fechaHasta = $fecha($fechaHastaInput, today())->endOfDay();
 
         $salesQuery = Sale::query()
-            ->where('estado', '!=', 'anulada')
+            ->where('estado', 'confirmada')
             ->whereBetween('fecha', [$fechaDesde, $fechaHasta])
             ->when($vendedorId, fn ($q) => $q->where('vendedor_id', $vendedorId));
 
@@ -111,7 +117,9 @@ class ReportController extends Controller
         $ticketPromedio = $cantidadVentas > 0 ? round($totalVentas / $cantidadVentas, 2) : 0.0;
 
         // Tasa de conversión de cotizaciones en el período
+        // Las cotizaciones en borrador o anuladas no se ofrecieron al cliente.
         $quotesQuery = Quote::query()->whereBetween('fecha', [$fechaDesde, $fechaHasta])
+            ->whereNotIn('estado', ['borrador', 'anulada'])
             ->when($vendedorId, fn ($q) => $q->where('vendedor_id', $vendedorId));
         $totalCotizaciones = (int) $quotesQuery->count();
         $cotizacionesGanadas = (int) (clone $quotesQuery)->whereIn('estado', ['convertida', 'aceptada'])->count();
@@ -119,7 +127,7 @@ class ReportController extends Controller
 
         // Desglose por Vendedor
         $porVendedor = Sale::query()
-            ->where('sales.estado', '!=', 'anulada')
+            ->where('sales.estado', 'confirmada')
             ->whereBetween('sales.fecha', [$fechaDesde, $fechaHasta])
             ->when($vendedorId, fn ($q) => $q->where('sales.vendedor_id', $vendedorId))
             ->join('users', 'users.id', '=', 'sales.vendedor_id')
@@ -136,7 +144,7 @@ class ReportController extends Controller
 
         // Top Clientes
         $topClientes = Sale::query()
-            ->where('sales.estado', '!=', 'anulada')
+            ->where('sales.estado', 'confirmada')
             ->whereBetween('sales.fecha', [$fechaDesde, $fechaHasta])
             ->when($vendedorId, fn ($q) => $q->where('sales.vendedor_id', $vendedorId))
             ->join('clients', 'clients.id', '=', 'sales.client_id')
@@ -156,7 +164,7 @@ class ReportController extends Controller
         $topItems = SaleItem::query()
             ->with(['product:id,nombre', 'service:id,nombre'])
             ->whereHas('sale', function ($q) use ($fechaDesde, $fechaHasta, $vendedorId) {
-                $q->where('estado', '!=', 'anulada')
+                $q->where('estado', 'confirmada')
                     ->whereBetween('fecha', [$fechaDesde, $fechaHasta])
                     ->when($vendedorId, fn ($sq) => $sq->where('vendedor_id', $vendedorId));
             })
@@ -196,23 +204,23 @@ class ReportController extends Controller
         $soloBajoMinimo = $request->boolean('solo_bajo_minimo', false);
 
         $sedeNombre = 'Todas las sedes';
+        $almacenes = null;
         if ($sedeId) {
-            $sede = Sede::find($sedeId);
+            $sede = Sede::query()->find((int) $sedeId);
             if ($sede) {
                 $sedeNombre = $sede->nombre;
+                // Una tienda vende del stock de su almacén.
+                $almacenes = [$sede->almacenEfectivoId()];
             }
         }
 
         $productsQuery = Product::query()
             ->where('activo', true)
-            ->withCount(['units as stock_disponible' => function ($q) use ($sedeId) {
-                $q->where('estado', 'disponible')
-                    ->when($sedeId, fn ($sq) => $sq->where('sede_id', $sedeId));
-            }])
+            ->conStock($almacenes)
             ->orderBy('nombre');
 
         $allProducts = $productsQuery->get()->map(function (Product $p) {
-            $disponible = (int) $p->stock_disponible;
+            $disponible = $p->stockDisponible();
             $minimo = $p->stock_minimo !== null ? (int) $p->stock_minimo : null;
             $bajoMinimo = $minimo !== null && $minimo > 0 && $disponible <= $minimo;
             $valorizacion = round($disponible * (float) $p->precio_venta, 2);
