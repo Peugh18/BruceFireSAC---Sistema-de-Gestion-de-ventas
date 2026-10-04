@@ -4,8 +4,11 @@ namespace App\Actions\Sales;
 
 use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Models\Client;
+use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Sale;
+use App\Models\Service;
+use App\Models\Vehicle;
 use App\Services\AuditLogger;
 use App\Services\Billing\PrecioConIgv;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +38,9 @@ class CreateSale
             }, $items);
 
             ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totales(array_column($lineas, 'subtotal'));
+
+            $this->validarVehiculo($data);
+            $this->validarCatalogoActivo($lineas);
 
             $this->validarComprobanteCliente->handle(
                 Client::query()->findOrFail($data['client_id']),
@@ -106,6 +112,8 @@ class CreateSale
                 (string) ($data['comprobante_tipo'] ?? ''),
                 $total,
             );
+
+            $this->validarVehiculo($data);
 
             $this->liberarBorrador->handle($sale);
 
@@ -189,5 +197,48 @@ class CreateSale
         }
 
         app(TransitionQuoteState::class)->convertToSale($quote);
+    }
+
+    /**
+     * La placa de la venta debe ser de un vehículo del mismo cliente.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function validarVehiculo(array $data): void
+    {
+        if (empty($data['vehicle_id'])) {
+            return;
+        }
+
+        $delCliente = Vehicle::query()
+            ->whereKey((int) $data['vehicle_id'])
+            ->where('client_id', (int) $data['client_id'])
+            ->exists();
+
+        if (! $delCliente) {
+            throw ValidationException::withMessages([
+                'vehicle_id' => 'El vehículo elegido no es de este cliente.',
+            ]);
+        }
+    }
+
+    /**
+     * Una venta nueva no lleva productos ni servicios dados de baja.
+     *
+     * @param  list<array<string, mixed>>  $lineas
+     */
+    protected function validarCatalogoActivo(array $lineas): void
+    {
+        $productos = array_filter(array_map(fn (array $linea) => $linea['product_id'] ?? null, $lineas));
+        $servicios = array_filter(array_map(fn (array $linea) => $linea['service_id'] ?? null, $lineas));
+
+        $inactivo = Product::query()->whereKey($productos)->where('activo', false)->value('nombre')
+            ?? Service::query()->whereKey($servicios)->where('activo', false)->value('nombre');
+
+        if ($inactivo !== null) {
+            throw ValidationException::withMessages([
+                'items' => "{$inactivo} está dado de baja: ya no se vende.",
+            ]);
+        }
     }
 }

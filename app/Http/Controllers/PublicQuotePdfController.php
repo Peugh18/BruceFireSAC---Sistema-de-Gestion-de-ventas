@@ -14,6 +14,9 @@ class PublicQuotePdfController extends Controller
 {
     public function __invoke(Quote $quote, QuotePdfService $pdf): Response
     {
+        // Una cotización anulada ya no se ofrece al cliente.
+        abort_if($quote->estado === 'anulada', 410, 'Esta cotización fue anulada. Pide una nueva a tu asesor.');
+
         return $pdf->generate($quote)->stream($pdf->nombreArchivo($quote));
     }
 }

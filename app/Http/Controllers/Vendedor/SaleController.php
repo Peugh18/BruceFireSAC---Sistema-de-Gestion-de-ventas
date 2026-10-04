@@ -491,6 +491,7 @@ class SaleController extends Controller
     public function anular(Team $current_team, Sale $sale, Request $request, AnularVentaPorEnviar $anularVentaPorEnviar): RedirectResponse
     {
         $this->assertSedeAccess($request, $sale);
+        $this->exigirCajaParaDevolverEfectivo($sale);
 
         $anularVentaPorEnviar->handle($sale);
 
@@ -523,6 +524,7 @@ class SaleController extends Controller
         $this->assertSedeAccess($request, $sale);
 
         $esBorrador = $sale->estado === 'borrador';
+        $this->exigirCajaParaDevolverEfectivo($sale);
         $descartar->handle($sale);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => $esBorrador
@@ -530,6 +532,22 @@ class SaleController extends Controller
             : "Nota de venta {$sale->numero_nota_venta} anulada; las unidades volvieron al stock."]);
 
         return back();
+    }
+
+    /**
+     * Anular una venta cobrada en efectivo devuelve ese dinero: sale de la
+     * caja abierta del vendedor, o no quedaría registrado en ningún arqueo.
+     */
+    protected function exigirCajaParaDevolverEfectivo(Sale $sale): void
+    {
+        $efectivo = (float) $sale->payments()->where('forma_pago', 'efectivo')->sum('monto')
+            - (float) $sale->refunds()->where('forma_pago', 'efectivo')->sum('monto');
+
+        if (round($efectivo, 2) > 0 && ! CashRegister::abiertaDe((int) $sale->vendedor_id)) {
+            throw ValidationException::withMessages([
+                'caja' => 'Esta venta se cobró en efectivo: abre la caja del vendedor para registrar la devolución y luego anúlala.',
+            ]);
+        }
     }
 
     /**

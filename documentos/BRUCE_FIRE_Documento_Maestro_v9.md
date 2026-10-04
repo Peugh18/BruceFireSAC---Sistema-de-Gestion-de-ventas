@@ -5263,3 +5263,16 @@ Se revisaron los cinco roles. Lo corregido, por parte:
 - **Marcas de agua:** factura, boleta o nota de venta anulada lleva
   «ANULADO» en rojo (la huella del PDF cambia y se redibuja); un certificado
   anulado o vencido lleva «ANULADO» o «VENCIDO».
+
+## 90.2 Ronda 2: catálogo, devoluciones y sedes (2026-10-04)
+
+- Una venta nueva no lleva productos ni servicios dados de baja, y su placa
+  debe ser de un vehículo del mismo cliente.
+- Al anular, se devuelve todo lo cobrado (también las cuotas pagadas de una
+  venta a crédito) menos lo ya devuelto; si hay efectivo por devolver, la
+  caja del vendedor debe estar abierta.
+- Un producto con movimientos, unidades o ventas no cambia entre «con serie»
+  y «sin serie»; cada cambio de producto (precio incluido) queda auditado.
+- No se desactiva una sede con stock; el enlace público de una cotización
+  anulada responde «anulada».
+- Consulta y Stock de Almacén buscan también por código de barras.

@@ -65,6 +65,7 @@ class StockController extends Controller
                 ->when($search !== '', function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('codigo', 'like', "%{$search}%")
+                            ->orWhere('codigo_barras', $search)
                             ->orWhere('nombre', 'like', "%{$search}%");
                     });
                 })

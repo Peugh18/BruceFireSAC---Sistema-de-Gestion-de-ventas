@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Gerente;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreSedeRequest;
 use App\Http\Requests\Gerente\UpdateSedeRequest;
+use App\Models\InventoryMovement;
+use App\Models\InventoryUnit;
 use App\Models\Sede;
 use App\Models\Team;
 use App\Models\User;
@@ -139,6 +141,11 @@ class SedeController extends Controller
                     ->with('error', 'No se puede desactivar la sede porque tiene tiendas activas que sacan stock de ella.');
             }
 
+            if ($this->tieneStock($sede)) {
+                return redirect()->back()
+                    ->with('error', 'No se puede desactivar la sede porque aún tiene stock. Trasládalo a otro almacén primero.');
+            }
+
             if ($sede->usuarios()->exists()) {
                 return redirect()->back()
                     ->with('error', 'No se puede desactivar la sede porque tiene trabajadores asignados. Reasígnelos primero.');
@@ -156,5 +163,24 @@ class SedeController extends Controller
         );
 
         return redirect()->back()->with('success', $sede->activo ? 'Sede activada exitosamente.' : 'Sede desactivada exitosamente.');
+    }
+
+    /**
+     * Unidades con serie disponibles o saldo de Kardex de productos sin serie.
+     */
+    protected function tieneStock(Sede $sede): bool
+    {
+        if (InventoryUnit::query()->where('sede_almacen_id', $sede->id)->where('estado', 'disponible')->exists()) {
+            return true;
+        }
+
+        return InventoryMovement::query()
+            ->join('products', 'products.id', '=', 'inventory_movements.product_id')
+            ->where('products.serializado', false)
+            ->where('inventory_movements.sede_id', $sede->id)
+            ->groupBy('inventory_movements.product_id')
+            ->havingRaw('SUM(inventory_movements.cantidad) > 0')
+            ->select('inventory_movements.product_id')
+            ->exists();
     }
 }
