@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\Client;
+use App\Models\ClientSite;
 use App\Models\CompanyBankAccount;
 use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
@@ -138,12 +139,16 @@ class ComprobantePdfService
             'comprobante_tipo' => 'factura',
             'condicion_pago' => 'contado',
             'medio_pago' => 'transferencia',
-            'referencia' => 'LOCAL: Sede principal',
+            'referencia' => 'SEDE: Planta principal',
             'observaciones' => 'Entrega en el local del cliente.',
             'subtotal' => $subtotal,
             'igv' => round($total - $subtotal, 2),
             'total' => $total,
         ]);
+        $client->setRelation('vehicles', new EloquentCollection);
+        $client->setRelation('sites', new EloquentCollection([
+            new ClientSite(['nombre' => 'Planta principal', 'direccion' => 'Mz. B Lote 4, Parque Industrial - Trujillo']),
+        ]));
         $sale->setRelation('client', $client);
         $sale->setRelation('items', new EloquentCollection($lineas->all()));
         $sale->setRelation('installments', new EloquentCollection);
@@ -186,7 +191,7 @@ class ComprobantePdfService
      */
     protected function datos(ElectronicDocument $document, string $xmlSigned, ?string $medioPago = null): array
     {
-        $document->loadMissing('sale.client', 'sale.vehicle', 'sale.vendedor', 'sale.items.product', 'sale.items.service', 'sale.installments');
+        $document->loadMissing('sale.client.sites', 'sale.client.vehicles', 'sale.vehicle', 'sale.vendedor', 'sale.items.product', 'sale.items.service', 'sale.installments');
         $sale = $document->sale;
         $company = CompanySetting::current();
 
