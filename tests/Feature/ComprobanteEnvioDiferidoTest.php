@@ -390,14 +390,15 @@ test('no se emite factura a un cliente sin direccion fiscal y se puede completar
     expect(comprobanteDe(ventaConfirmada($sinDireccion->fresh(), vendedor: $user))->sunat_estado)->toBe('por_enviar');
 });
 
-test('la boleta a un cliente con dni no exige direccion y no imprime un guion de relleno', function () {
+test('la boleta a un cliente con dni no exige direccion y la deja en blanco, sin el guion de relleno', function () {
     $sale = ventaConfirmada(Client::factory()->dni()->create(['direccion_fiscal' => '-']), 'boleta');
     $documento = comprobanteDe($sale);
 
     $html = app(ComprobantePdfService::class)->html($documento, (string) Storage::disk('local')->get($documento->xml_path));
 
     expect($documento->sunat_estado)->toBe('por_enviar')
-        ->and($html)->not->toContain('>Dirección<')
+        ->and($html)->toContain('>Dirección<')
+        ->and($html)->toContain('<div class="value">&nbsp;</div>')
         ->and($sale->client->direccionImprimible())->toBeNull();
 });
 

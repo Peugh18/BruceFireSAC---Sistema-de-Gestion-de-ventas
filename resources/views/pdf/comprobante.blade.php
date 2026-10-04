@@ -135,12 +135,12 @@
                     <div class="label">{{ $sale->client->tipo_documento === 'ruc' ? 'RUC' : ($sale->client->tipo_documento === 'dni' ? 'DNI' : 'Documento') }}</div>
                     <div class="value">{{ $sale->client->numero_documento }}</div>
                 </div>
-                @if($direccionCliente)
-                    <div class="field">
-                        <div class="label">{{ $sale->client->tieneRuc() ? 'Dirección fiscal' : 'Dirección' }}</div>
-                        <div class="value">{{ $direccionCliente }}</div>
-                    </div>
-                @endif
+                {{-- Siempre visible: si el cliente no tiene dirección queda en blanco
+                     para que se note y se complete en su ficha. --}}
+                <div class="field">
+                    <div class="label">{{ $sale->client->tieneRuc() ? 'Dirección fiscal' : 'Dirección' }}</div>
+                    <div class="value">{!! $direccionCliente !== null ? e($direccionCliente) : '&nbsp;' !!}</div>
+                </div>
                 @if($etiquetaReferencia)
                     <div class="field">
                         <div class="label">{{ $etiquetaReferencia }}</div>
