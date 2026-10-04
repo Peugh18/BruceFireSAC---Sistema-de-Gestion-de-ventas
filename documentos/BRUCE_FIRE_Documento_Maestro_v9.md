@@ -5151,3 +5151,33 @@ se descarta la copia compilada de la plantilla antes de dibujar y la
 descarga va con `Cache-Control: no-store` para que el navegador no
 muestre una copia guardada. `billing:redibujar-pdf` muestra la firma del
 diseño y la ruta de la plantilla para diagnosticar.
+
+# 89. Revisión del rol Vendedor: Ventas, Cotizaciones, Por vencer e Inicio (2026-10-04)
+
+Pedido del usuario: analizar lo que hay, proponer mejoras y quitar lo
+que no tiene sentido, sin romper nada. Un PR por mejora.
+
+- **Ventas:** por defecto solo las del día (hora de Lima); filtro
+  Desde/Hasta con atajos y buscador. Los recuadros suman las ventas
+  **emitidas** del vendedor en el rango (contado / crédito) y lo que
+  falta enviar a SUNAT. Se quitaron "Comprobantes" y "Registros" (eran
+  el mismo número).
+- **Cotizaciones:** si el cliente no tiene celular, el botón pasa a
+  "Agregar número": se guarda en su ficha y se abre WhatsApp con la
+  cotización. WhatsApp no permite envío automático sin la API de
+  WhatsApp Business (de pago): siempre lo confirma el vendedor.
+- **Por vencer:** solo mostraba lo vencido o lo de este mes y quedaba
+  vacío (los extintores vendidos vencen al año). Vista principal "Por
+  empresa" con todos los extintores de cada cliente y su próximo
+  vencimiento; la lista anterior queda como "Avisos por extintor".
+- **Inicio:** panel "Pendientes de hoy" (rechazados, por enviar,
+  cuotas vencidas, cotizaciones aceptadas, borradores) y "Clientes para
+  ofrecer recarga" (vencidos o próximos 3 meses).
+
+**Cosas sin sentido corregidas:**
+
+- El Inicio marcaba cuotas como vencidas cada vez que se abría (una
+  pantalla de lectura cambiaba datos); eso lo hace `alerts:recompute`.
+- "Ventas de hoy" sumaba borradores y ventas anuladas.
+- La ficha del cliente decía "Al día con pagos" con deuda a crédito no
+  vencida; ahora "Por cobrar · próxima cuota".

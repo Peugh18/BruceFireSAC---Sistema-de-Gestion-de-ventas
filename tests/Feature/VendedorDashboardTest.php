@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\CashRegister;
+use App\Models\Client;
+use App\Models\ElectronicDocument;
+use App\Models\Equipment;
 use App\Models\Installment;
 use App\Models\Quote;
 use App\Models\Sale;
@@ -33,6 +36,7 @@ test('ventas_hoy solo suma las ventas de HOY del vendedor autenticado', function
         'vendedor_id' => $vendedor->id,
         'fecha' => today(),
         'total' => 100.00,
+        'estado' => 'confirmada',
     ]);
 
     // Segunda venta de HOY del vendedor autenticado: debe contar (total: 200)
@@ -40,13 +44,19 @@ test('ventas_hoy solo suma las ventas de HOY del vendedor autenticado', function
         'vendedor_id' => $vendedor->id,
         'fecha' => today(),
         'total' => 200.00,
+        'estado' => 'confirmada',
     ]);
+
+    // Borrador y anulada de HOY del vendedor autenticado: NO deben contar
+    Sale::factory()->create(['vendedor_id' => $vendedor->id, 'fecha' => today(), 'total' => 70.00, 'estado' => 'borrador']);
+    Sale::factory()->create(['vendedor_id' => $vendedor->id, 'fecha' => today(), 'total' => 80.00, 'estado' => 'anulada']);
 
     // Venta de AYER del vendedor autenticado: NO debe contar
     Sale::factory()->create([
         'vendedor_id' => $vendedor->id,
         'fecha' => today()->subDay(),
         'total' => 150.00,
+        'estado' => 'confirmada',
     ]);
 
     // Venta de HOY de OTRO vendedor: NO debe contar
@@ -54,6 +64,7 @@ test('ventas_hoy solo suma las ventas de HOY del vendedor autenticado', function
         'vendedor_id' => $otroVendedor->id,
         'fecha' => today(),
         'total' => 500.00,
+        'estado' => 'confirmada',
     ]);
 
     $response = $this
@@ -273,4 +284,37 @@ test('agenda_hoy muestra solo las ordenes abiertas de hoy de la sede del vendedo
             'estado' => $ordenDeHoy->estado,
             'prioridad' => $ordenDeHoy->prioridad,
         ]);
+});
+
+test('el inicio muestra lo pendiente del vendedor y los clientes para ofrecer recarga', function () {
+    $vendedor = vendedorUser();
+    $otro = vendedorUser();
+
+    $porEnviar = Sale::factory()->create(['vendedor_id' => $vendedor->id, 'estado' => 'confirmada']);
+    ElectronicDocument::create(['sale_id' => $porEnviar->id, 'tipo' => 'boleta', 'serie' => 'B001', 'correlativo' => 1, 'sunat_estado' => 'por_enviar']);
+    $rechazada = Sale::factory()->create(['vendedor_id' => $vendedor->id, 'estado' => 'confirmada']);
+    ElectronicDocument::create(['sale_id' => $rechazada->id, 'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 2, 'sunat_estado' => 'rechazado']);
+    $ajena = Sale::factory()->create(['vendedor_id' => $otro->id, 'estado' => 'confirmada']);
+    ElectronicDocument::create(['sale_id' => $ajena->id, 'tipo' => 'boleta', 'serie' => 'B001', 'correlativo' => 3, 'sunat_estado' => 'por_enviar']);
+    Sale::factory()->create(['vendedor_id' => $vendedor->id, 'estado' => 'borrador']);
+    Quote::factory()->create(['estado' => 'aceptada']);
+
+    $cliente = Client::factory()->create(['razon_social' => 'TRANSPORTES ACUARIO SAC']);
+    Equipment::factory()->create(['client_id' => $cliente->id, 'estado' => 'activo', 'proxima_fecha_atencion' => today()->subDays(3)->toDateString(), 'proxima_prueba_hidrostatica' => null]);
+    $lejano = Client::factory()->create();
+    Equipment::factory()->create(['client_id' => $lejano->id, 'estado' => 'activo', 'proxima_fecha_atencion' => today()->addYear()->toDateString(), 'proxima_prueba_hidrostatica' => null]);
+
+    $props = $this->actingAs($vendedor)
+        ->get(route('vendedor.dashboard', ['current_team' => $vendedor->currentTeam]))
+        ->assertOk()
+        ->viewData('page')['props'];
+
+    expect($props['pendientes'])->toMatchArray([
+        'por_enviar' => 1,
+        'rechazados' => 1,
+        'cotizaciones_aceptadas' => 1,
+        'borradores' => 1,
+    ])
+        ->and(collect($props['oportunidades'])->pluck('cliente')->all())->toBe(['TRANSPORTES ACUARIO SAC'])
+        ->and($props['oportunidades'][0])->not->toHaveKey('equipos');
 });
