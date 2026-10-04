@@ -9,10 +9,12 @@ use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\AuditLogger;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,6 +28,7 @@ class ServiceOrderController extends Controller
             'en_camino' => ['pendiente_recepcion', 'recibido_planta', 'en_revision', 'esperando_autorizacion'],
             'en_proceso' => ['autorizado', 'en_proceso', 'trabajo_terminado', 'pendiente_datos', 'datos_completos'],
             'completadas' => ['listo_certificado', 'listo_entrega', 'entregado', 'cerrado'],
+            'anuladas' => ['anulada'],
         ];
 
         $sedeId = $request->user()->sedeRestringidaId();
@@ -140,6 +143,58 @@ class ServiceOrderController extends Controller
     }
 
     /**
+     * Anula la orden cuando el cliente se arrepiente, antes de que el taller
+     * emita el certificado. Si ya se cobró, primero se anula la venta. Los
+     * extintores que estaban en el taller vuelven a quedar del cliente para
+     * devolvérselos.
+     */
+    public function anular(Team $current_team, ServiceOrder $service_order, Request $request): RedirectResponse
+    {
+        $sedeId = $request->user()->sedeRestringidaId();
+        abort_if($sedeId !== null && (int) $service_order->sede_id !== $sedeId, 404);
+
+        $datos = $request->validate(['motivo' => ['required', 'string', 'min:5', 'max:500']], [
+            'motivo.required' => 'Escribe por qué se anula la orden.',
+            'motivo.min' => 'Escribe por qué se anula la orden.',
+        ]);
+
+        DB::transaction(function () use ($service_order, $datos, $request): void {
+            $orden = ServiceOrder::query()->lockForUpdate()->findOrFail($service_order->id);
+
+            if (! in_array($orden->estado, ServiceOrder::ESTADOS_ANULABLES, true)) {
+                throw ValidationException::withMessages(['motivo' => $orden->estado === 'anulada'
+                    ? 'La orden ya está anulada.'
+                    : 'El taller ya emitió el certificado: la orden no se anula.']);
+            }
+
+            if ($orden->sale_id !== null && $orden->sale()->where('estado', '!=', 'anulada')->exists()) {
+                throw ValidationException::withMessages(['motivo' => 'La orden ya se cobró: primero anula su venta.']);
+            }
+
+            $anterior = $orden->estado;
+            $orden->update(['estado' => 'anulada']);
+            $orden->equipments()->where('equipment.estado', 'en_servicio')->update(['equipment.estado' => 'activo']);
+            $orden->events()->create([
+                'tipo' => 'otro',
+                'user_id' => $request->user()->id,
+                'payload' => ['accion' => 'orden_anulada', 'origen' => 'vendedor', 'estado_anterior' => $anterior, 'mensaje' => "Orden anulada: {$datos['motivo']}"],
+            ]);
+
+            AuditLogger::log(
+                action: 'orden.anulada',
+                entity: $orden,
+                oldValues: ['estado' => $anterior],
+                newValues: ['estado' => 'anulada', 'motivo' => $datos['motivo']],
+                userId: $request->user()->id,
+            );
+        });
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Orden anulada.']);
+
+        return back();
+    }
+
+    /**
      * Editar la orden mientras no se entregue: fecha, prioridad, área,
      * técnico e indicaciones. El área solo cambia si aún no la recibieron;
      * cada cambio queda en la bitácora para que el técnico lo vea.
@@ -149,8 +204,8 @@ class ServiceOrderController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
         abort_if($sedeId !== null && (int) $service_order->sede_id !== $sedeId, 404);
 
-        if (in_array($service_order->estado, ['entregado', 'cerrado'], true)) {
-            throw ValidationException::withMessages(['estado' => 'La orden ya se entregó: ya no se puede editar.']);
+        if (in_array($service_order->estado, ['entregado', 'cerrado', 'anulada'], true)) {
+            throw ValidationException::withMessages(['estado' => $service_order->estado === 'anulada' ? 'La orden está anulada.' : 'La orden ya se entregó: ya no se puede editar.']);
         }
 
         $datos = $request->validate([
@@ -164,6 +219,12 @@ class ServiceOrderController extends Controller
 
         if ($datos['departamento_tecnico'] !== $service_order->departamento_tecnico && $service_order->estado !== 'pendiente_recepcion') {
             throw ValidationException::withMessages(['departamento_tecnico' => 'La orden ya está en manos del técnico: no se puede cambiar de área.']);
+        }
+
+        // Recibida en el taller, ya no cambia de servicio (recarga a inspección
+        // con el certificado de por medio no tiene sentido).
+        if ((int) $datos['service_id'] !== (int) $service_order->service_id && $service_order->estado !== 'pendiente_recepcion') {
+            throw ValidationException::withMessages(['service_id' => 'La orden ya está en el taller: no se cambia el servicio. Anúlala y crea otra.']);
         }
 
         $antes = $service_order->only(['fecha', 'prioridad', 'departamento_tecnico', 'tecnico_id', 'observaciones', 'service_id']);

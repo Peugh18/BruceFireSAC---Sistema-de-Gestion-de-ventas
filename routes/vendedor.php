@@ -96,6 +96,7 @@ Route::prefix('vendedor')
         Route::post('ordenes-servicio', [ServiceOrderController::class, 'store'])->name('ordenes-servicio.store');
         Route::get('ordenes-servicio/{service_order}', [ServiceOrderController::class, 'show'])->name('ordenes-servicio.show');
         Route::put('ordenes-servicio/{service_order}', [ServiceOrderController::class, 'update'])->name('ordenes-servicio.update');
+        Route::post('ordenes-servicio/{service_order}/anular', [ServiceOrderController::class, 'anular'])->name('ordenes-servicio.anular');
         Route::post('ordenes-servicio/{service_order}/asignar-tecnico', [ServiceOrderController::class, 'assign'])->name('ordenes-servicio.asignar-tecnico');
         Route::post('ordenes-servicio/{service_order}/equipos', [ServiceOrderEquipmentController::class, 'store'])->name('ordenes-servicio.equipos.store');
         Route::get('ordenes-servicio/{service_order}/constancia-recepcion', ServiceOrderReceiptController::class)->name('ordenes-servicio.constancia-recepcion');

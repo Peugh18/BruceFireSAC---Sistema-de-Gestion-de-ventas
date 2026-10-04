@@ -15,6 +15,7 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
 use App\Services\AuditLogger;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -163,18 +164,43 @@ class ExecuteAndCloseServiceOrder
             throw new InvalidArgumentException('Solo puedes avanzar a la siguiente etapa de la orden.');
         }
 
+        if ($targetState === 'trabajo_terminado') {
+            $this->asegurarTrabajoCompleto($serviceOrder);
+        }
+
         return DB::transaction(function () use ($serviceOrder, $targetState, $user, $extraData) {
+            // Bloqueada mientras avanza: un doble envío (mala señal en el
+            // celular) no emite dos certificados ni renueva dos veces.
+            $bloqueada = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            if ($bloqueada->estado !== $serviceOrder->estado) {
+                throw new InvalidArgumentException('La orden ya cambió de etapa: recarga la pantalla.');
+            }
+
             $previousState = $serviceOrder->estado;
 
             $serviceOrder->update([
                 'estado' => $targetState,
             ]);
 
-            // Si llega a listo_certificado, disparo automático del certificado (§85, Fase 5)
+            // Si llega a listo_certificado, disparo automático del certificado (§85, Fase 5).
+            // Solo los extintores que llegaron y no fueron rechazados; la
+            // P.H. se marca por extintor.
             if ($targetState === 'listo_certificado') {
-                $phRealizada = ! empty($extraData['ph_realizada']);
-                $this->triggerAutomaticCertificates($serviceOrder, $extraData);
-                $this->renewEquipmentAttentionDate->execute($serviceOrder->equipments()->get(), $phRealizada);
+                $aptos = $serviceOrder->equiposAptos();
+
+                // Un servicio sin extintores (luces, señalización) se
+                // certifica igual; con extintores, alguno tiene que estar apto.
+                if ($aptos->isEmpty() && $serviceOrder->equipments()->exists()) {
+                    throw new InvalidArgumentException('No hay extintores recibidos y aptos para certificar.');
+                }
+
+                $conPh = array_values(array_map('intval', array_key_exists('ph_equipos', $extraData)
+                    ? (array) $extraData['ph_equipos']
+                    : (! empty($extraData['ph_realizada']) ? $aptos->modelKeys() : [])));
+
+                $this->triggerAutomaticCertificates($serviceOrder, $aptos, $conPh, $extraData);
+                $this->renewEquipmentAttentionDate->execute($aptos->whereIn('id', $conPh)->values(), true);
+                $this->renewEquipmentAttentionDate->execute($aptos->whereNotIn('id', $conPh)->values(), false);
             }
 
             // Registrar evento append-only de transición
@@ -239,28 +265,58 @@ class ExecuteAndCloseServiceOrder
     }
 
     /**
+     * Para cerrar el trabajo: llegó al menos un extintor, cada uno que llegó
+     * tiene su checklist en esta orden y no queda ninguna deficiencia sin
+     * resolver ni esperando al cliente.
+     */
+    protected function asegurarTrabajoCompleto(ServiceOrder $serviceOrder): void
+    {
+        $recibidos = $serviceOrder->equipments()->wherePivot('recibido', true)->get();
+
+        if ($recibidos->isEmpty() && $serviceOrder->equipments()->exists()) {
+            throw new InvalidArgumentException('La orden no tiene extintores recibidos en el taller.');
+        }
+
+        $conChecklist = $serviceOrder->checklists()->pluck('equipment_id')->unique();
+        $sinChecklist = $recibidos->reject(fn (Equipment $eq) => $conChecklist->contains($eq->id));
+
+        if ($sinChecklist->isNotEmpty()) {
+            throw new InvalidArgumentException('Falta el checklist de: '.$sinChecklist->pluck('numero_serie')->implode(', ').'.');
+        }
+
+        $pendientes = $serviceOrder->deficiencies()
+            ->whereIn('estado', ['detectada', 'esperando_autorizacion', 'autorizada', 'en_correccion'])
+            ->count();
+
+        if ($pendientes > 0) {
+            throw new InvalidArgumentException("Quedan {$pendientes} deficiencia(s) sin resolver o esperando al cliente.");
+        }
+    }
+
+    /**
      * Emisión automática de certificados para la orden (§85).
      *
+     * @param  EloquentCollection<int, Equipment>  $aptos
+     * @param  list<int>  $conPh
      * @param  array<string, mixed>  $extraData
      */
-    protected function triggerAutomaticCertificates(ServiceOrder $serviceOrder, array $extraData): void
+    protected function triggerAutomaticCertificates(ServiceOrder $serviceOrder, EloquentCollection $aptos, array $conPh, array $extraData): void
     {
         // Evitar duplicar certificados si ya existen para esta orden
         if (Certificate::where('service_order_id', $serviceOrder->id)->exists()) {
             return;
         }
 
-        $serviceOrder->loadMissing(['client', 'equipments', 'service.certificateType']);
+        $serviceOrder->loadMissing(['client', 'service.certificateType']);
 
-        $equipments = $serviceOrder->equipments;
-        $unidades = $equipments->map(function (Equipment $eq) use ($extraData) {
+        $unidades = $aptos->map(function (Equipment $eq) use ($conPh) {
             return [
                 'equipment_id' => $eq->id,
                 'numero_serie' => $eq->numero_serie,
                 'fecha_ultima_recarga' => now()->toDateString(),
-                'fecha_ultima_ph' => ! empty($extraData['ph_realizada']) ? now()->toDateString() : null,
+                'fecha_ultima_ph' => in_array($eq->id, $conPh, true) ? now()->toDateString() : null,
             ];
-        })->all();
+        })->values()->all();
 
         // 1. Certificado principal de Operatividad y Garantía
         $tipoOperatividad = ($serviceOrder->service_id ? $serviceOrder->service->certificateType : null) ?? CertificateType::firstOrCreate(
@@ -285,8 +341,8 @@ class ExecuteAndCloseServiceOrder
             $extra,
         );
 
-        // 2. Si se realizó Prueba Hidrostática, generar también su certificado específico
-        if (! empty($extraData['ph_realizada'])) {
+        // 2. Los extintores con Prueba Hidrostática llevan además su certificado
+        if ($conPh !== []) {
             $tipoPH = CertificateType::firstOrCreate(
                 ['codigo' => 'prueba_hidrostatica'],
                 [
@@ -299,7 +355,7 @@ class ExecuteAndCloseServiceOrder
             $this->issueCertificate->handle(
                 $tipoPH,
                 $serviceOrder->client,
-                $unidades,
+                array_values(array_filter($unidades, fn (array $unidad) => in_array($unidad['equipment_id'], $conPh, true))),
                 $serviceOrder->sale_id,
                 $serviceOrder->id
             );

@@ -78,7 +78,10 @@ test('registering collection appends custody chain event to ServiceOrderEvent', 
         ->assertRedirect();
 
     $order->refresh();
-    expect($order->tecnico_id)->toBe($this->tecnicoCampo->id)
+    // Recogido, la orden va al taller: pasa a Planta y sin técnico para que
+    // el de planta la reciba.
+    expect($order->tecnico_id)->toBeNull()
+        ->and($order->departamento_tecnico)->toBe('planta')
         ->and($order->observaciones)->toContain('3 extintores PQS');
 
     // Verificar eslabón inmutable de Cadena de Custodia (§22.4, §85.6.3)

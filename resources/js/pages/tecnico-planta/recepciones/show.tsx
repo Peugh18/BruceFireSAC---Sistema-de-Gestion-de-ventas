@@ -76,8 +76,22 @@ export default function RecepcionShow({ asignacion, order }: Props) {
     const confirmForm = useForm({
         observaciones: '',
         equipos_recibidos_count: order.equipments.length,
+        // Solo lo que llegó físicamente se certifica y renueva.
+        equipos_recibidos: order.equipments.map((eq) => eq.id),
         diferencias: '',
     });
+
+    const alternarRecibido = (id: number) => {
+        const actuales = confirmForm.data.equipos_recibidos;
+        const siguientes = actuales.includes(id)
+            ? actuales.filter((x) => x !== id)
+            : [...actuales, id];
+        confirmForm.setData((data) => ({
+            ...data,
+            equipos_recibidos: siguientes,
+            equipos_recibidos_count: siguientes.length,
+        }));
+    };
 
     // Form for Alta Técnica Rápida (Caso A and B)
     const equipmentForm = useForm({
@@ -249,6 +263,37 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                             onSubmit={handleConfirmReception}
                             className="space-y-3 pt-1"
                         >
+                            {order.equipments.length > 0 ? (
+                                <div className="space-y-1">
+                                    <p className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                        Extintores que llegaron (desmarca los
+                                        que faltan)
+                                    </p>
+                                    {order.equipments.map((eq) => (
+                                        <label
+                                            key={eq.id}
+                                            className="bg-card flex items-center gap-2 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-[11.5px] dark:border-neutral-700"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={confirmForm.data.equipos_recibidos.includes(
+                                                    eq.id,
+                                                )}
+                                                onChange={() =>
+                                                    alternarRecibido(eq.id)
+                                                }
+                                            />
+                                            <span className="font-mono font-bold">
+                                                {eq.numero_serie}
+                                            </span>
+                                            <span className="text-neutral-500">
+                                                {eq.tipo_agente} {eq.capacidad}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                            ) : null}
+
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                     Diferencias o novedades en la recepción

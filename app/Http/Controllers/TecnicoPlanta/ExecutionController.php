@@ -137,6 +137,8 @@ class ExecutionController extends Controller
         $validated = $request->validate([
             'target_state' => ['required', 'in:en_proceso,trabajo_terminado,pendiente_datos,datos_completos,listo_certificado,listo_entrega'],
             'ph_realizada' => ['nullable', 'boolean'],
+            'ph_equipos' => ['sometimes', 'array'],
+            'ph_equipos.*' => ['integer'],
         ]);
 
         try {
@@ -146,6 +148,7 @@ class ExecutionController extends Controller
                 $request->user(),
                 [
                     'ph_realizada' => (bool) ($validated['ph_realizada'] ?? false),
+                    ...(array_key_exists('ph_equipos', $validated) ? ['ph_equipos' => $validated['ph_equipos']] : []),
                 ]
             );
         } catch (\InvalidArgumentException $exception) {

@@ -69,6 +69,7 @@ const TABS = [
     { id: 'en_camino', label: 'En camino' },
     { id: 'en_proceso', label: 'En proceso' },
     { id: 'completadas', label: 'Completadas' },
+    { id: 'anuladas', label: 'Anuladas' },
 ] as const;
 
 function getCoarseStep(coarseLabel: string): number {
