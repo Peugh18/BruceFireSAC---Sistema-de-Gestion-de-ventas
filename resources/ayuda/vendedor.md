@@ -104,3 +104,9 @@
 - Al entrar a **Ventas** ves solo las ventas **de hoy**. Arriba eliges **Desde / Hasta** o un atajo (**Hoy, Ayer, Esta semana, Este mes**) y pulsas **Ver**.
 - Puedes buscar por cliente, RUC/DNI, número de venta o de comprobante.
 - Los recuadros de arriba suman **tus** ventas emitidas en esas fechas: total, al contado, a crédito. "Por enviar a SUNAT" cuenta todo lo que aún falta enviar, sea del día que sea.
+
+## Por vencer: por empresa
+
+- **Por empresa** (vista principal): una tarjeta por cliente con cuántos extintores tiene, cuántos están vencidos o vencen en 30 días y su próximo vencimiento. Ábrela para ver cada extintor con su serie, recarga y prueba hidrostática. Botón **WhatsApp** para ofrecer la recarga.
+- Filtra por **Todas, Con vencidos, Próximos 30 días o Próximos 3 meses**, y busca por empresa, RUC o serie.
+- **Avisos por extintor** es la lista de antes (vencidas, esta semana, este mes).

@@ -255,3 +255,35 @@ test('atencion o cierre renueva recarga a 1 anio y ph a 5 anios si se realizo pr
         ->and($equipment->proxima_fecha_atencion->toDateString())->toBe(now()->addYear()->toDateString())
         ->and($equipment->proxima_prueba_hidrostatica->toDateString())->toBe(now()->addYears(5)->toDateString());
 });
+
+test('por empresa muestra a cada cliente con todos sus extintores aunque venzan el proximo año', function () {
+    $user = vendedorUser();
+    $roble = Client::factory()->create(['razon_social' => 'CONSTRUCTORA EL ROBLE S.A.C.', 'whatsapp' => '944555666']);
+    $otro = Client::factory()->create(['razon_social' => 'TRANSPORTES ACUARIO SAC']);
+    Equipment::factory()->create(['client_id' => $roble->id, 'estado' => 'activo', 'proxima_fecha_atencion' => now()->addYear()->toDateString(), 'proxima_prueba_hidrostatica' => now()->addYears(5)->toDateString()]);
+    Equipment::factory()->create(['client_id' => $roble->id, 'estado' => 'activo', 'proxima_fecha_atencion' => now()->addMonths(11)->toDateString(), 'proxima_prueba_hidrostatica' => null]);
+    Equipment::factory()->create(['client_id' => $otro->id, 'estado' => 'activo', 'proxima_fecha_atencion' => now()->subDays(2)->toDateString(), 'proxima_prueba_hidrostatica' => null]);
+    Equipment::factory()->create(['client_id' => $otro->id, 'estado' => 'baja', 'proxima_fecha_atencion' => now()->subDays(2)->toDateString()]);
+
+    $props = $this->actingAs($user)
+        ->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]))
+        ->assertOk()
+        ->viewData('page')['props'];
+
+    $empresas = collect($props['empresas']);
+
+    // Nada vence este mes en El Roble, pero igual aparece (antes la pantalla quedaba vacía).
+    expect($props['alerts']['este_mes'])->toBeEmpty()
+        ->and($empresas->pluck('cliente')->all())->toBe(['TRANSPORTES ACUARIO SAC', 'CONSTRUCTORA EL ROBLE S.A.C.']);
+
+    $acuario = $empresas->firstWhere('client_id', $otro->id);
+    $elRoble = $empresas->firstWhere('client_id', $roble->id);
+
+    expect($acuario['extintores'])->toBe(1)
+        ->and($acuario['vencidos'])->toBe(1)
+        ->and($elRoble['extintores'])->toBe(2)
+        ->and($elRoble['vencidos'])->toBe(0)
+        ->and($elRoble['proximo_vencimiento'])->toBe(now()->addMonths(11)->toDateString())
+        ->and($elRoble['whatsapp'])->toBe('51944555666')
+        ->and($elRoble['equipos'][0]['estado'])->toBe('al_dia');
+});
