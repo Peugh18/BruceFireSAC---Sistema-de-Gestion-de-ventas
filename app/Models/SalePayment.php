@@ -42,7 +42,8 @@ class SalePayment extends Model
     protected static function booted(): void
     {
         static::creating(function (SalePayment $pago): void {
-            $pago->user_id ??= auth()->id();
+            $usuario = auth()->id();
+            $pago->user_id ??= is_int($usuario) ? $usuario : null;
         });
     }
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\ProductLot;
 use App\Models\Sede;
 use App\Models\Team;
 use Illuminate\Http\Request;
@@ -90,6 +91,7 @@ class StockController extends Controller
                         'unidad_medida' => $product->unidad_medida,
                         'precio_venta' => (float) $product->precio_venta,
                         'serializado' => $product->serializado,
+                        'controla_lote' => $product->controla_lote,
                         'stock_minimo' => $product->stock_minimo,
                         'stock_disponible_total' => $totalDisponible,
                         'stock_por_sede' => $stockPorSede,
@@ -104,8 +106,33 @@ class StockController extends Controller
         // arreglo resultante a mano en vez de un Eloquent::paginate().
         $itemsPerPage = 15;
         $itemsPage = Paginator::resolveCurrentPage('page') ?: 1;
+        $pagina = array_slice($allItems, ($itemsPage - 1) * $itemsPerPage, $itemsPerPage);
+
+        // Lotes con saldo de los productos de esta página que llevan lote.
+        $conLote = collect($pagina)->where('controla_lote', true)->pluck('id')->all();
+        $lotes = ProductLot::query()
+            ->whereIn('product_id', $conLote)
+            ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
+            ->with('sede:id,nombre')
+            ->withSum('movements as saldo', 'cantidad')
+            ->orderBy('fecha_vencimiento')
+            ->get()
+            ->filter(fn (ProductLot $lote) => (int) $lote->getAttribute('saldo') > 0)
+            ->groupBy('product_id');
+        $pagina = array_map(fn (array $item) => [
+            ...$item,
+            'lotes' => ($lotes->get($item['id']) ?? collect())->map(fn (ProductLot $lote) => [
+                'lote' => $lote->lote,
+                'sede' => $lote->sede->nombre,
+                'fecha_vencimiento' => $lote->fecha_vencimiento?->toDateString(),
+                'vencido' => $lote->estaVencido(),
+                'por_vencer' => ! $lote->estaVencido() && $lote->fecha_vencimiento !== null && $lote->fecha_vencimiento->lte(today()->addDays(ProductLot::DIAS_AVISO)),
+                'saldo' => (int) $lote->getAttribute('saldo'),
+            ])->values()->all(),
+        ], $pagina);
+
         $items = new LengthAwarePaginator(
-            array_slice($allItems, ($itemsPage - 1) * $itemsPerPage, $itemsPerPage),
+            $pagina,
             count($allItems),
             $itemsPerPage,
             $itemsPage,

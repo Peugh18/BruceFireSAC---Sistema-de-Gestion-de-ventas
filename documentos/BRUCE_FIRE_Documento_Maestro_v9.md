@@ -5276,3 +5276,21 @@ Se revisaron los cinco roles. Lo corregido, por parte:
 - No se desactiva una sede con stock; el enlace público de una cotización
   anulada responde «anulada».
 - Consulta y Stock de Almacén buscan también por código de barras.
+
+## 90.3 Ronda 3: lotes de EPP y pendientes (2026-10-06)
+
+- **Lotes con vencimiento:** `products.controla_lote`, tabla `product_lots`
+  (producto, almacén, lote, vencimiento) e `inventory_movements.product_lot_id`.
+  `App\Services\Inventory\StockPorLote` centraliza entradas y salidas sin
+  serie: recepciones, ventas, repuestos del taller, traslados y ajustes. Sale
+  primero el stock sin lote (anterior a activar lotes) y luego lo que vence
+  primero; un lote vencido no se vende. La anulación devuelve al mismo lote.
+  Inicio de Almacén avisa lotes vencidos o a 60 días.
+- **Caja / par:** `unidad_compra` y `factor_compra` (1 CAJA = N); en
+  Recepciones se cuentan cajas y el stock entra en la unidad de venta. Las
+  unidades PR, BX, PK y DZN van a SUNAT con su código del Catálogo 03.
+- **Cobro anulado:** `sale_payments` con borrado lógico, `anulado_por`,
+  `anulado_motivo` y `user_id` de quien cobró; deja de contar en saldos y
+  caja y queda tachado en Cobranzas.
+- **Por vencer:** las consultas traen solo lo que entra en la lista.
+- **Certificado público:** el PDF que se abre por QR muestra el DNI a medias.

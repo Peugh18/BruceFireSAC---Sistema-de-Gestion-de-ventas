@@ -39,7 +39,11 @@ class UpdateProductRequest extends FormRequest
             'serializado' => ['boolean'],
             // EPP y consumibles: stock por lote con vencimiento (no aplica a
             // productos con serie), y compra por caja con su equivalencia.
-            'controla_lote' => ['boolean', 'declined_if:serializado,true,1'],
+            'controla_lote' => ['boolean', function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($this->boolean('controla_lote') && $this->boolean('serializado')) {
+                    $fail('Un producto con número de serie no se controla por lote.');
+                }
+            }],
             'unidad_compra' => ['nullable', 'string', 'max:10'],
             'factor_compra' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'stock_minimo' => ['nullable', 'integer', 'min:0'],
@@ -66,7 +70,6 @@ class UpdateProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'controla_lote.declined_if' => 'Un producto con número de serie no se controla por lote.',
             'codigo_barras.unique' => 'Ese código de barras ya está registrado en otro producto.',
             'codigo_barras.regex' => 'El código de barras solo lleva letras, números y guiones.',
         ];

@@ -33,9 +33,18 @@ export type StockItem = {
     unidad_medida: string;
     precio_venta: number;
     serializado: boolean;
+    controla_lote?: boolean;
     stock_minimo: number | null;
     stock_disponible_total: number | null;
     stock_por_sede: Record<number, number | null>;
+    lotes?: {
+        lote: string;
+        sede: string;
+        fecha_vencimiento: string | null;
+        vencido: boolean;
+        por_vencer: boolean;
+        saldo: number;
+    }[];
 };
 
 export type KardexItem = {
@@ -531,6 +540,43 @@ export default function StockIndex({
                                                                     de barras
                                                                 </span>
                                                             </div>
+                                                        )}
+                                                        {(item.lotes ?? []).map(
+                                                            (lote) => (
+                                                                <div
+                                                                    key={`${lote.sede}-${lote.lote}`}
+                                                                    className={`mt-0.5 text-[10.5px] ${
+                                                                        lote.vencido
+                                                                            ? 'text-destructive-strong font-bold'
+                                                                            : lote.por_vencer
+                                                                              ? 'text-warning-strong font-semibold'
+                                                                              : 'text-muted-foreground'
+                                                                    }`}
+                                                                >
+                                                                    Lote{' '}
+                                                                    {lote.lote}{' '}
+                                                                    ·{' '}
+                                                                    {lote.saldo}{' '}
+                                                                    ·{' '}
+                                                                    {lote.vencido
+                                                                        ? 'VENCIDO'
+                                                                        : 'vence'}{' '}
+                                                                    {lote.fecha_vencimiento
+                                                                        ? lote.fecha_vencimiento
+                                                                              .split(
+                                                                                  '-',
+                                                                              )
+                                                                              .reverse()
+                                                                              .join(
+                                                                                  '/',
+                                                                              )
+                                                                        : '—'}
+                                                                    {sedes.length >
+                                                                    1
+                                                                        ? ` (${lote.sede})`
+                                                                        : ''}
+                                                                </div>
+                                                            ),
                                                         )}
                                                     </td>
                                                     <td className="px-3 py-3">

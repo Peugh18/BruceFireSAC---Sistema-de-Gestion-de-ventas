@@ -51,7 +51,7 @@ class CreateReception
                     continue;
                 }
 
-                $product = Product::findOrFail($itemData['product_id']);
+                $product = Product::query()->findOrFail((int) $itemData['product_id']);
 
                 if ($product->serializado) {
                     // Para producto serializado: crear N InventoryUnit + N InventoryMovement (cantidad = 1)

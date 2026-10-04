@@ -40,7 +40,7 @@ class ProcessSaleItem
      */
     protected function processProducto(Sale $sale, array $itemData): SaleItem
     {
-        $product = Product::query()->findOrFail($itemData['product_id']);
+        $product = Product::query()->findOrFail((int) $itemData['product_id']);
 
         if ($product->serializado) {
             throw ValidationException::withMessages([

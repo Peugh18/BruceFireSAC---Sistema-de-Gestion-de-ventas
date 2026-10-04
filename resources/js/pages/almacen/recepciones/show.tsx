@@ -38,6 +38,8 @@ export type ReceptionItemData = {
     cantidad: number;
     cantidad_conforme: number;
     observacion_item: string | null;
+    lote: string | null;
+    fecha_vencimiento: string | null;
 };
 
 export type SerializedUnitData = {
@@ -88,6 +90,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
             cantidad: it.cantidad,
             cantidad_conforme: it.cantidad_conforme,
             observacion_item: it.observacion_item || '',
+            fecha_vencimiento: it.fecha_vencimiento || '',
             unidades_nuevas: [] as Array<{
                 capacidad: string;
                 serie_fabricante: string;
@@ -394,6 +397,44 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                     />
                                                 </div>
 
+                                                {reception.items[idx]?.lote && (
+                                                    <div>
+                                                        <Label className="text-foreground/80 text-[11px] font-bold">
+                                                            Vence (lote{' '}
+                                                            {
+                                                                reception.items[
+                                                                    idx
+                                                                ].lote
+                                                            }
+                                                            )
+                                                        </Label>
+                                                        <Input
+                                                            type="date"
+                                                            value={
+                                                                it.fecha_vencimiento
+                                                            }
+                                                            onChange={(e) => {
+                                                                const next = [
+                                                                    ...data.items,
+                                                                ];
+                                                                next[idx] = {
+                                                                    ...next[
+                                                                        idx
+                                                                    ],
+                                                                    fecha_vencimiento:
+                                                                        e.target
+                                                                            .value,
+                                                                };
+                                                                setData(
+                                                                    'items',
+                                                                    next,
+                                                                );
+                                                            }}
+                                                            className="mt-1 h-8 text-xs"
+                                                        />
+                                                    </div>
+                                                )}
+
                                                 <div>
                                                     <Label className="text-foreground/80 text-[11px] font-bold">
                                                         Motivo no conforme (si
@@ -660,6 +701,15 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                         <div className="text-muted-foreground font-mono text-[11px]">
                                                             {it.producto.codigo}
                                                         </div>
+                                                        {it.lote && (
+                                                            <div className="text-muted-foreground text-[11px]">
+                                                                Lote{' '}
+                                                                <b>{it.lote}</b>
+                                                                {it.fecha_vencimiento
+                                                                    ? ` · vence ${it.fecha_vencimiento.split('-').reverse().join('/')}`
+                                                                    : ''}
+                                                            </div>
+                                                        )}
                                                     </td>
                                                     <td className="px-3 py-3 text-center">
                                                         {it.producto

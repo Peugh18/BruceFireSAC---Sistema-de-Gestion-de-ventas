@@ -19,3 +19,12 @@
 
 - **Stickers de Barras**: imprime las etiquetas con código de barras de las unidades.
 - **Consulta Rápida**: busca una serie para ver dónde está y en qué estado.
+
+## EPP con lote y vencimiento
+
+- Los EPP y consumibles que el Gerente marcó con **Lote y vencimiento** (guantes, mascarillas, filtros) se reciben indicando el **lote** y la fecha de **vencimiento** que trae la caja. No se recibe nada ya vencido.
+- Si el producto se compra por **caja** (por ejemplo, 1 CAJA = 50 pares), en Recepciones escribe cuántas cajas llegaron: el stock sube en pares o unidades.
+- Al vender, el sistema saca solo **lo que vence primero** y **nunca** un lote vencido. Si anulan la venta, vuelve al mismo lote.
+- En **Stock** cada producto muestra sus lotes; en **Inicio** ves los lotes vencidos o que vencen en 60 días.
+- Un lote vencido se da de baja en **Ajustes**: elige el producto y el lote.
+- Si te equivocaste en el vencimiento, corrígelo editando la recepción.

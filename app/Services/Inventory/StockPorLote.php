@@ -86,9 +86,9 @@ class StockPorLote
 
         if ($vencimiento !== null && $existente->fecha_vencimiento === null) {
             $existente->update(['fecha_vencimiento' => $vencimiento]);
-        } elseif ($vencimiento !== null && $existente->fecha_vencimiento?->toDateString() !== $vencimiento) {
+        } elseif ($vencimiento !== null && $existente->fecha_vencimiento->toDateString() !== $vencimiento) {
             throw ValidationException::withMessages([
-                $campo => "El lote {$lote} de {$product->nombre} ya está registrado con vencimiento {$existente->fecha_vencimiento?->format('d/m/Y')}.",
+                $campo => "El lote {$lote} de {$product->nombre} ya está registrado con vencimiento {$existente->fecha_vencimiento->format('d/m/Y')}.",
             ]);
         }
 
@@ -110,8 +110,9 @@ class StockPorLote
         if ($loteId !== null) {
             $tramos = $tramos->filter(fn (array $tramo) => $tramo['lote']?->id === $loteId);
         } elseif ($product->controla_lote) {
-            $vencidos = (int) $tramos->filter(fn (array $tramo) => $tramo['lote']?->estaVencido())->sum('saldo');
-            $tramos = $tramos->reject(fn (array $tramo) => $tramo['lote']?->estaVencido());
+            $vencido = fn (array $tramo): bool => $tramo['lote'] !== null && $tramo['lote']->estaVencido();
+            $vencidos = (int) $tramos->filter($vencido)->sum('saldo');
+            $tramos = $tramos->reject($vencido);
         }
 
         $disponible = (int) $tramos->sum('saldo');
@@ -227,7 +228,8 @@ class StockPorLote
         $movement->product_lot_id = $loteId;
         $movement->cantidad = $cantidad;
         $movement->tipo = (string) $datos['tipo'];
-        $movement->user_id = isset($datos['user_id']) ? (int) $datos['user_id'] : auth()->id();
+        $usuario = auth()->id();
+        $movement->user_id = isset($datos['user_id']) ? (int) $datos['user_id'] : (is_int($usuario) ? $usuario : null);
         $movement->observacion = $datos['observacion'] ?? null;
         $movement->referencia_type = $datos['referencia_type'] ?? null;
         $movement->referencia_id = $datos['referencia_id'] ?? null;
