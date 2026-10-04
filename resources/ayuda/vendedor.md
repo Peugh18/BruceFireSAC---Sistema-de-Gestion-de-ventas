@@ -107,6 +107,6 @@
 
 ## Por vencer: por empresa
 
-- **Por empresa** (vista principal): una tarjeta por cliente con cuántos extintores tiene, cuántos están vencidos o vencen en 30 días y su próximo vencimiento. Ábrela para ver cada extintor con su serie, recarga y prueba hidrostática. Botón **WhatsApp** para ofrecer la recarga; si el cliente no tiene celular sale **Agregar número**. También cuenta lo vendido **sin serie** (recargas y extintores por cantidad) y lo comprado en el sistema anterior: se marca *estimado* y vence al año de la compra.
+- **Por empresa** (vista principal): una tarjeta por cliente con cuántos extintores tiene, cuántos están vencidos o vencen en 30 días y su próximo vencimiento. Ábrela para ver cada extintor con su serie, recarga y prueba hidrostática. Botón **WhatsApp** para ofrecer la recarga; si el cliente no tiene celular sale **Agregar número**. También cuenta lo vendido **sin serie** (recargas y extintores por cantidad) y lo comprado en el sistema anterior: se marca _estimado_ y vence al año de la compra.
 - Filtra por **Todas, Con vencidos, Próximos 30 días o Próximos 3 meses**, y busca por empresa, RUC o serie.
 - **Avisos por extintor** es la lista de antes (vencidas, esta semana, este mes).

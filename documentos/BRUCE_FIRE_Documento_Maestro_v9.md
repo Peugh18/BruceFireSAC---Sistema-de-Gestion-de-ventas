@@ -5200,5 +5200,5 @@ que no tiene sentido, sin romper nada. Un PR por mejora.
   recarga o productos de categoría extintor sin equipo; la última compra
   de cada producto por cliente, ventas confirmadas) y, para clientes sin
   nada en el sistema nuevo, su última compra del sistema anterior. Se
-  marcan *estimado* con la recarga al año de la compra. CLIENTES VARIOS
+  marcan _estimado_ con la recarga al año de la compra. CLIENTES VARIOS
   no aparece.
