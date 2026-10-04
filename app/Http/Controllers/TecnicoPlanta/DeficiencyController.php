@@ -205,6 +205,8 @@ class DeficiencyController extends Controller
             'resolucion' => ['required', 'string', 'max:500'],
         ]);
 
+        ExecuteAndCloseServiceOrder::asegurarQueSePuedeReparar($deficiency);
+
         $deficiency->update([
             'estado' => 'resuelta',
             'resolucion' => $validated['resolucion'],

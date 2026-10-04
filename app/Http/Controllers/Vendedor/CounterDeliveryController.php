@@ -30,7 +30,9 @@ class CounterDeliveryController extends Controller
     public function store(Team $current_team, ServiceOrder $service_order, Request $request, RenewEquipmentAttentionDate $renew): RedirectResponse
     {
         $this->assertAccess($service_order, $request);
-        abort_unless(in_array($service_order->estado, ['listo_entrega', 'entregado'], true), 422, 'La orden todavía no está lista para entregar.');
+        // Con el certificado emitido la orden ya se puede entregar.
+        abort_unless(in_array($service_order->estado, ServiceOrder::ESTADOS_PARA_ENTREGAR, true), 422, 'La orden todavía no está lista para entregar.');
+        abort_if($this->deliveryEvent($service_order) !== null, 422, 'Esta orden ya se entregó.');
 
         $validated = $request->validate([
             'receptor_nombre' => ['required', 'string', 'max:150'],
@@ -49,8 +51,13 @@ class CounterDeliveryController extends Controller
             ],
         ]);
         $service_order->update(['estado' => 'cerrado']);
-        $phRealizada = $service_order->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
-        $renew->execute($service_order->equipments()->get(), $phRealizada);
+
+        // Las fechas de los extintores se renuevan una sola vez: si el taller
+        // ya las renovó al emitir el certificado, la entrega no las mueve.
+        if (! $service_order->events()->where('tipo', 'trabajo_completado')->exists()) {
+            $phRealizada = $service_order->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
+            $renew->execute($service_order->equipments()->get(), $phRealizada);
+        }
 
         return back()->with('success', 'Entrega conforme registrada. Ya puedes descargar el acta.');
     }

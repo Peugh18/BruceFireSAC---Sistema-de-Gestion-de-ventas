@@ -303,9 +303,12 @@ export default function ServiceOrderShow({
                                 Editar orden
                             </Button>
                         ) : null}
-                        {['listo_entrega', 'entregado', 'cerrado'].includes(
-                            serviceOrder.estado,
-                        ) && (
+                        {[
+                            'listo_certificado',
+                            'listo_entrega',
+                            'entregado',
+                            'cerrado',
+                        ].includes(serviceOrder.estado) && (
                             <Button asChild size="sm">
                                 <Link
                                     href={`/${teamSlug}/vendedor/ordenes-servicio/${serviceOrder.id}/entrega-mostrador`}
