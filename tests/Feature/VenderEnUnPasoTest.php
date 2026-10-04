@@ -245,3 +245,32 @@ test('un extintor que volvio al stock por una venta anulada se puede vender de n
     expect(Sale::count())->toBe(2)
         ->and($unit->fresh()->estado)->toBe('vendido');
 });
+
+test('una venta nueva no puede ser de manana ni de hace mas de dos dias', function () {
+    $client = Client::factory()->create();
+
+    foreach ([today()->addDay(), today()->subDays(3)] as $fecha) {
+        $this->actingAs($this->vendedor)
+            ->post(route('vendedor.ventas.store', $this->team), datosDeVenta($client, unidadDisponible(), ['fecha' => $fecha->toDateString()]))
+            ->assertSessionHasErrors('fecha');
+    }
+
+    expect(Sale::count())->toBe(0);
+});
+
+test('un borrador que se emite otro dia sale con la fecha en que se emite', function () {
+    $client = Client::factory()->create();
+
+    $this->actingAs($this->vendedor)
+        ->post(route('vendedor.ventas.store', $this->team), datosDeVenta($client, unidadDisponible(), ['fecha' => today()->subDays(2)->toDateString()]))
+        ->assertSessionHasNoErrors();
+    $sale = Sale::sole();
+    expect($sale->estado)->toBe('borrador');
+
+    $this->actingAs($this->vendedor)
+        ->post(route('vendedor.ventas.confirmar', [...$this->team, 'sale' => $sale]))
+        ->assertSessionHasNoErrors();
+
+    expect($sale->fresh()->estado)->toBe('confirmada')
+        ->and($sale->fresh()->fecha->toDateString())->toBe(today()->toDateString());
+});

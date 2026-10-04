@@ -28,17 +28,23 @@ class CreditNoteController extends Controller
             (float) $request->input('importe'),
         );
 
-        $pagos = $original->sale->payments()->exists() && $original->sale->fresh()->estado === 'anulada';
-        $aviso = $pagos ? ' La venta tiene pagos registrados: devuelva el dinero al cliente de forma manual.' : '';
-
         try {
-            $emit->sendDocument($nota);
+            $nota = $emit->sendDocument($nota);
         } catch (Throwable $e) {
             report($e);
 
-            return back()->with('error', "Nota de crédito {$nota->serie}-{$nota->correlativo} registrada pero pendiente de envío a SUNAT.{$aviso}");
+            return back()->with('error', "Nota de crédito {$nota->serie}-{$nota->correlativo} registrada pero pendiente de envío a SUNAT. La venta se anula cuando SUNAT la acepte.");
         }
 
-        return back()->with('success', "Nota de crédito {$nota->serie}-{$nota->correlativo} emitida.{$aviso}");
+        if ($nota->sunat_estado === 'rechazado') {
+            return back()->with('error', "SUNAT rechazó la nota de crédito {$nota->serie}-{$nota->correlativo}: la venta sigue vigente. Puedes emitir otra.");
+        }
+
+        $anulada = $original->sale->fresh()->estado === 'anulada';
+        $aviso = $anulada && $original->sale->payments()->whereNotNull('installment_id')->exists()
+            ? ' La venta tenía cuotas cobradas: devuelve ese dinero al cliente.'
+            : '';
+
+        return back()->with('success', "Nota de crédito {$nota->serie}-{$nota->correlativo} emitida.".($anulada ? ' La venta quedó anulada.' : '').$aviso);
     }
 }

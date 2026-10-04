@@ -24,7 +24,11 @@ class StoreSaleRequest extends FormRequest
             'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'quote_id' => ['nullable', 'integer', 'exists:quotes,id'],
             'service_order_id' => ['nullable', 'integer', 'exists:service_orders,id'],
-            'fecha' => ['required', 'date'],
+            // Una venta nueva es de hoy o de hasta dos días atrás (SUNAT recibe
+            // el comprobante dentro de los 3 días): nunca de mañana.
+            'fecha' => $this->route('sale') === null
+                ? ['required', 'date', 'before_or_equal:today', 'after_or_equal:'.today()->subDays(2)->toDateString()]
+                : ['required', 'date'],
             'destino' => ['required', Rule::in(['local_cliente', 'vehiculo'])],
             'condicion_pago' => ['required', Rule::in(['contado', 'credito'])],
             'medio_pago' => ['required_if:condicion_pago,contado', 'nullable', Rule::in(array_keys(Sale::MEDIOS_PAGO))],
@@ -81,6 +85,8 @@ class StoreSaleRequest extends FormRequest
     {
         return [
             'items.*.precio_unitario.gt' => 'El precio debe ser mayor a cero.',
+            'fecha.before_or_equal' => 'La fecha de la venta no puede ser de mañana.',
+            'fecha.after_or_equal' => 'La venta puede ser de hoy o de hasta dos días atrás.',
             'medio_pago.required_if' => 'Elige cómo paga el cliente (efectivo, Yape, transferencia…).',
             'cuotas.required' => 'Define al menos una cuota para la venta a crédito.',
             'cuotas.min' => 'Define al menos una cuota para la venta a crédito.',

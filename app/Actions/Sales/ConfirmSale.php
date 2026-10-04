@@ -54,6 +54,12 @@ class ConfirmSale
 
         $sale->loadMissing('client');
 
+        // Un borrador que se emite otro día sale con la fecha en que se
+        // emite: el comprobante no puede ir a SUNAT con una fecha vieja.
+        if ($sale->fecha->lt(today())) {
+            $sale->update(['fecha' => today()]);
+        }
+
         if ($sale->esNotaVenta()) {
             return $this->confirmarNotaVenta($sale);
         }

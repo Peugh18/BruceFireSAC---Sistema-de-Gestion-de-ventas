@@ -4,6 +4,7 @@ namespace App\Actions\Billing;
 
 use App\Actions\Sales\RevertSale;
 use App\Models\ElectronicDocument;
+use App\Models\Sale;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -43,7 +44,8 @@ class IssueCreditNote
             ]);
         }
 
-        $sale = $original->sale;
+        // Leída de nuevo: la venta pudo anularse desde que se cargó el comprobante.
+        $sale = $original->sale()->firstOrFail();
 
         if ($sale->estado === 'anulada') {
             throw ValidationException::withMessages([
@@ -51,9 +53,11 @@ class IssueCreditNote
             ]);
         }
 
+        // Una nota que SUNAT rechazó no cuenta: se puede emitir otra.
         $acreditado = (float) ElectronicDocument::query()
             ->where('cpe_afectado_id', $original->id)
             ->where('tipo', 'nota_credito')
+            ->whereNotIn('sunat_estado', ['rechazado'])
             ->sum('importe');
 
         if ($importe + $acreditado > (float) $sale->total + 0.001) {
@@ -62,7 +66,7 @@ class IssueCreditNote
             ]);
         }
 
-        return DB::transaction(function () use ($original, $sale, $motivoCatalogo09, $detalle, $importe, $acreditado) {
+        return DB::transaction(function () use ($original, $motivoCatalogo09, $detalle, $importe) {
             $serie = $original->tipo === 'factura' ? 'FC01' : 'BC01';
             $correlativo = $this->reserveNextCorrelativo->handle('nota_credito', $serie);
 
@@ -78,14 +82,43 @@ class IssueCreditNote
                 'sunat_mensaje' => $detalle,
             ]);
 
-            $esAnulacionTotal = in_array($motivoCatalogo09, self::MOTIVOS_QUE_ANULAN, true)
-                && $importe + $acreditado >= (float) $sale->total - 0.001;
+            // La venta se anula recién cuando SUNAT acepta la nota
+            // (aplicarSiFueAceptada): si la rechaza, la factura sigue vigente
+            // y la venta no debe quedar anulada.
+            return $nota;
+        });
+    }
 
-            if ($esAnulacionTotal) {
-                $this->revertSale->handle($sale);
+    /**
+     * Cuando SUNAT acepta (u observa) una nota de crédito de anulación,
+     * devolución total o error de RUC que, con las demás aceptadas, cubre el
+     * total del comprobante, la venta se anula: vuelve el stock, se cierran
+     * las cuotas y se registra la devolución del cobro.
+     */
+    public function aplicarSiFueAceptada(ElectronicDocument $nota): void
+    {
+        if ($nota->tipo !== 'nota_credito'
+            || ! in_array($nota->sunat_estado, ['aceptado', 'observado'], true)
+            || ! in_array($nota->motivo_catalogo, self::MOTIVOS_QUE_ANULAN, true)) {
+            return;
+        }
+
+        DB::transaction(function () use ($nota): void {
+            $sale = Sale::query()->lockForUpdate()->findOrFail($nota->sale_id);
+
+            if ($sale->estado === 'anulada') {
+                return;
             }
 
-            return $nota;
+            $aceptado = (float) ElectronicDocument::query()
+                ->where('cpe_afectado_id', $nota->cpe_afectado_id)
+                ->where('tipo', 'nota_credito')
+                ->whereIn('sunat_estado', ['aceptado', 'observado'])
+                ->sum('importe');
+
+            if ($aceptado >= (float) $sale->total - 0.001) {
+                $this->revertSale->handle($sale);
+            }
         });
     }
 }

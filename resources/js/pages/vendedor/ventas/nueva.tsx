@@ -37,6 +37,7 @@ import { leerCookie } from '@/lib/cookies';
 import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
+import { fechaLocal } from '@/lib/utils';
 
 type SedeOption = { id: number; nombre: string };
 
@@ -158,7 +159,7 @@ const NOMBRE_COMPROBANTE: Record<DocumentType, string> = {
 };
 
 function today() {
-    return new Date().toISOString().slice(0, 10);
+    return fechaLocal();
 }
 
 function money(value: number) {

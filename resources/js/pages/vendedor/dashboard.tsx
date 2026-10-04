@@ -24,7 +24,7 @@ import alertas from '@/routes/vendedor/alertas';
 import clientes from '@/routes/vendedor/clientes';
 import facturacion from '@/routes/vendedor/facturacion';
 import VendedorLayout from '@/layouts/vendedor-layout';
-import { fechaCorta, soles } from '@/lib/utils';
+import { fechaCorta, soles, fechaLocal } from '@/lib/utils';
 import type { Auth, Team } from '@/types';
 
 export type VentasHoy = {
@@ -216,7 +216,7 @@ export default function VendedorDashboard({
             href: SaleController.index.url(teamSlug, {
                 query: {
                     estado: 'borrador',
-                    desde: haceUnAno.toISOString().slice(0, 10),
+                    desde: fechaLocal(haceUnAno),
                 },
             }),
             icono: FileText,
