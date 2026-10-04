@@ -53,7 +53,7 @@ test('gerente puede consultar la lista consolidada de cajas de todos los vendedo
             ->component('gerente/cajas/index')
             ->has('cajas.data', 2)
             ->has('kpis.turnosHoy')
-            ->has('kpis.totalDiferenciasMes')
+            ->has('kpis.faltantesMes')->has('kpis.sobrantesMes')
             ->has('kpis.turnosConDescuadreMes')
         );
 });

@@ -14,6 +14,7 @@ use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalePayment;
+use App\Models\SaleRefund;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Ml\RetentionModel;
@@ -34,46 +35,48 @@ class DashboardController extends Controller
         $inicioMes = now()->startOfMonth();
         $finMes = now()->endOfMonth();
 
-        // Actualizar cuotas vencidas antes de calcular
-        Installment::query()
-            ->where('estado', 'pendiente')
-            ->whereDate('fecha_vencimiento', '<', $hoy)
-            ->update(['estado' => 'vencido']);
+        // Abrir el Inicio no cambia datos: la tarea nocturna marca las cuotas
+        // vencidas; aquí se calcula por fecha. Solo cuentan las ventas
+        // emitidas (ni borradores ni anuladas), igual que en el Vendedor.
 
         // 1. Tarjetas KPI
         $ventasDia = (float) Sale::query()
             ->whereDate('fecha', $hoy)
-            ->where('estado', '!=', 'anulada')
+            ->where('estado', 'confirmada')
             ->sum('total');
 
         $ventasMes = (float) Sale::query()
             ->whereBetween('fecha', [$inicioMes, $finMes])
-            ->where('estado', '!=', 'anulada')
+            ->where('estado', 'confirmada')
             ->sum('total');
 
         $facturacionMes = (float) Sale::query()
             ->whereIn('comprobante_tipo', ['factura', 'boleta'])
             ->whereBetween('fecha', [$inicioMes, $finMes])
-            ->where('estado', '!=', 'anulada')
+            ->where('estado', 'confirmada')
             ->sum('total');
 
+        // Cobrado en el mes menos lo devuelto a clientes.
         $montoCobrado = (float) SalePayment::query()
             ->whereBetween('fecha', [$inicioMes, $finMes])
-            ->sum('monto');
+            ->sum('monto')
+            - (float) SaleRefund::query()
+                ->whereBetween('fecha', [$inicioMes, $finMes])
+                ->sum('monto');
 
-        $cuentasPorCobrar = (float) Installment::query()
-            ->whereIn('estado', ['pendiente', 'vencido'])
-            ->sum('monto');
+        // Por el saldo que falta cobrar, igual que en Cobranzas.
+        $deuda = fn () => Installment::query()
+            ->whereIn('installments.estado', CollectionConsolidatedController::DEBEN)
+            ->whereHas('sale', fn ($q) => $q->where('estado', 'confirmada'));
+        $cuentasPorCobrar = CollectionConsolidatedController::saldo($deuda());
+        $vencidoPorCobrar = CollectionConsolidatedController::saldo($deuda()->whereDate('fecha_vencimiento', '<', $hoy));
 
-        $vencidoPorCobrar = (float) Installment::query()
-            ->where('estado', 'vencido')
-            ->sum('monto');
-
+        // Ofrecidas al cliente y esperando su respuesta.
         $cotizacionesPendientes = Quote::query()
-            ->where('estado', 'pendiente')
+            ->whereIn('estado', ['emitida', 'enviada'])
             ->count();
 
-        $totalCotizaciones = Quote::query()->count();
+        $totalCotizaciones = Quote::query()->whereNotIn('estado', ['borrador', 'anulada'])->count();
         $cotizacionesGanadas = Quote::query()
             ->whereIn('estado', ['convertida', 'aceptada'])
             ->count();
@@ -90,16 +93,7 @@ class DashboardController extends Controller
             ->whereBetween('proxima_fecha_atencion', [$hoy, $hoy->copy()->addDays(30)])
             ->count();
 
-        $stockCritico = Product::query()
-            ->where('activo', true)
-            ->whereNotNull('stock_minimo')
-            ->where('stock_minimo', '>', 0)
-            ->withCount(['units as stock_disponible' => function ($query) {
-                $query->where('estado', 'disponible');
-            }])
-            ->get()
-            ->filter(fn ($p) => $p->stock_disponible <= $p->stock_minimo)
-            ->count();
+        $stockCritico = Product::query()->bajoMinimo()->count();
 
         $documentosSunatError = ElectronicDocument::query()
             ->whereIn('sunat_estado', ['rechazado', 'excepcion', 'error'])
@@ -115,7 +109,7 @@ class DashboardController extends Controller
 
             $montoMes = (float) Sale::query()
                 ->whereBetween('fecha', [$inicioTarget, $finTarget])
-                ->where('estado', '!=', 'anulada')
+                ->where('estado', 'confirmada')
                 ->sum('total');
 
             $ventasMensuales[] = [
@@ -124,23 +118,24 @@ class DashboardController extends Controller
             ];
         }
 
-        // Ventas por producto / servicio (top 5)
+        // Ventas por producto / servicio (top 5) de los últimos 12 meses,
+        // sumadas en la base (no se cargan todas las líneas en memoria).
+        $desdeAnio = now()->subMonths(11)->startOfMonth();
         $ventasPorItem = SaleItem::query()
-            ->with(['product:id,nombre', 'service:id,nombre'])
-            ->whereHas('sale', fn ($q) => $q->where('estado', '!=', 'anulada'))
+            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
+            ->leftJoin('services', 'services.id', '=', 'sale_items.service_id')
+            ->where('sales.estado', 'confirmada')
+            ->where('sales.fecha', '>=', $desdeAnio)
+            ->selectRaw("COALESCE(products.nombre, services.nombre, 'Ítem') as nombre, SUM(sale_items.subtotal) as monto")
+            ->groupByRaw("COALESCE(products.nombre, services.nombre, 'Ítem')")
+            ->orderByDesc('monto')
+            ->limit(5)
             ->get()
-            ->groupBy(function (SaleItem $item) {
-                return $item->product?->nombre ?? $item->service?->nombre ?? 'Ítem';
-            })
-            ->map(function ($items, $nombre) {
-                return [
-                    'nombre' => (string) $nombre,
-                    'monto' => round((float) $items->sum('subtotal'), 2),
-                ];
-            })
-            ->sortByDesc('monto')
-            ->take(5)
-            ->values()
+            ->map(fn ($row) => [
+                'nombre' => (string) $row->getAttribute('nombre'),
+                'monto' => round((float) $row->getAttribute('monto'), 2),
+            ])
             ->all();
 
         // Servicios por tipo
@@ -156,10 +151,7 @@ class DashboardController extends Controller
             ->all();
 
         // Cartera por estado
-        $carteraAlDia = (float) Installment::query()
-            ->where('estado', 'pendiente')
-            ->whereDate('fecha_vencimiento', '>=', $hoy)
-            ->sum('monto');
+        $carteraAlDia = CollectionConsolidatedController::saldo($deuda()->whereDate('fecha_vencimiento', '>=', $hoy));
 
         $carteraPorEstado = [
             ['estado' => 'Al Día', 'monto' => round($carteraAlDia, 2)],
@@ -167,9 +159,10 @@ class DashboardController extends Controller
             ['estado' => 'Cobrado Mes', 'monto' => round($montoCobrado, 2)],
         ];
 
-        // Top 5 clientes por facturación total
+        // Top 5 clientes de los últimos 12 meses
         $topClientes = Sale::query()
-            ->where('sales.estado', '!=', 'anulada')
+            ->where('sales.estado', 'confirmada')
+            ->where('sales.fecha', '>=', $desdeAnio)
             ->join('clients', 'clients.id', '=', 'sales.client_id')
             ->selectRaw('clients.razon_social as cliente, sum(sales.total) as total')
             ->groupBy('clients.id', 'clients.razon_social')

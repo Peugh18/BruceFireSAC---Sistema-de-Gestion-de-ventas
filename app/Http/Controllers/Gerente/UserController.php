@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\AuditLogger;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -82,6 +83,12 @@ class UserController extends Controller
     {
         $nuevoRol = $request->validated('role');
         $rolAnterior = $user->roles->first()?->name;
+
+        // Un Gerente no se quita su propio rol: se quedaría fuera de esta
+        // pantalla y la empresa podría quedar sin nadie que la administre.
+        if ($rolAnterior === 'Gerente' && $nuevoRol !== 'Gerente' && $user->is($request->user())) {
+            throw ValidationException::withMessages(['role' => 'No puedes quitarte tu propio rol de Gerente. Pídeselo a otro Gerente.']);
+        }
 
         // Si ya tiene sede, el nuevo rol tiene que poder trabajar ahí.
         if ($user->sede) {

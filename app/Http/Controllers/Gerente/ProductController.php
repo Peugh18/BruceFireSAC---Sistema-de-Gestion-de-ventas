@@ -24,9 +24,7 @@ class ProductController extends Controller
         $bajoMinimo = $request->boolean('bajo_minimo', false);
 
         $query = Product::query()
-            ->withCount(['units as stock_disponible' => function ($q) {
-                $q->where('estado', 'disponible');
-            }])
+            ->conStock()
             ->when($buscar !== '', function ($q) use ($buscar) {
                 $q->where(function ($sub) use ($buscar) {
                     $sub->where('nombre', 'like', "%{$buscar}%")
@@ -35,12 +33,7 @@ class ProductController extends Controller
             })
             ->when($estado === 'activos', fn ($q) => $q->where('activo', true))
             ->when($estado === 'inactivos', fn ($q) => $q->where('activo', false))
-            ->when($bajoMinimo, function ($q) {
-                $q->where('activo', true)
-                    ->whereNotNull('stock_minimo')
-                    ->where('stock_minimo', '>', 0)
-                    ->whereRaw('(SELECT count(*) FROM inventory_units WHERE inventory_units.product_id = products.id AND inventory_units.estado = ?) <= products.stock_minimo', ['disponible']);
-            })
+            ->when($bajoMinimo, fn ($q) => $q->bajoMinimo())
             ->orderBy('nombre');
 
         $productos = $query->paginate(15)->withQueryString()->through(function (Product $p) {
@@ -55,21 +48,14 @@ class ProductController extends Controller
                 'serializado' => (bool) $p->serializado,
                 'stock_minimo' => $p->stock_minimo !== null ? (int) $p->stock_minimo : null,
                 'activo' => (bool) $p->activo,
-                'stock_disponible' => (int) $p->stock_disponible,
+                'stock_disponible' => $p->stockDisponible(),
             ];
         });
 
         // Contadores resumen para KPI rápidos
         $totalProductos = Product::count();
         $totalActivos = Product::where('activo', true)->count();
-        $totalBajoMinimo = Product::query()
-            ->where('activo', true)
-            ->whereNotNull('stock_minimo')
-            ->where('stock_minimo', '>', 0)
-            ->withCount(['units as stock_disponible' => fn ($q) => $q->where('estado', 'disponible')])
-            ->get()
-            ->filter(fn ($p) => $p->stock_disponible <= $p->stock_minimo)
-            ->count();
+        $totalBajoMinimo = Product::query()->bajoMinimo()->count();
 
         return Inertia::render('gerente/productos/index', [
             'productos' => $productos,

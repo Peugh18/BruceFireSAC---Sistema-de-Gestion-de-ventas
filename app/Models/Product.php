@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use Closure;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -56,6 +60,74 @@ class Product extends Model
             'stock_minimo' => 'integer',
             'activo' => 'boolean',
         ];
+    }
+
+    /**
+     * Agrega el stock disponible a la consulta: los que llevan serie cuentan
+     * sus unidades disponibles y los que se venden por cantidad (repuestos,
+     * EPP) suman su Kardex. Es el mismo criterio de Almacén, así el Gerente
+     * y Almacén ven el mismo número. Se lee con stockDisponible().
+     *
+     * @param  Builder<Product>  $query
+     * @param  list<int>|null  $sedeIds  solo esos almacenes (null = todos)
+     */
+    public function scopeConStock(Builder $query, ?array $sedeIds = null): void
+    {
+        if ($query->getQuery()->columns === null) {
+            $query->select('products.*');
+        }
+
+        $query->selectSub(self::unidadesDisponibles($sedeIds), 'stock_unidades')
+            ->selectSub(self::saldoKardex($sedeIds), 'stock_kardex');
+    }
+
+    /**
+     * Productos activos con mínimo definido y stock en o bajo ese mínimo.
+     *
+     * @param  Builder<Product>  $query
+     * @param  list<int>|null  $sedeIds
+     */
+    public function scopeBajoMinimo(Builder $query, ?array $sedeIds = null): void
+    {
+        $minimo = DB::raw('products.stock_minimo');
+
+        $query->where('products.activo', true)
+            ->whereNotNull('products.stock_minimo')
+            ->where('products.stock_minimo', '>', 0)
+            ->where(fn (Builder $q) => $q
+                ->where(fn (Builder $q) => $q->where('products.serializado', true)->where(self::unidadesDisponibles($sedeIds), '<=', $minimo))
+                ->orWhere(fn (Builder $q) => $q->where('products.serializado', false)->where(self::saldoKardex($sedeIds), '<=', $minimo)));
+    }
+
+    /**
+     * El stock que trajo conStock().
+     */
+    public function stockDisponible(): int
+    {
+        return (int) $this->getAttribute($this->serializado ? 'stock_unidades' : 'stock_kardex');
+    }
+
+    /**
+     * @param  list<int>|null  $sedeIds
+     */
+    protected static function unidadesDisponibles(?array $sedeIds): Closure
+    {
+        return fn (QueryBuilder $q) => $q->from('inventory_units')
+            ->selectRaw('COUNT(*)')
+            ->whereColumn('inventory_units.product_id', 'products.id')
+            ->where('inventory_units.estado', 'disponible')
+            ->when($sedeIds !== null, fn (QueryBuilder $q) => $q->whereIn('inventory_units.sede_almacen_id', $sedeIds ?? []));
+    }
+
+    /**
+     * @param  list<int>|null  $sedeIds
+     */
+    protected static function saldoKardex(?array $sedeIds): Closure
+    {
+        return fn (QueryBuilder $q) => $q->from('inventory_movements')
+            ->selectRaw('COALESCE(SUM(inventory_movements.cantidad), 0)')
+            ->whereColumn('inventory_movements.product_id', 'products.id')
+            ->when($sedeIds !== null, fn (QueryBuilder $q) => $q->whereIn('inventory_movements.sede_id', $sedeIds ?? []));
     }
 
     /**

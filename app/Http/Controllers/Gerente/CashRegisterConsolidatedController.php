@@ -59,7 +59,7 @@ class CashRegisterConsolidatedController extends Controller
                     'id' => $cr->vendedor->id,
                     'name' => $cr->vendedor->name,
                 ],
-                'sede' => $cr->sede?->nombre ?? 'Principal',
+                'sede' => $cr->sede?->nombre ?? 'Sin sede',
                 'estado' => $cr->estado,
                 'fecha_apertura' => $cr->fecha_apertura?->toDateTimeString(),
                 'fecha_cierre' => $cr->fecha_cierre?->toDateTimeString(),
@@ -81,10 +81,13 @@ class CashRegisterConsolidatedController extends Controller
             ->where('estado', 'abierto')
             ->count();
 
-        $totalDiferenciasMes = (float) CashRegister::query()
+        // Faltantes y sobrantes por separado: sumados se tapan (un faltante
+        // de 100 y un sobrante de 100 darían 0).
+        $cerradosMes = fn () => CashRegister::query()
             ->where('estado', 'cerrado')
-            ->whereBetween('fecha_cierre', [now()->startOfMonth(), now()->endOfMonth()])
-            ->sum('diferencia');
+            ->whereBetween('fecha_cierre', [now()->startOfMonth(), now()->endOfMonth()]);
+        $faltantesMes = -(float) $cerradosMes()->where('diferencia', '<', 0)->sum('diferencia');
+        $sobrantesMes = (float) $cerradosMes()->where('diferencia', '>', 0)->sum('diferencia');
 
         $turnosConDescuadreMes = CashRegister::query()
             ->where('estado', 'cerrado')
@@ -118,7 +121,8 @@ class CashRegisterConsolidatedController extends Controller
             'kpis' => [
                 'turnosHoy' => $turnosHoy,
                 'turnosAbiertos' => $turnosAbiertos,
-                'totalDiferenciasMes' => round($totalDiferenciasMes, 2),
+                'faltantesMes' => round($faltantesMes, 2),
+                'sobrantesMes' => round($sobrantesMes, 2),
                 'turnosConDescuadreMes' => $turnosConDescuadreMes,
             ],
             'vendedores' => $vendedores,
