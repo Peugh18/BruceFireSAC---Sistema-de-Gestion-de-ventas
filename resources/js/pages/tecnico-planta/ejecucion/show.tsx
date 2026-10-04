@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
 import {
@@ -90,25 +90,24 @@ export default function EjecucionShow({
     repuestos,
     certificates,
 }: Props) {
-    const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    const { currentTeam, errors } = usePage<{
+        currentTeam?: Team | null;
+        errors: Record<string, string>;
+    }>().props;
     const teamSlug = currentTeam?.slug ?? '';
     const teamPrefix = `/${teamSlug}/tecnico-planta`;
 
     const [selectedDeficiency, setSelectedDeficiency] =
         useState<DeficiencyItem | null>(null);
-    const [phRealizada, setPhRealizada] = useState(false);
+    // Extintores a los que se les hizo la Prueba Hidrostática (uno por uno).
+    const [conPh, setConPh] = useState<number[]>([]);
+    const [avanzando, setAvanzando] = useState(false);
 
     // Form for consuming spare parts
     const spareForm = useForm({
         product_id: repuestos[0]?.id || '',
         cantidad: 1,
         observacion: '',
-    });
-
-    // Form for advancing state
-    const advanceForm = useForm({
-        target_state: '',
-        ph_realizada: false,
     });
 
     const handleConsumeSpare = (e: React.FormEvent) => {
@@ -126,12 +125,18 @@ export default function EjecucionShow({
         );
     };
 
+    // Un solo envío a la vez: con mala señal el técnico no emite dos veces.
     const handleAdvance = (targetState: string) => {
-        advanceForm.setData({
-            target_state: targetState,
-            ph_realizada: phRealizada,
-        });
-        advanceForm.post(`${teamPrefix}/ordenes/${order.id}/avanzar-estado`);
+        if (avanzando) return;
+        router.post(
+            `${teamPrefix}/ordenes/${order.id}/avanzar-estado`,
+            { target_state: targetState, ph_equipos: conPh },
+            {
+                preserveScroll: true,
+                onStart: () => setAvanzando(true),
+                onFinish: () => setAvanzando(false),
+            },
+        );
     };
 
     return (
@@ -287,11 +292,21 @@ export default function EjecucionShow({
                         <span>Control de Ejecución en Planta</span>
                     </h3>
 
+                    {errors.target_state ? (
+                        <p
+                            role="alert"
+                            className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+                        >
+                            {errors.target_state}
+                        </p>
+                    ) : null}
+
                     {order.estado === 'recibido_planta' ||
                     order.estado === 'autorizado' ? (
                         <button
                             type="button"
                             onClick={() => handleAdvance('en_proceso')}
+                            disabled={avanzando}
                             className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-700"
                         >
                             <Wrench className="h-4 w-4" />
@@ -301,6 +316,7 @@ export default function EjecucionShow({
                         <button
                             type="button"
                             onClick={() => handleAdvance('trabajo_terminado')}
+                            disabled={avanzando}
                             className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3 text-xs font-bold text-white shadow-sm hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
                         >
                             <CheckCircle2 className="h-4 w-4" />
@@ -310,26 +326,50 @@ export default function EjecucionShow({
                       order.estado === 'pendiente_datos' ||
                       order.estado === 'datos_completos' ? (
                         <div className="space-y-3">
-                            <label className="bg-card flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 p-3 text-xs font-semibold text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-                                <input
-                                    type="checkbox"
-                                    checked={phRealizada}
-                                    onChange={(e) =>
-                                        setPhRealizada(e.target.checked)
-                                    }
-                                    className="text-warning-strong h-4 w-4 rounded border-neutral-300 focus:ring-amber-500"
-                                />
-                                <span>
-                                    Se realizó Prueba Hidrostática (P.H.) en el
-                                    cilindro
-                                </span>
-                            </label>
+                            {order.equipments.length > 0 ? (
+                                <div className="bg-card space-y-1.5 rounded-xl border border-neutral-200 p-3 text-xs dark:border-neutral-700 dark:bg-neutral-800">
+                                    <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                        Prueba Hidrostática (P.H.): marca solo
+                                        los cilindros a los que se les hizo
+                                    </p>
+                                    {order.equipments.map((eq) => (
+                                        <label
+                                            key={eq.id}
+                                            className="flex cursor-pointer items-center gap-2"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={conPh.includes(eq.id)}
+                                                onChange={(e) =>
+                                                    setConPh((actual) =>
+                                                        e.target.checked
+                                                            ? [...actual, eq.id]
+                                                            : actual.filter(
+                                                                  (id) =>
+                                                                      id !==
+                                                                      eq.id,
+                                                              ),
+                                                    )
+                                                }
+                                                className="text-warning-strong h-4 w-4 rounded border-neutral-300 focus:ring-amber-500"
+                                            />
+                                            <span className="font-mono font-bold">
+                                                {eq.numero_serie}
+                                            </span>
+                                            <span className="text-neutral-500">
+                                                {eq.tipo_agente} {eq.capacidad}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                            ) : null}
 
                             <button
                                 type="button"
                                 onClick={() =>
                                     handleAdvance('listo_certificado')
                                 }
+                                disabled={avanzando}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-xs font-extrabold text-white shadow-md hover:bg-emerald-700 active:bg-emerald-800"
                             >
                                 <Sparkles className="h-4 w-4" />
@@ -351,6 +391,7 @@ export default function EjecucionShow({
                             <button
                                 type="button"
                                 onClick={() => handleAdvance('listo_entrega')}
+                                disabled={avanzando}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
                             >
                                 <CheckCircle2 className="h-4 w-4" />

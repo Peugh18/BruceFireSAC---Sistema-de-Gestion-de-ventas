@@ -29,7 +29,7 @@ class IssueDebitNote
             ]);
         }
 
-        if ($original->sale->estado === 'anulada') {
+        if ($original->sale()->value('estado') === 'anulada') {
             throw ValidationException::withMessages([
                 'electronic_document_id' => 'La venta está anulada: no admite notas de débito.',
             ]);

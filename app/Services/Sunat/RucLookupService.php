@@ -4,6 +4,7 @@ namespace App\Services\Sunat;
 
 use App\Models\Client;
 use App\Models\Ubigeo;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -54,9 +55,44 @@ class RucLookupService
             throw new RuntimeException('APIsPeru devolvio una respuesta invalida.');
         }
 
-        return mb_strlen($numeroDocumento) === 11
+        $resultado = mb_strlen($numeroDocumento) === 11
             ? $this->mapRucResponse($data)
             : $this->mapDniResponse($data);
+
+        // Se recuerda una hora: al guardar el cliente, su estado SUNAT sale
+        // de esta consulta del servidor y no de lo que mande el formulario.
+        Cache::put(self::claveConsulta($numeroDocumento), $resultado, now()->addHour());
+
+        return $resultado;
+    }
+
+    /**
+     * Lo que SUNAT respondió en la última hora para ese documento.
+     *
+     * @return array{razon_social: string, direccion: ?string, estado_contribuyente: ?string, condicion_domicilio: ?string, ubigeo: ?string}|null
+     */
+    public function consultaReciente(string $numeroDocumento): ?array
+    {
+        $consulta = Cache::get(self::claveConsulta($numeroDocumento));
+
+        if (! is_array($consulta)) {
+            return null;
+        }
+
+        $texto = fn (string $clave): ?string => isset($consulta[$clave]) && is_string($consulta[$clave]) ? $consulta[$clave] : null;
+
+        return [
+            'razon_social' => $texto('razon_social') ?? '',
+            'direccion' => $texto('direccion'),
+            'estado_contribuyente' => $texto('estado_contribuyente'),
+            'condicion_domicilio' => $texto('condicion_domicilio'),
+            'ubigeo' => $texto('ubigeo'),
+        ];
+    }
+
+    protected static function claveConsulta(string $numeroDocumento): string
+    {
+        return "sunat-consulta:{$numeroDocumento}";
     }
 
     /**

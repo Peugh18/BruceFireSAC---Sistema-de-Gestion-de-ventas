@@ -33,6 +33,10 @@ class RegisterCollection
             throw new InvalidArgumentException('Se requiere la conformidad del cliente para el recojo de equipos.');
         }
 
+        if ($serviceOrder->estado !== 'pendiente_recepcion' || $serviceOrder->events()->where('payload->eslabon_custodia', 'recojo_campo')->exists()) {
+            throw new InvalidArgumentException('Este recojo ya se registró.');
+        }
+
         return DB::transaction(function () use ($serviceOrder, $user, $data) {
             $cantidad = $serviceOrder->equipments()->count();
             if ($cantidad === 0) {
@@ -48,9 +52,11 @@ class RegisterCollection
                 $serviceOrder->equipments()->syncWithoutDetaching($data['equipos_ids']);
             }
 
-            // Actualizar orden: se mantiene en pendiente_recepcion (en camino al taller de Planta)
+            // La orden sigue en pendiente_recepcion, ahora rumbo al taller:
+            // pasa a Planta y sin técnico, para que el de planta la reciba.
             $serviceOrder->update([
-                'tecnico_id' => $user->id,
+                'departamento_tecnico' => 'planta',
+                'tecnico_id' => null,
                 'observaciones' => $observaciones ? ($serviceOrder->observaciones ? "{$serviceOrder->observaciones}\n[Recojo]: {$observaciones}" : "[Recojo]: {$observaciones}") : $serviceOrder->observaciones,
             ]);
 

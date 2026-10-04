@@ -323,15 +323,35 @@ test('comprobantes sunat muestra los de hoy y filtra por fecha de emision', func
         ->assertInertia(fn ($page) => $page->where('totalFiltrados', 1)->where('documents.data.0.correlativo', 71));
 });
 
-test('una nota de credito por devolucion total anula la venta y una por item no', function () {
+test('una nota de credito por devolucion total anula la venta cuando sunat la acepta y una por item no', function () {
     foreach (['06' => 'anulada', '07' => 'confirmada'] as $motivo => $esperado) {
         $sale = Sale::factory()->create(['estado' => 'confirmada', 'total' => 100, 'condicion_pago' => 'credito']);
         $original = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'sunat_estado' => 'aceptado']);
 
-        app(IssueCreditNote::class)->handle($original, $motivo, 'Devolución del cliente', 100);
+        $nota = app(IssueCreditNote::class)->handle($original, $motivo, 'Devolución del cliente', 100);
+        // Emitida pero aún sin respuesta de SUNAT: la venta sigue vigente.
+        expect($sale->fresh()->estado)->toBe('confirmada');
+
+        $nota->update(['sunat_estado' => 'aceptado']);
+        app(IssueCreditNote::class)->aplicarSiFueAceptada($nota);
 
         expect($sale->fresh()->estado)->toBe($esperado);
     }
+});
+
+test('si sunat rechaza la nota de anulacion la venta sigue vigente y se puede emitir otra', function () {
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'total' => 100, 'condicion_pago' => 'credito']);
+    $original = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'sunat_estado' => 'aceptado']);
+
+    $rechazada = app(IssueCreditNote::class)->handle($original, '01', 'Anulación', 100);
+    $rechazada->update(['sunat_estado' => 'rechazado']);
+    app(IssueCreditNote::class)->aplicarSiFueAceptada($rechazada);
+    expect($sale->fresh()->estado)->toBe('confirmada');
+
+    $otra = app(IssueCreditNote::class)->handle($original, '01', 'Anulación', 100);
+    $otra->update(['sunat_estado' => 'aceptado']);
+    app(IssueCreditNote::class)->aplicarSiFueAceptada($otra);
+    expect($sale->fresh()->estado)->toBe('anulada');
 });
 
 test('en comprobantes sunat una nota de credito muestra su importe y no el de la venta', function () {

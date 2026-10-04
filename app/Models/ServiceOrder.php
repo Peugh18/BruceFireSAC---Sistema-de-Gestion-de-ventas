@@ -58,7 +58,17 @@ class ServiceOrder extends Model
     public const ESTADOS = [
         'pendiente_recepcion', 'recibido_planta', 'en_revision', 'esperando_autorizacion',
         'autorizado', 'en_proceso', 'trabajo_terminado', 'pendiente_datos', 'datos_completos',
-        'listo_certificado', 'listo_entrega', 'entregado', 'cerrado',
+        'listo_certificado', 'listo_entrega', 'entregado', 'cerrado', 'anulada',
+    ];
+
+    /**
+     * Hasta dónde se puede anular la orden: con el certificado emitido ya no.
+     *
+     * @var list<string>
+     */
+    public const ESTADOS_ANULABLES = [
+        'pendiente_recepcion', 'recibido_planta', 'en_revision', 'esperando_autorizacion',
+        'autorizado', 'en_proceso', 'trabajo_terminado', 'pendiente_datos', 'datos_completos',
     ];
 
     /**
@@ -68,6 +78,14 @@ class ServiceOrder extends Model
      * @var list<string>
      */
     public const ESTADOS_LISTOS = ['listo_certificado', 'listo_entrega'];
+
+    /**
+     * El taller ya terminó con la orden (o se anuló): no se le agregan
+     * checklists ni deficiencias.
+     *
+     * @var list<string>
+     */
+    public const ESTADOS_CERRADOS_AL_TALLER = ['trabajo_terminado', 'pendiente_datos', 'datos_completos', 'listo_certificado', 'listo_entrega', 'entregado', 'cerrado', 'anulada'];
 
     /**
      * Desde dónde se registra la entrega en mostrador (`entregado` viene de
@@ -97,6 +115,7 @@ class ServiceOrder extends Model
         'listo_entrega' => 'completada',
         'entregado' => 'completada',
         'cerrado' => 'cerrada',
+        'anulada' => 'anulada',
     ];
 
     protected function casts(): array
@@ -166,6 +185,23 @@ class ServiceOrder extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    /**
+     * Los extintores que se certifican y a los que se les renuevan las
+     * fechas: los que llegaron al taller y cuya reparación el cliente no
+     * rechazó (un extintor sin reparar no sale como operativo).
+     *
+     * @return Collection<int, Equipment>
+     */
+    public function equiposAptos(): Collection
+    {
+        $rechazados = $this->deficiencies()->where('estado', 'rechazada')->whereNotNull('equipment_id')->pluck('equipment_id');
+
+        return $this->equipments()
+            ->wherePivot('recibido', true)
+            ->whereNotIn('equipment.id', $rechazados)
+            ->get();
     }
 
     /**

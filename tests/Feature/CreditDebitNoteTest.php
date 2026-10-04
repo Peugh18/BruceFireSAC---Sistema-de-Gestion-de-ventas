@@ -61,11 +61,22 @@ function ventaConFactura(string $condicionPago = 'contado', string $tipo = 'fact
     return [$sale->refresh(), $documento, $unit];
 }
 
+/**
+ * SUNAT acepta la nota: recién ahí una anulación total anula la venta.
+ */
+function aceptarNota(ElectronicDocument $nota): ElectronicDocument
+{
+    $nota->update(['sunat_estado' => 'aceptado']);
+    app(IssueCreditNote::class)->aplicarSiFueAceptada($nota);
+
+    return $nota;
+}
+
 test('una nota de crédito de anulación total devuelve stock kardex y anula la venta', function () {
     [$sale, $factura, $unit] = ventaConFactura('credito_30');
     SalePayment::factory()->create(['sale_id' => $sale->id, 'monto' => 10]);
 
-    $nota = app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total);
+    $nota = aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total));
 
     expect($nota->serie)->toBe('FC01')
         ->and($nota->importe)->toBe(number_format((float) $sale->total, 2, '.', ''))
@@ -97,7 +108,7 @@ test('las notas de crédito acumuladas no pueden superar el total del comprobant
 
 test('una venta anulada rechaza nuevas notas de crédito y de débito', function () {
     [$sale, $factura] = ventaConFactura();
-    app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total);
+    aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total));
 
     expect(fn () => app(IssueCreditNote::class)->handle($factura, '04', 'Descuento', 1))
         ->toThrow(ValidationException::class)

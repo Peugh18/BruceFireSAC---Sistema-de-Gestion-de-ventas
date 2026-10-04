@@ -117,6 +117,16 @@ class DeficiencyController extends Controller
             'foto_path' => ['nullable', 'string', 'max:255'],
         ]);
 
+        // Con el certificado emitido (o la orden anulada) ya no se agregan
+        // deficiencias: devolverían la orden a esperar autorización.
+        if (in_array($service_order->estado, ServiceOrder::ESTADOS_CERRADOS_AL_TALLER, true)) {
+            return back()->withErrors(['componente' => 'Esta orden ya terminó en el taller: no se le agregan deficiencias.']);
+        }
+
+        if (! empty($validated['equipment_id']) && ! $service_order->equipments()->whereKey($validated['equipment_id'])->exists()) {
+            return back()->withErrors(['equipment_id' => 'Ese extintor no es de esta orden.']);
+        }
+
         $requiereAuth = (bool) ($validated['requiere_autorizacion'] ?? false);
         $equipmentId = $validated['equipment_id'] ?? $service_order->equipments()->value('equipment.id');
 

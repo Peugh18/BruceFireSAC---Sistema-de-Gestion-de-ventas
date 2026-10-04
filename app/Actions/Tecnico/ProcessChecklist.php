@@ -64,6 +64,14 @@ class ProcessChecklist
             throw new InvalidArgumentException('El checklist debe incluir los elementos evaluados.');
         }
 
+        // En planta se revisa lo recibido y antes de cerrar el trabajo.
+        if (in_array($serviceOrder->estado, ServiceOrder::ESTADOS_CERRADOS_AL_TALLER, true)
+            || (($data['origen'] ?? null) === 'planta' && $serviceOrder->estado === 'pendiente_recepcion')) {
+            throw ValidationException::withMessages(['equipment' => $serviceOrder->estado === 'pendiente_recepcion'
+                ? 'Primero confirma la recepción de la orden en planta.'
+                : 'Esta orden ya terminó en el taller: no se hacen más checklists.']);
+        }
+
         // Solo se revisan los extintores de esta orden (no los de otro cliente).
         if (! $serviceOrder->equipments()->whereKey($equipment->id)->exists()) {
             throw ValidationException::withMessages(['equipment' => 'Ese extintor no está registrado en esta orden.']);

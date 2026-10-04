@@ -14,23 +14,35 @@ class ReceiveServiceOrder
      * Confirma la recepción de la orden en Planta (§18).
      * Transición: pendiente_recepcion -> recibido_planta.
      * Registra evento inmutable en ServiceOrderEvent con la bitácora de recepción y diferencias.
+     *
+     * @param  list<int>|null  $equiposRecibidos  los que llegaron (null = todos)
      */
     public function execute(
         ServiceOrder $serviceOrder,
         User $user,
         ?string $observaciones = null,
         int $equiposRecibidosCount = 0,
-        ?string $diferencias = null
+        ?string $diferencias = null,
+        ?array $equiposRecibidos = null,
     ): ServiceOrder {
-        if ($serviceOrder->estado !== 'recibido_planta' && $serviceOrder->estado !== 'pendiente_recepcion') {
+        // Se recibe una sola vez.
+        if ($serviceOrder->estado !== 'pendiente_recepcion') {
             throw new InvalidArgumentException(sprintf(
                 'No se puede recibir una orden en estado "%s".',
                 $serviceOrder->estado
             ));
         }
 
-        return DB::transaction(function () use ($serviceOrder, $user, $observaciones, $equiposRecibidosCount, $diferencias) {
-            $serviceOrder->equipments()->newPivotStatement()->where('service_order_id', $serviceOrder->id)->update(['recibido' => true, 'updated_at' => now()]);
+        return DB::transaction(function () use ($serviceOrder, $user, $observaciones, $equiposRecibidosCount, $diferencias, $equiposRecibidos) {
+            // Solo lo que llegó queda como recibido: lo que falta no se
+            // certifica ni se le renuevan las fechas.
+            $pivote = $serviceOrder->equipments()->newPivotStatement()->where('service_order_id', $serviceOrder->id);
+            if ($equiposRecibidos === null) {
+                $pivote->update(['recibido' => true, 'updated_at' => now()]);
+            } else {
+                (clone $pivote)->update(['recibido' => false, 'updated_at' => now()]);
+                $pivote->whereIn('equipment_id', $equiposRecibidos)->update(['recibido' => true, 'updated_at' => now()]);
+            }
             $estadoAnterior = $serviceOrder->estado;
 
             $serviceOrder->update([

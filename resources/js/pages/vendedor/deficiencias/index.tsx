@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
+import { fechaLocal } from '@/lib/utils';
 
 export type DeficiencyItem = {
     id: number;
@@ -147,7 +148,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
         autorizado: true,
         autorizado_por: '',
         canal: 'whatsapp',
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: fechaLocal(),
         observacion: '',
     });
 
@@ -157,7 +158,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
             autorizado: isApproving,
             autorizado_por: '',
             canal: 'whatsapp',
-            fecha: new Date().toISOString().split('T')[0],
+            fecha: fechaLocal(),
             observacion: '',
         });
     };

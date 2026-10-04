@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
-import { fechaCorta } from '@/lib/utils';
+import { fechaCorta, fechaLocal } from '@/lib/utils';
 
 export type ServiceOrderItem = {
     id: number;
@@ -69,6 +69,7 @@ const TABS = [
     { id: 'en_camino', label: 'En camino' },
     { id: 'en_proceso', label: 'En proceso' },
     { id: 'completadas', label: 'Completadas' },
+    { id: 'anuladas', label: 'Anuladas' },
 ] as const;
 
 function getCoarseStep(coarseLabel: string): number {
@@ -157,7 +158,7 @@ export default function ServiceOrdersIndex({
         client_id: '',
         service_id: '',
         tipo_servicio: '',
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: fechaLocal(),
         departamento_tecnico: 'planta' as 'planta' | 'campo',
         tecnico_id: '',
         referencia: '',

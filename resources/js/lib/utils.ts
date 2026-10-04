@@ -36,3 +36,16 @@ export function soles(monto: number | string | null | undefined): string {
         .format(Number.isFinite(numero) ? numero : 0)
         .replace(/\s/u, '\u00a0');
 }
+
+/**
+ * Fecha "YYYY-MM-DD" en la hora del equipo (Perú), no en UTC: con
+ * toISOString() una venta hecha después de las 19:00 quedaba con la fecha
+ * de mañana.
+ */
+export function fechaLocal(fecha: Date = new Date()): string {
+    return [
+        fecha.getFullYear(),
+        String(fecha.getMonth() + 1).padStart(2, '0'),
+        String(fecha.getDate()).padStart(2, '0'),
+    ].join('-');
+}

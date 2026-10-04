@@ -93,7 +93,21 @@ const ESTADOS: Record<string, string> = {
     listo_entrega: 'Listo para entregar',
     entregado: 'Entregado',
     cerrado: 'Cerrado',
+    anulada: 'Anulada',
 };
+
+/** Hasta aquí se puede anular: con el certificado emitido ya no. */
+const ANULABLES = [
+    'pendiente_recepcion',
+    'recibido_planta',
+    'en_revision',
+    'esperando_autorizacion',
+    'autorizado',
+    'en_proceso',
+    'trabajo_terminado',
+    'pendiente_datos',
+    'datos_completos',
+];
 
 const PRIORIDADES: Record<string, string> = {
     normal: 'Normal',
@@ -188,7 +202,31 @@ export default function ServiceOrderShow({
             : '');
 
     const currentStep = getCoarseStep(serviceOrder.estado);
-    const editable = !['entregado', 'cerrado'].includes(serviceOrder.estado);
+    const editable = !['entregado', 'cerrado', 'anulada'].includes(
+        serviceOrder.estado,
+    );
+    const [anulando, setAnulando] = useState(false);
+    const [motivoAnulacion, setMotivoAnulacion] = useState('');
+    const [errorAnulacion, setErrorAnulacion] = useState<string | null>(null);
+
+    const anularOrden = () => {
+        router.post(
+            ordenes.anular.url({
+                current_team: teamSlug,
+                service_order: serviceOrder.id,
+            }),
+            { motivo: motivoAnulacion },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setAnulando(false);
+                    setMotivoAnulacion('');
+                },
+                onError: (errores) =>
+                    setErrorAnulacion(errores.motivo ?? 'No se pudo anular.'),
+            },
+        );
+    };
     const [editando, setEditando] = useState(false);
     const [tecnicoElegido, setTecnicoElegido] = useState('');
     const edicion = useForm({
@@ -292,6 +330,19 @@ export default function ServiceOrderShow({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                        {ANULABLES.includes(serviceOrder.estado) ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    setErrorAnulacion(null);
+                                    setAnulando(true);
+                                }}
+                                className="border-destructive/40 text-destructive-strong rounded-[9px] text-xs font-semibold"
+                            >
+                                Anular orden
+                            </Button>
+                        ) : null}
                         {editable ? (
                             <Button
                                 type="button"
@@ -913,6 +964,47 @@ export default function ServiceOrderShow({
                             </Button>
                         </div>
                     </form>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={anulando} onOpenChange={setAnulando}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
+                            Anular la orden {serviceOrder.codigo}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <p className="text-muted-foreground text-xs">
+                        Úsalo cuando el cliente se arrepiente. Los extintores
+                        que estén en el taller se le devuelven sin servicio. Si
+                        la orden ya se cobró, primero anula la venta.
+                    </p>
+                    <textarea
+                        value={motivoAnulacion}
+                        onChange={(e) => setMotivoAnulacion(e.target.value)}
+                        placeholder="Motivo de la anulación"
+                        className="border-border bg-card min-h-[80px] w-full rounded-lg border p-2 text-sm"
+                    />
+                    {errorAnulacion ? (
+                        <p className="text-destructive-strong text-xs font-semibold">
+                            {errorAnulacion}
+                        </p>
+                    ) : null}
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setAnulando(false)}
+                        >
+                            Volver
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={anularOrden}
+                            className="bg-destructive hover:bg-destructive/90 text-white"
+                        >
+                            Anular orden
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
         </VendedorLayout>

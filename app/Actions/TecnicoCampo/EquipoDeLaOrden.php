@@ -81,7 +81,7 @@ class EquipoDeLaOrden
      */
     public static function asegurarAbierta(ServiceOrder $orden): void
     {
-        if (in_array($orden->estado, ['esperando_autorizacion', 'listo_certificado', 'listo_entrega', 'entregado', 'cerrado'], true)) {
+        if (in_array($orden->estado, ['esperando_autorizacion', 'listo_certificado', 'listo_entrega', 'entregado', 'cerrado', 'anulada'], true)) {
             throw ValidationException::withMessages([
                 'estado' => 'Esta orden ya se finalizó: no se puede volver a registrar.',
             ]);

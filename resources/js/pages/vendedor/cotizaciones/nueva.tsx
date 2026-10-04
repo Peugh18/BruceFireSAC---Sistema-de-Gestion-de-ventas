@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import cotizaciones from '@/routes/vendedor/cotizaciones';
 import type { Team } from '@/types';
+import { fechaLocal } from '@/lib/utils';
 
 type QuoteItemForm = {
     key: string;
@@ -60,7 +61,7 @@ function sumarDias(dias: number) {
     const date = new Date();
     date.setDate(date.getDate() + dias);
 
-    return date.toISOString().slice(0, 10);
+    return fechaLocal(date);
 }
 
 function money(value: number) {

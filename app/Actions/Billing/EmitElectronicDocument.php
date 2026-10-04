@@ -72,6 +72,9 @@ class EmitElectronicDocument
             'enviado_at' => now(),
         ]);
 
+        // Una nota de crédito de anulación aceptada anula la venta.
+        app(IssueCreditNote::class)->aplicarSiFueAceptada($document->refresh());
+
         return $document->refresh();
     }
 

@@ -11,6 +11,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { fechaLocal } from '@/lib/utils';
 
 export type Cuota = { fecha_vencimiento: string; monto: number };
 
@@ -18,7 +19,7 @@ function sumarDias(fecha: string, dias: number) {
     const d = new Date(`${fecha}T00:00:00`);
     d.setDate(d.getDate() + dias);
 
-    return d.toISOString().slice(0, 10);
+    return fechaLocal(d);
 }
 
 function redondear(valor: number) {

@@ -22,6 +22,9 @@ class ChecklistController extends Controller
         ServiceOrder $service_order,
         Equipment $equipment
     ): Response {
+        // Solo los extintores de esta orden (no se ven los de otro cliente).
+        abort_unless($service_order->equipments()->whereKey($equipment->id)->exists(), 404);
+
         $service_order->load(['client:id,nombre_comercial,razon_social,numero_documento', 'sede:id,nombre']);
 
         // Historial previo de checklists para este equipo

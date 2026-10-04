@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Clientes;
 
 use App\Models\Client;
+use App\Support\Ruc;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -37,9 +38,9 @@ class UpdateClientRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255'],
             'direccion_fiscal' => ['nullable', 'string', 'max:255'],
             'ubigeo' => ['nullable', 'string', 'size:6', 'exists:ubigeos,codigo'],
-            'estado_contribuyente' => ['nullable', 'string', 'max:255'],
-            'condicion_domicilio' => ['nullable', 'string', 'max:255'],
-            'consultado_at' => ['nullable', 'date'],
+            // El estado y la condición ante SUNAT no se escriben a mano: los
+            // pone el servidor con la consulta (si no, se saltaría la regla
+            // de facturar solo a RUC Activo y Habido).
             'activo' => ['sometimes', 'boolean'],
             'observaciones' => ['nullable', 'string'],
         ];
@@ -53,6 +54,7 @@ class UpdateClientRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 $this->validateDocumentLength($validator);
+                $this->validarRuc($validator);
             },
         ];
     }
@@ -67,6 +69,34 @@ class UpdateClientRequest extends FormRequest
 
         if (mb_strlen((string) $this->input('numero_documento')) !== $expectedLength) {
             $validator->errors()->add('numero_documento', "El numero de documento debe tener {$expectedLength} caracteres.");
+        }
+    }
+
+    /**
+     * Un RUC con el dígito verificador mal es un error de tipeo.
+     */
+    protected function validarRuc(Validator $validator): void
+    {
+        if ($validator->errors()->has('numero_documento') || $this->input('tipo_documento') !== 'ruc') {
+            return;
+        }
+
+        $client = $this->route('client');
+        $cambiaDocumento = $client instanceof Client
+            && ($client->numero_documento !== (string) $this->input('numero_documento') || $client->tipo_documento !== $this->input('tipo_documento'));
+
+        if ($client instanceof Client && $cambiaDocumento && ($client->esClientesVarios() || $client->sales()->where('estado', 'confirmada')->exists())) {
+            $validator->errors()->add('numero_documento', 'Este cliente ya tiene ventas emitidas: no se cambia su documento. Registra un cliente nuevo con el documento correcto.');
+
+            return;
+        }
+
+        if (! $cambiaDocumento) {
+            return;
+        }
+
+        if (! Ruc::esValido((string) $this->input('numero_documento'))) {
+            $validator->errors()->add('numero_documento', 'El RUC no es válido: revisa los dígitos (debe empezar con 10 o 20 y su último dígito no coincide).');
         }
     }
 }

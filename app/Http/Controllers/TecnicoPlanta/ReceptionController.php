@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -156,18 +157,38 @@ class ReceptionController extends Controller
         $validated = $request->validate([
             'observaciones' => ['nullable', 'string', 'max:1000'],
             'equipos_recibidos_count' => ['nullable', 'integer', 'min:0'],
+            'equipos_recibidos' => ['sometimes', 'array'],
+            'equipos_recibidos.*' => ['integer'],
             'diferencias' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $recibidos = array_key_exists('equipos_recibidos', $validated)
+            ? array_values(array_map('intval', (array) $validated['equipos_recibidos']))
+            : null;
+
+        try {
+            $this->recibir($action, $service_order, $request, $validated, $recibidos);
+        } catch (\InvalidArgumentException $e) {
+            throw ValidationException::withMessages(['estado' => $service_order->estado === 'anulada' ? 'Esta orden está anulada.' : 'Esta orden ya fue recibida.']);
+        }
+
+        return back()->with('success', 'Orden recibida en Planta correctamente.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @param  list<int>|null  $recibidos
+     */
+    protected function recibir(ReceiveServiceOrder $action, ServiceOrder $service_order, Request $request, array $validated, ?array $recibidos): void
+    {
         $action->execute(
             $service_order,
             $request->user(),
             $validated['observaciones'] ?? null,
-            (int) ($validated['equipos_recibidos_count'] ?? $service_order->equipments()->count()),
-            $validated['diferencias'] ?? null
+            (int) ($recibidos !== null ? count($recibidos) : ($validated['equipos_recibidos_count'] ?? $service_order->equipments()->count())),
+            $validated['diferencias'] ?? null,
+            $recibidos,
         );
-
-        return back()->with('success', 'Orden recibida en Planta correctamente.');
     }
 
     /**
