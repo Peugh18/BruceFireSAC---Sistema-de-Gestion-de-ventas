@@ -1,14 +1,17 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     Banknote,
+    CalendarDays,
     CheckCircle2,
+    Clock3,
+    CreditCard,
     Eye,
-    FileText,
     PencilLine,
     Plus,
-    ReceiptText,
+    Search,
     ShoppingCart,
 } from 'lucide-react';
+import { FormEvent, useState } from 'react';
 
 import { FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
@@ -78,15 +81,52 @@ type Paginated<T> = {
     total?: number;
 };
 
+type Filters = {
+    estado?: string;
+    comprobante?: string;
+    buscar?: string;
+    desde: string;
+    hasta: string;
+};
+
 type Props = {
     sales: Paginated<SaleRow>;
-    filters: { estado?: string; comprobante?: string };
+    filters: Filters;
+    hoy: string;
     kpis: {
-        ventas_del_mes: number | string;
-        comprobantes: number;
-        pendientes_confirmar: number;
+        total_vendido: number;
+        ventas: number;
+        contado: number;
+        credito: number;
+        por_enviar: number;
+        borradores: number;
     };
 };
+
+/** Fecha local "YYYY-MM-DD" desplazada unos días desde otra. */
+function moverDias(fecha: string, dias: number) {
+    const d = new Date(`${fecha}T00:00:00`);
+    d.setDate(d.getDate() + dias);
+
+    return [
+        d.getFullYear(),
+        String(d.getMonth() + 1).padStart(2, '0'),
+        String(d.getDate()).padStart(2, '0'),
+    ].join('-');
+}
+
+/** Atajos del filtro de fechas, calculados desde "hoy" del servidor (hora de Lima). */
+function atajos(hoy: string) {
+    const d = new Date(`${hoy}T00:00:00`);
+    const diaSemana = (d.getDay() + 6) % 7; // lunes = 0
+
+    return [
+        { label: 'Hoy', desde: hoy, hasta: hoy },
+        { label: 'Ayer', desde: moverDias(hoy, -1), hasta: moverDias(hoy, -1) },
+        { label: 'Esta semana', desde: moverDias(hoy, -diaSemana), hasta: hoy },
+        { label: 'Este mes', desde: `${hoy.slice(0, 8)}01`, hasta: hoy },
+    ];
+}
 
 const FILTERS = [
     { label: 'Todas', value: '' },
@@ -124,7 +164,7 @@ function statusBadge(estado: string) {
     return 'bg-muted text-muted-foreground border-transparent';
 }
 
-export default function VentasIndex({ sales, filters, kpis }: Props) {
+export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ??
@@ -136,12 +176,28 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
 
     const currentComprobante = filters.comprobante ?? '';
 
-    const changeFilter = (estado: string, comprobante = currentComprobante) => {
+    const [desde, setDesde] = useState(filters.desde);
+    const [hasta, setHasta] = useState(filters.hasta);
+    const [buscar, setBuscar] = useState(filters.buscar ?? '');
+
+    const filtrar = (cambios: Partial<Filters>) => {
+        const query = {
+            estado: currentFilter,
+            comprobante: currentComprobante,
+            buscar: filters.buscar ?? '',
+            desde: filters.desde,
+            hasta: filters.hasta,
+            ...cambios,
+        };
+
         router.get(
             ventas.index.url(teamSlug, {
                 query: {
-                    estado: estado || undefined,
-                    comprobante: comprobante || undefined,
+                    estado: query.estado || undefined,
+                    comprobante: query.comprobante || undefined,
+                    buscar: query.buscar || undefined,
+                    desde: query.desde,
+                    hasta: query.hasta,
                 },
             }),
             {},
@@ -149,34 +205,62 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
         );
     };
 
+    const changeFilter = (estado: string, comprobante = currentComprobante) =>
+        filtrar({ estado, comprobante });
+
+    const aplicarRango = (rango: { desde: string; hasta: string }) => {
+        setDesde(rango.desde);
+        setHasta(rango.hasta);
+        filtrar(rango);
+    };
+
+    const buscarVentas = (event: FormEvent) => {
+        event.preventDefault();
+        filtrar({ desde, hasta, buscar: buscar.trim() });
+    };
+
+    const esHoy = filters.desde === hoy && filters.hasta === hoy;
+    const periodo = esHoy
+        ? 'hoy'
+        : filters.desde === filters.hasta
+          ? `el ${fechaCorta(filters.desde)}`
+          : `del ${fechaCorta(filters.desde)} al ${fechaCorta(filters.hasta)}`;
+
     const kpiItems = [
         {
-            label: 'Ventas del mes',
-            value: money(kpis.ventas_del_mes),
+            label: esHoy ? 'Vendido hoy' : 'Vendido en el periodo',
+            value: money(kpis.total_vendido),
+            detalle: `${kpis.ventas} venta(s) emitida(s)`,
             icon: Banknote,
             bg: 'bg-emerald-500/10',
             text: 'text-success-strong',
         },
         {
-            label: 'Comprobantes',
-            value: kpis.comprobantes,
-            icon: ReceiptText,
+            label: 'Al contado',
+            value: money(kpis.contado),
+            detalle: 'Cobrado en caja',
+            icon: ShoppingCart,
             bg: 'bg-blue-500/10',
             text: 'text-blue-600 dark:text-blue-400',
         },
         {
-            label: 'Borradores',
-            value: kpis.pendientes_confirmar,
-            icon: FileText,
-            bg: 'bg-amber-500/10',
-            text: 'text-warning-strong',
-        },
-        {
-            label: 'Registros',
-            value: sales.total ?? sales.data.length,
-            icon: ShoppingCart,
+            label: 'A crédito',
+            value: money(kpis.credito),
+            detalle: 'Se cobra por cuotas',
+            icon: CreditCard,
             bg: 'bg-muted',
             text: 'text-foreground/80',
+        },
+        {
+            label: 'Por enviar a SUNAT',
+            value: kpis.por_enviar,
+            detalle:
+                kpis.borradores > 0
+                    ? `${kpis.borradores} borrador(es) sin emitir`
+                    : 'Se envían solos',
+            icon: Clock3,
+            bg: 'bg-amber-500/10',
+            text: 'text-warning-strong',
         },
     ];
 
@@ -222,6 +306,9 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                     <div className="text-foreground text-[26px] leading-tight font-semibold tracking-tight tabular-nums">
                                         {item.value}
                                     </div>
+                                    <div className="text-muted-foreground text-[11px]">
+                                        {item.detalle}
+                                    </div>
                                 </div>
                             </Card>
                         );
@@ -229,6 +316,86 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                 </div>
 
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
+                    <form
+                        onSubmit={buscarVentas}
+                        className="border-border mb-4 flex flex-col gap-3 border-b pb-4 lg:flex-row lg:items-end"
+                    >
+                        <div className="flex flex-wrap items-end gap-2">
+                            <label className="text-foreground/80 flex flex-col gap-1 text-[11px] font-bold uppercase">
+                                Desde
+                                <input
+                                    type="date"
+                                    value={desde}
+                                    max={hoy}
+                                    onChange={(event) =>
+                                        setDesde(event.target.value)
+                                    }
+                                    className="border-border bg-card h-9 rounded-[9px] border px-2.5 text-[13px] font-normal normal-case"
+                                />
+                            </label>
+                            <label className="text-foreground/80 flex flex-col gap-1 text-[11px] font-bold uppercase">
+                                Hasta
+                                <input
+                                    type="date"
+                                    value={hasta}
+                                    max={hoy}
+                                    onChange={(event) =>
+                                        setHasta(event.target.value)
+                                    }
+                                    className="border-border bg-card h-9 rounded-[9px] border px-2.5 text-[13px] font-normal normal-case"
+                                />
+                            </label>
+                            <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
+                                {atajos(hoy).map((rango) => {
+                                    const activo =
+                                        filters.desde === rango.desde &&
+                                        filters.hasta === rango.hasta;
+
+                                    return (
+                                        <button
+                                            key={rango.label}
+                                            type="button"
+                                            onClick={() => aplicarRango(rango)}
+                                            className={`rounded-[7px] px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
+                                                activo
+                                                    ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                                                    : 'text-muted-foreground hover:text-foreground'
+                                            }`}
+                                        >
+                                            {rango.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        <div className="flex flex-1 items-end gap-2">
+                            <div className="border-border bg-muted/40 focus-within:border-ring flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
+                                <Search className="text-muted-foreground size-3.5 shrink-0" />
+                                <input
+                                    value={buscar}
+                                    onChange={(event) =>
+                                        setBuscar(event.target.value)
+                                    }
+                                    placeholder="Cliente, RUC/DNI, N° de venta o comprobante..."
+                                    className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent text-[13px] outline-none"
+                                />
+                            </div>
+                            <Button
+                                type="submit"
+                                className="bg-foreground text-background hover:bg-foreground/90 h-9 rounded-[9px] px-4 text-[12.5px] font-bold shadow-none"
+                            >
+                                <CalendarDays className="size-3.5" />
+                                Ver
+                            </Button>
+                        </div>
+                    </form>
+                    <p className="text-muted-foreground -mt-2 mb-3 text-[12px]">
+                        Ventas de {periodo}
+                        {filters.buscar
+                            ? ` que coinciden con «${filters.buscar}»`
+                            : ''}
+                        .
+                    </p>
                     <div className="mb-4 flex flex-wrap items-center gap-2.5">
                         <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
                             {FILTERS.map((filter) => {
@@ -332,7 +499,9 @@ export default function VentasIndex({ sales, filters, kpis }: Props) {
                                                     <ShoppingCart className="size-6 opacity-75" />
                                                 </div>
                                                 <p className="text-foreground text-sm font-semibold">
-                                                    No se encontraron ventas
+                                                    {esHoy && !filters.buscar
+                                                        ? 'Todavía no hay ventas hoy'
+                                                        : 'No se encontraron ventas'}
                                                 </p>
                                                 <p className="text-muted-foreground max-w-sm text-xs">
                                                     {currentFilter &&

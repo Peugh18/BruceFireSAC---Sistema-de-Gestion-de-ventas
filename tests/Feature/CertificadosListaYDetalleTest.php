@@ -79,7 +79,7 @@ test('el detalle trae la venta, el cliente y a donde ir para corregirlo', functi
 
 test('la lista de ventas muestra el comprobante vigente y su estado en sunat', function () {
     $user = vendedorDeCertificados();
-    $sale = Sale::factory()->create(['client_id' => Client::factory()->create()->id, 'estado' => 'confirmada', 'vendedor_id' => $user->id]);
+    $sale = Sale::factory()->create(['client_id' => Client::factory()->create()->id, 'estado' => 'confirmada', 'vendedor_id' => $user->id, 'fecha' => today()]);
     ElectronicDocument::create(['sale_id' => $sale->id, 'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 90, 'sunat_estado' => 'excepcion']);
     ElectronicDocument::create(['sale_id' => $sale->id, 'tipo' => 'boleta', 'serie' => 'B001', 'correlativo' => 91, 'sunat_estado' => 'aceptado']);
 

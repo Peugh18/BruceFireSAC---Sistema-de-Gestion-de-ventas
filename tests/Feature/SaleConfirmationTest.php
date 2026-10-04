@@ -128,6 +128,48 @@ test('los KPIs del listado de ventas solo cuentan las ventas del vendedor autent
 
     $kpis = $response->viewData('page')['props']['kpis'];
 
-    expect((float) $kpis['ventas_del_mes'])->toBe(118.0)
-        ->and($kpis['comprobantes'])->toBe(1);
+    // La venta propia sigue en borrador: cuenta como borrador, no como vendida.
+    expect((float) $kpis['total_vendido'])->toBe(0.0)
+        ->and($kpis['borradores'])->toBe(1);
+
+    $sale->update(['estado' => 'confirmada']);
+    $ajena->update(['estado' => 'confirmada']);
+
+    $kpis = $this->actingAs($user)
+        ->get(route('vendedor.ventas.index', ['current_team' => $user->currentTeam]))
+        ->viewData('page')['props']['kpis'];
+
+    expect((float) $kpis['total_vendido'])->toBe(118.0)
+        ->and($kpis['ventas'])->toBe(1);
+});
+
+test('el listado de ventas muestra solo las de hoy y se filtra por rango de fechas y busqueda', function () {
+    $user = vendedorUser();
+    $roble = Client::factory()->create(['razon_social' => 'CONSTRUCTORA EL ROBLE S.A.C.']);
+    $hoy = Sale::factory()->create(['vendedor_id' => $user->id, 'client_id' => $roble->id, 'estado' => 'confirmada', 'fecha' => today(), 'total' => 100]);
+    $ayer = Sale::factory()->create(['vendedor_id' => $user->id, 'estado' => 'confirmada', 'fecha' => today()->subDay(), 'total' => 50, 'condicion_pago' => 'credito']);
+    $mesPasado = Sale::factory()->create(['vendedor_id' => $user->id, 'estado' => 'confirmada', 'fecha' => today()->subDays(40), 'total' => 30]);
+    $url = route('vendedor.ventas.index', ['current_team' => $user->currentTeam]);
+
+    $this->actingAs($user)->get($url)->assertInertia(fn ($page) => $page
+        ->has('sales.data', 1)
+        ->where('sales.data.0.id', $hoy->id)
+        ->where('filters.desde', today()->toDateString())
+        ->where('kpis.ventas', 1)
+        ->where('kpis.total_vendido', 100));
+
+    $this->actingAs($user)->get($url.'?desde='.today()->subDay()->toDateString().'&hasta='.today()->toDateString())
+        ->assertInertia(fn ($page) => $page
+            ->has('sales.data', 2)
+            ->where('kpis.contado', 100)
+            ->where('kpis.credito', 50));
+
+    // Fechas al revés se ordenan solas.
+    $this->actingAs($user)->get($url.'?desde='.today()->toDateString().'&hasta='.today()->subDays(45)->toDateString())
+        ->assertInertia(fn ($page) => $page->has('sales.data', 3));
+
+    $this->actingAs($user)->get($url.'?desde='.today()->subDays(45)->toDateString().'&hasta='.today()->toDateString().'&buscar=roble')
+        ->assertInertia(fn ($page) => $page->has('sales.data', 1)->where('sales.data.0.id', $hoy->id));
+
+    expect($ayer->id)->not->toBe($mesPasado->id);
 });

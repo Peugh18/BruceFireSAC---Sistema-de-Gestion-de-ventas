@@ -15,6 +15,7 @@ use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\CompanySetting;
+use App\Models\ElectronicDocument;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\Sale;
@@ -25,30 +26,49 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Throwable;
 
 class SaleController extends Controller
 {
+    /**
+     * Ventas de un rango de fechas (por defecto, las de hoy), con los totales
+     * del vendedor en ese mismo rango.
+     */
     public function index(Team $current_team, Request $request): Response
     {
         $estado = $request->string('estado')->toString();
         $comprobante = $request->string('comprobante')->toString();
+        $buscar = trim($request->string('buscar')->toString());
+        [$desde, $hasta] = $this->rangoDeFechas($request);
         $vendedorId = $request->user()->id;
         $sedeId = $request->user()->sedeRestringidaId();
 
         $sales = Sale::query()
             ->with(['client', 'electronicDocuments'])
             ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
+            ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
             ->when($comprobante === 'nota_venta', fn ($query) => $query->where('comprobante_tipo', Sale::NOTA_VENTA))
             ->when($comprobante === 'sunat', fn ($query) => $query->where('comprobante_tipo', '!=', Sale::NOTA_VENTA))
-            ->orderByDesc('created_at')
+            ->when($buscar !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('numero_interno', 'like', "%{$buscar}%")
+                ->orWhere('numero_nota_venta', 'like', "%{$buscar}%")
+                ->orWhereHas('client', fn ($query) => $query
+                    ->where('razon_social', 'like', "%{$buscar}%")
+                    ->orWhere('numero_documento', 'like', "%{$buscar}%"))
+                ->orWhereHas('electronicDocuments', fn ($query) => $query
+                    ->whereRaw("CONCAT(serie, '-', correlativo) like ?", ["%{$buscar}%"]))))
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString()
             ->through(fn (Sale $sale) => [
@@ -68,19 +88,73 @@ class SaleController extends Controller
                 'editable' => $sale->sePuedeEditar(),
             ]);
 
+        // KPIs siempre acotados al vendedor autenticado: NUNCA acumulado de
+        // toda la empresa (regla de la sección 77.3 del doc maestro).
+        $emitidas = Sale::query()
+            ->where('vendedor_id', $vendedorId)
+            ->where('estado', 'confirmada')
+            ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
+            ->get(['total', 'condicion_pago']);
+
         return Inertia::render('vendedor/ventas/index', [
             'sales' => $sales,
-            'filters' => ['estado' => $estado, 'comprobante' => $comprobante],
-            // KPIs siempre acotados al vendedor autenticado: NUNCA acumulado
-            // de toda la empresa (regla de la sección 77.3 del doc maestro).
+            'filters' => [
+                'estado' => $estado,
+                'comprobante' => $comprobante,
+                'buscar' => $buscar,
+                'desde' => $desde->toDateString(),
+                'hasta' => $hasta->toDateString(),
+            ],
+            'hoy' => today()->toDateString(),
             'kpis' => [
-                'ventas_del_mes' => Sale::where('vendedor_id', $vendedorId)
-                    ->whereBetween('fecha', [now()->startOfMonth(), now()->endOfMonth()])
-                    ->sum('total'),
-                'comprobantes' => Sale::where('vendedor_id', $vendedorId)->count(),
-                'pendientes_confirmar' => Sale::where('vendedor_id', $vendedorId)->where('estado', 'borrador')->count(),
+                'total_vendido' => round((float) $emitidas->sum('total'), 2),
+                'ventas' => $emitidas->count(),
+                'contado' => round((float) $emitidas->reject(fn (Sale $sale) => $sale->esCredito())->sum('total'), 2),
+                'credito' => round((float) $emitidas->filter(fn (Sale $sale) => $sale->esCredito())->sum('total'), 2),
+                // Lo que falta enviar a SUNAT no depende del rango: tiene plazo.
+                'por_enviar' => ElectronicDocument::query()
+                    ->where('sunat_estado', 'por_enviar')
+                    ->whereHas('sale', fn ($query) => $query->where('vendedor_id', $vendedorId))
+                    ->count(),
+                'borradores' => Sale::query()->where('vendedor_id', $vendedorId)->where('estado', 'borrador')->count(),
             ],
         ]);
+    }
+
+    /**
+     * Rango del filtro "Desde / Hasta"; sin fechas, el día de hoy. Si vienen
+     * al revés se ordenan, y nunca abarca más de un año.
+     *
+     * @return array{0: CarbonInterface, 1: CarbonInterface}
+     */
+    protected function rangoDeFechas(Request $request): array
+    {
+        $leer = function (string $campo) use ($request): ?CarbonInterface {
+            $valor = $request->string($campo)->toString();
+
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor) !== 1) {
+                return null;
+            }
+
+            try {
+                return Carbon::createFromFormat('Y-m-d', $valor)->startOfDay();
+            } catch (Throwable) {
+                return null;
+            }
+        };
+
+        $desde = $leer('desde') ?? today();
+        $hasta = $leer('hasta') ?? $desde->copy();
+
+        if ($hasta->lt($desde)) {
+            [$desde, $hasta] = [$hasta, $desde];
+        }
+
+        if ($desde->diffInDays($hasta) > 366) {
+            $desde = $hasta->copy()->subYear();
+        }
+
+        return [$desde, $hasta];
     }
 
     public function create(Team $current_team, Request $request): Response

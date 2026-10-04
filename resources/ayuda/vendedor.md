@@ -98,3 +98,9 @@
 
 - **Factura:** el cliente debe tener dirección fiscal. Normalmente viene sola al consultar el RUC; si falta, al elegir Factura aparece un recuadro rojo para escribirla y **Guardar dirección** (queda en su ficha).
 - **Boleta:** la dirección es opcional. Si el cliente con DNI te la da, regístrala y saldrá impresa.
+
+## Lista de ventas por fechas
+
+- Al entrar a **Ventas** ves solo las ventas **de hoy**. Arriba eliges **Desde / Hasta** o un atajo (**Hoy, Ayer, Esta semana, Este mes**) y pulsas **Ver**.
+- Puedes buscar por cliente, RUC/DNI, número de venta o de comprobante.
+- Los recuadros de arriba suman **tus** ventas emitidas en esas fechas: total, al contado, a crédito. "Por enviar a SUNAT" cuenta todo lo que aún falta enviar, sea del día que sea.

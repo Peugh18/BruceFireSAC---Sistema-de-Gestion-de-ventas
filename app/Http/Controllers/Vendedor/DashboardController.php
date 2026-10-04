@@ -100,12 +100,9 @@ class DashboardController extends Controller
             ->map(fn ($count) => (int) $count)
             ->all();
 
-        // 4. Cobros pendientes / vencidos del vendedor autenticado
-        Installment::query()
-            ->where('estado', 'pendiente')
-            ->whereDate('fecha_vencimiento', '<', today())
-            ->update(['estado' => 'vencido']);
-
+        // 4. Cobros pendientes / vencidos del vendedor autenticado. Abrir el
+        // Inicio no cambia datos: la tarea nocturna (alerts:recompute) marca
+        // las cuotas vencidas; aquí solo se muestran según su fecha.
         $cobrosPendientes = Installment::query()
             ->whereIn('estado', ['pendiente', 'vencido'])
             ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id))
@@ -126,7 +123,7 @@ class DashboardController extends Controller
                     'numero_cuota' => $inst->numero_cuota,
                     'monto' => (float) $inst->monto,
                     'fecha_vencimiento' => $fechaVenc->toDateString(),
-                    'estado' => $inst->estado,
+                    'estado' => $inst->estado === 'pendiente' && $diasVencido > 0 ? 'vencido' : $inst->estado,
                     'dias_vencido' => $diasVencido,
                     'cliente' => $inst->sale?->client?->razon_social,
                     'telefono' => $inst->sale?->client?->whatsapp ?: $inst->sale?->client?->telefono,
