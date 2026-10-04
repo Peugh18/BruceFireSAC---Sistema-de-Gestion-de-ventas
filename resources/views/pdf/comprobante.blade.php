@@ -4,11 +4,15 @@
         'boleta' => 'Boleta de venta electrónica',
         'nota_credito' => 'Nota de crédito electrónica',
         'nota_debito' => 'Nota de débito electrónica',
+        'nota_venta' => 'Nota de venta',
         default => ucfirst(str_replace('_', ' ', $document->tipo)),
     };
-    $numero = $document->serie.'-'.str_pad((string) $document->correlativo, 8, '0', STR_PAD_LEFT);
+    $esNotaVenta = $document->tipo === 'nota_venta';
+    $numero = $esNotaVenta
+        ? $sale->numero_nota_venta
+        : $document->serie.'-'.str_pad((string) $document->correlativo, 8, '0', STR_PAD_LEFT);
     $fechaEmision = $document->fecha_emision ?? $sale->fecha;
-    $esVenta = $document->tipo === 'factura' || $document->tipo === 'boleta';
+    $esVenta = in_array($document->tipo, ['factura', 'boleta', 'nota_venta'], true);
     $vencimiento = $sale->esCredito() && $sale->installments->isNotEmpty() ? $sale->installments->last()->fecha_vencimiento : null;
     $ubicacion = collect([$company->distrito, $company->provincia, $company->departamento])->filter()->unique()->implode(' - ');
     $direccionCliente = $sale->client->direccionImprimible();
@@ -318,14 +322,18 @@
 
     <table class="footer">
         <tr>
-            <td class="footer-qr">
-                @if($qrBase64)
+            @if($qrBase64)
+                <td class="footer-qr">
                     <img src="data:image/png;base64,{{ $qrBase64 }}" alt="QR">
-                @endif
-            </td>
+                </td>
+            @endif
             <td>
-                <b>Representación impresa de la {{ mb_strtolower($nombreDocumento) }}.</b><br>
-                Consulte su validez en www.sunat.gob.pe con el RUC del emisor, el tipo, la serie, el número, la fecha de emisión y el importe total.
+                @if($esNotaVenta)
+                    <b>Documento interno de control.</b> No es un comprobante de pago electrónico; si lo necesita, solicite su boleta o factura.
+                @else
+                    <b>Representación impresa de la {{ mb_strtolower($nombreDocumento) }}.</b><br>
+                    Consulte su validez en www.sunat.gob.pe con el RUC del emisor, el tipo, la serie, el número, la fecha de emisión y el importe total.
+                @endif
                 <div class="thanks">{{ $company->mensaje_agradecimiento ?: 'Gracias por su preferencia.' }}</div>
                 @if($company->leyenda_pie)
                     <div class="leyenda">{{ $company->leyenda_pie }}</div>

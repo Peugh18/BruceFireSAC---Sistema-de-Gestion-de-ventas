@@ -5202,3 +5202,13 @@ que no tiene sentido, sin romper nada. Un PR por mejora.
   nada en el sistema nuevo, su última compra del sistema anterior. Se
   marcan _estimado_ con la recarga al año de la compra. CLIENTES VARIOS
   no aparece.
+
+## 88.4 La nota de venta usa el mismo diseño (2026-10-04)
+
+La nota de venta tenía su propia plantilla (`pdf/nota-venta.blade.php`)
+y no recibió el diseño de marca. Ahora se dibuja con
+`pdf/comprobante.blade.php` (`ComprobantePdfService::notaDeVenta()`):
+mismo logo, colores, datos del cliente, placa o sede, cuotas, cuentas
+y condiciones. Por ser un documento interno no lleva QR ni la leyenda de
+SUNAT, sino "Documento interno de control. No es un comprobante de pago
+electrónico". La plantilla anterior se eliminó.
