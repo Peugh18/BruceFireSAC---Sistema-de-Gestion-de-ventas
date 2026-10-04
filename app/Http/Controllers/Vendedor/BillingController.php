@@ -245,7 +245,12 @@ class BillingController extends Controller
 
         abort_if(! $path || ! Storage::disk('local')->exists($path), 404);
 
-        return Storage::disk('local')->download($path, $this->friendlyFileName($document, $extension));
+        // El PDF se redibuja cuando cambia el diseño: que el navegador no
+        // muestre una copia guardada.
+        return Storage::disk('local')->download($path, $this->friendlyFileName($document, $extension), [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     /**

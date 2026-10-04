@@ -5136,3 +5136,18 @@ formal, y que cada dato aparezca solo si la venta lo tiene.
   y recuadro de cuotas (crédito), observaciones, columnas Código y
   Dscto., fila Descuentos, detracción, cuentas bancarias, condiciones,
   web y leyenda.
+
+## 88.3 Por qué un PDF ya emitido seguía con el diseño viejo (2026-10-04)
+
+Se decidía si redibujar comparando **fechas de archivos** (PDF contra
+plantilla y datos de la empresa). Esas fechas no son confiables: un PDF
+generado después del `git pull`, o una copia compilada de la plantilla
+con fecha vieja, hacían que se siguiera entregando el diseño anterior.
+
+Ahora cada comprobante guarda `pdf_firma`, una huella del **contenido**
+de la plantilla y del servicio del PDF más los datos de la empresa y sus
+cuentas. Si la huella cambia, el PDF se redibuja al descargarlo. Además
+se descarta la copia compilada de la plantilla antes de dibujar y la
+descarga va con `Cache-Control: no-store` para que el navegador no
+muestre una copia guardada. `billing:redibujar-pdf` muestra la firma del
+diseño y la ruta de la plantilla para diagnosticar.

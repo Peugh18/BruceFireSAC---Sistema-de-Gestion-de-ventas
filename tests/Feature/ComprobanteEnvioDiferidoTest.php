@@ -343,25 +343,36 @@ test('si el gerente cambia el diseño, el pdf ya emitido se vuelve a dibujar al 
     expect(Storage::disk('local')->get($documento->fresh()->pdf_path))->not->toBe($antes);
 });
 
-test('un pdf generado con la plantilla anterior se vuelve a dibujar al descargarlo', function () {
+test('un pdf dibujado con otro diseño se vuelve a dibujar al descargarlo aunque sea mas nuevo que la plantilla', function () {
     $user = vendedorUser();
     $documento = comprobanteDe(ventaConfirmada(Client::factory()->create(), vendedor: $user));
 
-    // Simula un PDF hecho antes de instalar la versión actual de la plantilla,
-    // con los datos de la empresa sin tocar desde antes de ese PDF.
-    $plantilla = max(filemtime(resource_path('views/pdf/comprobante.blade.php')), filemtime(app_path('Services/Billing/ComprobantePdfService.php')));
+    // Caso real: el PDF guardado es más reciente que la plantilla instalada
+    // (las fechas no sirven), pero se dibujó con el diseño anterior.
     Storage::disk('local')->put($documento->pdf_path, '%PDF-viejo');
-    touch(Storage::disk('local')->path($documento->pdf_path), $plantilla - 3600);
-    $empresa = CompanySetting::current();
-    $empresa->timestamps = false;
-    $empresa->forceFill(['updated_at' => now()->setTimestamp($plantilla - 7200)])->save();
+    $documento->forceFill(['pdf_firma' => 'diseno-anterior'])->saveQuietly();
 
     $this->actingAs($user)
         ->get(route('vendedor.facturacion.pdf', ['current_team' => $user->currentTeam, 'electronic_document' => $documento]))
-        ->assertOk();
+        ->assertOk()
+        ->assertHeader('Cache-Control', 'max-age=0, must-revalidate, no-cache, no-store, private');
 
-    expect(Storage::disk('local')->get($documento->fresh()->pdf_path))->not->toBe('%PDF-viejo')
-        ->and(Storage::disk('local')->get($documento->fresh()->pdf_path))->toStartWith('%PDF-');
+    $documento->refresh();
+
+    expect(Storage::disk('local')->get($documento->pdf_path))->not->toBe('%PDF-viejo')
+        ->and(Storage::disk('local')->get($documento->pdf_path))->toStartWith('%PDF-')
+        ->and($documento->pdf_firma)->toBe(app(ComprobantePdfService::class)->firmaDeDiseno());
+});
+
+test('un pdf ya dibujado con el diseño actual no se vuelve a dibujar', function () {
+    $documento = comprobanteDe(ventaConfirmada(Client::factory()->create()));
+    Storage::disk('local')->put($documento->pdf_path, '%PDF-al-dia');
+
+    expect($documento->pdf_firma)->toBe(app(ComprobantePdfService::class)->firmaDeDiseno());
+
+    app(ComprobantePdfService::class)->vigente($documento);
+
+    expect(Storage::disk('local')->get($documento->pdf_path))->toBe('%PDF-al-dia');
 });
 
 test('billing:redibujar-pdf vuelve a dibujar todas las facturas y boletas', function () {
