@@ -166,6 +166,7 @@ test('el vendedor emite notas desde el detalle y si SUNAT no responde quedan pen
         }
     });
     $vendedor = vendedorUser();
+    $factura->sale->update(['vendedor_id' => $vendedor->id]);
     $team = ['current_team' => $vendedor->currentTeam];
 
     $this->actingAs($vendedor)

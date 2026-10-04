@@ -124,6 +124,15 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * Cada vendedor ve y corrige solo sus propias ventas; el Gerente las de
+     * todos (devuelve null).
+     */
+    public function vendedorRestringidoId(): ?int
+    {
+        return $this->hasRole('Gerente') ? null : $this->id;
+    }
+
+    /**
      * Sede de cuyo stock puede ver el usuario: la de su almacén efectivo
      * (una tienda usa el almacén asignado). Null si ve todas las sedes.
      */

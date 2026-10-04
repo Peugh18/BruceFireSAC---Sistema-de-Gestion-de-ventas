@@ -35,8 +35,8 @@ function teamOf(User $user): array
 
 test('un trabajador con sede solo ve las ventas de su sede', function () {
     $vendedor = vendedorEnSede($this->sedeA);
-    $propia = Sale::factory()->create(['sede_id' => $this->sedeA->id, 'fecha' => today()]);
-    $ajena = Sale::factory()->create(['sede_id' => $this->sedeB->id, 'fecha' => today()]);
+    $propia = Sale::factory()->create(['sede_id' => $this->sedeA->id, 'vendedor_id' => $vendedor->id, 'fecha' => today()]);
+    $ajena = Sale::factory()->create(['sede_id' => $this->sedeB->id, 'vendedor_id' => $vendedor->id, 'fecha' => today()]);
 
     $this->actingAs($vendedor)
         ->get(route('vendedor.ventas.index', teamOf($vendedor)))
@@ -50,18 +50,38 @@ test('un trabajador con sede solo ve las ventas de su sede', function () {
     $this->actingAs($vendedor)->post(route('vendedor.ventas.confirmar', [...teamOf($vendedor), 'sale' => $ajena]))->assertNotFound();
 });
 
-test('un usuario sin sede o el gerente ven las ventas de todas las sedes', function () {
+test('el gerente ve las ventas de todas las sedes y de todos los vendedores', function () {
     Sale::factory()->create(['sede_id' => $this->sedeA->id, 'fecha' => today()]);
     Sale::factory()->create(['sede_id' => $this->sedeB->id, 'fecha' => today()]);
-    $sinSede = vendedorUser();
     $gerente = User::factory()->create();
-    $gerente->assignRole('Gerente');
+    // Un Gerente que también vende entra a la pantalla de ventas.
+    $gerente->assignRole(['Gerente', 'Vendedor']);
     $gerente->update(['sede_id' => $this->sedeA->id]);
 
-    $this->actingAs($sinSede)->get(route('vendedor.ventas.index', teamOf($sinSede)))
+    $this->actingAs($gerente)->get(route('vendedor.ventas.index', teamOf($gerente)))
         ->assertInertia(fn (Assert $page) => $page->has('sales.data', 2));
 
-    expect($gerente->refresh()->sedeRestringidaId())->toBeNull();
+    expect($gerente->refresh()->sedeRestringidaId())->toBeNull()
+        ->and($gerente->vendedorRestringidoId())->toBeNull();
+});
+
+test('cada vendedor ve y corrige solo sus ventas, aunque el otro sea de su misma sede', function () {
+    $yo = vendedorEnSede($this->sedeA);
+    $companero = vendedorEnSede($this->sedeA);
+    $mia = Sale::factory()->create(['sede_id' => $this->sedeA->id, 'vendedor_id' => $yo->id, 'fecha' => today()]);
+    $suya = Sale::factory()->create(['sede_id' => $this->sedeA->id, 'vendedor_id' => $companero->id, 'fecha' => today()]);
+
+    $this->actingAs($yo)
+        ->get(route('vendedor.ventas.index', teamOf($yo)))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('sales.data', 1)
+            ->where('sales.data.0.id', $mia->id)
+        );
+
+    $this->actingAs($yo)->get(route('vendedor.ventas.show', [...teamOf($yo), 'sale' => $suya]))->assertNotFound();
+    $this->actingAs($yo)->get(route('vendedor.ventas.edit', [...teamOf($yo), 'sale' => $suya]))->assertNotFound();
+    $this->actingAs($yo)->post(route('vendedor.ventas.anular', [...teamOf($yo), 'sale' => $suya]), ['motivo' => 'Prueba de permisos'])->assertNotFound();
+    $this->actingAs($yo)->get(route('vendedor.ventas.show', [...teamOf($yo), 'sale' => $mia]))->assertOk();
 });
 
 test('la nueva venta de un trabajador con sede queda registrada en su sede aunque envíe otra', function () {

@@ -22,7 +22,7 @@
 2. Busca y elige el cliente.
 3. Elige por cuántos días se respeta el precio: 7, 15 o 30 días (la fecha de emisión es hoy).
 4. Marca si es para **Local** o **Vehículo** y, si quieres, la **Referencia** (placa o sede u oficina del cliente).
-5. Busca productos o servicios por nombre, código o código de barras y agrégalos. Ajusta cantidad, precio o descuento.
+5. Busca productos o servicios por nombre, código o código de barras y agrégalos. Ajusta cantidad, precio o descuento (el descuento nunca deja una línea en S/ 0.00).
 6. Los precios **ya incluyen IGV**.
 7. Elige la condición de pago propuesta y pulsa **Guardar cotización**.
 8. En la lista puedes **Enviar**, marcar **Aceptada** y luego **Pasar a venta**.
@@ -106,6 +106,8 @@
 
 ## Lista de ventas por fechas
 
+- En **Ventas** ves solo **tus** ventas: cada vendedor corrige o anula lo suyo; el Gerente ve las de todos.
+- Una factura, boleta o nota de venta anulada sale en el PDF con la marca de agua roja **ANULADO**; un certificado vencido o anulado sale con **VENCIDO** o **ANULADO**.
 - Al entrar a **Ventas** ves solo las ventas **de hoy**. Arriba eliges **Desde / Hasta** o un atajo (**Hoy, Ayer, Esta semana, Este mes**); el cambio se aplica solo.
 - Puedes buscar por cliente, RUC/DNI, número de venta o de comprobante.
 - Los recuadros de arriba suman **tus** ventas emitidas en esas fechas: total, al contado, a crédito. "Por enviar a SUNAT" cuenta todo lo que aún falta enviar, sea del día que sea.

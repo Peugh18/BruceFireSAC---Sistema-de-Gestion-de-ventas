@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vendedor\Concerns;
 
 use App\Models\Certificate;
+use App\Models\Sale;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -21,6 +22,19 @@ trait AcotaPorSede
         $miSede = $this->sedeDelUsuario();
 
         abort_if($miSede !== null && (int) $sedeId !== $miSede, 404);
+    }
+
+    /**
+     * Una venta (y sus comprobantes) solo la opera quien la hizo, dentro de
+     * su sede; el Gerente opera todas.
+     */
+    protected function asegurarVenta(?Sale $sale): void
+    {
+        abort_if($sale === null, 404);
+        $this->asegurarSede($sale->sede_id);
+
+        $vendedorId = request()->user()?->vendedorRestringidoId();
+        abort_if($vendedorId !== null && (int) $sale->vendedor_id !== $vendedorId, 404);
     }
 
     /**

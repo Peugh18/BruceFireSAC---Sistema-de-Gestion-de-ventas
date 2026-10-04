@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int $certificate_type_id
  * @property int $client_id
  * @property Carbon $fecha_emision
- * @property Carbon $fecha_vigencia_hasta
+ * @property Carbon|null $fecha_vigencia_hasta
  * @property string $estado
  * @property int $revision
  * @property string|null $anulado_motivo

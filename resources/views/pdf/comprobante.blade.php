@@ -122,9 +122,15 @@
         .footer-qr img { width: 76px; height: 76px; }
         .thanks { font-size: 9px; font-style: italic; color: #333; margin-top: 4px; }
         .leyenda { font-size: 7.8px; font-style: italic; color: #777; }
+
+        /* Marca de agua de un comprobante anulado */
+        .marca-anulado { position: fixed; top: 330px; left: 0; right: 0; text-align: center; font-size: 110px; font-weight: bold; color: #dc2626; opacity: 0.22; letter-spacing: 10px; transform: rotate(-35deg); }
     </style>
 </head>
 <body>
+    @if ($anulado ?? false)
+        <div class="marca-anulado">ANULADO</div>
+    @endif
     {{-- Cabecera: logo y empresa | recuadro tributario --}}
     <table class="header">
         <tr>

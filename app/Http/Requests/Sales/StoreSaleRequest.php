@@ -71,8 +71,10 @@ class StoreSaleRequest extends FormRequest
             foreach ($this->input('items', []) as $index => $item) {
                 $importe = (float) ($item['cantidad'] ?? 0) * (float) ($item['precio_unitario'] ?? 0);
 
-                if ((float) ($item['descuento'] ?? 0) > $importe) {
-                    $validator->errors()->add("items.{$index}.descuento", 'El descuento no puede superar el importe de la línea.');
+                // Ninguna línea puede quedar en S/ 0.00: un regalo se registra
+                // con su precio real y su descuento parcial, nunca total.
+                if (round((float) ($item['descuento'] ?? 0), 2) >= round($importe, 2)) {
+                    $validator->errors()->add("items.{$index}.descuento", 'El descuento debe ser menor que el importe de la línea: ninguna línea puede quedar en S/ 0.00.');
                 }
             }
         });

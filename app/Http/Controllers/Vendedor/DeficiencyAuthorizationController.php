@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\Deficiencies\StoreDeficiencyAuthorizationRequest;
 use App\Models\Deficiency;
+use App\Models\Quote;
 use App\Models\Team;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -39,6 +40,22 @@ class DeficiencyAuthorizationController extends Controller
             );
 
             return back();
+        }
+
+        // La cotización del adicional debe ser del mismo cliente y sede de la orden.
+        if ($request->filled('cotizacion_adicional_id')) {
+            $orden = $deficiency->serviceOrder;
+            $valida = Quote::query()
+                ->whereKey($request->integer('cotizacion_adicional_id'))
+                ->where('client_id', $orden->client_id)
+                ->where(fn ($query) => $query->whereNull('sede_id')->orWhere('sede_id', $orden->sede_id))
+                ->exists();
+
+            if (! $valida) {
+                throw ValidationException::withMessages([
+                    'cotizacion_adicional_id' => 'La cotización debe ser del mismo cliente y sede de la orden.',
+                ]);
+            }
         }
 
         $deficiency->authorization()->create([

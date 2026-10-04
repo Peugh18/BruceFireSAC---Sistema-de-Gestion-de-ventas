@@ -57,7 +57,7 @@ class CreateSale
             }
 
             if (! empty($data['quote_id'])) {
-                $this->convertirCotizacion((int) $data['quote_id'], (int) $sale->client_id);
+                $this->convertirCotizacion((int) $data['quote_id'], (int) $sale->client_id, (int) $sale->sede_id);
             }
 
             if ($sale->esCredito()) {
@@ -172,9 +172,15 @@ class CreateSale
      * Una venta solo puede nacer de una cotización aceptada del mismo
      * cliente; al crearse la venta, la cotización pasa a convertida.
      */
-    protected function convertirCotizacion(int $quoteId, int $clientId): void
+    protected function convertirCotizacion(int $quoteId, int $clientId, int $sedeId): void
     {
         $quote = Quote::query()->lockForUpdate()->findOrFail($quoteId);
+
+        if ($quote->sede_id !== null && (int) $quote->sede_id !== $sedeId) {
+            throw ValidationException::withMessages([
+                'quote_id' => "La cotización {$quote->numero} es de otra sede.",
+            ]);
+        }
 
         if ((int) $quote->client_id !== $clientId) {
             throw ValidationException::withMessages([

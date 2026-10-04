@@ -19,7 +19,7 @@ class CreditNoteController extends Controller
     public function store(Team $current_team, StoreCreditNoteRequest $request, IssueCreditNote $action, EmitElectronicDocument $emit): RedirectResponse
     {
         $original = ElectronicDocument::findOrFail($request->integer('electronic_document_id'));
-        $this->asegurarSede($original->sale?->sede_id);
+        $this->asegurarVenta($original->sale);
 
         $nota = $action->handle(
             $original,
