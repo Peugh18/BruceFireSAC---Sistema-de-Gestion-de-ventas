@@ -481,9 +481,25 @@ export default function NuevaVenta({
                     : l.product_id === item.id),
         );
 
+        // Lo que no hay en el almacén no se vende: se avisa al escanear y no
+        // al guardar.
+        const cantidadNueva = (existente?.cantidad ?? 0) + 1;
+        if (
+            tipo === 'producto' &&
+            item.stock !== null &&
+            cantidadNueva > item.stock
+        ) {
+            setAviso(
+                item.stock > 0
+                    ? `Solo hay ${item.stock} de ${item.nombre} en el almacén de esta sede.`
+                    : `No hay ${item.nombre} en el almacén de esta sede.`,
+            );
+            return;
+        }
+
         if (existente) {
             actualizarLinea(existente.key, {
-                cantidad: existente.cantidad + 1,
+                cantidad: cantidadNueva,
             });
             return;
         }

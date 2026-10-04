@@ -43,8 +43,9 @@ class CatalogoController extends Controller
 
         $products = $soloServicios ? collect() : Product::query()
             ->where('activo', true)
-            ->where(fn (Builder $query) => $this->coincide($query, $search))
-            ->orderByRaw('codigo = ? desc', [$search])
+            // El código de barras del fabricante (EPP, repuestos) va exacto.
+            ->where(fn (Builder $query) => $query->where('codigo_barras', $search)->orWhere(fn (Builder $query) => $this->coincide($query, $search)))
+            ->orderByRaw('(codigo = ? or codigo_barras = ?) desc', [$search, $search])
             ->orderBy('nombre')
             ->limit(12)
             ->get()
@@ -52,6 +53,7 @@ class CatalogoController extends Controller
                 'tipo' => 'product',
                 'id' => $product->id,
                 'codigo' => $product->codigo,
+                'codigo_barras' => $product->codigo_barras,
                 'nombre' => $product->nombre,
                 'precio_venta' => (float) $product->precio_venta,
                 'serializado' => (bool) $product->serializado,

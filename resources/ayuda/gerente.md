@@ -2,7 +2,8 @@
 
 ## Productos y servicios
 
-- **Productos**: crea cada producto con código, nombre, precio (con IGV incluido) y si es **con serie** (extintores) o sin serie (bases, repuestos). El stock no se escribe aquí: entra por Recepciones del Almacén.
+- **Productos**: crea cada producto con código, nombre, precio (con IGV incluido), **categoría** y si es **con serie** (extintores) o sin serie (bases, repuestos, EPP). El stock no se escribe aquí: entra por Recepciones del Almacén.
+- **EPP y repuestos con código de barras**: registra cada modelo y talla como un producto sin serie y escanea su **código de barras del fabricante**. Desde ahí Almacén y los vendedores solo escanean. Un código no se puede repetir en dos productos.
 - **Servicios**: crea los servicios (recarga, mantenimiento, prueba hidrostática, instalación, capacitación) con su precio. Son los que los vendedores eligen en ventas y órdenes de servicio.
 
 ## Usuarios, roles y sedes
@@ -12,8 +13,9 @@
 
 ## Caja, cobranzas y reportes
 
-- **Caja Consolidada**: movimientos de caja de todas las sedes.
-- **Cobranzas**: cuotas pendientes y vencidas de todas las ventas a crédito.
+- **Caja Consolidada**: movimientos de caja de todas las sedes; faltantes y sobrantes del mes por separado.
+- **Cobranzas**: cuotas pendientes y vencidas de las ventas emitidas, por el saldo que falta cobrar.
+- **Inicio**: solo cuenta ventas emitidas (ni borradores ni anuladas); el stock de productos sin serie sale del Kardex, igual que en Almacén.
 - **Reportes**: comercial e inventario, exportables a PDF.
 
 ## Configuración de la empresa

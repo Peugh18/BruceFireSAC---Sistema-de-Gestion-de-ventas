@@ -28,7 +28,8 @@ class ProductController extends Controller
             ->when($buscar !== '', function ($q) use ($buscar) {
                 $q->where(function ($sub) use ($buscar) {
                     $sub->where('nombre', 'like', "%{$buscar}%")
-                        ->orWhere('codigo', 'like', "%{$buscar}%");
+                        ->orWhere('codigo', 'like', "%{$buscar}%")
+                        ->orWhere('codigo_barras', $buscar);
                 });
             })
             ->when($estado === 'activos', fn ($q) => $q->where('activo', true))
@@ -40,6 +41,8 @@ class ProductController extends Controller
             return [
                 'id' => $p->id,
                 'codigo' => $p->codigo,
+                'codigo_barras' => $p->codigo_barras,
+                'categoria' => $p->categoria,
                 'nombre' => $p->nombre,
                 'descripcion' => $p->descripcion,
                 'unidad_medida' => $p->unidad_medida,
@@ -58,6 +61,7 @@ class ProductController extends Controller
         $totalBajoMinimo = Product::query()->bajoMinimo()->count();
 
         return Inertia::render('gerente/productos/index', [
+            'categorias' => Product::CATEGORIAS,
             'productos' => $productos,
             'filters' => [
                 'buscar' => $buscar,
