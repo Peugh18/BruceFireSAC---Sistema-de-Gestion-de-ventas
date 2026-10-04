@@ -5248,3 +5248,18 @@ Se revisaron los cinco roles. Lo corregido, por parte:
   sin serie. Casos de error: código no registrado (avisa, no inventa),
   cantidad mayor al stock (avisa al escanear y el servidor lo bloquea),
   código repetido entre productos (rechazado).
+
+## 90.1 Ronda 2: permisos por vendedor y marcas de agua (2026-10-04)
+
+- **Cada vendedor, sus ventas:** Ventas, edición, anulación, comprobantes,
+  notas de crédito/débito y certificados de una venta solo los opera quien
+  la hizo (`User::vendedorRestringidoId`, `AcotaPorSede::asegurarVenta`);
+  lo ajeno responde 404. El Gerente opera todas.
+- **Nada de otra sede:** una venta no cobra una orden de servicio ni
+  convierte una cotización de otra sede; la cotización del adicional de una
+  deficiencia debe ser del mismo cliente y sede de la orden; el técnico
+  asignado al crear la orden debe atender su área y sede.
+- **Descuentos:** se mantienen, pero ninguna línea puede quedar en S/ 0.00.
+- **Marcas de agua:** factura, boleta o nota de venta anulada lleva
+  «ANULADO» en rojo (la huella del PDF cambia y se redibuja); un certificado
+  anulado o vencido lleva «ANULADO» o «VENCIDO».

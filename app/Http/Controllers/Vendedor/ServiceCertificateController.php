@@ -90,5 +90,9 @@ class ServiceCertificateController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         abort_if($sedeId !== null && (int) $sale->sede_id !== $sedeId, 404);
+
+        // Cada vendedor corrige solo sus ventas; el Gerente, las de todos.
+        $vendedorId = $request->user()->vendedorRestringidoId();
+        abort_if($vendedorId !== null && (int) $sale->vendedor_id !== $vendedorId, 404);
     }
 }

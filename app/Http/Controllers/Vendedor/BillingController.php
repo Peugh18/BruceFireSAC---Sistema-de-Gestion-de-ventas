@@ -217,7 +217,7 @@ class BillingController extends Controller
 
     public function resend(Team $current_team, ElectronicDocument $electronic_document, EmitElectronicDocument $emitElectronicDocument): RedirectResponse
     {
-        $this->asegurarSede($electronic_document->sale->sede_id);
+        $this->asegurarVenta($electronic_document->sale);
 
         if (! in_array($electronic_document->sunat_estado, ['pendiente', 'observado', 'excepcion'], true)) {
             abort(422, 'Solo se pueden reenviar documentos pendientes observados o con excepción.');
@@ -240,14 +240,14 @@ class BillingController extends Controller
 
     public function downloadPdf(Team $current_team, ElectronicDocument $electronic_document): StreamedResponse
     {
-        $this->asegurarSede($electronic_document->sale->sede_id);
+        $this->asegurarVenta($electronic_document->sale);
 
         return $this->downloadPath($electronic_document, app(ComprobantePdfService::class)->vigente($electronic_document), 'pdf');
     }
 
     protected function downloadPath(ElectronicDocument $document, ?string $path, string $extension): StreamedResponse
     {
-        $this->asegurarSede($document->sale?->sede_id);
+        $this->asegurarVenta($document->sale);
 
         abort_if(! $path || ! Storage::disk('local')->exists($path), 404);
 

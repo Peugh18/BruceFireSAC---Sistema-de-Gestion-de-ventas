@@ -75,9 +75,13 @@ class ServiceOrderController extends Controller
     public function store(Team $current_team, StoreServiceOrderRequest $request, ServiceOrderNumberGenerator $numberGenerator): RedirectResponse
     {
         if ($request->filled('tecnico_id')) {
-            $rol = $request->input('departamento_tecnico') === 'campo' ? 'TecnicoCampo' : 'TecnicoPlanta';
+            // Solo un técnico del área que atiende la sede de la orden.
+            $borrador = new ServiceOrder([
+                'departamento_tecnico' => $request->input('departamento_tecnico'),
+                'sede_id' => $request->user()->sedeRestringidaId() ?? $request->input('sede_id'),
+            ]);
 
-            if (! User::role($rol)->whereKey($request->integer('tecnico_id'))->exists()) {
+            if (! $this->tecnicosQueAtienden($borrador)->whereKey($request->integer('tecnico_id'))->exists()) {
                 throw ValidationException::withMessages([
                     'tecnico_id' => 'El técnico elegido no pertenece al área de la orden.',
                 ]);

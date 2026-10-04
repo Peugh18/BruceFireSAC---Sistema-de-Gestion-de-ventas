@@ -115,6 +115,7 @@ test('la limpieza diaria descarta solo los borradores olvidados', function () {
 test('el vendedor descarta el borrador desde el detalle', function () {
     $vendedor = vendedorUser();
     [$sale] = borradorConUnidad();
+    $sale->update(['vendedor_id' => $vendedor->id]);
 
     $this->actingAs($vendedor)
         ->post(route('vendedor.ventas.descartar', ['current_team' => $vendedor->currentTeam, 'sale' => $sale]))

@@ -45,7 +45,7 @@ class ComprobantePdfService
     public function generate(ElectronicDocument $document, string $xmlSigned): string
     {
         $path = "pdf/{$document->tipo}-{$document->serie}-{$document->correlativo}.pdf";
-        $firma = $this->firmaDeDiseno();
+        $firma = $this->firmaDeDiseno($document);
 
         Storage::disk('local')->put($path, $this->render($document, $xmlSigned));
 
@@ -71,7 +71,7 @@ class ComprobantePdfService
 
         $tieneArchivo = $document->pdf_path && Storage::disk('local')->exists($document->pdf_path);
 
-        if ($tieneArchivo && $document->pdf_firma === $this->firmaDeDiseno()) {
+        if ($tieneArchivo && $document->pdf_firma === $this->firmaDeDiseno($document)) {
             return $document->pdf_path;
         }
 
@@ -223,6 +223,7 @@ class ComprobantePdfService
         return [
             'document' => $document,
             'sale' => $sale,
+            'anulado' => in_array($document->tipo, ['factura', 'boleta', 'nota_venta'], true) && $sale->estado === 'anulada',
             'company' => $company,
             'marca' => [
                 'color' => $company->colorMarca(),
@@ -277,16 +278,34 @@ class ComprobantePdfService
         }
     }
 
-    public function firmaDeDiseno(): string
+    /**
+     * Huella de cómo se dibuja el PDF. Una venta anulada cambia la huella,
+     * así su PDF se redibuja con la marca de agua «ANULADO».
+     */
+    public function firmaDeDiseno(?ElectronicDocument $document = null): string
     {
         $empresa = CompanySetting::current();
         $cuentas = CompanyBankAccount::query()->orderBy('id')->get(['id', 'updated_at', 'activo']);
 
-        return hash('sha256', implode('|', [
+        $firma = hash('sha256', implode('|', [
             (string) @file_get_contents(resource_path('views/pdf/comprobante.blade.php')),
             (string) @file_get_contents(__FILE__),
             $empresa->updated_at?->toIso8601String(),
             $cuentas->toJson(),
         ]));
+
+        return $document !== null && $this->estaAnulado($document)
+            ? hash('sha256', $firma.'|anulado')
+            : $firma;
+    }
+
+    /**
+     * Factura, boleta o nota de venta cuya venta quedó anulada (por nota de
+     * crédito aceptada o anulación interna).
+     */
+    public function estaAnulado(ElectronicDocument $document): bool
+    {
+        return in_array($document->tipo, ['factura', 'boleta', 'nota_venta'], true)
+            && $document->sale()->value('estado') === 'anulada';
     }
 }

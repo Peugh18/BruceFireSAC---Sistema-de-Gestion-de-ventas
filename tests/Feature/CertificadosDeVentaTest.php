@@ -260,6 +260,7 @@ test('los tres certificados generan su pdf con qr', function (string $destino, i
 test('el vendedor abre la pantalla de armar certificados y los emite', function () {
     $user = vendedorUser();
     [$sale, $equipos] = ventaConExtintores(2);
+    $sale->update(['vendedor_id' => $user->id]);
 
     $this->actingAs($user)
         ->get(route('vendedor.ventas.certificados.create', ['current_team' => $user->currentTeam, 'sale' => $sale]))

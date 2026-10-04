@@ -147,8 +147,10 @@ test('el listado de ventas muestra solo las de hoy y se filtra por rango de fech
     $user = vendedorUser();
     $roble = Client::factory()->create(['razon_social' => 'CONSTRUCTORA EL ROBLE S.A.C.']);
     $hoy = Sale::factory()->create(['vendedor_id' => $user->id, 'client_id' => $roble->id, 'estado' => 'confirmada', 'fecha' => today(), 'total' => 100]);
-    $ayer = Sale::factory()->create(['vendedor_id' => $user->id, 'estado' => 'confirmada', 'fecha' => today()->subDay(), 'total' => 50, 'condicion_pago' => 'credito']);
-    $mesPasado = Sale::factory()->create(['vendedor_id' => $user->id, 'estado' => 'confirmada', 'fecha' => today()->subDays(40), 'total' => 30]);
+    // Otro cliente con nombre fijo: uno al azar podría llamarse "Robles".
+    $otro = Client::factory()->create(['razon_social' => 'FERRETERIA EL PINO S.A.C.', 'numero_documento' => '20601234565']);
+    $ayer = Sale::factory()->create(['vendedor_id' => $user->id, 'client_id' => $otro->id, 'estado' => 'confirmada', 'fecha' => today()->subDay(), 'total' => 50, 'condicion_pago' => 'credito']);
+    $mesPasado = Sale::factory()->create(['vendedor_id' => $user->id, 'client_id' => $otro->id, 'estado' => 'confirmada', 'fecha' => today()->subDays(40), 'total' => 30]);
     $url = route('vendedor.ventas.index', ['current_team' => $user->currentTeam]);
 
     $this->actingAs($user)->get($url)->assertInertia(fn ($page) => $page

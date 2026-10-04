@@ -107,9 +107,14 @@
         .firma-nombre { font-family: 'Cond'; font-weight: bold; font-size: 11pt; }
         .firma-cargo { font-family: 'Cond'; font-size: 8.4pt; color: #d20404; letter-spacing: 1pt; text-transform: uppercase; }
         .sello { top: 155mm; left: 128mm; width: 36mm; }
+        /* Marca de agua de un certificado anulado o vencido */
+        .sello-estado { position: fixed; top: 240px; left: 0; right: 0; text-align: center; font-size: 110px; font-weight: bold; color: #dc2626; opacity: 0.22; letter-spacing: 10px; transform: rotate(-35deg); z-index: 1000; }
     </style>
 </head>
 <body>
+    @if (! empty($sello_estado))
+        <div class="sello-estado">{{ $sello_estado }}</div>
+    @endif
 @foreach($paginas ?? [[
     'empresa' => $empresa, 'tipo' => $tipo, 'certificado' => $certificado, 'cliente' => $cliente,
     'firmantes' => $firmantes, 'capacitacion' => $capacitacion, 'qr' => $qr, 'diploma' => $diploma,

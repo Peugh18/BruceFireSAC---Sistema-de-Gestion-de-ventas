@@ -20,20 +20,38 @@ class CertificatePdfService
     public function generate(Certificate $certificate, ?CertificateParticipant $participant = null): DompdfWrapper
     {
         $certificate->loadMissing(['certificateType', 'client', 'participants']);
+        $marca = ['sello_estado' => $this->selloDeEstado($certificate)];
 
         if (($certificate->datos['modo'] ?? 'normal') === 'por_trabajador' && ! $participant) {
-            $paginas = $certificate->participants
+            $paginas = array_values($certificate->participants
                 ->whereNull('anulado_at')
-                ->map(fn (CertificateParticipant $worker) => $this->documentos->desde($certificate, $worker))
-                ->values()
-                ->all();
+                ->map(fn (CertificateParticipant $worker) => [...$this->documentos->desde($certificate, $worker), ...$marca])
+                ->all());
 
             if ($paginas !== []) {
                 return $this->diplomaPaginas($paginas);
             }
         }
 
-        return $this->dibujar($this->documentos->desde($certificate, $participant));
+        return $this->dibujar([...$this->documentos->desde($certificate, $participant), ...$marca]);
+    }
+
+    /**
+     * Marca de agua roja de un certificado que ya no vale: «ANULADO» si se
+     * anuló y «VENCIDO» si pasó su fecha de vigencia.
+     */
+    public function selloDeEstado(Certificate $certificate): ?string
+    {
+        if ($certificate->estado === 'anulado') {
+            return 'ANULADO';
+        }
+
+        if ($certificate->estado === 'vencido'
+            || $certificate->fecha_vigencia_hasta?->lt(today())) {
+            return 'VENCIDO';
+        }
+
+        return null;
     }
 
     /**

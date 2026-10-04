@@ -149,9 +149,14 @@
         .firma-cargo { font-family: 'Cond'; font-size: 7.4pt; color: #3f3d3b; text-transform: uppercase; letter-spacing: 0.3pt; line-height: 1.2; }
         .sello-celda { width: 26mm; }
         .sello { width: 21mm; }
+        /* Marca de agua de un certificado anulado o vencido */
+        .sello-estado { position: fixed; top: 360px; left: 0; right: 0; text-align: center; font-size: 110px; font-weight: bold; color: #dc2626; opacity: 0.22; letter-spacing: 10px; transform: rotate(-35deg); z-index: 1000; }
     </style>
 </head>
 <body>
+    @if (! empty($sello_estado))
+        <div class="sello-estado">{{ $sello_estado }}</div>
+    @endif
     <img class="franja-sup" src="{{ $recursos['franja_superior'] }}" alt="">
     <img class="franja-inf" src="{{ $recursos['franja_inferior'] }}" alt="">
     <img class="marca-agua" src="{{ $recursos['marca_agua'] }}" alt="">

@@ -50,10 +50,13 @@ class SaleController extends Controller
         [$desde, $hasta] = $this->rangoDeFechas($request);
         $vendedorId = $request->user()->id;
         $sedeId = $request->user()->sedeRestringidaId();
+        $soloDe = $request->user()->vendedorRestringidoId();
 
+        // Cada vendedor ve solo sus ventas; el Gerente, las de todos.
         $sales = Sale::query()
             ->with(['client', 'electronicDocuments'])
             ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
+            ->when($soloDe, fn ($query) => $query->where('vendedor_id', $soloDe))
             ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
             ->when($comprobante === 'nota_venta', fn ($query) => $query->where('comprobante_tipo', Sale::NOTA_VENTA))
@@ -227,6 +230,7 @@ class SaleController extends Controller
         $sale = Sale::query()
             ->with('client', 'items.product', 'items.service', 'items.inventoryUnit', 'installments', 'payments', 'electronicDocuments')
             ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
+            ->when(request()->user()?->vendedorRestringidoId(), fn ($query, int $vendedorId) => $query->where('vendedor_id', $vendedorId))
             ->find($saleId);
 
         if (! $sale) {
@@ -337,7 +341,8 @@ class SaleController extends Controller
         $data = $request->safe()->except(['items', 'emitir']);
         $items = $request->safe()->input('items');
 
-        if ($sedeId = $request->user()->sedeRestringidaId()) {
+        $sedeId = $request->user()->sedeRestringidaId();
+        if ($sedeId) {
             $data['sede_id'] = $sedeId;
         }
 
@@ -346,8 +351,12 @@ class SaleController extends Controller
         $emitir = $request->boolean('emitir');
 
         $serviceOrderId = $request->integer('service_order_id') ?: null;
-        $sale = DB::transaction(function () use ($data, $items, $request, $createSale, $emitir, $serviceOrderId, $numberGenerator) {
-            $serviceOrder = $serviceOrderId ? ServiceOrder::lockForUpdate()->findOrFail($serviceOrderId) : null;
+        $sale = DB::transaction(function () use ($data, $items, $request, $createSale, $emitir, $serviceOrderId, $numberGenerator, $sedeId) {
+            // Solo órdenes y cotizaciones de la sede del vendedor.
+            $serviceOrder = $serviceOrderId ? ServiceOrder::lockForUpdate()->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($serviceOrderId) : null;
+            if ($serviceOrderId && ! $serviceOrder) {
+                throw ValidationException::withMessages(['service_order_id' => 'La orden de servicio no es de tu sede.']);
+            }
             if ($serviceOrder?->sale_id) {
                 throw ValidationException::withMessages(['service_order_id' => 'Esta orden ya fue cobrada.']);
             }
@@ -358,7 +367,10 @@ class SaleController extends Controller
             $serviceOrder?->update(['sale_id' => $sale->id]);
 
             if (! $serviceOrder && ! empty($data['quote_id'])) {
-                $quote = Quote::query()->with(['items.service', 'equipments'])->findOrFail((int) $data['quote_id']);
+                $quote = Quote::query()->with(['items.service', 'equipments'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find((int) $data['quote_id']);
+                if (! $quote) {
+                    throw ValidationException::withMessages(['quote_id' => 'La cotización no es de tu sede.']);
+                }
                 $serviceItem = $quote->items->first(fn (QuoteItem $item): bool => $item->service_id !== null);
                 if ($serviceItem?->service) {
                     $serviceOrder = ServiceOrder::create(['codigo' => $numberGenerator->next(), 'client_id' => $quote->client_id, 'sede_id' => $sale->sede_id, 'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'sale_id' => $sale->id, 'service_id' => $serviceItem->service_id, 'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'observaciones' => "Creada desde {$quote->numero}", 'estado' => 'pendiente_recepcion']);
@@ -528,5 +540,9 @@ class SaleController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         abort_if($sedeId !== null && (int) $sale->sede_id !== $sedeId, 404);
+
+        // Cada vendedor corrige solo sus ventas; el Gerente, las de todos.
+        $vendedorId = $request->user()->vendedorRestringidoId();
+        abort_if($vendedorId !== null && (int) $sale->vendedor_id !== $vendedorId, 404);
     }
 }
