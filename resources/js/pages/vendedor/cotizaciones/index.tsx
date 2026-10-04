@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
 import { Cargando, FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
+import WhatsappNumeroDialog from '@/components/whatsapp-numero-dialog';
 import { Button } from '@/components/ui/button';
 import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
@@ -36,15 +37,18 @@ export type QuoteItem = {
     vigencia_hasta: string;
     estado: string;
     whatsapp: string | null;
+    client_id: number;
+    puede_guardar_numero: boolean;
     enlace_pdf: string;
     venta: { id: number; numero: string } | null;
 };
 
 /**
  * Mensaje listo para WhatsApp con el enlace al PDF de la cotización. Si el
- * cliente no tiene número guardado, WhatsApp deja elegir el contacto.
+ * cliente no tiene número guardado (solo CLIENTES VARIOS), WhatsApp deja
+ * elegir el contacto.
  */
-function enlaceWhatsapp(quote: QuoteItem): string {
+function enlaceWhatsapp(quote: QuoteItem, numero = quote.whatsapp): string {
     const monto = Number(quote.total).toLocaleString('es-PE', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
@@ -54,7 +58,7 @@ function enlaceWhatsapp(quote: QuoteItem): string {
     ).toLocaleDateString('es-PE');
     const texto = `Hola ${quote.cliente}, le saludamos de Extintores Bruce Fire. Le enviamos la cotización ${quote.numero} por S/ ${monto}, válida hasta el ${vence}. Puede verla aquí: ${quote.enlace_pdf}`;
 
-    return `https://wa.me/${quote.whatsapp ?? ''}?text=${encodeURIComponent(texto)}`;
+    return `https://wa.me/${numero ?? ''}?text=${encodeURIComponent(texto)}`;
 }
 
 export type PaginationLink = {
@@ -299,6 +303,10 @@ export default function CotizacionesIndex({
             Object.values(errors)[0] ?? 'No se pudo actualizar la cotización.',
         );
     };
+
+    const [pidiendoNumero, setPidiendoNumero] = useState<QuoteItem | null>(
+        null,
+    );
 
     const handleSend = (quote: QuoteItem) => {
         setProcessingAction({ id: quote.id, action: 'send' });
@@ -682,7 +690,40 @@ export default function CotizacionesIndex({
                                                                 'convertida',
                                                             ].includes(
                                                                 quote.estado,
-                                                            ) && (
+                                                            ) &&
+                                                            !quote.whatsapp &&
+                                                            quote.puede_guardar_numero && (
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={
+                                                                        isRowProcessing
+                                                                    }
+                                                                    onClick={() =>
+                                                                        setPidiendoNumero(
+                                                                            quote,
+                                                                        )
+                                                                    }
+                                                                    title="El cliente no tiene celular: agrégalo y se envía por WhatsApp"
+                                                                    className="flex h-7 items-center gap-1.5 rounded-[7px] border border-green-700 bg-green-700/5 px-2.5 text-[11px] font-bold text-green-800 shadow-xs transition-colors hover:bg-green-700/10 dark:text-green-400"
+                                                                >
+                                                                    <MessageCircle className="size-3" />
+                                                                    <span>
+                                                                        Agregar
+                                                                        número
+                                                                    </span>
+                                                                </button>
+                                                            )}
+                                                        {!quote.venta &&
+                                                            ![
+                                                                'rechazada',
+                                                                'vencida',
+                                                                'anulada',
+                                                                'convertida',
+                                                            ].includes(
+                                                                quote.estado,
+                                                            ) &&
+                                                            (quote.whatsapp ||
+                                                                !quote.puede_guardar_numero) && (
                                                                 <a
                                                                     href={enlaceWhatsapp(
                                                                         quote,
@@ -701,7 +742,7 @@ export default function CotizacionesIndex({
                                                                     title={
                                                                         quote.whatsapp
                                                                             ? 'Enviar por WhatsApp al cliente'
-                                                                            : 'El cliente no tiene celular guardado: elige el contacto en WhatsApp'
+                                                                            : 'Clientes varios: elige el contacto en WhatsApp'
                                                                     }
                                                                     className="flex h-7 items-center gap-1.5 rounded-[7px] bg-green-700 px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-green-800"
                                                                 >
@@ -894,6 +935,29 @@ export default function CotizacionesIndex({
                     )}
                 </div>
             </div>
+            {pidiendoNumero ? (
+                <WhatsappNumeroDialog
+                    open
+                    onOpenChange={(abierto) => {
+                        if (!abierto) {
+                            setPidiendoNumero(null);
+                        }
+                    }}
+                    teamSlug={teamSlug}
+                    clientId={pidiendoNumero.client_id}
+                    cliente={pidiendoNumero.cliente}
+                    enlace={(numero) => enlaceWhatsapp(pidiendoNumero, numero)}
+                    onGuardado={() => {
+                        const quote = pidiendoNumero;
+
+                        if (['borrador', 'emitida'].includes(quote.estado)) {
+                            handleSend(quote);
+                        } else {
+                            router.reload({ only: ['quotes'] });
+                        }
+                    }}
+                />
+            ) : null}
         </VendedorLayout>
     );
 }

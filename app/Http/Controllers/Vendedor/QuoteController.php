@@ -44,10 +44,12 @@ class QuoteController extends Controller
                 'id' => $quote->id,
                 'numero' => $quote->numero,
                 'cliente' => $quote->client->razon_social,
+                'client_id' => $quote->client_id,
                 'total' => $quote->total,
                 'vigencia_hasta' => $quote->vigencia_hasta->toDateString(),
                 'estado' => $quote->estado,
-                'whatsapp' => $this->numeroWhatsapp($quote->client->whatsapp ?: $quote->client->telefono),
+                'whatsapp' => $quote->client->esClientesVarios() ? null : $quote->client->whatsappInternacional(),
+                'puede_guardar_numero' => ! $quote->client->esClientesVarios(),
                 'enlace_pdf' => $pdf->enlacePublico($quote),
                 'venta' => $quote->sale ? ['id' => $quote->sale->id, 'numero' => $quote->sale->numero_interno] : null,
             ]);
@@ -178,21 +180,6 @@ class QuoteController extends Controller
         return $request->boolean('descargar')
             ? $documento->download($pdf->nombreArchivo($quote))
             : $documento->stream($pdf->nombreArchivo($quote));
-    }
-
-    /**
-     * Número para wa.me: solo dígitos y con el 51 de Perú si es un celular
-     * de 9 dígitos.
-     */
-    protected function numeroWhatsapp(?string $telefono): ?string
-    {
-        $digitos = preg_replace('/\D/', '', (string) $telefono);
-
-        if ($digitos === '') {
-            return null;
-        }
-
-        return strlen($digitos) === 9 ? '51'.$digitos : $digitos;
     }
 
     public function send(Team $current_team, Quote $quote): RedirectResponse
