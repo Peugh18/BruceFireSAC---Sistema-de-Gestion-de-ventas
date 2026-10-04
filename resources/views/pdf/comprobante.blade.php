@@ -12,8 +12,11 @@
     $ubicacion = collect([$company->distrito, $company->provincia, $company->departamento])->filter()->unique()->implode(' - ');
     $etiquetaReferencia = null;
     $valorReferencia = null;
+    $direccionCliente = $sale->client->direccionImprimible();
     if ($sale->referencia) {
-        $etiquetaReferencia = str_contains($sale->referencia, ':') ? trim(mb_strtoupper(strstr($sale->referencia, ':', true))) : 'REFERENCIA';
+        $etiquetaReferencia = str_contains($sale->referencia, ':')
+            ? trim(mb_strtoupper(strstr($sale->referencia, ':', true)))
+            : ($sale->destino === 'vehiculo' ? 'PLACA' : 'REFERENCIA');
         $valorReferencia = str_contains($sale->referencia, ':') ? trim(substr(strstr($sale->referencia, ':'), 1)) : $sale->referencia;
     } elseif ($sale->destino === 'vehiculo' && $sale->vehicle) {
         [$etiquetaReferencia, $valorReferencia] = ['PLACA', $sale->vehicle->placa];
@@ -132,10 +135,10 @@
                     <div class="label">{{ $sale->client->tipo_documento === 'ruc' ? 'RUC' : ($sale->client->tipo_documento === 'dni' ? 'DNI' : 'Documento') }}</div>
                     <div class="value">{{ $sale->client->numero_documento }}</div>
                 </div>
-                @if($sale->client->direccion_fiscal)
+                @if($direccionCliente)
                     <div class="field">
-                        <div class="label">Dirección</div>
-                        <div class="value">{{ $sale->client->direccion_fiscal }}</div>
+                        <div class="label">{{ $sale->client->tieneRuc() ? 'Dirección fiscal' : 'Dirección' }}</div>
+                        <div class="value">{{ $direccionCliente }}</div>
                     </div>
                 @endif
                 @if($etiquetaReferencia)

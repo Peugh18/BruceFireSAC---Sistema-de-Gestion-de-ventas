@@ -86,10 +86,10 @@
             <td class="et">{{ strtoupper((string) $quote->client->tipo_documento) === 'RUC' ? 'RUC' : 'Documento' }}</td>
             <td>{{ $quote->client->numero_documento }}</td>
         </tr>
-        @if ($quote->client->direccion_fiscal || $quote->referencia)
+        @if ($quote->client->direccionImprimible() || $quote->referencia)
             <tr>
                 <td class="et">Dirección</td>
-                <td>{{ $quote->client->direccion_fiscal ?: '—' }}</td>
+                <td>{{ $quote->client->direccionImprimible() ?? '—' }}</td>
                 <td class="et">Referencia</td>
                 <td>{{ $quote->referencia ?: '—' }}</td>
             </tr>

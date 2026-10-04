@@ -15,6 +15,7 @@ use App\Models\Equipment;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\Team;
+use App\Services\AuditLogger;
 use App\Services\Ml\RetentionModel;
 use App\Services\Sunat\RucLookupService;
 use Illuminate\Http\JsonResponse;
@@ -324,6 +325,35 @@ class ClientController extends Controller
         $updateClient->handle($client, $request->validated());
 
         return back();
+    }
+
+    /**
+     * Completa solo la dirección fiscal desde la venta, sin salir del
+     * formulario (la factura no se emite sin ella).
+     */
+    public function actualizarDireccion(Team $current_team, Request $request, Client $client): JsonResponse
+    {
+        abort_if($client->esClientesVarios(), 422, 'CLIENTES VARIOS no lleva dirección.');
+
+        $data = $request->validate([
+            'direccion_fiscal' => ['required', 'string', 'min:5', 'max:255'],
+        ], [
+            'direccion_fiscal.required' => 'Escribe la dirección fiscal del cliente.',
+            'direccion_fiscal.min' => 'Escribe la dirección completa.',
+        ]);
+
+        $antes = $client->direccion_fiscal;
+        $client->update(['direccion_fiscal' => trim($data['direccion_fiscal'])]);
+
+        AuditLogger::log(
+            action: 'cliente.actualizado',
+            entity: $client,
+            oldValues: ['direccion_fiscal' => $antes],
+            newValues: ['direccion_fiscal' => $client->direccion_fiscal],
+            userId: $request->user()->id,
+        );
+
+        return response()->json(['direccion_fiscal' => $client->direccion_fiscal]);
     }
 
     /**

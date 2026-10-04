@@ -33,6 +33,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import { leerCookie } from '@/lib/cookies';
 import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
@@ -328,6 +329,69 @@ export default function NuevaVenta({
         form.data.comprobante_tipo === 'boleta' &&
         total > limiteBoletaSinIdentificar;
 
+    // La factura exige la dirección fiscal del cliente (sale impresa): si
+    // falta, se completa aquí mismo y queda guardada en su ficha.
+    const facturaSinDireccion =
+        form.data.comprobante_tipo === 'factura' &&
+        cliente !== null &&
+        cliente.tipo_documento === 'ruc' &&
+        (cliente.direccion_fiscal ?? '').replace(/[-.\s]/g, '') === '';
+    const [direccionNueva, setDireccionNueva] = useState('');
+    const [guardandoDireccion, setGuardandoDireccion] = useState(false);
+    const [errorDireccion, setErrorDireccion] = useState<string | null>(null);
+
+    const guardarDireccion = async () => {
+        if (!cliente) {
+            return;
+        }
+
+        setGuardandoDireccion(true);
+        setErrorDireccion(null);
+
+        try {
+            const response = await fetch(
+                clientes.direccion.url({
+                    current_team: teamSlug,
+                    client: cliente.id,
+                }),
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-XSRF-TOKEN': leerCookie('XSRF-TOKEN'),
+                    },
+                    body: JSON.stringify({ direccion_fiscal: direccionNueva }),
+                },
+            );
+            const payload = (await response.json()) as {
+                direccion_fiscal?: string;
+                message?: string;
+                errors?: Record<string, string[]>;
+            };
+
+            if (!response.ok) {
+                setErrorDireccion(
+                    payload.errors?.direccion_fiscal?.[0] ??
+                        payload.message ??
+                        'No se pudo guardar la dirección.',
+                );
+                return;
+            }
+
+            setCliente({
+                ...cliente,
+                direccion_fiscal: payload.direccion_fiscal ?? direccionNueva,
+            });
+            setDireccionNueva('');
+            setAviso(null);
+        } catch {
+            setErrorDireccion('No se pudo guardar la dirección.');
+        } finally {
+            setGuardandoDireccion(false);
+        }
+    };
+
     const elegirCliente = (ficha: ClientFicha | null) => {
         setCliente(ficha);
         form.setData((data) => ({
@@ -477,6 +541,13 @@ export default function NuevaVenta({
                     ).length,
             }))
             .find((line) => line.faltantes > 0);
+
+        if (emitir && facturaSinDireccion) {
+            setAviso(
+                'Completa la dirección fiscal del cliente: la factura la necesita.',
+            );
+            return;
+        }
 
         if (emitir && unidadFaltante) {
             setAviso(
@@ -770,6 +841,48 @@ export default function NuevaVenta({
                                 </div>
                             </div>
                         </div>
+                        {facturaSinDireccion ? (
+                            <div className="border-destructive/40 bg-destructive/5 rounded-[12px] border p-3">
+                                <div className="text-destructive-strong flex items-center gap-2 text-[12.5px] font-bold">
+                                    <MapPin className="size-4 shrink-0" />
+                                    Falta la dirección fiscal del cliente
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11.5px]">
+                                    La factura la imprime y no se emite sin
+                                    ella. Se guarda en la ficha del cliente.
+                                </p>
+                                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                                    <Input
+                                        value={direccionNueva}
+                                        onChange={(event) =>
+                                            setDireccionNueva(
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="Ej. Av. España 1234, Trujillo - La Libertad"
+                                        className="h-9 flex-1 rounded-[9px] text-[13px]"
+                                    />
+                                    <Button
+                                        type="button"
+                                        disabled={
+                                            guardandoDireccion ||
+                                            direccionNueva.trim().length < 5
+                                        }
+                                        onClick={() => void guardarDireccion()}
+                                        className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] text-[12.5px] font-bold text-white shadow-none"
+                                    >
+                                        {guardandoDireccion
+                                            ? 'Guardando…'
+                                            : 'Guardar dirección'}
+                                    </Button>
+                                </div>
+                                {errorDireccion ? (
+                                    <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+                                        {errorDireccion}
+                                    </p>
+                                ) : null}
+                            </div>
+                        ) : null}
                     </Card>
 
                     <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">

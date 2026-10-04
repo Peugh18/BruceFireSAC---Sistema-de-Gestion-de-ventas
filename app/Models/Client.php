@@ -103,6 +103,17 @@ class Client extends Model
     }
 
     /**
+     * Dirección que se imprime en el comprobante, o null si no hay una de
+     * verdad ("-" es el relleno de CLIENTES VARIOS).
+     */
+    public function direccionImprimible(): ?string
+    {
+        $direccion = trim((string) $this->direccion_fiscal);
+
+        return $direccion === '' || trim($direccion, '-. ') === '' ? null : $direccion;
+    }
+
+    /**
      * @return HasMany<ClientSite, $this>
      */
     public function sites(): HasMany
