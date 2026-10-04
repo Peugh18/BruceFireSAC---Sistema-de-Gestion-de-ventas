@@ -173,6 +173,21 @@ class ComprobantePdfService
     }
 
     /**
+     * La nota de venta con el mismo diseño del comprobante: es un documento
+     * interno, así que no lleva QR ni la leyenda de SUNAT.
+     */
+    public function notaDeVenta(Sale $sale): string
+    {
+        $document = new ElectronicDocument(['tipo' => 'nota_venta', 'fecha_emision' => $sale->fecha]);
+        $document->created_at = $sale->created_at;
+        $document->setRelation('sale', $sale);
+
+        $this->olvidarPlantillaCompilada();
+
+        return Pdf::loadView('pdf.comprobante', $this->datos($document, null))->setPaper('a4')->output();
+    }
+
+    /**
      * Dibuja el PDF y devuelve su contenido.
      */
     public function render(ElectronicDocument $document, string $xmlSigned, ?string $medioPago = null): string
@@ -196,7 +211,7 @@ class ComprobantePdfService
      *
      * @return array<string, mixed>
      */
-    protected function datos(ElectronicDocument $document, string $xmlSigned, ?string $medioPago = null): array
+    protected function datos(ElectronicDocument $document, ?string $xmlSigned, ?string $medioPago = null): array
     {
         $document->loadMissing('sale.client.sites', 'sale.client.vehicles', 'sale.vehicle', 'sale.vendedor', 'sale.items.product', 'sale.items.service', 'sale.installments');
         $sale = $document->sale;
@@ -223,7 +238,7 @@ class ComprobantePdfService
             'condicionPago' => $sale->esCredito()
                 ? 'Crédito '.str_pad((string) $sale->diasCredito(), 2, '0', STR_PAD_LEFT).' días'
                 : 'Contado'.($medioPago ? ' · '.$medioPago : ''),
-            'qrBase64' => base64_encode($this->qrGenerator->generate($document, $xmlSigned)),
+            'qrBase64' => $xmlSigned !== null ? base64_encode($this->qrGenerator->generate($document, $xmlSigned)) : null,
             'montoEnLetras' => $this->numeroEnLetras->convertir((float) $sale->total),
             'bankAccounts' => CompanyBankAccount::query()->where('activo', true)->orderBy('orden')->get(),
             'detraccion' => $this->detraccionCalculator->paraVenta($sale, $document->tipo),

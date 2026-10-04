@@ -15,7 +15,6 @@ use App\Http\Controllers\Vendedor\Concerns\FiltraPorFechas;
 use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\CashRegister;
 use App\Models\Client;
-use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
 use App\Models\Quote;
 use App\Models\QuoteItem;
@@ -25,8 +24,8 @@ use App\Models\Sede;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Billing\ComprobantePdfService;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -438,12 +437,11 @@ class SaleController extends Controller
 
         abort_unless($sale->esNotaVenta() && $sale->numero_nota_venta, 404);
 
-        $sale->load('client', 'items.product', 'items.service', 'items.equipment');
-
-        return Pdf::loadView('pdf.nota-venta', [
-            'sale' => $sale,
-            'company' => CompanySetting::current(),
-        ])->setPaper('a4')->stream("{$sale->numero_nota_venta}.pdf");
+        return response(app(ComprobantePdfService::class)->notaDeVenta($sale), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"{$sale->numero_nota_venta}.pdf\"",
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
     }
 
     public function confirm(Team $current_team, Sale $sale, ConfirmSale $confirmSale, Request $request): RedirectResponse

@@ -11,6 +11,7 @@ use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Sede;
+use App\Services\Billing\ComprobantePdfService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Http;
 
@@ -145,6 +146,20 @@ test('el vendedor registra una nota de venta desde el formulario y descarga su p
         ->get(route('vendedor.ventas.nota-venta-pdf', [...$team, 'sale' => $sale->fresh()]))
         ->assertOk()
         ->assertHeader('content-type', 'application/pdf');
+
+    // Mismo diseño que la factura y la boleta, sin QR ni leyenda de SUNAT.
+    $html = view('pdf.comprobante', (fn () => $this->datos(...func_get_args()))->call(
+        app(ComprobantePdfService::class),
+        tap(new ElectronicDocument(['tipo' => 'nota_venta', 'fecha_emision' => $sale->fecha]))->setRelation('sale', $sale->fresh()),
+        null,
+    ))->render();
+
+    expect($html)->toContain('Nota de venta')
+        ->toContain($sale->fresh()->numero_nota_venta)
+        ->toContain('Documento interno de control')
+        ->toContain('Forma de pago')
+        ->not->toContain('Representación impresa')
+        ->not->toContain('alt="QR"');
 });
 
 test('el listado de ventas separa notas de venta de las ventas con comprobante', function () {
