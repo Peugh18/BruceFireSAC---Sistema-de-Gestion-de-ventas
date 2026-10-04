@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\InventoryMovement;
 use App\Models\Installment;
+use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Sale;
