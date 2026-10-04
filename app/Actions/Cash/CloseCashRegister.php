@@ -3,7 +3,6 @@
 namespace App\Actions\Cash;
 
 use App\Models\CashRegister;
-use App\Models\SalePayment;
 use Illuminate\Validation\ValidationException;
 
 class CloseCashRegister
@@ -18,13 +17,8 @@ class CloseCashRegister
 
         $now = now();
 
-        $totalEfectivo = (float) SalePayment::query()
-            ->where('forma_pago', 'efectivo')
-            ->whereHas('sale', function ($query) use ($cashRegister) {
-                $query->where('vendedor_id', $cashRegister->vendedor_id);
-            })
-            ->whereBetween('created_at', [$cashRegister->fecha_apertura, $now])
-            ->sum('monto');
+        // Efectivo cobrado en el turno menos el devuelto a clientes.
+        $totalEfectivo = $cashRegister->movimientosPorFormaDePago($now)['efectivo'] ?? 0.0;
 
         $montoEsperadoCalculado = round((float) $cashRegister->monto_apertura + $totalEfectivo, 2);
 

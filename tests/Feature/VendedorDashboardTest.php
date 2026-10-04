@@ -170,8 +170,8 @@ test('cobros_pendientes solo incluye installments de ventas del vendedor autenti
     $vendedor = vendedorUser();
     $otroVendedor = vendedorUser();
 
-    $saleVendedor = Sale::factory()->create(['vendedor_id' => $vendedor->id]);
-    $saleOtro = Sale::factory()->create(['vendedor_id' => $otroVendedor->id]);
+    $saleVendedor = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $vendedor->id]);
+    $saleOtro = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $otroVendedor->id]);
 
     $installmentMio = Installment::factory()->create([
         'sale_id' => $saleVendedor->id,

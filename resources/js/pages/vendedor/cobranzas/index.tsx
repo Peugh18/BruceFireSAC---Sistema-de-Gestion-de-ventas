@@ -223,7 +223,6 @@ export default function CobranzasIndex({
     const montoApertura = turno_actual
         ? Number(turno_actual.monto_apertura)
         : 0;
-    const ventasEfectivo = turno_actual?.ventas_por_forma_pago?.efectivo ?? 0;
     const ventasTransferencia =
         (turno_actual?.ventas_por_forma_pago?.transferencia ?? 0) +
         (turno_actual?.ventas_por_forma_pago?.deposito ?? 0);
@@ -232,7 +231,6 @@ export default function CobranzasIndex({
         (turno_actual?.ventas_por_forma_pago?.yape ?? 0) +
         (turno_actual?.ventas_por_forma_pago?.plin ?? 0) +
         (turno_actual?.ventas_por_forma_pago?.pos ?? 0);
-    const efectivoEsperado = montoApertura + ventasEfectivo;
 
     const installmentRows = installments?.data ?? [];
 
@@ -303,14 +301,6 @@ export default function CobranzasIndex({
                                         </div>
                                         <div className="flex items-center justify-between py-2">
                                             <span className="text-muted-foreground">
-                                                Ventas en efectivo
-                                            </span>
-                                            <span className="text-foreground font-semibold">
-                                                {soles(ventasEfectivo)}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between py-2">
-                                            <span className="text-muted-foreground">
                                                 Transferencia / Depósito
                                             </span>
                                             <span className="text-foreground font-semibold">
@@ -325,14 +315,14 @@ export default function CobranzasIndex({
                                                 {soles(ventasTarjetaYape)}
                                             </span>
                                         </div>
-                                        <div className="flex items-center justify-between pt-2.5 text-[13.5px]">
-                                            <span className="text-foreground font-bold">
-                                                Efectivo esperado
-                                            </span>
-                                            <span className="text-success-strong font-['Oswald',sans-serif] text-[18px] font-semibold">
-                                                {soles(efectivoEsperado)}
-                                            </span>
-                                        </div>
+                                        {/* Arqueo ciego: el efectivo esperado
+                                        se ve recién al cerrar, después de
+                                        contar lo que hay en el cajón. */}
+                                        <p className="text-muted-foreground pt-2.5 text-[11.5px]">
+                                            El efectivo esperado se muestra al
+                                            cerrar el turno, después de que
+                                            cuentes el cajón.
+                                        </p>
                                     </div>
 
                                     {/* Botón Cerrar Turno */}

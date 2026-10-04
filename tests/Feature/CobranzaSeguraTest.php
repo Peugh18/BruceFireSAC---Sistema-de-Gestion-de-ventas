@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AuditLog;
+use App\Models\CashRegister;
 use App\Models\Installment;
 use App\Models\Sale;
 use App\Models\SalePayment;
@@ -11,7 +12,8 @@ test('limita el cobro al saldo y permite anularlo con motivo y auditoria', funct
     $this->seed(RolesAndPermissionsSeeder::class);
     $vendedor = User::factory()->create();
     $vendedor->assignRole('Vendedor');
-    $sale = Sale::factory()->create(['vendedor_id' => $vendedor->id]);
+    CashRegister::factory()->create(['vendedor_id' => $vendedor->id]);
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $vendedor->id]);
     $installment = Installment::factory()->create([
         'sale_id' => $sale->id,
         'monto' => 300,
@@ -58,7 +60,7 @@ test('solo gerencia puede anular un cobro de un dia anterior', function () {
     $vendedor->assignRole('Vendedor');
     $gerente = User::factory()->create();
     $gerente->assignRole('Gerente');
-    $sale = Sale::factory()->create(['vendedor_id' => $vendedor->id]);
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $vendedor->id]);
     $installment = Installment::factory()->create(['sale_id' => $sale->id, 'estado' => 'pagado']);
     $payment = SalePayment::factory()->create([
         'sale_id' => $sale->id,

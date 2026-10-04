@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Cash\StoreCloseCashRegisterRequest;
 use App\Http\Requests\Cash\StoreOpenCashRegisterRequest;
 use App\Models\CashRegister;
-use App\Models\SalePayment;
 use App\Models\Sede;
 use App\Models\Team;
 use App\Models\User;
@@ -48,14 +47,7 @@ class CashRegisterController extends Controller
 
         $ventasPorFormaPago = [];
         if ($turnoActual) {
-            $ventasPorFormaPago = SalePayment::query()
-                ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id))
-                ->whereBetween('created_at', [$turnoActual->fecha_apertura, now()])
-                ->selectRaw('forma_pago, SUM(monto) as total')
-                ->groupBy('forma_pago')
-                ->pluck('total', 'forma_pago')
-                ->map(fn ($total) => round((float) $total, 2))
-                ->all();
+            $ventasPorFormaPago = $turnoActual->movimientosPorFormaDePago();
         }
 
         $cierres = CashRegister::query()
@@ -63,7 +55,7 @@ class CashRegisterController extends Controller
             ->where('vendedor_id', $user->id)
             ->where('estado', 'cerrado')
             ->orderByDesc('fecha_cierre')
-            ->paginate(10)
+            ->paginate(10, ['*'], 'cierres_page')
             ->withQueryString()
             ->through(fn (CashRegister $cr) => [
                 'id' => $cr->id,

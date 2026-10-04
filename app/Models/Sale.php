@@ -214,6 +214,16 @@ class Sale extends Model
     }
 
     /**
+     * Dinero devuelto al cliente (venta anulada o rebajada).
+     *
+     * @return HasMany<SaleRefund, $this>
+     */
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(SaleRefund::class);
+    }
+
+    /**
      * @return HasMany<Installment, $this>
      */
     public function installments(): HasMany

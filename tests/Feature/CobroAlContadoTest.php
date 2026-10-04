@@ -1,6 +1,8 @@
 <?php
 
+use App\Actions\Cash\CloseCashRegister;
 use App\Actions\Sales\DescartarVentaSinComprobante;
+use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\InventoryUnit;
 use App\Models\Product;
@@ -18,6 +20,7 @@ function vendedorDeCaja(): User
 {
     $user = User::factory()->create();
     $user->assignRole('Vendedor');
+    CashRegister::factory()->create(['vendedor_id' => $user->id]);
 
     return $user;
 }
@@ -102,6 +105,47 @@ test('al anular la venta el cobro al contado sale de la caja', function () {
 
     app(DescartarVentaSinComprobante::class)->handle($sale, 'por prueba');
 
+    // El cobro queda como se hizo y la devolución se registra hoy aparte:
+    // el efectivo sale de la caja del turno en que se devuelve.
     expect($sale->fresh()->estado)->toBe('anulada')
-        ->and(SalePayment::where('sale_id', $sale->id)->exists())->toBeFalse();
+        ->and((float) SalePayment::where('sale_id', $sale->id)->sum('monto'))->toBe(100.0)
+        ->and((float) $sale->refunds()->sole()->monto)->toBe(100.0);
+});
+
+test('editar una venta cobrada en un turno anterior deja ese cobro y registra hoy solo la diferencia', function () {
+    $vendedor = vendedorDeCaja();
+    $sale = venderAlContado($vendedor, ['condicion_pago' => 'contado', 'medio_pago' => 'efectivo']);
+    $original = SalePayment::where('sale_id', $sale->id)->sole();
+
+    // Ese turno ya se cerró ayer; hoy abrió uno nuevo.
+    CashRegister::where('vendedor_id', $vendedor->id)->update(['estado' => 'cerrado', 'fecha_apertura' => now()->subDay(), 'fecha_cierre' => now()->subDay()->addHours(8)]);
+    $original->forceFill(['created_at' => now()->subDay()->addHour(), 'fecha' => today()->subDay()])->saveQuietly();
+    $hoy = CashRegister::factory()->create(['vendedor_id' => $vendedor->id, 'fecha_apertura' => now()->subMinutes(10), 'monto_apertura' => 50]);
+
+    $item = $sale->load('items.inventoryUnit')->items->first();
+    $this->actingAs($vendedor)
+        ->put(route('vendedor.ventas.update', ['current_team' => $vendedor->currentTeam, 'sale' => $sale]), [
+            'client_id' => $sale->client_id,
+            'sede_id' => $sale->sede_id,
+            'fecha' => $sale->fecha->toDateString(),
+            'destino' => 'local_cliente',
+            'condicion_pago' => 'contado',
+            'medio_pago' => 'efectivo',
+            'comprobante_tipo' => 'nota_venta',
+            'items' => [['tipo_linea' => 'unidad_nueva', 'numero_serie' => $item->inventoryUnit->numero_serie, 'product_id' => $item->product_id, 'cantidad' => 1, 'precio_unitario' => 120]],
+        ])
+        ->assertSessionHasNoErrors();
+
+    $pagos = SalePayment::where('sale_id', $sale->id)->orderBy('id')->get();
+
+    expect($pagos)->toHaveCount(2)
+        ->and($pagos[0]->id)->toBe($original->id)
+        ->and((float) $pagos[0]->monto)->toBe(100.0)
+        ->and($pagos[0]->created_at->isToday())->toBeFalse()
+        ->and((float) $pagos[1]->monto)->toBe(20.0)
+        ->and($pagos[1]->forma_pago)->toBe('efectivo');
+
+    // El arqueo de hoy espera el fondo más solo los 20 que entraron hoy.
+    app(CloseCashRegister::class)->handle($hoy, 70, null);
+    expect((float) $hoy->fresh()->monto_esperado_calculado)->toBe(70.0);
 });

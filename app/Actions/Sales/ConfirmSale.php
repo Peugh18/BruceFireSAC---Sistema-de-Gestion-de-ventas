@@ -5,9 +5,11 @@ namespace App\Actions\Sales;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\ReserveNextCorrelativo;
 use App\Actions\Certificates\EmitirCertificadosDeVenta;
+use App\Models\CashRegister;
 use App\Models\CompanySetting;
 use App\Models\Sale;
 use App\Models\SalePayment;
+use App\Models\SaleRefund;
 use App\Services\AuditLogger;
 use App\Services\Billing\DetraccionCalculator;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +18,9 @@ use Illuminate\Validation\ValidationException;
 class ConfirmSale
 {
     public const SERIE_NOTA_VENTA = 'NV01';
+
+    /** La detracción se registra como un depósito en el Banco de la Nación. */
+    public const FORMA_DETRACCION = 'deposito';
 
     public function __construct(
         protected EmitElectronicDocument $emitElectronicDocument,
@@ -117,28 +122,76 @@ class ConfirmSale
             return;
         }
 
-        // Con detracción el cliente paga el total menos la detracción; esa
-        // parte la deposita en la cuenta del Banco de la Nación de la empresa.
+        $this->registrarCobros($sale, $this->cobrosAlContado($sale));
+    }
+
+    /**
+     * Lo que el cliente paga al contado por forma de pago. Con detracción
+     * paga el total menos la detracción; esa parte la deposita en la cuenta
+     * del Banco de la Nación de la empresa.
+     *
+     * @return array<string, float>
+     */
+    public function cobrosAlContado(Sale $sale): array
+    {
+        if ($sale->esCredito() || ! $sale->medio_pago) {
+            return [];
+        }
+
         $detraccion = $this->detraccion->paraVenta($sale)['monto'];
-
-        SalePayment::create([
-            'sale_id' => $sale->id,
-            'forma_pago' => $sale->medio_pago,
-            'monto' => round((float) $sale->total - $detraccion, 2),
-            'numero_operacion' => $sale->numero_operacion,
-            'fecha' => today(),
-        ]);
-
-        $sale->update(['medio_pago' => null, 'numero_operacion' => null]);
+        $cobros = [$sale->medio_pago => round((float) $sale->total - $detraccion, 2)];
 
         if ($detraccion > 0) {
+            $cobros[self::FORMA_DETRACCION] = round(($cobros[self::FORMA_DETRACCION] ?? 0) + $detraccion, 2);
+        }
+
+        return $cobros;
+    }
+
+    /**
+     * Registra hoy los cobros de la venta por forma de pago; un monto
+     * negativo es dinero que se le devuelve al cliente. El efectivo que
+     * entra exige la caja abierta.
+     *
+     * @param  array<string, float>  $cobros
+     */
+    public function registrarCobros(Sale $sale, array $cobros, string $nota = ''): void
+    {
+        foreach ($cobros as $forma => $monto) {
+            $monto = round($monto, 2);
+
+            if ($monto == 0.0) {
+                continue;
+            }
+
+            if ($monto < 0) {
+                SaleRefund::create([
+                    'sale_id' => $sale->id,
+                    'forma_pago' => $forma,
+                    'monto' => -$monto,
+                    'motivo' => $nota !== '' ? $nota : 'Devolución al cliente',
+                    'user_id' => auth()->id(),
+                    'fecha' => today(),
+                ]);
+
+                continue;
+            }
+
+            if ($forma === 'efectivo') {
+                CashRegister::exigirAbiertaParaEfectivo((int) $sale->vendedor_id);
+            }
+
             SalePayment::create([
                 'sale_id' => $sale->id,
-                'forma_pago' => 'deposito',
-                'monto' => $detraccion,
-                'numero_operacion' => 'Detracción (Banco de la Nación)',
+                'forma_pago' => $forma,
+                'monto' => $monto,
+                'numero_operacion' => $nota !== '' ? $nota : ($forma === self::FORMA_DETRACCION && $sale->medio_pago !== self::FORMA_DETRACCION
+                    ? 'Detracción (Banco de la Nación)'
+                    : $sale->numero_operacion),
                 'fecha' => today(),
             ]);
         }
+
+        $sale->update(['medio_pago' => null, 'numero_operacion' => null]);
     }
 }
