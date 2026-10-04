@@ -27,6 +27,8 @@ class UpdateReceptionRequest extends FormRequest
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
             'items.*.cantidad_conforme' => ['required', 'integer', 'min:0'],
             'items.*.observacion_item' => ['nullable', 'string'],
+            // Se puede corregir el vencimiento de un lote mal tipeado.
+            'items.*.fecha_vencimiento' => ['nullable', 'date'],
             'items.*.unidades_nuevas' => ['nullable', 'array'],
             'items.*.unidades_nuevas.*.capacidad' => ['required_with:items.*.unidades_nuevas', 'string', 'max:50'],
             'items.*.unidades_nuevas.*.serie_fabricante' => ['nullable', 'string', 'max:100'],

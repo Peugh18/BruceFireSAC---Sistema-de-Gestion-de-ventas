@@ -5,6 +5,7 @@ namespace App\Http\Requests\Almacen;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\ProductLot;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -35,6 +36,11 @@ class StoreStockAdjustmentRequest extends FormRequest
             'cantidad' => ['required', 'integer', 'min:1'],
             'motivo' => ['required', 'string', 'min:10', 'max:255'],
             'observacion' => ['nullable', 'string', 'max:500'],
+            // Productos con lote: el ingreso dice su lote y vencimiento; la
+            // baja puede ser de un lote puntual (por ejemplo, uno vencido).
+            'product_lot_id' => ['nullable', 'integer', 'exists:product_lots,id'],
+            'lote' => ['nullable', 'string', 'max:50'],
+            'fecha_vencimiento' => ['nullable', 'date'],
         ];
     }
 
@@ -110,6 +116,13 @@ class StoreStockAdjustmentRequest extends FormRequest
                             'inventory_unit_id',
                             'Los productos con serie entran por Recepciones (cada unidad con su serie), no por ajuste.'
                         );
+                    }
+                    if ($product && $product->controla_lote && $tipoAjuste === 'incremento' && trim((string) $this->input('lote')) === '') {
+                        $validator->errors()->add('lote', "{$product->nombre} lleva lote: escribe el número de lote y su vencimiento.");
+                    }
+                    $loteId = $this->input('product_lot_id');
+                    if ($loteId && ! ProductLot::query()->whereKey((int) $loteId)->where('product_id', $productId)->where('sede_id', $sedeId)->exists()) {
+                        $validator->errors()->add('product_lot_id', 'Ese lote no es de este producto en este almacén.');
                     }
                     if ($product && ! $product->serializado && $tipoAjuste === 'decremento') {
                         $saldo = InventoryMovement::saldo($product->id, $sedeId);

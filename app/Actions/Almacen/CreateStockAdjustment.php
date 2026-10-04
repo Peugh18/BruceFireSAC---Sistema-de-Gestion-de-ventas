@@ -7,6 +7,7 @@ use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 
 class CreateStockAdjustment
@@ -30,21 +31,27 @@ class CreateStockAdjustment
             $observacion = ! empty($data['observacion']) ? trim((string) $data['observacion']) : null;
             $textoKardex = $observacion ? "{$motivo} - {$observacion}" : $motivo;
 
-            // Revalida el saldo con bloqueo: dos bajas a la vez no dejan el
-            // stock en negativo.
-            if ($tipoAjuste === 'decremento' && ! $unitId) {
-                InventoryMovement::exigirSaldo(Product::findOrFail($productId), $sedeId, $rawCantidad);
-            }
+            $datos = ['tipo' => 'ajuste', 'user_id' => $user?->id ?? auth()->id(), 'observacion' => $textoKardex];
+            $stock = app(StockPorLote::class);
 
-            $movement = InventoryMovement::create([
-                'inventory_unit_id' => $unitId,
-                'product_id' => $productId,
-                'sede_id' => $sedeId,
-                'tipo' => 'ajuste',
-                'cantidad' => $signedCantidad,
-                'user_id' => $user?->id ?? auth()->id(),
-                'observacion' => $textoKardex,
-            ]);
+            if ($unitId) {
+                $movement = InventoryMovement::create([
+                    'inventory_unit_id' => $unitId,
+                    'product_id' => $productId,
+                    'sede_id' => $sedeId,
+                    'tipo' => 'ajuste',
+                    'cantidad' => $signedCantidad,
+                    'user_id' => $datos['user_id'],
+                    'observacion' => $textoKardex,
+                ]);
+            } elseif ($tipoAjuste === 'decremento') {
+                // Con bloqueo, sin dejar el stock en negativo; con lote, del
+                // lote elegido o de lo que vence primero.
+                $loteId = ! empty($data['product_lot_id']) ? (int) $data['product_lot_id'] : null;
+                $movement = $stock->sacar(Product::findOrFail($productId), $sedeId, $rawCantidad, $datos, loteId: $loteId, verbo: 'dar de baja')[0];
+            } else {
+                $movement = $stock->ingresar(Product::findOrFail($productId), $sedeId, $rawCantidad, $datos, $data['lote'] ?? null, $data['fecha_vencimiento'] ?? null);
+            }
 
             // Si se especificó una unidad serializada puntual, actualizamos su estado
             if ($unitId) {

@@ -56,7 +56,7 @@ class PublicCertificateVerificationController extends Controller
 
         abort_if(! $certificate, 404);
 
-        return $pdfService->generate($certificate, $participant)->stream(($participant?->numero() ?? $certificate->numero).'.pdf');
+        return $pdfService->generate($certificate, $participant, publico: true)->stream(($participant?->numero() ?? $certificate->numero).'.pdf');
     }
 
     protected function buscar(string $token): ?Certificate
@@ -141,11 +141,11 @@ class PublicCertificateVerificationController extends Controller
      */
     protected function documentoVisible(?string $tipo, ?string $numero): ?string
     {
-        if (! $numero || strtoupper((string) $tipo) === 'RUC' || strlen($numero) < 6) {
+        if (! $numero || strtoupper((string) $tipo) === 'RUC') {
             return $numero;
         }
 
-        return substr($numero, 0, 2).str_repeat('•', strlen($numero) - 4).substr($numero, -2);
+        return CertificatePdfService::documentoParcial($numero);
     }
 
     protected function dniVisible(?string $dni): ?string

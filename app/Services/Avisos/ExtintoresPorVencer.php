@@ -23,11 +23,16 @@ class ExtintoresPorVencer
      */
     public function segmentos(CarbonInterface $today, int $porSegmento = 100): array
     {
+        // Solo lo que entra en alguna lista (vencido, descargado o que vence
+        // en los próximos 30 días): el resto no se trae de la base de datos.
+        $limite = $today->copy()->addDays(30)->toDateString();
+
         $rows = Equipment::query()
-            ->with(['client', 'product'])
+            ->select(['id', 'client_id', 'product_id', 'numero_serie', 'estado', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica'])
+            ->with(['client:id,razon_social,telefono,whatsapp', 'product:id,nombre'])
             ->where(fn ($query) => $query
-                ->whereNotNull('proxima_fecha_atencion')
-                ->orWhereNotNull('proxima_prueba_hidrostatica')
+                ->whereDate('proxima_fecha_atencion', '<=', $limite)
+                ->orWhereDate('proxima_prueba_hidrostatica', '<=', $limite)
                 ->orWhereIn('estado', ['descargado', 'usado']))
             ->get()
             ->map(fn (Equipment $equipment) => $this->alertRow($equipment, $today))
@@ -101,10 +106,13 @@ class ExtintoresPorVencer
     public function porEmpresa(CarbonInterface $today, int $limite = 300): array
     {
         $registrados = Equipment::query()
-            ->with('product')
+            // Solo las columnas que se muestran, y sin CLIENTES VARIOS.
+            ->select(['id', 'client_id', 'product_id', 'numero_serie', 'estado', 'capacidad', 'ubicacion_actual', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica'])
+            ->with('product:id,nombre')
             // 'operativo' es el que quedó en el local del cliente tras una
             // inspección o instalación de campo.
             ->whereIn('estado', ['activo', 'operativo', 'descargado', 'usado'])
+            ->whereHas('client', fn ($query) => $query->where('tipo_documento', '!=', Client::TIPO_DOCUMENTO_VARIOS))
             ->get()
             ->map(function (Equipment $equipo) use ($today): array {
                 $descargado = in_array($equipo->estado, ['descargado', 'usado'], true);

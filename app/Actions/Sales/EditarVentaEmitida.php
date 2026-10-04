@@ -82,7 +82,8 @@ class EditarVentaEmitida
             $fechaCobro = $pagosAntes->sortBy('id')->first()?->fecha;
 
             if ($rehacerCobro) {
-                $sale->payments()->whereNull('installment_id')->delete();
+                // Se rehace el mismo cobro del turno abierto: no es una anulación.
+                $sale->payments()->whereNull('installment_id')->forceDelete();
             }
 
             // La venta vuelve a llenarse como un borrador; la fecha no cambia.

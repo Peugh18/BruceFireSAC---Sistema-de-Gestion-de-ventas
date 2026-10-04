@@ -77,6 +77,13 @@ export type InstallmentItem = {
         fecha: string;
         puede_anular: boolean;
     }[];
+    anulados: {
+        id: number;
+        monto: number | string;
+        forma_pago: string;
+        motivo: string | null;
+        por: string | null;
+    }[];
 };
 
 export type PaginationLink = {
@@ -529,6 +536,34 @@ export default function CobranzasIndex({
                                                                     inst.monto,
                                                                 )}
                                                             </div>
+                                                            {inst.anulados.map(
+                                                                (anulado) => (
+                                                                    <div
+                                                                        key={
+                                                                            anulado.id
+                                                                        }
+                                                                        className="text-destructive-strong text-[10px] font-normal"
+                                                                        title={
+                                                                            anulado.motivo ??
+                                                                            undefined
+                                                                        }
+                                                                    >
+                                                                        <span className="line-through">
+                                                                            {soles(
+                                                                                anulado.monto,
+                                                                            )}
+                                                                        </span>{' '}
+                                                                        cobro
+                                                                        anulado
+                                                                        {anulado.por
+                                                                            ? ` por ${anulado.por}`
+                                                                            : ''}
+                                                                        {anulado.motivo
+                                                                            ? `: ${anulado.motivo}`
+                                                                            : ''}
+                                                                    </div>
+                                                                ),
+                                                            )}
                                                         </td>
 
                                                         <td className="px-2.5 py-3.5">

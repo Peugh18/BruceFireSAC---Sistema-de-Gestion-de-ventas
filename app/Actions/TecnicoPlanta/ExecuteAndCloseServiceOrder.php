@@ -15,6 +15,7 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\Inventory\StockPorLote;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -62,8 +63,6 @@ class ExecuteAndCloseServiceOrder
                 throw ValidationException::withMessages(['product_id' => "{$product->nombre} se controla por serie: no se consume como repuesto."]);
             }
 
-            InventoryMovement::exigirSaldo($product, (int) $sedeId, $cantidad);
-
             $obsKardex = sprintf(
                 'Consumo en taller para orden %s: %s (%s). %s',
                 $serviceOrder->codigo,
@@ -73,16 +72,14 @@ class ExecuteAndCloseServiceOrder
             );
 
             // Generar movimiento real de salida en el Kardex
-            $movement = InventoryMovement::create([
-                'product_id' => $product->id,
-                'sede_id' => $sedeId,
+            // Sin dejar el almacén en negativo; con lote, lo que vence primero.
+            $movement = app(StockPorLote::class)->sacar($product, (int) $sedeId, $cantidad, [
                 'tipo' => 'salida_servicio',
-                'cantidad' => -$cantidad,
                 'referencia_type' => Deficiency::class,
                 'referencia_id' => $deficiency->id,
                 'user_id' => $user->id,
                 'observacion' => trim($obsKardex),
-            ]);
+            ])[0];
 
             // Marcar deficiencia como resuelta
             $deficiency->update([

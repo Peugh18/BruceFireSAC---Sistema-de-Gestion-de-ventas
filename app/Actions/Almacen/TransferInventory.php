@@ -7,6 +7,7 @@ use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -37,9 +38,7 @@ class TransferInventory
                     throw ValidationException::withMessages(['product_id' => 'Selecciona un producto y una cantidad.']);
                 }
                 $product = Product::query()->where('serializado', false)->findOrFail($productId);
-                // Con bloqueo: dos traslados a la vez no dejan la sede en negativo.
-                InventoryMovement::exigirSaldo($product, $sourceSedeId, $quantity, 'quantity');
-                $this->recordPair($product->id, $sourceSedeId, $data['destination_sede_id'], $quantity, $user, $data['observation'] ?? null);
+                $this->trasladarSinSerie($product, $sourceSedeId, (int) $data['destination_sede_id'], (int) $quantity, $user, $data['observation'] ?? null);
             }
 
             $salida = InventoryMovement::query()->where('tipo', 'traslado')->where('sede_id', $sourceSedeId)->where('user_id', $user->id)->latest('id')->first();
@@ -50,6 +49,20 @@ class TransferInventory
                 'quantity' => $data['quantity'] ?? $serials->count(),
             ], userId: $user->id);
         });
+    }
+
+    /**
+     * Sale del origen (con bloqueo, sin dejarlo en negativo; con lote, lo que
+     * vence primero) y entra al destino en el mismo lote y vencimiento.
+     */
+    private function trasladarSinSerie(Product $product, int $sourceSedeId, int $destinationSedeId, int $quantity, User $user, ?string $observation): void
+    {
+        $stock = app(StockPorLote::class);
+        $datos = ['tipo' => 'traslado', 'user_id' => $user->id, 'observacion' => trim("Traslado entre sedes. {$observation}")];
+
+        foreach ($stock->sacar($product, $sourceSedeId, $quantity, $datos, 'quantity', verbo: 'trasladar') as $salida) {
+            $stock->ingresarComo($salida, $destinationSedeId, $datos);
+        }
     }
 
     private function recordPair(int $productId, int $sourceSedeId, int $destinationSedeId, int $quantity, User $user, ?string $observation, ?InventoryUnit $unit = null): void

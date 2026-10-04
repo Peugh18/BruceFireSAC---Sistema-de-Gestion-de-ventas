@@ -49,7 +49,10 @@ test('limita el cobro al saldo y permite anularlo con motivo y auditoria', funct
         'payment' => $payment,
     ]), ['motivo' => 'Se registró dos veces'])->assertSessionHasNoErrors();
 
-    expect($payment->fresh())->toBeNull()
+    // El cobro anulado no se borra: queda tachado con motivo y quién lo anuló.
+    expect($payment->fresh()->trashed())->toBeTrue()
+        ->and($payment->fresh()->anulado_motivo)->toBe('Se registró dos veces')
+        ->and($payment->fresh()->anulado_por)->toBe($vendedor->id)
         ->and($installment->refresh()->estado)->toBe('parcial')
         ->and(AuditLog::where('action', 'cobro.anulado')->where('auditable_id', $payment->id)->exists())->toBeTrue();
 });
@@ -79,5 +82,6 @@ test('solo gerencia puede anular un cobro de un dia anterior', function () {
         'payment' => $payment,
     ]), ['motivo' => 'Cobro equivocado'])->assertSessionHasNoErrors();
 
-    expect($payment->fresh())->toBeNull();
+    expect($payment->fresh()->trashed())->toBeTrue()
+        ->and(SalePayment::query()->whereKey($payment->id)->exists())->toBeFalse();
 });

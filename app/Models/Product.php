@@ -25,6 +25,9 @@ use Illuminate\Support\Facades\DB;
  * @property float $precio_venta
  * @property bool $aplica_igv
  * @property bool $serializado
+ * @property bool $controla_lote
+ * @property string|null $unidad_compra
+ * @property int $factor_compra
  * @property int|null $stock_minimo
  * @property bool $activo
  * @property Carbon|null $created_at
@@ -34,6 +37,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection<int, Equipment> $equipment
  * @property-read Collection<int, QuoteItem> $quoteItems
  * @property-read Collection<int, SaleItem> $saleItems
+ * @property-read Collection<int, ProductLot> $lots
  */
 #[Fillable([
     'codigo',
@@ -45,6 +49,9 @@ use Illuminate\Support\Facades\DB;
     'precio_venta',
     'aplica_igv',
     'serializado',
+    'controla_lote',
+    'unidad_compra',
+    'factor_compra',
     'stock_minimo',
     'activo',
 ])]
@@ -59,6 +66,8 @@ class Product extends Model
             'precio_venta' => 'decimal:2',
             'aplica_igv' => 'boolean',
             'serializado' => 'boolean',
+            'controla_lote' => 'boolean',
+            'factor_compra' => 'integer',
             'stock_minimo' => 'integer',
             'activo' => 'boolean',
         ];
@@ -177,6 +186,16 @@ class Product extends Model
     public function quoteItems(): HasMany
     {
         return $this->hasMany(QuoteItem::class);
+    }
+
+    /**
+     * Lotes con vencimiento (EPP y consumibles), por almacén.
+     *
+     * @return HasMany<ProductLot, $this>
+     */
+    public function lots(): HasMany
+    {
+        return $this->hasMany(ProductLot::class);
     }
 
     /**

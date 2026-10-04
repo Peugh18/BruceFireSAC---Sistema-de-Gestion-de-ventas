@@ -15,6 +15,7 @@ use Illuminate\Validation\ValidationException;
  *
  * @property int $id
  * @property int|null $inventory_unit_id
+ * @property int|null $product_lot_id
  * @property int $product_id
  * @property int $sede_id
  * @property string $tipo
@@ -26,11 +27,12 @@ use Illuminate\Validation\ValidationException;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read InventoryUnit|null $inventoryUnit
+ * @property-read ProductLot|null $lot
  * @property-read Product $product
  * @property-read Sede $sede
  * @property-read User|null $user
  */
-#[Fillable(['inventory_unit_id', 'product_id', 'sede_id', 'tipo', 'cantidad', 'referencia_type', 'referencia_id', 'user_id', 'observacion'])]
+#[Fillable(['inventory_unit_id', 'product_lot_id', 'product_id', 'sede_id', 'tipo', 'cantidad', 'referencia_type', 'referencia_id', 'user_id', 'observacion'])]
 class InventoryMovement extends Model
 {
     /**
@@ -39,6 +41,14 @@ class InventoryMovement extends Model
     public function inventoryUnit(): BelongsTo
     {
         return $this->belongsTo(InventoryUnit::class);
+    }
+
+    /**
+     * @return BelongsTo<ProductLot, $this>
+     */
+    public function lot(): BelongsTo
+    {
+        return $this->belongsTo(ProductLot::class, 'product_lot_id');
     }
 
     /**

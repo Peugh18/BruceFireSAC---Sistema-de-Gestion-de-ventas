@@ -4,10 +4,12 @@ namespace App\Actions\Almacen;
 
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
+use App\Models\ProductLot;
 use App\Models\Reception;
 use App\Models\ReceptionItem;
 use App\Models\User;
 use App\Services\Inventory\InventorySequenceGenerator;
+use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -51,6 +53,12 @@ class UpdateReception
                     'cantidad_conforme' => $newConforme,
                     'observacion_item' => $itemData['observacion_item'] ?? null,
                 ]);
+
+                // Vencimiento mal tipeado: se corrige en el lote.
+                if (! empty($itemData['fecha_vencimiento']) && $item->product_lot_id) {
+                    $item->update(['fecha_vencimiento' => $itemData['fecha_vencimiento']]);
+                    ProductLot::query()->whereKey($item->product_lot_id)->update(['fecha_vencimiento' => $itemData['fecha_vencimiento']]);
+                }
 
                 if ($diff === 0) {
                     continue;
@@ -137,23 +145,25 @@ class UpdateReception
                         }
                     }
                 } else {
-                    // Producto no serializado: insertar movimiento compensatorio tipo 'ajuste' con la diferencia (+ o -)
-                    if ($diff < 0) {
-                        InventoryMovement::exigirSaldo($product, $reception->sede_almacen_id, -$diff, 'items');
-                    }
-
-                    $movement = new InventoryMovement([
-                        'inventory_unit_id' => null,
-                        'product_id' => $product->id,
-                        'sede_id' => $reception->sede_almacen_id,
+                    // Producto sin serie: movimiento compensatorio 'ajuste' con la
+                    // diferencia, en el mismo lote de la partida si lleva lote.
+                    $datos = [
                         'tipo' => 'ajuste',
-                        'cantidad' => $diff,
                         'user_id' => $userId,
                         'observacion' => "Corrección Recepción {$reception->id}: ".($diff > 0 ? "+{$diff}" : (string) $diff).' conforme',
-                    ]);
-                    $movement->referencia_type = $reception->getMorphClass();
-                    $movement->referencia_id = $reception->id;
-                    $movement->save();
+                        'referencia_type' => $reception->getMorphClass(),
+                        'referencia_id' => $reception->id,
+                    ];
+                    $stock = app(StockPorLote::class);
+
+                    if ($diff < 0) {
+                        $stock->sacar($product, (int) $reception->sede_almacen_id, -$diff, $datos, 'items', $item->product_lot_id, 'retirar');
+                    } else {
+                        $movement = $stock->ingresar($product, (int) $reception->sede_almacen_id, $diff, $datos, $item->lote, $item->fecha_vencimiento?->toDateString(), 'items');
+                        if ($movement->product_lot_id && ! $item->product_lot_id) {
+                            $item->update(['product_lot_id' => $movement->product_lot_id]);
+                        }
+                    }
                 }
             }
 

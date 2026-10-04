@@ -15,12 +15,15 @@ use Illuminate\Support\Carbon;
  * @property int $cantidad
  * @property int $cantidad_conforme
  * @property string|null $observacion_item
+ * @property string|null $lote
+ * @property Carbon|null $fecha_vencimiento
+ * @property int|null $product_lot_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Reception $reception
  * @property-read Product $product
  */
-#[Fillable(['reception_id', 'product_id', 'cantidad', 'cantidad_conforme', 'observacion_item'])]
+#[Fillable(['reception_id', 'product_id', 'cantidad', 'cantidad_conforme', 'observacion_item', 'lote', 'fecha_vencimiento', 'product_lot_id'])]
 class ReceptionItem extends Model
 {
     use HasFactory;
@@ -30,6 +33,7 @@ class ReceptionItem extends Model
         return [
             'cantidad' => 'integer',
             'cantidad_conforme' => 'integer',
+            'fecha_vencimiento' => 'date',
         ];
     }
 

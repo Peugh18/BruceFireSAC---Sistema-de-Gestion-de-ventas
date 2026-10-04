@@ -17,15 +17,19 @@ class CertificatePdfService
      * verificación, con la plantilla estilo C de su tipo: diploma horizontal
      * para las capacitaciones y documento vertical para el resto.
      */
-    public function generate(Certificate $certificate, ?CertificateParticipant $participant = null): DompdfWrapper
+    public function generate(Certificate $certificate, ?CertificateParticipant $participant = null, bool $publico = false): DompdfWrapper
     {
         $certificate->loadMissing(['certificateType', 'client', 'participants']);
         $marca = ['sello_estado' => $this->selloDeEstado($certificate)];
+        $datos = fn (?CertificateParticipant $persona): array => $this->paraQuienLoAbre(
+            [...$this->documentos->desde($certificate, $persona), ...$marca],
+            $publico,
+        );
 
         if (($certificate->datos['modo'] ?? 'normal') === 'por_trabajador' && ! $participant) {
             $paginas = array_values($certificate->participants
                 ->whereNull('anulado_at')
-                ->map(fn (CertificateParticipant $worker) => [...$this->documentos->desde($certificate, $worker), ...$marca])
+                ->map(fn (CertificateParticipant $worker) => $datos($worker))
                 ->all());
 
             if ($paginas !== []) {
@@ -33,7 +37,39 @@ class CertificatePdfService
             }
         }
 
-        return $this->dibujar([...$this->documentos->desde($certificate, $participant), ...$marca]);
+        return $this->dibujar($datos($participant));
+    }
+
+    /**
+     * El PDF que cualquiera abre con el QR o el enlace público muestra el DNI
+     * de una persona a medias (12••••78); el RUC es público. El que imprime
+     * la empresa lo lleva completo.
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>
+     */
+    protected function paraQuienLoAbre(array $datos, bool $publico): array
+    {
+        if (! $publico) {
+            return $datos;
+        }
+
+        if (isset($datos['cliente']['documento']) && strtoupper((string) ($datos['cliente']['documento_tipo'] ?? '')) !== 'RUC') {
+            $datos['cliente']['documento'] = self::documentoParcial((string) $datos['cliente']['documento']);
+        }
+
+        if (! empty($datos['capacitacion']['dni'])) {
+            $datos['capacitacion']['dni'] = self::documentoParcial((string) $datos['capacitacion']['dni']);
+        }
+
+        return $datos;
+    }
+
+    public static function documentoParcial(string $numero): string
+    {
+        return strlen($numero) < 6
+            ? $numero
+            : substr($numero, 0, 2).str_repeat('•', strlen($numero) - 4).substr($numero, -2);
     }
 
     /**

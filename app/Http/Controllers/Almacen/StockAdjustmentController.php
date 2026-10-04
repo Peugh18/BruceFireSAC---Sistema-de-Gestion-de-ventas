@@ -86,7 +86,8 @@ class StockAdjustmentController extends Controller
         $movement = $createStockAdjustment->handle($request->validated(), $request->user());
 
         $tipoTexto = $movement->cantidad > 0 ? 'incremento' : 'decremento';
-        $cantidadAbs = abs($movement->cantidad);
+        // Con lotes, una baja puede repartirse en varios movimientos.
+        $cantidadAbs = (int) $request->validated('cantidad');
 
         return redirect()->route('almacen.ajustes.index', ['current_team' => $current_team])
             ->with('success', "Ajuste de {$tipoTexto} por {$cantidadAbs} unidades registrado correctamente en el Kardex.");

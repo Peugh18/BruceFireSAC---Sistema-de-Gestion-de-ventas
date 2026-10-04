@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SaleRefund;
 use App\Services\AuditLogger;
+use App\Services\Inventory\StockPorLote;
 
 class RevertSale
 {
@@ -106,22 +107,13 @@ class RevertSale
      */
     protected function devolverProducto(Sale $sale, SaleItem $item, string $motivo): void
     {
-        $salida = InventoryMovement::query()
-            ->where('referencia_type', $sale->getMorphClass())
-            ->where('referencia_id', $sale->id)
-            ->where('product_id', $item->product_id)
-            ->where('tipo', 'salida_venta')
-            ->first();
-
-        $movement = new InventoryMovement;
-        $movement->product_id = $item->product_id;
-        $movement->sede_id = $salida?->sede_id ?? $sale->sede_id;
-        $movement->tipo = 'ingreso';
-        $movement->cantidad = (int) $item->cantidad;
-        $movement->referencia_type = $sale->getMorphClass();
-        $movement->referencia_id = $sale->id;
-        $movement->user_id = auth()->id();
-        $movement->observacion = "Anulación de la venta {$sale->numero_interno} {$motivo}";
-        $movement->save();
+        // Vuelve al mismo almacén y al mismo lote de donde salió.
+        app(StockPorLote::class)->devolver($sale, (int) $item->product_id, (int) $item->cantidad, [
+            'tipo' => 'ingreso',
+            'referencia_type' => $sale->getMorphClass(),
+            'referencia_id' => $sale->id,
+            'user_id' => auth()->id(),
+            'observacion' => "Anulación de la venta {$sale->numero_interno} {$motivo}",
+        ], sedeIdSinRastro: $sale->sede_id);
     }
 }
