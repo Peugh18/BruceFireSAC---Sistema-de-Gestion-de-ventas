@@ -69,6 +69,21 @@ class ComprobantePdfService
             return $document->pdf_path;
         }
 
+        return $this->redibujar($document);
+    }
+
+    /**
+     * Vuelve a dibujar el PDF de una factura o boleta con su XML firmado, sin
+     * importar cuándo se generó. Devuelve null si no tiene XML guardado.
+     */
+    public function redibujar(ElectronicDocument $document): ?string
+    {
+        if (! in_array($document->tipo, ['factura', 'boleta'], true)
+            || ! $document->xml_path
+            || ! Storage::disk('local')->exists($document->xml_path)) {
+            return null;
+        }
+
         $path = $this->generate($document, (string) Storage::disk('local')->get($document->xml_path));
 
         if ($path !== $document->pdf_path) {
@@ -215,13 +230,16 @@ class ComprobantePdfService
     }
 
     /**
-     * Momento del último cambio que afecta cómo se ve el comprobante.
+     * Momento del último cambio que afecta cómo se ve el comprobante: los
+     * datos de la empresa y sus cuentas (Gerente) o una nueva versión de la
+     * plantilla instalada con el código.
      */
     protected function ultimoCambioDeDiseno(): int
     {
         $empresa = CompanySetting::current()->updated_at?->getTimestamp() ?? 0;
         $cuentas = CompanyBankAccount::query()->max('updated_at');
+        $plantilla = max((int) @filemtime(resource_path('views/pdf/comprobante.blade.php')), (int) @filemtime(__FILE__));
 
-        return max($empresa, $cuentas ? Carbon::parse($cuentas)->getTimestamp() : 0);
+        return max($empresa, $cuentas ? Carbon::parse($cuentas)->getTimestamp() : 0, $plantilla);
     }
 }
