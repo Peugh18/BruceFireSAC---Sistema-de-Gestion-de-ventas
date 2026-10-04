@@ -58,6 +58,7 @@ Route::prefix('gerente')
 
         Route::get('configuracion/empresa', [CompanySettingController::class, 'edit'])->name('configuracion.empresa.edit');
         Route::post('configuracion/empresa', [CompanySettingController::class, 'update'])->name('configuracion.empresa.update');
+        Route::get('configuracion/empresa/vista-previa-comprobante', [CompanySettingController::class, 'vistaPrevia'])->name('configuracion.empresa.vista-previa');
 
         Route::post('configuracion/empresa/cuentas-bancarias', [CompanyBankAccountController::class, 'store'])->name('configuracion.cuentas-bancarias.store');
         Route::put('configuracion/empresa/cuentas-bancarias/{cuenta_bancaria}', [CompanyBankAccountController::class, 'update'])->name('configuracion.cuentas-bancarias.update');

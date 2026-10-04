@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreCompanyBankAccountRequest;
 use App\Http\Requests\Gerente\UpdateCompanyBankAccountRequest;
 use App\Models\CompanyBankAccount;
+use App\Models\CompanySetting;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 
@@ -31,6 +32,9 @@ class CompanyBankAccountController extends Controller
     public function destroy(Team $current_team, CompanyBankAccount $cuenta_bancaria): RedirectResponse
     {
         $cuenta_bancaria->delete();
+
+        // Los comprobantes ya generados se vuelven a dibujar sin esta cuenta.
+        CompanySetting::current()->touch();
 
         return back();
     }

@@ -1,5 +1,12 @@
 import { router, useForm, usePage } from '@inertiajs/react';
-import { Building2, CreditCard, Trash2, Upload } from 'lucide-react';
+import {
+    Building2,
+    CreditCard,
+    Eye,
+    Palette,
+    Trash2,
+    Upload,
+} from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { ConfiguracionTabs } from '@/components/configuracion-tabs';
@@ -23,7 +30,11 @@ type Company = {
     ubicacion: UbigeoOption | null;
     telefono: string | null;
     email: string | null;
+    sitio_web: string | null;
+    color_marca: string;
     leyenda_pie: string | null;
+    mensaje_agradecimiento: string | null;
+    condiciones_comprobante: string | null;
     cuenta_detraccion: string | null;
     logo_url: string | null;
 };
@@ -43,6 +54,20 @@ type Props = {
     bankAccounts: BankAccount[];
     firmasPendientes: number;
 };
+
+// Mismos límites que valida el servidor (UpdateCompanySettingRequest).
+const LOGO_MIN_ANCHO = 150;
+const LOGO_MIN_ALTO = 60;
+const LOGO_MAX_LADO = 3000;
+
+const COLORES_SUGERIDOS = [
+    '#D2232A',
+    '#B71C1C',
+    '#E65100',
+    '#1F4E79',
+    '#1B5E20',
+    '#263238',
+];
 
 function field(errors: Record<string, string>, name: string) {
     return errors[name] ? (
@@ -67,6 +92,7 @@ export default function EmpresaConfiguracion({
         company.logo_url,
     );
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [avisoLogo, setAvisoLogo] = useState<string | null>(null);
 
     const [ubicacion, setUbicacion] = useState<UbigeoOption | null>(
         company.ubicacion,
@@ -80,7 +106,11 @@ export default function EmpresaConfiguracion({
         ubigeo: company.ubigeo ?? '',
         telefono: company.telefono ?? '',
         email: company.email ?? '',
+        sitio_web: company.sitio_web ?? '',
+        color_marca: company.color_marca,
         leyenda_pie: company.leyenda_pie ?? '',
+        mensaje_agradecimiento: company.mensaje_agradecimiento ?? '',
+        condiciones_comprobante: company.condiciones_comprobante ?? '',
         cuenta_detraccion: company.cuenta_detraccion ?? '',
         logo: null as File | null,
     });
@@ -90,16 +120,47 @@ export default function EmpresaConfiguracion({
         form.post(empresa.update.url({ current_team: teamSlug }), {
             forceFormData: true,
             preserveScroll: true,
+            onSuccess: () => form.setDefaults(),
         });
     }
 
     function onLogoChange(event: React.ChangeEvent<HTMLInputElement>) {
         const file = event.target.files?.[0] ?? null;
-        form.setData('logo', file);
+        setAvisoLogo(null);
 
-        if (file) {
-            setLogoPreview(URL.createObjectURL(file));
+        if (!file) {
+            form.setData('logo', null);
+            return;
         }
+
+        const url = URL.createObjectURL(file);
+        const imagen = new Image();
+        imagen.onload = () => {
+            const { naturalWidth: ancho, naturalHeight: alto } = imagen;
+
+            if (
+                ancho < LOGO_MIN_ANCHO ||
+                alto < LOGO_MIN_ALTO ||
+                ancho > LOGO_MAX_LADO ||
+                alto > LOGO_MAX_LADO
+            ) {
+                setAvisoLogo(
+                    `El logo mide ${ancho}×${alto} px. Debe tener al menos ${LOGO_MIN_ANCHO}×${LOGO_MIN_ALTO} px y como máximo ${LOGO_MAX_LADO} px por lado.`,
+                );
+                form.setData('logo', null);
+                URL.revokeObjectURL(url);
+
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+
+                return;
+            }
+
+            form.setData('logo', file);
+            setLogoPreview(url);
+        };
+        imagen.src = url;
     }
 
     const bankForm = useForm({
@@ -187,8 +248,18 @@ export default function EmpresaConfiguracion({
                                     <Upload className="size-3.5" /> Subir logo
                                 </Button>
                                 <p className="text-muted-foreground mt-1 text-[11px]">
-                                    PNG o JPG, máx. 2MB.
+                                    PNG con fondo transparente (o JPG), de
+                                    {` ${LOGO_MIN_ANCHO}×${LOGO_MIN_ALTO}`} a{' '}
+                                    {LOGO_MAX_LADO} px, máx. 2MB. Ideal:
+                                    horizontal, unos 600×200 px. En el
+                                    comprobante se ajusta solo, sin deformarse.
                                 </p>
+                                {avisoLogo ? (
+                                    <p className="text-destructive-strong mt-1 text-[11.5px] font-semibold">
+                                        {avisoLogo}
+                                    </p>
+                                ) : null}
+                                {field(form.errors, 'logo')}
                             </div>
                         </div>
 
@@ -287,6 +358,21 @@ export default function EmpresaConfiguracion({
                                     }
                                 />
                             </div>
+                            <div>
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                    Página web
+                                </Label>
+                                <Input
+                                    value={form.data.sitio_web}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'sitio_web',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="www.extintoresbrucefire.com"
+                                />
+                            </div>
                             <div className="md:col-span-2">
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Cuenta de detracción (Banco de la Nación)
@@ -308,6 +394,93 @@ export default function EmpresaConfiguracion({
                             </div>
                         </div>
 
+                        <div className="border-border flex flex-col gap-3 border-t pt-4">
+                            <div className="flex items-center gap-2">
+                                <Palette className="text-primary-strong size-4" />
+                                <h2 className="font-['Oswald',sans-serif] text-[16px] font-semibold uppercase">
+                                    Diseño del comprobante
+                                </h2>
+                            </div>
+                            <p className="text-muted-foreground -mt-2 text-[12px]">
+                                Vale para todas las facturas y boletas. Los
+                                datos de cada venta (cliente, productos,
+                                referencia, observaciones) salen solos de la
+                                venta o cotización.
+                            </p>
+                            <div>
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                    Color de la marca
+                                </Label>
+                                <div className="mt-1 flex flex-wrap items-center gap-2">
+                                    <input
+                                        type="color"
+                                        value={form.data.color_marca}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'color_marca',
+                                                e.target.value.toUpperCase(),
+                                            )
+                                        }
+                                        className="border-border h-9 w-12 cursor-pointer rounded-[8px] border bg-transparent p-1"
+                                        aria-label="Color de la marca"
+                                    />
+                                    {COLORES_SUGERIDOS.map((color) => (
+                                        <button
+                                            key={color}
+                                            type="button"
+                                            title={color}
+                                            onClick={() =>
+                                                form.setData(
+                                                    'color_marca',
+                                                    color,
+                                                )
+                                            }
+                                            className={`size-7 rounded-full border-2 transition-transform hover:scale-110 ${form.data.color_marca === color ? 'border-foreground' : 'border-transparent'}`}
+                                            style={{ backgroundColor: color }}
+                                        />
+                                    ))}
+                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[12px]">
+                                        {form.data.color_marca}
+                                    </span>
+                                </div>
+                                {field(form.errors, 'color_marca')}
+                            </div>
+                            <div>
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                    Mensaje de agradecimiento
+                                </Label>
+                                <Input
+                                    value={form.data.mensaje_agradecimiento}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'mensaje_agradecimiento',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="¡Gracias por su preferencia!"
+                                    maxLength={150}
+                                />
+                            </div>
+                            <div>
+                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                    Condiciones de venta o garantía (opcional)
+                                </Label>
+                                <Textarea
+                                    value={form.data.condiciones_comprobante}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'condiciones_comprobante',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="Ej: Garantía de 1 año en extintores nuevos. No se aceptan devoluciones de recargas ya realizadas."
+                                    rows={3}
+                                    maxLength={1000}
+                                />
+                                {field(form.errors, 'condiciones_comprobante')}
+                            </div>
+                        </div>
+
                         <div>
                             <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Leyenda de pie (opcional)
@@ -322,7 +495,7 @@ export default function EmpresaConfiguracion({
                             />
                         </div>
 
-                        <div>
+                        <div className="flex flex-wrap items-center gap-2">
                             <Button
                                 type="submit"
                                 disabled={form.processing}
@@ -332,6 +505,28 @@ export default function EmpresaConfiguracion({
                                     ? 'Guardando…'
                                     : 'Guardar cambios'}
                             </Button>
+                            <Button
+                                asChild
+                                variant="outline"
+                                className="border-border bg-card text-foreground h-10 rounded-[9px] shadow-none"
+                            >
+                                <a
+                                    href={empresa.vistaPrevia.url({
+                                        current_team: teamSlug,
+                                    })}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    <Eye className="size-4" />
+                                    Vista previa de la factura
+                                </a>
+                            </Button>
+                            {form.isDirty ? (
+                                <span className="text-muted-foreground text-[11.5px]">
+                                    Guarda los cambios para verlos en la vista
+                                    previa.
+                                </span>
+                            ) : null}
                         </div>
                     </form>
                 </Card>

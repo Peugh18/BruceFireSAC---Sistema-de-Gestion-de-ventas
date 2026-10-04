@@ -94,3 +94,76 @@ test('vendedor no puede acceder a la configuración de empresa', function () {
         ->get(route('gerente.configuracion.empresa.edit', ['current_team' => $vendedor->currentTeam]))
         ->assertForbidden();
 });
+
+test('el logo del comprobante no se acepta demasiado chico', function () {
+    $user = gerenteUser();
+
+    $this->actingAs($user)
+        ->post(route('gerente.configuracion.empresa.update', ['current_team' => $user->currentTeam]), [
+            'razon_social' => 'BRUCE FIRE S.A.C.',
+            'ruc' => '20616376528',
+            'logo' => UploadedFile::fake()->image('logo.png', 80, 40),
+        ])
+        ->assertSessionHasErrors('logo');
+
+    expect(CompanySetting::current()->logo_path)->toBeNull();
+});
+
+test('el logo se dibuja dentro de la caja del comprobante sin deformarse', function () {
+    Storage::disk('public')->put('company/ancho.png', UploadedFile::fake()->image('ancho.png', 1200, 300)->getContent());
+    Storage::disk('public')->put('company/cuadrado.png', UploadedFile::fake()->image('cuadrado.png', 900, 900)->getContent());
+    Storage::disk('public')->put('company/tira.png', UploadedFile::fake()->image('tira.png', 1800, 200)->getContent());
+    $company = CompanySetting::current();
+
+    $company->update(['logo_path' => 'company/ancho.png']);
+    expect(array_diff_key($company->logoParaPdf(), ['src' => true]))->toBe(['ancho' => 190, 'alto' => 48]);
+
+    $company->update(['logo_path' => 'company/cuadrado.png']);
+    expect(array_diff_key($company->logoParaPdf(), ['src' => true]))->toBe(['ancho' => 80, 'alto' => 80]);
+
+    // Muy alargado: crece un poco más a lo ancho para no quedar como una tira.
+    $company->update(['logo_path' => 'company/tira.png']);
+    expect(array_diff_key($company->logoParaPdf(), ['src' => true]))->toBe(['ancho' => 230, 'alto' => 26]);
+});
+
+test('gerente elige el color y los textos del comprobante y ve la vista previa', function () {
+    $user = gerenteUser();
+
+    $this->actingAs($user)
+        ->post(route('gerente.configuracion.empresa.update', ['current_team' => $user->currentTeam]), [
+            'razon_social' => 'BRUCE FIRE S.A.C.',
+            'ruc' => '20616376528',
+            'color_marca' => '#1f4e79',
+            'sitio_web' => 'www.extintoresbrucefire.com',
+            'mensaje_agradecimiento' => 'Gracias por confiar en nosotros',
+            'condiciones_comprobante' => 'Garantía de 1 año.',
+        ])
+        ->assertSessionHasNoErrors();
+
+    $company = CompanySetting::current();
+
+    expect($company->colorMarca())->toBe('#1F4E79')
+        ->and($company->colorTextoSobreMarca())->toBe('#FFFFFF')
+        ->and($company->mensaje_agradecimiento)->toBe('Gracias por confiar en nosotros');
+
+    $this->actingAs($user)
+        ->get(route('gerente.configuracion.empresa.vista-previa', ['current_team' => $user->currentTeam]))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf');
+
+    $this->actingAs($user)
+        ->post(route('gerente.configuracion.empresa.update', ['current_team' => $user->currentTeam]), [
+            'razon_social' => 'BRUCE FIRE S.A.C.',
+            'ruc' => '20616376528',
+            'color_marca' => 'rojo',
+        ])
+        ->assertSessionHasErrors('color_marca');
+});
+
+test('un color de marca claro lleva el texto oscuro encima', function () {
+    $company = CompanySetting::current();
+    $company->update(['color_marca' => '#FFD54F']);
+
+    expect($company->colorTextoSobreMarca())->toBe('#1A1A1A')
+        ->and($company->colorMarcaSuave())->toBe('#FFFCF1');
+});

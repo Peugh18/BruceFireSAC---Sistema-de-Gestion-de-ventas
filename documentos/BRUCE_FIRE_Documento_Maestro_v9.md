@@ -5051,3 +5051,52 @@ Código: `app/Actions/Sales/EditarVentaEmitida.php` (reemplaza a
 `CorregirComprobante` y a la ruta `corregir-productos`),
 `SaleController::edit/update`, `resources/js/pages/vendedor/ventas/`
 (`show.tsx`, `index.tsx`, `nueva.tsx`).
+
+# 88. Comprobante personalizable y con diseño de marca (2026-10-04)
+
+**Pedido del usuario:** la factura/boleta impresa se veía plana (gris,
+sin marca), el logo salía diminuto o no salía, "NIU" en vez de "UND",
+campos vacíos como "Dirección: -" u "Obs:". Quiere que sea estética y
+dinámica: **lo general se llena desde Gerente y lo particular sale de la
+venta o cotización**.
+
+**Lo general (Gerente → Configuración → Empresa → Diseño del
+comprobante):** color de la marca (con sugerencias; el texto encima
+pasa a blanco u oscuro según el contraste), página web, mensaje de
+agradecimiento, condiciones de venta/garantía, leyenda de pie, cuentas
+bancarias y logo. Botón **Vista previa de la factura** con datos de
+ejemplo.
+
+**Logo con mínimo y máximo:** se valida al subirlo (PNG/JPG, de 150×60 a
+3000 px por lado, 2 MB). En el PDF se dibuja sin deformarse dentro de una
+caja de hasta 190×80 px; si es muy alargado se le permite llegar a 230 px
+de ancho para que no quede como una tira
+(`CompanySetting::logoParaPdf()`).
+
+**Lo particular (de la venta):** cliente, documento, dirección (solo si
+existe), referencia/local/placa, condición y medio de pago, vencimiento,
+vendedor que atendió, ítems, observaciones (solo si hay), cuotas,
+detracción.
+
+**Diseño:** cabecera con logo, nombre comercial y razón social; recuadro
+tributario con el color de la marca; panel suave con cliente y datos de
+la operación; tabla con encabezado de marca y filas alternadas; las
+columnas Código y Dscto. solo aparecen si alguna línea las usa;
+unidades legibles (NIU→UND, ZZ→SERV); cantidades sin decimales cuando
+son enteras; monto en letras destacado; total resaltado; QR y leyenda
+SUNAT al pie.
+
+**PDFs ya emitidos:** al descargarlos (o en el ZIP masivo) se vuelven a
+dibujar si la empresa o sus cuentas cambiaron después, usando el mismo
+XML firmado (`ComprobantePdfService::vigente()`); lo enviado a SUNAT no
+cambia.
+
+Código: `resources/views/pdf/comprobante.blade.php`,
+`app/Services/Billing/ComprobantePdfService.php`,
+`app/Models/CompanySetting.php`, migración
+`2026_10_04_010000_add_diseno_comprobante_to_company_settings_table`,
+`resources/js/pages/gerente/configuracion/empresa.tsx`.
+
+Pendiente: aplicar el mismo diseño a la nota de venta y a la
+cotización; campos por venta como N° de orden de compra o de guía de
+remisión si el negocio los usa.
