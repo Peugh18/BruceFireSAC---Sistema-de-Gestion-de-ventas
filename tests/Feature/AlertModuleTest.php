@@ -287,3 +287,38 @@ test('por empresa muestra a cada cliente con todos sus extintores aunque venzan 
         ->and($elRoble['whatsapp'])->toBe('51944555666')
         ->and($elRoble['equipos'][0]['estado'])->toBe('al_dia');
 });
+
+test('por empresa cuenta lo vendido sin serie con la recarga estimada al año de la compra', function () {
+    $user = vendedorUser();
+    $minera = Client::factory()->create(['razon_social' => 'MINERA SIN SERIE SAC']);
+    $recarga = Service::factory()->create(['nombre' => 'RECARGA DE EXTINTOR PQS 6KG']);
+    $fecha = now()->subMonths(11)->toDateString();
+
+    $venta = fn (Client $client, string $estado, string $fecha, int $cantidad) => SaleItem::factory()->forService($recarga)->create([
+        'sale_id' => Sale::factory()->create(['client_id' => $client->id, 'estado' => $estado, 'fecha' => $fecha])->id,
+        'tipo_linea' => 'servicio',
+        'cantidad' => $cantidad,
+    ]);
+    $venta($minera, 'confirmada', now()->subMonths(13)->toDateString(), 2);
+    $venta($minera, 'confirmada', $fecha, 4);
+    $venta($minera, 'anulada', now()->toDateString(), 9);
+    $venta(Client::clientesVarios(), 'confirmada', $fecha, 3);
+
+    $empresas = collect($this->actingAs($user)
+        ->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]))
+        ->assertOk()
+        ->viewData('page')['props']['empresas']);
+
+    // Solo la última compra cuenta, la anulada no, y CLIENTES VARIOS no es una empresa.
+    expect($empresas)->toHaveCount(1);
+    $empresa = $empresas->first();
+
+    expect($empresa['cliente'])->toBe('MINERA SIN SERIE SAC')
+        ->and($empresa['extintores'])->toBe(4)
+        ->and($empresa['estimados'])->toBe(4)
+        ->and($empresa['por_vencer'])->toBe(0)
+        ->and($empresa['proximo_vencimiento'])->toBe(now()->subMonths(11)->addYear()->toDateString())
+        ->and($empresa['equipos'][0]['estimado'])->toBeTrue()
+        ->and($empresa['equipos'][0]['numero_serie'])->toBeNull()
+        ->and($empresa['equipos'][0]['equipo'])->toBe('RECARGA DE EXTINTOR PQS 6KG');
+});

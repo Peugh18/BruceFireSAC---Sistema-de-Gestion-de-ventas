@@ -13,6 +13,7 @@ import {
 import { FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
+import RangoFechas, { describirRango } from '@/components/rango-fechas';
 import { CargaLarga, Cargando, FilasCargando } from '@/components/cargando';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
@@ -51,7 +52,14 @@ type Paginated<T> = {
 
 type Props = {
     documents: Paginated<DocumentRow>;
-    filters: { tipo?: string; estado?: string; mes?: string; buscar?: string };
+    filters: {
+        tipo?: string;
+        estado?: string;
+        buscar?: string;
+        desde: string;
+        hasta: string;
+    };
+    hoy: string;
     totalFiltrados: number;
     kpis: {
         emitidos_hoy: number;
@@ -118,6 +126,7 @@ export default function FacturacionIndex({
     filters,
     kpis,
     totalFiltrados,
+    hoy,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -141,7 +150,8 @@ export default function FacturacionIndex({
                 query: {
                     tipo: siguiente.tipo || undefined,
                     estado: siguiente.estado || undefined,
-                    mes: siguiente.mes || undefined,
+                    desde: siguiente.desde,
+                    hasta: siguiente.hasta,
                     buscar: siguiente.buscar || undefined,
                 },
             }),
@@ -224,7 +234,8 @@ export default function FacturacionIndex({
             query: {
                 tipo: filters.tipo || undefined,
                 estado: filters.estado || undefined,
-                mes: filters.mes || undefined,
+                desde: filters.desde,
+                hasta: filters.hasta,
                 buscar: filters.buscar || undefined,
                 ...(todoLoFiltrado ? {} : { ids: marcados }),
                 incluir,
@@ -311,7 +322,7 @@ export default function FacturacionIndex({
                 </div>
 
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
-                    <div className="mb-4 flex flex-wrap items-center gap-2.5">
+                    <div className="mb-2 flex flex-wrap items-end gap-2.5">
                         <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
                             {TYPE_FILTERS.map((filter) => {
                                 const active =
@@ -331,15 +342,10 @@ export default function FacturacionIndex({
                                 );
                             })}
                         </div>
-                        <input
-                            type="month"
-                            value={filters.mes ?? ''}
-                            onChange={(event) =>
-                                filtrar({ mes: event.target.value })
-                            }
-                            className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 h-10 rounded-[9px] border px-3 text-[12.5px] outline-none focus-visible:ring-[3px]"
-                            title="Filtrar por mes"
-                            aria-label="Filtrar por mes"
+                        <RangoFechas
+                            rango={filters}
+                            hoy={hoy}
+                            onCambiar={filtrar}
                         />
                         <div className="flex-1" />
                         <form
@@ -357,6 +363,15 @@ export default function FacturacionIndex({
                             />
                         </form>
                     </div>
+
+                    <p className="text-muted-foreground mb-3 text-[12px]">
+                        {totalFiltrados} comprobante(s) de{' '}
+                        {describirRango(filters, hoy)}
+                        {filters.buscar
+                            ? ` que coinciden con «${filters.buscar}»`
+                            : ''}
+                        .
+                    </p>
 
                     <div className="border-border bg-muted/30 mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border px-3 py-2">
                         <span className="text-foreground text-[12px] font-semibold">

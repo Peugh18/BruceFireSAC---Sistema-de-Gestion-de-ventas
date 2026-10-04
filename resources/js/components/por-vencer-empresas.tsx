@@ -1,15 +1,16 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Building2, ChevronDown, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import WhatsappNumeroDialog from '@/components/whatsapp-numero-dialog';
 import { fechaCorta } from '@/lib/utils';
 import clientes from '@/routes/vendedor/clientes';
 
 export type EquipoEmpresa = {
-    equipment_id: number;
-    numero_serie: string;
+    equipment_id: number | null;
+    numero_serie: string | null;
     equipo: string;
     capacidad: string | null;
     ubicacion: string | null;
@@ -18,6 +19,10 @@ export type EquipoEmpresa = {
     prueba_hidrostatica: string | null;
     proxima: string | null;
     dias: number | null;
+    /** Cuántos extintores representa la línea (1 si tiene serie). */
+    cantidad: number;
+    /** Sin serie: la fecha se estima al año de la compra. */
+    estimado: boolean;
 };
 
 export type Empresa = {
@@ -28,6 +33,7 @@ export type Empresa = {
     extintores: number;
     vencidos: number;
     por_vencer: number;
+    estimados: number;
     proximo_vencimiento: string | null;
     dias: number | null;
     equipos: EquipoEmpresa[];
@@ -78,7 +84,7 @@ export function filtrarPorPlazo(empresas: Empresa[], plazo: PlazoEmpresa) {
     });
 }
 
-function mensajeWhatsapp(empresa: Empresa) {
+function mensajeWhatsapp(empresa: Empresa, numero = empresa.whatsapp ?? '') {
     const vencidos = empresa.vencidos;
     const fecha = empresa.proximo_vencimiento
         ? fechaCorta(empresa.proximo_vencimiento)
@@ -88,7 +94,7 @@ function mensajeWhatsapp(empresa: Empresa) {
             ? `Hola ${empresa.cliente}, le saludamos de Extintores Bruce Fire. ${vencidos} de sus ${empresa.extintores} extintores ya necesitan recarga o mantenimiento. ¿Le agendamos la atención?`
             : `Hola ${empresa.cliente}, le saludamos de Extintores Bruce Fire. Sus extintores tienen su próxima recarga o mantenimiento el ${fecha}. ¿Le agendamos la atención con anticipación?`;
 
-    return `https://wa.me/${empresa.whatsapp ?? ''}?text=${encodeURIComponent(texto)}`;
+    return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
 
 /**
@@ -103,6 +109,7 @@ export default function PorVencerEmpresas({
     teamSlug: string;
 }) {
     const [abierta, setAbierta] = useState<number | null>(null);
+    const [pidiendoNumero, setPidiendoNumero] = useState<Empresa | null>(null);
 
     if (empresas.length === 0) {
         return (
@@ -121,6 +128,21 @@ export default function PorVencerEmpresas({
 
     return (
         <div className="flex flex-col gap-2.5">
+            {pidiendoNumero ? (
+                <WhatsappNumeroDialog
+                    open
+                    onOpenChange={(abierto) => {
+                        if (!abierto) {
+                            setPidiendoNumero(null);
+                        }
+                    }}
+                    teamSlug={teamSlug}
+                    clientId={pidiendoNumero.client_id}
+                    cliente={pidiendoNumero.cliente}
+                    enlace={(numero) => mensajeWhatsapp(pidiendoNumero, numero)}
+                    onGuardado={() => router.reload({ only: ['empresas'] })}
+                />
+            ) : null}
             {empresas.map((empresa) => {
                 const estaAbierta = abierta === empresa.client_id;
                 const urgente = empresa.vencidos > 0;
@@ -151,6 +173,9 @@ export default function PorVencerEmpresas({
                                     <div className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
                                         {empresa.numero_documento} ·{' '}
                                         {empresa.extintores} extintor(es)
+                                        {empresa.estimados > 0
+                                            ? ` · ${empresa.estimados} sin serie`
+                                            : ''}
                                     </div>
                                 </div>
                                 <ChevronDown
@@ -184,20 +209,30 @@ export default function PorVencerEmpresas({
                                         </span>
                                     </div>
                                 </div>
-                                <a
-                                    href={mensajeWhatsapp(empresa)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    title={
-                                        empresa.whatsapp
-                                            ? 'Ofrecer la recarga por WhatsApp'
-                                            : 'Sin celular guardado: elige el contacto en WhatsApp'
-                                    }
-                                    className="flex h-8 items-center gap-1.5 rounded-[8px] bg-green-700 px-3 text-[11.5px] font-bold text-white transition-colors hover:bg-green-800"
-                                >
-                                    <MessageSquare className="size-3.5" />
-                                    WhatsApp
-                                </a>
+                                {empresa.whatsapp ? (
+                                    <a
+                                        href={mensajeWhatsapp(empresa)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="Ofrecer la recarga por WhatsApp"
+                                        className="flex h-8 items-center gap-1.5 rounded-[8px] bg-green-700 px-3 text-[11.5px] font-bold text-white transition-colors hover:bg-green-800"
+                                    >
+                                        <MessageSquare className="size-3.5" />
+                                        WhatsApp
+                                    </a>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setPidiendoNumero(empresa)
+                                        }
+                                        title="El cliente no tiene celular: agrégalo y se abre WhatsApp"
+                                        className="flex h-8 items-center gap-1.5 rounded-[8px] border border-green-700 bg-green-700/5 px-3 text-[11.5px] font-bold text-green-800 transition-colors hover:bg-green-700/10 dark:text-green-400"
+                                    >
+                                        <MessageSquare className="size-3.5" />
+                                        Agregar número
+                                    </button>
+                                )}
                                 <Link
                                     href={clientes.show.url({
                                         current_team: teamSlug,
@@ -234,19 +269,40 @@ export default function PorVencerEmpresas({
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {empresa.equipos.map((equipo) => (
+                                        {empresa.equipos.map((equipo, i) => (
                                             <tr
-                                                key={equipo.equipment_id}
+                                                key={
+                                                    equipo.equipment_id ??
+                                                    `estimado-${i}`
+                                                }
                                                 className="border-border border-t"
                                             >
                                                 <td className="px-4 py-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]">
-                                                    {equipo.numero_serie}
+                                                    {equipo.numero_serie ?? (
+                                                        <span
+                                                            className="text-muted-foreground font-sans"
+                                                            title="Vendido sin número de serie: la recarga se calcula al año de la compra"
+                                                        >
+                                                            Sin serie
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-3 py-2">
+                                                    {equipo.cantidad > 1 ? (
+                                                        <b>
+                                                            {equipo.cantidad}{' '}
+                                                            ×{' '}
+                                                        </b>
+                                                    ) : null}
                                                     {equipo.equipo}
                                                     {equipo.capacidad
                                                         ? ` · ${equipo.capacidad}`
                                                         : ''}
+                                                    {equipo.estimado ? (
+                                                        <span className="ml-1.5 rounded-full bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-700 dark:text-sky-400">
+                                                            estimado
+                                                        </span>
+                                                    ) : null}
                                                 </td>
                                                 <td className="text-muted-foreground px-3 py-2">
                                                     {equipo.ubicacion ?? '—'}

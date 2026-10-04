@@ -5181,3 +5181,24 @@ que no tiene sentido, sin romper nada. Un PR por mejora.
 - "Ventas de hoy" sumaba borradores y ventas anuladas.
 - La ficha del cliente decía "Al día con pagos" con deuda a crédito no
   vencida; ahora "Por cobrar · próxima cuota".
+
+## 89.1 Segunda vuelta: fechas en Comprobantes, WhatsApp y Por vencer sin serie (2026-10-04)
+
+- **Comprobantes SUNAT:** mismo filtro "Desde / Hasta" que Ventas (hoy
+  por defecto, atajos Hoy/Ayer/Esta semana/Este mes) en lugar del mes.
+  Filtra por la fecha de emisión del comprobante (`fecha_emision`, o la de
+  registro si no la tiene); la descarga ZIP/Excel usa el mismo rango. El
+  filtro es un componente compartido (`rango-fechas.tsx` + trait
+  `FiltraPorFechas`) y se aplica al elegir la fecha, sin botón.
+- **WhatsApp:** `Client::whatsappInternacional()` solo acepta un celular
+  peruano (9 dígitos que empiezan con 9, con o sin 51). Antes un teléfono
+  fijo (044-…) o un relleno contaba como WhatsApp y la cotización abría
+  WhatsApp sin destino en vez de pedir "Agregar número". "Por empresa"
+  también ofrece "Agregar número".
+- **Por vencer sin serie:** "Por empresa" solo contaba extintores
+  registrados con serie. Ahora suma lo vendido sin serie (líneas de
+  recarga o productos de categoría extintor sin equipo; la última compra
+  de cada producto por cliente, ventas confirmadas) y, para clientes sin
+  nada en el sistema nuevo, su última compra del sistema anterior. Se
+  marcan _estimado_ con la recarga al año de la compra. CLIENTES VARIOS
+  no aparece.

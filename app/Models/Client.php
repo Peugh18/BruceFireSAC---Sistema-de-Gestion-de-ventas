@@ -103,18 +103,22 @@ class Client extends Model
     }
 
     /**
-     * Número para wa.me (solo dígitos, con el 51 de Perú si es un celular de
-     * 9 dígitos), tomado del WhatsApp o, si no hay, del teléfono.
+     * Número para wa.me: un celular peruano (9 dígitos que empiezan con 9)
+     * con el 51 delante, tomado del WhatsApp o, si no sirve, del teléfono.
+     * Un fijo, un número incompleto o un relleno ("-", "000") no cuenta:
+     * así la pantalla pide el número en vez de abrir WhatsApp sin destino.
      */
     public function whatsappInternacional(): ?string
     {
-        $digitos = preg_replace('/\D/', '', (string) ($this->whatsapp ?: $this->telefono));
+        foreach ([$this->whatsapp, $this->telefono] as $numero) {
+            $digitos = (string) preg_replace('/\D/', '', (string) $numero);
 
-        if ($digitos === '') {
-            return null;
+            if (preg_match('/^(?:51)?(9\d{8})$/', $digitos, $celular) === 1) {
+                return '51'.$celular[1];
+            }
         }
 
-        return strlen($digitos) === 9 ? '51'.$digitos : $digitos;
+        return null;
     }
 
     /**
