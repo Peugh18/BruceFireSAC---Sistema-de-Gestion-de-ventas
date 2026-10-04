@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Sunat\RucLookupService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
@@ -19,7 +20,7 @@ test('creates a valid client for vendedor users', function () {
         ->actingAs($user)
         ->post(route('vendedor.clientes.store', ['current_team' => $user->currentTeam]), [
             'tipo_documento' => 'ruc',
-            'numero_documento' => '20601234567',
+            'numero_documento' => '20601234565',
             'razon_social' => 'BRUCE FIRE CLIENTE S.A.C.',
             'nombre_comercial' => 'Cliente Peru',
             'email' => 'cliente@example.com',
@@ -30,7 +31,7 @@ test('creates a valid client for vendedor users', function () {
             'activo' => true,
         ]);
 
-    $client = Client::where('numero_documento', '20601234567')->firstOrFail();
+    $client = Client::where('numero_documento', '20601234565')->firstOrFail();
 
     $response
         ->assertSessionHasNoErrors()
@@ -42,7 +43,7 @@ test('creates a valid client for vendedor users', function () {
     $this->assertDatabaseHas('clients', [
         'codigo_interno' => 'CLI-'.str_pad((string) $client->id, 4, '0', STR_PAD_LEFT),
         'tipo_documento' => 'ruc',
-        'numero_documento' => '20601234567',
+        'numero_documento' => '20601234565',
         'razon_social' => 'BRUCE FIRE CLIENTE S.A.C.',
     ]);
 });
@@ -248,3 +249,37 @@ if (! function_exists('vendedorUser')) {
         return $user;
     }
 }
+
+test('el estado sunat del ruc lo pone el servidor con su consulta y no el formulario', function () {
+    $user = vendedorUser();
+    $guardar = fn (string $ruc) => $this->actingAs($user)->post(route('vendedor.clientes.store', ['current_team' => $user->currentTeam]), [
+        'tipo_documento' => 'ruc', 'numero_documento' => $ruc, 'razon_social' => "EMPRESA {$ruc}",
+        'estado_contribuyente' => 'ACTIVO', 'condicion_domicilio' => 'HABIDO',
+    ]);
+
+    // Sin consulta a SUNAT el estado queda vacío aunque el formulario diga ACTIVO.
+    $guardar('20603335717')->assertSessionHasNoErrors();
+    expect(Client::where('numero_documento', '20603335717')->sole()->estado_contribuyente)->toBeNull();
+
+    // Con la consulta del servidor, se guarda lo que respondió SUNAT.
+    Cache::put('sunat-consulta:20601234565', ['razon_social' => 'X', 'direccion' => null, 'estado_contribuyente' => 'BAJA DE OFICIO', 'condicion_domicilio' => 'NO HABIDO', 'ubigeo' => null], now()->addHour());
+    $guardar('20601234565')->assertSessionHasNoErrors();
+    expect(Client::where('numero_documento', '20601234565')->sole()->estado_contribuyente)->toBe('BAJA DE OFICIO');
+
+    // Un RUC con el dígito verificador mal no se registra.
+    $guardar('20601234567')->assertSessionHasErrors('numero_documento');
+});
+
+test('no se cambia el documento de un cliente con ventas emitidas', function () {
+    $user = vendedorUser();
+    $client = Client::factory()->create(['tipo_documento' => 'ruc', 'numero_documento' => '20603335717']);
+    Sale::factory()->create(['client_id' => $client->id, 'estado' => 'confirmada']);
+
+    $this->actingAs($user)
+        ->put(route('vendedor.clientes.update', ['current_team' => $user->currentTeam, 'client' => $client]), [
+            'tipo_documento' => 'ruc', 'numero_documento' => '20601234565', 'razon_social' => $client->razon_social,
+        ])
+        ->assertSessionHasErrors('numero_documento');
+
+    expect($client->fresh()->numero_documento)->toBe('20603335717');
+});
