@@ -149,8 +149,8 @@ test('el vendedor registra una nota de venta desde el formulario y descarga su p
 
 test('el listado de ventas separa notas de venta de las ventas con comprobante', function () {
     $vendedor = vendedorUser();
-    Sale::factory()->create(['comprobante_tipo' => 'nota_venta', 'vendedor_id' => $vendedor->id]);
-    Sale::factory()->create(['comprobante_tipo' => 'factura', 'vendedor_id' => $vendedor->id]);
+    Sale::factory()->create(['comprobante_tipo' => 'nota_venta', 'vendedor_id' => $vendedor->id, 'fecha' => today()]);
+    Sale::factory()->create(['comprobante_tipo' => 'factura', 'vendedor_id' => $vendedor->id, 'fecha' => today()]);
     $url = route('vendedor.ventas.index', ['current_team' => $vendedor->currentTeam]);
 
     $this->actingAs($vendedor)->get($url.'?comprobante=nota_venta')

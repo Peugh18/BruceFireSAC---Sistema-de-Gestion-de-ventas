@@ -35,8 +35,8 @@ function teamOf(User $user): array
 
 test('un trabajador con sede solo ve las ventas de su sede', function () {
     $vendedor = vendedorEnSede($this->sedeA);
-    $propia = Sale::factory()->create(['sede_id' => $this->sedeA->id]);
-    $ajena = Sale::factory()->create(['sede_id' => $this->sedeB->id]);
+    $propia = Sale::factory()->create(['sede_id' => $this->sedeA->id, 'fecha' => today()]);
+    $ajena = Sale::factory()->create(['sede_id' => $this->sedeB->id, 'fecha' => today()]);
 
     $this->actingAs($vendedor)
         ->get(route('vendedor.ventas.index', teamOf($vendedor)))
@@ -51,8 +51,8 @@ test('un trabajador con sede solo ve las ventas de su sede', function () {
 });
 
 test('un usuario sin sede o el gerente ven las ventas de todas las sedes', function () {
-    Sale::factory()->create(['sede_id' => $this->sedeA->id]);
-    Sale::factory()->create(['sede_id' => $this->sedeB->id]);
+    Sale::factory()->create(['sede_id' => $this->sedeA->id, 'fecha' => today()]);
+    Sale::factory()->create(['sede_id' => $this->sedeB->id, 'fecha' => today()]);
     $sinSede = vendedorUser();
     $gerente = User::factory()->create();
     $gerente->assignRole('Gerente');

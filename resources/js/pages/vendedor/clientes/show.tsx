@@ -89,6 +89,7 @@ export type Vehicle = {
 export type ResumenData = {
     total_comprado: number;
     deuda_pendiente: number;
+    proxima_cuota?: string | null;
     cuotas_vencidas: number;
     extintores_activos: number;
     por_vencer_30_dias: number;
@@ -872,8 +873,10 @@ export default function ClienteShow({
                                             {resumen.cuotas_vencidas} cuota(s)
                                             vencida(s)
                                         </span>
+                                    ) : (resumen?.deuda_pendiente ?? 0) > 0 ? (
+                                        `Por cobrar${resumen?.proxima_cuota ? ` · próxima cuota ${fechaCorta(resumen.proxima_cuota)}` : ''}`
                                     ) : (
-                                        'Al día con pagos'
+                                        'Sin deuda'
                                     )}
                                 </div>
                             </Card>

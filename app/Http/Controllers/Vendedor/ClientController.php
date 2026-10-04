@@ -183,6 +183,7 @@ class ClientController extends Controller
                 'total_comprado' => round((float) $confirmadas->sum('total'), 2),
                 'deuda_pendiente' => round((float) $cuotasConSaldo->sum($saldoDe), 2),
                 'cuotas_vencidas' => $cuotasConSaldo->filter(fn ($installment) => $installment->fecha_vencimiento?->isBefore(today()))->count(),
+                'proxima_cuota' => $cuotasConSaldo->filter(fn ($installment) => $installment->fecha_vencimiento && ! $installment->fecha_vencimiento->isBefore(today()))->min(fn ($installment) => $installment->fecha_vencimiento->toDateString()),
                 'extintores_activos' => $equipos->where('estado', 'activo')->count(),
                 'por_vencer_30_dias' => $equipos->where('estado', 'activo')->filter(fn ($equipo) => $en30Dias($equipo->proxima_fecha_atencion) || $en30Dias($equipo->proxima_prueba_hidrostatica))->count(),
                 'ultima_compra' => $confirmadas->max(fn ($sale) => $sale->fecha?->toDateString()),
