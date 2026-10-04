@@ -35,12 +35,29 @@ class GreenterService
     protected const UNIDADES_SUNAT = [
         'und' => 'NIU',
         'unidad' => 'NIU',
+        // Los códigos SUNAT que ya vienen como unidad del producto.
+        'niu' => 'NIU',
+        'kgm' => 'KGM',
+        'mtr' => 'MTR',
+        'ltr' => 'LTR',
+        'gll' => 'GLL',
+        'gli' => 'GLL',
+        'set' => 'SET',
         'servicio' => 'ZZ',
         'metro' => 'MTR',
         'kilogramo' => 'KGM',
         'kg' => 'KGM',
         'litro' => 'LTR',
         'galon' => 'GLL',
+        // EPP: guantes y botas por par; cajas, paquetes y docenas.
+        'par' => 'PR',
+        'pr' => 'PR',
+        'caja' => 'BX',
+        'bx' => 'BX',
+        'paquete' => 'PK',
+        'pk' => 'PK',
+        'docena' => 'DZN',
+        'dzn' => 'DZN',
     ];
 
     public function __construct(

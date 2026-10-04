@@ -25,6 +25,9 @@ type ProductItem = {
     precio_venta: number;
     aplica_igv: boolean;
     serializado: boolean;
+    controla_lote: boolean;
+    unidad_compra: string | null;
+    factor_compra: number;
     stock_minimo: number | null;
     activo: boolean;
     stock_disponible: number;
@@ -97,6 +100,9 @@ export default function ProductosIndex() {
         precio_venta: '',
         aplica_igv: true,
         serializado: false,
+        controla_lote: false,
+        unidad_compra: '',
+        factor_compra: '1',
         stock_minimo: '',
         activo: true,
     });
@@ -114,6 +120,9 @@ export default function ProductosIndex() {
             precio_venta: '',
             aplica_igv: true,
             serializado: false,
+            controla_lote: false,
+            unidad_compra: '',
+            factor_compra: '1',
             stock_minimo: '',
             activo: true,
         });
@@ -132,6 +141,9 @@ export default function ProductosIndex() {
             precio_venta: String(product.precio_venta),
             aplica_igv: product.aplica_igv,
             serializado: product.serializado,
+            controla_lote: product.controla_lote,
+            unidad_compra: product.unidad_compra ?? '',
+            factor_compra: String(product.factor_compra || 1),
             stock_minimo:
                 product.stock_minimo !== null
                     ? String(product.stock_minimo)
@@ -728,6 +740,18 @@ export default function ProductosIndex() {
                                             <option value="SET">
                                                 SET (Juego)
                                             </option>
+                                            <option value="PR">
+                                                PR (Par: guantes, botas)
+                                            </option>
+                                            <option value="BX">
+                                                BX (Caja)
+                                            </option>
+                                            <option value="PK">
+                                                PK (Paquete)
+                                            </option>
+                                            <option value="DZN">
+                                                DZN (Docena)
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
@@ -825,6 +849,55 @@ export default function ProductosIndex() {
                                     </div>
                                 </div>
 
+                                {!form.data.serializado && (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-foreground/80 block font-semibold">
+                                                Se compra por (opcional)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                maxLength={10}
+                                                value={form.data.unidad_compra}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'unidad_compra',
+                                                        e.target.value.toUpperCase(),
+                                                    )
+                                                }
+                                                placeholder="CAJA"
+                                                className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-foreground/80 block font-semibold">
+                                                ¿Cuántas trae cada una?
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                disabled={
+                                                    !form.data.unidad_compra
+                                                }
+                                                value={form.data.factor_compra}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'factor_compra',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="100"
+                                                className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none disabled:opacity-50"
+                                            />
+                                            <p className="text-muted-foreground mt-0.5 text-[10px]">
+                                                Ej.: 1 CAJA = 100 UND. En
+                                                Recepciones se cuentan cajas y
+                                                el stock sube en unidades.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex items-center gap-6 pt-1">
                                     <label className="flex cursor-pointer items-center gap-2">
                                         <input
@@ -848,15 +921,38 @@ export default function ProductosIndex() {
                                             type="checkbox"
                                             checked={form.data.serializado}
                                             onChange={(e) =>
+                                                form.setData((datos) => ({
+                                                    ...datos,
+                                                    serializado:
+                                                        e.target.checked,
+                                                    controla_lote: e.target
+                                                        .checked
+                                                        ? false
+                                                        : datos.controla_lote,
+                                                }))
+                                            }
+                                            className="border-border text-primary-strong rounded"
+                                        />
+                                        <span className="text-foreground/80">
+                                            Control por Serie (Serializado)
+                                        </span>
+                                    </label>
+
+                                    <label className="flex cursor-pointer items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={form.data.controla_lote}
+                                            disabled={form.data.serializado}
+                                            onChange={(e) =>
                                                 form.setData(
-                                                    'serializado',
+                                                    'controla_lote',
                                                     e.target.checked,
                                                 )
                                             }
                                             className="border-border text-primary-strong rounded"
                                         />
                                         <span className="text-foreground/80">
-                                            Control por Serie (Serializado)
+                                            Lote y vencimiento (EPP)
                                         </span>
                                     </label>
 

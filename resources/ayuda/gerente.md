@@ -30,3 +30,5 @@
 - Registro de acciones sensibles: quién creó, anuló o corrigió ventas, comprobantes y certificados.
 - Un producto que ya tiene movimientos o ventas no cambia entre «con serie» y «sin serie»: crea uno nuevo. Los cambios de precio quedan en Auditoría.
 - Para desactivar una sede, primero traslada su stock.
+- En **Productos**, marca **Lote y vencimiento** para los EPP que vencen, y en **Se compra por** indica la caja y cuántas trae (1 CAJA = 100). La unidad de venta puede ser **PR (par)** para guantes y botas.
+- Un cobro anulado ya no se borra: queda tachado en Cobranzas con quién lo anuló y por qué.

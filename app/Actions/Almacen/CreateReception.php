@@ -9,6 +9,7 @@ use App\Models\Reception;
 use App\Models\ReceptionItem;
 use App\Models\User;
 use App\Services\Inventory\InventorySequenceGenerator;
+use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 
 class CreateReception
@@ -40,6 +41,8 @@ class CreateReception
                     'cantidad' => $itemData['cantidad'],
                     'cantidad_conforme' => $itemData['cantidad_conforme'],
                     'observacion_item' => $itemData['observacion_item'] ?? null,
+                    'lote' => filled($itemData['lote'] ?? null) ? mb_strtoupper(trim((string) $itemData['lote'])) : null,
+                    'fecha_vencimiento' => $itemData['fecha_vencimiento'] ?? null,
                 ]);
 
                 $conforme = (int) $itemData['cantidad_conforme'];
@@ -48,7 +51,7 @@ class CreateReception
                     continue;
                 }
 
-                $product = Product::findOrFail($itemData['product_id']);
+                $product = Product::query()->findOrFail((int) $itemData['product_id']);
 
                 if ($product->serializado) {
                     // Para producto serializado: crear N InventoryUnit + N InventoryMovement (cantidad = 1)
@@ -83,19 +86,19 @@ class CreateReception
                         $movement->save();
                     }
                 } else {
-                    // Para producto no serializado: un solo InventoryMovement con cantidad = N
-                    $movement = new InventoryMovement([
-                        'inventory_unit_id' => null,
-                        'product_id' => $product->id,
-                        'sede_id' => $reception->sede_almacen_id,
+                    // Producto sin serie: un movimiento con la cantidad; si lleva
+                    // lote, entra a su lote con su vencimiento.
+                    $movement = app(StockPorLote::class)->ingresar($product, (int) $reception->sede_almacen_id, $conforme, [
                         'tipo' => 'ingreso',
-                        'cantidad' => $conforme,
                         'user_id' => $reception->user_id,
                         'observacion' => "Recepción {$reception->id} - {$reception->proveedor}",
-                    ]);
-                    $movement->referencia_type = $reception->getMorphClass();
-                    $movement->referencia_id = $reception->id;
-                    $movement->save();
+                        'referencia_type' => $reception->getMorphClass(),
+                        'referencia_id' => $reception->id,
+                    ], $item->lote, $item->fecha_vencimiento?->toDateString(), 'items');
+
+                    if ($movement->product_lot_id) {
+                        $item->update(['product_lot_id' => $movement->product_lot_id]);
+                    }
                 }
             }
 

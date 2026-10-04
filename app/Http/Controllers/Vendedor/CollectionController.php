@@ -50,7 +50,11 @@ class CollectionController extends Controller
             ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id)
                 ->where('estado', 'confirmada')
                 ->when($user->sedeRestringidaId(), fn ($sq, $sedeId) => $sq->where('sede_id', $sedeId)))
-            ->with(['sale.client', 'payments' => fn ($query) => $query->latest('id')])
+            ->with([
+                'sale.client',
+                'payments' => fn ($query) => $query->latest('id'),
+                'paymentsAnulados' => fn ($query) => $query->with('anuladoPor:id,name')->latest('deleted_at'),
+            ])
             ->orderBy('fecha_vencimiento')
             ->paginate(15)
             ->withQueryString()
@@ -79,6 +83,14 @@ class CollectionController extends Controller
                         'forma_pago' => $payment->forma_pago,
                         'fecha' => $payment->fecha->toDateString(),
                         'puede_anular' => $user->hasRole('Gerente') || $payment->fecha->isToday(),
+                    ])->values(),
+                    // Cobros anulados: quedan a la vista, tachados, con el motivo.
+                    'anulados' => $inst->paymentsAnulados->map(fn (SalePayment $payment) => [
+                        'id' => $payment->id,
+                        'monto' => $payment->monto,
+                        'forma_pago' => $payment->forma_pago,
+                        'motivo' => $payment->anulado_motivo,
+                        'por' => $payment->anuladoPor?->name,
                     ])->values(),
                 ];
             })
@@ -153,7 +165,7 @@ class CollectionController extends Controller
                 userId: $request->user()->id,
             );
 
-            $payment->delete();
+            $payment->anular($data['motivo'], $request->user()->id);
             $this->recalculateInstallmentState($installment);
         });
 

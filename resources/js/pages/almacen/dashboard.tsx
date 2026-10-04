@@ -63,6 +63,18 @@ export type AlmacenDashboardProps = {
     recepciones_hoy: number;
     movimientos_recientes: MovimientoReciente[];
     productos_bajo_minimo: ProductoBajoMinimo[];
+    lotes_por_vencer: LotePorVencer[];
+};
+
+export type LotePorVencer = {
+    id: number;
+    producto: string;
+    unidad_medida: string;
+    lote: string;
+    sede: string;
+    fecha_vencimiento: string | null;
+    vencido: boolean;
+    saldo: number;
 };
 
 function formatNumber(value: number): string {
@@ -129,6 +141,7 @@ export default function AlmacenDashboard({
     recepciones_hoy,
     movimientos_recientes,
     productos_bajo_minimo,
+    lotes_por_vencer,
 }: AlmacenDashboardProps) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -160,6 +173,58 @@ export default function AlmacenDashboard({
                             <ArrowRight className="size-3.5" />
                         </Link>
                     </div>
+                )}
+
+                {/* EPP y consumibles: lotes vencidos o por vencer (60 días) */}
+                {lotes_por_vencer.length > 0 && (
+                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <div className="flex items-center justify-between">
+                            <span className="text-foreground text-[13.5px] font-bold">
+                                Lotes vencidos o por vencer
+                            </span>
+                            <Link
+                                href={`/${teamSlug}/almacen/ajustes`}
+                                className="text-primary-strong text-xs font-bold"
+                            >
+                                Dar de baja un vencido
+                            </Link>
+                        </div>
+                        <p className="text-muted-foreground mt-1 text-[11.5px]">
+                            Los vencidos no se venden; los próximos salen
+                            primero en cada venta.
+                        </p>
+                        <div className="divide-border mt-3 flex flex-col divide-y">
+                            {lotes_por_vencer.map((lote) => (
+                                <div
+                                    key={lote.id}
+                                    className="flex flex-wrap items-center justify-between gap-2 py-2 text-xs"
+                                >
+                                    <div>
+                                        <div className="text-foreground font-bold">
+                                            {lote.producto}
+                                        </div>
+                                        <div className="text-muted-foreground text-[11px]">
+                                            Lote {lote.lote} · {lote.saldo}{' '}
+                                            {lote.unidad_medida} · {lote.sede}
+                                        </div>
+                                    </div>
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${
+                                            lote.vencido
+                                                ? 'bg-destructive/10 text-destructive-strong'
+                                                : 'text-warning-strong bg-amber-500/10'
+                                        }`}
+                                    >
+                                        {lote.vencido ? 'Vencido' : 'Vence'}{' '}
+                                        {lote.fecha_vencimiento
+                                            ?.split('-')
+                                            .reverse()
+                                            .join('/')}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
                 )}
 
                 {/* 3-Column Top Grid: Unidades en Stock, Recepciones de Hoy, Alerta Reabastecimiento */}

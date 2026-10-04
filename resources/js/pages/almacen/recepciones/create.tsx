@@ -35,6 +35,9 @@ export type ProductOption = {
     nombre: string;
     unidad_medida: string;
     serializado: boolean;
+    controla_lote: boolean;
+    unidad_compra: string | null;
+    factor_compra: number;
 };
 
 export type UnidadSerializadaForm = {
@@ -49,6 +52,8 @@ export type ReceptionItemForm = {
     cantidad: number;
     cantidad_conforme: number;
     observacion_item: string;
+    lote: string;
+    fecha_vencimiento: string;
     unidades: UnidadSerializadaForm[];
 };
 
@@ -117,6 +122,8 @@ export default function RecepcionesCreate({
                 cantidad: 1,
                 cantidad_conforme: 1,
                 observacion_item: '',
+                lote: '',
+                fecha_vencimiento: '',
                 unidades: firstProd.serializado ? [newUnit()] : [],
             },
         ]);
@@ -162,6 +169,8 @@ export default function RecepcionesCreate({
                     cantidad: 1,
                     cantidad_conforme: 1,
                     observacion_item: '',
+                    lote: '',
+                    fecha_vencimiento: '',
                     unidades: prod.serializado ? [newUnit()] : [],
                 },
             ]);
@@ -263,6 +272,16 @@ export default function RecepcionesCreate({
             ...next[itemIndex],
             unidades,
         };
+        setData('items', next);
+    };
+
+    const updateLineLote = (
+        index: number,
+        campo: 'lote' | 'fecha_vencimiento',
+        valor: string,
+    ) => {
+        const next = [...data.items];
+        next[index] = { ...next[index], [campo]: valor };
         setData('items', next);
     };
 
@@ -637,6 +656,126 @@ export default function RecepcionesCreate({
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* EPP: se cuenta por caja y entra con su lote y vencimiento */}
+                                        {prod &&
+                                            !isSerializado &&
+                                            (prod.controla_lote ||
+                                                (prod.unidad_compra &&
+                                                    prod.factor_compra >
+                                                        1)) && (
+                                                <div className="border-border bg-muted/40 grid gap-3 rounded-[10px] border p-3 sm:grid-cols-3">
+                                                    {prod.unidad_compra &&
+                                                        prod.factor_compra >
+                                                            1 && (
+                                                            <div>
+                                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                                    {
+                                                                        prod.unidad_compra
+                                                                    }{' '}
+                                                                    recibidas (×{' '}
+                                                                    {
+                                                                        prod.factor_compra
+                                                                    }
+                                                                    )
+                                                                </Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    placeholder="0"
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) => {
+                                                                        const cajas =
+                                                                            Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            );
+                                                                        if (
+                                                                            cajas >
+                                                                            0
+                                                                        ) {
+                                                                            updateLineCantidad(
+                                                                                index,
+                                                                                cajas *
+                                                                                    prod.factor_compra,
+                                                                            );
+                                                                        }
+                                                                    }}
+                                                                    className="mt-1 h-8 text-xs"
+                                                                />
+                                                                <p className="text-muted-foreground mt-0.5 text-[10px]">
+                                                                    ={' '}
+                                                                    {
+                                                                        item.cantidad
+                                                                    }{' '}
+                                                                    {
+                                                                        prod.unidad_medida
+                                                                    }{' '}
+                                                                    al stock
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    {prod.controla_lote && (
+                                                        <>
+                                                            <div>
+                                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                                    Lote{' '}
+                                                                    <span className="text-primary-strong">
+                                                                        *
+                                                                    </span>
+                                                                </Label>
+                                                                <Input
+                                                                    value={
+                                                                        item.lote
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        updateLineLote(
+                                                                            index,
+                                                                            'lote',
+                                                                            e.target.value.toUpperCase(),
+                                                                        )
+                                                                    }
+                                                                    placeholder="Como figura en la caja"
+                                                                    className="mt-1 h-8 text-xs"
+                                                                    required
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                                    Vence{' '}
+                                                                    <span className="text-primary-strong">
+                                                                        *
+                                                                    </span>
+                                                                </Label>
+                                                                <Input
+                                                                    type="date"
+                                                                    min={today}
+                                                                    value={
+                                                                        item.fecha_vencimiento
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        updateLineLote(
+                                                                            index,
+                                                                            'fecha_vencimiento',
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    className="mt-1 h-8 text-xs"
+                                                                    required
+                                                                />
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
 
                                         {/* Motivo de no conformidad (obligatorio si cantidad_conforme < cantidad) */}
                                         {hasNoConforme && (

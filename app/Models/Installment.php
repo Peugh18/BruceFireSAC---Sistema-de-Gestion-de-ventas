@@ -63,4 +63,14 @@ class Installment extends Model
     {
         return $this->hasMany(SalePayment::class);
     }
+
+    /**
+     * Cobros anulados de la cuota (quedan en el historial).
+     *
+     * @return HasMany<SalePayment, $this>
+     */
+    public function paymentsAnulados(): HasMany
+    {
+        return $this->hasMany(SalePayment::class)->onlyTrashed();
+    }
 }

@@ -30,6 +30,10 @@ class ComprobantePdfService
         'kgm' => 'KG', 'kg' => 'KG', 'kilogramo' => 'KG',
         'ltr' => 'L', 'litro' => 'L',
         'gll' => 'GAL', 'galon' => 'GAL',
+        'pr' => 'PAR', 'par' => 'PAR',
+        'bx' => 'CAJA', 'caja' => 'CAJA',
+        'pk' => 'PAQ', 'paquete' => 'PAQ',
+        'dzn' => 'DOC', 'docena' => 'DOC',
     ];
 
     public function __construct(

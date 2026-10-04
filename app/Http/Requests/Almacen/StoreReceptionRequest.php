@@ -36,6 +36,8 @@ class StoreReceptionRequest extends FormRequest
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
             'items.*.cantidad_conforme' => ['required', 'integer', 'min:0'],
             'items.*.observacion_item' => ['nullable', 'string'],
+            'items.*.lote' => ['nullable', 'string', 'max:50'],
+            'items.*.fecha_vencimiento' => ['nullable', 'date'],
             'items.*.unidades' => ['nullable', 'array'],
             'items.*.unidades.*.capacidad' => ['required_with:items.*.unidades', 'string', 'max:50'],
             'items.*.unidades.*.serie_fabricante' => ['nullable', 'string', 'max:100'],
@@ -95,6 +97,20 @@ class StoreReceptionRequest extends FormRequest
                     // Validación de unidades serializadas
                     $productId = $item['product_id'] ?? null;
                     $product = $products->get($productId);
+
+                    // EPP y consumibles con lote: lote y vencimiento, y nada
+                    // vencido entra al almacén.
+                    if ($product && $product->controla_lote && $conforme > 0) {
+                        if (trim((string) ($item['lote'] ?? '')) === '') {
+                            $validator->errors()->add("items.{$index}.lote", "{$product->nombre} lleva lote: escribe el número de lote.");
+                        }
+                        $vence = $item['fecha_vencimiento'] ?? null;
+                        if (! $vence) {
+                            $validator->errors()->add("items.{$index}.fecha_vencimiento", "Indica el vencimiento del lote de {$product->nombre}.");
+                        } elseif (strtotime((string) $vence) !== false && strtotime((string) $vence) < strtotime(today()->toDateString())) {
+                            $validator->errors()->add("items.{$index}.fecha_vencimiento", "El lote de {$product->nombre} ya está vencido: no se recibe.");
+                        }
+                    }
 
                     if ($product && $product->serializado) {
                         $unidades = $item['unidades'] ?? [];

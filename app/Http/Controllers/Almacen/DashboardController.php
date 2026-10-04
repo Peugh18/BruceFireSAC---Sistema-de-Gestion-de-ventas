@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\ProductLot;
 use App\Models\Reception;
 use App\Models\Sede;
 use App\Models\Team;
@@ -122,7 +123,32 @@ class DashboardController extends Controller
             ->values()
             ->all();
 
+        // 5. Lotes vencidos o que vencen en los próximos 60 días con stock:
+        // los vencidos se dan de baja (Ajustes) y los próximos se venden antes.
+        $lotesPorVencer = ProductLot::query()
+            ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
+            ->whereNotNull('fecha_vencimiento')
+            ->whereDate('fecha_vencimiento', '<=', today()->addDays(ProductLot::DIAS_AVISO))
+            ->with(['product:id,codigo,nombre,unidad_medida', 'sede:id,nombre'])
+            ->withSum('movements as saldo', 'cantidad')
+            ->orderBy('fecha_vencimiento')
+            ->get()
+            ->filter(fn (ProductLot $lote) => (int) $lote->getAttribute('saldo') > 0)
+            ->map(fn (ProductLot $lote) => [
+                'id' => $lote->id,
+                'producto' => $lote->product->nombre,
+                'unidad_medida' => $lote->product->unidad_medida,
+                'lote' => $lote->lote,
+                'sede' => $lote->sede->nombre,
+                'fecha_vencimiento' => $lote->fecha_vencimiento?->toDateString(),
+                'vencido' => $lote->estaVencido(),
+                'saldo' => (int) $lote->getAttribute('saldo'),
+            ])
+            ->values()
+            ->all();
+
         return Inertia::render('almacen/dashboard', [
+            'lotes_por_vencer' => $lotesPorVencer,
             'stock' => [
                 'total_disponible' => $unidadesDisponiblesTotal,
                 'por_sede' => $stockPorSede,

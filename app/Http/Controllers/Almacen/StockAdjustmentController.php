@@ -8,6 +8,7 @@ use App\Http\Requests\Almacen\StoreStockAdjustmentRequest;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\ProductLot;
 use App\Models\Sede;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
@@ -35,7 +36,7 @@ class StockAdjustmentController extends Controller
         $products = Product::query()
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get(['id', 'codigo', 'nombre', 'serializado', 'unidad_medida']);
+            ->get(['id', 'codigo', 'nombre', 'serializado', 'controla_lote', 'unidad_medida']);
 
         // Unidades serializadas existentes en stock o de baja para el selector contextual
         $units = InventoryUnit::query()
@@ -44,6 +45,24 @@ class StockAdjustmentController extends Controller
             ->with(['product:id,codigo,nombre', 'sedeAlmacen:id,nombre'])
             ->orderBy('numero_serie')
             ->get(['id', 'product_id', 'sede_almacen_id', 'numero_serie', 'marca', 'estado']);
+
+        // Lotes con saldo, para dar de baja uno puntual (por ejemplo, vencido).
+        $lotes = ProductLot::query()
+            ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
+            ->withSum('movements as saldo', 'cantidad')
+            ->orderBy('fecha_vencimiento')
+            ->get(['id', 'product_id', 'sede_id', 'lote', 'fecha_vencimiento'])
+            ->filter(fn (ProductLot $lote) => (int) $lote->getAttribute('saldo') > 0)
+            ->map(fn (ProductLot $lote) => [
+                'id' => $lote->id,
+                'product_id' => $lote->product_id,
+                'sede_id' => $lote->sede_id,
+                'lote' => $lote->lote,
+                'fecha_vencimiento' => $lote->fecha_vencimiento?->toDateString(),
+                'vencido' => $lote->estaVencido(),
+                'saldo' => (int) $lote->getAttribute('saldo'),
+            ])
+            ->values();
 
         // Historial de ajustes del Kardex
         $ajustes = InventoryMovement::query()
@@ -54,6 +73,7 @@ class StockAdjustmentController extends Controller
                 'sede:id,nombre',
                 'user:id,name',
                 'inventoryUnit:id,numero_serie,marca,estado',
+                'lot:id,lote,fecha_vencimiento',
             ])
             ->latest('id')
             ->paginate(15)
@@ -64,6 +84,7 @@ class StockAdjustmentController extends Controller
             'sedes' => $sedes,
             'products' => $products,
             'units' => $units,
+            'lotes' => $lotes,
             'kpis' => [
                 'total_ajustes' => InventoryMovement::where('tipo', 'ajuste')->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))->count(),
                 'ajustes_mes' => InventoryMovement::where('tipo', 'ajuste')
@@ -86,7 +107,8 @@ class StockAdjustmentController extends Controller
         $movement = $createStockAdjustment->handle($request->validated(), $request->user());
 
         $tipoTexto = $movement->cantidad > 0 ? 'incremento' : 'decremento';
-        $cantidadAbs = abs($movement->cantidad);
+        // Con lotes, una baja puede repartirse en varios movimientos.
+        $cantidadAbs = (int) $request->validated('cantidad');
 
         return redirect()->route('almacen.ajustes.index', ['current_team' => $current_team])
             ->with('success', "Ajuste de {$tipoTexto} por {$cantidadAbs} unidades registrado correctamente en el Kardex.");

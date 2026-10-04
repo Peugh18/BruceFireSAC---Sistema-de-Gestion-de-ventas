@@ -34,7 +34,18 @@ export type ProductOption = {
     codigo: string;
     nombre: string;
     serializado: boolean;
+    controla_lote: boolean;
     unidad_medida: string;
+};
+
+export type LoteOption = {
+    id: number;
+    product_id: number;
+    sede_id: number;
+    lote: string;
+    fecha_vencimiento: string | null;
+    vencido: boolean;
+    saldo: number;
 };
 
 export type UnitOption = {
@@ -91,6 +102,7 @@ export type Props = {
     sedes: SedeOption[];
     products: ProductOption[];
     units: UnitOption[];
+    lotes: LoteOption[];
     kpis: {
         total_ajustes: number;
         ajustes_mes: number;
@@ -114,6 +126,7 @@ export default function AjustesIndex({
     sedes,
     products,
     units,
+    lotes,
     kpis,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
@@ -127,9 +140,18 @@ export default function AjustesIndex({
         tipo_ajuste: 'decremento',
         cantidad: 1,
         inventory_unit_id: '',
+        product_lot_id: '',
+        lote: '',
+        fecha_vencimiento: '',
         motivo: '',
         observacion: '',
     });
+
+    const lotesDelProducto = lotes.filter(
+        (l) =>
+            String(l.product_id) === String(data.product_id) &&
+            String(l.sede_id) === String(data.sede_id),
+    );
 
     const selectedProduct = useMemo(() => {
         return products.find((p) => String(p.id) === String(data.product_id));
@@ -149,7 +171,15 @@ export default function AjustesIndex({
         e.preventDefault();
         post(`/${teamSlug}/almacen/ajustes`, {
             onSuccess: () => {
-                reset('motivo', 'observacion', 'inventory_unit_id', 'cantidad');
+                reset(
+                    'motivo',
+                    'observacion',
+                    'inventory_unit_id',
+                    'cantidad',
+                    'product_lot_id',
+                    'lote',
+                    'fecha_vencimiento',
+                );
                 setShowForm(false);
             },
         });
@@ -424,6 +454,80 @@ export default function AjustesIndex({
                                                 registradas en esta sede.
                                             </p>
                                         )}
+                                    </div>
+                                ) : selectedProduct?.controla_lote &&
+                                  data.tipo_ajuste === 'decremento' ? (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-foreground text-xs font-bold">
+                                            Lote
+                                        </Label>
+                                        <select
+                                            value={data.product_lot_id}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'product_lot_id',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="border-border bg-card text-foreground focus:border-primary w-full rounded-[8px] border px-3 py-2 text-xs font-medium focus:outline-none"
+                                        >
+                                            <option value="">
+                                                Lo que vence primero
+                                            </option>
+                                            {lotesDelProducto.map((l) => (
+                                                <option key={l.id} value={l.id}>
+                                                    {l.lote} · vence{' '}
+                                                    {l.fecha_vencimiento
+                                                        ? l.fecha_vencimiento
+                                                              .split('-')
+                                                              .reverse()
+                                                              .join('/')
+                                                        : '—'}{' '}
+                                                    · {l.saldo} en stock
+                                                    {l.vencido
+                                                        ? ' (VENCIDO)'
+                                                        : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                ) : selectedProduct?.controla_lote ? (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-foreground text-xs font-bold">
+                                                Lote{' '}
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
+                                            </Label>
+                                            <Input
+                                                value={data.lote}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'lote',
+                                                        e.target.value.toUpperCase(),
+                                                    )
+                                                }
+                                                className="h-9 text-xs"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-foreground text-xs font-bold">
+                                                Vence
+                                            </Label>
+                                            <Input
+                                                type="date"
+                                                value={data.fecha_vencimiento}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'fecha_vencimiento',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="h-9 text-xs"
+                                            />
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="space-y-1.5">

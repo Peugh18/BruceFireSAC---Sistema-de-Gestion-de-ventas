@@ -11,6 +11,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Sede;
 use App\Models\Service;
+use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -39,7 +40,7 @@ class ProcessSaleItem
      */
     protected function processProducto(Sale $sale, array $itemData): SaleItem
     {
-        $product = Product::query()->findOrFail($itemData['product_id']);
+        $product = Product::query()->findOrFail((int) $itemData['product_id']);
 
         if ($product->serializado) {
             throw ValidationException::withMessages([
@@ -55,28 +56,16 @@ class ProcessSaleItem
 
         $almacenId = Sede::find($sale->sede_id)?->almacenEfectivoId() ?? (int) $sale->sede_id;
         $cantidad = (int) $itemData['cantidad'];
-        $stock = (int) InventoryMovement::query()
-            ->where('product_id', $product->id)
-            ->where('sede_id', $almacenId)
-            ->lockForUpdate()
-            ->sum('cantidad');
 
-        if ($stock < $cantidad) {
-            throw ValidationException::withMessages([
-                'items' => "Stock insuficiente de {$product->nombre}: hay {$stock} y se quieren vender {$cantidad}.",
-            ]);
-        }
-
-        $movement = new InventoryMovement;
-        $movement->product_id = $product->id;
-        $movement->sede_id = $almacenId;
-        $movement->tipo = 'salida_venta';
-        $movement->cantidad = -$cantidad;
-        $movement->referencia_type = $sale->getMorphClass();
-        $movement->referencia_id = $sale->id;
-        $movement->user_id = $sale->vendedor_id;
-        $movement->observacion = "Venta {$sale->numero_interno}";
-        $movement->save();
+        // Sin dejar el almacén en negativo; si lleva lote, sale lo que vence
+        // primero y nunca un lote vencido.
+        app(StockPorLote::class)->sacar($product, $almacenId, $cantidad, [
+            'tipo' => 'salida_venta',
+            'referencia_type' => $sale->getMorphClass(),
+            'referencia_id' => $sale->id,
+            'user_id' => $sale->vendedor_id,
+            'observacion' => "Venta {$sale->numero_interno}",
+        ], campo: 'items', verbo: 'vender');
 
         return $sale->items()->create([
             'product_id' => $product->id,
