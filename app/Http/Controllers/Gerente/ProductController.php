@@ -7,8 +7,10 @@ use App\Http\Requests\Gerente\StoreProductRequest;
 use App\Http\Requests\Gerente\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\Team;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -86,7 +88,28 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Team $current_team, Product $producto): RedirectResponse
     {
-        $producto->update($request->validated());
+        $datos = $request->validated();
+
+        // Con stock o ventas registradas, cambiar "con serie" / "sin serie"
+        // descuadraría el Kardex: se crea otro producto.
+        if (array_key_exists('serializado', $datos)
+            && (bool) $datos['serializado'] !== (bool) $producto->serializado
+            && ($producto->movements()->exists() || $producto->units()->exists() || $producto->saleItems()->exists())) {
+            throw ValidationException::withMessages([
+                'serializado' => 'Este producto ya tiene movimientos o ventas: no se puede cambiar si lleva número de serie. Crea un producto nuevo.',
+            ]);
+        }
+
+        $antes = $producto->only(['nombre', 'precio_venta', 'serializado', 'activo', 'codigo_barras']);
+        $producto->update($datos);
+
+        AuditLogger::log(
+            action: 'producto.actualizado',
+            entity: $producto,
+            oldValues: $antes,
+            newValues: $producto->only(array_keys($antes)),
+            userId: $request->user()?->id,
+        );
 
         return redirect()->route('gerente.productos.index', ['current_team' => $current_team])
             ->with('success', 'Producto actualizado exitosamente.');

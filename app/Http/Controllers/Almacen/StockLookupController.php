@@ -82,9 +82,13 @@ class StockLookupController extends Controller
                 ];
             } else {
                 // 2. Si no es serie de unidad, buscar si coincide con un producto
+                // El código de barras del fabricante (EPP) o el código interno
+                // exactos tienen prioridad sobre un nombre parecido.
                 $product = Product::query()
                     ->where('codigo', $search)
+                    ->orWhere('codigo_barras', $search)
                     ->orWhere('nombre', 'like', "%{$search}%")
+                    ->orderByRaw('(codigo = ? or codigo_barras = ?) desc', [$search, $search])
                     ->first();
 
                 if ($product) {

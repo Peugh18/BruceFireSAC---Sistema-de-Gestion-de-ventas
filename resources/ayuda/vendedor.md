@@ -106,6 +106,7 @@
 
 ## Lista de ventas por fechas
 
+- Para anular una venta cobrada en efectivo, ten la caja abierta: la devolución sale de tu turno. Al anular una venta a crédito, lo cobrado de sus cuotas también se registra como devuelto.
 - En **Ventas** ves solo **tus** ventas: cada vendedor corrige o anula lo suyo; el Gerente ve las de todos.
 - Una factura, boleta o nota de venta anulada sale en el PDF con la marca de agua roja **ANULADO**; un certificado vencido o anulado sale con **VENCIDO** o **ANULADO**.
 - Al entrar a **Ventas** ves solo las ventas **de hoy**. Arriba eliges **Desde / Hasta** o un atajo (**Hoy, Ayer, Esta semana, Este mes**); el cambio se aplica solo.
