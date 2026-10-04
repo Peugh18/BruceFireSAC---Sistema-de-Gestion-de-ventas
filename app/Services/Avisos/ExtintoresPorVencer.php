@@ -85,6 +85,70 @@ class ExtintoresPorVencer
     }
 
     /**
+     * Todos los extintores de los clientes agrupados por empresa, vengan
+     * cuando vengan: cuántos tiene, cuántos están vencidos o vencen en 30
+     * días y su próximo vencimiento. Así la pantalla nunca queda vacía
+     * aunque nada venza este mes. Ordenado por el vencimiento más próximo.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function porEmpresa(CarbonInterface $today, int $limite = 300): array
+    {
+        return Equipment::query()
+            ->with(['client', 'product'])
+            ->whereIn('estado', ['activo', 'descargado', 'usado'])
+            ->get()
+            ->groupBy('client_id')
+            ->map(function (Collection $equipos) use ($today): array {
+                /** @var Equipment $primero */
+                $primero = $equipos->first();
+                $client = $primero->client;
+
+                $detalle = $equipos->map(function (Equipment $equipo) use ($today): array {
+                    $descargado = in_array($equipo->estado, ['descargado', 'usado'], true);
+                    $proxima = $descargado
+                        ? $today->toDateString()
+                        : collect([$equipo->proxima_fecha_atencion, $equipo->proxima_prueba_hidrostatica])
+                            ->filter()
+                            ->min(fn (CarbonInterface $fecha) => $fecha->toDateString());
+                    $dias = $proxima ? (int) $today->diffInDays(Carbon::parse($proxima), false) : null;
+
+                    return [
+                        'equipment_id' => $equipo->id,
+                        'numero_serie' => $equipo->numero_serie,
+                        'equipo' => $equipo->product->nombre,
+                        'capacidad' => $equipo->capacidad,
+                        'ubicacion' => $equipo->ubicacion_actual,
+                        'estado' => $descargado ? 'descargado' : ($dias !== null && $dias < 0 ? 'vencido' : ($dias !== null && $dias <= 30 ? 'por_vencer' : 'al_dia')),
+                        'recarga' => $equipo->proxima_fecha_atencion?->toDateString(),
+                        'prueba_hidrostatica' => $equipo->proxima_prueba_hidrostatica?->toDateString(),
+                        'proxima' => $proxima,
+                        'dias' => $dias,
+                    ];
+                })->sortBy(fn (array $equipo) => $equipo['proxima'] ?? '9999-12-31')->values();
+
+                $proximo = $detalle->first();
+
+                return [
+                    'client_id' => $client->id,
+                    'cliente' => $client->razon_social,
+                    'numero_documento' => $client->numero_documento,
+                    'whatsapp' => $client->whatsappInternacional(),
+                    'extintores' => $detalle->count(),
+                    'vencidos' => $detalle->whereIn('estado', ['vencido', 'descargado'])->count(),
+                    'por_vencer' => $detalle->where('estado', 'por_vencer')->count(),
+                    'proximo_vencimiento' => $proximo['proxima'] ?? null,
+                    'dias' => $proximo['dias'] ?? null,
+                    'equipos' => $detalle->all(),
+                ];
+            })
+            ->sortBy(fn (array $empresa) => $empresa['proximo_vencimiento'] ?? '9999-12-31')
+            ->take($limite)
+            ->values()
+            ->all();
+    }
+
+    /**
      * @return array{client_id: int, cliente: string, equipment_id: int, equipo: string, numero_serie: string|null, fecha: string, dias: int, segmento: string, tipo_alerta: string, motivo_alerta: string, telefono: string|null, whatsapp: string|null, origen: string}|null
      */
     protected function alertRow(Equipment $equipment, CarbonInterface $today): ?array

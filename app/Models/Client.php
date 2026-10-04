@@ -103,6 +103,21 @@ class Client extends Model
     }
 
     /**
+     * Número para wa.me (solo dígitos, con el 51 de Perú si es un celular de
+     * 9 dígitos), tomado del WhatsApp o, si no hay, del teléfono.
+     */
+    public function whatsappInternacional(): ?string
+    {
+        $digitos = preg_replace('/\D/', '', (string) ($this->whatsapp ?: $this->telefono));
+
+        if ($digitos === '') {
+            return null;
+        }
+
+        return strlen($digitos) === 9 ? '51'.$digitos : $digitos;
+    }
+
+    /**
      * Dirección que se imprime en el comprobante, o null si no hay una de
      * verdad ("-" es el relleno de CLIENTES VARIOS).
      */

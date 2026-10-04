@@ -72,3 +72,43 @@ test('una cotizacion convertida enlaza a su venta', function () {
             ->where('quotes.data.0.venta.id', $sale->id)
             ->where('quotes.data.0.venta.numero', 'VTA-0077'));
 });
+
+test('sin celular la cotizacion pide agregar numero y al guardarlo queda en la ficha del cliente', function () {
+    $quote = cotizacionConItems(['whatsapp' => null, 'telefono' => null]);
+    $team = ['current_team' => $this->vendedor->currentTeam];
+
+    $this->actingAs($this->vendedor)
+        ->get(route('vendedor.cotizaciones.index', $team))
+        ->assertInertia(fn ($page) => $page
+            ->where('quotes.data.0.whatsapp', null)
+            ->where('quotes.data.0.puede_guardar_numero', true)
+            ->where('quotes.data.0.client_id', $quote->client_id));
+
+    $this->actingAs($this->vendedor)
+        ->patchJson(route('vendedor.clientes.whatsapp', [...$team, 'client' => $quote->client_id]), ['whatsapp' => '12345'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('whatsapp');
+
+    $this->actingAs($this->vendedor)
+        ->patchJson(route('vendedor.clientes.whatsapp', [...$team, 'client' => $quote->client_id]), ['whatsapp' => '987 654 321'])
+        ->assertOk()
+        ->assertJson(['whatsapp' => '51987654321']);
+
+    expect($quote->client->fresh()->whatsapp)->toBe('987654321');
+});
+
+test('a CLIENTES VARIOS no se le guarda numero', function () {
+    $varios = Client::clientesVarios();
+    $quote = Quote::factory()->create(['client_id' => $varios->id, 'vendedor_id' => $this->vendedor->id]);
+    $team = ['current_team' => $this->vendedor->currentTeam];
+
+    $this->actingAs($this->vendedor)
+        ->get(route('vendedor.cotizaciones.index', $team))
+        ->assertInertia(fn ($page) => $page->where('quotes.data.0.puede_guardar_numero', false));
+
+    $this->actingAs($this->vendedor)
+        ->patchJson(route('vendedor.clientes.whatsapp', [...$team, 'client' => $varios->id]), ['whatsapp' => '987654321'])
+        ->assertStatus(422);
+
+    expect($quote->id)->toBeInt();
+});

@@ -358,6 +358,36 @@ class ClientController extends Controller
     }
 
     /**
+     * Guarda el celular de WhatsApp del cliente sin salir de la pantalla (se
+     * pide al enviar una cotización a un cliente que no tiene número).
+     */
+    public function actualizarWhatsapp(Team $current_team, Request $request, Client $client): JsonResponse
+    {
+        abort_if($client->esClientesVarios(), 422, 'CLIENTES VARIOS no lleva número.');
+
+        $request->merge(['whatsapp' => preg_replace('/\D/', '', (string) $request->input('whatsapp'))]);
+        $data = $request->validate([
+            'whatsapp' => ['required', 'regex:/^(51)?9\d{8}$/'],
+        ], [
+            'whatsapp.required' => 'Escribe el celular del cliente.',
+            'whatsapp.regex' => 'Escribe un celular peruano de 9 dígitos que empiece con 9.',
+        ]);
+
+        $antes = $client->whatsapp;
+        $client->update(['whatsapp' => substr($data['whatsapp'], -9)]);
+
+        AuditLogger::log(
+            action: 'cliente.actualizado',
+            entity: $client,
+            oldValues: ['whatsapp' => $antes],
+            newValues: ['whatsapp' => $client->whatsapp],
+            userId: $request->user()->id,
+        );
+
+        return response()->json(['whatsapp' => $client->whatsappInternacional()]);
+    }
+
+    /**
      * Lo que pasó, en palabras que entiende la vendedora.
      */
     protected function textoDeHistorial(AuditLog $log): string

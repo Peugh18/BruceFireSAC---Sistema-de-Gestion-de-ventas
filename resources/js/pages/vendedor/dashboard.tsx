@@ -1,11 +1,16 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    AlertTriangle,
+    Building2,
     Calendar,
     CheckCircle2,
     ClipboardList,
+    Clock3,
     CreditCard,
+    FileText,
     MessageSquare,
     Plus,
+    UserPlus,
     Wallet,
 } from 'lucide-react';
 import CashRegisterController from '@/actions/App/Http/Controllers/Vendedor/CashRegisterController';
@@ -14,9 +19,10 @@ import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteContro
 import SaleController from '@/actions/App/Http/Controllers/Vendedor/SaleController';
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
 import ChispaAvatar from '@/components/chispa-avatar';
-import { RecompraBadge } from '@/components/recompra-badge';
 import type { AlertItem } from '@/pages/vendedor/alertas/index';
 import alertas from '@/routes/vendedor/alertas';
+import clientes from '@/routes/vendedor/clientes';
+import facturacion from '@/routes/vendedor/facturacion';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import { fechaCorta, soles } from '@/lib/utils';
 import type { Auth, Team } from '@/types';
@@ -75,6 +81,26 @@ export type AgendaItem = {
     prioridad: string;
 };
 
+export type Pendientes = {
+    por_enviar: number;
+    rechazados: number;
+    cotizaciones_aceptadas: number;
+    cuotas_vencidas: number;
+    borradores: number;
+};
+
+export type Oportunidad = {
+    client_id: number;
+    cliente: string;
+    numero_documento: string;
+    whatsapp: string | null;
+    extintores: number;
+    vencidos: number;
+    por_vencer: number;
+    proximo_vencimiento: string | null;
+    dias: number | null;
+};
+
 export type Props = {
     ventas_hoy: VentasHoy;
     caja_hoy: CajaHoy;
@@ -83,6 +109,8 @@ export type Props = {
     alertas_top: AlertaItem[];
     agenda_hoy: AgendaItem[];
     por_vencer_semana: AlertItem[];
+    pendientes: Pendientes;
+    oportunidades: Oportunidad[];
 };
 
 function initials(value: string | undefined): string {
@@ -103,7 +131,8 @@ export default function VendedorDashboard({
     cobros_pendientes,
     alertas_top,
     agenda_hoy,
-    por_vencer_semana,
+    pendientes,
+    oportunidades,
 }: Props) {
     const { currentTeam, auth } = usePage<{
         currentTeam?: Team | null;
@@ -139,6 +168,61 @@ export default function VendedorDashboard({
         anulada: 'Anuladas',
     };
     const pagos = caja_hoy?.por_forma_pago;
+    const haceUnAno = new Date();
+    haceUnAno.setFullYear(haceUnAno.getFullYear() - 1);
+    const listaPendientes = [
+        {
+            clave: 'rechazados',
+            cantidad: pendientes.rechazados,
+            texto: 'comprobante(s) rechazado(s) por SUNAT: corrígelos con «Editar»',
+            href: facturacion.index.url(teamSlug, {
+                query: { estado: 'rechazado' },
+            }),
+            icono: AlertTriangle,
+            urgente: true,
+        },
+        {
+            clave: 'por_enviar',
+            cantidad: pendientes.por_enviar,
+            texto: 'comprobante(s) por enviar a SUNAT (se envían solos; revísalos antes)',
+            href: facturacion.index.url(teamSlug, {
+                query: { estado: 'por_enviar' },
+            }),
+            icono: Clock3,
+            urgente: false,
+        },
+        {
+            clave: 'cuotas_vencidas',
+            cantidad: pendientes.cuotas_vencidas,
+            texto: 'cuota(s) vencida(s) por cobrar',
+            href: CollectionController.index.url(teamSlug),
+            icono: CreditCard,
+            urgente: true,
+        },
+        {
+            clave: 'cotizaciones_aceptadas',
+            cantidad: pendientes.cotizaciones_aceptadas,
+            texto: 'cotización(es) aceptada(s) por pasar a venta',
+            href: QuoteController.index.url(teamSlug, {
+                query: { estado: 'aceptada' },
+            }),
+            icono: ClipboardList,
+            urgente: false,
+        },
+        {
+            clave: 'borradores',
+            cantidad: pendientes.borradores,
+            texto: 'venta(s) en borrador sin emitir',
+            href: SaleController.index.url(teamSlug, {
+                query: {
+                    estado: 'borrador',
+                    desde: haceUnAno.toISOString().slice(0, 10),
+                },
+            }),
+            icono: FileText,
+            urgente: false,
+        },
+    ].filter((item) => item.cantidad > 0);
     const resumen = [
         {
             label: 'Ventas de hoy',
@@ -226,6 +310,13 @@ export default function VendedorDashboard({
                             <CreditCard className="size-4" />
                             Cobrar una cuota
                         </Link>
+                        <Link
+                            className="bf-action"
+                            href={clientes.index.url(teamSlug)}
+                        >
+                            <UserPlus className="size-4" />
+                            Clientes
+                        </Link>
                     </nav>
                 </section>
 
@@ -249,6 +340,44 @@ export default function VendedorDashboard({
                             </p>
                         </div>
                     ))}
+                </section>
+
+                <section
+                    className="bf-data-panel"
+                    aria-labelledby="pendientes-heading"
+                >
+                    <h2 id="pendientes-heading">Pendientes de hoy</h2>
+                    {listaPendientes.length === 0 ? (
+                        <p className="text-muted-foreground mt-2 flex items-center gap-2 text-[12.5px]">
+                            <CheckCircle2 className="text-success-strong size-4" />
+                            Todo al día: nada por enviar, cobrar ni pasar a
+                            venta.
+                        </p>
+                    ) : (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            {listaPendientes.map((item) => {
+                                const Icono = item.icono;
+
+                                return (
+                                    <Link
+                                        key={item.clave}
+                                        href={item.href}
+                                        className={`border-border hover:bg-muted/50 flex items-center gap-3 rounded-[11px] border px-3 py-2.5 transition-colors ${item.urgente ? 'border-l-destructive border-l-4' : ''}`}
+                                    >
+                                        <Icono
+                                            className={`size-4 shrink-0 ${item.urgente ? 'text-destructive-strong' : 'text-warning-strong'}`}
+                                        />
+                                        <span className="text-[12.5px]">
+                                            <strong className="text-foreground text-[15px] tabular-nums">
+                                                {item.cantidad}
+                                            </strong>{' '}
+                                            {item.texto}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
                 </section>
 
                 <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
@@ -374,7 +503,7 @@ export default function VendedorDashboard({
                         >
                             <div className="flex items-center justify-between gap-3">
                                 <h2 id="vencimientos-heading">
-                                    Por vencer esta semana
+                                    Clientes para ofrecer recarga
                                 </h2>
                                 <Link
                                     href={alertas.index.url(teamSlug)}
@@ -383,48 +512,48 @@ export default function VendedorDashboard({
                                     Ver todos
                                 </Link>
                             </div>
-                            {por_vencer_semana.length === 0 ? (
+                            {oportunidades.length === 0 ? (
                                 <div className="bf-empty">
                                     <CheckCircle2 className="text-success-strong mx-auto mb-2 size-6" />
                                     <p className="text-foreground font-medium">
-                                        Sin vencimientos en los próximos 7 días
+                                        Ningún cliente vence en los próximos 3
+                                        meses
                                     </p>
                                     <p>
-                                        Consulta los equipos vencidos y próximos
-                                        del mes en Por vencer.
+                                        Revisa el parque completo de tus
+                                        clientes en Por vencer.
                                     </p>
                                 </div>
                             ) : (
                                 <div className="divide-border mt-3 divide-y">
-                                    {por_vencer_semana.map((alerta) => (
+                                    {oportunidades.map((empresa) => (
                                         <div
-                                            key={`${alerta.client_id}-${alerta.fecha}`}
-                                            className="py-4"
+                                            key={empresa.client_id}
+                                            className="flex flex-wrap items-center justify-between gap-2 py-3"
                                         >
-                                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                                <p className="text-[13px] font-semibold">
-                                                    {alerta.cliente}
-                                                </p>
-                                                {alerta.recompra && (
-                                                    <RecompraBadge
-                                                        recompra={
-                                                            alerta.recompra
-                                                        }
-                                                    />
-                                                )}
+                                            <div className="flex min-w-0 items-center gap-2.5">
+                                                <Building2 className="text-muted-foreground size-4 shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-[13px] font-semibold">
+                                                        {empresa.cliente}
+                                                    </p>
+                                                    <p className="text-muted-foreground text-xs">
+                                                        {empresa.extintores}{' '}
+                                                        extintor(es) ·{' '}
+                                                        {empresa.vencidos > 0
+                                                            ? `${empresa.vencidos} vencido(s)`
+                                                            : `vence el ${fechaCorta(empresa.proximo_vencimiento)}`}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-                                                {alerta.cantidad} ×{' '}
-                                                {alerta.equipo} ·{' '}
-                                                {fechaCorta(alerta.fecha)}
-                                            </p>
                                             <Link
-                                                href={alertas.index.url(
-                                                    teamSlug,
-                                                )}
-                                                className="text-primary-strong mt-2 inline-block text-xs font-medium hover:underline"
+                                                href={clientes.show.url({
+                                                    current_team: teamSlug,
+                                                    client: empresa.client_id,
+                                                })}
+                                                className="text-primary-strong text-xs font-medium hover:underline"
                                             >
-                                                Revisar atención
+                                                Ver cliente
                                             </Link>
                                         </div>
                                     ))}

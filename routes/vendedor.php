@@ -52,6 +52,7 @@ Route::prefix('vendedor')
         Route::post('clientes/{client}/verificar-sunat', [ClientController::class, 'verifySunat'])->name('clientes.verificar-sunat');
         Route::put('clientes/{client}', [ClientController::class, 'update'])->name('clientes.update');
         Route::patch('clientes/{client}/direccion', [ClientController::class, 'actualizarDireccion'])->name('clientes.direccion');
+        Route::patch('clientes/{client}/whatsapp', [ClientController::class, 'actualizarWhatsapp'])->name('clientes.whatsapp');
         Route::post('clientes/{client}/extintores/{equipment}/reportar-uso', [ClientController::class, 'reportEquipmentUsed'])->name('clientes.extintores.reportar-uso');
 
         Route::post('clientes/{client}/sites', [ClientSiteController::class, 'store'])->name('clientes.sites.store');

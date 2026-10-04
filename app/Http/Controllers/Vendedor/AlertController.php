@@ -37,6 +37,8 @@ class AlertController extends Controller
     {
         return Inertia::render('vendedor/alertas/index', [
             'alerts' => $porVencer->segmentos(today()),
+            'empresas' => $porVencer->porEmpresa(today()),
+            'hoy' => today()->toDateString(),
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Http\Controllers\Controller;
 use App\Models\CashRegister;
+use App\Models\ElectronicDocument;
 use App\Models\Installment;
 use App\Models\Quote;
 use App\Models\Sale;
@@ -27,9 +28,11 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // 1. Ventas de HOY del vendedor autenticado
+        // 1. Ventas emitidas HOY por el vendedor autenticado (no cuentan los
+        // borradores ni las anuladas, igual que en la lista de Ventas).
         $ventasHoyQuery = Sale::query()
             ->where('vendedor_id', $user->id)
+            ->where('estado', 'confirmada')
             ->whereDate('fecha', today());
 
         $ventasHoyTotal = (float) $ventasHoyQuery->sum('total');
@@ -160,6 +163,55 @@ class DashboardController extends Controller
             'alertas_top' => $alertasTop,
             'agenda_hoy' => $agendaHoy,
             'por_vencer_semana' => app(ExtintoresPorVencer::class)->segmentos(today(), 5)['esta_semana'],
+            'pendientes' => $this->pendientes($user->id, $user->sedeRestringidaId()),
+            // Clientes para ofrecer la recarga: con extintores vencidos o que
+            // vencen en los próximos 3 meses, del más urgente al más lejano.
+            'oportunidades' => collect(app(ExtintoresPorVencer::class)->porEmpresa(today()))
+                ->filter(fn (array $empresa) => $empresa['vencidos'] > 0 || ($empresa['dias'] !== null && $empresa['dias'] <= 90))
+                ->take(5)
+                ->map(fn (array $empresa) => collect($empresa)->except('equipos')->all())
+                ->values()
+                ->all(),
         ]);
+    }
+
+    /**
+     * Lo que el vendedor tiene que resolver: cada número enlaza a la pantalla
+     * donde se atiende.
+     *
+     * @return array{por_enviar: int, rechazados: int, cotizaciones_aceptadas: int, cuotas_vencidas: int, borradores: int}
+     */
+    protected function pendientes(int $vendedorId, ?int $sedeId): array
+    {
+        $documentos = fn (array $estados) => ElectronicDocument::query()
+            ->whereIn('tipo', ['factura', 'boleta'])
+            ->whereIn('sunat_estado', $estados)
+            ->whereHas('sale', fn ($query) => $query->where('vendedor_id', $vendedorId)->where('estado', 'confirmada'))
+            ->count();
+
+        return [
+            'por_enviar' => $documentos(['por_enviar']),
+            // Solo los rechazos que aún no se corrigieron (la venta sigue con
+            // ese comprobante como el último).
+            'rechazados' => Sale::query()
+                ->where('vendedor_id', $vendedorId)
+                ->where('estado', 'confirmada')
+                ->with('electronicDocuments')
+                ->whereHas('electronicDocuments', fn ($query) => $query->whereIn('sunat_estado', ['rechazado', 'excepcion']))
+                ->get()
+                ->filter(fn (Sale $sale) => (bool) $sale->comprobanteElectronico()?->fueRechazado())
+                ->count(),
+            'cotizaciones_aceptadas' => Quote::query()
+                ->where('estado', 'aceptada')
+                ->whereDoesntHave('sale')
+                ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
+                ->count(),
+            'cuotas_vencidas' => Installment::query()
+                ->whereIn('estado', ['pendiente', 'vencido'])
+                ->whereDate('fecha_vencimiento', '<', today())
+                ->whereHas('sale', fn ($query) => $query->where('vendedor_id', $vendedorId)->where('estado', 'confirmada'))
+                ->count(),
+            'borradores' => Sale::query()->where('vendedor_id', $vendedorId)->where('estado', 'borrador')->count(),
+        ];
     }
 }
