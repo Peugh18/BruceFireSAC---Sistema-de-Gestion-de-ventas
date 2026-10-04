@@ -215,13 +215,16 @@ class ComprobantePdfService
     }
 
     /**
-     * Momento del último cambio que afecta cómo se ve el comprobante.
+     * Momento del último cambio que afecta cómo se ve el comprobante: los
+     * datos de la empresa y sus cuentas (Gerente) o una nueva versión de la
+     * plantilla instalada con el código.
      */
     protected function ultimoCambioDeDiseno(): int
     {
         $empresa = CompanySetting::current()->updated_at?->getTimestamp() ?? 0;
         $cuentas = CompanyBankAccount::query()->max('updated_at');
+        $plantilla = max((int) @filemtime(resource_path('views/pdf/comprobante.blade.php')), (int) @filemtime(__FILE__));
 
-        return max($empresa, $cuentas ? Carbon::parse($cuentas)->getTimestamp() : 0);
+        return max($empresa, $cuentas ? Carbon::parse($cuentas)->getTimestamp() : 0, $plantilla);
     }
 }

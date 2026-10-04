@@ -341,3 +341,24 @@ test('si el gerente cambia el diseño, el pdf ya emitido se vuelve a dibujar al 
 
     expect(Storage::disk('local')->get($documento->fresh()->pdf_path))->not->toBe($antes);
 });
+
+test('un pdf generado con la plantilla anterior se vuelve a dibujar al descargarlo', function () {
+    $user = vendedorUser();
+    $documento = comprobanteDe(ventaConfirmada(Client::factory()->create(), vendedor: $user));
+
+    // Simula un PDF hecho antes de instalar la versión actual de la plantilla,
+    // con los datos de la empresa sin tocar desde antes de ese PDF.
+    $plantilla = max(filemtime(resource_path('views/pdf/comprobante.blade.php')), filemtime(app_path('Services/Billing/ComprobantePdfService.php')));
+    Storage::disk('local')->put($documento->pdf_path, '%PDF-viejo');
+    touch(Storage::disk('local')->path($documento->pdf_path), $plantilla - 3600);
+    $empresa = CompanySetting::current();
+    $empresa->timestamps = false;
+    $empresa->forceFill(['updated_at' => now()->setTimestamp($plantilla - 7200)])->save();
+
+    $this->actingAs($user)
+        ->get(route('vendedor.facturacion.pdf', ['current_team' => $user->currentTeam, 'electronic_document' => $documento]))
+        ->assertOk();
+
+    expect(Storage::disk('local')->get($documento->fresh()->pdf_path))->not->toBe('%PDF-viejo')
+        ->and(Storage::disk('local')->get($documento->fresh()->pdf_path))->toStartWith('%PDF-');
+});
