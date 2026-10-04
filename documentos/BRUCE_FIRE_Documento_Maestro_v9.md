@@ -5100,3 +5100,20 @@ Código: `resources/views/pdf/comprobante.blade.php`,
 Pendiente: aplicar el mismo diseño a la nota de venta y a la
 cotización; campos por venta como N° de orden de compra o de guía de
 remisión si el negocio los usa.
+
+## 88.1 Datos del cliente según SUNAT (2026-10-04)
+
+Investigado en la normativa de la representación impresa (RS 097-2012 y
+modificatorias, anexos de RS 114-2019 y RS 123-2022):
+
+- **Factura:** RUC y razón social del cliente obligatorios. La dirección
+  no la exige el XML, pero **Bruce Fire la vuelve obligatoria**: no se
+  emite una factura si el cliente no tiene dirección fiscal. Si falta,
+  la vendedora la completa en la misma venta y queda guardada en la
+  ficha del cliente.
+- **Boleta:** nombre y DNI solo obligatorios si la venta supera S/ 700
+  (el sistema ya lo controla con el límite de CLIENTES VARIOS). La
+  dirección es opcional; si el cliente la tiene, se imprime.
+- El relleno "-" de CLIENTES VARIOS ya no se imprime como dirección
+  (`Client::direccionImprimible()`).
+- En una venta para vehículo, la referencia se imprime como **PLACA**.

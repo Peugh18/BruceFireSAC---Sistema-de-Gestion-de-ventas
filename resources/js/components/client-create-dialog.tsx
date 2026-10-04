@@ -250,7 +250,9 @@ function ClientFormFields({
 
             <div className="sm:col-span-2">
                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                    Direccion fiscal
+                    {data.tipo_documento === 'ruc'
+                        ? 'Dirección fiscal (obligatoria para facturar)'
+                        : 'Dirección (opcional, sale en la boleta)'}
                 </Label>
                 <Input
                     value={data.direccion_fiscal}

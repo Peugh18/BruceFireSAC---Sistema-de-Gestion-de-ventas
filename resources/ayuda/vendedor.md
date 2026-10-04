@@ -93,3 +93,8 @@
 - "Stock insuficiente": no hay suficientes unidades en el almacén de tu sede.
 - "Su RUC no está Activo y Habido": SUNAT no permite facturarle; revisa el RUC.
 - No aparece un servicio en el buscador: pide al Gerente que lo cree en Servicios.
+
+## Dirección del cliente en factura y boleta
+
+- **Factura:** el cliente debe tener dirección fiscal. Normalmente viene sola al consultar el RUC; si falta, al elegir Factura aparece un recuadro rojo para escribirla y **Guardar dirección** (queda en su ficha).
+- **Boleta:** la dirección es opcional. Si el cliente con DNI te la da, regístrala y saldrá impresa.

@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\User;
+use App\Services\Billing\ComprobantePdfService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -372,4 +373,42 @@ test('billing:redibujar-pdf vuelve a dibujar todas las facturas y boletas', func
         ->assertSuccessful();
 
     expect(Storage::disk('local')->get($documento->fresh()->pdf_path))->not->toBe('%PDF-viejo');
+});
+
+test('no se emite factura a un cliente sin direccion fiscal y se puede completar desde la venta', function () {
+    $user = vendedorUser();
+    $sinDireccion = Client::factory()->create(['direccion_fiscal' => null]);
+
+    expect(fn () => ventaConfirmada($sinDireccion, vendedor: $user))
+        ->toThrow(ValidationException::class, 'Falta la dirección fiscal');
+
+    $this->actingAs($user)
+        ->patchJson(route('vendedor.clientes.direccion', ['current_team' => $user->currentTeam, 'client' => $sinDireccion]), ['direccion_fiscal' => 'Av. España 1234, Trujillo'])
+        ->assertOk()
+        ->assertJson(['direccion_fiscal' => 'Av. España 1234, Trujillo']);
+
+    expect(comprobanteDe(ventaConfirmada($sinDireccion->fresh(), vendedor: $user))->sunat_estado)->toBe('por_enviar');
+});
+
+test('la boleta a un cliente con dni no exige direccion y no imprime un guion de relleno', function () {
+    $sale = ventaConfirmada(Client::factory()->dni()->create(['direccion_fiscal' => '-']), 'boleta');
+    $documento = comprobanteDe($sale);
+
+    $html = app(ComprobantePdfService::class)->html($documento, (string) Storage::disk('local')->get($documento->xml_path));
+
+    expect($documento->sunat_estado)->toBe('por_enviar')
+        ->and($html)->not->toContain('>Dirección<')
+        ->and($sale->client->direccionImprimible())->toBeNull();
+});
+
+test('en una venta para vehiculo la referencia se imprime como placa', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $sale->update(['destino' => 'vehiculo', 'referencia' => 'T2R-458']);
+    $documento = comprobanteDe($sale);
+
+    $html = app(ComprobantePdfService::class)->html($documento->fresh(), (string) Storage::disk('local')->get($documento->xml_path));
+
+    expect($html)->toContain('PLACA')
+        ->and($html)->toContain('T2R-458')
+        ->and($html)->toContain($sale->client->direccion_fiscal);
 });

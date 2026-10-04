@@ -10,6 +10,7 @@ import {
 } from 'react';
 
 import ChispaAvatar from '@/components/chispa-avatar';
+import { leerCookie } from '@/lib/cookies';
 import { asistente } from '@/routes';
 
 type Mensaje = { role: 'user' | 'assistant'; content: string };
@@ -28,15 +29,6 @@ const SUGERENCIAS: Record<string, string[]> = {
     almacen: ['¿Cómo registro una recepción?', '¿Cómo ajusto el stock?'],
     tecnico: ['¿Cómo registro una deficiencia?', '¿Qué hago en una entrega?'],
 };
-
-function leerCookie(nombre: string) {
-    const valor = document.cookie
-        .split('; ')
-        .find((c) => c.startsWith(`${nombre}=`))
-        ?.split('=')[1];
-
-    return valor ? decodeURIComponent(valor) : '';
-}
 
 /**
  * Muestra el texto del asistente con **negritas** y saltos de línea.
