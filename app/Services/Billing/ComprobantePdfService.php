@@ -69,6 +69,21 @@ class ComprobantePdfService
             return $document->pdf_path;
         }
 
+        return $this->redibujar($document);
+    }
+
+    /**
+     * Vuelve a dibujar el PDF de una factura o boleta con su XML firmado, sin
+     * importar cuándo se generó. Devuelve null si no tiene XML guardado.
+     */
+    public function redibujar(ElectronicDocument $document): ?string
+    {
+        if (! in_array($document->tipo, ['factura', 'boleta'], true)
+            || ! $document->xml_path
+            || ! Storage::disk('local')->exists($document->xml_path)) {
+            return null;
+        }
+
         $path = $this->generate($document, (string) Storage::disk('local')->get($document->xml_path));
 
         if ($path !== $document->pdf_path) {

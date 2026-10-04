@@ -362,3 +362,14 @@ test('un pdf generado con la plantilla anterior se vuelve a dibujar al descargar
     expect(Storage::disk('local')->get($documento->fresh()->pdf_path))->not->toBe('%PDF-viejo')
         ->and(Storage::disk('local')->get($documento->fresh()->pdf_path))->toStartWith('%PDF-');
 });
+
+test('billing:redibujar-pdf vuelve a dibujar todas las facturas y boletas', function () {
+    $documento = comprobanteDe(ventaConfirmada(Client::factory()->create()));
+    Storage::disk('local')->put($documento->pdf_path, '%PDF-viejo');
+
+    $this->artisan('billing:redibujar-pdf')
+        ->expectsOutputToContain('1 de 1 comprobante(s) redibujados')
+        ->assertSuccessful();
+
+    expect(Storage::disk('local')->get($documento->fresh()->pdf_path))->not->toBe('%PDF-viejo');
+});
