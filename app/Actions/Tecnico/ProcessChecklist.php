@@ -10,6 +10,7 @@ use App\Models\ServiceOrderEvent;
 use App\Models\TechnicalChecklist;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class ProcessChecklist
@@ -61,6 +62,11 @@ class ProcessChecklist
     ): TechnicalChecklist {
         if (! isset($data['items']) || ! is_array($data['items'])) {
             throw new InvalidArgumentException('El checklist debe incluir los elementos evaluados.');
+        }
+
+        // Solo se revisan los extintores de esta orden (no los de otro cliente).
+        if (! $serviceOrder->equipments()->whereKey($equipment->id)->exists()) {
+            throw ValidationException::withMessages(['equipment' => 'Ese extintor no está registrado en esta orden.']);
         }
 
         return DB::transaction(function () use ($serviceOrder, $equipment, $user, $data) {

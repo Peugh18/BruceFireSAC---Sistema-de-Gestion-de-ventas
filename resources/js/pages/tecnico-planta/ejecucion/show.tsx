@@ -307,6 +307,7 @@ export default function EjecucionShow({
                             <span>Marcar Trabajo como Terminado en Taller</span>
                         </button>
                     ) : order.estado === 'trabajo_terminado' ||
+                      order.estado === 'pendiente_datos' ||
                       order.estado === 'datos_completos' ? (
                         <div className="space-y-3">
                             <label className="bg-card flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 p-3 text-xs font-semibold text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
@@ -338,13 +339,46 @@ export default function EjecucionShow({
                                 </span>
                             </button>
                         </div>
-                    ) : (
+                    ) : order.estado === 'listo_certificado' ? (
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                <ShieldCheck className="text-success-strong h-5 w-5 flex-shrink-0" />
+                                <span>
+                                    Certificado emitido. Avisa al vendedor que
+                                    los equipos están listos.
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => handleAdvance('listo_entrega')}
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+                            >
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>Marcar lista para entrega</span>
+                            </button>
+                        </div>
+                    ) : order.estado === 'esperando_autorizacion' ? (
+                        <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
+                            <ShieldCheck className="h-5 w-5 flex-shrink-0" />
+                            <span>
+                                Esperando que el cliente autorice las
+                                reparaciones (lo registra el vendedor).
+                            </span>
+                        </div>
+                    ) : ['listo_entrega', 'entregado', 'cerrado'].includes(
+                          order.estado,
+                      ) ? (
                         <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
                             <ShieldCheck className="text-success-strong h-5 w-5 flex-shrink-0" />
                             <span>
-                                Trabajo de taller finalizado y certificado
-                                emitido.
+                                Trabajo terminado y certificado emitido: la
+                                orden ya está para entregar.
                             </span>
+                        </div>
+                    ) : (
+                        <div className="text-muted-foreground rounded-xl border p-3 text-xs">
+                            Primero recibe la orden en planta para empezar el
+                            trabajo.
                         </div>
                     )}
                 </div>

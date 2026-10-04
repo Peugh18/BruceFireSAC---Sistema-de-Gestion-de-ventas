@@ -80,7 +80,7 @@ class AvisosDelVendedor
     /** @return Builder<ServiceOrder> */
     protected function listasParaEntregar(User $user): Builder
     {
-        return $this->deSuSede(ServiceOrder::query(), $user)->where('estado', 'listo_entrega');
+        return $this->deSuSede(ServiceOrder::query(), $user)->whereIn('estado', ServiceOrder::ESTADOS_LISTOS);
     }
 
     /** @return Builder<ServiceOrder> */

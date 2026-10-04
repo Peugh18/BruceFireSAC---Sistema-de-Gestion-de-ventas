@@ -62,6 +62,22 @@ class ServiceOrder extends Model
     ];
 
     /**
+     * Terminadas en taller y aún sin entregar al cliente: con el certificado
+     * emitido ya se pueden entregar en mostrador.
+     *
+     * @var list<string>
+     */
+    public const ESTADOS_LISTOS = ['listo_certificado', 'listo_entrega'];
+
+    /**
+     * Desde dónde se registra la entrega en mostrador (`entregado` viene de
+     * campo, sin el acta del cliente todavía).
+     *
+     * @var list<string>
+     */
+    public const ESTADOS_PARA_ENTREGAR = ['listo_certificado', 'listo_entrega', 'entregado'];
+
+    /**
      * Mapa de los 13 estados finos al indicador de 4 puntos del mockup de
      * Vendedor (Asignada / En proceso / Completada / Cerrada).
      *

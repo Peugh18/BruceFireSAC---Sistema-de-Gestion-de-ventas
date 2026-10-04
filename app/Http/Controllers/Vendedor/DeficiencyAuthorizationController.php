@@ -54,6 +54,7 @@ class DeficiencyAuthorizationController extends Controller
             $deficiency->serviceOrder->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'payload' => ['accion' => 'saldo_adicional_pendiente', 'deficiency_id' => $deficiency->id, 'mensaje' => 'La orden ya fue cobrada; el adicional autorizado queda como saldo pendiente por cobrar.']]);
         }
         $this->recordEvent($deficiency, $request->user()->id, true);
+        $action->releaseFromAuthorizationHold($deficiency->serviceOrder, $request->user());
 
         AuditLogger::log(
             action: 'deficiencia.autorizacion',

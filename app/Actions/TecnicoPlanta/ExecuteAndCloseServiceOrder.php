@@ -16,6 +16,7 @@ use App\Models\ServiceOrderEvent;
 use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class ExecuteAndCloseServiceOrder
@@ -40,6 +41,12 @@ class ExecuteAndCloseServiceOrder
         if ($cantidad <= 0) {
             throw new InvalidArgumentException('La cantidad de repuestos debe ser mayor a cero.');
         }
+
+        if ($deficiency->service_order_id !== $serviceOrder->id) {
+            throw ValidationException::withMessages(['deficiency' => 'Esa deficiencia no es de esta orden.']);
+        }
+
+        self::asegurarQueSePuedeReparar($deficiency);
 
         return DB::transaction(function () use ($serviceOrder, $deficiency, $product, $cantidad, $user, $observacion) {
             $sedeId = $serviceOrder->sede_id ?: Sede::where('activo', true)->first()?->id ?: 1;
@@ -89,6 +96,24 @@ class ExecuteAndCloseServiceOrder
 
             return $movement;
         });
+    }
+
+    /**
+     * Solo se repara lo que el cliente aceptó: una deficiencia que espera su
+     * autorización, que rechazó o que ya se resolvió no gasta repuestos.
+     */
+    public static function asegurarQueSePuedeReparar(Deficiency $deficiency): void
+    {
+        $motivo = match ($deficiency->estado) {
+            'esperando_autorizacion' => 'Esta reparación todavía espera la autorización del cliente.',
+            'rechazada' => 'El cliente rechazó esta reparación: no se puede ejecutar.',
+            'resuelta' => 'Esta deficiencia ya está resuelta.',
+            default => null,
+        };
+
+        if ($motivo !== null) {
+            throw ValidationException::withMessages(['deficiency' => $motivo]);
+        }
     }
 
     /**
