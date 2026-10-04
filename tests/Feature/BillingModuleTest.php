@@ -322,3 +322,23 @@ test('comprobantes sunat muestra los de hoy y filtra por fecha de emision', func
     $this->actingAs($user)->get(route('vendedor.facturacion.index', [...$team, 'desde' => today()->subDays(7)->toDateString(), 'hasta' => today()->subDays(3)->toDateString()]))
         ->assertInertia(fn ($page) => $page->where('totalFiltrados', 1)->where('documents.data.0.correlativo', 71));
 });
+
+test('una nota de credito por devolucion total anula la venta y una por item no', function () {
+    foreach (['06' => 'anulada', '07' => 'confirmada'] as $motivo => $esperado) {
+        $sale = Sale::factory()->create(['estado' => 'confirmada', 'total' => 100, 'condicion_pago' => 'credito']);
+        $original = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'sunat_estado' => 'aceptado']);
+
+        app(IssueCreditNote::class)->handle($original, $motivo, 'Devolución del cliente', 100);
+
+        expect($sale->fresh()->estado)->toBe($esperado);
+    }
+});
+
+test('en comprobantes sunat una nota de credito muestra su importe y no el de la venta', function () {
+    $user = vendedorUser();
+    $sale = Sale::factory()->create(['vendedor_id' => $user->id, 'total' => 500]);
+    ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'nota_credito', 'serie' => 'FC01', 'correlativo' => 3, 'importe' => 120]);
+
+    $this->actingAs($user)->get(route('vendedor.facturacion.index', ['current_team' => $user->currentTeam, 'tipo' => 'nota']))
+        ->assertInertia(fn ($page) => $page->where('documents.data.0.total', '120.00'));
+});

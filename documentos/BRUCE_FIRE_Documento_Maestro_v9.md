@@ -5212,3 +5212,39 @@ mismo logo, colores, datos del cliente, placa o sede, cuotas, cuentas
 y condiciones. Por ser un documento interno no lleva QR ni la leyenda de
 SUNAT, sino "Documento interno de control. No es un comprobante de pago
 electrónico". La plantilla anterior se eliminó.
+
+# 90. Auditoría por roles y correcciones (2026-10-04)
+
+Se revisaron los cinco roles. Lo corregido, por parte:
+
+- **A · Taller:** con el certificado emitido la orden se entrega en
+  mostrador (`ServiceOrder::ESTADOS_LISTOS`) y aparece en los avisos del
+  vendedor; botón "Marcar lista para entrega". Una orden no se entrega dos
+  veces y la entrega no vuelve a renovar fechas. No se gastan repuestos en
+  deficiencias sin autorizar, rechazadas o de otra orden; aprobar la última
+  deficiencia libera la orden; el checklist solo es de equipos de la orden.
+- **B · Cobranzas y caja:** solo cuotas de ventas `confirmada`; parciales
+  vencidas cuentan como vencidas; KPIs por saldo. Devoluciones en
+  `sale_refunds` (los cobros no admiten negativos): la caja descuenta el
+  efectivo devuelto en el turno en que sale. Editar una venta cobrada en
+  otro turno registra hoy solo la diferencia. Efectivo exige caja abierta
+  también en el servidor. Arqueo ciego real. Un solo cálculo del turno:
+  `CashRegister::movimientosPorFormaDePago()`.
+- **C · Gerente:** ventas `confirmada`; cotizaciones pendientes = emitidas
+  o enviadas; stock unificado `Product::conStock()/bajoMinimo()` (serie por
+  unidades, sin serie por Kardex); reporte de inventario por sede sin error;
+  el Inicio no modifica cuotas; faltantes y sobrantes de caja por separado.
+- **D · Almacén:** salidas con serie restan (-1) y una migración corrige
+  las grabadas; ajustes, recepciones y traslados por almacén propio, sin
+  stock negativo (`InventoryMovement::exigirSaldo` con bloqueo); no se
+  revive un extintor vendido; el Gerente elige el origen del traslado.
+- **E · Técnico de campo:** solo extintores del cliente de la orden
+  (`EquipoDeLaOrden`); serie repetida se reutiliza; acciones no se repiten;
+  certificado de inspección solo con conformes (`tipo_atencion` inspección).
+- **F · Notas de crédito:** motivos 01, 02 y 06 que cubren el total anulan
+  la venta; Comprobantes muestra el importe de la nota.
+- **G · EPP:** `products.codigo_barras` (único) y `categoria`; se escanea en
+  Recepciones, Venta y Cotización. Cada modelo y talla de EPP es un producto
+  sin serie. Casos de error: código no registrado (avisa, no inventa),
+  cantidad mayor al stock (avisa al escanear y el servidor lo bloquea),
+  código repetido entre productos (rechazado).

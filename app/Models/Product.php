@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * @property int $id
  * @property string $codigo
+ * @property string|null $codigo_barras
  * @property string $nombre
  * @property string|null $categoria
  * @property string|null $descripcion
@@ -36,6 +37,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[Fillable([
     'codigo',
+    'codigo_barras',
     'nombre',
     'categoria',
     'descripcion',
@@ -61,6 +63,21 @@ class Product extends Model
             'activo' => 'boolean',
         ];
     }
+
+    /**
+     * Categorías del catálogo: ordenan el catálogo y deciden qué se avisa
+     * en Por vencer (los extintores).
+     *
+     * @var array<string, string>
+     */
+    public const CATEGORIAS = [
+        'extintor' => 'Extintor',
+        'epp' => 'EPP (seguridad personal)',
+        'senalizacion' => 'Señalización',
+        'repuesto' => 'Repuesto / componente',
+        'accesorio' => 'Accesorio (gabinete, soporte)',
+        'otro' => 'Otro',
+    ];
 
     /**
      * Agrega el stock disponible a la consulta: los que llevan serie cuentan

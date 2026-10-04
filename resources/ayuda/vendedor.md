@@ -83,7 +83,9 @@
 
 ## Cobranzas y alertas
 
-- **Cobranzas**: cuotas pendientes y vencidas de las ventas a crédito; registra los pagos.
+- **Cobranzas**: cuotas pendientes y vencidas de tus ventas emitidas (un borrador o una venta anulada no se cobra); registra los pagos. Cobrar en **efectivo** exige la caja abierta.
+- **Caja**: el arqueo es ciego: cuentas el cajón y recién al cerrar ves el esperado. Si anulas o rebajas una venta, la devolución sale de la caja del turno en que devuelves el dinero; si editas una venta de un turno anterior, solo se registra hoy la diferencia.
+- **Órdenes listas**: una orden con el certificado emitido ya se puede entregar en mostrador (una sola vez).
 - **Alertas de Vencimiento**: clientes con recarga o prueba hidrostática por vencer, para ofrecerles el servicio.
 
 ## Errores comunes
@@ -93,6 +95,9 @@
 - "Stock insuficiente": no hay suficientes unidades en el almacén de tu sede.
 - "Su RUC no está Activo y Habido": SUNAT no permite facturarle; revisa el RUC.
 - No aparece un servicio en el buscador: pide al Gerente que lo cree en Servicios.
+- "El código ... no está registrado": escaneaste un EPP cuyo código de barras no está en ningún producto; pide al Gerente que lo agregue.
+- "Solo hay N en el almacén": no se puede vender más de lo que hay.
+- Nota de crédito por **anulación**, **error de RUC** o **devolución total** que cubre el total: la venta se anula (vuelve el stock y se cierran las cuotas).
 
 ## Dirección del cliente en factura y boleta
 

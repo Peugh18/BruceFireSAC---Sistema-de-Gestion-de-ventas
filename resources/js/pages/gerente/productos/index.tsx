@@ -17,6 +17,8 @@ import GerenteLayout from '@/layouts/gerente-layout';
 type ProductItem = {
     id: number;
     codigo: string;
+    codigo_barras: string | null;
+    categoria: string | null;
     nombre: string;
     descripcion: string | null;
     unidad_medida: string;
@@ -59,6 +61,7 @@ type PageProps = {
     productos: PaginatedProducts;
     filters: ProductFilters;
     kpis: ProductKpis;
+    categorias: Record<string, string>;
     flash?: {
         success?: string;
         error?: string;
@@ -75,7 +78,7 @@ function formatCurrency(amount: number): string {
 }
 
 export default function ProductosIndex() {
-    const { currentTeam, productos, filters, kpis, flash } =
+    const { currentTeam, productos, filters, kpis, categorias, flash } =
         usePage<PageProps>().props;
 
     const [buscar, setBuscar] = useState(filters.buscar || '');
@@ -86,6 +89,8 @@ export default function ProductosIndex() {
 
     const form = useForm({
         codigo: '',
+        codigo_barras: '',
+        categoria: '',
         nombre: '',
         descripcion: '',
         unidad_medida: 'NIU',
@@ -101,6 +106,8 @@ export default function ProductosIndex() {
         form.reset();
         form.setData({
             codigo: '',
+            codigo_barras: '',
+            categoria: '',
             nombre: '',
             descripcion: '',
             unidad_medida: 'NIU',
@@ -117,6 +124,8 @@ export default function ProductosIndex() {
         setEditingProduct(product);
         form.setData({
             codigo: product.codigo,
+            codigo_barras: product.codigo_barras ?? '',
+            categoria: product.categoria ?? '',
             nombre: product.nombre,
             descripcion: product.descripcion || '',
             unidad_medida: product.unidad_medida,
@@ -425,6 +434,11 @@ export default function ProductosIndex() {
                                             >
                                                 <td className="text-foreground px-4 py-3 font-mono font-bold">
                                                     {p.codigo}
+                                                    {p.codigo_barras ? (
+                                                        <div className="text-muted-foreground text-[10.5px] font-normal">
+                                                            ▮▮ {p.codigo_barras}
+                                                        </div>
+                                                    ) : null}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <div className="text-foreground font-medium">
@@ -602,6 +616,64 @@ export default function ProductosIndex() {
                                 onSubmit={handleSubmit}
                                 className="mt-4 space-y-4 text-xs"
                             >
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-foreground/80 block font-semibold">
+                                            Código de barras del fabricante
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={form.data.codigo_barras}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'codigo_barras',
+                                                    e.target.value.trim(),
+                                                )
+                                            }
+                                            placeholder="Escanéalo aquí (EAN)"
+                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
+                                        />
+                                        <p className="text-muted-foreground mt-1">
+                                            Para EPP y repuestos que ya traen
+                                            código: luego se escanea al recibir
+                                            y al vender.
+                                        </p>
+                                        {form.errors.codigo_barras && (
+                                            <p className="mt-1 text-red-600">
+                                                {form.errors.codigo_barras}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-foreground/80 block font-semibold">
+                                            Categoría
+                                        </label>
+                                        <select
+                                            value={form.data.categoria}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'categoria',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                        >
+                                            <option value="">
+                                                Sin categoría
+                                            </option>
+                                            {Object.entries(categorias).map(
+                                                ([valor, etiqueta]) => (
+                                                    <option
+                                                        key={valor}
+                                                        value={valor}
+                                                    >
+                                                        {etiqueta}
+                                                    </option>
+                                                ),
+                                            )}
+                                        </select>
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="text-foreground/80 block font-semibold">

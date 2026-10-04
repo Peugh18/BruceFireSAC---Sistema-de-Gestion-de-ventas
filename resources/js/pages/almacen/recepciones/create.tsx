@@ -12,7 +12,7 @@ import {
     Trash2,
     Truck,
 } from 'lucide-react';
-import { FormEvent } from 'react';
+import { FormEvent, KeyboardEvent, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,6 +31,7 @@ export type SedeOption = {
 export type ProductOption = {
     id: number;
     codigo: string;
+    codigo_barras?: string | null;
     nombre: string;
     unidad_medida: string;
     serializado: boolean;
@@ -119,6 +120,65 @@ export default function RecepcionesCreate({
                 unidades: firstProd.serializado ? [newUnit()] : [],
             },
         ]);
+    };
+
+    const [escaneo, setEscaneo] = useState('');
+    const [avisoEscaneo, setAvisoEscaneo] = useState<string | null>(null);
+
+    /**
+     * Lector de barras: cada lectura suma una unidad del producto (o agrega
+     * su línea). Sirve con el código del fabricante (EPP, repuestos) o el
+     * código interno.
+     */
+    const alEscanear = (event: KeyboardEvent<HTMLInputElement>) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+
+        const codigo = escaneo.trim();
+        if (!codigo) return;
+
+        const prod = products.find(
+            (p) =>
+                p.codigo_barras === codigo ||
+                p.codigo.toUpperCase() === codigo.toUpperCase(),
+        );
+        setEscaneo('');
+
+        if (!prod) {
+            setAvisoEscaneo(
+                `El código ${codigo} no está registrado en ningún producto: pídele al Gerente que lo agregue en Productos.`,
+            );
+            return;
+        }
+
+        setAvisoEscaneo(null);
+        const index = data.items.findIndex((i) => i.product_id === prod.id);
+
+        if (index === -1) {
+            setData('items', [
+                ...data.items,
+                {
+                    product_id: prod.id,
+                    cantidad: 1,
+                    cantidad_conforme: 1,
+                    observacion_item: '',
+                    unidades: prod.serializado ? [newUnit()] : [],
+                },
+            ]);
+            return;
+        }
+
+        const linea = data.items[index];
+        const next = [...data.items];
+        next[index] = {
+            ...linea,
+            cantidad: linea.cantidad + 1,
+            cantidad_conforme: linea.cantidad_conforme + 1,
+            unidades: prod.serializado
+                ? [...linea.unidades, newUnit()]
+                : linea.unidades,
+        };
+        setData('items', next);
     };
 
     const removeLine = (index: number) => {
@@ -386,6 +446,16 @@ export default function RecepcionesCreate({
                             </h2>
                         </div>
 
+                        <div className="flex flex-1 justify-end px-3">
+                            <input
+                                value={escaneo}
+                                onChange={(e) => setEscaneo(e.target.value)}
+                                onKeyDown={alEscanear}
+                                placeholder="Escanear código de barras..."
+                                aria-label="Escanear código de barras"
+                                className="border-border bg-muted/40 h-8 w-full max-w-[260px] rounded-[8px] border px-3 font-mono text-[12px] outline-none"
+                            />
+                        </div>
                         <Button
                             type="button"
                             onClick={addLine}
@@ -395,6 +465,14 @@ export default function RecepcionesCreate({
                             <Plus className="size-3.5" />
                             <span>Agregar Ítem</span>
                         </Button>
+                        {avisoEscaneo ? (
+                            <p
+                                className="text-destructive-strong text-[11px] font-semibold"
+                                role="alert"
+                            >
+                                {avisoEscaneo}
+                            </p>
+                        ) : null}
                         {Object.values(errors)[0] ? (
                             <p
                                 className="text-destructive-strong text-[11px] font-semibold"

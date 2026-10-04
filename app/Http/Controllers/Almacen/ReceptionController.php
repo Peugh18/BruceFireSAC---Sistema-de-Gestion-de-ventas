@@ -105,7 +105,7 @@ class ReceptionController extends Controller
         $products = Product::query()
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get(['id', 'codigo', 'nombre', 'unidad_medida', 'serializado']);
+            ->get(['id', 'codigo', 'codigo_barras', 'nombre', 'unidad_medida', 'serializado']);
 
         return Inertia::render('almacen/recepciones/create', [
             'sedes' => $sedes,

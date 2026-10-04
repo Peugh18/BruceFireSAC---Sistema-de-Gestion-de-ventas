@@ -53,7 +53,10 @@ class BillingController extends Controller
                 'serie' => $document->serie,
                 'correlativo' => $document->correlativo,
                 'cliente' => $document->sale->client->razon_social,
-                'total' => $document->sale->total,
+                // Una nota de crédito o débito vale su importe, no el de la venta.
+                'total' => in_array($document->tipo, ['nota_credito', 'nota_debito'], true) && $document->importe !== null
+                    ? $document->importe
+                    : $document->sale->total,
                 'sunat_estado' => $document->sunat_estado,
                 'sunat_codigo_respuesta' => $document->sunat_codigo_respuesta,
                 'sunat_mensaje' => $document->sunat_mensaje,

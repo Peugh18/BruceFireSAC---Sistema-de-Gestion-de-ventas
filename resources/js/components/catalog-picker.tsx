@@ -8,6 +8,7 @@ export type CatalogItem = {
     tipo: 'product' | 'service';
     id: number;
     codigo: string | null;
+    codigo_barras?: string | null;
     nombre: string;
     precio_venta: number;
     serializado: boolean;
@@ -150,7 +151,10 @@ export default function CatalogPicker({
             if (datos.unidad && onPickUnidad) {
                 elegirUnidad(datos.unidad);
             } else if (datos.items.length > 0) {
-                const exacto = datos.items.find((i) => i.codigo === term);
+                // Escaneado: el código interno o el de barras del fabricante.
+                const exacto = datos.items.find(
+                    (i) => i.codigo === term || i.codigo_barras === term,
+                );
                 elegir(exacto ?? datos.items[activo] ?? datos.items[0]);
             } else {
                 setRespuesta(datos);
@@ -258,8 +262,9 @@ export default function CatalogPicker({
 
             {sinResultados ? (
                 <p className="text-muted-foreground mt-1 text-[11.5px]">
-                    No hay productos, servicios ni series que coincidan con "
-                    {busqueda.trim()}".
+                    {/^\d{8,14}$/.test(busqueda.trim())
+                        ? `El código ${busqueda.trim()} no está registrado: pide que lo agreguen al producto en Productos (Gerente) y vuelve a escanear.`
+                        : `No hay productos, servicios ni series que coincidan con "${busqueda.trim()}".`}
                 </p>
             ) : null}
         </div>

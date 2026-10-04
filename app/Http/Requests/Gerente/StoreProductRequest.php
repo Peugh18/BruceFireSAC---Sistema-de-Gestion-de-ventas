@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Gerente;
 
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -18,6 +20,10 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'codigo' => ['required', 'string', 'max:50', 'unique:products,codigo'],
+            // El del fabricante (EAN/UPC): solo letras y números, y no se
+            // repite entre productos.
+            'codigo_barras' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9-]+$/', 'unique:products,codigo_barras'],
+            'categoria' => ['nullable', Rule::in(array_keys(Product::CATEGORIAS))],
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
             'unidad_medida' => ['required', 'string', 'max:10'],
@@ -26,6 +32,17 @@ class StoreProductRequest extends FormRequest
             'serializado' => ['boolean'],
             'stock_minimo' => ['nullable', 'integer', 'min:0'],
             'activo' => ['boolean'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'codigo_barras.unique' => 'Ese código de barras ya está registrado en otro producto.',
+            'codigo_barras.regex' => 'El código de barras solo lleva letras, números y guiones.',
         ];
     }
 }
