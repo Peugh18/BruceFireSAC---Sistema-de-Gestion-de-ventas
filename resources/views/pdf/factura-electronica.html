@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Factura electrónica F001-00000123 | BRUCE FIRE S.A.C.</title>
+    <style>
+        @page { size: A4 portrait; margin: 14mm; }
+        body { margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 9pt; line-height: 1.4; color: #222; background: #fff; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { vertical-align: top; }
+        p { margin: 0 0 2mm; }
+        .sheet { width: 182mm; margin: 0 auto; }
+        .header { margin-bottom: 5mm; page-break-inside: avoid; }
+        .header td { padding: 0; }
+        .company { width: 64%; padding-right: 5mm !important; }
+        .brand td { vertical-align: middle; }
+        .logo-cell { width: 24mm; }
+        .logo { width: 19mm; height: 19mm; }
+        .company-name { font-size: 15pt; font-weight: bold; line-height: 1.2; margin-bottom: 2mm; }
+        .company-detail { font-size: 8pt; line-height: 1.5; }
+        .document-box { border: 0.8pt solid #333; }
+        .document-box td { padding: 2.6mm 1mm; text-align: center; border-bottom: 0.5pt solid #b0b0b0; }
+        .document-box .ruc { font-size: 10pt; font-weight: bold; }
+        .document-box .document-title { font-size: 11pt; font-weight: bold; }
+        .document-box .document-number { font-size: 13pt; font-weight: bold; border-bottom: 0; }
+        .accent { border-top: 0.6pt solid #D2232A; margin-bottom: 5mm; }
+        .customer-block { margin-bottom: 5mm; page-break-inside: avoid; }
+        .customer-main { width: 61%; padding-right: 5mm; }
+        .customer-meta { width: 39%; border-left: 0.5pt solid #ccc; padding-left: 4mm; }
+        .fields td { padding: 0.8mm 0; font-size: 8pt; }
+        .fields .label { width: 22mm; font-weight: bold; }
+        .fields .colon { width: 3mm; }
+        .metadata .label { width: 27mm; }
+        .items { border: 0.5pt solid #aaa; font-size: 8pt; }
+        .items thead { display: table-header-group; }
+        .items th { background: #ededed; font-weight: bold; padding: 2.5mm 1.5mm; border: 0.5pt solid #aaa; vertical-align: middle; }
+        .items td { padding: 3mm 1.5mm; border: 0.5pt solid #c5c5c5; }
+        .items tr { page-break-inside: avoid; }
+        .items .description { text-align: left; }
+        .item-detail { display: block; margin-top: 1mm; font-size: 7pt; color: #555; }
+        .center { text-align: center; }
+        .number { text-align: right; white-space: nowrap; }
+        .totals-wrap { margin-top: 5mm; page-break-inside: avoid; }
+        .notes { width: 62%; padding-right: 7mm; font-size: 8pt; }
+        .amount-words { border-bottom: 0.5pt solid #ccc; padding-bottom: 3mm; margin-bottom: 3mm; }
+        .notes-title { font-weight: bold; }
+        .totals td { padding: 1.2mm 0; font-size: 8.5pt; }
+        .totals .total-label { width: 65%; }
+        .totals .grand td { border-top: 0.8pt solid #333; border-bottom: 0.8pt solid #333; padding: 2.5mm 0; font-size: 10pt; font-weight: bold; }
+        .conditions-wrap { margin-top: 7mm; page-break-inside: avoid; }
+        .conditions-wrap > tbody > tr > td { padding: 0; }
+        .bank-cell { width: 55%; padding-right: 4mm !important; }
+        .box { border: 0.5pt solid #aaa; }
+        .box th { padding: 2mm 3mm; border-bottom: 0.5pt solid #aaa; text-align: left; font-size: 8pt; }
+        .box td { padding: 3mm; font-size: 7.5pt; }
+        .bank-details td { padding: 0.6mm 0; font-size: 7.5pt; }
+        .bank-details .bank-label { width: 21mm; }
+        .footer { margin-top: 9mm; border-top: 0.5pt solid #aaa; page-break-inside: avoid; }
+        .footer td { padding-top: 4mm; vertical-align: middle; }
+        .qr-cell { width: 28mm; }
+        .qr { width: 23mm; height: 23mm; }
+        .qr-caption { font-size: 6pt; color: #666; margin: 0; }
+        .footer-copy { font-size: 7.5pt; padding-left: 3mm; }
+        .hash { font-family: Courier, monospace; font-size: 7pt; word-wrap: break-word; }
+        .thanks { margin-top: 3mm; font-size: 8pt; font-weight: bold; }
+        .sample { margin-top: 2mm; font-size: 6.5pt; color: #666; }
+    </style>
+</head>
+<body>
+<!-- Maqueta independiente. Sustituir campos entre corchetes y datos de ejemplo.
+     Logo y QR embebidos: no se requieren recursos remotos ni JavaScript.
+     En producción, reemplazar el QR de muestra por el del comprobante y
+     el hash por el del XML firmado. V. Unit. sin IGV; P. Unit. con IGV.
+     Importes mostrados en soles. No incluir el aviso de maqueta en la emisión. -->
+<div class="sheet">
+    <table class="header" role="presentation">
+        <tr>
+            <td class="company">
+                <table class="brand" role="presentation">
+                    <tr>
+                        <td class="logo-cell"><img class="logo" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgdmVyc2lvbj0iMS4xIgogICB3aWR0aD0iMS41NjI5NTc2aW4iCiAgIGhlaWdodD0iMS40OTIyNTk2aW4iCiAgIHZpZXdCb3g9IjAgMCAxMTIuNTMzMTcgMTA3LjQ0MjgyIgogICBpZD0ic3ZnMTYzIgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxNjMiIC8+CiAgPGcKICAgICBpZD0iTGF5ZXIxMDAwIgogICAgIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xMy4zOTQzLC03Ljg3NTczMTgpIj4KICAgIDxwYXRoCiAgICAgICBkPSJtIDEzLjkyNDksODYuODY5OSAxNy42OTM2LC01NS4yOTcgNDQuNjI3NCwwLjE5NDcgYyAxMS44Mzk1LDIuNjA2MSA5LjA0MTgsMTYuMjEwOCAxLjg4MzUsMjIuMTY1NSAtMC4yNDU5LDAuMjA0NSAtMC41MDU0LDAuNDMxMSAtMC44MDk4LDAuNjU4NCBMIDQ2Ljk5MzksNTQuODMxMyBDIDQ5LjkzLDU2LjUyIDUxLjUzLDYyLjEyIDQ4LjQ3MjIsNjMuODQgbCAtMTIuMTY2LC0wLjM5NDEgLTMuODEyMSwxMS43MTM0IDEyLjQ2ODMsLTAuMDk2NiBjIC0wLjc2OSwyLjQyNDMgLTEuNTQyLDQuODQ3NCAtMi4zMTYxLDcuMjcwMSAtMC40NjE5LDEuNDQ1OSAtMC45MjQ0LDIuODkxNSAtMS4zODczLDQuMzM3MiBMIDE1LjQ4NjcsODYuMDk4MyBaIE0gMzkuNTg0LDUzLjg0ODUgMzkuNjU2Niw1My45Mjc3IDYzLjA2Miw1My41NjU2IGMgMi4yNjM5LC0wLjAzNSAzLjQyODUsLTAuNTk3NCAzLjk1OSwtMi40MzQyIGwgMS41NjM2LC01LjQxMjcgYyAtMC4xNTkxLC0yLjQzOTYgLTEuNjYwNSwtMi43MjA2IC0zLjk2OTMsLTIuNzE1NCBsIC0yMS42NjIxLDAuMDExMiB6IgogICAgICAgc3R5bGU9ImZpbGw6IzMzMzMzMztmaWxsLXJ1bGU6ZXZlbm9kZCIKICAgICAgIGlkPSJwYXRoMjQiIC8+CiAgICA8cGF0aAogICAgICAgZD0ibSAzOS4zNTM3LDEwMC44MTU5IGMgMS4yMTIsMC4zOTg0IDYuNjMyNiwzLjYwOTkgMTAuMjAzMyw0LjExMTcgMC42ODUzLC0yLjI1NDIgMi43NjksLTcuNDk0MSAzLjA4NjUsLTkuMjgzOCBsIDMuMzY5MSwtOS45NSAxOC4yMzExLC0wLjAyMSAxMy4zOTg0LC0xMC4xOTIgYyAwLjQwOTQsLTAuMTY3IDAuMzM3OSwwLjE3OTggMC4zMjgxLC0wLjI2MzIgTCA1OS41OTU1LDc1LjE4NDUgNjIuMzkzNiw2Ni42MjEgOTEuNjI4LDY2LjYwOCBjIDEuMjQzOSwtMC42MzEzIDIuNjQ2NSwtMS43NzY2IDMuODE4NiwtMi41MzY1IDEuMzU1NSwtMC44Nzg3IDIuNTMzNiwtMS42ODc0IDMuOTA0NywtMi42MjIzIDEuMzAwNCwtMC44ODY3IDIuNTcxNSwtMS43NjQ0IDMuODgwMiwtMi42NDMxIGwgNC4wMDgzLC0yLjU4NCBMIDczLjA0MzEsNTYuMTc2NiA1MC42LDU2LjE0MjEgQyA1MS41NSw1Ni42IDUyLjIsNTkuMiA1MS44NSw2MS40IGMgLTAuMiwxIC0xLjEyLDEuNCAtMS41LDIuNiBsIC04LjE5MDUsMjUuNjQ5MyBjIC0wLjYyOSwxLjk3NCAtMy4zODMzLDEwLjAwNzUgLTMuNTAxNywxMS4yOTYxIHoiCiAgICAgICBzdHlsZT0iZmlsbDojMzMzMzMzO2ZpbGwtcnVsZTpldmVub2RkIgogICAgICAgaWQ9InBhdGgyNSIgLz4KICAgIDxwYXRoCiAgICAgICBkPSJtIDg5Ljg1NjUsOTQuODQwMiA2ZS00LC03ZS00IG0gMC4wMDg5LC0wLjAxMTEgMC4wMTEyLC0wLjAxMzQgbSAwLjA5MjUsLTAuMDkzIDAuMDAxNiwtMC4wMDE0IG0gMC4xMTI2LC0wLjA5NDEgMC4wMDIsLTAuMDAxNyB6IG0gMTAuMjQ2MSw0LjU3MDEgYyAwLjY3MDksOC4zMDk1IC00LjQ4OTYsMTIuNzk5MSAtOS42NTIyLDE1Ljc4NTggMTguMjMwNCwtMS42ODMyIDM4Ljk3MTcsLTE4LjA5NjMgMzQuNjc4OCwtNDEuODk0NSAtMC4yMzU0LDAuMzc4NiAtMC42NDk1LDIuMDY1NCAtMC44ODk0LDIuNjUxOSAtMS4xOTQ2LDIuOTE5NiAtMS45NjgxLDQuNjcxMyAtNC4yMDc3LDcuMTIyNyAtMi42NDMyLDIuODkzMyAtNC44MTgzLDQuMTM0NSAtOS40NDQ2LDUuNTA0IGwgMi41MDc1LC0zLjE3MDEgYyAwLjY5MDksLTAuODQ3IDIuMDg4NCwtMi42ODIyIDIuNDMzMywtMy43NjM5IDAuNjMyOSwtMC4zMzU0IDEuNDU5NSwtMi40NTAzIDEuODUzMiwtMy4zMTUyIGwgMS4xMzk0LC0yLjgwMTEgYyAxLjU5MTUsLTIuNTU0OSAxLjcwMTksLTYuOTc5NCAxLjYzMzYsLTEwLjM3NDMgLTAuMDYxNCwtMy4wNDkxIC0wLjgzMTMsLTYuMjg4MyAtMS42NTkxLC04Ljk5MDUgLTAuNDQyOCwtMS40NDU4IC0wLjg2NywtMi42NDc0IC0xLjQyNjIsLTMuODk1IGwgLTEuNTYwNCwtMy4wODg0IGMgLTAuMDI3NiwtMC4wMzM5IC0wLjA2MDQsLTAuMDcxOCAtMC4wODg5LC0wLjEwNDIgbCAtMC4zMTI2LC0wLjMwODMgYyAwLjY5NDYsOC40NzM5IC0zLjAwNDMsMTQuNDczNSAtOC43NzgsMTkuNTY5MiAtNS40NTQ3LDQuODE0MiAtMTEuMDU3Myw2LjcyOTMgLTE0LjQzOCwxMy45NDg0IC0xLjQ2OCwyLjI5NzUgLTEuMzEyOSw1Ljc4ODMgLTEuNDkyLDcuOTQyMSAtMC44NTk1LC0wLjM4NyAtMS44NjU1LC0xLjk2MjcgLTIuMjAzMywtMi44NDUyIC0wLjg0MTMsLTIuMTk2OSAtMC4zNjE1LC0yLjUzMzYgLTAuMzcxNywtNC42ODk0IC0wLjk4OSwwLjUzMDQgLTIuNzc3OSwyLjk2NTMgLTMuNTA5NSw0LjM1MDUgLTIuNzI0NCw1LjE1ODUgLTIuODA5OCw4LjA3MDUgLTEuOTA5NiwxMy44Mjc3IC0wLjE5NSwxMi44MjMzIC05LjIxNTYsMTEuOTAwMyAtMTIuNzc1MSwxNC42NTk4IDIzLjU1MDIsLTAuODA0IDI3LjQ2NDksLTEyLjMwMiAzMC40NzI1LC0xNi4xMjIgeiIKICAgICAgIHN0eWxlPSJmaWxsOiMzMzMzMzM7ZmlsbC1ydWxlOmV2ZW5vZGQiCiAgICAgICBpZD0icGF0aDI2IiAvPgogICAgPHBhdGgKICAgICAgIGQ9Im0gMTAzLjgzNzksNTAuNDMwMSAwLjQ2MDgsMy4wNjg1IGMgNS4wMDIxLC0wLjUyOCAzLjg4MjEsLTAuMjMxMiA4LjE0NiwtMi4wNzY2IC02Ljk1NSwtMzIuNDEyOSAtMzMuNzAxMywtNDQuNjYyOCAtNTUuNzcyLC00My40NjcxIC00LjM5NywwLjIzODIgLTcuMjY1OSwxLjE5MDQgLTEwLjYwNzUsMS42MTggMC41NjE0LDAuMTA4MSAzLjkyOTIsLTAuNDY0MiA1LjEwNDgsLTAuNTIyIDE1LjA3NDIsLTAuNzQwMiAyNy45MDk5LDMuNzA1OCAzOC43ODQ4LDEzLjg5OSA4LjUxMyw3Ljk3OTUgMTIuMTA2NCwxNi41Mjc3IDEzLjg4MzEsMjcuNDgwMiB6IgogICAgICAgc3R5bGU9ImZpbGw6IzMzMzMzMztmaWxsLXJ1bGU6ZXZlbm9kZCIKICAgICAgIGlkPSJwYXRoMjciIC8+CiAgICA8cGF0aAogICAgICAgZD0iTSAxMy4zOTQzLDg2LjU0NzQgMzEuMDg4LDMxLjI1MDUgNzUuNzE1MywzMS40NDUyIGMgMTEuODM5NSwyLjYwNiA5LjA0MTksMTYuMjEwOCAxLjg4MzUsMjIuMTY1NCAtMC4yNDU5LDAuMjA0NiAtMC41MDUzLDAuNDMxMSAtMC44MDk4LDAuNjU4NSBMIDQ2LjQ2MzMsNTQuNTA4OCBDIDQ5LjQsNTYuMiA1MSw2MS44IDQ3Ljk0MTYsNjMuNTE3NSBsIC0xMi4xNjYsLTAuMzk0IC0zLjgxMjEsMTEuNzEzMyAxMi40NjgzLC0wLjA5NjUgYyAtMC43NjksMi40MjQzIC0xLjU0Miw0Ljg0NzQgLTIuMzE2MSw3LjI3IC0wLjQ2MTksMS40NDYgLTAuOTI0NCwyLjg5MTYgLTEuMzg3Myw0LjMzNzMgTCAxNC45NTYyLDg1Ljc3NTkgWiBtIDI1LjY1OTEsLTMzLjAyMTQgMC4wNzI3LDAuMDc5MyAyMy40MDUzLC0wLjM2MjIgYyAyLjI2MzksLTAuMDM1IDMuNDI4NSwtMC41OTczIDMuOTU5MSwtMi40MzQyIGwgMS41NjM1LC01LjQxMjcgYyAtMC4xNTkxLC0yLjQzOTYgLTEuNjYwNSwtMi43MjA1IC0zLjk2OTMsLTIuNzE1MyBsIC0yMS42NjIxLDAuMDExMiB6IgogICAgICAgc3R5bGU9ImZpbGw6IzMzMzMzMztmaWxsLXJ1bGU6ZXZlbm9kZCIKICAgICAgIGlkPSJwYXRoMjgiIC8+CiAgICA8cGF0aAogICAgICAgZD0ibSAxNi4yODA4LDkwLjM3NzkgaCA1LjYxNDYgYyAxMy4wNjgsMTguNjg4OCAzOS43NzMxLDI2LjE0ODQgNTcuMjIxMiwxNS42NDkyIC0xNS41MjMzLDE1LjIxNTYgLTQ4LjQ2NzQsNy43NjA1IC02Mi44MzU4LC0xNS42NDkyIHoiCiAgICAgICBzdHlsZT0iZmlsbDojMzMzMzMzO2ZpbGwtcnVsZTpldmVub2RkIgogICAgICAgaWQ9InBhdGgyOSIgLz4KICAgIDxwYXRoCiAgICAgICBkPSJtIDk4LjU1MSw4NS4xNzgxIGMgLTIuOTYxNiwzLjkxNDUgLTIuMzA4Nyw4LjI4MzcgLTMuNzI1OSwxMi41NzI5IC0wLjUyNDgsMS41ODgzIC0xLjI2NiwyLjQ2MzkgLTEuODMyOCwzLjY1NjcgLTAuOTI0MSwtNC4zNjkxIC0yLjE3NDYsLTQuMTY1OCAtMi44NTI3LC02LjkzMDcgLTIuNDc2NiwyLjMxNDEgMi4wNDI2LDEwLjM3NTMgLTExLjk4NTEsMTguNTMzOSAxMi4wMjk3LC0wLjk5NDEgMTUuNTA1NiwtNC44MzI3IDIyLjE3NTUsLTEzLjgxNDMgLTAuMTc2Miw3LjI0NDQgLTEuMDQxMywxMC4zODUyIC03LjM2MDksMTQuNzE3MSAtMC4zMDY2LDAuMjI4MiAtMC4xNDk4LDAuMDcxNSAtMC4zOTM1LDAuMzQyMSAyLjA4NTMsLTAuMjg0MSAzLjU4ODksLTEuMTQwNyA1LjA3NjUsLTEuODIxNCA4LjkyNjcsLTQuNzEwOSAxMy43NzkzLC0xMS4xODczIDE1LjQzMiwtMTkuMDUwMyAtMS43MTc1LDEuNDUxOCAtNi4xNTU5LDMuMDc2NyAtOC41NjkzLDIuNjg4MyAtMC4xODc1LC0zLjY5NTMgLTAuMzY1NywtNy42OTc0IDAuNDYxMiwtMTEuMjQzOSAwLjM4NCwtMS42NDcgMC45MTcyLC0zLjAzMDEgMS40OTI2LC00LjUxNTYgMC41NzY2LC0xLjQ4ODcgMS41NDA0LC0yLjkxMSAyLjA3LC0zLjkwODcgLTAuNzk3MiwtMC4wMTA1IC0wLjExNDEsLTAuMTQzNSAtMC44ODcyLDAuMjk5NSAtMi45MDUsMS42NjQyIC03LjcyMzcsNS42NTA4IC05LjEwMDQsOC40NzQ0IHoiCiAgICAgICBzdHlsZT0iZmlsbDojMzMzMzMzO2ZpbGwtcnVsZTpldmVub2RkIgogICAgICAgaWQ9InBhdGgzMCIgLz4KICAgIDxwYXRoCiAgICAgICBkPSJtIDk4LjU1MSw4NS4xNzgxIGMgLTIuOTYxNiwzLjkxNDUgLTIuMzA4Nyw4LjI4MzcgLTMuNzI1OSwxMi41NzI5IC0wLjUyNDgsMS41ODgzIC0xLjI2NiwyLjQ2MzkgLTEuODMyOCwzLjY1NjcgLTAuOTI0MSwtNC4zNjkxIC0yLjE3NDYsLTQuMTY1OCAtMi44NTI3LC02LjkzMDcgLTIuNDc2NiwyLjMxNDEgMi4wNDI2LDEwLjM3NTMgLTExLjk4NTEsMTguNTMzOSAxMi4wMjk3LC0wLjk5NDEgMTUuNTA1NiwtNC44MzI3IDIyLjE3NTUsLTEzLjgxNDMgLTAuMTc2Miw3LjI0NDQgLTEuMDQxMywxMC4zODUyIC03LjM2MDksMTQuNzE3MSAtMC4zMDY2LDAuMjI4MiAtMC4xNDk4LDAuMDcxNSAtMC4zOTM1LDAuMzQyMSAyLjA4NTMsLTAuMjg0MSAzLjU4ODksLTEuMTQwNyA1LjA3NjUsLTEuODIxNCA4LjkyNjcsLTQuNzEwOSAxMy43NzkzLC0xMS4xODczIDE1LjQzMiwtMTkuMDUwMyAtMS43MTc1LDEuNDUxOCAtNi4xNTU5LDMuMDc2NyAtOC41NjkzLDIuNjg4MyAtMC4xODc1LC0zLjY5NTMgLTAuMzY1NywtNy42OTc0IDAuNDYxMiwtMTEuMjQzOSAwLjM4NCwtMS42NDcgMC45MTcyLC0zLjAzMDEgMS40OTI2LC00LjUxNTYgMC41NzY2LC0xLjQ4ODcgMS41NDA0LC0yLjkxMSAyLjA3LC0zLjkwODcgLTAuNzk3MiwtMC4wMTA1IC0wLjExNDEsLTAuMTQzNSAtMC44ODcyLDAuMjk5NSAtMi45MDUsMS42NjQyIC03LjcyMzcsNS42NTA4IC05LjEwMDQsOC40NzQ0IHoiCiAgICAgICBzdHlsZT0iZmlsbDojMzMzMzMzO2ZpbGwtb3BhY2l0eTowO2ZpbGwtcnVsZTpldmVub2RkIgogICAgICAgaWQ9InBhdGgzMSIgLz4KICAgIDxwYXRoCiAgICAgICBkPSJtIDEwMy44Mzc5LDUwLjQzMDEgMC40NjA4LDMuMDY4NSBjIDUuMDAyMSwtMC41MjggMy44ODIxLC0wLjIzMTIgOC4xNDYsLTIuMDc2NiAtNi45NTUsLTMyLjQxMjkgLTMzLjcwMTMsLTQ0LjY2MjggLTU1Ljc3MiwtNDMuNDY3MSAtNC4zOTcsMC4yMzgyIC03LjI2NTksMS4xOTA0IC0xMC42MDc1LDEuNjE4IDAuNTYxNCwwLjEwODEgMy45MjkyLC0wLjQ2NDIgNS4xMDQ4LC0wLjUyMiAxNS4wNzQyLC0wLjc0MDIgMjcuOTA5OSwzLjcwNTggMzguNzg0OCwxMy44OTkgOC41MTMsNy45Nzk1IDEyLjEwNjQsMTYuNTI3NyAxMy44ODMxLDI3LjQ4MDIgeiIKICAgICAgIHN0eWxlPSJmaWxsOiMzMzMzMzM7ZmlsbC1vcGFjaXR5OjA7ZmlsbC1ydWxlOmV2ZW5vZGQiCiAgICAgICBpZD0icGF0aDMyIiAvPgogICAgPHBhdGgKICAgICAgIGQ9Ik0gMTMuMzk0Myw4Ni41NDc0IDMxLjA4OCwzMS4yNTA1IDc1LjcxNTMsMzEuNDQ1MiBjIDExLjgzOTUsMi42MDYgOS4wNDE5LDE2LjIxMDggMS44ODM1LDIyLjE2NTQgLTAuMjQ1OSwwLjIwNDYgLTAuNTA1MywwLjQzMTEgLTAuODA5OCwwLjY1ODUgTCA0Ni40NjMzLDU0LjUwODggQyA0OS40LDU2LjIgNTEsNjEuOCA0Ny45NDE2LDYzLjUxNzUgbCAtMTIuMTY2LC0wLjM5NCAtMy44MTIxLDExLjcxMzMgMTIuNDY4MywtMC4wOTY1IGMgLTAuNzY5LDIuNDI0MyAtMS41NDIsNC44NDc0IC0yLjMxNjEsNy4yNyAtMC40NjE5LDEuNDQ2IC0wLjkyNDQsMi44OTE2IC0xLjM4NzMsNC4zMzczIEwgMTQuOTU2Miw4NS43NzU5IFogbSAyNS42NTkxLC0zMy4wMjE0IDAuMDcyNywwLjA3OTMgMjMuNDA1MywtMC4zNjIyIGMgMi4yNjM5LC0wLjAzNSAzLjQyODUsLTAuNTk3MyAzLjk1OTEsLTIuNDM0MiBsIDEuNTYzNSwtNS40MTI3IGMgLTAuMTU5MSwtMi40Mzk2IC0xLjY2MDUsLTIuNzIwNSAtMy45NjkzLC0yLjcxNTMgbCAtMjEuNjYyMSwwLjAxMTIgeiIKICAgICAgIHN0eWxlPSJmaWxsOiMzMzMzMzM7ZmlsbC1vcGFjaXR5OjA7ZmlsbC1ydWxlOmV2ZW5vZGQiCiAgICAgICBpZD0icGF0aDMzIiAvPgogICAgPHBhdGgKICAgICAgIGQ9Im0gMTYuMjgwOCw5MC4zNzc5IGggNS42MTQ2IGMgMTMuMDY4LDE4LjY4ODggMzkuNzczMSwyNi4xNDg0IDU3LjIyMTIsMTUuNjQ5MiAtMTUuNTIzMywxNS4yMTU2IC00OC40Njc0LDcuNzYwNSAtNjIuODM1OCwtMTUuNjQ5MiB6IgogICAgICAgc3R5bGU9ImZpbGw6IzMzMzMzMztmaWxsLW9wYWNpdHk6MDtmaWxsLXJ1bGU6ZXZlbm9kZCIKICAgICAgIGlkPSJwYXRoMzQiIC8+CiAgPC9nPgo8L3N2Zz4K" alt="Logo BRUCE FIRE"></td>
+                        <td>
+                            <p class="company-name">BRUCE FIRE S.A.C.</p>
+                            <div class="company-detail">Extintores y equipos contra incendios</div>
+                            <div class="company-detail">[Dirección fiscal] - Trujillo, La Libertad</div>
+                            <div class="company-detail">Tel.: [Teléfono] &nbsp; | &nbsp; [Email]</div>
+                            <div class="company-detail">[Sitio web]</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table class="document-box" role="presentation">
+                    <tr><td class="ruc">R.U.C. 20616376528</td></tr>
+                    <tr><td class="document-title">FACTURA ELECTRÓNICA</td></tr>
+                    <tr><td class="document-number">F001-00000123</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <div class="accent"></div>
+
+    <table class="customer-block" role="presentation">
+        <tr>
+            <td class="customer-main">
+                <table class="fields" role="presentation">
+                    <tr><td class="label">Señor(es)</td><td class="colon">:</td><td>CLIENTE DE EJEMPLO S.A.C.</td></tr>
+                    <tr><td class="label">RUC</td><td class="colon">:</td><td>[RUC del cliente]</td></tr>
+                    <tr><td class="label">Dirección</td><td class="colon">:</td><td>[Dirección fiscal del cliente]<br>Trujillo, La Libertad</td></tr>
+                    <tr><td class="label">Local/Placa</td><td class="colon">:</td><td>[Local o placa del vehículo]</td></tr>
+                </table>
+            </td>
+            <td class="customer-meta">
+                <table class="fields metadata" role="presentation">
+                    <tr><td class="label">Fecha de emisión</td><td class="colon">:</td><td>03/10/2026</td></tr>
+                    <tr><td class="label">Vencimiento</td><td class="colon">:</td><td>03/10/2026</td></tr>
+                    <tr><td class="label">Moneda</td><td class="colon">:</td><td>Soles (PEN)</td></tr>
+                    <tr><td class="label">Forma de pago</td><td class="colon">:</td><td>Contado</td></tr>
+                    <tr><td class="label">Vendedor</td><td class="colon">:</td><td>[Vendedor]</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="items" aria-label="Detalle de la factura">
+        <colgroup>
+            <col style="width: 7%;"><col style="width: 9%;"><col style="width: 12%;">
+            <col style="width: 36%;"><col style="width: 12%;"><col style="width: 12%;"><col style="width: 12%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th scope="col" class="center" style="width: 7%;">Cant.</th><th scope="col" class="center" style="width: 9%;">Unidad</th>
+                <th scope="col" class="center" style="width: 12%;">Código</th><th scope="col" class="description" style="width: 36%;">Descripción</th>
+                <th scope="col" class="number" style="width: 12%;">V. Unit.</th><th scope="col" class="number" style="width: 12%;">P. Unit.</th><th scope="col" class="number" style="width: 12%;">Importe</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="center">2</td><td class="center">NIU</td><td class="center">EXT-006</td>
+                <td>Extintor PQS ABC de 6 kg<span class="item-detail">Incluye soporte y tarjeta de control.</span></td>
+                <td class="number">100.00</td><td class="number">118.00</td><td class="number">236.00</td>
+            </tr>
+            <tr>
+                <td class="center">3</td><td class="center">ZZ</td><td class="center">REC-006</td>
+                <td>Recarga de extintor PQS de 6 kg<span class="item-detail">Servicio de mantenimiento y recarga.</span></td>
+                <td class="number">50.00</td><td class="number">59.00</td><td class="number">177.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="totals-wrap" role="presentation">
+        <tr>
+            <td class="notes">
+                <p class="amount-words"><strong>SON:</strong> CUATROCIENTOS TRECE Y 00/100 SOLES</p>
+                <p class="notes-title">Observaciones</p>
+                <p>[Referencia de orden de compra, entrega o servicio.]</p>
+                <p>V. Unit.: valor sin IGV. P. Unit.: precio con IGV.<br>Importes expresados en soles.</p>
+            </td>
+            <td>
+                <table class="totals" aria-label="Totales en soles">
+                    <tr><td class="total-label">Op. Gravada</td><td class="number">350.00</td></tr>
+                    <tr><td>Op. Exonerada</td><td class="number">0.00</td></tr>
+                    <tr><td>Op. Inafecta</td><td class="number">0.00</td></tr>
+                    <tr><td>I.G.V. 18%</td><td class="number">63.00</td></tr>
+                    <tr class="grand"><td>IMPORTE TOTAL</td><td class="number">S/ 413.00</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="conditions-wrap" role="presentation">
+        <tr>
+            <td class="bank-cell">
+                <table class="box" aria-label="Cuentas bancarias">
+                    <tr><th scope="col">Cuentas bancarias</th></tr>
+                    <tr><td>
+                        <table class="bank-details" role="presentation">
+                            <tr><td class="bank-label">Titular</td><td>BRUCE FIRE S.A.C.</td></tr>
+                            <tr><td>Banco / Moneda</td><td>[Banco] / Soles</td></tr>
+                            <tr><td>Cuenta</td><td>[Número de cuenta]</td></tr>
+                            <tr><td>CCI</td><td>[Código interbancario]</td></tr>
+                        </table>
+                    </td></tr>
+                </table>
+            </td>
+            <td>
+                <table class="box" aria-label="Condiciones comerciales">
+                    <tr><th scope="col">Condiciones</th></tr>
+                    <tr><td>
+                        <p><strong>Pago:</strong> contado.</p>
+                        <p><strong>Entrega:</strong> [Lugar y plazo acordados].</p>
+                        <p><strong>Garantía:</strong> [Condiciones pactadas].</p>
+                        <p>Indicar F001-00000123 al realizar el abono.</p>
+                    </td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="footer" role="presentation">
+        <tr>
+            <td class="qr-cell">
+                <img class="qr" src="data:image/png;base64,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" alt="QR de muestra; reemplazar por el QR del comprobante">
+                <p class="qr-caption">QR DE MUESTRA</p>
+            </td>
+            <td class="footer-copy">
+                <p><strong>Representación impresa de la Factura Electrónica</strong></p>
+                <p>Código hash: <span class="hash">[Hash del XML firmado]</span></p>
+                <p>Consulte en www.sunat.gob.pe</p>
+                <p class="thanks">Gracias por confiar en BRUCE FIRE S.A.C.</p>
+                <p class="sample">MAQUETA DE DISEÑO · Datos de ejemplo · Sin validez tributaria</p>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
