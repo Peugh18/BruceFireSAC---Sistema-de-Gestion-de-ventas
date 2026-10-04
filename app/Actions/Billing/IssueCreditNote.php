@@ -14,6 +14,16 @@ class IssueCreditNote
      */
     public const MOTIVO_ANULACION = '01';
 
+    /**
+     * Motivos del Catálogo 09 que deshacen toda la venta cuando la nota cubre
+     * el total: 01 anulación de la operación, 02 anulación por error en el
+     * RUC y 06 devolución total. El stock vuelve, las cuotas pendientes se
+     * cierran y el cobro al contado se registra como devolución.
+     *
+     * @var list<string>
+     */
+    public const MOTIVOS_QUE_ANULAN = ['01', '02', '06'];
+
     public function __construct(
         protected ReserveNextCorrelativo $reserveNextCorrelativo,
         protected RevertSale $revertSale,
@@ -68,7 +78,7 @@ class IssueCreditNote
                 'sunat_mensaje' => $detalle,
             ]);
 
-            $esAnulacionTotal = $motivoCatalogo09 === self::MOTIVO_ANULACION
+            $esAnulacionTotal = in_array($motivoCatalogo09, self::MOTIVOS_QUE_ANULAN, true)
                 && $importe + $acreditado >= (float) $sale->total - 0.001;
 
             if ($esAnulacionTotal) {

@@ -344,7 +344,9 @@ export function SaleNotesPanel({
                                     </p>
                                 )}
                                 {kind === 'nota_credito' &&
-                                    form.data.motivo_catalogo === '01' && (
+                                    ['01', '02', '06'].includes(
+                                        form.data.motivo_catalogo,
+                                    ) && (
                                         <p className="text-muted-foreground mt-1">
                                             Si el importe cubre todo el
                                             comprobante la venta se anula: las
