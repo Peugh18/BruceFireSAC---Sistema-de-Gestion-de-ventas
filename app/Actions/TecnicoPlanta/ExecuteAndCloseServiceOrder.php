@@ -49,7 +49,19 @@ class ExecuteAndCloseServiceOrder
         self::asegurarQueSePuedeReparar($deficiency);
 
         return DB::transaction(function () use ($serviceOrder, $deficiency, $product, $cantidad, $user, $observacion) {
-            $sedeId = $serviceOrder->sede_id ?: Sede::where('activo', true)->first()?->id ?: 1;
+            // Del almacén que abastece a la sede de la orden, y sin dejarlo
+            // en negativo.
+            $sedeId = $serviceOrder->sede?->almacenEfectivoId() ?? Sede::where('activo', true)->whereIn('tipo', ['almacen', 'mixta'])->value('id');
+
+            if ($sedeId === null) {
+                throw ValidationException::withMessages(['product_id' => 'La orden no tiene un almacén del que sacar el repuesto.']);
+            }
+
+            if ($product->serializado) {
+                throw ValidationException::withMessages(['product_id' => "{$product->nombre} se controla por serie: no se consume como repuesto."]);
+            }
+
+            InventoryMovement::exigirSaldo($product, (int) $sedeId, $cantidad);
 
             $obsKardex = sprintf(
                 'Consumo en taller para orden %s: %s (%s). %s',

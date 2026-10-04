@@ -16,6 +16,20 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
+/**
+ * Deja stock del repuesto en el almacén que abastece a la sede.
+ */
+function repuestoEnStock(Product $product, Sede $sede, int $cantidad = 10): void
+{
+    (new InventoryMovement)->forceFill([
+        'product_id' => $product->id,
+        'sede_id' => $sede->almacenEfectivoId(),
+        'tipo' => 'ingreso',
+        'cantidad' => $cantidad,
+        'observacion' => 'Stock inicial de prueba',
+    ])->save();
+}
+
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->team = Team::factory()->create();
@@ -57,7 +71,9 @@ test('consuming spare part generates real InventoryMovement in Kardex and resolv
 
     $product = Product::factory()->create([
         'nombre' => 'Manómetro 1/8 195 PSI',
+        'serializado' => false,
     ]);
+    repuestoEnStock($product, $sede);
 
     $deficiency = Deficiency::create([
         'service_order_id' => $order->id,
@@ -108,7 +124,8 @@ test('order is released from esperando_autorizacion once its last pending defici
         'estado' => 'esperando_autorizacion',
     ]);
 
-    $product = Product::factory()->create(['nombre' => 'Manguera 1.5 pulg']);
+    $product = Product::factory()->create(['nombre' => 'Manguera 1.5 pulg', 'serializado' => false]);
+    repuestoEnStock($product, $sede);
 
     // Una deficiencia ya autorizada por Vendedor, lista para que Planta la resuelva
     $deficiency = Deficiency::create([
@@ -155,7 +172,8 @@ test('order stays in esperando_autorizacion while another deficiency is still pe
         'estado' => 'esperando_autorizacion',
     ]);
 
-    $product = Product::factory()->create(['nombre' => 'Manguera 1.5 pulg']);
+    $product = Product::factory()->create(['nombre' => 'Manguera 1.5 pulg', 'serializado' => false]);
+    repuestoEnStock($product, $sede);
 
     $deficiencyResolved = Deficiency::create([
         'service_order_id' => $order->id,

@@ -1,25 +1,28 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AlmacenLayout from '@/layouts/almacen-layout';
-import { store } from '@/routes/almacen/traslados';
+import { index, store } from '@/routes/almacen/traslados';
 import type { Team } from '@/types';
 
 type Option = { id: number; nombre: string; codigo?: string };
 
 export default function Transfers({
     sourceSede,
+    origenes,
     destinations,
     bulkProducts,
 }: {
     sourceSede: Option;
+    origenes: Option[];
     destinations: Option[];
     bulkProducts: Option[];
 }) {
     const form = useForm({
+        origen_sede_id: String(sourceSede.id),
         destination_sede_id: '',
         serials_text: '',
         product_id: '',
@@ -40,6 +43,30 @@ export default function Transfers({
                         indica un producto sin serie.
                     </p>
                 </div>
+                {origenes.length > 0 ? (
+                    <div>
+                        <Label>Origen</Label>
+                        <select
+                            value={sourceSede.id}
+                            onChange={(event) =>
+                                router.get(
+                                    index.url(teamSlug, {
+                                        query: {
+                                            origen_sede_id: event.target.value,
+                                        },
+                                    }),
+                                )
+                            }
+                            className="border-border bg-background mt-1 h-10 w-full rounded-md border px-3"
+                        >
+                            {origenes.map((sede) => (
+                                <option key={sede.id} value={sede.id}>
+                                    {sede.nombre}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                ) : null}
                 <form
                     className="space-y-4"
                     onSubmit={(event) => {

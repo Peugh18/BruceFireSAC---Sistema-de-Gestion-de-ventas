@@ -855,7 +855,7 @@ export default function StockIndex({
                                                     mov.tipo,
                                                 );
                                             const isSalida =
-                                                mov.tipo === 'salida_venta';
+                                                Number(mov.cantidad) < 0;
 
                                             return (
                                                 <tr
@@ -913,7 +913,7 @@ export default function StockIndex({
                                                             }
                                                         >
                                                             {isSalida
-                                                                ? `-${mov.cantidad}`
+                                                                ? `${mov.cantidad}`
                                                                 : `+${mov.cantidad}`}
                                                         </span>{' '}
                                                         <span className="text-muted-foreground text-[10px] font-normal">

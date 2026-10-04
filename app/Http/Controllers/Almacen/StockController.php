@@ -55,7 +55,7 @@ class StockController extends Controller
             $stockMatrix[$unit->product_id][$unit->sede_id] = (int) $unit->total;
         }
         foreach ($bulkMovements as $bm) {
-            $stockMatrix[$bm->product_id][$bm->sede_id] = max(0, (int) $bm->total);
+            $stockMatrix[$bm->product_id][$bm->sede_id] = (int) $bm->total;
         }
 
         // 3. Obtener Productos
@@ -181,14 +181,9 @@ class StockController extends Controller
             'product_list' => $productList,
             'kpis' => [
                 'total_productos' => Product::where('activo', true)->count(),
-                'unidades_en_stock' => InventoryUnit::where('estado', 'disponible')->count(),
-                'bajo_minimo' => Product::where('activo', true)
-                    ->whereNotNull('stock_minimo')
-                    ->where('stock_minimo', '>', 0)
-                    ->withCount(['units as disponible' => fn ($q) => $q->where('estado', 'disponible')])
-                    ->get()
-                    ->filter(fn ($p) => $p->disponible <= $p->stock_minimo)
-                    ->count(),
+                'unidades_en_stock' => InventoryUnit::where('estado', 'disponible')->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))->count(),
+                // Con serie por unidades; sin serie (repuestos, EPP) por Kardex.
+                'bajo_minimo' => Product::query()->bajoMinimo($almacenId ? [$almacenId] : null)->count(),
             ],
         ]);
     }

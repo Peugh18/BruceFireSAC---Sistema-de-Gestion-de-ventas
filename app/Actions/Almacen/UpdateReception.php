@@ -9,6 +9,7 @@ use App\Models\ReceptionItem;
 use App\Models\User;
 use App\Services\Inventory\InventorySequenceGenerator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class UpdateReception
 {
@@ -39,7 +40,8 @@ class UpdateReception
 
             foreach ($itemsData as $itemData) {
                 /** @var ReceptionItem $item */
-                $item = ReceptionItem::findOrFail($itemData['id']);
+                // Solo partidas de esta recepción, bloqueadas mientras se corrigen.
+                $item = $reception->items()->lockForUpdate()->findOrFail($itemData['id']);
                 $prevConforme = (int) $item->cantidad_conforme;
                 $newConforme = (int) $itemData['cantidad_conforme'];
                 $diff = $newConforme - $prevConforme;
@@ -60,6 +62,11 @@ class UpdateReception
                     if ($diff > 0) {
                         // Se aumentó la cantidad conforme: crear las nuevas unidades y registrar movimiento compensatorio
                         $unidadesNuevas = $itemData['unidades_nuevas'] ?? [];
+                        if (count($unidadesNuevas) < $diff) {
+                            throw ValidationException::withMessages([
+                                'items' => "Faltan los datos de {$diff} unidad(es) nueva(s) de {$product->nombre} (marca, capacidad y año).",
+                            ]);
+                        }
                         for ($i = 0; $i < $diff; $i++) {
                             $uData = $unidadesNuevas[$i] ?? [];
                             $numeroSerie = $this->sequenceGenerator->nextEquipmentSerial();
@@ -105,6 +112,13 @@ class UpdateReception
                             ->limit($toRemove)
                             ->get();
 
+                        // Las que ya se vendieron no se pueden retirar.
+                        if ($availableUnits->count() < $toRemove) {
+                            throw ValidationException::withMessages([
+                                'items' => "Solo {$availableUnits->count()} unidad(es) de {$product->nombre} de esta recepción siguen en el almacén: no se pueden retirar {$toRemove}.",
+                            ]);
+                        }
+
                         foreach ($availableUnits as $unit) {
                             $unit->update(['estado' => 'baja']);
 
@@ -124,6 +138,10 @@ class UpdateReception
                     }
                 } else {
                     // Producto no serializado: insertar movimiento compensatorio tipo 'ajuste' con la diferencia (+ o -)
+                    if ($diff < 0) {
+                        InventoryMovement::exigirSaldo($product, $reception->sede_almacen_id, -$diff, 'items');
+                    }
+
                     $movement = new InventoryMovement([
                         'inventory_unit_id' => null,
                         'product_id' => $product->id,

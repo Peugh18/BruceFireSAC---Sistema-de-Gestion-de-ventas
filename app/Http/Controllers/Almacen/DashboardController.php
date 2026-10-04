@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\Reception;
 use App\Models\Sede;
 use App\Models\Team;
 use Illuminate\Http\Request;
@@ -24,15 +25,21 @@ class DashboardController extends Controller
      */
     public function __invoke(Team $current_team, Request $request): Response
     {
+        // El almacenero ve su almacén; el Gerente, todos.
+        $almacenId = $request->user()->almacenRestringidoId();
+        $almacenes = $almacenId ? [$almacenId] : null;
+
         // 1. Unidades disponibles en stock
         $unidadesDisponiblesTotal = InventoryUnit::query()
             ->where('estado', 'disponible')
+            ->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))
             ->count();
 
         // Stock disponible agrupado por sede de almacén
         $sedesAlmacen = Sede::query()
             ->whereIn('tipo', ['almacen', 'mixta'])
             ->where('activo', true)
+            ->when($almacenId, fn ($q) => $q->where('id', $almacenId))
             ->get();
 
         // El conteo real por sede se calcula directamente de InventoryUnit
@@ -52,14 +59,17 @@ class DashboardController extends Controller
             ];
         })->values()->all();
 
-        // 2. Recepciones de hoy
-        $recepcionesHoy = InventoryMovement::query()
-            ->where('tipo', 'ingreso')
+        // 2. Recepciones de hoy: documentos de proveedor, no movimientos (una
+        // recepción de 10 extintores es una sola, y una anulación de venta
+        // no es una recepción).
+        $recepcionesHoy = Reception::query()
             ->whereDate('created_at', today())
+            ->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))
             ->count();
 
         // 3. Movimientos recientes (últimos 10)
         $movimientosRecientes = InventoryMovement::query()
+            ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
             ->with([
                 'product:id,codigo,nombre,unidad_medida,serializado',
                 'inventoryUnit:id,numero_serie,estado',
@@ -92,16 +102,12 @@ class DashboardController extends Controller
 
         // 4. Productos bajo el mínimo (reabastecimiento propio del almacén)
         // Solo aplica a productos activos con stock_minimo definido (> 0)
+        // Con serie se cuentan unidades; sin serie (repuestos, EPP), el Kardex.
         $productosBajoMinimo = Product::query()
-            ->where('activo', true)
-            ->whereNotNull('stock_minimo')
-            ->where('stock_minimo', '>', 0)
-            ->withCount(['units as stock_disponible' => function ($query) {
-                $query->where('estado', 'disponible');
-            }])
+            ->conStock($almacenes)
+            ->bajoMinimo($almacenes)
             ->get()
-            ->filter(fn (Product $product) => $product->stock_disponible <= $product->stock_minimo)
-            ->sortBy('stock_disponible')
+            ->sortBy(fn (Product $product) => $product->stockDisponible())
             ->map(function (Product $product) {
                 return [
                     'id' => $product->id,
@@ -109,8 +115,8 @@ class DashboardController extends Controller
                     'nombre' => $product->nombre,
                     'unidad_medida' => $product->unidad_medida,
                     'stock_minimo' => $product->stock_minimo,
-                    'stock_disponible' => (int) $product->stock_disponible,
-                    'diferencia' => (int) ($product->stock_minimo - $product->stock_disponible),
+                    'stock_disponible' => $product->stockDisponible(),
+                    'diferencia' => (int) $product->stock_minimo - $product->stockDisponible(),
                 ];
             })
             ->values()

@@ -37,14 +37,18 @@ class TransferInventory
                     throw ValidationException::withMessages(['product_id' => 'Selecciona un producto y una cantidad.']);
                 }
                 $product = Product::query()->where('serializado', false)->findOrFail($productId);
-                $available = (int) InventoryMovement::query()->where('product_id', $product->id)->where('sede_id', $sourceSedeId)->sum('cantidad');
-                if ($available < $quantity) {
-                    throw ValidationException::withMessages(['quantity' => 'No hay stock suficiente en la sede origen.']);
-                }
+                // Con bloqueo: dos traslados a la vez no dejan la sede en negativo.
+                InventoryMovement::exigirSaldo($product, $sourceSedeId, $quantity, 'quantity');
                 $this->recordPair($product->id, $sourceSedeId, $data['destination_sede_id'], $quantity, $user, $data['observation'] ?? null);
             }
 
-            AuditLogger::log('inventario.traslado', new InventoryMovement, ['sede_id' => $sourceSedeId], ['sede_id' => $data['destination_sede_id'], 'serials' => $serials->all()], userId: $user->id);
+            $salida = InventoryMovement::query()->where('tipo', 'traslado')->where('sede_id', $sourceSedeId)->where('user_id', $user->id)->latest('id')->first();
+            AuditLogger::log('inventario.traslado', $salida ?? new InventoryMovement, ['sede_id' => $sourceSedeId], [
+                'sede_id' => $data['destination_sede_id'],
+                'serials' => $serials->all(),
+                'product_id' => $data['product_id'] ?? null,
+                'quantity' => $data['quantity'] ?? $serials->count(),
+            ], userId: $user->id);
         });
     }
 
