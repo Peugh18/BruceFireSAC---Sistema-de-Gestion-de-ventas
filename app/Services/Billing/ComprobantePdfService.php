@@ -45,16 +45,21 @@ class ComprobantePdfService
     public function generate(ElectronicDocument $document, string $xmlSigned): string
     {
         $path = "pdf/{$document->tipo}-{$document->serie}-{$document->correlativo}.pdf";
+        $firma = $this->firmaDeDiseno();
 
         Storage::disk('local')->put($path, $this->render($document, $xmlSigned));
+
+        if ($document->exists) {
+            $document->forceFill(['pdf_firma' => $firma])->saveQuietly();
+        }
 
         return $path;
     }
 
     /**
-     * Ruta del PDF al día: si el Gerente cambió el diseño o los datos de la
-     * empresa después de generarlo, se vuelve a dibujar con el mismo XML
-     * firmado (el comprobante no cambia, solo su presentación).
+     * Ruta del PDF al día: si se dibujó con otra plantilla o con otros datos
+     * de la empresa (su firma de diseño no coincide), se vuelve a dibujar con
+     * el mismo XML firmado (el comprobante no cambia, solo su presentación).
      */
     public function vigente(ElectronicDocument $document): ?string
     {
@@ -66,7 +71,7 @@ class ComprobantePdfService
 
         $tieneArchivo = $document->pdf_path && Storage::disk('local')->exists($document->pdf_path);
 
-        if ($tieneArchivo && Storage::disk('local')->lastModified($document->pdf_path) >= $this->ultimoCambioDeDiseno()) {
+        if ($tieneArchivo && $document->pdf_firma === $this->firmaDeDiseno()) {
             return $document->pdf_path;
         }
 
@@ -172,6 +177,8 @@ class ComprobantePdfService
      */
     public function render(ElectronicDocument $document, string $xmlSigned, ?string $medioPago = null): string
     {
+        $this->olvidarPlantillaCompilada();
+
         return Pdf::loadView('pdf.comprobante', $this->datos($document, $xmlSigned, $medioPago))->setPaper('a4')->output();
     }
 
@@ -235,16 +242,36 @@ class ComprobantePdfService
     }
 
     /**
-     * Momento del último cambio que afecta cómo se ve el comprobante: los
-     * datos de la empresa y sus cuentas (Gerente) o una nueva versión de la
-     * plantilla instalada con el código.
+     * Huella de todo lo que cambia cómo se ve el comprobante: el contenido de
+     * la plantilla y de este servicio (nueva versión instalada con el código)
+     * y los datos de la empresa y sus cuentas (Gerente). Se compara por
+     * contenido, no por fechas de archivos.
      */
-    protected function ultimoCambioDeDiseno(): int
+    /**
+     * Laravel guarda una copia compilada de la plantilla y decide si está
+     * vieja por la fecha del archivo; si esa fecha no cambió al actualizar
+     * el código, seguiría dibujando el diseño anterior. Se descarta para que
+     * siempre se use la plantilla instalada.
+     */
+    protected function olvidarPlantillaCompilada(): void
     {
-        $empresa = CompanySetting::current()->updated_at?->getTimestamp() ?? 0;
-        $cuentas = CompanyBankAccount::query()->max('updated_at');
-        $plantilla = max((int) @filemtime(resource_path('views/pdf/comprobante.blade.php')), (int) @filemtime(__FILE__));
+        $compilada = app('blade.compiler')->getCompiledPath(resource_path('views/pdf/comprobante.blade.php'));
 
-        return max($empresa, $cuentas ? Carbon::parse($cuentas)->getTimestamp() : 0, $plantilla);
+        if (is_file($compilada)) {
+            @unlink($compilada);
+        }
+    }
+
+    public function firmaDeDiseno(): string
+    {
+        $empresa = CompanySetting::current();
+        $cuentas = CompanyBankAccount::query()->orderBy('id')->get(['id', 'updated_at', 'activo']);
+
+        return hash('sha256', implode('|', [
+            (string) @file_get_contents(resource_path('views/pdf/comprobante.blade.php')),
+            (string) @file_get_contents(__FILE__),
+            $empresa->updated_at?->toIso8601String(),
+            $cuentas->toJson(),
+        ]));
     }
 }

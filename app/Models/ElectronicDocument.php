@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $xml_path
  * @property string|null $cdr_path
  * @property string|null $pdf_path
+ * @property string|null $pdf_firma
  * @property string $sunat_estado
  * @property Carbon|null $enviar_desde
  * @property string|null $sunat_codigo_respuesta
@@ -34,7 +35,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'sale_id', 'tipo', 'serie', 'correlativo', 'fecha_emision', 'cpe_afectado_id', 'motivo_catalogo', 'importe',
-    'xml_path', 'cdr_path', 'pdf_path', 'sunat_estado', 'sunat_codigo_respuesta',
+    'xml_path', 'cdr_path', 'pdf_path', 'pdf_firma', 'sunat_estado', 'sunat_codigo_respuesta',
     'sunat_mensaje', 'enviar_desde', 'enviado_at',
 ])]
 class ElectronicDocument extends Model

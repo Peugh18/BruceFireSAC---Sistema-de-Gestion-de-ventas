@@ -30,6 +30,7 @@ class RedibujarComprobantes extends Command
         }
 
         $this->info("{$redibujados} de {$documentos->count()} comprobante(s) redibujados con el diseño actual.");
+        $this->line('Firma del diseño: '.substr($pdfService->firmaDeDiseno(), 0, 12).' · plantilla: '.resource_path('views/pdf/comprobante.blade.php'));
 
         if ($sinXml !== []) {
             $this->warn('Sin XML guardado, no se pudieron redibujar: '.implode(', ', $sinXml));
