@@ -11,6 +11,7 @@ use App\Actions\Sales\CreateSale;
 use App\Actions\Sales\DescartarVentaSinComprobante;
 use App\Actions\Sales\EditarVentaEmitida;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vendedor\Concerns\FiltraPorFechas;
 use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\CashRegister;
 use App\Models\Client;
@@ -26,19 +27,18 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
-use Throwable;
 
 class SaleController extends Controller
 {
+    use FiltraPorFechas;
+
     /**
      * Ventas de un rango de fechas (por defecto, las de hoy), con los totales
      * del vendedor en ese mismo rango.
@@ -119,42 +119,6 @@ class SaleController extends Controller
                 'borradores' => Sale::query()->where('vendedor_id', $vendedorId)->where('estado', 'borrador')->count(),
             ],
         ]);
-    }
-
-    /**
-     * Rango del filtro "Desde / Hasta"; sin fechas, el día de hoy. Si vienen
-     * al revés se ordenan, y nunca abarca más de un año.
-     *
-     * @return array{0: CarbonInterface, 1: CarbonInterface}
-     */
-    protected function rangoDeFechas(Request $request): array
-    {
-        $leer = function (string $campo) use ($request): ?CarbonInterface {
-            $valor = $request->string($campo)->toString();
-
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor) !== 1) {
-                return null;
-            }
-
-            try {
-                return Carbon::createFromFormat('Y-m-d', $valor)->startOfDay();
-            } catch (Throwable) {
-                return null;
-            }
-        };
-
-        $desde = $leer('desde') ?? today();
-        $hasta = $leer('hasta') ?? $desde->copy();
-
-        if ($hasta->lt($desde)) {
-            [$desde, $hasta] = [$hasta, $desde];
-        }
-
-        if ($desde->diffInDays($hasta) > 366) {
-            $desde = $hasta->copy()->subYear();
-        }
-
-        return [$desde, $hasta];
     }
 
     public function create(Team $current_team, Request $request): Response

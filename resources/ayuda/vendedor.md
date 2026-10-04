@@ -77,7 +77,7 @@
 
 ## Facturación electrónica
 
-- Filtra por tipo, mes o busca por número (F001-65), cliente o RUC.
+- Al entrar ves los comprobantes **de hoy** (por su fecha de emisión). Cambia **Desde / Hasta** o usa un atajo (**Hoy, Ayer, Esta semana, Este mes**); se aplica solo. Filtra por tipo o busca por número (F001-65), cliente o RUC dentro de esas fechas. La descarga en ZIP o Excel toma lo filtrado.
 - Marca comprobantes (o "seleccionar los N del filtro") y pulsa **Descargar ZIP** (XML, CDR, PDF) o **Excel** (registro de ventas).
 - Reenvía los observados o con excepción con el botón de reenviar.
 
@@ -101,12 +101,12 @@
 
 ## Lista de ventas por fechas
 
-- Al entrar a **Ventas** ves solo las ventas **de hoy**. Arriba eliges **Desde / Hasta** o un atajo (**Hoy, Ayer, Esta semana, Este mes**) y pulsas **Ver**.
+- Al entrar a **Ventas** ves solo las ventas **de hoy**. Arriba eliges **Desde / Hasta** o un atajo (**Hoy, Ayer, Esta semana, Este mes**); el cambio se aplica solo.
 - Puedes buscar por cliente, RUC/DNI, número de venta o de comprobante.
 - Los recuadros de arriba suman **tus** ventas emitidas en esas fechas: total, al contado, a crédito. "Por enviar a SUNAT" cuenta todo lo que aún falta enviar, sea del día que sea.
 
 ## Por vencer: por empresa
 
-- **Por empresa** (vista principal): una tarjeta por cliente con cuántos extintores tiene, cuántos están vencidos o vencen en 30 días y su próximo vencimiento. Ábrela para ver cada extintor con su serie, recarga y prueba hidrostática. Botón **WhatsApp** para ofrecer la recarga.
+- **Por empresa** (vista principal): una tarjeta por cliente con cuántos extintores tiene, cuántos están vencidos o vencen en 30 días y su próximo vencimiento. Ábrela para ver cada extintor con su serie, recarga y prueba hidrostática. Botón **WhatsApp** para ofrecer la recarga; si el cliente no tiene celular sale **Agregar número**. También cuenta lo vendido **sin serie** (recargas y extintores por cantidad) y lo comprado en el sistema anterior: se marca *estimado* y vence al año de la compra.
 - Filtra por **Todas, Con vencidos, Próximos 30 días o Próximos 3 meses**, y busca por empresa, RUC o serie.
 - **Avisos por extintor** es la lista de antes (vencidas, esta semana, este mes).

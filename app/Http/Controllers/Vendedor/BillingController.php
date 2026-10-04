@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Vendedor;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
+use App\Http\Controllers\Vendedor\Concerns\FiltraPorFechas;
 use App\Models\ElectronicDocument;
 use App\Models\Team;
 use App\Services\Billing\ComprobantePdfService;
@@ -25,6 +26,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class BillingController extends Controller
 {
     use AcotaPorSede;
+    use FiltraPorFechas;
 
     /**
      * Máximo de comprobantes por ZIP para no agotar memoria ni tiempo.
@@ -35,8 +37,8 @@ class BillingController extends Controller
     {
         $tipo = $request->string('tipo')->toString();
         $estado = $request->string('estado')->toString();
-        $mes = $request->string('mes')->toString();
         $buscar = $request->string('buscar')->toString();
+        [$desde, $hasta] = $this->rangoDeFechas($request);
         $vendedorId = $request->user()->id;
 
         $documents = $this->consulta($request)
@@ -68,9 +70,11 @@ class BillingController extends Controller
             'filters' => [
                 'tipo' => $tipo,
                 'estado' => $estado,
-                'mes' => $mes,
                 'buscar' => $buscar,
+                'desde' => $desde->toDateString(),
+                'hasta' => $hasta->toDateString(),
             ],
+            'hoy' => today()->toDateString(),
             'totalFiltrados' => $this->consulta($request)->count(),
             'kpis' => [
                 'emitidos_hoy' => $baseKpiQuery()->whereDate('created_at', today())->count(),
@@ -172,17 +176,16 @@ class BillingController extends Controller
     {
         $tipo = $request->string('tipo')->toString();
         $estado = $request->string('estado')->toString();
-        $mes = $request->string('mes')->toString();
         $buscar = trim($request->string('buscar')->toString());
+        [$desde, $hasta] = $this->rangoDeFechas($request);
 
         return ElectronicDocument::query()
             ->whereHas('sale', fn ($query) => $query->where('vendedor_id', $request->user()->id))
             ->when($tipo === 'nota', fn ($query) => $query->whereIn('tipo', ['nota_credito', 'nota_debito']))
             ->when(in_array($tipo, ['factura', 'boleta', 'nota_credito', 'nota_debito'], true), fn ($query) => $query->where('tipo', $tipo))
             ->when($estado !== '' && $estado !== 'todos', fn ($query) => $query->where('sunat_estado', $estado))
-            ->when(preg_match('/^\d{4}-\d{2}$/', $mes) === 1, fn ($query) => $query
-                ->whereYear('created_at', (int) substr($mes, 0, 4))
-                ->whereMonth('created_at', (int) substr($mes, 5, 2)))
+            // Fecha del comprobante (la que va a SUNAT), no la de registro.
+            ->whereRaw('COALESCE(fecha_emision, DATE(created_at)) BETWEEN ? AND ?', [$desde->toDateString(), $hasta->toDateString()])
             ->when($buscar !== '', function ($query) use ($buscar) {
                 $numero = preg_match('/^([A-Z0-9]{4})-0*(\d+)$/i', $buscar, $partes) === 1 ? $partes : null;
 

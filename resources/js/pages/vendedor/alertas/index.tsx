@@ -84,7 +84,9 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
             empresa.cliente.toLowerCase().includes(q) ||
             empresa.numero_documento.includes(q) ||
             empresa.equipos.some((equipo) =>
-                equipo.numero_serie.toLowerCase().includes(q),
+                (equipo.numero_serie ?? equipo.equipo)
+                    .toLowerCase()
+                    .includes(q),
             ),
     );
     const plazos = [

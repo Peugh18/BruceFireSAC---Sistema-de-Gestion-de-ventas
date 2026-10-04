@@ -112,3 +112,17 @@ test('a CLIENTES VARIOS no se le guarda numero', function () {
 
     expect($quote->id)->toBeInt();
 });
+
+test('un telefono fijo no sirve para whatsapp y la cotizacion pide agregar numero', function () {
+    cotizacionConItems(['whatsapp' => '-', 'telefono' => '044-245678']);
+
+    $this->actingAs($this->vendedor)
+        ->get(route('vendedor.cotizaciones.index', ['current_team' => $this->vendedor->currentTeam]))
+        ->assertInertia(fn ($page) => $page
+            ->where('quotes.data.0.whatsapp', null)
+            ->where('quotes.data.0.puede_guardar_numero', true));
+
+    expect((new Client(['whatsapp' => null, 'telefono' => '+51 987-654-321']))->whatsappInternacional())->toBe('51987654321')
+        ->and((new Client(['whatsapp' => '12345', 'telefono' => '987654321']))->whatsappInternacional())->toBe('51987654321')
+        ->and((new Client(['whatsapp' => '000000000', 'telefono' => null]))->whatsappInternacional())->toBeNull();
+});

@@ -2,6 +2,7 @@
 
 namespace App\Services\Avisos;
 
+use App\Models\Client;
 use App\Models\ClientRetentionScore;
 use App\Models\Equipment;
 use App\Services\Ml\RetentionModel;
@@ -90,43 +91,63 @@ class ExtintoresPorVencer
      * días y su próximo vencimiento. Así la pantalla nunca queda vacía
      * aunque nada venza este mes. Ordenado por el vencimiento más próximo.
      *
+     * Además de los extintores registrados con serie, cuenta lo que se vendió
+     * sin serie (recargas y extintores por cantidad) y lo que el cliente
+     * compró en el sistema anterior, con la recarga estimada al año de la
+     * compra y marcado como estimado.
+     *
      * @return array<int, array<string, mixed>>
      */
     public function porEmpresa(CarbonInterface $today, int $limite = 300): array
     {
-        return Equipment::query()
-            ->with(['client', 'product'])
+        $registrados = Equipment::query()
+            ->with('product')
             ->whereIn('estado', ['activo', 'descargado', 'usado'])
             ->get()
+            ->map(function (Equipment $equipo) use ($today): array {
+                $descargado = in_array($equipo->estado, ['descargado', 'usado'], true);
+                $proxima = $descargado
+                    ? $today->toDateString()
+                    : collect([$equipo->proxima_fecha_atencion, $equipo->proxima_prueba_hidrostatica])
+                        ->filter()
+                        ->min(fn (CarbonInterface $fecha) => $fecha->toDateString());
+
+                return [
+                    'client_id' => $equipo->client_id,
+                    ...$this->equipoEmpresa($today, $proxima, $descargado),
+                    'equipment_id' => $equipo->id,
+                    'numero_serie' => $equipo->numero_serie,
+                    'equipo' => $equipo->product->nombre,
+                    'capacidad' => $equipo->capacidad,
+                    'ubicacion' => $equipo->ubicacion_actual,
+                    'recarga' => $equipo->proxima_fecha_atencion?->toDateString(),
+                    'prueba_hidrostatica' => $equipo->proxima_prueba_hidrostatica?->toDateString(),
+                ];
+            });
+
+        $vendidosSinSerie = $this->vendidosSinSerie($today);
+        $conDatos = $registrados->pluck('client_id')->merge($vendidosSinSerie->pluck('client_id'))->unique();
+        $equipos = $registrados
+            ->concat($vendidosSinSerie)
+            ->concat($this->compradosEnSistemaAnterior($today)->whereNotIn('client_id', $conDatos->all()));
+
+        // CLIENTES VARIOS no es una empresa a la que se le pueda ofrecer nada.
+        $clientes = Client::query()
+            ->whereIn('id', $equipos->pluck('client_id')->unique())
+            ->where('tipo_documento', '!=', Client::TIPO_DOCUMENTO_VARIOS)
+            ->get()
+            ->keyBy('id');
+
+        return $equipos
+            ->filter(fn (array $equipo) => $clientes->has($equipo['client_id']))
             ->groupBy('client_id')
-            ->map(function (Collection $equipos) use ($today): array {
-                /** @var Equipment $primero */
-                $primero = $equipos->first();
-                $client = $primero->client;
-
-                $detalle = $equipos->map(function (Equipment $equipo) use ($today): array {
-                    $descargado = in_array($equipo->estado, ['descargado', 'usado'], true);
-                    $proxima = $descargado
-                        ? $today->toDateString()
-                        : collect([$equipo->proxima_fecha_atencion, $equipo->proxima_prueba_hidrostatica])
-                            ->filter()
-                            ->min(fn (CarbonInterface $fecha) => $fecha->toDateString());
-                    $dias = $proxima ? (int) $today->diffInDays(Carbon::parse($proxima), false) : null;
-
-                    return [
-                        'equipment_id' => $equipo->id,
-                        'numero_serie' => $equipo->numero_serie,
-                        'equipo' => $equipo->product->nombre,
-                        'capacidad' => $equipo->capacidad,
-                        'ubicacion' => $equipo->ubicacion_actual,
-                        'estado' => $descargado ? 'descargado' : ($dias !== null && $dias < 0 ? 'vencido' : ($dias !== null && $dias <= 30 ? 'por_vencer' : 'al_dia')),
-                        'recarga' => $equipo->proxima_fecha_atencion?->toDateString(),
-                        'prueba_hidrostatica' => $equipo->proxima_prueba_hidrostatica?->toDateString(),
-                        'proxima' => $proxima,
-                        'dias' => $dias,
-                    ];
-                })->sortBy(fn (array $equipo) => $equipo['proxima'] ?? '9999-12-31')->values();
-
+            ->map(function (Collection $deLaEmpresa, int $clientId) use ($clientes): array {
+                /** @var Client $client */
+                $client = $clientes->get($clientId);
+                $detalle = $deLaEmpresa
+                    ->map(fn (array $equipo) => collect($equipo)->except('client_id')->all())
+                    ->sortBy(fn (array $equipo) => $equipo['proxima'] ?? '9999-12-31')
+                    ->values();
                 $proximo = $detalle->first();
 
                 return [
@@ -134,9 +155,10 @@ class ExtintoresPorVencer
                     'cliente' => $client->razon_social,
                     'numero_documento' => $client->numero_documento,
                     'whatsapp' => $client->whatsappInternacional(),
-                    'extintores' => $detalle->count(),
-                    'vencidos' => $detalle->whereIn('estado', ['vencido', 'descargado'])->count(),
-                    'por_vencer' => $detalle->where('estado', 'por_vencer')->count(),
+                    'extintores' => (int) $detalle->sum('cantidad'),
+                    'vencidos' => (int) $detalle->whereIn('estado', ['vencido', 'descargado'])->sum('cantidad'),
+                    'por_vencer' => (int) $detalle->where('estado', 'por_vencer')->sum('cantidad'),
+                    'estimados' => (int) $detalle->where('estimado', true)->sum('cantidad'),
                     'proximo_vencimiento' => $proximo['proxima'] ?? null,
                     'dias' => $proximo['dias'] ?? null,
                     'equipos' => $detalle->all(),
@@ -146,6 +168,112 @@ class ExtintoresPorVencer
             ->take($limite)
             ->values()
             ->all();
+    }
+
+    /**
+     * Estado y días al próximo vencimiento de una línea de "Por empresa".
+     *
+     * @return array{estado: string, proxima: string|null, dias: int|null, cantidad: int, estimado: bool}
+     */
+    protected function equipoEmpresa(CarbonInterface $today, ?string $proxima, bool $descargado = false, int $cantidad = 1, bool $estimado = false): array
+    {
+        $dias = $proxima ? (int) $today->diffInDays(Carbon::parse($proxima), false) : null;
+
+        return [
+            'estado' => $descargado ? 'descargado' : ($dias !== null && $dias < 0 ? 'vencido' : ($dias !== null && $dias <= 30 ? 'por_vencer' : 'al_dia')),
+            'proxima' => $proxima,
+            'dias' => $dias,
+            'cantidad' => $cantidad,
+            'estimado' => $estimado,
+        ];
+    }
+
+    /**
+     * Línea estimada (sin serie): se recarga al año de la última compra.
+     *
+     * @return array<string, mixed>
+     */
+    protected function equipoEstimado(CarbonInterface $today, int $clientId, string $nombre, string $fechaCompra, int $cantidad, string $origen): array
+    {
+        $proxima = Carbon::parse($fechaCompra)->addYear()->toDateString();
+
+        return [
+            'client_id' => $clientId,
+            ...$this->equipoEmpresa($today, $proxima, cantidad: max(1, $cantidad), estimado: true),
+            'equipment_id' => null,
+            'numero_serie' => null,
+            'equipo' => $nombre,
+            'capacidad' => null,
+            'ubicacion' => $origen,
+            'recarga' => $proxima,
+            'prueba_hidrostatica' => null,
+        ];
+    }
+
+    /**
+     * Recargas y extintores vendidos en este sistema sin un equipo con serie:
+     * por cliente y por producto, la última compra.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    protected function vendidosSinSerie(CarbonInterface $today): Collection
+    {
+        return DB::table('sale_items')
+            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->leftJoin('services', 'services.id', '=', 'sale_items.service_id')
+            ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
+            ->where('sales.estado', 'confirmada')
+            ->whereNull('sale_items.equipment_id')
+            ->where(fn ($query) => $query
+                ->where('services.nombre', 'like', '%RECARGA%')
+                ->orWhere('products.categoria', 'extintor'))
+            ->get([
+                'sales.client_id',
+                'sales.fecha',
+                DB::raw('COALESCE(products.nombre, services.nombre) as nombre'),
+                'sale_items.cantidad',
+            ])
+            ->groupBy(fn (object $linea) => "{$linea->client_id}|{$linea->nombre}")
+            ->map(function (Collection $compras) use ($today): array {
+                $fecha = (string) $compras->max('fecha');
+                $ultima = $compras->filter(fn (object $linea) => (string) $linea->fecha === $fecha);
+                $primera = $ultima->first();
+
+                return $this->equipoEstimado($today, (int) $primera->client_id, (string) $primera->nombre, $fecha, (int) round((float) $ultima->sum('cantidad')), 'Sin serie (estimado por la venta)');
+            })
+            ->values();
+    }
+
+    /**
+     * Lo que el cliente compró en el sistema anterior (recargas y
+     * extintores): por cliente, lo de su última compra.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    protected function compradosEnSistemaAnterior(CarbonInterface $today): Collection
+    {
+        return DB::table('ml_lineas_historicas')
+            ->join('ml_comprobantes_historicos', 'ml_comprobantes_historicos.comprobante', '=', 'ml_lineas_historicas.comprobante')
+            ->join('ml_productos_historicos', 'ml_productos_historicos.id', '=', 'ml_lineas_historicas.ml_producto_id')
+            ->join('clients', 'clients.numero_documento', '=', 'ml_comprobantes_historicos.documento_cliente')
+            ->where(fn ($query) => $query
+                ->whereIn('ml_productos_historicos.categoria', ['recarga_mantenimiento', 'mantenimiento'])
+                ->orWhere('ml_productos_historicos.nombre', 'like', 'EXTINTOR%'))
+            ->get([
+                'clients.id as client_id', 'ml_comprobantes_historicos.fecha',
+                'ml_productos_historicos.nombre', 'ml_lineas_historicas.cantidad',
+            ])
+            ->groupBy('client_id')
+            ->flatMap(function (Collection $delCliente) use ($today): Collection {
+                $fecha = (string) $delCliente->max('fecha');
+
+                return $delCliente
+                    ->filter(fn (object $linea) => (string) $linea->fecha === $fecha)
+                    ->groupBy('nombre')
+                    ->map(fn (Collection $lineas, string $nombre) => $this->equipoEstimado($today, (int) $lineas->first()->client_id, $nombre, $fecha, (int) round((float) $lineas->sum('cantidad')), 'Sistema anterior (estimado)'))
+                    ->values();
+            })
+            ->values();
     }
 
     /**
