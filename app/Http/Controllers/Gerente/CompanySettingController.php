@@ -9,10 +9,12 @@ use App\Models\CompanySetting;
 use App\Models\Signer;
 use App\Models\Team;
 use App\Services\AuditLogger;
+use App\Services\Billing\ComprobantePdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class CompanySettingController extends Controller
 {
@@ -30,7 +32,11 @@ class CompanySettingController extends Controller
                 'ubicacion' => $company->ubicacion?->paraFormulario(),
                 'telefono' => $company->telefono,
                 'email' => $company->email,
+                'sitio_web' => $company->sitio_web,
+                'color_marca' => $company->colorMarca(),
                 'leyenda_pie' => $company->leyenda_pie,
+                'mensaje_agradecimiento' => $company->mensaje_agradecimiento,
+                'condiciones_comprobante' => $company->condiciones_comprobante,
                 'cuenta_detraccion' => $company->cuenta_detraccion,
                 'logo_url' => $company->logoUrl(),
             ],
@@ -43,6 +49,7 @@ class CompanySettingController extends Controller
     {
         $company = CompanySetting::current();
         $data = $request->safe()->except('logo');
+        $data['color_marca'] = strtoupper($data['color_marca'] ?? CompanySetting::COLOR_MARCA);
 
         if ($request->hasFile('logo')) {
             if ($company->logo_path) {
@@ -63,5 +70,16 @@ class CompanySettingController extends Controller
         );
 
         return back();
+    }
+
+    /**
+     * Factura de ejemplo con el diseño y los datos actuales de la empresa.
+     */
+    public function vistaPrevia(Team $current_team, ComprobantePdfService $pdfService): HttpResponse
+    {
+        return response($pdfService->vistaPrevia(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="vista-previa-comprobante.pdf"',
+        ]);
     }
 }

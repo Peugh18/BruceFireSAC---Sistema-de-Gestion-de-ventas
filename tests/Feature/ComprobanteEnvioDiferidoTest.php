@@ -7,6 +7,7 @@ use App\Actions\Sales\CreateSale;
 use App\Actions\Sales\EditarVentaEmitida;
 use App\Contracts\SunatClientInterface;
 use App\Models\Client;
+use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryUnit;
 use App\Models\Product;
@@ -323,4 +324,20 @@ test('no se emite nota de credito sobre un comprobante que aun no se envio a SUN
 
     expect(fn () => app(IssueCreditNote::class)->handle($documento, '01', 'Anulación', 76.7))
         ->toThrow(ValidationException::class, 'solo se emite sobre un comprobante aceptado');
+});
+
+test('si el gerente cambia el diseño, el pdf ya emitido se vuelve a dibujar al descargarlo', function () {
+    $user = vendedorUser();
+    $documento = comprobanteDe(ventaConfirmada(Client::factory()->create(), vendedor: $user));
+    $antes = Storage::disk('local')->get($documento->pdf_path);
+
+    $this->travel(5)->minutes();
+    CompanySetting::current()->update(['color_marca' => '#1F4E79', 'mensaje_agradecimiento' => 'Gracias por confiar en nosotros']);
+    $this->travel(1)->minutes();
+
+    $this->actingAs($user)
+        ->get(route('vendedor.facturacion.pdf', ['current_team' => $user->currentTeam, 'electronic_document' => $documento]))
+        ->assertOk();
+
+    expect(Storage::disk('local')->get($documento->fresh()->pdf_path))->not->toBe($antes);
 });

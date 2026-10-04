@@ -19,6 +19,9 @@
 ## Configuración de la empresa
 
 - Datos de la empresa, logo, cuentas bancarias, firmantes de los certificados (técnico, administrador, ingeniero y CIP) e instructor de capacitación.
+- **Diseño del comprobante** (Configuración → Empresa): color de la marca, página web, mensaje de agradecimiento, condiciones de venta o garantía y leyenda de pie. Vale para todas las facturas y boletas; pulsa **Vista previa de la factura** para verla antes de emitir.
+- **Logo**: PNG con fondo transparente (o JPG), entre 150×60 y 3000 px por lado. Ideal horizontal, unos 600×200 px. En el comprobante se ajusta solo, sin deformarse.
+- Si cambias el diseño, las facturas ya emitidas salen con el diseño nuevo la próxima vez que se descargan (el XML enviado a SUNAT no cambia).
 
 ## Auditoría
 

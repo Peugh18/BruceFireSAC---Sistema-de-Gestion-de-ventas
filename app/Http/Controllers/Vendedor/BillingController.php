@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Models\ElectronicDocument;
 use App\Models\Team;
+use App\Services\Billing\ComprobantePdfService;
 use App\Services\Billing\MensajeSunat;
 use App\Services\Billing\PrecioConIgv;
 use Illuminate\Database\Eloquent\Builder;
@@ -101,7 +102,9 @@ class BillingController extends Controller
         $agregados = 0;
 
         foreach ($documentos as $documento) {
-            foreach (['xml' => $documento->xml_path, 'cdr' => $documento->cdr_path, 'pdf' => $documento->pdf_path] as $carpeta => $path) {
+            $pdf = in_array('pdf', $incluir, true) ? app(ComprobantePdfService::class)->vigente($documento) : null;
+
+            foreach (['xml' => $documento->xml_path, 'cdr' => $documento->cdr_path, 'pdf' => $pdf] as $carpeta => $path) {
                 if (! in_array($carpeta, $incluir, true) || ! $path || ! Storage::disk('local')->exists($path)) {
                     continue;
                 }
@@ -208,7 +211,7 @@ class BillingController extends Controller
 
     public function resend(Team $current_team, ElectronicDocument $electronic_document, EmitElectronicDocument $emitElectronicDocument): RedirectResponse
     {
-        $this->asegurarSede($electronic_document->sale?->sede_id);
+        $this->asegurarSede($electronic_document->sale->sede_id);
 
         if (! in_array($electronic_document->sunat_estado, ['pendiente', 'observado', 'excepcion'], true)) {
             abort(422, 'Solo se pueden reenviar documentos pendientes observados o con excepción.');
@@ -231,7 +234,9 @@ class BillingController extends Controller
 
     public function downloadPdf(Team $current_team, ElectronicDocument $electronic_document): StreamedResponse
     {
-        return $this->downloadPath($electronic_document, $electronic_document->pdf_path, 'pdf');
+        $this->asegurarSede($electronic_document->sale->sede_id);
+
+        return $this->downloadPath($electronic_document, app(ComprobantePdfService::class)->vigente($electronic_document), 'pdf');
     }
 
     protected function downloadPath(ElectronicDocument $document, ?string $path, string $extension): StreamedResponse

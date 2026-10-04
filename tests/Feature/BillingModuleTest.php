@@ -11,9 +11,9 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
+use App\Services\Billing\ComprobantePdfService;
 use App\Services\Billing\DetraccionCalculator;
 use App\Services\Billing\GreenterService;
-use App\Services\Billing\NumeroEnLetrasService;
 use App\Services\Billing\ResponseClassifier;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Storage;
@@ -132,16 +132,7 @@ test('emit electronic document prints the detraccion legend and bank account whe
     expect($document->pdf_path)->not->toBeNull()
         ->and(Storage::disk('local')->exists($document->pdf_path))->toBeTrue();
 
-    $html = view('pdf.comprobante', [
-        'document' => $document,
-        'sale' => $document->sale,
-        'company' => CompanySetting::current(),
-        'logoBase64' => null,
-        'qrBase64' => '',
-        'montoEnLetras' => app(NumeroEnLetrasService::class)->convertir((float) $sale->total),
-        'bankAccounts' => collect(),
-        'detraccion' => app(DetraccionCalculator::class)->calcular((float) $sale->total, true),
-    ])->render();
+    $html = app(ComprobantePdfService::class)->html($document, (string) Storage::disk('local')->get($document->xml_path));
 
     expect($html)->toContain('Sistema de Pago de Obligaciones Tributarias')
         ->and($html)->toContain('00-123-456789');
