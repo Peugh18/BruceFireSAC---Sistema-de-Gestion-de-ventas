@@ -8,112 +8,145 @@
     };
     $numero = $document->serie.'-'.str_pad((string) $document->correlativo, 8, '0', STR_PAD_LEFT);
     $fechaEmision = $document->fecha_emision ?? $sale->fecha;
+    $esVenta = $document->tipo === 'factura' || $document->tipo === 'boleta';
     $vencimiento = $sale->esCredito() && $sale->installments->isNotEmpty() ? $sale->installments->last()->fecha_vencimiento : null;
     $ubicacion = collect([$company->distrito, $company->provincia, $company->departamento])->filter()->unique()->implode(' - ');
-    $etiquetaReferencia = null;
-    $valorReferencia = null;
     $direccionCliente = $sale->client->direccionImprimible();
+    $etiquetaDocumento = match ($sale->client->tipo_documento) {
+        'ruc' => 'R.U.C.',
+        'dni' => 'D.N.I.',
+        default => 'Documento',
+    };
+
+    // Destino que escribió el vendedor ("PLACA: AVR-833", "SEDE: Planta
+    // Chimbote" u otro texto): solo aparece si existe, y destacado.
+    $destino = null;
     if ($sale->referencia) {
-        $etiquetaReferencia = str_contains($sale->referencia, ':')
-            ? trim(mb_strtoupper(strstr($sale->referencia, ':', true)))
-            : ($sale->destino === 'vehiculo' ? 'PLACA' : 'REFERENCIA');
-        $valorReferencia = str_contains($sale->referencia, ':') ? trim(substr(strstr($sale->referencia, ':'), 1)) : $sale->referencia;
+        $tieneEtiqueta = str_contains($sale->referencia, ':');
+        $etiqueta = $tieneEtiqueta ? trim(mb_strtoupper(strstr($sale->referencia, ':', true))) : ($sale->destino === 'vehiculo' ? 'PLACA' : 'REFERENCIA');
+        $valor = $tieneEtiqueta ? trim(substr(strstr($sale->referencia, ':'), 1)) : trim($sale->referencia);
+        if ($valor !== '') {
+            $destino = ['etiqueta' => $etiqueta, 'valor' => $valor, 'detalle' => null];
+        }
     } elseif ($sale->destino === 'vehiculo' && $sale->vehicle) {
-        [$etiquetaReferencia, $valorReferencia] = ['PLACA', $sale->vehicle->placa];
+        $destino = ['etiqueta' => 'PLACA', 'valor' => $sale->vehicle->placa, 'detalle' => $sale->vehicle->descripcion];
     }
+    if ($destino) {
+        $destino['titulo'] = match ($destino['etiqueta']) {
+            'PLACA' => 'Vehículo · placa',
+            'SEDE', 'LOCAL' => 'Local / sede del cliente',
+            default => mb_convert_case(mb_strtolower($destino['etiqueta']), MB_CASE_TITLE),
+        };
+        if ($destino['etiqueta'] === 'PLACA' && ! $destino['detalle'] && $sale->client->relationLoaded('vehicles')) {
+            $destino['detalle'] = $sale->client->vehicles->firstWhere('placa', $destino['valor'])?->descripcion;
+        }
+        if (in_array($destino['etiqueta'], ['SEDE', 'LOCAL'], true) && $sale->client->relationLoaded('sites')) {
+            $destino['detalle'] = $sale->client->sites->first(fn ($sitio) => mb_strtolower(trim($sitio->nombre)) === mb_strtolower($destino['valor']))?->direccion;
+        }
+    }
+
     $descuentoTotal = $lineas->sum(fn ($item) => (float) $item->descuento);
     $cantidad = fn ($valor) => fmod((float) $valor, 1.0) === 0.0 ? number_format((float) $valor, 0) : number_format((float) $valor, 2);
-    $columnas = 6 + ($mostrarCodigo ? 1 : 0) + ($mostrarDescuento ? 1 : 0);
 @endphp
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <style>
-        @page { margin: 26px 30px 24px; }
-        body { font-family: Helvetica, Arial, sans-serif; font-size: 9px; color: #222; line-height: 1.35; }
+        @page { margin: 30px 34px 26px; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 8.8px; color: #222; line-height: 1.4; }
         table { border-collapse: collapse; width: 100%; }
         td, th { vertical-align: top; }
-        .muted { color: #6b6b6b; }
-        .upper { text-transform: uppercase; }
 
         /* Cabecera */
         .header td { vertical-align: middle; }
-        .company-name { font-size: 15px; font-weight: bold; color: {{ $marca['color'] }}; letter-spacing: 0.3px; }
-        .company-legal { font-size: 9px; font-weight: bold; color: #333; margin-top: 1px; }
-        .company-line { font-size: 8.3px; color: #555; margin-top: 2px; }
-        .doc-box { width: 205px; border: 1.5px solid {{ $marca['color'] }}; border-radius: 6px; }
-        .doc-box .ruc { background: {{ $marca['color'] }}; color: {{ $marca['texto'] }}; font-weight: bold; font-size: 10.5px; padding: 6px 8px; text-align: center; letter-spacing: 0.5px; }
-        .doc-box .tipo { font-size: 10.5px; font-weight: bold; text-transform: uppercase; padding: 7px 8px 2px; text-align: center; }
-        .doc-box .numero { font-size: 13px; font-weight: bold; padding: 2px 8px 8px; text-align: center; color: {{ $marca['color'] }}; letter-spacing: 0.5px; }
-        .rule { height: 3px; background: {{ $marca['color'] }}; margin: 12px 0 10px; }
+        .company-name { font-size: 13px; font-weight: bold; color: #111; letter-spacing: 0.2px; }
+        .company-line { font-size: 8.2px; color: #555; margin-top: 2px; }
+        .doc-box { width: 200px; border: 1.4px solid {{ $marca['color'] }}; }
+        .doc-box td { text-align: center; }
+        .doc-box .ruc { font-size: 11px; font-weight: bold; color: #111; padding: 8px 6px 5px; letter-spacing: 0.6px; }
+        .doc-box .tipo { font-size: 9.6px; font-weight: bold; color: #111; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px; background: #f2f2f2; border-top: 0.6px solid #cfcfcf; border-bottom: 0.6px solid #cfcfcf; }
+        .doc-box .numero { font-size: 13.5px; font-weight: bold; color: #111; padding: 6px 6px 8px; letter-spacing: 0.8px; }
+        .rule { border-top: 2px solid {{ $marca['color'] }}; margin: 12px 0 0; }
 
-        /* Cliente y datos de la operación */
-        .panel { background: {{ $marca['suave'] }}; border-radius: 6px; }
-        .panel td { padding: 8px 10px; }
-        .field { margin-bottom: 3px; }
-        .label { font-size: 7.3px; font-weight: bold; color: #6b6b6b; text-transform: uppercase; letter-spacing: 0.4px; }
-        .value { font-size: 9.3px; color: #1a1a1a; }
-        .value-strong { font-size: 10px; font-weight: bold; color: #1a1a1a; }
+        /* Datos del cliente y de la operación: "Etiqueta : valor" */
+        .datos { margin-top: 12px; }
+        .datos td { padding: 2px 0; font-size: 8.8px; }
+        .k { width: 74px; color: #555; font-weight: bold; }
+        .k2 { width: 92px; color: #555; font-weight: bold; }
+        .sep { width: 10px; color: #555; }
+        .v { color: #111; }
+        .v-strong { color: #111; font-weight: bold; font-size: 9.6px; }
+        .vacio { border-bottom: 0.6px dotted #b5b5b5; }
 
-        /* Ítems */
-        .items { margin-top: 12px; }
-        .items th { background: {{ $marca['color'] }}; color: {{ $marca['texto'] }}; font-size: 7.8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px; padding: 6px 6px; text-align: left; }
-        .items td { padding: 6px 6px; font-size: 8.8px; border-bottom: 0.6px solid {{ $marca['linea'] }}; }
-        .items tr.par td { background: #fafafa; }
+        /* Destino destacado: placa o local */
+        .destino { margin-top: 10px; border: 0.8px solid #d7d7d7; border-left: 3px solid {{ $marca['color'] }}; background: {{ $marca['suave'] }}; }
+        .destino td { padding: 7px 10px; vertical-align: middle; }
+        .destino .titulo { font-size: 7.4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px; color: #555; }
+        .destino .valor { font-size: 13px; font-weight: bold; color: #111; letter-spacing: 0.6px; }
+        .destino .detalle { font-size: 8.4px; color: #444; }
+
+        /* Detalle */
+        .items { margin-top: 14px; }
+        .items th { font-size: 7.4px; font-weight: bold; color: #333; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 6px; text-align: left; background: #f2f2f2; border-top: 1px solid #333; border-bottom: 1px solid #333; }
+        .items td { padding: 6px 6px; font-size: 8.8px; border-bottom: 0.6px solid #e1e1e1; }
+        .items tr.last td { border-bottom: 1px solid #333; }
         .num, .items th.num { text-align: right; white-space: nowrap; }
         .center, .items th.center { text-align: center; }
-        .code { font-family: Courier, monospace; font-size: 8.2px; color: #555; }
+        .code { font-size: 8px; color: #666; }
 
         /* Totales */
         .summary { margin-top: 10px; }
-        .letras { font-size: 8.6px; font-weight: bold; border-left: 3px solid {{ $marca['color'] }}; padding: 5px 8px; background: #f7f7f7; }
-        .obs { margin-top: 6px; font-size: 8.4px; }
-        .totals td { padding: 3px 8px; font-size: 9px; }
-        .totals .t-value { text-align: right; font-weight: bold; white-space: nowrap; }
-        .totals .grand td { background: {{ $marca['color'] }}; color: {{ $marca['texto'] }}; font-size: 11.5px; font-weight: bold; padding: 7px 8px; }
+        .letras { font-size: 8.4px; border: 0.6px solid #cfcfcf; padding: 6px 8px; }
+        .letras b { color: #111; }
+        .obs { margin-top: 6px; font-size: 8.4px; color: #333; }
+        .totals td { padding: 3px 8px; font-size: 8.8px; }
+        .totals .t-label { color: #444; }
+        .totals .t-value { text-align: right; white-space: nowrap; color: #111; }
+        .totals .grand td { border-top: 1.2px solid #111; border-bottom: 1.2px solid #111; padding: 6px 8px; font-size: 11px; font-weight: bold; color: #111; background: #f2f2f2; }
 
-        /* Bloques de información */
-        .box { margin-top: 10px; border: 0.8px solid #dcdcdc; border-radius: 5px; padding: 7px 9px; font-size: 8.3px; }
-        .box-title { font-size: 7.5px; font-weight: bold; color: {{ $marca['color'] }}; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
-        .mini th { font-size: 7.4px; text-transform: uppercase; color: #6b6b6b; text-align: left; padding: 2px 4px; border-bottom: 0.6px solid #dcdcdc; }
-        .mini td { font-size: 8.3px; padding: 2px 4px; }
+        /* Bloques opcionales */
+        .box { margin-top: 10px; border: 0.6px solid #cfcfcf; padding: 6px 9px; font-size: 8.2px; color: #333; }
+        .box-title { font-size: 7.3px; font-weight: bold; color: #111; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+        .mini th { font-size: 7.2px; text-transform: uppercase; color: #555; text-align: left; padding: 2px 4px; border-bottom: 0.6px solid #cfcfcf; }
+        .mini td { font-size: 8.2px; padding: 2px 4px; }
 
         /* Pie */
-        .thanks { margin-top: 14px; text-align: center; font-size: 10px; font-weight: bold; color: {{ $marca['color'] }}; }
-        .leyenda { text-align: center; font-size: 8.3px; font-style: italic; color: #555; margin-top: 2px; }
-        .footer { margin-top: 12px; border-top: 0.8px solid #dcdcdc; padding-top: 8px; }
+        .footer { margin-top: 16px; border-top: 0.6px solid #cfcfcf; padding-top: 8px; }
         .footer td { vertical-align: middle; font-size: 7.6px; color: #555; }
-        .footer-qr { width: 86px; }
-        .footer-qr img { width: 78px; height: 78px; }
+        .footer-qr { width: 84px; }
+        .footer-qr img { width: 76px; height: 76px; }
+        .thanks { font-size: 9px; font-style: italic; color: #333; margin-top: 4px; }
+        .leyenda { font-size: 7.8px; font-style: italic; color: #777; }
     </style>
 </head>
 <body>
-    {{-- Cabecera: logo + empresa | recuadro tributario --}}
+    {{-- Cabecera: logo y empresa | recuadro tributario --}}
     <table class="header">
         <tr>
             @if($logo)
-                <td style="width: {{ $logo['ancho'] + 14 }}px; padding-right: 14px;">
+                <td style="width: {{ $logo['ancho'] + 16 }}px; padding-right: 16px;">
                     <img src="{{ $logo['src'] }}" alt="logo" style="width: {{ $logo['ancho'] }}px; height: {{ $logo['alto'] }}px;">
                 </td>
             @endif
             <td>
-                <div class="company-name">{{ $company->nombre_comercial ?: $company->razon_social }}</div>
-                @if($company->nombre_comercial && $company->nombre_comercial !== $company->razon_social)
-                    <div class="company-legal">{{ $company->razon_social }}</div>
+                <div class="company-name">{{ $company->razon_social }}</div>
+                @if(! $logo && $company->nombre_comercial && $company->nombre_comercial !== $company->razon_social)
+                    <div class="company-line">{{ $company->nombre_comercial }}</div>
                 @endif
                 @if($company->direccion)
-                    <div class="company-line">{{ $company->direccion }}@if($ubicacion) · {{ $ubicacion }}@endif</div>
+                    <div class="company-line">{{ $company->direccion }}@if($ubicacion), {{ $ubicacion }}@endif</div>
                 @endif
-                @if($company->telefono || $company->email || $company->sitio_web)
-                    <div class="company-line">
-                        {{ collect([$company->telefono ? 'Telf. '.$company->telefono : null, $company->email, $company->sitio_web])->filter()->implode('  ·  ') }}
-                    </div>
+                @if($company->telefono || $company->email)
+                    <div class="company-line">{{ collect([$company->telefono ? 'Telf. '.$company->telefono : null, $company->email])->filter()->implode('  ·  ') }}</div>
+                @endif
+                @if($company->sitio_web)
+                    <div class="company-line">{{ $company->sitio_web }}</div>
                 @endif
             </td>
-            <td style="width: 205px;">
+            <td style="width: 200px;">
                 <table class="doc-box">
-                    <tr><td class="ruc">R.U.C. {{ $company->ruc }}</td></tr>
+                    <tr><td class="ruc">R.U.C. N.° {{ $company->ruc }}</td></tr>
                     <tr><td class="tipo">{{ $nombreDocumento }}</td></tr>
                     <tr><td class="numero">{{ $numero }}</td></tr>
                 </table>
@@ -124,68 +157,54 @@
     <div class="rule"></div>
 
     {{-- Cliente | datos de la operación --}}
-    <table class="panel">
+    <table class="datos">
         <tr>
-            <td style="width: 58%;">
-                <div class="field">
-                    <div class="label">Cliente</div>
-                    <div class="value-strong">{{ $sale->client->razon_social }}</div>
-                </div>
-                <div class="field">
-                    <div class="label">{{ $sale->client->tipo_documento === 'ruc' ? 'RUC' : ($sale->client->tipo_documento === 'dni' ? 'DNI' : 'Documento') }}</div>
-                    <div class="value">{{ $sale->client->numero_documento }}</div>
-                </div>
-                {{-- Siempre visible: si el cliente no tiene dirección queda en blanco
-                     para que se note y se complete en su ficha. --}}
-                <div class="field">
-                    <div class="label">{{ $sale->client->tieneRuc() ? 'Dirección fiscal' : 'Dirección' }}</div>
-                    <div class="value">{!! $direccionCliente !== null ? e($direccionCliente) : '&nbsp;' !!}</div>
-                </div>
-                @if($etiquetaReferencia)
-                    <div class="field">
-                        <div class="label">{{ $etiquetaReferencia }}</div>
-                        <div class="value">{{ $valorReferencia }}</div>
-                    </div>
-                @endif
+            <td style="width: 58%; padding-right: 14px;">
+                <table>
+                    <tr><td class="k">Señor(es)</td><td class="sep">:</td><td class="v-strong">{{ $sale->client->razon_social }}</td></tr>
+                    <tr><td class="k">{{ $etiquetaDocumento }}</td><td class="sep">:</td><td class="v">{{ $sale->client->numero_documento }}</td></tr>
+                    <tr>
+                        <td class="k">Dirección</td><td class="sep">:</td>
+                        {{-- Siempre visible: si falta queda en blanco para completarla en la ficha del cliente. --}}
+                        @if($direccionCliente)
+                            <td class="v">{{ $direccionCliente }}</td>
+                        @else
+                            <td class="v vacio">&nbsp;</td>
+                        @endif
+                    </tr>
+                </table>
             </td>
             <td style="width: 42%;">
                 <table>
-                    <tr>
-                        <td style="padding: 0 6px 4px 0;">
-                            <div class="label">Fecha de emisión</div>
-                            <div class="value">{{ $fechaEmision->format('d/m/Y') }} {{ $document->created_at?->format('H:i') }}</div>
-                        </td>
-                        <td style="padding: 0 0 4px;">
-                            <div class="label">Moneda</div>
-                            <div class="value">Soles (PEN)</div>
-                        </td>
-                    </tr>
-                    @if($document->tipo === 'factura' || $document->tipo === 'boleta')
-                        <tr>
-                            <td style="padding: 0 6px 4px 0;">
-                                <div class="label">Condición de pago</div>
-                                <div class="value">{{ $condicionPago }}</div>
-                            </td>
-                            <td style="padding: 0 0 4px;">
-                                @if($vencimiento)
-                                    <div class="label">Vencimiento</div>
-                                    <div class="value">{{ $vencimiento->format('d/m/Y') }}</div>
-                                @endif
-                            </td>
-                        </tr>
+                    <tr><td class="k2">Fecha de emisión</td><td class="sep">:</td><td class="v">{{ $fechaEmision->format('d/m/Y') }}@if($document->created_at) {{ $document->created_at->format('H:i') }}@endif</td></tr>
+                    @if($vencimiento)
+                        <tr><td class="k2">Fecha de venc.</td><td class="sep">:</td><td class="v">{{ $vencimiento->format('d/m/Y') }}</td></tr>
+                    @endif
+                    <tr><td class="k2">Moneda</td><td class="sep">:</td><td class="v">Soles (PEN)</td></tr>
+                    @if($esVenta)
+                        <tr><td class="k2">Forma de pago</td><td class="sep">:</td><td class="v">{{ $condicionPago }}</td></tr>
                     @endif
                     @if($sale->vendedor)
-                        <tr>
-                            <td colspan="2" style="padding: 0;">
-                                <div class="label">Atendido por</div>
-                                <div class="value">{{ $sale->vendedor->name }}</div>
-                            </td>
-                        </tr>
+                        <tr><td class="k2">Vendedor</td><td class="sep">:</td><td class="v">{{ $sale->vendedor->name }}</td></tr>
                     @endif
                 </table>
             </td>
         </tr>
     </table>
+
+    @if($destino)
+        <table class="destino">
+            <tr>
+                <td style="width: 150px;">
+                    <div class="titulo">{{ $destino['titulo'] }}</div>
+                    <div class="valor">{{ $destino['valor'] }}</div>
+                </td>
+                @if($destino['detalle'])
+                    <td class="detalle">{{ $destino['detalle'] }}</td>
+                @endif
+            </tr>
+        </table>
+    @endif
 
     @if($document->tipo === 'nota_credito' || $document->tipo === 'nota_debito')
         <div class="box">
@@ -199,28 +218,26 @@
     <table class="items">
         <thead>
             <tr>
-                <th style="width: 18px;" class="center">#</th>
+                <th style="width: 34px;" class="num">Cant.</th>
+                <th style="width: 38px;" class="center">Unid.</th>
                 @if($mostrarCodigo)<th style="width: 62px;">Código</th>@endif
                 <th>Descripción</th>
-                <th style="width: 38px;" class="center">Unid.</th>
-                <th style="width: 36px;" class="num">Cant.</th>
-                <th style="width: 54px;" class="num">P. Unit.</th>
-                @if($mostrarDescuento)<th style="width: 46px;" class="num">Dscto.</th>@endif
-                <th style="width: 60px;" class="num">Importe</th>
+                <th style="width: 56px;" class="num">P. Unit.</th>
+                @if($mostrarDescuento)<th style="width: 48px;" class="num">Dscto.</th>@endif
+                <th style="width: 62px;" class="num">Importe</th>
             </tr>
         </thead>
         <tbody>
             @foreach($lineas as $index => $item)
                 @php $catalogo = $item->product ?? $item->service; @endphp
-                <tr class="{{ $index % 2 === 1 ? 'par' : '' }}">
-                    <td class="center muted">{{ $index + 1 }}</td>
+                <tr class="{{ $loop->last ? 'last' : '' }}">
+                    <td class="num">{{ $cantidad($item->cantidad) }}</td>
+                    <td class="center">{{ $unidades[$index] }}</td>
                     @if($mostrarCodigo)<td class="code">{{ $catalogo?->codigo }}</td>@endif
                     <td>{{ $catalogo?->nombre }}</td>
-                    <td class="center">{{ $unidades[$index] }}</td>
-                    <td class="num">{{ $cantidad($item->cantidad) }}</td>
                     <td class="num">{{ number_format((float) $item->precio_unitario, 2) }}</td>
-                    @if($mostrarDescuento)<td class="num">{{ (float) $item->descuento > 0 ? number_format((float) $item->descuento, 2) : '—' }}</td>@endif
-                    <td class="num"><strong>{{ number_format((float) $item->subtotal, 2) }}</strong></td>
+                    @if($mostrarDescuento)<td class="num">{{ (float) $item->descuento > 0 ? number_format((float) $item->descuento, 2) : '' }}</td>@endif
+                    <td class="num">{{ number_format((float) $item->subtotal, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -229,20 +246,20 @@
     {{-- Monto en letras y observaciones | totales --}}
     <table class="summary">
         <tr>
-            <td style="padding-right: 16px;">
-                <div class="letras">SON: {{ $montoEnLetras }}</div>
+            <td style="padding-right: 18px;">
+                <div class="letras"><b>SON:</b> {{ $montoEnLetras }}</div>
                 @if($sale->observaciones)
-                    <div class="obs"><span class="label">Observaciones</span><br>{{ $sale->observaciones }}</div>
+                    <div class="obs"><b>Observaciones:</b> {{ $sale->observaciones }}</div>
                 @endif
             </td>
-            <td style="width: 210px;">
+            <td style="width: 215px;">
                 <table class="totals">
                     @if($descuentoTotal > 0)
-                        <tr><td>Descuentos</td><td class="t-value">S/ {{ number_format($descuentoTotal, 2) }}</td></tr>
+                        <tr><td class="t-label">Descuentos</td><td class="t-value">S/ {{ number_format($descuentoTotal, 2) }}</td></tr>
                     @endif
-                    <tr><td>Op. gravada</td><td class="t-value">S/ {{ number_format((float) $sale->subtotal, 2) }}</td></tr>
-                    <tr><td>I.G.V. (18%)</td><td class="t-value">S/ {{ number_format((float) $sale->igv, 2) }}</td></tr>
-                    <tr class="grand"><td>TOTAL</td><td class="t-value">S/ {{ number_format((float) $sale->total, 2) }}</td></tr>
+                    <tr><td class="t-label">Op. gravada</td><td class="t-value">S/ {{ number_format((float) $sale->subtotal, 2) }}</td></tr>
+                    <tr><td class="t-label">I.G.V. 18%</td><td class="t-value">S/ {{ number_format((float) $sale->igv, 2) }}</td></tr>
+                    <tr class="grand"><td>IMPORTE TOTAL</td><td class="t-value">S/ {{ number_format((float) $sale->total, 2) }}</td></tr>
                 </table>
             </td>
         </tr>
@@ -282,10 +299,10 @@
                 <tr><th>Banco</th><th>Titular</th><th>N.° de cuenta</th><th>CCI</th></tr>
                 @foreach($bankAccounts as $account)
                     <tr>
-                        <td><strong>{{ $account->banco }}</strong></td>
+                        <td><b>{{ $account->banco }}</b></td>
                         <td>{{ $account->titular }}</td>
                         <td>{{ $account->numero_cuenta }}</td>
-                        <td>{{ $account->cci ?: '—' }}</td>
+                        <td>{{ $account->cci }}</td>
                     </tr>
                 @endforeach
             </table>
@@ -299,11 +316,6 @@
         </div>
     @endif
 
-    <div class="thanks">{{ $company->mensaje_agradecimiento ?: '¡Gracias por su preferencia!' }}</div>
-    @if($company->leyenda_pie)
-        <div class="leyenda">{{ $company->leyenda_pie }}</div>
-    @endif
-
     <table class="footer">
         <tr>
             <td class="footer-qr">
@@ -312,8 +324,12 @@
                 @endif
             </td>
             <td>
-                <strong>Representación impresa de la {{ mb_strtolower($nombreDocumento) }}.</strong><br>
-                Puede consultar su validez en el portal de SUNAT (www.sunat.gob.pe) con el RUC del emisor, el tipo, la serie, el número, la fecha y el importe total.
+                <b>Representación impresa de la {{ mb_strtolower($nombreDocumento) }}.</b><br>
+                Consulte su validez en www.sunat.gob.pe con el RUC del emisor, el tipo, la serie, el número, la fecha de emisión y el importe total.
+                <div class="thanks">{{ $company->mensaje_agradecimiento ?: 'Gracias por su preferencia.' }}</div>
+                @if($company->leyenda_pie)
+                    <div class="leyenda">{{ $company->leyenda_pie }}</div>
+                @endif
             </td>
         </tr>
     </table>

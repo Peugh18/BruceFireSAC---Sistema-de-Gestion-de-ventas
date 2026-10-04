@@ -398,7 +398,7 @@ test('la boleta a un cliente con dni no exige direccion y la deja en blanco, sin
 
     expect($documento->sunat_estado)->toBe('por_enviar')
         ->and($html)->toContain('>Dirección<')
-        ->and($html)->toContain('<div class="value">&nbsp;</div>')
+        ->and($html)->toContain('<td class="v vacio">&nbsp;</td>')
         ->and($sale->client->direccionImprimible())->toBeNull();
 });
 
@@ -409,7 +409,29 @@ test('en una venta para vehiculo la referencia se imprime como placa', function 
 
     $html = app(ComprobantePdfService::class)->html($documento->fresh(), (string) Storage::disk('local')->get($documento->xml_path));
 
-    expect($html)->toContain('PLACA')
+    expect($html)->toContain('Vehículo · placa')
         ->and($html)->toContain('T2R-458')
         ->and($html)->toContain($sale->client->direccion_fiscal);
+});
+
+test('el comprobante solo muestra placa, vencimiento y cuotas cuando la venta los tiene', function () {
+    $contado = comprobanteDe(ventaConfirmada(Client::factory()->create()));
+    $html = app(ComprobantePdfService::class)->html($contado, (string) Storage::disk('local')->get($contado->xml_path));
+
+    expect($html)->not->toContain('Vehículo · placa')
+        ->and($html)->not->toContain('Local / sede del cliente')
+        ->and($html)->not->toContain('Fecha de venc.')
+        ->and($html)->not->toContain('Cuotas del crédito')
+        ->and($html)->not->toContain('Observaciones:')
+        ->and($html)->toContain('Vendedor');
+
+    $sale = $contado->sale;
+    $sale->update(['condicion_pago' => 'credito', 'observaciones' => 'Entregar en almacén']);
+    $sale->installments()->create(['numero_cuota' => 1, 'fecha_vencimiento' => today()->addDays(30), 'monto' => $sale->total, 'estado' => 'pendiente']);
+    $html = app(ComprobantePdfService::class)->html($contado->fresh(), (string) Storage::disk('local')->get($contado->xml_path));
+
+    expect($html)->toContain('Fecha de venc.')
+        ->and($html)->toContain('Cuotas del crédito')
+        ->and($html)->toContain('Crédito 30 días')
+        ->and($html)->toContain('Entregar en almacén');
 });

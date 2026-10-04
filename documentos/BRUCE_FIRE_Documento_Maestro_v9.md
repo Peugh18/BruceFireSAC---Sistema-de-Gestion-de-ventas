@@ -5117,3 +5117,22 @@ modificatorias, anexos de RS 114-2019 y RS 123-2022):
 - El relleno "-" de CLIENTES VARIOS ya no se imprime como dirección
   (`Client::direccionImprimible()`).
 - En una venta para vehículo, la referencia se imprime como **PLACA**.
+
+## 88.2 Estilo formal y comprobante dinámico (2026-10-04)
+
+Pedido del usuario, tomando como referencia las facturas de Codeplex
+(F001-00000088 Acuario y F001-00000015 Mannucci): estilo elegante y
+formal, y que cada dato aparezca solo si la venta lo tiene.
+
+- **Estilo:** blanco, negro y gris; el color de la marca solo en la
+  línea bajo la cabecera, el borde del recuadro del RUC y la franja del
+  destino. Datos en formato "Etiqueta : valor".
+- **Siempre:** emisor, recuadro RUC/tipo/número, Señor(es), RUC o DNI,
+  Dirección (en blanco si falta), fecha de emisión, moneda, forma de
+  pago, vendedor, detalle, SON, totales, QR y leyenda SUNAT.
+- **Solo si existe:** placa (franja destacada, con la descripción del
+  vehículo si está registrada), local/sede del cliente (franja
+  destacada, con su dirección si está registrada), fecha de vencimiento
+  y recuadro de cuotas (crédito), observaciones, columnas Código y
+  Dscto., fila Descuentos, detracción, cuentas bancarias, condiciones,
+  web y leyenda.
