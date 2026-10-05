@@ -10,6 +10,7 @@ import {
 } from 'react';
 
 import ChispaAvatar from '@/components/chispa-avatar';
+import ChispaSprite, { type ChispaEstado } from '@/components/chispa-sprite';
 import { leerCookie } from '@/lib/cookies';
 import { asistente } from '@/routes';
 
@@ -77,10 +78,22 @@ export default function ChispaWidget({
     });
     const [texto, setTexto] = useState('');
     const [pensando, setPensando] = useState(false);
+    const [gesto, setGesto] = useState<ChispaEstado>('reposo');
     const [globo, setGlobo] = useState(false);
     const finRef = useRef<HTMLDivElement>(null);
     /** En celular los técnicos tienen una barra inferior fija: Chispa va encima. */
     const conBarraInferior = rol === 'tecnico';
+
+    useEffect(() => {
+        if (gesto === 'reposo' || pensando) return;
+        const temporizador = setTimeout(() => setGesto('reposo'), 1800);
+        return () => clearTimeout(temporizador);
+    }, [gesto, pensando]);
+
+    const cambiarAbierto = (valor: boolean) => {
+        setAbierto(valor);
+        if (valor && !pensando) setGesto('saludo');
+    };
 
     useEffect(() => {
         try {
@@ -132,6 +145,7 @@ export default function ChispaWidget({
         setMensajes(historial);
         setTexto('');
         setPensando(true);
+        setGesto('reposo');
 
         try {
             const response = await fetch(asistente.url(), {
@@ -150,19 +164,25 @@ export default function ChispaWidget({
                 respuesta?: string;
                 message?: string;
             };
+            const respuestaValida =
+                response.ok &&
+                typeof data.respuesta === 'string' &&
+                data.respuesta.trim().length > 0;
+            setGesto(respuestaValida ? 'revisando' : 'error');
 
             setMensajes([
                 ...historial,
                 {
                     role: 'assistant',
                     content:
-                        data.respuesta ??
+                        (respuestaValida ? data.respuesta : undefined) ??
                         (response.status === 429
                             ? 'Hiciste muchas preguntas seguidas. Espera un minuto y vuelve a intentar.'
                             : 'No pude responder ahora. Intenta de nuevo.'),
                 },
             ]);
         } catch {
+            setGesto('error');
             setMensajes([
                 ...historial,
                 {
@@ -181,7 +201,7 @@ export default function ChispaWidget({
     };
 
     return (
-        <Dialog.Root open={abierto} onOpenChange={setAbierto}>
+        <Dialog.Root open={abierto} onOpenChange={cambiarAbierto}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20" />
                 <Dialog.Content
@@ -227,9 +247,10 @@ export default function ChispaWidget({
                         {mensajes.length === 0 ? (
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3">
-                                    <ChispaAvatar
+                                    <ChispaSprite
                                         size={72}
-                                        pose="saludo"
+                                        estado={pensando ? 'pensando' : gesto}
+                                        repetir={gesto === 'reposo'}
                                         className="shrink-0"
                                     />
                                     <p className="text-muted-foreground">
@@ -271,13 +292,23 @@ export default function ChispaWidget({
                                 </div>
                             </div>
                         ))}
-                        {pensando ? (
+                        {pensando ||
+                        gesto === 'revisando' ||
+                        gesto === 'error' ? (
                             <div
                                 className="text-muted-foreground flex items-center gap-2 text-[12px]"
                                 role="status"
                             >
-                                <ChispaAvatar size={32} pose="piensa" animado />
-                                Chispa está pensando…
+                                <ChispaSprite
+                                    size={64}
+                                    estado={pensando ? 'pensando' : gesto}
+                                    repetir={pensando}
+                                />
+                                {pensando
+                                    ? 'Chispa está pensando…'
+                                    : gesto === 'revisando'
+                                      ? 'Respuesta lista'
+                                      : 'No pude responder ahora'}
                             </div>
                         ) : null}
                         <div ref={finRef} />
@@ -319,7 +350,10 @@ export default function ChispaWidget({
                     >
                         ¿Te ayudo?
                     </span>
-                    <ChispaAvatar pose="busto" size={48} />
+                    <ChispaSprite
+                        estado={pensando ? 'pensando' : gesto}
+                        repetir={gesto === 'reposo' || pensando}
+                    />
                 </button>
             </Dialog.Trigger>
         </Dialog.Root>
