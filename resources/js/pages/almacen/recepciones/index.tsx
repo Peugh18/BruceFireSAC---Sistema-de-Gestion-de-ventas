@@ -216,10 +216,14 @@ export default function RecepcionesIndex({
                         </div>
 
                         <div className="w-[180px]">
-                            <Label className="text-foreground/80 text-xs font-bold">
+                            <Label
+                                htmlFor="almacen-recepciones-sede-almacen"
+                                className="text-foreground/80 text-xs font-bold"
+                            >
                                 Sede almacén
                             </Label>
                             <select
+                                id="almacen-recepciones-sede-almacen"
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
                                 className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
@@ -234,10 +238,14 @@ export default function RecepcionesIndex({
                         </div>
 
                         <div className="w-[130px]">
-                            <Label className="text-foreground/80 text-xs font-bold">
+                            <Label
+                                htmlFor="almacen-recepciones-desde"
+                                className="text-foreground/80 text-xs font-bold"
+                            >
                                 Desde
                             </Label>
                             <Input
+                                id="almacen-recepciones-desde"
                                 type="date"
                                 value={fechaDesde}
                                 onChange={(e) => setFechaDesde(e.target.value)}
@@ -246,10 +254,14 @@ export default function RecepcionesIndex({
                         </div>
 
                         <div className="w-[130px]">
-                            <Label className="text-foreground/80 text-xs font-bold">
+                            <Label
+                                htmlFor="almacen-recepciones-hasta"
+                                className="text-foreground/80 text-xs font-bold"
+                            >
                                 Hasta
                             </Label>
                             <Input
+                                id="almacen-recepciones-hasta"
                                 type="date"
                                 value={fechaHasta}
                                 onChange={(e) => setFechaHasta(e.target.value)}

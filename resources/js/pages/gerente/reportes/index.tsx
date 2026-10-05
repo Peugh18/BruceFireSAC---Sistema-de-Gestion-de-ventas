@@ -202,10 +202,14 @@ export default function ReportesIndex() {
                         <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
                             <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
                                 <div>
-                                    <label className="text-foreground/80 block font-semibold">
+                                    <label
+                                        htmlFor="gerente-reportes-fecha-desde"
+                                        className="text-foreground/80 block font-semibold"
+                                    >
                                         Fecha Desde
                                     </label>
                                     <input
+                                        id="gerente-reportes-fecha-desde"
                                         type="date"
                                         value={fechaDesde}
                                         onChange={(e) =>
@@ -215,10 +219,14 @@ export default function ReportesIndex() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-foreground/80 block font-semibold">
+                                    <label
+                                        htmlFor="gerente-reportes-fecha-hasta"
+                                        className="text-foreground/80 block font-semibold"
+                                    >
                                         Fecha Hasta
                                     </label>
                                     <input
+                                        id="gerente-reportes-fecha-hasta"
                                         type="date"
                                         value={fechaHasta}
                                         onChange={(e) =>
@@ -228,10 +236,14 @@ export default function ReportesIndex() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-foreground/80 block font-semibold">
+                                    <label
+                                        htmlFor="gerente-reportes-vendedor"
+                                        className="text-foreground/80 block font-semibold"
+                                    >
                                         Vendedor
                                     </label>
                                     <select
+                                        id="gerente-reportes-vendedor"
                                         value={vendedorId}
                                         onChange={(e) =>
                                             setVendedorId(e.target.value)
@@ -533,10 +545,14 @@ export default function ReportesIndex() {
                         <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
                             <div className="grid max-w-xl flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div>
-                                    <label className="text-foreground/80 block font-semibold">
+                                    <label
+                                        htmlFor="gerente-reportes-sede-almacen"
+                                        className="text-foreground/80 block font-semibold"
+                                    >
                                         Sede / Almacén
                                     </label>
                                     <select
+                                        id="gerente-reportes-sede-almacen"
                                         value={sedeId}
                                         onChange={(e) =>
                                             setSedeId(e.target.value)

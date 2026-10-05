@@ -215,6 +215,7 @@ export default function ConsultaIndex({
 
                         <div className="w-full md:w-56">
                             <select
+                                aria-label="Filtrar por sede"
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
                                 className="border-border bg-card text-foreground focus:border-primary h-11 w-full rounded-[9px] border px-3 text-xs font-medium focus:outline-none"

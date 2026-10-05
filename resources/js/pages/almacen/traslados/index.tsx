@@ -45,8 +45,9 @@ export default function Transfers({
                 </div>
                 {origenes.length > 0 ? (
                     <div>
-                        <Label>Origen</Label>
+                        <Label htmlFor="almacen-traslados-origen">Origen</Label>
                         <select
+                            id="almacen-traslados-origen"
                             value={sourceSede.id}
                             onChange={(event) =>
                                 router.get(
@@ -84,8 +85,11 @@ export default function Transfers({
                     }}
                 >
                     <div>
-                        <Label>Destino</Label>
+                        <Label htmlFor="almacen-traslados-destino">
+                            Destino
+                        </Label>
                         <select
+                            id="almacen-traslados-destino"
                             value={form.data.destination_sede_id}
                             onChange={(event) =>
                                 form.setData(
@@ -105,8 +109,11 @@ export default function Transfers({
                         </select>
                     </div>
                     <div>
-                        <Label>Unidades BF-EQ</Label>
+                        <Label htmlFor="almacen-traslados-unidades-bf-eq">
+                            Unidades BF-EQ
+                        </Label>
                         <textarea
+                            id="almacen-traslados-unidades-bf-eq"
                             value={form.data.serials_text}
                             onChange={(event) =>
                                 form.setData('serials_text', event.target.value)
@@ -120,6 +127,7 @@ export default function Transfers({
                     </p>
                     <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
                         <select
+                            aria-label="Producto sin serie"
                             value={form.data.product_id}
                             onChange={(event) =>
                                 form.setData('product_id', event.target.value)
@@ -134,6 +142,7 @@ export default function Transfers({
                             ))}
                         </select>
                         <Input
+                            aria-label="Cantidad a trasladar"
                             type="number"
                             min={1}
                             value={form.data.quantity}
@@ -146,8 +155,11 @@ export default function Transfers({
                         />
                     </div>
                     <div>
-                        <Label>Observación</Label>
+                        <Label htmlFor="almacen-traslados-observacion">
+                            Observación
+                        </Label>
                         <Input
+                            id="almacen-traslados-observacion"
                             value={form.data.observation}
                             onChange={(event) =>
                                 form.setData('observation', event.target.value)

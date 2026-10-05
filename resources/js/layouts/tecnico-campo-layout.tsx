@@ -94,7 +94,7 @@ export default function TecnicoCampoLayout({
                             <span className="text-foreground text-xs font-black tracking-tight">
                                 BRUCE FIRE
                             </span>
-                            <span className="py-0.2 inline-flex items-center rounded-full border border-sky-500/30 bg-sky-500/10 px-1.5 text-[9.5px] font-black tracking-wide text-sky-600 dark:text-sky-400">
+                            <span className="py-0.2 inline-flex items-center rounded-full border border-sky-500/30 bg-sky-500/10 px-1.5 text-[9.5px] font-black tracking-wide text-sky-800 dark:text-sky-300">
                                 CAMPO
                             </span>
                         </div>
@@ -110,7 +110,7 @@ export default function TecnicoCampoLayout({
                     <ThemeToggle className="size-8 rounded-[8px]" />
 
                     <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-[8px] border px-2.5 py-1 text-xs">
-                        <div className="bg-info text-info-foreground flex size-5 items-center justify-center rounded-full text-[9px] font-bold">
+                        <div className="flex size-5 items-center justify-center rounded-full bg-sky-700 text-[9px] font-bold text-white">
                             {initials}
                         </div>
                         <span className="text-foreground max-w-[90px] truncate text-[11px] font-semibold">

@@ -241,10 +241,14 @@ export default function CobranzasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-cobranzas-vendedor"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Vendedor
                             </label>
                             <select
+                                id="gerente-cobranzas-vendedor"
                                 value={vendedorId}
                                 onChange={(e) => setVendedorId(e.target.value)}
                                 className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
@@ -259,10 +263,14 @@ export default function CobranzasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-cobranzas-estado-de-cuota"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Estado de Cuota
                             </label>
                             <select
+                                id="gerente-cobranzas-estado-de-cuota"
                                 value={estado}
                                 onChange={(e) => setEstado(e.target.value)}
                                 className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"
@@ -278,10 +286,14 @@ export default function CobranzasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-cobranzas-periodo-vencimiento"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Periodo / Vencimiento
                             </label>
                             <select
+                                id="gerente-cobranzas-periodo-vencimiento"
                                 value={periodo}
                                 onChange={(e) => setPeriodo(e.target.value)}
                                 className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-1.5 text-xs focus:outline-none"

@@ -56,7 +56,13 @@ class ConfirmSale
 
         // Un borrador que se emite otro día sale con la fecha en que se
         // emite: el comprobante no puede ir a SUNAT con una fecha vieja.
+        // Sus cuotas se corren los mismos días para conservar el plazo pactado.
         if ($sale->fecha->lt(today())) {
+            $dias = (int) $sale->fecha->diffInDays(today());
+
+            $sale->installments()->get()->each(
+                fn ($cuota) => $cuota->update(['fecha_vencimiento' => $cuota->fecha_vencimiento->copy()->addDays($dias)]),
+            );
             $sale->update(['fecha' => today()]);
         }
 
@@ -171,6 +177,11 @@ class ConfirmSale
             }
 
             if ($monto < 0) {
+                // El efectivo que se devuelve también tiene que salir de un turno.
+                if ($forma === 'efectivo') {
+                    CashRegister::exigirAbiertaParaEfectivo((int) $sale->vendedor_id);
+                }
+
                 SaleRefund::create([
                     'sale_id' => $sale->id,
                     'forma_pago' => $forma,
@@ -187,17 +198,50 @@ class ConfirmSale
                 CashRegister::exigirAbiertaParaEfectivo((int) $sale->vendedor_id);
             }
 
-            SalePayment::create([
-                'sale_id' => $sale->id,
-                'forma_pago' => $forma,
-                'monto' => $monto,
-                'numero_operacion' => $nota !== '' ? $nota : ($forma === self::FORMA_DETRACCION && $sale->medio_pago !== self::FORMA_DETRACCION
-                    ? 'Detracción (Banco de la Nación)'
-                    : $sale->numero_operacion),
-                'fecha' => today(),
-            ]);
+            foreach ($this->partesDelCobro($sale, $forma, $monto, $nota) as [$parte, $operacion]) {
+                SalePayment::create([
+                    'sale_id' => $sale->id,
+                    'forma_pago' => $forma,
+                    'monto' => $parte,
+                    'numero_operacion' => $operacion,
+                    'fecha' => today(),
+                ]);
+            }
         }
 
         $sale->update(['medio_pago' => null, 'numero_operacion' => null]);
+    }
+
+    /**
+     * Un cobro puede ser dos registros: si el cliente también paga por
+     * depósito, lo suyo (con su número de operación) y la detracción que va
+     * al Banco de la Nación quedan separados, como cuando paga por otro medio.
+     *
+     * @return list<array{0: float, 1: string|null}>
+     */
+    protected function partesDelCobro(Sale $sale, string $forma, float $monto, string $nota): array
+    {
+        if ($nota !== '') {
+            return [[$monto, $nota]];
+        }
+
+        if ($forma !== self::FORMA_DETRACCION) {
+            return [[$monto, $sale->numero_operacion]];
+        }
+
+        if ($sale->medio_pago !== self::FORMA_DETRACCION) {
+            return [[$monto, 'Detracción (Banco de la Nación)']];
+        }
+
+        $detraccion = round((float) $this->detraccion->paraVenta($sale)['monto'], 2);
+
+        if ($detraccion <= 0 || $detraccion >= $monto) {
+            return [[$monto, $sale->numero_operacion]];
+        }
+
+        return [
+            [round($monto - $detraccion, 2), $sale->numero_operacion],
+            [$detraccion, 'Detracción (Banco de la Nación)'],
+        ];
     }
 }

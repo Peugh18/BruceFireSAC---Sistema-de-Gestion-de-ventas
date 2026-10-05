@@ -164,7 +164,7 @@ export default function InstalacionesIndex({
                     onClick={() => handleTabChange('todos')}
                     className={`rounded-[12px] border p-2.5 text-left transition-all ${
                         currentTab === 'todos'
-                            ? 'border-sky-500/20 bg-sky-600 text-white shadow-sm'
+                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
@@ -177,7 +177,7 @@ export default function InstalacionesIndex({
                     onClick={() => handleTabChange('pendientes')}
                     className={`rounded-[12px] border p-2.5 text-left transition-all ${
                         currentTab === 'pendientes'
-                            ? 'border-sky-500/20 bg-sky-600 text-white shadow-sm'
+                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
@@ -192,7 +192,7 @@ export default function InstalacionesIndex({
                     onClick={() => handleTabChange('en_proceso')}
                     className={`rounded-[12px] border p-2.5 text-left transition-all ${
                         currentTab === 'en_proceso'
-                            ? 'border-sky-500/20 bg-sky-600 text-white shadow-sm'
+                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
@@ -207,7 +207,7 @@ export default function InstalacionesIndex({
                     onClick={() => handleTabChange('finalizadas')}
                     className={`rounded-[12px] border p-2.5 text-left transition-all ${
                         currentTab === 'finalizadas'
-                            ? 'border-sky-500/20 bg-sky-600 text-white shadow-sm'
+                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >

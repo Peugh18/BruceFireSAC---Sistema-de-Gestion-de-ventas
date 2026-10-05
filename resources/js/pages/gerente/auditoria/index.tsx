@@ -140,10 +140,14 @@ export default function AuditoriaIndex() {
                 <div className="border-border bg-card space-y-3 rounded-xl border p-4 shadow-xs">
                     <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-auditoria-accion"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Acción
                             </label>
                             <select
+                                id="gerente-auditoria-accion"
                                 value={accion}
                                 onChange={(e) => setAccion(e.target.value)}
                                 className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
@@ -160,10 +164,14 @@ export default function AuditoriaIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-auditoria-usuario"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Usuario
                             </label>
                             <select
+                                id="gerente-auditoria-usuario"
                                 value={userId}
                                 onChange={(e) => setUserId(e.target.value)}
                                 className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
@@ -178,10 +186,14 @@ export default function AuditoriaIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-auditoria-fecha-desde"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Fecha Desde
                             </label>
                             <input
+                                id="gerente-auditoria-fecha-desde"
                                 type="date"
                                 value={fechaDesde}
                                 onChange={(e) => setFechaDesde(e.target.value)}
@@ -190,10 +202,14 @@ export default function AuditoriaIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-auditoria-fecha-hasta"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Fecha Hasta
                             </label>
                             <input
+                                id="gerente-auditoria-fecha-hasta"
                                 type="date"
                                 value={fechaHasta}
                                 onChange={(e) => setFechaHasta(e.target.value)}

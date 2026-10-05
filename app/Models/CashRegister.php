@@ -132,4 +132,20 @@ class CashRegister extends Model
             ]);
         }
     }
+
+    /**
+     * Anular una venta cobrada en efectivo devuelve ese dinero: sale de la
+     * caja abierta del vendedor, o no quedaría registrado en ningún arqueo.
+     */
+    public static function exigirAbiertaParaDevolverEfectivo(Sale $sale, string $campo = 'caja'): void
+    {
+        $efectivo = (float) $sale->payments()->where('forma_pago', 'efectivo')->sum('monto')
+            - (float) $sale->refunds()->where('forma_pago', 'efectivo')->sum('monto');
+
+        if (round($efectivo, 2) > 0 && ! self::abiertaDe((int) $sale->vendedor_id)) {
+            throw ValidationException::withMessages([
+                $campo => 'Esta venta se cobró en efectivo: abre la caja del vendedor para registrar la devolución y luego anúlala.',
+            ]);
+        }
+    }
 }
