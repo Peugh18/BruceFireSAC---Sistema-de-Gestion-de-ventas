@@ -401,10 +401,14 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[180px]">
-                                <Label className="text-foreground/80 text-xs font-bold">
+                                <Label
+                                    htmlFor="almacen-stock-tipo-de-item"
+                                    className="text-foreground/80 text-xs font-bold"
+                                >
                                     Tipo de ítem
                                 </Label>
                                 <select
+                                    id="almacen-stock-tipo-de-item"
                                     value={stockTipo}
                                     onChange={(e) =>
                                         setStockTipo(e.target.value)
@@ -705,10 +709,14 @@ export default function StockIndex({
                             className="border-border flex flex-wrap items-end gap-3 border-b pb-5"
                         >
                             <div className="w-[200px]">
-                                <Label className="text-foreground/80 text-xs font-bold">
+                                <Label
+                                    htmlFor="almacen-stock-producto"
+                                    className="text-foreground/80 text-xs font-bold"
+                                >
                                     Producto
                                 </Label>
                                 <select
+                                    id="almacen-stock-producto"
                                     value={kProductId}
                                     onChange={(e) =>
                                         setKProductId(e.target.value)
@@ -727,10 +735,14 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[160px]">
-                                <Label className="text-foreground/80 text-xs font-bold">
+                                <Label
+                                    htmlFor="almacen-stock-sede-almacen"
+                                    className="text-foreground/80 text-xs font-bold"
+                                >
                                     Sede / Almacén
                                 </Label>
                                 <select
+                                    id="almacen-stock-sede-almacen"
                                     value={kSedeId}
                                     onChange={(e) => setKSedeId(e.target.value)}
                                     className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
@@ -745,10 +757,14 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[150px]">
-                                <Label className="text-foreground/80 text-xs font-bold">
+                                <Label
+                                    htmlFor="almacen-stock-tipo-movimiento"
+                                    className="text-foreground/80 text-xs font-bold"
+                                >
                                     Tipo movimiento
                                 </Label>
                                 <select
+                                    id="almacen-stock-tipo-movimiento"
                                     value={kTipo}
                                     onChange={(e) => setKTipo(e.target.value)}
                                     className="border-border bg-card text-foreground focus:border-primary mt-1 h-9 w-full rounded-md border px-3 text-xs focus:outline-none"
@@ -775,10 +791,14 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[130px]">
-                                <Label className="text-foreground/80 text-xs font-bold">
+                                <Label
+                                    htmlFor="almacen-stock-desde"
+                                    className="text-foreground/80 text-xs font-bold"
+                                >
                                     Desde
                                 </Label>
                                 <Input
+                                    id="almacen-stock-desde"
                                     type="date"
                                     value={kFechaDesde}
                                     onChange={(e) =>
@@ -789,10 +809,14 @@ export default function StockIndex({
                             </div>
 
                             <div className="w-[130px]">
-                                <Label className="text-foreground/80 text-xs font-bold">
+                                <Label
+                                    htmlFor="almacen-stock-hasta"
+                                    className="text-foreground/80 text-xs font-bold"
+                                >
                                     Hasta
                                 </Label>
                                 <Input
+                                    id="almacen-stock-hasta"
                                     type="date"
                                     value={kFechaHasta}
                                     onChange={(e) =>

@@ -213,10 +213,14 @@ export default function CajasConsolidadasIndex() {
                 <div className="border-border bg-card space-y-3 rounded-xl border p-4 shadow-xs">
                     <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-5">
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-cajas-vendedor"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Vendedor
                             </label>
                             <select
+                                id="gerente-cajas-vendedor"
                                 value={vendedorId}
                                 onChange={(e) => setVendedorId(e.target.value)}
                                 className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
@@ -231,10 +235,14 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-cajas-sede"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Sede
                             </label>
                             <select
+                                id="gerente-cajas-sede"
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
                                 className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
@@ -249,10 +257,14 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-cajas-estado"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Estado
                             </label>
                             <select
+                                id="gerente-cajas-estado"
                                 value={estado}
                                 onChange={(e) => setEstado(e.target.value)}
                                 className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
@@ -264,10 +276,14 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-cajas-fecha-desde"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Fecha Desde
                             </label>
                             <input
+                                id="gerente-cajas-fecha-desde"
                                 type="date"
                                 value={fechaDesde}
                                 onChange={(e) => setFechaDesde(e.target.value)}
@@ -276,10 +292,14 @@ export default function CajasConsolidadasIndex() {
                         </div>
 
                         <div>
-                            <label className="text-foreground/80 block font-semibold">
+                            <label
+                                htmlFor="gerente-cajas-fecha-hasta"
+                                className="text-foreground/80 block font-semibold"
+                            >
                                 Fecha Hasta
                             </label>
                             <input
+                                id="gerente-cajas-fecha-hasta"
                                 type="date"
                                 value={fechaHasta}
                                 onChange={(e) => setFechaHasta(e.target.value)}

@@ -279,6 +279,7 @@ export default function UsuariosIndex() {
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <select
+                                                        aria-label={`Rol de ${u.name}`}
                                                         value={u.role ?? ''}
                                                         disabled={
                                                             pendingUserId ===
@@ -310,6 +311,7 @@ export default function UsuariosIndex() {
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <select
+                                                        aria-label={`Sede de ${u.name}`}
                                                         value={u.sede_id ?? ''}
                                                         disabled={
                                                             pendingUserId ===

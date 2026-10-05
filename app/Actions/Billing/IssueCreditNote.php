@@ -3,6 +3,7 @@
 namespace App\Actions\Billing;
 
 use App\Actions\Sales\RevertSale;
+use App\Models\CashRegister;
 use App\Models\ElectronicDocument;
 use App\Models\Sale;
 use Illuminate\Support\Facades\DB;
@@ -44,29 +45,38 @@ class IssueCreditNote
             ]);
         }
 
-        // Leída de nuevo: la venta pudo anularse desde que se cargó el comprobante.
-        $sale = $original->sale()->firstOrFail();
-
-        if ($sale->estado === 'anulada') {
-            throw ValidationException::withMessages([
-                'electronic_document_id' => 'La venta ya está anulada: no admite más notas de crédito.',
-            ]);
-        }
-
-        // Una nota que SUNAT rechazó no cuenta: se puede emitir otra.
-        $acreditado = (float) ElectronicDocument::query()
-            ->where('cpe_afectado_id', $original->id)
-            ->where('tipo', 'nota_credito')
-            ->whereNotIn('sunat_estado', ['rechazado'])
-            ->sum('importe');
-
-        if ($importe + $acreditado > (float) $sale->total + 0.001) {
-            throw ValidationException::withMessages([
-                'importe' => 'El importe acumulado de las notas de crédito no puede superar el total del comprobante.',
-            ]);
-        }
-
         return DB::transaction(function () use ($original, $motivoCatalogo09, $detalle, $importe) {
+            // Leída de nuevo y bloqueada: la venta pudo anularse desde que se
+            // cargó el comprobante, y dos notas a la vez no deben pasar juntas
+            // el control del total.
+            $sale = Sale::query()->lockForUpdate()->findOrFail($original->sale_id);
+
+            if ($sale->estado === 'anulada') {
+                throw ValidationException::withMessages([
+                    'electronic_document_id' => 'La venta ya está anulada: no admite más notas de crédito.',
+                ]);
+            }
+
+            // Una nota que SUNAT rechazó no cuenta: se puede emitir otra.
+            $acreditado = (float) ElectronicDocument::query()
+                ->where('cpe_afectado_id', $original->id)
+                ->where('tipo', 'nota_credito')
+                ->whereNotIn('sunat_estado', ['rechazado'])
+                ->sum('importe');
+
+            if ($importe + $acreditado > (float) $sale->total + 0.001) {
+                throw ValidationException::withMessages([
+                    'importe' => 'El importe acumulado de las notas de crédito no puede superar el total del comprobante.',
+                ]);
+            }
+
+            // Si esta nota anula la venta, al aceptarla SUNAT se devuelve el
+            // efectivo cobrado: tiene que caer en la caja abierta del vendedor.
+            if (in_array($motivoCatalogo09, self::MOTIVOS_QUE_ANULAN, true)
+                && $importe + $acreditado >= (float) $sale->total - 0.001) {
+                CashRegister::exigirAbiertaParaDevolverEfectivo($sale);
+            }
+
             $serie = $original->tipo === 'factura' ? 'FC01' : 'BC01';
             $correlativo = $this->reserveNextCorrelativo->handle('nota_credito', $serie);
 

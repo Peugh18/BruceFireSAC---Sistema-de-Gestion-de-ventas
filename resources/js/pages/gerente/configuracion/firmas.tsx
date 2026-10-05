@@ -354,8 +354,14 @@ function TarjetaFirmante({
 
             <div className="grid gap-2 sm:grid-cols-[1fr_1fr_90px]">
                 <div>
-                    <Label className={etiqueta}>Nombre</Label>
+                    <Label
+                        htmlFor="gerente-configuracion-firmas-nombre"
+                        className={etiqueta}
+                    >
+                        Nombre
+                    </Label>
                     <Input
+                        id="gerente-configuracion-firmas-nombre"
                         value={datos.nombre}
                         onChange={(e) =>
                             setDatos({ ...datos, nombre: e.target.value })
@@ -363,8 +369,14 @@ function TarjetaFirmante({
                     />
                 </div>
                 <div>
-                    <Label className={etiqueta}>Cargo</Label>
+                    <Label
+                        htmlFor="gerente-configuracion-firmas-cargo"
+                        className={etiqueta}
+                    >
+                        Cargo
+                    </Label>
                     <Input
+                        id="gerente-configuracion-firmas-cargo"
                         value={datos.cargo}
                         onChange={(e) =>
                             setDatos({ ...datos, cargo: e.target.value })
@@ -372,8 +384,14 @@ function TarjetaFirmante({
                     />
                 </div>
                 <div>
-                    <Label className={etiqueta}>CIP</Label>
+                    <Label
+                        htmlFor="gerente-configuracion-firmas-cip"
+                        className={etiqueta}
+                    >
+                        CIP
+                    </Label>
                     <Input
+                        id="gerente-configuracion-firmas-cip"
                         value={datos.cip}
                         onChange={(e) =>
                             setDatos({ ...datos, cip: e.target.value })

@@ -355,11 +355,15 @@ export default function RecepcionesCreate({
 
                     <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="sm:col-span-2">
-                            <Label className="text-foreground/80 text-xs font-bold">
+                            <Label
+                                htmlFor="recepcion-proveedor-razon-social"
+                                className="text-foreground/80 text-xs font-bold"
+                            >
                                 Proveedor / Razón Social{' '}
                                 <span className="text-primary-strong">*</span>
                             </Label>
                             <Input
+                                id="recepcion-proveedor-razon-social"
                                 value={data.proveedor}
                                 onChange={(e) =>
                                     setData('proveedor', e.target.value)
@@ -376,10 +380,14 @@ export default function RecepcionesCreate({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-xs font-bold">
+                            <Label
+                                htmlFor="almacen-recepciones-create-doc-referencia-guia-factura"
+                                className="text-foreground/80 text-xs font-bold"
+                            >
                                 Doc. Referencia (Guía / Factura)
                             </Label>
                             <Input
+                                id="almacen-recepciones-create-doc-referencia-guia-factura"
                                 value={data.documento_referencia}
                                 onChange={(e) =>
                                     setData(
@@ -393,11 +401,15 @@ export default function RecepcionesCreate({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-xs font-bold">
+                            <Label
+                                htmlFor="recepcion-fecha-de-recepcion"
+                                className="text-foreground/80 text-xs font-bold"
+                            >
                                 Fecha de Recepción{' '}
                                 <span className="text-primary-strong">*</span>
                             </Label>
                             <Input
+                                id="recepcion-fecha-de-recepcion"
                                 type="date"
                                 max={today}
                                 value={data.fecha}
@@ -415,11 +427,15 @@ export default function RecepcionesCreate({
                         </div>
 
                         <div className="sm:col-span-2">
-                            <Label className="text-foreground/80 text-xs font-bold">
+                            <Label
+                                htmlFor="recepcion-sede-de-almacen-destino"
+                                className="text-foreground/80 text-xs font-bold"
+                            >
                                 Sede de Almacén Destino{' '}
                                 <span className="text-primary-strong">*</span>
                             </Label>
                             <select
+                                id="recepcion-sede-de-almacen-destino"
                                 value={data.sede_almacen_id}
                                 onChange={(e) =>
                                     setData(
@@ -440,10 +456,14 @@ export default function RecepcionesCreate({
                         </div>
 
                         <div className="sm:col-span-2">
-                            <Label className="text-foreground/80 text-xs font-bold">
+                            <Label
+                                htmlFor="almacen-recepciones-create-observacion-general-de-recepcion"
+                                className="text-foreground/80 text-xs font-bold"
+                            >
                                 Observación General de Recepción
                             </Label>
                             <Input
+                                id="almacen-recepciones-create-observacion-general-de-recepcion"
                                 value={data.observacion}
                                 onChange={(e) =>
                                     setData('observacion', e.target.value)
@@ -550,13 +570,17 @@ export default function RecepcionesCreate({
 
                                         <div className="grid gap-3 sm:grid-cols-4 lg:grid-cols-6">
                                             <div className="sm:col-span-2 lg:col-span-3">
-                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                <Label
+                                                    htmlFor={`recepcion-producto-${index}`}
+                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                >
                                                     Producto{' '}
                                                     <span className="text-primary-strong">
                                                         *
                                                     </span>
                                                 </Label>
                                                 <select
+                                                    id={`recepcion-producto-${index}`}
                                                     value={item.product_id}
                                                     onChange={(e) =>
                                                         updateLineProduct(
@@ -584,13 +608,17 @@ export default function RecepcionesCreate({
                                             </div>
 
                                             <div>
-                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                <Label
+                                                    htmlFor={`recepcion-cant-recibida-${index}`}
+                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                >
                                                     Cant. Recibida{' '}
                                                     <span className="text-primary-strong">
                                                         *
                                                     </span>
                                                 </Label>
                                                 <Input
+                                                    id={`recepcion-cant-recibida-${index}`}
                                                     type="number"
                                                     min="1"
                                                     value={item.cantidad}
@@ -608,13 +636,17 @@ export default function RecepcionesCreate({
                                             </div>
 
                                             <div>
-                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                <Label
+                                                    htmlFor={`recepcion-cant-conforme-${index}`}
+                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                >
                                                     Cant. Conforme{' '}
                                                     <span className="text-primary-strong">
                                                         *
                                                     </span>
                                                 </Label>
                                                 <Input
+                                                    id={`recepcion-cant-conforme-${index}`}
                                                     type="number"
                                                     min="0"
                                                     max={item.cantidad}
@@ -720,13 +752,17 @@ export default function RecepcionesCreate({
                                                     {prod.controla_lote && (
                                                         <>
                                                             <div>
-                                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                                <Label
+                                                                    htmlFor={`recepcion-lote-${index}`}
+                                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                                >
                                                                     Lote{' '}
                                                                     <span className="text-primary-strong">
                                                                         *
                                                                     </span>
                                                                 </Label>
                                                                 <Input
+                                                                    id={`recepcion-lote-${index}`}
                                                                     value={
                                                                         item.lote
                                                                     }
@@ -745,13 +781,17 @@ export default function RecepcionesCreate({
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                                <Label
+                                                                    htmlFor={`recepcion-vence-${index}`}
+                                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                                >
                                                                     Vence{' '}
                                                                     <span className="text-primary-strong">
                                                                         *
                                                                     </span>
                                                                 </Label>
                                                                 <Input
+                                                                    id={`recepcion-vence-${index}`}
                                                                     type="date"
                                                                     min={today}
                                                                     value={
@@ -780,12 +820,16 @@ export default function RecepcionesCreate({
                                         {/* Motivo de no conformidad (obligatorio si cantidad_conforme < cantidad) */}
                                         {hasNoConforme && (
                                             <div className="rounded-[10px] border border-amber-500/20 bg-amber-500/10 p-3">
-                                                <Label className="text-warning-strong text-[11px] font-bold">
+                                                <Label
+                                                    htmlFor={`recepcion-motivo-no-conformidad-${index}`}
+                                                    className="text-warning-strong text-[11px] font-bold"
+                                                >
                                                     Motivo de no conformidad
                                                     (obligatorio para sustentar
                                                     reclamo al proveedor):
                                                 </Label>
                                                 <Input
+                                                    id={`recepcion-motivo-no-conformidad-${index}`}
                                                     value={
                                                         item.observacion_item
                                                     }

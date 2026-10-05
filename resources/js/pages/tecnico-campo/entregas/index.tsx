@@ -146,7 +146,7 @@ export default function EntregasIndex({
                     onClick={() => handleTabChange('listas')}
                     className={`rounded-[12px] border p-2.5 text-left transition-all ${
                         currentTab === 'listas'
-                            ? 'border-sky-500/20 bg-sky-600 text-white shadow-sm'
+                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
@@ -161,7 +161,7 @@ export default function EntregasIndex({
                     onClick={() => handleTabChange('entregadas')}
                     className={`rounded-[12px] border p-2.5 text-left transition-all ${
                         currentTab === 'entregadas'
-                            ? 'border-sky-500/20 bg-sky-600 text-white shadow-sm'
+                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
@@ -176,7 +176,7 @@ export default function EntregasIndex({
                     onClick={() => handleTabChange('cerradas')}
                     className={`rounded-[12px] border p-2.5 text-left transition-all ${
                         currentTab === 'cerradas'
-                            ? 'border-sky-500/20 bg-sky-600 text-white shadow-sm'
+                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
@@ -191,7 +191,7 @@ export default function EntregasIndex({
                     onClick={() => handleTabChange('todos')}
                     className={`rounded-[12px] border p-2.5 text-left transition-all ${
                         currentTab === 'todos'
-                            ? 'border-sky-500/20 bg-sky-600 text-white shadow-sm'
+                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >

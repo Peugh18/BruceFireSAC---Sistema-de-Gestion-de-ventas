@@ -265,10 +265,14 @@ export default function EmpresaConfiguracion({
 
                         <div className="grid gap-3 md:grid-cols-2">
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-razon-social"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Razón social
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-razon-social"
                                     value={form.data.razon_social}
                                     onChange={(e) =>
                                         form.setData(
@@ -280,10 +284,14 @@ export default function EmpresaConfiguracion({
                                 {field(form.errors, 'razon_social')}
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-nombre-comercial"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Nombre comercial
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-nombre-comercial"
                                     value={form.data.nombre_comercial}
                                     onChange={(e) =>
                                         form.setData(
@@ -294,10 +302,14 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-ruc"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     RUC
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-ruc"
                                     value={form.data.ruc}
                                     onChange={(e) =>
                                         form.setData('ruc', e.target.value)
@@ -307,10 +319,14 @@ export default function EmpresaConfiguracion({
                                 {field(form.errors, 'ruc')}
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-telefono"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Teléfono
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-telefono"
                                     value={form.data.telefono}
                                     onChange={(e) =>
                                         form.setData('telefono', e.target.value)
@@ -318,10 +334,14 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-direccion"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Dirección
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-direccion"
                                     value={form.data.direccion}
                                     onChange={(e) =>
                                         form.setData(
@@ -348,10 +368,14 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-email"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Email
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-email"
                                     value={form.data.email}
                                     onChange={(e) =>
                                         form.setData('email', e.target.value)
@@ -359,10 +383,14 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-pagina-web"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Página web
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-pagina-web"
                                     value={form.data.sitio_web}
                                     onChange={(e) =>
                                         form.setData(
@@ -374,10 +402,14 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-cuenta-de-detraccion-banco-de-la-nacion"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Cuenta de detracción (Banco de la Nación)
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-cuenta-de-detraccion-banco-de-la-nacion"
                                     value={form.data.cuenta_detraccion}
                                     onChange={(e) =>
                                         form.setData(
@@ -446,10 +478,14 @@ export default function EmpresaConfiguracion({
                                 {field(form.errors, 'color_marca')}
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-mensaje-de-agradecimiento"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Mensaje de agradecimiento
                                 </Label>
                                 <Input
+                                    id="gerente-configuracion-empresa-mensaje-de-agradecimiento"
                                     value={form.data.mensaje_agradecimiento}
                                     onChange={(e) =>
                                         form.setData(
@@ -462,10 +498,14 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label
+                                    htmlFor="gerente-configuracion-empresa-condiciones-de-venta-o-garantia-opcional"
+                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                >
                                     Condiciones de venta o garantía (opcional)
                                 </Label>
                                 <Textarea
+                                    id="gerente-configuracion-empresa-condiciones-de-venta-o-garantia-opcional"
                                     value={form.data.condiciones_comprobante}
                                     onChange={(e) =>
                                         form.setData(
@@ -482,10 +522,14 @@ export default function EmpresaConfiguracion({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label
+                                htmlFor="gerente-configuracion-empresa-leyenda-de-pie-opcional"
+                                className="text-foreground/80 text-[11px] font-bold uppercase"
+                            >
                                 Leyenda de pie (opcional)
                             </Label>
                             <Textarea
+                                id="gerente-configuracion-empresa-leyenda-de-pie-opcional"
                                 value={form.data.leyenda_pie}
                                 onChange={(e) =>
                                     form.setData('leyenda_pie', e.target.value)

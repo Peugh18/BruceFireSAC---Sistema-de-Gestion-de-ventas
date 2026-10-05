@@ -4,6 +4,7 @@ use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Billing\IssueDebitNote;
 use App\Actions\Sales\CreateSale;
 use App\Contracts\SunatClientInterface;
+use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryMovement;
@@ -75,6 +76,8 @@ function aceptarNota(ElectronicDocument $nota): ElectronicDocument
 test('una nota de crédito de anulación total devuelve stock kardex y anula la venta', function () {
     [$sale, $factura, $unit] = ventaConFactura('credito_30');
     SalePayment::factory()->create(['sale_id' => $sale->id, 'monto' => 10]);
+    // Si lo cobrado fue en efectivo, la devolución sale de la caja abierta.
+    CashRegister::factory()->create(['vendedor_id' => $sale->vendedor_id]);
 
     $nota = aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total));
 

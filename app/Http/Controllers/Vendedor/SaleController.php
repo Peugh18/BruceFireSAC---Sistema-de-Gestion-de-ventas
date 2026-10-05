@@ -540,14 +540,7 @@ class SaleController extends Controller
      */
     protected function exigirCajaParaDevolverEfectivo(Sale $sale): void
     {
-        $efectivo = (float) $sale->payments()->where('forma_pago', 'efectivo')->sum('monto')
-            - (float) $sale->refunds()->where('forma_pago', 'efectivo')->sum('monto');
-
-        if (round($efectivo, 2) > 0 && ! CashRegister::abiertaDe((int) $sale->vendedor_id)) {
-            throw ValidationException::withMessages([
-                'caja' => 'Esta venta se cobró en efectivo: abre la caja del vendedor para registrar la devolución y luego anúlala.',
-            ]);
-        }
+        CashRegister::exigirAbiertaParaDevolverEfectivo($sale);
     }
 
     /**

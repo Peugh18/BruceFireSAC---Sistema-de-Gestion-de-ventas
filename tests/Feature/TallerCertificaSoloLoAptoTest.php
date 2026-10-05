@@ -1,14 +1,20 @@
 <?php
 
+use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Enums\TeamRole;
 use App\Models\Certificate;
 use App\Models\Deficiency;
 use App\Models\Equipment;
+use App\Models\InventoryMovement;
+use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Sede;
 use App\Models\ServiceOrder;
+use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use App\Models\TechnicalChecklist;
 use App\Models\User;
+use App\Services\Inventory\StockPorLote;
 use Database\Seeders\CertificateTypeSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
@@ -85,4 +91,38 @@ test('el vendedor anula una orden antes del certificado y no si ya se cobro o se
 
     // Una orden anulada no se recibe en el taller.
     $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'))->assertSessionHasErrors();
+});
+
+test('la ph marcada solo en un extintor rechazado no emite un certificado de ph vacio', function () {
+    [$llego, $rechazado] = $this->equipos;
+
+    $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id, $rechazado->id]])->assertSessionHasNoErrors();
+    $this->orden->update(['estado' => 'en_proceso']);
+    checklistConforme($llego);
+    checklistConforme($rechazado);
+    Deficiency::create(['service_order_id' => $this->orden->id, 'equipment_id' => $rechazado->id, 'componente' => 'Válvula', 'condicion' => 'Fuga', 'estado' => 'rechazada']);
+
+    $avanzar = fn (string $estado, array $extra = []) => $this->actingAs($this->tecnico)->post(($this->ruta)('ejecucion.advance'), ['target_state' => $estado, ...$extra]);
+    $avanzar('trabajo_terminado')->assertSessionHasNoErrors();
+    $avanzar('listo_certificado', ['ph_equipos' => [$rechazado->id]])->assertSessionHasNoErrors();
+
+    expect(Certificate::where('service_order_id', $this->orden->id)->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists())->toBeFalse()
+        ->and($llego->fresh()->proxima_prueba_hidrostatica->isPast())->toBeTrue();
+});
+
+test('un repuesto que sale de dos lotes deja los dos movimientos en la bitacora de la orden', function () {
+    $almacen = Sede::factory()->mixta()->create();
+    $this->orden->update(['sede_id' => $almacen->id, 'estado' => 'en_proceso']);
+    $orring = Product::factory()->create(['nombre' => 'O-ring', 'serializado' => false, 'controla_lote' => true]);
+    app(StockPorLote::class)->ingresar($orring, $almacen->id, 4, ['tipo' => 'ingreso'], 'L-1', today()->addMonth()->toDateString());
+    app(StockPorLote::class)->ingresar($orring, $almacen->id, 6, ['tipo' => 'ingreso'], 'L-2', today()->addYear()->toDateString());
+    $deficiencia = Deficiency::create(['service_order_id' => $this->orden->id, 'equipment_id' => $this->equipos[0]->id, 'componente' => 'Válvula', 'condicion' => 'Fuga', 'estado' => 'autorizada']);
+
+    app(ExecuteAndCloseServiceOrder::class)->consumeSparePart($this->orden, $deficiencia, $orring, 7, $this->tecnico);
+
+    $evento = ServiceOrderEvent::where('service_order_id', $this->orden->id)->get()
+        ->first(fn (ServiceOrderEvent $e) => ($e->payload['accion'] ?? null) === 'consumo_repuesto_kardex');
+
+    expect($evento->payload['inventory_movement_ids'] ?? [])->toHaveCount(2)
+        ->and((int) InventoryMovement::whereIn('id', $evento->payload['inventory_movement_ids'] ?? [0])->sum('cantidad'))->toBe(-7);
 });

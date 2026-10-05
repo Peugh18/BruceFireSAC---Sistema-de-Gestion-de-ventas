@@ -73,13 +73,14 @@ class ExecuteAndCloseServiceOrder
 
             // Generar movimiento real de salida en el Kardex
             // Sin dejar el almacén en negativo; con lote, lo que vence primero.
-            $movement = app(StockPorLote::class)->sacar($product, (int) $sedeId, $cantidad, [
+            $movimientos = app(StockPorLote::class)->sacar($product, (int) $sedeId, $cantidad, [
                 'tipo' => 'salida_servicio',
                 'referencia_type' => Deficiency::class,
                 'referencia_id' => $deficiency->id,
                 'user_id' => $user->id,
                 'observacion' => trim($obsKardex),
-            ])[0];
+            ]);
+            $movement = $movimientos[0];
 
             // Marcar deficiencia como resuelta
             $deficiency->update([
@@ -99,6 +100,8 @@ class ExecuteAndCloseServiceOrder
                     'product_nombre' => $product->nombre,
                     'cantidad' => $cantidad,
                     'inventory_movement_id' => $movement->id,
+                    // Si salió de varios lotes, todos sus movimientos.
+                    'inventory_movement_ids' => array_map(fn (InventoryMovement $m) => $m->id, $movimientos),
                 ],
             ]);
 
@@ -191,9 +194,10 @@ class ExecuteAndCloseServiceOrder
                     throw new InvalidArgumentException('No hay extintores recibidos y aptos para certificar.');
                 }
 
-                $conPh = array_values(array_map('intval', array_key_exists('ph_equipos', $extraData)
+                // Solo los aptos llevan P.H.: un id rechazado o ajeno no cuenta.
+                $conPh = array_values(array_intersect($aptos->modelKeys(), array_map('intval', array_key_exists('ph_equipos', $extraData)
                     ? (array) $extraData['ph_equipos']
-                    : (! empty($extraData['ph_realizada']) ? $aptos->modelKeys() : [])));
+                    : (! empty($extraData['ph_realizada']) ? $aptos->modelKeys() : []))));
 
                 $this->triggerAutomaticCertificates($serviceOrder, $aptos, $conPh, $extraData);
                 $this->renewEquipmentAttentionDate->execute($aptos->whereIn('id', $conPh)->values(), true);
