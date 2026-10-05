@@ -113,6 +113,8 @@ test('al anular la venta el cobro al contado sale de la caja', function () {
 });
 
 test('editar una venta cobrada en un turno anterior deja ese cobro y registra hoy solo la diferencia', function () {
+    // A mediodía: "ayer más una hora" no puede caer en el día de hoy.
+    $this->travelTo(today()->setTime(12, 0));
     $vendedor = vendedorDeCaja();
     $sale = venderAlContado($vendedor, ['condicion_pago' => 'contado', 'medio_pago' => 'efectivo']);
     $original = SalePayment::where('sale_id', $sale->id)->sole();
