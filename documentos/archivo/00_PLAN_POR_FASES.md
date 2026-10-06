@@ -1,5 +1,7 @@
 # BRUCE FIRE S.A.C. — Plan por Fases (BruceFireSacv2)
 
+> **Archivado el 2026-10-06.** Lo reemplaza `docs/ai/PLAN.md`. Se guarda solo como historial.
+
 Este documento es el **mapa de ejecución**. El contenido funcional
 completo (roles, reglas de negocio, certificados, checklist técnico,
 facturación, etc.) ya está maduro y con fuentes en

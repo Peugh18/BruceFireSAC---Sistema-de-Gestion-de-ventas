@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
+import ejecucion from '@/routes/tecnico-planta/ejecucion';
+import recepciones from '@/routes/tecnico-planta/recepciones';
 import type { Team } from '@/types';
 
 export type OrderItem = {
@@ -186,7 +188,7 @@ export default function TecnicoPlantaDashboard({
                     </div>
 
                     <Link
-                        href={`/${teamSlug}/tecnico-planta/recepcion`}
+                        href={recepciones.index.url(teamSlug)}
                         className="bg-primary hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all active:scale-95"
                     >
                         <PackageCheck className="size-4" />
@@ -363,7 +365,17 @@ export default function TecnicoPlantaDashboard({
                         orders.data.map((order) => (
                             <Link
                                 key={order.id}
-                                href={`/${teamSlug}/tecnico-planta/ordenes/${order.id}`}
+                                href={
+                                    order.estado === 'pendiente_recepcion'
+                                        ? recepciones.show.url([
+                                              teamSlug,
+                                              order.id,
+                                          ])
+                                        : ejecucion.show.url([
+                                              teamSlug,
+                                              order.id,
+                                          ])
+                                }
                                 className="border-border bg-card hover:border-destructive/20/40 block rounded-[14px] border p-4 shadow-xs transition-all hover:shadow-sm active:scale-[0.99]"
                             >
                                 <div className="border-border mb-2.5 flex items-start justify-between gap-2 border-b pb-2.5">

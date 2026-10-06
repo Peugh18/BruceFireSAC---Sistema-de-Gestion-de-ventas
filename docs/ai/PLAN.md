@@ -1,71 +1,135 @@
-# PLAN: Auditoría Integral Funcional, Resiliencia y Rediseño Estilo Apple
+# PLAN: Sistema web para la gestión de ventas en BRUCE FIRE S.A.C.
 
-## Estado General
+**Estado (2026-10-06):** auditoría completa terminada (`AUDITORIA.md` y `SUNAT.md`). **El dueño pidió no cambiar código hasta revisar el reporte.** Se trabaja en SUNAT **beta**; producción, al final (fase G).
 
-- **Fase Actual:** Fase 1 — Análisis y Auditoría Módulo por Módulo
-- **Última Actualización:** 2026-10-05
+Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS** = alcance nuevo: antes de construirlo hay que agregar su REQ al DRS v3.1, su historia en el Product Backlog y su fila en la Matriz de Consistencia.
+
+## Ya hecho (resumen)
+
+- **Roles:** los 5 roles construidos con su recorrido principal: venta → SUNAT beta → certificado → orden → taller → campo → acta.
+- **Auditoría del 2026-10-05:**
+    - PDF de las notas igual a su XML.
+    - Numeración de series sin choques.
+    - Traslados sin almacén muestran un aviso en vez de romperse.
+    - Se quitó "Eliminar cuenta".
+    - Prueba de que el historial no se puede borrar.
+    - Páginas de error con Chispa.
+    - Subido en el PR #23 (abierto, sin fusionar).
+- **2026-10-06:**
+    - 2 enlaces 404 del técnico de planta, corregidos.
+    - Auditoría por roles hecha en equipo (Claude, GPT y Antigravity).
+    - Guías SUNAT convertidas en `documentos/sunat/`.
+    - Normativa vigente en `SUNAT.md`.
+    - Documentación unificada.
+
+## Pendiente: sistema (en este orden)
+
+### A. Facturación lista para pasar a producción
+
+- [ ] S1: elegir el servidor beta o producción según `SUNAT_BETA` y verificar el certificado TLS
+- [ ] S2: bloquear las NC con motivo 04, 05 u 08 sobre boletas
+- [ ] S3: ND motivo 13 para penalidades, inafecto; el 03 pasa a "otros conceptos" (R.S. 000048-2026)
+- [ ] S4: respetar "Aplica IGV" por línea; antes, confirmar con el contador si hay exonerados
+- [ ] S5: guardar la hora de emisión y usar la misma en el XML y en el PDF
+- [ ] S6: guardar la fecha de la NC y la ND al crearla y reutilizarla en los reintentos
+- [ ] S9 y S10: catálogo 09 completo; notas que cuadran con un original que no sea todo gravado
+- [ ] S8: avisar cuando un comprobante pendiente se acerca a su plazo (factura 3 días, boleta 5)
+- [ ] S7: comunicación de baja (solo comprobantes no entregados, dentro de 7 días)
+- [ ] S12 y S13: congelar el comprobante emitido; reintentos y CDR confiables
+- [ ] V2 y S17: aplicar los permisos de verdad; la NC necesita aprobación del Gerente
+
+### A2. Seguridad (antes de producción)
+
+- [ ] X1: filtro de sede en la capa de datos (scope o trait en `Sale`, `ServiceOrder`, `Certificate`, `Equipment`) y pruebas de acceso cruzado por ruta; corregir la ficha del cliente
+- [ ] X2: firmas y sellos al disco privado, servidos con una ruta autenticada
+- [ ] X3: obligar a cambiar la contraseña en el primer ingreso; 2FA obligatorio para el Gerente
+- [ ] X4 y X5: `.env` de producción (`APP_DEBUG=false`, `LOG_LEVEL=warning`, cookie segura), `trustProxies` del hosting, CSP y HSTS
+
+### B. Certificados y tipo de extintor
+
+- [ ] C1: agente y capacidad en el producto, copiados a la unidad y al equipo; si falta el agente, no se emite el certificado
+- [ ] C2: los certificados técnicos (P.H., capacitación) se emiten solo después de que un técnico los valide, no al cobrar
+- [ ] Una sola regla de certificados: `CertificateRuleEngine` o la regla por destino, no las dos
+- [ ] A4: el servicio elige su tipo de certificado en el formulario del Gerente
+
+### C. Ventas, caja y cobranzas
+
+- [ ] V1: línea serializada siempre con cantidad 1
+- [ ] V3: la cotización pasa completa a la venta (descuento, condición de pago, observaciones, vehículo)
+- [ ] V4 y S11: las notas aceptadas cambian el saldo por cobrar
+- [ ] V5: renovar el vencimiento del equipo solo al cerrar el trabajo técnico
+- [ ] V6: un adicional autorizado genera deuda real
+- [ ] V7: pago ligado al turno de caja; bloqueo contra doble apertura o confirmación
+- [ ] V8: decidir si el vendedor ve en la ficha del cliente solo sus propias ventas
+
+- [ ] X6: la tarea diaria no debe vencer cotizaciones "aceptadas"
+- [ ] X7: medir los KPI del proyecto (tiempo de venta, tiempo de cotización, clientes recuperados por alertas: la cotización guarda la alerta de origen)
+- [ ] X8 y X9: alertas filtradas por sede o vendedor, con registro de contacto; "ofrecer recarga" según la capacidad y el agente
+
+### D. Técnicos ⚠️ DRS
+
+- [ ] Evidencias únicas (§33): foto, audio o archivo por orden, equipo y etapa
+- [ ] Conversación de la orden sobre `ServiceOrderEvent`: todos escriben y adjuntan (T3)
+- [ ] Firma táctil en recojo, entrega, instalación, inspección y mantenimiento (T1)
+- [ ] Motor único de visitas de campo con plantillas; mantenimiento en sitio incluido (T2)
+- [ ] Instalación escaneando cada unidad vendida (T4); deficiencia fuera del checklist (T5)
+
+### E. Almacén y Gerente
+
+- [ ] A2: tabla de categorías y botón "Gestionar" junto al select; categoría también en servicios ⚠️ DRS
+- [ ] A3: unidad de medida del servicio con el catálogo SUNAT 03; rechazar unidades desconocidas
+- [ ] A5: no permitir dar de baja dos veces la misma unidad
+- [ ] A6: arreglar los botones sin acción (nueva recepción y anular pago)
+- [ ] A1: costo de compra en la recepción y valorización correcta del inventario ⚠️ DRS
+- [ ] Stickers de 5 × 5 cm, 20 por hoja, con opción de empezar en la posición N (cambia el REQ-INV-07)
+- [ ] A7: paginar en la base de datos; quitar el N+1 de Consulta Rápida
+
+### F. Interfaz y nombres
+
+- [ ] Nombres: "Cajas", "Inventario" y grupo "Empresa"; cada tarjeta del dashboard enlaza a su reporte
+- [ ] Menús con rutas Wayfinder (las URL armadas a mano causaron los 404)
+- [ ] Contraste de las opciones del select en modo oscuro
+- [ ] Sistema de diseño: `AppleSegmentedTabs`, `AppleKpiCard`, `AppleTableCard`, Chispa sin tapar botones en celular, `currentSede` compartido. **Sin tocar `.bf-nav-active`.**
+
+- [ ] X13: un `AlertDialog` común en lugar de los 7 `confirm()` nativos
+- [ ] X14 y X15: componente de tabla común que en el celular se vea como tarjetas; partir las páginas de más de 900 líneas (empezar por `clientes/show.tsx`) y usar _deferred props_
+- [ ] X16 a X18: tokens de tipografía (texto mínimo legible), `StatusBadge` y `Kpi` comunes, `alt` y `htmlFor` que falten, Chispa animada más liviana
+
+### G. Servidor y paso a producción (al final)
+
+- [ ] Checklist de `SUNAT.md` §4: todos los casos probados en beta con su CDR aceptado
+- [ ] Cron `schedule:run` cada minuto y worker de colas supervisado
+- [ ] Respaldo fuera del servidor, incluidos los XML y los CDR
+- [ ] `trustProxies` según el hosting y `SESSION_SECURE_COOKIE=true`
+- [ ] Certificado digital de producción, usuario SOL, datos reales de la empresa y cuenta de detracción
+
+### H. Guía de remisión electrónica (obligatoria) ⚠️ DRS
+
+Diseño en `SUNAT.md` §5.
+
+- [ ] **Ya, sin código:** emitir las GRE desde el portal SOL o la app Emprender mientras el sistema no las tenga
+- [ ] Actualizar Greenter de **v4.3.1 (2021) a v5.3** y agregar `greenter/gre-api` (requiere aprobación: cambia dependencias); volver a pasar toda la suite de facturación
+- [ ] Credenciales de la API (`client_id` y `client_secret`) desde Menú SOL; confirmar cómo probar sin afectar producción
+- [ ] Datos maestros: vehículos (placa y categoría M1, L o N), conductores, peso por producto y código de establecimiento por sede
+- [ ] Módulo único "Guías de remisión": emitir desde la venta (motivo 01), desde la orden de recojo o entrega (motivo 13, por confirmar) y desde el traslado entre sedes (04, con "en tránsito", A8); CDR aceptado antes de salir
+
+## Decisiones pendientes del dueño o del contador
+
+1. ¿La P.H. y la capacitación se hacen de verdad en cada venta, o un técnico debe validarlas? (C2)
+2. ¿Venden algo exonerado o inafecto? ¿Qué código de detracción les corresponde? (S4, S14)
+3. ¿Cobran penalidades o mora? (S3)
+4. ¿Con qué vehículo transportan (auto, moto o camioneta)? ¿Dónde emiten hoy la guía de remisión? ¿Qué motivo usan para el recojo y la devolución de los extintores en recarga? (H)
+5. ¿Quieren registrar el costo de compra? (A1)
+6. ¿Prestan extintores mientras recargan los del cliente? ¿Los técnicos trabajan seguido sin señal?
 
 ---
 
-## Fases del Plan
+## Contenido y redes (Bruce Fire) [EN CURSO]
 
-### Fase 1: Auditoría Técnica y Funcional Módulo por Módulo [COMPLETADA]
-
-- [x] **1.1 Módulo Vendedor & Ventas:** Cotizaciones, CRM clientes, proceso de venta, caja, comprobantes de pago, notas de crédito.
-- [x] **1.2 Módulo Facturación Electrónica SUNAT (Greenter):** Generación de XML UBL 2.1, firmas digitales, envío a WS SUNAT, manejo de CDR, timeouts, estado de contingencia. (Detectado bug 404 en PDF de Notas de Crédito).
-- [x] **1.3 Módulo Almacén & Control de Lotes:** Movimientos de kardex, insumos (PQS, CO2), trazabilidad de lotes, transferencias entre sedes. (Detectado edge-case en `origen_sede_id`).
-- [x] **1.4 Módulo Técnico de Planta (Taller):** Recepción de extintores, checklists técnicos (NTP 350.043), pruebas hidrostáticas, deficiencias y solicitudes a vendedor. (Detectado riesgo 500 en `service->nombre`).
-- [x] **1.5 Módulo Técnico de Campo:** Rutas, entregas, firma táctil digital, actas y sincronización. (Detectado leak de conteos globales y N+1 en eventos de custodia).
-- [x] **1.6 Módulo Gerente & Seguridad:** Auditoría de logs, arqueos ciegos, permisos Spatie, aislamiento multi-sede (`{current_team}`). (Detectado riesgo null en `cr->vendedor->id`).
-- [x] **1.7 Verificación Pública & Asistente Chispa:** QR para ITSE, enlaces firmados, rate limiting y resiliencia.
-
-### Fase 2: Auditoría de Usabilidad y Resiliencia de UI (4 Estados) [COMPLETADA]
-
-- [x] **2.1 Estados Vacíos (Empty States vs Search Zero-Results):** Verificación de llamadas a la acción y mensajes claros en cada listado.
-- [x] **2.2 Prevención de Errores y Doble Envío:** Bloqueo de botones `disabled={processing}` con loaders visuales.
-- [x] **2.3 Modales de Confirmación:** Acciones destructivas (anulaciones, cierres de caja) con confirmación explícita.
-- [x] **2.4 Ergonomía Móvil y Táctil:** Vistas operativas en teléfonos con áreas táctiles ≥ 44px e inputs sin auto-zoom.
-- [x] **2.5 Integración de Hallazgos de Obsidian:**
-    - Diagnóstico de widget Chispa tapando botones en móvil (375px).
-    - Diagnóstico de 4 estilos inconsistentes de pestañas.
-    - Falta de componente unificado para tarjetas KPI y tablas de datos.
-    - Disparidad de tokens manuales (`text-[..px]` y `rounded-[..px]`).
-
-### Fase 3: Especificación y Directrices de Rediseño Estilo Apple [COMPLETADA]
-
-- [x] **3.1 Sistema de Tokens y Materiales Apple:** Translúcidos (`backdrop-blur`), bordes sutiles, sombras suaves difusas, curvaturas squircle (`rounded-2xl`).
-- [x] **3.2 Tipografía y Ritmo Visual:** Escala tipográfica SF Pro / Inter, espaciado uniforme, pesos balanceados.
-- [x] **3.3 Micro-interacciones Táctiles:** Efectos `active:scale-[0.98]`, transiciones de resorte sutiles con tiempos de respuesta inmediatos.
-- [x] **3.4 Modo Oscuro Pulido:** Contrastes WCAG AA, superficies de profundidad diferenciada (fondo, barra lateral, tarjetas elevadas).
-- [x] **3.5 Componente Maestro Apple Segmented Control:** Reemplazo de los 4 estilos dispares por una pastilla deslizante iOS.
-
-### Fase 4: Plan de Ejecución Priorizado
-
-- [x] **4.1 Corrección de Bugs Funcionales Críticos [COMPLETADA]:**
-    - Generación de PDF y descarga de Notas de Crédito / Débito (reparado 404 en `EmitElectronicDocument` y `ComprobantePdfService`).
-    - Corregida condición de carrera con `firstOrCreate` en `ReserveNextCorrelativo`.
-    - Scope multi-sede estricto en contadores de campo (`DeliveryController`, `InspectionController`).
-    - Optimización N+1 eliminada en eventos de custodia de campo (`CollectionController`).
-    - Safe navigation y eager load de `service` en taller (`ExecutionController`).
-    - Safe navigation en cajas consolidadas para usuarios dados de baja (`CashRegisterConsolidatedController`).
-    - Manejo seguro y resiliente de sedes en traslados de almacén (`TransferController`).
-    - Sincronización de KPIs según rol restringido vs gerente en ventas (`SaleController`).
-    - **Mascota Chispa garantizada en errores 404, 500 y 403**: Creadas vistas Blade de respaldo con poses (`busca`, `corre`, `piensa`, `sentado`) y branding oficial.
-- [ ] **4.2 Implementación del Sistema de Diseño Apple en UI:**
-    - Componentes maestros: `AppleSegmentedTabs`, `AppleKpiCard`, `AppleTableCard`.
-    - Reubicación ergonómica y no invasiva de la mascota Chispa en móviles.
-    - Inyección de `currentSede` completa en `HandleInertiaRequests`.
-    - Transición a materiales translúcidos (`backdrop-blur-xl`) y bordes hairline.
-    - **REGLA DE ORO:** Respetar intacto al 100% el diseño del slider/sidebar curvo cóncavo (`.bf-nav-active`).
-
-### 4.3 Bloqueantes para producción (auditoría 2026-10-05, 2.ª pasada)
-
-- [x] Verificar con `composer ci:check` los cambios de la 1.ª pasada (fallaban formato y PHPStan).
-- [x] PDF de notas de crédito/débito igual al XML (una línea: motivo × importe), sin cuotas ni vencimiento.
-- [x] `ReserveNextCorrelativo`: `createOrFirst` + volver a bloquear la fila (el `firstOrCreate` no evitaba la carrera).
-- [x] Traslados: estado vacío cuando no hay almacén activo (antes la pantalla se rompía con `sourceSede = null`).
-- [x] **CRÍTICO:** quitar "Eliminar cuenta" (botón, ruta `profile.destroy` y validación) (Ajustes → Perfil). Hoy cualquier usuario puede borrarse y la BD borra en cascada sus ventas, comprobantes SUNAT, cajas y cotizaciones.
-- [x] Borrado en cascada de usuarios y clientes: ya estaba bloqueado por la migración `2026_09_28_014309_proteger_historial_legal_y_financiero` (falso positivo de la auditoría). Se añadió `tests/Feature/BorradoProtegidoDeHistorialTest.php` para que no se pierda.
-- [ ] Copia de respaldo fuera del servidor (hoy `backup:bd` guarda en `storage/app/backups` del mismo equipo) e incluir `storage/app/private/xml` y CDR.
-- [ ] Revisar `trustProxies` según el hosting (Cloudflare o balanceador) y `SESSION_SECURE_COOKIE=true`.
-- [ ] Servidor: cron `schedule:run` cada minuto y un worker de colas (`queue:work`) supervisado.
+- Carpeta de contenido: `../Contenido/` (PERFIL, GANCHOS, CALENDARIO, PUBLICADO, piezas).
+- [x] Perfil de marca, banco de ganchos y guion del video de presentación (`piezas/2026-10-05-video-presentacion/guion.md`).
+- [ ] Aprobar el guion y resolver los pendientes del cliente (WhatsApp, recojo y entrega, ASNEEX).
+- [x] Video armado en HyperFrames (`../Contenido/piezas/2026-10-05-video-presentacion/video/`, 38 s, 9:16), con imágenes provisionales; `hyperframes check` pasa.
+- [x] Video v2 final 9:16 renderizado (Chispa ilustrada, voz Jair Solano, música Eleven Music, 3 clips de Veo).
+- [ ] Versión 1:1 para LinkedIn y captions por red.
+- [ ] Crear los perfiles en TikTok, Instagram, Facebook, YouTube, LinkedIn y Google.
