@@ -7,31 +7,39 @@ use Illuminate\Validation\ValidationException;
 
 class IssueDebitNote
 {
+    /**
+     * Motivos del Catalogo 10 que usan afectacion inafecta (30) segun la
+     * R.S. 000048-2026 vigente desde el 1/08/2026.
+     *
+     * @var list<string>
+     */
+    public const MOTIVOS_INAFECTOS = ['13'];
+
     public function __construct(
         protected ReserveNextCorrelativo $reserveNextCorrelativo,
     ) {}
 
     /**
-     * Emite una nota de débito (Catálogo 10 SUNAT) que aumenta el valor de una
+     * Emite una nota de debito (Catalogo 10 SUNAT) que aumenta el valor de una
      * factura o boleta ya enviada. No modifica stock ni cuotas de la venta.
      */
     public function handle(ElectronicDocument $original, string $motivoCatalogo10, string $detalle, float $importe): ElectronicDocument
     {
         if (! in_array($original->tipo, ['factura', 'boleta'], true)) {
             throw ValidationException::withMessages([
-                'electronic_document_id' => 'Solo se puede emitir nota de débito sobre una factura o boleta existente.',
+                'electronic_document_id' => 'Solo se puede emitir nota de debito sobre una factura o boleta existente.',
             ]);
         }
 
         if (! in_array($original->sunat_estado, ['aceptado', 'observado'], true)) {
             throw ValidationException::withMessages([
-                'electronic_document_id' => 'La nota de débito solo se emite sobre un comprobante aceptado por SUNAT. Si aún está por enviar o fue rechazado, corrígelo con «Editar» desde la venta.',
+                'electronic_document_id' => 'La nota de debito solo se emite sobre un comprobante aceptado por SUNAT. Si aun esta por enviar o fue rechazado, corrigelo con Editar desde la venta.',
             ]);
         }
 
         if ($original->sale()->value('estado') === 'anulada') {
             throw ValidationException::withMessages([
-                'electronic_document_id' => 'La venta está anulada: no admite notas de débito.',
+                'electronic_document_id' => 'La venta esta anulada: no admite notas de debito.',
             ]);
         }
 
@@ -48,6 +56,8 @@ class IssueDebitNote
             'importe' => $importe,
             'sunat_estado' => 'pendiente',
             'sunat_mensaje' => $detalle,
+            // S6: la fecha se guarda al crear y se reutiliza en cada reintento.
+            'fecha_emision' => now(),
         ]);
     }
 }

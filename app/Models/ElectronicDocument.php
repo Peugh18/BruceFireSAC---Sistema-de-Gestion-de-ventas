@@ -48,7 +48,9 @@ class ElectronicDocument extends Model
         return [
             'correlativo' => 'integer',
             'importe' => 'decimal:2',
-            'fecha_emision' => 'date',
+            // S5: guardamos la hora de emision (no solo la fecha) para cumplir
+            // el requisito SUNAT de incluir la hora en el XML y el PDF.
+            'fecha_emision' => 'datetime',
             'enviar_desde' => 'datetime',
             'enviado_at' => 'datetime',
         ];
@@ -86,5 +88,30 @@ class ElectronicDocument extends Model
     public function cpeAfectado(): BelongsTo
     {
         return $this->belongsTo(self::class, 'cpe_afectado_id');
+    }
+
+    public const PLAZO_DIAS_FACTURA = 3;
+
+    public const PLAZO_DIAS_BOLETA = 5;
+
+    public function plazoLimiteDias(): int
+    {
+        return $this->tipo === 'factura' ? self::PLAZO_DIAS_FACTURA : self::PLAZO_DIAS_BOLETA;
+    }
+
+    public function diasRestantesParaEnvio(): int
+    {
+        $fecha = $this->fecha_emision ?? $this->created_at ?? now();
+        $limite = $fecha->copy()->addDays($this->plazoLimiteDias());
+
+        return (int) now()->diffInDays($limite, false);
+    }
+
+    /**
+     * S8: Avisa si el comprobante pendiente esta a 1 dia o menos de vencer su plazo SUNAT.
+     */
+    public function estaPorVencerSunat(): bool
+    {
+        return $this->estaPorEnviar() && $this->diasRestantesParaEnvio() <= 1;
     }
 }

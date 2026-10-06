@@ -138,3 +138,22 @@
     - X2: las firmas están en el disco público.
     - X6: la tarea diaria vence cotizaciones aceptadas.
 - Descartado: "los certificados no se pueden corregir".
+
+## [2026-10-06] — Fase A (Facturación SUNAT) completada al 100% con TDD
+
+- **Fase A resuelta al 100%:**
+    1. _S1 (Servidores SUNAT & TLS):_ Implementado `GreenterSunatClient` para conmutar entre `SunatEndpoints::FE_BETA` y `FE_PRODUCCION` según `billing.sunat.beta` y verificación de conexión segura TLS.
+    2. _S2 (Bloqueo NC Boletas):_ NC sobre boletas rechaza motivos `04` (Descuento global), `05` (Descuento por ítem) y `08` (Bonificación).
+    3. _S3 (ND Penalidades):_ Añadido motivo `13` (Penalidades) en Catálogo 10 con afectación Inafecta (`30`) y cero IGV. Actualizado motivo `03` a "Otros conceptos".
+    4. _S4 (Catálogo 07 en Productos):_ Añadida columna `tipo_afectacion_igv` (Catálogo 07: `10` Gravado, `20` Exonerado, `30` Inafecto) en `products`. `GreenterService` asigna afectación respetando la configuración por producto.
+    5. _S5 (Hora de Emisión):_ Columna `fecha_emision` migrada a `DATETIME` en `electronic_documents`. `EmitElectronicDocument` guarda `now()` con hora completa y `GreenterService` genera la hora exacta `H:i:s` en XML y PDF.
+    6. _S6 (Persistencia Fecha NC/ND):_ NC y ND guardan `fecha_emision = now()` al ser creadas y conservan su fecha en reintentos.
+    7. _S7 (Comunicación de Baja):_ Acción `VoidElectronicDocument` para comunicación de baja de facturas/notas aceptadas dentro de los 7 días posteriores a su emisión.
+    8. _S8 (Avisos de Plazo de Envío):_ Métodos `plazoLimiteDias()`, `diasRestantesParaEnvio()` y `estaPorVencerSunat()` en `ElectronicDocument` (factura 3 días, boleta 5 días).
+    9. _S9 y S10 (Catálogo NC 01-13 & Afectaciones):_ Motivos `01` al `13` completos. `StoreCreditNoteRequest` y `buildNote` soportan notas sobre comprobantes con mezcla de líneas gravadas e inafectas.
+    10. _S12 & S13 (Congelamiento de XML & Reintentos):_ `EmitElectronicDocument::prepararDocumento()` congela y reutiliza el XML firmado en reintentos para no modificar firmas ni timestamps.
+    11. _V2 & S17 (Permisos Spatie & Autorización):_ Permiso `billing.credit_note` y control de autorización en `StoreCreditNoteRequest` y `StoreDebitNoteRequest`.
+- **Suite de Pruebas:**
+    - Creada suite `tests/Feature/FaseASunatTest.php` con 27 pruebas Pest pasando al 100%.
+    - `CreditDebitNoteTest.php` (10 pruebas) pasando al 100%.
+    - Formato verificado con `vendor/bin/pint` y `npx vp check --fix`.

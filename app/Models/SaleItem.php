@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property float $precio_unitario
  * @property float $descuento
  * @property float $subtotal
+ * @property bool $aplica_igv
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Sale $sale

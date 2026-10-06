@@ -3,17 +3,12 @@
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Billing\IssueDebitNote;
-use App\Actions\Sales\CreateSale;
 use App\Contracts\SunatClientInterface;
 use App\Models\CashRegister;
-use App\Models\Client;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryMovement;
-use App\Models\InventoryUnit;
-use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SalePayment;
-use App\Models\Sede;
 use App\Services\Billing\ComprobantePdfService;
 use App\Services\Billing\GreenterService;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -22,58 +17,6 @@ use Illuminate\Validation\ValidationException;
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
-
-/**
- * Venta confirmada de una unidad nueva con su factura aceptada por SUNAT.
- *
- * @return array{0: Sale, 1: ElectronicDocument, 2: InventoryUnit}
- */
-function ventaConFactura(string $condicionPago = 'contado', string $tipo = 'factura'): array
-{
-    $sede = Sede::factory()->almacen()->create();
-    $product = Product::factory()->create();
-    $unit = InventoryUnit::factory()->create([
-        'product_id' => $product->id,
-        'sede_almacen_id' => $sede->id,
-        'estado' => 'disponible',
-    ]);
-
-    $sale = app(CreateSale::class)->handle([
-        'client_id' => Client::factory()->create()->id,
-        'sede_id' => $sede->id,
-        'fecha' => now()->toDateString(),
-        'destino' => 'local_cliente',
-        'condicion_pago' => $condicionPago,
-        'comprobante_tipo' => $tipo,
-    ], [[
-        'tipo_linea' => 'unidad_nueva',
-        'numero_serie' => $unit->numero_serie,
-        'product_id' => $product->id,
-        'cantidad' => 1,
-        'precio_unitario' => 100,
-    ]], vendedorUser()->id);
-
-    $sale->update(['estado' => 'confirmada']);
-    $documento = ElectronicDocument::factory()->create([
-        'sale_id' => $sale->id,
-        'tipo' => $tipo,
-        'serie' => $tipo === 'factura' ? 'F001' : 'B001',
-        'sunat_estado' => 'aceptado',
-    ]);
-
-    return [$sale->refresh(), $documento, $unit];
-}
-
-/**
- * SUNAT acepta la nota: recién ahí una anulación total anula la venta.
- */
-function aceptarNota(ElectronicDocument $nota): ElectronicDocument
-{
-    $nota->update(['sunat_estado' => 'aceptado']);
-    app(IssueCreditNote::class)->aplicarSiFueAceptada($nota);
-
-    return $nota;
-}
 
 test('una nota de crédito de anulación total devuelve stock kardex y anula la venta', function () {
     [$sale, $factura, $unit] = ventaConFactura('credito_30');

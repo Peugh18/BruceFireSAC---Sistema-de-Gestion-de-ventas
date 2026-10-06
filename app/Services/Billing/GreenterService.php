@@ -217,7 +217,7 @@ class GreenterService
     public function buildNote(ElectronicDocument $note): Note
     {
         if (! in_array($note->tipo, ['nota_credito', 'nota_debito'], true)) {
-            throw new RuntimeException("GreenterService::buildNote solo soporta notas de crédito o débito (recibido: {$note->tipo}).");
+            throw new RuntimeException("GreenterService::buildNote solo soporta notas de credito o debito (recibido: {$note->tipo}).");
         }
 
         $original = $note->cpeAfectado;
@@ -231,9 +231,16 @@ class GreenterService
         $esCredito = $note->tipo === 'nota_credito';
 
         $importe = (float) $note->importe;
-        $base = round($importe / 1.18, 2);
-        $igv = round($importe - $base, 2);
         $descripcion = $esCredito ? $this->descripcionMotivoCredito($note->motivo_catalogo) : $this->descripcionMotivoDebito($note->motivo_catalogo);
+
+        // S10: el motivo 13 (penalidades, R.S. 000048-2026) es inafecto al IGV.
+        // Los demas motivos heredan la afectacion gravada (10) del original.
+        $esInafecto = $note->motivo_catalogo === '13';
+        $base = $esInafecto ? $importe : round($importe / 1.18, 2);
+        $igv = $esInafecto ? 0.0 : round($importe - $base, 2);
+        $tipAfeIgv = $esInafecto ? '30' : '10';
+        $porcentajeIgv = $esInafecto ? 0.0 : 18.00;
+        $mtoBaseIgv = $esInafecto ? 0.0 : $base;
 
         $detail = (new SaleDetail)
             ->setCodProducto($esCredito ? 'NC-01' : 'ND-01')
@@ -242,19 +249,23 @@ class GreenterService
             ->setDescripcion($descripcion)
             ->setMtoValorUnitario($base)
             ->setMtoValorVenta($base)
-            ->setMtoBaseIgv($base)
-            ->setPorcentajeIgv(18.00)
+            ->setMtoBaseIgv($mtoBaseIgv)
+            ->setPorcentajeIgv($porcentajeIgv)
             ->setIgv($igv)
-            ->setTipAfeIgv('10')
+            ->setTipAfeIgv($tipAfeIgv)
             ->setTotalImpuestos($igv)
             ->setMtoPrecioUnitario($importe);
+
+        // S5/S6: usa la fecha persistida en la nota (no now()), para que los
+        // reintentos no cambien la fecha de emision del XML.
+        $fechaEmision = $note->fecha_emision ?? now();
 
         return (new Note)
             ->setUblVersion('2.1')
             ->setTipoDoc($esCredito ? '07' : '08')
             ->setSerie($note->serie)
             ->setCorrelativo((string) $note->correlativo)
-            ->setFechaEmision(now())
+            ->setFechaEmision($fechaEmision)
             ->setTipDocAfectado($original->tipo === 'factura' ? '01' : '03')
             ->setNumDocfectado("{$original->serie}-{$original->correlativo}")
             ->setCodMotivo($note->motivo_catalogo)
@@ -262,7 +273,8 @@ class GreenterService
             ->setTipoMoneda('PEN')
             ->setCompany($this->buildCompany())
             ->setClient($this->buildClient($sale))
-            ->setMtoOperGravadas($base)
+            ->setMtoOperGravadas($esInafecto ? 0.0 : $base)
+            ->setMtoOperInafectas($esInafecto ? $importe : 0.0)
             ->setMtoIGV($igv)
             ->setTotalImpuestos($igv)
             ->setMtoImpVenta($importe)
@@ -276,6 +288,8 @@ class GreenterService
 
     public static function descripcionMotivoCredito(?string $codigo): string
     {
+        // S9: Catalogo 09 completo (01 al 13) segun SUNAT.
+        // El 07 es "devolucion por item" (no "devolucion total", que es el 06).
         return match ($codigo) {
             '01' => 'ANULACION DE LA OPERACION',
             '02' => 'ANULACION POR ERROR EN EL RUC',
@@ -283,17 +297,29 @@ class GreenterService
             '04' => 'DESCUENTO GLOBAL',
             '05' => 'DESCUENTO POR ITEM',
             '06' => 'DEVOLUCION TOTAL',
-            '07' => 'DEVOLUCION POR ITEM',
+            '07' => 'DEVOLUCION PARCIAL',
+            '08' => 'BONIFICACION',
+            '09' => 'DISMINUCION EN EL VALOR',
+            '10' => 'OTROS CONCEPTOS',
+            '11' => 'AJUSTES DE OPERACIONES DE EXPORTACION',
+            '12' => 'AJUSTES AFECTOS AL IVAP',
+            '13' => 'CORRECCION DE LA DESCRIPCION O DEL MONTO NETO PENDIENTE DE PAGO',
             default => 'AJUSTE DEL COMPROBANTE',
         };
     }
 
     public static function descripcionMotivoDebito(?string $codigo): string
     {
+        // S3: Catalogo 10 actualizado por R.S. 000048-2026 (vigente 1/08/2026).
+        // 03 = Otros conceptos (ya NO incluye penalidades).
+        // 13 = Penalidades, inafectas al IGV.
         return match ($codigo) {
             '01' => 'INTERESES POR MORA',
             '02' => 'AUMENTO EN EL VALOR',
-            '03' => 'PENALIDADES U OTROS CONCEPTOS',
+            '03' => 'OTROS CONCEPTOS',
+            '11' => 'AJUSTES DE OPERACIONES DE EXPORTACION',
+            '12' => 'AJUSTES AFECTOS AL IVAP',
+            '13' => 'PENALIDADES',
             default => 'AJUSTE DEL COMPROBANTE',
         };
     }
@@ -301,10 +327,26 @@ class GreenterService
     protected function buildDetail(SaleItem $item): SaleDetail
     {
         $productOrService = $item->product ?? $item->service;
-        // El subtotal de la línea ya incluye IGV: se separa en base e IGV.
-        ['base' => $valorVenta, 'igv' => $igvLinea] = PrecioConIgv::desglosar((float) $item->subtotal);
-        $precioUnitario = (float) $item->precio_unitario;
-        $valorUnitario = round($precioUnitario / (1 + PrecioConIgv::TASA), 10);
+        $product = $item->product;
+        $tipAfeIgv = ($product !== null && $product->tipo_afectacion_igv !== null)
+            ? $product->tipo_afectacion_igv
+            : ($item->aplica_igv ? '10' : '30');
+        $esGravado = $tipAfeIgv === '10';
+
+        if ($esGravado) {
+            ['base' => $valorVenta, 'igv' => $igvLinea] = PrecioConIgv::desglosar((float) $item->subtotal);
+            $precioUnitario = (float) $item->precio_unitario;
+            $valorUnitario = round($precioUnitario / (1 + PrecioConIgv::TASA), 10);
+            $porcentajeIgv = 18.00;
+            $mtoBaseIgv = $valorVenta;
+        } else {
+            $valorVenta = (float) $item->subtotal;
+            $precioUnitario = (float) $item->precio_unitario;
+            $valorUnitario = $precioUnitario;
+            $igvLinea = 0.0;
+            $porcentajeIgv = 0.0;
+            $mtoBaseIgv = 0.0;
+        }
 
         $detail = (new SaleDetail)
             ->setCodProducto($productOrService->codigo)
@@ -313,10 +355,10 @@ class GreenterService
             ->setDescripcion($productOrService->nombre)
             ->setMtoValorUnitario($valorUnitario)
             ->setMtoValorVenta($valorVenta)
-            ->setMtoBaseIgv($valorVenta)
-            ->setPorcentajeIgv(18.00)
+            ->setMtoBaseIgv($mtoBaseIgv)
+            ->setPorcentajeIgv($porcentajeIgv)
             ->setIgv($igvLinea)
-            ->setTipAfeIgv('10')
+            ->setTipAfeIgv($tipAfeIgv)
             ->setTotalImpuestos($igvLinea)
             ->setMtoPrecioUnitario($precioUnitario);
 

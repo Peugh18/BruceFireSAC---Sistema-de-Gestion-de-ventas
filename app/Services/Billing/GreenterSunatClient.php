@@ -7,15 +7,41 @@ use Greenter\Model\Response\BillResult;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Note;
 use Greenter\See;
+use Greenter\Ws\Services\SunatEndpoints;
 use RuntimeException;
 
 class GreenterSunatClient implements SunatClientInterface
 {
     /**
+     * Devuelve el endpoint SOAP segun la configuracion beta/produccion.
+     * Publico para poder comprobarlo en tests sin enviar nada a SUNAT.
+     */
+    public function resolveEndpoint(): string
+    {
+        return config('billing.sunat.beta')
+            ? SunatEndpoints::FE_BETA
+            : SunatEndpoints::FE_PRODUCCION;
+    }
+
+    /**
+     * Verifica que el endpoint configurado utilice conexion segura TLS (HTTPS).
+     */
+    public function verifyTlsConfig(): bool
+    {
+        $endpoint = $this->resolveEndpoint();
+
+        return str_starts_with(strtolower($endpoint), 'https://');
+    }
+
+    /**
      * @return array{cdr_zip:string|null,codigo:int,mensaje:string,notas:list<string>}
      */
     public function send(string $xmlSigned, string $documentName): array
     {
+        if (! $this->verifyTlsConfig()) {
+            throw new RuntimeException('El endpoint SUNAT requiere una conexion TLS segura (HTTPS).');
+        }
+
         $certPath = config('billing.sunat.cert_path');
 
         if (! is_string($certPath) || ! file_exists($certPath)) {
@@ -29,8 +55,12 @@ class GreenterSunatClient implements SunatClientInterface
             (string) config('billing.sunat.usuario_sol'),
             (string) config('billing.sunat.clave_sol'),
         );
+        // Elige el endpoint segun el ambiente: beta (pruebas) o produccion.
+        // Sin esta llamada, Greenter siempre usaria su URL por defecto (beta),
+        // con lo que SUNAT_BETA=false no tendria ningun efecto (auditoria S1).
+        $see->setService($this->resolveEndpoint());
 
-        // El primer parámetro debe ser el FQCN del documento (lo que
+        // El primer parametro debe ser el FQCN del documento (lo que
         // XmlBuilderResolver/WsSenderResolver esperan para resolver builder y
         // sender), no un alias corto como 'invoice': con un alias,
         // XmlBuilderResolver::findBuilderType() revienta con
@@ -46,7 +76,7 @@ class GreenterSunatClient implements SunatClientInterface
             return [
                 'cdr_zip' => null,
                 'codigo' => 500,
-                'mensaje' => $error?->getMessage() ?? 'Error de comunicación con SUNAT.',
+                'mensaje' => $error?->getMessage() ?? 'Error de comunicacion con SUNAT.',
                 'notas' => [],
             ];
         }
@@ -55,7 +85,7 @@ class GreenterSunatClient implements SunatClientInterface
             return [
                 'cdr_zip' => null,
                 'codigo' => 500,
-                'mensaje' => 'SUNAT no devolvió una respuesta CDR válida.',
+                'mensaje' => 'SUNAT no devolvio una respuesta CDR valida.',
                 'notas' => [],
             ];
         }
@@ -65,7 +95,7 @@ class GreenterSunatClient implements SunatClientInterface
         return [
             'cdr_zip' => $result->getCdrZip(),
             'codigo' => (int) ($cdrResponse?->getCode() ?? 0),
-            'mensaje' => $cdrResponse?->getDescription() ?? 'Sin descripción SUNAT',
+            'mensaje' => $cdrResponse?->getDescription() ?? 'Sin descripcion SUNAT',
             'notas' => $cdrResponse?->getNotes() ?? [],
         ];
     }

@@ -32,6 +32,7 @@ class ProductFactory extends Factory
             'unidad_medida' => 'UND',
             'precio_venta' => fake()->randomFloat(2, 40, 250),
             'aplica_igv' => true,
+            'tipo_afectacion_igv' => '10',
             'serializado' => true,
             'stock_minimo' => 5,
             'activo' => true,

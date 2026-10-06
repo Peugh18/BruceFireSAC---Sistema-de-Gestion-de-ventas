@@ -84,8 +84,15 @@ class EmitElectronicDocument
      *
      * @return array{xml: string, nombre: string}
      */
-    public function prepararDocumento(ElectronicDocument $document): array
+    public function prepararDocumento(ElectronicDocument $document, bool $forceRegenerate = false): array
     {
+        if (! $forceRegenerate && $document->xml_path && Storage::disk('local')->exists($document->xml_path)) {
+            $xmlSigned = Storage::disk('local')->get($document->xml_path);
+            $documentName = pathinfo($document->xml_path, PATHINFO_FILENAME);
+
+            return ['xml' => $xmlSigned, 'nombre' => $documentName];
+        }
+
         $document->unsetRelation('sale');
         $document->loadMissing('sale.client', 'sale.items.product', 'sale.items.service', 'sale.installments', 'cpeAfectado');
 
@@ -141,7 +148,9 @@ class EmitElectronicDocument
             'tipo' => $tipo,
             'serie' => $serie,
             'correlativo' => $correlativo,
-            'fecha_emision' => ($fechaEmision ?? $sale->fecha)->toDateString(),
+            // S5: se guarda como datetime (con hora) para que el XML y el PDF
+            // muestren la hora de emision real, no las 00:00:00 del DATE.
+            'fecha_emision' => $fechaEmision ?? now(),
             'sunat_estado' => $estado,
         ]);
     }

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
  * @property string $unidad_medida
  * @property float $precio_venta
  * @property bool $aplica_igv
+ * @property string|null $tipo_afectacion_igv
  * @property bool $serializado
  * @property bool $controla_lote
  * @property string|null $unidad_compra
@@ -48,6 +49,7 @@ use Illuminate\Support\Facades\DB;
     'unidad_medida',
     'precio_venta',
     'aplica_igv',
+    'tipo_afectacion_igv',
     'serializado',
     'controla_lote',
     'unidad_compra',

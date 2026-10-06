@@ -26,17 +26,17 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 
 ### A. Facturación lista para pasar a producción
 
-- [ ] S1: elegir el servidor beta o producción según `SUNAT_BETA` y verificar el certificado TLS
-- [ ] S2: bloquear las NC con motivo 04, 05 u 08 sobre boletas
-- [ ] S3: ND motivo 13 para penalidades, inafecto; el 03 pasa a "otros conceptos" (R.S. 000048-2026)
-- [ ] S4: respetar "Aplica IGV" por línea; antes, confirmar con el contador si hay exonerados
-- [ ] S5: guardar la hora de emisión y usar la misma en el XML y en el PDF
-- [ ] S6: guardar la fecha de la NC y la ND al crearla y reutilizarla en los reintentos
-- [ ] S9 y S10: catálogo 09 completo; notas que cuadran con un original que no sea todo gravado
-- [ ] S8: avisar cuando un comprobante pendiente se acerca a su plazo (factura 3 días, boleta 5)
-- [ ] S7: comunicación de baja (solo comprobantes no entregados, dentro de 7 días)
-- [ ] S12 y S13: congelar el comprobante emitido; reintentos y CDR confiables
-- [ ] V2 y S17: aplicar los permisos de verdad; la NC necesita aprobación del Gerente
+- [x] S1: elegir el servidor beta o producción según `SUNAT_BETA` y verificar el certificado TLS
+- [x] S2: bloquear las NC con motivo 04, 05 u 08 sobre boletas
+- [x] S3: ND motivo 13 para penalidades, inafecto; el 03 pasa a "otros conceptos" (R.S. 000048-2026)
+- [x] S4: agregar campo de tipo de afectación IGV (Catálogo 07: 10/20/30) en el producto e ítem de venta
+- [x] S5: guardar la hora de emisión y usar la misma en el XML y en el PDF
+- [x] S6: guardar la fecha de la NC y la ND al crearla y reutilizarla en los reintentos
+- [x] S9 y S10: catálogo 09 completo; notas que cuadran con un original que no sea todo gravado
+- [x] S8: avisar cuando un comprobante pendiente se acerca a su plazo (factura 3 días, boleta 5)
+- [x] S7: comunicación de baja (solo comprobantes no entregados, dentro de 7 días)
+- [x] S12 y S13: congelar el comprobante emitido; reintentos y CDR confiables
+- [x] V2 y S17: aplicar los permisos de verdad; la NC necesita aprobación del Gerente
 
 ### A2. Seguridad (antes de producción)
 
