@@ -13,6 +13,7 @@ use App\Services\Billing\ComprobantePdfService;
 use App\Services\Billing\GreenterService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Validation\ValidationException;
+use Tests\Fixtures\SunatSoloEnvio;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -104,9 +105,9 @@ test('greenter construye las notas con el importe persistido y el comprobante af
         ->and((float) $noteDebito->getMtoOperGravadas())->toBe(100.0);
 });
 
-test('el vendedor emite notas desde el detalle y si SUNAT no responde quedan pendientes', function () {
+test('quien también es gerente emite notas desde el detalle y si SUNAT no responde quedan pendientes', function () {
     [, $factura] = ventaConFactura();
-    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    $this->app->bind(SunatClientInterface::class, fn () => new class extends SunatSoloEnvio
     {
         public function send(string $xmlSigned, string $documentName): array
         {
@@ -114,6 +115,8 @@ test('el vendedor emite notas desde el detalle y si SUNAT no responde quedan pen
         }
     });
     $vendedor = vendedorUser();
+    // Un vendedor solo pide la nota; quien además es Gerente la emite directo.
+    $vendedor->assignRole('Gerente');
     $factura->sale->update(['vendedor_id' => $vendedor->id]);
     $team = ['current_team' => $vendedor->currentTeam];
 

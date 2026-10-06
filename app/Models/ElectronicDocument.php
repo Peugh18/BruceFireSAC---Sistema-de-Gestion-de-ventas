@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Database\Factories\ElectronicDocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +30,11 @@ use Illuminate\Support\Carbon;
  * @property string|null $sunat_codigo_respuesta
  * @property string|null $sunat_mensaje
  * @property Carbon|null $enviado_at
+ * @property string|null $baja_nombre
+ * @property string|null $baja_ticket
+ * @property string|null $baja_motivo
+ * @property string|null $baja_mensaje
+ * @property string|null $baja_estado_previo
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Sale $sale
@@ -37,6 +44,7 @@ use Illuminate\Support\Carbon;
     'sale_id', 'tipo', 'serie', 'correlativo', 'fecha_emision', 'cpe_afectado_id', 'motivo_catalogo', 'importe',
     'xml_path', 'cdr_path', 'pdf_path', 'pdf_firma', 'sunat_estado', 'sunat_codigo_respuesta',
     'sunat_mensaje', 'enviar_desde', 'enviado_at',
+    'baja_nombre', 'baja_ticket', 'baja_motivo', 'baja_mensaje', 'baja_estado_previo',
 ])]
 class ElectronicDocument extends Model
 {
@@ -75,6 +83,25 @@ class ElectronicDocument extends Model
     }
 
     /**
+     * Día en que SUNAT devolvió el CDR (se guarda en enviado_at al recibir
+     * la respuesta). Los comprobantes antiguos sin ese dato usan la fecha
+     * de emisión, que es la más conservadora para el plazo de baja.
+     */
+    public function fechaRecepcionCdr(): CarbonInterface
+    {
+        return ($this->enviado_at ?? $this->fecha_emision ?? $this->created_at ?? now())->copy()->startOfDay();
+    }
+
+    /**
+     * Último día para la comunicación de baja: 7 días calendario contados
+     * desde el día siguiente a la recepción del CDR.
+     */
+    public function vencimientoBaja(): CarbonInterface
+    {
+        return $this->fechaRecepcionCdr()->addDays(7);
+    }
+
+    /**
      * @return BelongsTo<Sale, $this>
      */
     public function sale(): BelongsTo
@@ -94,24 +121,80 @@ class ElectronicDocument extends Model
 
     public const PLAZO_DIAS_BOLETA = 5;
 
+    /**
+     * Estados de un comprobante que todavía no llega a SUNAT con éxito.
+     *
+     * @var list<string>
+     */
+    public const ESTADOS_SIN_ENVIAR = ['por_enviar', 'pendiente', 'excepcion'];
+
+    /**
+     * Factura y sus notas (serie F...): 3 días calendario contados desde el
+     * día siguiente a la emisión. Boleta y sus notas (serie B...): 5 días
+     * calendario contando el día de emisión (R.S. 000003-2023; SUNAT.md §1).
+     */
     public function plazoLimiteDias(): int
     {
-        return $this->tipo === 'factura' ? self::PLAZO_DIAS_FACTURA : self::PLAZO_DIAS_BOLETA;
-    }
-
-    public function diasRestantesParaEnvio(): int
-    {
-        $fecha = $this->fecha_emision ?? $this->created_at ?? now();
-        $limite = $fecha->copy()->addDays($this->plazoLimiteDias());
-
-        return (int) now()->diffInDays($limite, false);
+        return $this->esDeFactura() ? self::PLAZO_DIAS_FACTURA : self::PLAZO_DIAS_BOLETA;
     }
 
     /**
-     * S8: Avisa si el comprobante pendiente esta a 1 dia o menos de vencer su plazo SUNAT.
+     * Último día en que SUNAT todavía recibe el comprobante.
+     */
+    public function fechaLimiteEnvio(): CarbonInterface
+    {
+        $emision = ($this->fecha_emision ?? $this->created_at ?? now())->copy()->startOfDay();
+
+        return $emision->addDays($this->esDeFactura() ? self::PLAZO_DIAS_FACTURA : self::PLAZO_DIAS_BOLETA - 1);
+    }
+
+    /**
+     * Días calendario que faltan: 0 = vence hoy, negativo = ya venció.
+     */
+    public function diasRestantesParaEnvio(): int
+    {
+        return (int) today()->diffInDays($this->fechaLimiteEnvio(), false);
+    }
+
+    /**
+     * S8: aún no llega a SUNAT y vence hoy, mañana o ya venció.
      */
     public function estaPorVencerSunat(): bool
     {
-        return $this->estaPorEnviar() && $this->diasRestantesParaEnvio() <= 1;
+        return in_array($this->sunat_estado, self::ESTADOS_SIN_ENVIAR, true) && $this->diasRestantesParaEnvio() <= 1;
+    }
+
+    /**
+     * Sin enviar y con plazo que vence hoy o mañana.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopePorVencerSunat(Builder $query): void
+    {
+        $query->whereIn('sunat_estado', self::ESTADOS_SIN_ENVIAR)
+            ->whereRaw(self::SQL_FECHA_LIMITE.' BETWEEN ? AND ?', [today()->toDateString(), today()->addDay()->toDateString()]);
+    }
+
+    /**
+     * Sin enviar y con el plazo ya vencido: SUNAT lo rechazaría.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeVencidosSunat(Builder $query): void
+    {
+        $query->whereIn('sunat_estado', self::ESTADOS_SIN_ENVIAR)
+            ->whereRaw(self::SQL_FECHA_LIMITE.' < ?', [today()->toDateString()]);
+    }
+
+    /**
+     * Misma regla que fechaLimiteEnvio(), en SQL (MySQL).
+     */
+    protected const SQL_FECHA_LIMITE = "DATE_ADD(DATE(COALESCE(fecha_emision, created_at)), INTERVAL IF(tipo = 'factura' OR (tipo <> 'boleta' AND serie LIKE 'F%'), 3, 4) DAY)";
+
+    protected function esDeFactura(): bool
+    {
+        // Las notas siguen al comprobante que afectan: su serie empieza con F o B.
+        return $this->tipo === 'factura'
+            || ($this->tipo !== 'boleta' && str_starts_with(strtoupper($this->serie), 'F'));
     }
 }

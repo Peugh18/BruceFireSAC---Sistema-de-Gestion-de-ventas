@@ -3,13 +3,13 @@
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Billing\IssueDebitNote;
-use App\Actions\Billing\VoidElectronicDocument;
 use App\Actions\Sales\CreateSale;
 use App\Http\Requests\Billing\StoreCreditNoteRequest;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
+use App\Models\NoteRequest;
 use App\Models\Product;
 use App\Models\Sede;
 use App\Services\Billing\GreenterService;
@@ -132,7 +132,8 @@ test('S3: StoreDebitNoteRequest acepta el motivo 13', function () {
         ])
         ->assertSessionMissing('errors');
 
-    expect(ElectronicDocument::where('tipo', 'nota_debito')->where('motivo_catalogo', '13')->exists())->toBeTrue();
+    // El vendedor solo la pide: queda por aprobar del Gerente.
+    expect(NoteRequest::where('tipo', 'nota_debito')->where('motivo_catalogo', '13')->exists())->toBeTrue();
 });
 
 test('S3: la ND con motivo 13 usa afectacion inafecta 30 en el XML', function () {
@@ -235,11 +236,6 @@ test('S10: buildNote con motivo 13 pone afectacion 30 y cero IGV', function () {
         ->and((float) $detalle->getIgv())->toBe(0.0);
 });
 
-test('S1: el cliente SUNAT verifica TLS seguro', function () {
-    $client = new GreenterSunatClient;
-    expect($client->verifyTlsConfig())->toBeTrue();
-});
-
 // ---------------------------------------------------------------------------
 // S4: tipo_afectacion_igv del Catalogo 07 en el producto
 // ---------------------------------------------------------------------------
@@ -283,35 +279,8 @@ test('S4: buildInvoice respeta el tipo_afectacion_igv inafecto 30 del producto',
         ->and((float) $detail->getIgv())->toBe(0.0);
 });
 
-// ---------------------------------------------------------------------------
-// S7: Comunicacion de baja (VoidElectronicDocument)
-// ---------------------------------------------------------------------------
-
-test('S7: no se puede comunicar la baja de un comprobante emitido hace mas de 7 dias', function () {
-    $doc = ElectronicDocument::factory()->create([
-        'tipo' => 'factura',
-        'sunat_estado' => 'aceptado',
-        'fecha_emision' => now()->subDays(10),
-    ]);
-
-    $action = new VoidElectronicDocument;
-    expect(fn () => $action->handle($doc, 'Error de emision'))
-        ->toThrow(ValidationException::class);
-});
-
-test('S7: anula un comprobante aceptado dentro de los 7 dias', function () {
-    $doc = ElectronicDocument::factory()->create([
-        'tipo' => 'factura',
-        'sunat_estado' => 'aceptado',
-        'fecha_emision' => now()->subDays(2),
-    ]);
-
-    $action = new VoidElectronicDocument;
-    $anulado = $action->handle($doc, 'Error en el cliente');
-
-    expect($anulado->sunat_estado)->toBe('anulado')
-        ->and($anulado->sunat_mensaje)->toContain('Baja procesada');
-});
+// S1 (TLS real) y S7 (comunicación de baja) se prueban en
+// GreenterSunatClientTest y ComunicacionBajaTest.
 
 // ---------------------------------------------------------------------------
 // S8: Aviso de plazo de envio (factura 3 dias, boleta 5 dias)

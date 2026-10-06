@@ -16,6 +16,7 @@ use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
+use App\Models\NoteRequest;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\Sale;
@@ -444,6 +445,12 @@ class SaleController extends Controller
             'editable' => $sale->sePuedeEditar(),
             'certificados' => SaleCertificateController::certificados($sale),
             'tieneEquipos' => $sale->items->contains(fn ($item) => $item->equipment_id !== null),
+            // Notas pedidas al Gerente que aún no se emiten (por aprobar o rechazadas).
+            'solicitudesNota' => NoteRequest::query()
+                ->whereIn('electronic_document_id', $sale->electronicDocuments->pluck('id'))
+                ->where('estado', '!=', 'aprobada')
+                ->latest('id')
+                ->get(['id', 'tipo', 'motivo_catalogo', 'importe', 'estado', 'motivo_rechazo']),
             'tiposServicio' => EmitirCertificadoDeServicio::tiposDeServicio()
                 ->map(fn ($tipo) => ['codigo' => $tipo->codigo, 'nombre' => $tipo->nombre])
                 ->values(),

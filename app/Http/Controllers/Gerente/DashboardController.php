@@ -9,6 +9,7 @@ use App\Models\Equipment;
 use App\Models\Installment;
 use App\Models\InventoryMovement;
 use App\Models\MlEntrenamiento;
+use App\Models\NoteRequest;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Sale;
@@ -265,6 +266,12 @@ class DashboardController extends Controller
                 'equiposProximosAtencion' => $equiposProximosAtencion,
                 'stockCritico' => $stockCritico,
                 'documentosSunatError' => $documentosSunatError,
+                'notasPorAprobar' => NoteRequest::query()->where('estado', 'por_aprobar')->count(),
+                // S8: comprobantes que aún no llegan a SUNAT y vencen hoy o mañana, o ya vencieron.
+                'plazoSunat' => [
+                    'por_vencer' => ElectronicDocument::query()->porVencerSunat()->count(),
+                    'vencidos' => ElectronicDocument::query()->vencidosSunat()->count(),
+                ],
             ],
             'charts' => [
                 'ventasMensuales' => $ventasMensuales,

@@ -41,24 +41,7 @@ class IssueCreditNote
 
     public function handle(ElectronicDocument $original, string $motivoCatalogo09, string $detalle, float $importe): ElectronicDocument
     {
-        if (! in_array($original->tipo, ['factura', 'boleta'], true)) {
-            throw ValidationException::withMessages([
-                'electronic_document_id' => 'Solo se puede emitir nota de credito sobre una factura o boleta existente.',
-            ]);
-        }
-
-        // S2: los motivos 04, 05 y 08 estan prohibidos en boletas (guia NC, linea 888).
-        if ($original->tipo === 'boleta' && in_array($motivoCatalogo09, self::MOTIVOS_PROHIBIDOS_EN_BOLETA, true)) {
-            throw ValidationException::withMessages([
-                'motivo_catalogo' => 'El motivo '.$motivoCatalogo09.' no esta permitido en notas de credito sobre boletas (guia SUNAT NC, catalogo 09).',
-            ]);
-        }
-
-        if (! in_array($original->sunat_estado, ['aceptado', 'observado'], true)) {
-            throw ValidationException::withMessages([
-                'electronic_document_id' => 'La nota de credito solo se emite sobre un comprobante aceptado por SUNAT. Si aun esta por enviar o fue rechazado, corrigelo con Editar desde la venta.',
-            ]);
-        }
+        $this->validar($original, $motivoCatalogo09);
 
         return DB::transaction(function () use ($original, $motivoCatalogo09, $detalle, $importe) {
             // Leida de nuevo y bloqueada: la venta pudo anularse desde que se
@@ -115,6 +98,34 @@ class IssueCreditNote
             // y la venta no debe quedar anulada.
             return $nota;
         });
+    }
+
+    /**
+     * Reglas que se revisan al pedir la nota (antes de que la apruebe el
+     * Gerente) y otra vez al emitirla.
+     *
+     * @throws ValidationException
+     */
+    public function validar(ElectronicDocument $original, string $motivoCatalogo09): void
+    {
+        if (! in_array($original->tipo, ['factura', 'boleta'], true)) {
+            throw ValidationException::withMessages([
+                'electronic_document_id' => 'Solo se puede emitir nota de credito sobre una factura o boleta existente.',
+            ]);
+        }
+
+        // S2: los motivos 04, 05 y 08 estan prohibidos en boletas (guia NC, linea 888).
+        if ($original->tipo === 'boleta' && in_array($motivoCatalogo09, self::MOTIVOS_PROHIBIDOS_EN_BOLETA, true)) {
+            throw ValidationException::withMessages([
+                'motivo_catalogo' => 'El motivo '.$motivoCatalogo09.' no esta permitido en notas de credito sobre boletas (guia SUNAT NC, catalogo 09).',
+            ]);
+        }
+
+        if (! in_array($original->sunat_estado, ['aceptado', 'observado'], true)) {
+            throw ValidationException::withMessages([
+                'electronic_document_id' => 'La nota de credito solo se emite sobre un comprobante aceptado por SUNAT. Si aun esta por enviar o fue rechazado, corrigelo con Editar desde la venta.',
+            ]);
+        }
     }
 
     /**

@@ -7,11 +7,12 @@ use Illuminate\Validation\Rule;
 
 class StoreCreditNoteRequest extends FormRequest
 {
+    /**
+     * El permiso se revisa de verdad: sin billing.credit_note, 403.
+     */
     public function authorize(): bool
     {
-        $user = $this->user();
-
-        return $user !== null && ($user->can('billing.credit_note') || $user->hasRole(['Gerente', 'Vendedor']));
+        return (bool) $this->user()?->can('billing.credit_note');
     }
 
     /**

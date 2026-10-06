@@ -56,6 +56,7 @@ type Props = {
         tipo?: string;
         estado?: string;
         buscar?: string;
+        plazo?: string;
         desde: string;
         hasta: string;
     };
@@ -67,6 +68,8 @@ type Props = {
         observados: number;
         rechazados: number;
     };
+    /** S8: sin enviar a SUNAT que vencen hoy o mañana, y ya vencidos. */
+    plazoSunat: { por_vencer: number; vencidos: number };
 };
 
 const TYPE_FILTERS = [
@@ -118,6 +121,8 @@ function sunatEstadoLabel(document: DocumentRow) {
     if (estado === 'aceptado') return 'Aceptado';
     if (estado === 'observado') return 'Observado';
     if (estado === 'por_enviar') return 'Por enviar';
+    if (estado === 'baja_pendiente') return 'Baja en proceso';
+    if (estado === 'anulado') return 'Anulado (baja)';
     return document.sunat_estado || 'Pendiente';
 }
 
@@ -125,6 +130,7 @@ export default function FacturacionIndex({
     documents,
     filters,
     kpis,
+    plazoSunat,
     totalFiltrados,
     hoy,
 }: Props) {
@@ -292,6 +298,49 @@ export default function FacturacionIndex({
                     title="Comprobantes SUNAT"
                     description="Facturas, boletas y notas enviadas a SUNAT con su respuesta. Marca varios para descargarlos juntos."
                 />
+                {(plazoSunat.por_vencer > 0 ||
+                    plazoSunat.vencidos > 0 ||
+                    filters.plazo) && (
+                    <div
+                        role="alert"
+                        className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[14px] border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+                    >
+                        <AlertTriangle className="size-5 shrink-0" />
+                        <p className="min-w-0 flex-1">
+                            <strong>Plazo de SUNAT:</strong>{' '}
+                            {plazoSunat.por_vencer} comprobante(s) sin enviar
+                            vencen hoy o mañana y {plazoSunat.vencidos} ya
+                            vencieron. Envíalos cuanto antes: pasado el plazo
+                            SUNAT los rechaza.
+                        </p>
+                        <div className="flex flex-wrap gap-3 font-semibold">
+                            <Link
+                                href={facturacion.index.url(teamSlug, {
+                                    query: { plazo: 'por_vencer' },
+                                })}
+                                className="underline underline-offset-2"
+                            >
+                                Ver los que vencen
+                            </Link>
+                            <Link
+                                href={facturacion.index.url(teamSlug, {
+                                    query: { plazo: 'vencidos' },
+                                })}
+                                className="underline underline-offset-2"
+                            >
+                                Ver los vencidos
+                            </Link>
+                            {filters.plazo && (
+                                <Link
+                                    href={facturacion.index.url(teamSlug)}
+                                    className="underline underline-offset-2"
+                                >
+                                    Ver todos
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                )}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {kpiItems.map((item) => {
                         const Icon = item.icon;

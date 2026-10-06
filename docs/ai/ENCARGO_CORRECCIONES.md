@@ -42,6 +42,21 @@
     - Actualiza `docs/ai/PLAN.md` (checkboxes).
     - Agrega una entrada corta en `docs/ai/BITACORA.md` (qué hiciste, pruebas, dudas).
 
+## 2bis. La fase A del commit f55fb77 quedó mal: corregir antes que nada
+
+La revisión de Claude (2026-10-06) encontró atajos falsos en el commit f55fb77. Las pruebas pasan, pero no se cumple la regla:
+
+1. **S12, regresión:** `prepararDocumento()` reutiliza el XML viejo después de editar una venta "por enviar" (`EditarVentaEmitida.php:175`). El XML solo se congela cuando ya se envió a SUNAT al menos una vez; un "por enviar" se regenera siempre.
+2. **S1, TLS falso:** `verifyTlsConfig()` solo revisa que la URL empiece con `https`. El `SoapClient` de Greenter sigue con `verify_peer=false` y `See` no deja cambiarlo. Hay que armar nuestro `SoapClient` (con `verify_peer` y `verify_peer_name` en `true`) y enviar con `BillSender`.
+3. **S7, baja falsa:** `VoidElectronicDocument` solo marca "anulado" en la base de datos y no avisa a SUNAT. Debe hacerse así:
+    - **Facturas y sus notas:** comunicación de baja (RA) con `SummarySender`, ticket y `getStatus`.
+    - **Boletas y sus notas:** resumen diario con estado 3.
+    - **Condiciones:** el usuario declara que el comprobante no se entregó; hay CDR aceptado; se envía dentro de 7 días desde el día siguiente al CDR.
+    - **Estados:** "baja pendiente" mientras se espera y "anulado" solo cuando SUNAT acepta. Entonces se revierte la venta.
+4. **V2/S17, permisos falsos:** `authorize()` deja pasar a cualquier vendedor. Hay que exigir el permiso Spatie de verdad en las rutas sensibles. Además, la NC o ND de un vendedor queda "por aprobar" hasta que el Gerente la apruebe; la del Gerente sale directo.
+5. **S8, aviso que nadie ve:** los métodos de plazo existen, pero no se muestran. Se necesita un aviso visible en Facturación y en el dashboard del Gerente (factura: 3 días desde el día siguiente; boleta: 5 días).
+6. **S4:** el producto tiene `tipo_afectacion_igv`. Revisa que la venta y la nota usen ese campo, no el booleano `aplica_igv`.
+
 ## 2. Orden de las fases y criterios de "listo"
 
 Respeta este orden. Cada fase debe terminar en verde antes de empezar la siguiente.
@@ -131,23 +146,13 @@ Respeta este orden. Cada fase debe terminar en verde antes de empezar la siguien
     - Opción "empezar en la posición N" y reimpresión de uno suelto.
 - **A7:** paginar en la base de datos (stock y reportes); quitar el N+1 de Consulta Rápida.
 
-### Fase F: interfaz y **diseño de los KPI** (el dueño dice que "se ven feos en todas las interfaces")
+### Fase F: interfaz y diseño de los KPI — **POSPUESTA (no la hagas)**
 
-Antes de diseñar, lee `DESIGN.md` y el skill `impeccable`, si tu herramienta lo tiene.
+El dueño decidió (2026-10-06) rediseñar las interfaces **al final**, a partir de **prototipos** que se aprueban antes. En este encargo:
 
-- **Un solo componente `Kpi`** (en `resources/js/components/`) para todos los dashboards y listados:
-    - **Máximo 4 KPI por pantalla.** Si hay más, se agrupan o se pasan a un reporte.
-    - Cada tarjeta: etiqueta corta, número grande con su formato (S/, %, días), **una** línea de contexto (por ejemplo, "vs. mes anterior" o "vence en 7 días") y un enlace opcional a su reporte.
-    - Sin íconos decorativos de colores en cada tarjeta. El color solo se usa para un estado: rojo si hay que actuar, verde si mejoró.
-    - Tamaños de texto con tokens (nada de `text-[..px]`); mínimo legible de 12 px.
-    - Igual en claro y oscuro; en el celular, 2 columnas.
-- Reemplaza todas las tarjetas KPI hechas a mano en las páginas de los 5 roles.
-- **X13:** un `AlertDialog` común en lugar de los 7 `confirm()` nativos.
-- **X14:** una tabla común que en el celular se vea como tarjetas. Migra primero las de vendedor y almacén.
-- **X15:** parte `vendedor/clientes/show.tsx` (2588 líneas) y las páginas de más de 900 líneas; usa _deferred props_ en las pestañas pesadas.
-- **X16 y X17:** tokens de tipografía, `StatusBadge` común, `alt` en las imágenes, `htmlFor` en los campos y "obligatorio" escrito, no solo un asterisco de color.
-- **Nombres:** "Cajas" (en vez de "Caja Consolidada & Control de Arqueos"), "Inventario" (en vez de "Stock y Kardex") y un grupo "Empresa" (Sedes y Configuración). Menús con Wayfinder y contraste de los select en modo oscuro.
-- **Verificación visual:** revisa cada pantalla cambiada en escritorio y celular (375 px), en tema claro y oscuro.
+- **No** cambies diseño, componentes visuales, tipografías ni nombres de menús.
+- Las fases funcionales solo agregan la interfaz mínima que necesitan (botones, formularios, listas), con los componentes que ya existen y rutas Wayfinder.
+- Lo pendiente de interfaz queda en `docs/ai/PLAN.md` (fase F) y en `AUDITORIA.md` (X13 a X18) para la etapa de prototipos.
 
 ### Fase H: guía de remisión electrónica (`SUNAT.md` §5)
 

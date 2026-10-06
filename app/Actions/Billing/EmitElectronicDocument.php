@@ -80,17 +80,19 @@ class EmitElectronicDocument
 
     /**
      * Arma y firma el XML con los datos actuales de la venta y regenera el
-     * PDF. Se llama al programar, al corregir y justo antes de enviar.
+     * PDF mientras el comprobante está "por enviar" (aún se puede corregir).
+     * Una vez que llegó a SUNAT al menos una vez, el XML queda congelado: un
+     * reintento envía exactamente el mismo XML firmado.
      *
      * @return array{xml: string, nombre: string}
      */
-    public function prepararDocumento(ElectronicDocument $document, bool $forceRegenerate = false): array
+    public function prepararDocumento(ElectronicDocument $document): array
     {
-        if (! $forceRegenerate && $document->xml_path && Storage::disk('local')->exists($document->xml_path)) {
-            $xmlSigned = Storage::disk('local')->get($document->xml_path);
-            $documentName = pathinfo($document->xml_path, PATHINFO_FILENAME);
-
-            return ['xml' => $xmlSigned, 'nombre' => $documentName];
+        if (! $document->estaPorEnviar() && $document->xml_path && Storage::disk('local')->exists($document->xml_path)) {
+            return [
+                'xml' => (string) Storage::disk('local')->get($document->xml_path),
+                'nombre' => pathinfo($document->xml_path, PATHINFO_FILENAME),
+            ];
         }
 
         $document->unsetRelation('sale');

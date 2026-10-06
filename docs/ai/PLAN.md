@@ -26,17 +26,19 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 
 ### A. Facturación lista para pasar a producción
 
-- [x] S1: elegir el servidor beta o producción según `SUNAT_BETA` y verificar el certificado TLS
+- [x] S1: elegir el servidor beta o producción según `SUNAT_BETA` y verificar el certificado TLS (envío propio con `verify_peer`, sin `See`)
 - [x] S2: bloquear las NC con motivo 04, 05 u 08 sobre boletas
 - [x] S3: ND motivo 13 para penalidades, inafecto; el 03 pasa a "otros conceptos" (R.S. 000048-2026)
-- [x] S4: agregar campo de tipo de afectación IGV (Catálogo 07: 10/20/30) en el producto e ítem de venta
+- [ ] S4: agregar campo de tipo de afectación IGV (Catálogo 07: 10/20/30) en el producto e ítem de venta — **parcial:** existe la columna y el XML la usa; falta el select en el catálogo del Gerente y reemplazar `aplica_igv`
 - [x] S5: guardar la hora de emisión y usar la misma en el XML y en el PDF
 - [x] S6: guardar la fecha de la NC y la ND al crearla y reutilizarla en los reintentos
-- [x] S9 y S10: catálogo 09 completo; notas que cuadran con un original que no sea todo gravado
-- [x] S8: avisar cuando un comprobante pendiente se acerca a su plazo (factura 3 días, boleta 5)
-- [x] S7: comunicación de baja (solo comprobantes no entregados, dentro de 7 días)
-- [x] S12 y S13: congelar el comprobante emitido; reintentos y CDR confiables
-- [x] V2 y S17: aplicar los permisos de verdad; la NC necesita aprobación del Gerente
+- [x] S9: catálogo 09 completo
+- [ ] S10: notas que cuadran con un original que no sea todo gravado — **pendiente:** `buildNote` sigue con 1.18 fijo salvo el motivo 13
+- [x] S8: aviso en Facturación del vendedor y en el dashboard del Gerente (vence hoy o mañana, y vencidos), con lista filtrada
+- [x] S7: comunicación de baja real (RA para serie F, RC estado 3 para serie B, ticket y consulta), solo no entregados y dentro de 7 días desde el CDR
+- [ ] S12: congelar el comprobante emitido — **parcial:** el XML se congela al primer envío y el reintento reutiliza el mismo firmado; falta guardar los datos del cliente y de las líneas (el PDF y la baja por RC aún leen los actuales)
+- [x] S13: no se acepta nada sin un CDR válido
+- [x] V2 y S17: permisos Spatie en rutas y FormRequest; la NC y la ND del vendedor esperan la aprobación del Gerente
 
 ### A2. Seguridad (antes de producción)
 
@@ -84,7 +86,7 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 - [ ] Stickers de 5 × 5 cm, 20 por hoja, con opción de empezar en la posición N (cambia el REQ-INV-07)
 - [ ] A7: paginar en la base de datos; quitar el N+1 de Consulta Rápida
 
-### F. Interfaz y nombres
+### F. Interfaz y nombres — al final, con prototipos aprobados antes (decisión del dueño, 2026-10-06)
 
 - [ ] Nombres: "Cajas", "Inventario" y grupo "Empresa"; cada tarjeta del dashboard enlaza a su reporte
 - [ ] Menús con rutas Wayfinder (las URL armadas a mano causaron los 404)

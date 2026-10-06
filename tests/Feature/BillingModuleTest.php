@@ -18,6 +18,7 @@ use App\Services\Billing\ResponseClassifier;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Tests\Fixtures\SunatSoloEnvio;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -56,7 +57,7 @@ test('emit electronic document builds and signs a real greenter invoice, stores 
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
     config(['billing.company.ruc' => '20600000001']);
 
-    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    $this->app->bind(SunatClientInterface::class, fn () => new class extends SunatSoloEnvio
     {
         public function send(string $xmlSigned, string $documentName): array
         {
@@ -84,7 +85,7 @@ test('emit electronic document builds and signs a real greenter invoice, stores 
 test('emit electronic document marks accepted-with-observations code as observado', function () {
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
 
-    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    $this->app->bind(SunatClientInterface::class, fn () => new class extends SunatSoloEnvio
     {
         public function send(string $xmlSigned, string $documentName): array
         {
@@ -101,7 +102,7 @@ test('emit electronic document marks accepted-with-observations code as observad
 test('emit electronic document prints the detraccion legend and bank account when it applies', function () {
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
 
-    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    $this->app->bind(SunatClientInterface::class, fn () => new class extends SunatSoloEnvio
     {
         public function send(string $xmlSigned, string $documentName): array
         {

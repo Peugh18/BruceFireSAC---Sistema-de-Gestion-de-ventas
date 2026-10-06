@@ -16,12 +16,17 @@ use Greenter\Model\DocumentInterface;
 use Greenter\Model\Sale\Charge;
 use Greenter\Model\Sale\Cuota;
 use Greenter\Model\Sale\Detraction;
+use Greenter\Model\Sale\Document;
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\FormaPagos\FormaPagoCredito;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
 use Greenter\Model\Sale\Note;
 use Greenter\Model\Sale\SaleDetail;
+use Greenter\Model\Summary\Summary;
+use Greenter\Model\Summary\SummaryDetail;
+use Greenter\Model\Voided\Voided;
+use Greenter\Model\Voided\VoidedDetail;
 use Greenter\See;
 use RuntimeException;
 
@@ -284,6 +289,79 @@ class GreenterService
                     ->setCode('1000')
                     ->setValue($this->numeroEnLetras->convertir($importe)),
             ]);
+    }
+
+    /**
+     * Comunicación de baja de un comprobante aceptado (S7). Las facturas y
+     * sus notas (serie F...) van en una Comunicación de Baja (RA); las
+     * boletas y sus notas (serie B...) en un Resumen Diario (RC) con estado
+     * 3 = anulado. La fecha de generación es la de emisión del comprobante.
+     */
+    public function buildBaja(ElectronicDocument $document, string $motivo, int $correlativo): Voided|Summary
+    {
+        $tipoDoc = match ($document->tipo) {
+            'factura' => '01',
+            'boleta' => '03',
+            'nota_credito' => '07',
+            'nota_debito' => '08',
+            default => throw new RuntimeException("No se da de baja un documento de tipo {$document->tipo}."),
+        };
+        $fechaEmision = $document->fecha_emision ?? $document->created_at ?? now();
+
+        if (! self::seInformaPorResumen($document)) {
+            return (new Voided)
+                ->setCorrelativo((string) $correlativo)
+                ->setFecGeneracion($fechaEmision)
+                ->setFecComunicacion(now())
+                ->setCompany($this->buildCompany())
+                ->setDetails([
+                    (new VoidedDetail)
+                        ->setTipoDoc($tipoDoc)
+                        ->setSerie($document->serie)
+                        ->setCorrelativo((string) $document->correlativo)
+                        ->setDesMotivoBaja(mb_substr($motivo, 0, 100)),
+                ]);
+        }
+
+        // Los montos y el cliente salen del mismo armado que el comprobante.
+        $document->loadMissing('sale.client', 'sale.items.product', 'sale.items.service', 'sale.installments', 'cpeAfectado');
+        $comprobante = in_array($document->tipo, ['nota_credito', 'nota_debito'], true)
+            ? $this->buildNote($document)
+            : $this->buildInvoice($document->sale, $document);
+
+        $detalle = (new SummaryDetail)
+            ->setTipoDoc($tipoDoc)
+            ->setSerieNro("{$document->serie}-{$document->correlativo}")
+            ->setClienteTipo($comprobante->getClient()?->getTipoDoc())
+            ->setClienteNro($comprobante->getClient()?->getNumDoc())
+            ->setEstado('3')
+            ->setTotal((float) $comprobante->getMtoImpVenta())
+            ->setMtoOperGravadas((float) $comprobante->getMtoOperGravadas())
+            ->setMtoOperInafectas((float) $comprobante->getMtoOperInafectas())
+            ->setMtoOperExoneradas((float) $comprobante->getMtoOperExoneradas())
+            ->setMtoIGV((float) $comprobante->getMtoIGV());
+
+        if ($document->cpeAfectado) {
+            $detalle->setDocReferencia((new Document)
+                ->setTipoDoc($document->cpeAfectado->tipo === 'factura' ? '01' : '03')
+                ->setNroDoc("{$document->cpeAfectado->serie}-{$document->cpeAfectado->correlativo}"));
+        }
+
+        return (new Summary)
+            ->setCorrelativo((string) $correlativo)
+            ->setFecGeneracion($fechaEmision)
+            ->setFecResumen(now())
+            ->setMoneda('PEN')
+            ->setCompany($this->buildCompany())
+            ->setDetails([$detalle]);
+    }
+
+    /**
+     * Boletas y sus notas (series B...) se anulan por Resumen Diario.
+     */
+    public static function seInformaPorResumen(ElectronicDocument $document): bool
+    {
+        return str_starts_with(strtoupper($document->serie), 'B');
     }
 
     public static function descripcionMotivoCredito(?string $codigo): string

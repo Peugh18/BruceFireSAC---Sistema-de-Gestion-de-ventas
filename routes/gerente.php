@@ -6,6 +6,7 @@ use App\Http\Controllers\Gerente\CollectionConsolidatedController;
 use App\Http\Controllers\Gerente\CompanyBankAccountController;
 use App\Http\Controllers\Gerente\CompanySettingController;
 use App\Http\Controllers\Gerente\DashboardController;
+use App\Http\Controllers\Gerente\NoteRequestController;
 use App\Http\Controllers\Gerente\ProductController;
 use App\Http\Controllers\Gerente\ReportController;
 use App\Http\Controllers\Gerente\SedeController;
@@ -23,6 +24,11 @@ Route::prefix('gerente')
     ->middleware('role:Gerente')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+        // Notas de crédito y débito que piden los vendedores (V2/S17).
+        Route::get('notas-por-aprobar', [NoteRequestController::class, 'index'])->name('notas.index');
+        Route::post('notas-por-aprobar/{note_request}/aprobar', [NoteRequestController::class, 'aprobar'])->name('notas.aprobar');
+        Route::post('notas-por-aprobar/{note_request}/rechazar', [NoteRequestController::class, 'rechazar'])->name('notas.rechazar');
 
         // Catálogo de Productos y Servicios (§86.4.2)
         Route::resource('productos', ProductController::class)->except(['create', 'edit', 'show']);

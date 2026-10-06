@@ -157,3 +157,18 @@
     - Creada suite `tests/Feature/FaseASunatTest.php` con 27 pruebas Pest pasando al 100%.
     - `CreditDebitNoteTest.php` (10 pruebas) pasando al 100%.
     - Formato verificado con `vendor/bin/pint` y `npx vp check --fix`.
+
+## [2026-10-06] — Fase A: corrección de los atajos del commit f55fb77
+
+- **S12:** `prepararDocumento()` congela el XML solo cuando el comprobante ya salió a SUNAT; uno "por enviar" se redibuja siempre (editar la venta cambia el XML). Se quitó `forceRegenerate`.
+- **S1:** `GreenterSunatClient` ya no usa `See::sendXml`: arma el `SoapClient` de Greenter con `verify_peer` y `verify_peer_name`, el endpoint según `SUNAT_BETA` y las credenciales SOL, y envía con `BillSender`, `SummarySender` y `ExtService`. Se quitó el falso `verifyTlsConfig()`. Verificado a mano el handshake TLS con e-beta y e-factura en el PHP de Laragon (usa el almacén de Windows; sin `openssl.cafile`).
+- **S7:** comunicación de baja real (`VoidElectronicDocument`): RA para la serie F y Resumen Diario con estado 3 para la serie B, correlativo diario, ticket y consulta (inmediata y en `billing:enviar-programados`). Estado `baja_pendiente`; anulado solo si SUNAT acepta, y entonces la venta se revierte con `RevertSale`. Botón "Comunicar baja" en el detalle de la venta con la casilla "no fue entregado".
+- **V2/S17:** permisos Spatie con `can:` en las rutas sensibles del vendedor y en los FormRequest de notas. Las NC y ND que pide un vendedor quedan en `note_requests` por aprobar; el Gerente las aprueba (se emiten) o las rechaza con motivo en "Notas por aprobar".
+- **S8:** plazo corregido (factura y sus notas: emisión + 3; boleta y sus notas: emisión + 4, contando el día de emisión). Aviso en Facturación del vendedor (con lista filtrada) y en el dashboard del Gerente.
+- Pruebas nuevas: `GreenterSunatClientTest`, `ComunicacionBajaTest`, `NotaAprobacionGerenteTest`, `PermisosRutasVendedorTest`, `PlazoEnvioSunatTest` y 2 casos en `ComprobanteEnvioDiferidoTest`.
+- **Dudas:**
+    - Plazo de la boleta: se tomó "5 días desde la emisión" contando el día de emisión (límite = emisión + 4), lo más conservador. Confirmar con el contador.
+    - El plazo de baja corre desde `enviado_at` (cuando llegó el CDR); los comprobantes antiguos sin ese dato usan la fecha de emisión.
+    - `certificates.generate` no lo tiene ningún rol: las rutas de certificados de la venta exigen `certificates.print` (la matriz dice "ver/imprime").
+    - El Gerente no tiene una lista de comprobantes: su aviso de plazo no enlaza a una lista; cada vendedor la ve en su Facturación.
+    - Pendientes de la fase A: S4 (select del catálogo), S10 (notas sin 1.18 fijo) y S12 completo (guardar datos del cliente y de las líneas).

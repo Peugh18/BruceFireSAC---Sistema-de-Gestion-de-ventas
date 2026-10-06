@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Billing\EmitElectronicDocument;
+use App\Actions\Billing\VoidElectronicDocument;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Controllers\Vendedor\Concerns\FiltraPorFechas;
@@ -74,6 +75,7 @@ class BillingController extends Controller
                 'tipo' => $tipo,
                 'estado' => $estado,
                 'buscar' => $buscar,
+                'plazo' => $request->string('plazo')->toString(),
                 'desde' => $desde->toDateString(),
                 'hasta' => $hasta->toDateString(),
             ],
@@ -84,6 +86,10 @@ class BillingController extends Controller
                 'aceptados_hoy' => $baseKpiQuery()->whereDate('created_at', today())->where('sunat_estado', 'aceptado')->count(),
                 'observados' => $baseKpiQuery()->where('sunat_estado', 'observado')->count(),
                 'rechazados' => $baseKpiQuery()->where('sunat_estado', 'rechazado')->count(),
+            ],
+            'plazoSunat' => [
+                'por_vencer' => $baseKpiQuery()->porVencerSunat()->count(),
+                'vencidos' => $baseKpiQuery()->vencidosSunat()->count(),
             ],
         ]);
     }
@@ -180,6 +186,7 @@ class BillingController extends Controller
         $tipo = $request->string('tipo')->toString();
         $estado = $request->string('estado')->toString();
         $buscar = trim($request->string('buscar')->toString());
+        $plazo = $request->string('plazo')->toString();
         [$desde, $hasta] = $this->rangoDeFechas($request);
 
         return ElectronicDocument::query()
@@ -187,8 +194,12 @@ class BillingController extends Controller
             ->when($tipo === 'nota', fn ($query) => $query->whereIn('tipo', ['nota_credito', 'nota_debito']))
             ->when(in_array($tipo, ['factura', 'boleta', 'nota_credito', 'nota_debito'], true), fn ($query) => $query->where('tipo', $tipo))
             ->when($estado !== '' && $estado !== 'todos', fn ($query) => $query->where('sunat_estado', $estado))
+            // Aviso de plazo SUNAT (S8): muestra todos los que vencen, sin el rango de fechas.
+            ->when($plazo === 'por_vencer', fn ($query) => $query->porVencerSunat())
+            ->when($plazo === 'vencidos', fn ($query) => $query->vencidosSunat())
             // Fecha del comprobante (la que va a SUNAT), no la de registro.
-            ->whereRaw('COALESCE(fecha_emision, DATE(created_at)) BETWEEN ? AND ?', [$desde->toDateString(), $hasta->toDateString()])
+            ->when(! in_array($plazo, ['por_vencer', 'vencidos'], true), fn ($query) => $query
+                ->whereRaw('COALESCE(fecha_emision, DATE(created_at)) BETWEEN ? AND ?', [$desde->toDateString(), $hasta->toDateString()]))
             ->when($buscar !== '', function ($query) use ($buscar) {
                 $numero = preg_match('/^([A-Z0-9]{4})-0*(\d+)$/i', $buscar, $partes) === 1 ? $partes : null;
 
@@ -226,6 +237,31 @@ class BillingController extends Controller
         $emitElectronicDocument->sendDocument($electronic_document);
 
         return back();
+    }
+
+    /**
+     * Comunicación de baja: el vendedor declara que el comprobante no se
+     * entregó al cliente y da el motivo (máx. 100 caracteres, límite SUNAT).
+     */
+    public function baja(Team $current_team, ElectronicDocument $electronic_document, Request $request, VoidElectronicDocument $voidElectronicDocument): RedirectResponse
+    {
+        $this->asegurarVenta($electronic_document->sale);
+
+        $datos = $request->validate([
+            'motivo' => ['required', 'string', 'max:100'],
+            'no_entregado' => ['accepted'],
+        ], [
+            'no_entregado.accepted' => 'Confirma que el comprobante no se entregó al cliente. Si ya lo entregaste, emite una nota de crédito.',
+        ]);
+
+        $documento = $voidElectronicDocument->handle($electronic_document, $datos['motivo'], noEntregado: true);
+        $numero = "{$documento->serie}-{$documento->correlativo}";
+
+        return match ($documento->sunat_estado) {
+            'anulado' => back()->with('success', "SUNAT aceptó la baja de {$numero}. La venta quedó anulada."),
+            'baja_pendiente' => back()->with('success', "Baja de {$numero} enviada a SUNAT. Te avisaremos aquí cuando la acepte."),
+            default => back()->with('error', (string) $documento->baja_mensaje),
+        };
     }
 
     public function downloadXml(Team $current_team, ElectronicDocument $electronic_document): StreamedResponse

@@ -66,31 +66,31 @@ Route::prefix('vendedor')
         Route::get('ruc-lookup', [RucLookupController::class, 'show'])->name('ruc-lookup');
 
         Route::get('cotizaciones', [QuoteController::class, 'index'])->name('cotizaciones.index');
-        Route::get('cotizaciones/nueva', [QuoteController::class, 'create'])->name('cotizaciones.create');
+        Route::get('cotizaciones/nueva', [QuoteController::class, 'create'])->middleware('can:quotes.create')->name('cotizaciones.create');
         Route::get('cotizaciones/buscar-catalogo', [QuoteController::class, 'searchCatalogo'])->name('cotizaciones.buscar-catalogo');
-        Route::post('cotizaciones', [QuoteController::class, 'store'])->name('cotizaciones.store');
-        Route::post('cotizaciones/{quote}/enviar', [QuoteController::class, 'send'])->name('cotizaciones.send');
+        Route::post('cotizaciones', [QuoteController::class, 'store'])->middleware('can:quotes.create')->name('cotizaciones.store');
+        Route::post('cotizaciones/{quote}/enviar', [QuoteController::class, 'send'])->middleware('can:quotes.create')->name('cotizaciones.send');
         Route::get('cotizaciones/{quote}/pdf', [QuoteController::class, 'pdf'])->name('cotizaciones.pdf');
-        Route::post('cotizaciones/{quote}/aceptar', [QuoteController::class, 'accept'])->name('cotizaciones.accept');
-        Route::post('cotizaciones/{quote}/rechazar', [QuoteController::class, 'reject'])->name('cotizaciones.reject');
+        Route::post('cotizaciones/{quote}/aceptar', [QuoteController::class, 'accept'])->middleware('can:quotes.convert')->name('cotizaciones.accept');
+        Route::post('cotizaciones/{quote}/rechazar', [QuoteController::class, 'reject'])->middleware('can:quotes.update')->name('cotizaciones.reject');
 
         Route::get('ventas', [SaleController::class, 'index'])->name('ventas.index');
-        Route::get('ventas/nueva', [SaleController::class, 'create'])->name('ventas.create');
-        Route::post('ventas', [SaleController::class, 'store'])->name('ventas.store');
+        Route::get('ventas/nueva', [SaleController::class, 'create'])->middleware('can:sales.create')->name('ventas.create');
+        Route::post('ventas', [SaleController::class, 'store'])->middleware('can:sales.create')->name('ventas.store');
         Route::get('ventas/escanear-serie', [SaleItemScanController::class, 'resolve'])->name('ventas.escanear-serie');
         Route::get('ventas/{sale}', [SaleController::class, 'show'])->name('ventas.show');
-        Route::get('ventas/{sale}/editar', [SaleController::class, 'edit'])->name('ventas.edit');
-        Route::put('ventas/{sale}', [SaleController::class, 'update'])->name('ventas.update');
+        Route::get('ventas/{sale}/editar', [SaleController::class, 'edit'])->middleware('can:sales.create')->name('ventas.edit');
+        Route::put('ventas/{sale}', [SaleController::class, 'update'])->middleware('can:sales.create')->name('ventas.update');
         Route::get('ventas/{sale}/nota-venta-pdf', [SaleController::class, 'notaVentaPdf'])->name('ventas.nota-venta-pdf');
-        Route::post('ventas/{sale}/confirmar', [SaleController::class, 'confirm'])->name('ventas.confirmar');
-        Route::post('ventas/{sale}/enviar-sunat', [SaleController::class, 'enviarSunat'])->name('ventas.enviar-sunat');
-        Route::post('ventas/{sale}/anular', [SaleController::class, 'anular'])->name('ventas.anular');
-        Route::post('ventas/{sale}/descartar', [SaleController::class, 'descartar'])->name('ventas.descartar');
-        Route::get('ventas/{sale}/certificado-servicio/{tipo:codigo}', [ServiceCertificateController::class, 'create'])->name('ventas.certificado-servicio.create')->withoutScopedBindings();
-        Route::post('ventas/{sale}/certificado-servicio/{tipo:codigo}', [ServiceCertificateController::class, 'store'])->name('ventas.certificado-servicio.store')->withoutScopedBindings();
-        Route::post('ventas/{sale}/items/{item}/cambiar-unidad', [SaleController::class, 'cambiarUnidad'])->name('ventas.cambiar-unidad');
-        Route::get('ventas/{sale}/certificados', [SaleCertificateController::class, 'create'])->name('ventas.certificados.create');
-        Route::post('ventas/{sale}/certificados', [SaleCertificateController::class, 'store'])->name('ventas.certificados.store');
+        Route::post('ventas/{sale}/confirmar', [SaleController::class, 'confirm'])->middleware('can:sales.create')->name('ventas.confirmar');
+        Route::post('ventas/{sale}/enviar-sunat', [SaleController::class, 'enviarSunat'])->middleware('can:sales.create')->name('ventas.enviar-sunat');
+        Route::post('ventas/{sale}/anular', [SaleController::class, 'anular'])->middleware('can:sales.create')->name('ventas.anular');
+        Route::post('ventas/{sale}/descartar', [SaleController::class, 'descartar'])->middleware('can:sales.create')->name('ventas.descartar');
+        Route::get('ventas/{sale}/certificado-servicio/{tipo:codigo}', [ServiceCertificateController::class, 'create'])->middleware('can:certificates.print')->name('ventas.certificado-servicio.create')->withoutScopedBindings();
+        Route::post('ventas/{sale}/certificado-servicio/{tipo:codigo}', [ServiceCertificateController::class, 'store'])->middleware('can:certificates.print')->name('ventas.certificado-servicio.store')->withoutScopedBindings();
+        Route::post('ventas/{sale}/items/{item}/cambiar-unidad', [SaleController::class, 'cambiarUnidad'])->middleware('can:sales.create')->name('ventas.cambiar-unidad');
+        Route::get('ventas/{sale}/certificados', [SaleCertificateController::class, 'create'])->middleware('can:certificates.print')->name('ventas.certificados.create');
+        Route::post('ventas/{sale}/certificados', [SaleCertificateController::class, 'store'])->middleware('can:certificates.print')->name('ventas.certificados.store');
 
         Route::get('ordenes-servicio', [ServiceOrderController::class, 'index'])->name('ordenes-servicio.index');
         Route::post('ordenes-servicio', [ServiceOrderController::class, 'store'])->name('ordenes-servicio.store');
@@ -115,13 +115,14 @@ Route::prefix('vendedor')
 
         Route::get('certificados', [CertificateController::class, 'index'])->name('certificados.index');
         Route::get('certificados/{certificate}', [CertificateController::class, 'show'])->name('certificados.show');
-        Route::get('certificados/{certificate}/pdf', [CertificateController::class, 'pdf'])->name('certificados.pdf');
-        Route::get('certificados/{certificate}/word', [CertificateController::class, 'word'])->name('certificados.word');
+        Route::get('certificados/{certificate}/pdf', [CertificateController::class, 'pdf'])->middleware('can:certificates.print')->name('certificados.pdf');
+        Route::get('certificados/{certificate}/word', [CertificateController::class, 'word'])->middleware('can:certificates.print')->name('certificados.word');
 
         Route::get('facturacion', [BillingController::class, 'index'])->name('facturacion.index');
         Route::get('facturacion/descarga-masiva', [BillingController::class, 'descargaMasiva'])->name('facturacion.descarga-masiva');
         Route::get('facturacion/excel', [BillingController::class, 'exportarExcel'])->name('facturacion.excel');
-        Route::post('facturacion/{electronic_document}/reenviar', [BillingController::class, 'resend'])->name('facturacion.resend');
+        Route::post('facturacion/{electronic_document}/reenviar', [BillingController::class, 'resend'])->middleware('can:billing.resend')->name('facturacion.resend');
+        Route::post('facturacion/{electronic_document}/baja', [BillingController::class, 'baja'])->middleware('can:billing.void')->name('facturacion.baja');
         Route::get('facturacion/{electronic_document}/xml', [BillingController::class, 'downloadXml'])->name('facturacion.xml');
         Route::get('facturacion/{electronic_document}/cdr', [BillingController::class, 'downloadCdr'])->name('facturacion.cdr');
         Route::get('facturacion/{electronic_document}/pdf', [BillingController::class, 'downloadPdf'])->name('facturacion.pdf');
@@ -129,10 +130,10 @@ Route::prefix('vendedor')
         Route::post('notas-debito', [DebitNoteController::class, 'store'])->name('notas-debito.store');
 
         Route::get('caja', [CashRegisterController::class, 'show'])->name('caja.index');
-        Route::post('caja/abrir', [CashRegisterController::class, 'open'])->name('caja.abrir');
-        Route::post('caja/{cash_register}/cerrar', [CashRegisterController::class, 'close'])->name('caja.cerrar');
+        Route::post('caja/abrir', [CashRegisterController::class, 'open'])->middleware('can:cashregister.open')->name('caja.abrir');
+        Route::post('caja/{cash_register}/cerrar', [CashRegisterController::class, 'close'])->middleware('can:cashregister.close')->name('caja.cerrar');
 
         Route::get('cobranzas', [CollectionController::class, 'index'])->name('cobranzas.index');
-        Route::post('cobranzas/cuotas/{installment}/pagar', [CollectionController::class, 'registerPayment'])->name('cobranzas.pagar');
-        Route::delete('cobranzas/pagos/{payment}', [CollectionController::class, 'cancelPayment'])->name('cobranzas.pagos.anular');
+        Route::post('cobranzas/cuotas/{installment}/pagar', [CollectionController::class, 'registerPayment'])->middleware('can:collections.register_payment')->name('cobranzas.pagar');
+        Route::delete('cobranzas/pagos/{payment}', [CollectionController::class, 'cancelPayment'])->middleware('can:collections.register_payment')->name('cobranzas.pagos.anular');
     });

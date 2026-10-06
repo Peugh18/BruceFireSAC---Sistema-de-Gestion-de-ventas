@@ -21,11 +21,14 @@ import {
     Wrench,
 } from 'lucide-react';
 
+import { Link, usePage } from '@inertiajs/react';
+
 import SaludDelSistema, {
     type SaludDelSistemaData,
 } from '@/components/salud-del-sistema';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { fechaCorta } from '@/lib/utils';
+import notas from '@/routes/gerente/notas';
 
 type DashboardMetrics = {
     ventasDia: number;
@@ -40,6 +43,9 @@ type DashboardMetrics = {
     equiposProximosAtencion: number;
     stockCritico: number;
     documentosSunatError: number;
+    notasPorAprobar: number;
+    /** S8: sin enviar a SUNAT que vencen hoy o mañana, y ya vencidos. */
+    plazoSunat: { por_vencer: number; vencidos: number };
 };
 
 type DashboardCharts = {
@@ -125,6 +131,7 @@ export default function GerenteDashboard({
     aiRetention,
     sistema,
 }: GerenteDashboardProps) {
+    const { currentTeam } = usePage<{ currentTeam: { slug: string } }>().props;
     const maxVentaMensual = Math.max(
         ...charts.ventasMensuales.map((m) => m.monto),
         1,
@@ -170,6 +177,40 @@ export default function GerenteDashboard({
                 </div>
 
                 <SaludDelSistema salud={sistema} />
+
+                {(metrics.plazoSunat.por_vencer > 0 ||
+                    metrics.plazoSunat.vencidos > 0) && (
+                    <div
+                        role="alert"
+                        className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+                    >
+                        <AlertTriangle className="mt-0.5 size-5 shrink-0" />
+                        <p>
+                            <strong>Plazo de SUNAT:</strong>{' '}
+                            {metrics.plazoSunat.por_vencer} comprobante(s) sin
+                            enviar vencen hoy o mañana y{' '}
+                            {metrics.plazoSunat.vencidos} ya vencieron. Cada
+                            vendedor los ve y los reenvía desde su página de
+                            Facturación.
+                        </p>
+                    </div>
+                )}
+
+                {metrics.notasPorAprobar > 0 && (
+                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-200">
+                        <FileCheck className="size-5 shrink-0" />
+                        <p className="min-w-0 flex-1">
+                            Tienes {metrics.notasPorAprobar} nota(s) de crédito
+                            o débito esperando tu aprobación.
+                        </p>
+                        <Link
+                            href={notas.index.url(currentTeam.slug)}
+                            className="font-semibold underline underline-offset-2"
+                        >
+                            Revisar notas
+                        </Link>
+                    </div>
+                )}
 
                 {/* Grid de 12 Tarjetas KPI */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

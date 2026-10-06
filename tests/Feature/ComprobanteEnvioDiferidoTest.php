@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Billing\AnularVentaPorEnviar;
+use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Sales\ConfirmSale;
 use App\Actions\Sales\CreateSale;
@@ -19,6 +20,7 @@ use App\Services\Billing\ComprobantePdfService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Tests\Fixtures\SunatSoloEnvio;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -29,7 +31,7 @@ beforeEach(function () {
         'billing.envio_diferido_horas' => 6,
     ]);
 
-    $this->sunat = new class implements SunatClientInterface
+    $this->sunat = new class extends SunatSoloEnvio
     {
         public int $enviados = 0;
 
@@ -262,6 +264,37 @@ test('editar productos y precios de una factura por enviar conserva la venta y e
         ->and($otra->fresh()->estado)->toBe('vendido')
         ->and((float) $editada->payments()->sum('monto'))->toBe(80.0)
         ->and(Sale::count())->toBe(1);
+});
+
+test('editar el precio de una factura por enviar redibuja el xml que se enviara a SUNAT', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $item = $sale->items()->with('inventoryUnit')->first();
+
+    expect(Storage::disk('local')->get(comprobanteDe($sale)->xml_path))->toContain('>65.00<');
+
+    $documento = comprobanteDe(editarVenta($sale, items: [[
+        'tipo_linea' => 'unidad_nueva',
+        'numero_serie' => $item->inventoryUnit->numero_serie,
+        'product_id' => $item->product_id,
+        'cantidad' => 1,
+        'precio_unitario' => 80,
+    ]]));
+    $xml = Storage::disk('local')->get($documento->xml_path);
+
+    expect($xml)->toContain('<cbc:PayableAmount currencyID="PEN">80.00</cbc:PayableAmount>')
+        ->and($xml)->not->toContain('>65.00<');
+});
+
+test('un comprobante ya enviado reutiliza su mismo xml firmado al reintentar', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $documento = comprobanteDe($sale);
+    $documento->update(['sunat_estado' => 'excepcion']);
+    $original = Storage::disk('local')->get($documento->xml_path);
+    $sale->client->update(['razon_social' => 'OTRO NOMBRE SAC']);
+
+    app(EmitElectronicDocument::class)->sendDocument($documento->fresh());
+
+    expect(Storage::disk('local')->get($documento->fresh()->xml_path))->toBe($original);
 });
 
 test('una venta aceptada por SUNAT no se abre para editar', function () {

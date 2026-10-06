@@ -23,7 +23,10 @@ import CambiarUnidadDialog, {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { SaleNotesPanel } from '@/components/sale-notes-panel';
+import {
+    SaleNotesPanel,
+    type SolicitudNota,
+} from '@/components/sale-notes-panel';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import facturacion from '@/routes/vendedor/facturacion';
 import ventas from '@/routes/vendedor/ventas';
@@ -107,6 +110,7 @@ type Props = {
     certificados: CertificadoVenta[];
     tieneEquipos: boolean;
     tiposServicio: { codigo: string; nombre: string }[];
+    solicitudesNota: SolicitudNota[];
 };
 
 function money(value?: number | string) {
@@ -153,6 +157,7 @@ export default function VentasShow({
     certificados,
     tieneEquipos,
     tiposServicio,
+    solicitudesNota,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -790,6 +795,7 @@ export default function VentasShow({
                     documents={sale.electronic_documents ?? []}
                     saleEstado={sale.estado}
                     abrirNotaCredito={abrirNotaCredito}
+                    solicitudes={solicitudesNota}
                 />
             </div>
 
