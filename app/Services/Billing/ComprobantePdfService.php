@@ -67,7 +67,7 @@ class ComprobantePdfService
      */
     public function vigente(ElectronicDocument $document): ?string
     {
-        if (! in_array($document->tipo, ['factura', 'boleta'], true)
+        if (! in_array($document->tipo, ['factura', 'boleta', 'nota_credito', 'nota_debito'], true)
             || ! $document->xml_path
             || ! Storage::disk('local')->exists($document->xml_path)) {
             return $document->pdf_path;
@@ -83,12 +83,12 @@ class ComprobantePdfService
     }
 
     /**
-     * Vuelve a dibujar el PDF de una factura o boleta con su XML firmado, sin
-     * importar cuándo se generó. Devuelve null si no tiene XML guardado.
+     * Vuelve a dibujar el PDF de una factura, boleta o nota con su XML firmado,
+     * sin importar cuándo se generó. Devuelve null si no tiene XML guardado.
      */
     public function redibujar(ElectronicDocument $document): ?string
     {
-        if (! in_array($document->tipo, ['factura', 'boleta'], true)
+        if (! in_array($document->tipo, ['factura', 'boleta', 'nota_credito', 'nota_debito'], true)
             || ! $document->xml_path
             || ! Storage::disk('local')->exists($document->xml_path)) {
             return null;
@@ -224,6 +224,25 @@ class ComprobantePdfService
         $lineas = $sale->lineasComprobante()->values();
         $medioPago ??= $sale->exists ? $sale->medioPagoTexto() : null;
 
+        $esNota = in_array($document->tipo, ['nota_credito', 'nota_debito'], true) && $document->importe !== null;
+        $totalDoc = (float) ($esNota ? $document->importe : $sale->total);
+        $motivoNota = null;
+        if ($esNota) {
+            // La nota va a SUNAT con una sola línea (el motivo por el importe):
+            // la representación impresa tiene que mostrar lo mismo que el XML.
+            $motivoNota = $document->tipo === 'nota_credito'
+                ? GreenterService::descripcionMotivoCredito($document->motivo_catalogo)
+                : GreenterService::descripcionMotivoDebito($document->motivo_catalogo);
+            $linea = new SaleItem(['cantidad' => 1, 'precio_unitario' => $totalDoc, 'descuento' => 0, 'subtotal' => $totalDoc]);
+            $linea->setRelation('product', null);
+            $linea->setRelation('service', new Service(['codigo' => $document->tipo === 'nota_credito' ? 'NC-01' : 'ND-01', 'nombre' => $motivoNota]));
+            $lineas = collect([$linea]);
+            $desglose = PrecioConIgv::desglosar($totalDoc);
+            $montos = ['subtotal' => $desglose['base'], 'igv' => $desglose['igv'], 'total' => $desglose['total']];
+        } else {
+            $montos = ['subtotal' => (float) $sale->subtotal, 'igv' => (float) $sale->igv, 'total' => (float) $sale->total];
+        }
+
         return [
             'document' => $document,
             'sale' => $sale,
@@ -244,7 +263,9 @@ class ComprobantePdfService
                 ? 'Crédito '.str_pad((string) $sale->diasCredito(), 2, '0', STR_PAD_LEFT).' días'
                 : 'Contado'.($medioPago ? ' · '.$medioPago : ''),
             'qrBase64' => $xmlSigned !== null ? base64_encode($this->qrGenerator->generate($document, $xmlSigned)) : null,
-            'montoEnLetras' => $this->numeroEnLetras->convertir((float) $sale->total),
+            'montos' => $montos,
+            'motivoNota' => $motivoNota,
+            'montoEnLetras' => $this->numeroEnLetras->convertir($totalDoc),
             'bankAccounts' => CompanyBankAccount::query()->where('activo', true)->orderBy('orden')->get(),
             'detraccion' => $this->detraccionCalculator->paraVenta($sale, $document->tipo),
         ];

@@ -99,11 +99,11 @@ class EmitElectronicDocument
 
         Storage::disk('local')->put("xml/{$documentName}.xml", $xmlSigned);
 
-        $pdfPath = $esNota ? null : $this->pdfService->generate($document, $xmlSigned);
+        $pdfPath = $this->pdfService->generate($document, $xmlSigned);
 
         $document->update([
             'xml_path' => "xml/{$documentName}.xml",
-            'pdf_path' => $pdfPath ?? $document->pdf_path,
+            'pdf_path' => $pdfPath,
         ]);
 
         return ['xml' => $xmlSigned, 'nombre' => $documentName];

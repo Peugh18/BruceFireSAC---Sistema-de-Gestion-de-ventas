@@ -67,7 +67,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             $renderBranded = in_array($status, [403, 404], true)
-                || (in_array($status, [500, 503], true) && ! app()->environment(['local', 'testing']));
+                || (in_array($status, [500, 503], true) && (! config('app.debug') || ! app()->environment(['local', 'testing'])));
 
             if ($renderBranded) {
                 return Inertia::render('errors/error', ['status' => $status])

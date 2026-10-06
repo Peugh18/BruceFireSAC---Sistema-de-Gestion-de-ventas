@@ -53,11 +53,18 @@ class DeliveryController extends Controller
 
         $entregas = $query->paginate(15)->withQueryString();
 
+        $baseStatsQuery = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
+            ->where(function ($q) {
+                $q->where('departamento_tecnico', 'campo')
+                    ->orWhereIn('estado', ['listo_entrega', 'entregado', 'cerrado']);
+            });
+
         $stats = [
-            'total' => ServiceOrder::query()->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
-            'listas' => ServiceOrder::query()->where('estado', 'listo_entrega')->count(),
-            'entregadas' => ServiceOrder::query()->where('estado', 'entregado')->count(),
-            'cerradas' => ServiceOrder::query()->where('estado', 'cerrado')->count(),
+            'total' => (clone $baseStatsQuery)->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
+            'listas' => (clone $baseStatsQuery)->where('estado', 'listo_entrega')->count(),
+            'entregadas' => (clone $baseStatsQuery)->where('estado', 'entregado')->count(),
+            'cerradas' => (clone $baseStatsQuery)->where('estado', 'cerrado')->count(),
         ];
 
         return Inertia::render('tecnico-campo/entregas/index', [

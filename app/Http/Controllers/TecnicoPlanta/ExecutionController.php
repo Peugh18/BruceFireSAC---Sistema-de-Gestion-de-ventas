@@ -25,6 +25,7 @@ class ExecutionController extends Controller
         $service_order->load([
             'client:id,nombre_comercial,razon_social,telefono,numero_documento',
             'sede:id,nombre',
+            'service:id,nombre',
             'equipments',
             'deficiencies.authorization',
             'events' => fn ($q) => $q->latest('created_at')->limit(10),
@@ -56,7 +57,7 @@ class ExecutionController extends Controller
                 'cliente_doc' => $service_order->client->numero_documento,
                 'telefono' => $service_order->client->telefono,
                 'sede' => $service_order->sede?->nombre,
-                'tipo_servicio' => $service_order->service->nombre,
+                'tipo_servicio' => $service_order->service->nombre ?? $service_order->tipo_servicio ?? 'Servicio general',
                 'fecha' => $service_order->fecha->toDateString(),
                 'prioridad' => $service_order->prioridad,
                 'estado' => $service_order->estado,

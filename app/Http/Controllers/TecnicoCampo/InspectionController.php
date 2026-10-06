@@ -55,22 +55,18 @@ class InspectionController extends Controller
 
         $inspecciones = $query->paginate(15)->withQueryString();
 
+        $baseStatsQuery = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
+            ->where(function ($q) {
+                $q->where('departamento_tecnico', 'campo')
+                    ->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%'));
+            });
+
         $stats = [
-            'total' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')))
-                ->count(),
-            'pendientes' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')))
-                ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta'])
-                ->count(),
-            'en_proceso' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')))
-                ->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion'])
-                ->count(),
-            'finalizadas' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')))
-                ->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])
-                ->count(),
+            'total' => (clone $baseStatsQuery)->count(),
+            'pendientes' => (clone $baseStatsQuery)->whereIn('estado', ['pendiente_recepcion', 'recibido_planta'])->count(),
+            'en_proceso' => (clone $baseStatsQuery)->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion'])->count(),
+            'finalizadas' => (clone $baseStatsQuery)->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
         ];
 
         return Inertia::render('tecnico-campo/inspecciones/index', [

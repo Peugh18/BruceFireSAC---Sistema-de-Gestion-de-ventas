@@ -13,7 +13,7 @@
         : $document->serie.'-'.str_pad((string) $document->correlativo, 8, '0', STR_PAD_LEFT);
     $fechaEmision = $document->fecha_emision ?? $sale->fecha;
     $esVenta = in_array($document->tipo, ['factura', 'boleta', 'nota_venta'], true);
-    $vencimiento = $sale->esCredito() && $sale->installments->isNotEmpty() ? $sale->installments->last()->fecha_vencimiento : null;
+    $vencimiento = $esVenta && $sale->esCredito() && $sale->installments->isNotEmpty() ? $sale->installments->last()->fecha_vencimiento : null;
     $ubicacion = collect([$company->distrito, $company->provincia, $company->departamento])->filter()->unique()->implode(' - ');
     $direccionCliente = $sale->client->direccionImprimible();
     $etiquetaDocumento = match ($sale->client->tipo_documento) {
@@ -220,7 +220,7 @@
         <div class="box">
             <div class="box-title">Documento que modifica</div>
             {{ strtoupper($document->cpeAfectado->tipo ?? '') }} {{ $document->cpeAfectado->serie ?? '' }}-{{ $document->cpeAfectado?->correlativo }}
-            @if($document->motivo_catalogo) — {{ $document->motivo_catalogo }} @endif
+            @if($document->motivo_catalogo) — {{ $document->motivo_catalogo }} {{ $motivoNota ?? '' }} @endif
         </div>
     @endif
 
@@ -267,15 +267,15 @@
                     @if($descuentoTotal > 0)
                         <tr><td class="t-label">Descuentos</td><td class="t-value">S/ {{ number_format($descuentoTotal, 2) }}</td></tr>
                     @endif
-                    <tr><td class="t-label">Op. gravada</td><td class="t-value">S/ {{ number_format((float) $sale->subtotal, 2) }}</td></tr>
-                    <tr><td class="t-label">I.G.V. 18%</td><td class="t-value">S/ {{ number_format((float) $sale->igv, 2) }}</td></tr>
-                    <tr class="grand"><td>IMPORTE TOTAL</td><td class="t-value">S/ {{ number_format((float) $sale->total, 2) }}</td></tr>
+                    <tr><td class="t-label">Op. gravada</td><td class="t-value">S/ {{ number_format((float) ($montos['subtotal'] ?? $sale->subtotal), 2) }}</td></tr>
+                    <tr><td class="t-label">I.G.V. 18%</td><td class="t-value">S/ {{ number_format((float) ($montos['igv'] ?? $sale->igv), 2) }}</td></tr>
+                    <tr class="grand"><td>IMPORTE TOTAL</td><td class="t-value">S/ {{ number_format((float) ($montos['total'] ?? $sale->total), 2) }}</td></tr>
                 </table>
             </td>
         </tr>
     </table>
 
-    @if($sale->esCredito() && $sale->installments->isNotEmpty())
+    @if($esVenta && $sale->esCredito() && $sale->installments->isNotEmpty())
         <div class="box">
             <div class="box-title">Cuotas del crédito</div>
             <table class="mini">

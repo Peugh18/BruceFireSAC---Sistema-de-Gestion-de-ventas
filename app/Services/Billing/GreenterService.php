@@ -274,7 +274,7 @@ class GreenterService
             ]);
     }
 
-    protected function descripcionMotivoCredito(?string $codigo): string
+    public static function descripcionMotivoCredito(?string $codigo): string
     {
         return match ($codigo) {
             '01' => 'ANULACION DE LA OPERACION',
@@ -288,7 +288,7 @@ class GreenterService
         };
     }
 
-    protected function descripcionMotivoDebito(?string $codigo): string
+    public static function descripcionMotivoDebito(?string $codigo): string
     {
         return match ($codigo) {
             '01' => 'INTERESES POR MORA',

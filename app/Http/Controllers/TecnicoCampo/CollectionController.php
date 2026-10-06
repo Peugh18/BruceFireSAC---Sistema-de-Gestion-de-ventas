@@ -37,6 +37,7 @@ class CollectionController extends Controller
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento,direccion_fiscal',
                 'vehicle:id,placa,marca',
                 'equipments',
+                'events' => fn ($events) => $events->where('payload->eslabon_custodia', 'recojo_campo'),
             ])
             ->latest('id');
 
@@ -52,10 +53,7 @@ class CollectionController extends Controller
         }
 
         $recojos = $query->paginate(15)->through(function (ServiceOrder $order) {
-            $custodyEvent = $order->events()
-                ->where('payload->eslabon_custodia', 'recojo_campo')
-                ->latest('created_at')
-                ->first();
+            $custodyEvent = $order->events->sortByDesc('created_at')->first();
 
             return [
                 'id' => $order->id,

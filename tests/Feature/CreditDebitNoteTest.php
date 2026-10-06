@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Billing\IssueDebitNote;
 use App\Actions\Sales\CreateSale;
@@ -13,6 +14,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Models\Sede;
+use App\Services\Billing\ComprobantePdfService;
 use App\Services\Billing\GreenterService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Validation\ValidationException;
@@ -206,4 +208,19 @@ test('la nota de débito valida el motivo del catálogo 10', function () {
             'importe' => 5,
         ])
         ->assertSessionHasErrors('motivo_catalogo');
+});
+
+test('el pdf de una nota de crédito muestra la misma línea e importe que su xml', function () {
+    config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
+    [$sale, $factura] = ventaConFactura();
+    $credito = app(IssueCreditNote::class)->handle($factura, '04', 'Rebaja acordada', 59);
+    ['xml' => $xml] = app(EmitElectronicDocument::class)->prepararDocumento($credito);
+    $credito->refresh();
+
+    $html = app(ComprobantePdfService::class)->html($credito, $xml);
+
+    expect($credito->pdf_path)->not->toBeNull()
+        ->and($html)->toContain('DESCUENTO GLOBAL')
+        ->and($html)->toContain('S/ 59.00')
+        ->and($html)->not->toContain($sale->items->first()->product->nombre);
 });

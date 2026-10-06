@@ -51,16 +51,22 @@ class ReserveNextCorrelativo
 
     protected function lockSerie(string $tipoComprobante, string $serie): DocumentSeries
     {
-        $documentSeries = DocumentSeries::query()
+        $query = fn () => DocumentSeries::query()
             ->where('tipo_comprobante', $tipoComprobante)
             ->where('serie', $serie)
-            ->lockForUpdate()
-            ->first();
+            ->lockForUpdate();
 
-        return $documentSeries ?? DocumentSeries::create([
-            'tipo_comprobante' => $tipoComprobante,
-            'serie' => $serie,
-            'correlativo_actual' => 0,
-        ]);
+        if ($documentSeries = $query()->first()) {
+            return $documentSeries;
+        }
+
+        // Dos emisiones pueden estrenar la serie a la vez: el índice único deja
+        // crear solo una fila y la otra la reutiliza, siempre bloqueada.
+        DocumentSeries::query()->createOrFirst(
+            ['tipo_comprobante' => $tipoComprobante, 'serie' => $serie],
+            ['correlativo_actual' => 0],
+        );
+
+        return $query()->firstOrFail();
     }
 }

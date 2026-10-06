@@ -48,7 +48,6 @@ class SaleController extends Controller
         $comprobante = $request->string('comprobante')->toString();
         $buscar = trim($request->string('buscar')->toString());
         [$desde, $hasta] = $this->rangoDeFechas($request);
-        $vendedorId = $request->user()->id;
         $sedeId = $request->user()->sedeRestringidaId();
         $soloDe = $request->user()->vendedorRestringidoId();
 
@@ -90,10 +89,11 @@ class SaleController extends Controller
                 'editable' => $sale->sePuedeEditar(),
             ]);
 
-        // KPIs siempre acotados al vendedor autenticado: NUNCA acumulado de
-        // toda la empresa (regla de la sección 77.3 del doc maestro).
+        // KPIs con el mismo alcance que la tabla: el Vendedor ve solo lo suyo y
+        // el acumulado de la empresa queda para el Gerente (Documento Maestro §77.3).
         $emitidas = Sale::query()
-            ->where('vendedor_id', $vendedorId)
+            ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
+            ->when($soloDe, fn ($q) => $q->where('vendedor_id', $soloDe))
             ->where('estado', 'confirmada')
             ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
             ->get(['total', 'condicion_pago']);
@@ -116,9 +116,16 @@ class SaleController extends Controller
                 // Lo que falta enviar a SUNAT no depende del rango: tiene plazo.
                 'por_enviar' => ElectronicDocument::query()
                     ->where('sunat_estado', 'por_enviar')
-                    ->whereHas('sale', fn ($query) => $query->where('vendedor_id', $vendedorId))
+                    ->whereHas('sale', fn ($query) => $query
+                        ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
+                        ->when($soloDe, fn ($q) => $q->where('vendedor_id', $soloDe))
+                    )
                     ->count(),
-                'borradores' => Sale::query()->where('vendedor_id', $vendedorId)->where('estado', 'borrador')->count(),
+                'borradores' => Sale::query()
+                    ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
+                    ->when($soloDe, fn ($q) => $q->where('vendedor_id', $soloDe))
+                    ->where('estado', 'borrador')
+                    ->count(),
             ],
         ]);
     }

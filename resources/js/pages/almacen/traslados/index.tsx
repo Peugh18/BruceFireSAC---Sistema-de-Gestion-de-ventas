@@ -16,13 +16,13 @@ export default function Transfers({
     destinations,
     bulkProducts,
 }: {
-    sourceSede: Option;
+    sourceSede: Option | null;
     origenes: Option[];
     destinations: Option[];
     bulkProducts: Option[];
 }) {
     const form = useForm({
-        origen_sede_id: String(sourceSede.id),
+        origen_sede_id: sourceSede ? String(sourceSede.id) : '',
         destination_sede_id: '',
         serials_text: '',
         product_id: '',
@@ -31,6 +31,21 @@ export default function Transfers({
     });
     const teamSlug =
         usePage<{ currentTeam?: Team | null }>().props.currentTeam?.slug ?? '';
+
+    if (!sourceSede) {
+        return (
+            <AlmacenLayout title="Traslados">
+                <Head title="Traslados entre sedes" />
+                <Card className="mx-auto max-w-2xl space-y-2 p-6">
+                    <h1 className="text-xl font-bold">Traslado entre sedes</h1>
+                    <p className="text-muted-foreground text-sm">
+                        No hay un almacén activo desde el cual trasladar. Activa
+                        una sede de tipo almacén o mixta en Sedes para empezar.
+                    </p>
+                </Card>
+            </AlmacenLayout>
+        );
+    }
 
     return (
         <AlmacenLayout title="Traslados">

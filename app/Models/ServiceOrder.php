@@ -25,7 +25,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $vehicle_id
  * @property int|null $quote_id
  * @property int|null $sale_id
- * @property int $service_id
+ * @property int|null $service_id
+ * @property string $tipo_servicio
  * @property Carbon $fecha
  * @property int|null $tecnico_id
  * @property string|null $departamento_tecnico
@@ -36,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Client $client
  * @property-read Sede|null $sede
+ * @property-read Service|null $service
  * @property-read Vehicle|null $vehicle
  * @property-read Quote|null $quote
  * @property-read User|null $tecnico
