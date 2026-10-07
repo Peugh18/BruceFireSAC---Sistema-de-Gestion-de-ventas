@@ -172,3 +172,9 @@
     - `certificates.generate` no lo tiene ningún rol: las rutas de certificados de la venta exigen `certificates.print` (la matriz dice "ver/imprime").
     - El Gerente no tiene una lista de comprobantes: su aviso de plazo no enlaza a una lista; cada vendedor la ve en su Facturación.
     - Pendientes de la fase A: S4 (select del catálogo), S10 (notas sin 1.18 fijo) y S12 completo (guardar datos del cliente y de las líneas).
+
+## [2026-10-06] — Fase A: pendientes S4, S10 y S12 (Codex)
+
+- Codex dejó, sin commit, el tipo de afectación IGV en servicios y líneas, el desglose de las notas según el original (`DesgloseNota`) y la copia de los datos de emisión (`DatosEmision`, columna `datos_emision`).
+- Claude revisó el código; `php -l` y `tsc` pasan. **No se corrió la suite completa:** el dueño pidió dejar las pruebas largas para el final.
+

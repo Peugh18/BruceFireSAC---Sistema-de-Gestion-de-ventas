@@ -18,6 +18,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $descripcion
  * @property string $unidad_medida
  * @property float $precio_venta
+ * @property Carbon|null $igv_revisado_at
+ * @property string|null $tipo_afectacion_igv
  * @property bool $aplica_igv
  * @property int|null $certificate_type_id
  * @property bool $activo
@@ -32,7 +34,7 @@ use Illuminate\Support\Carbon;
     'descripcion',
     'unidad_medida',
     'precio_venta',
-    'aplica_igv',
+    'aplica_igv', 'igv_revisado_at', 'tipo_afectacion_igv',
     'certificate_type_id',
     'activo',
 ])]
@@ -46,6 +48,7 @@ class Service extends Model
         return [
             'precio_venta' => 'decimal:2',
             'aplica_igv' => 'boolean',
+            'igv_revisado_at' => 'datetime',
             'activo' => 'boolean',
         ];
     }

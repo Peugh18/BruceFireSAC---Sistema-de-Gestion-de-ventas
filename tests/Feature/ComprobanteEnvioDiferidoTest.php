@@ -479,6 +479,7 @@ test('el comprobante solo muestra placa, vencimiento y cuotas cuando la venta lo
     $sale = $contado->sale;
     $sale->update(['condicion_pago' => 'credito', 'observaciones' => 'Entregar en almacén']);
     $sale->installments()->create(['numero_cuota' => 1, 'fecha_vencimiento' => today()->addDays(30), 'monto' => $sale->total, 'estado' => 'pendiente']);
+    app(EmitElectronicDocument::class)->prepararDocumento($contado->fresh());
     $html = app(ComprobantePdfService::class)->html($contado->fresh(), (string) Storage::disk('local')->get($contado->xml_path));
 
     expect($html)->toContain('Fecha de venc.')

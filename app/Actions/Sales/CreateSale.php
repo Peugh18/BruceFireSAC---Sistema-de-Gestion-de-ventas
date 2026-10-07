@@ -10,6 +10,7 @@ use App\Models\Sale;
 use App\Models\Service;
 use App\Models\Vehicle;
 use App\Services\AuditLogger;
+use App\Services\Billing\AfectacionIgv;
 use App\Services\Billing\PrecioConIgv;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -34,10 +35,13 @@ class CreateSale
             $lineas = array_map(function (array $item) {
                 $descuento = $item['descuento'] ?? 0;
 
-                return [...$item, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
+                $catalogo = ! empty($item['service_id']) ? Service::findOrFail((int) $item['service_id']) : Product::findOrFail((int) $item['product_id']);
+                $afectacion = AfectacionIgv::codigo($catalogo);
+
+                return [...$item, 'tipo_afectacion_igv' => $afectacion, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
             }, $items);
 
-            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totales(array_column($lineas, 'subtotal'));
+            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totalesConAfectacion($lineas);
 
             $this->validarVehiculo($data);
             $this->validarCatalogoActivo($lineas);
@@ -102,10 +106,13 @@ class CreateSale
             $lineas = array_map(function (array $item) {
                 $descuento = $item['descuento'] ?? 0;
 
-                return [...$item, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
+                $catalogo = ! empty($item['service_id']) ? Service::findOrFail((int) $item['service_id']) : Product::findOrFail((int) $item['product_id']);
+                $afectacion = AfectacionIgv::codigo($catalogo);
+
+                return [...$item, 'tipo_afectacion_igv' => $afectacion, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
             }, $items);
 
-            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totales(array_column($lineas, 'subtotal'));
+            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totalesConAfectacion($lineas);
 
             $this->validarComprobanteCliente->handle(
                 Client::query()->findOrFail($data['client_id']),

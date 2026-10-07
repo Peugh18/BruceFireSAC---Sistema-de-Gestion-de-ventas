@@ -11,9 +11,7 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
-
 import GerenteLayout from '@/layouts/gerente-layout';
-
 type ServiceItem = {
     id: number;
     codigo: string;
@@ -22,15 +20,15 @@ type ServiceItem = {
     unidad_medida: string;
     precio_venta: number;
     aplica_igv: boolean;
+    tipo_afectacion_igv: string | null;
+    igv_requiere_revision: boolean;
     activo: boolean;
 };
-
 type PaginationLink = {
     url: string | null;
     label: string;
     active: boolean;
 };
-
 type PaginatedServices = {
     data: ServiceItem[];
     links: PaginationLink[];
@@ -38,17 +36,14 @@ type PaginatedServices = {
     last_page: number;
     total: number;
 };
-
 type ServiceFilters = {
     buscar: string;
     estado: string;
 };
-
 type ServiceKpis = {
     totalServicios: number;
     totalActivos: number;
 };
-
 type PageProps = {
     currentTeam: { slug: string };
     servicios: PaginatedServices;
@@ -60,7 +55,6 @@ type PageProps = {
     };
     [key: string]: unknown;
 };
-
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-PE', {
         style: 'currency',
@@ -68,17 +62,14 @@ function formatCurrency(amount: number): string {
         minimumFractionDigits: 2,
     }).format(amount);
 }
-
 export default function ServiciosIndex() {
     const { currentTeam, servicios, filters, kpis, flash } =
         usePage<PageProps>().props;
-
     const [buscar, setBuscar] = useState(filters.buscar || '');
     const [modalOpen, setModalOpen] = useState(false);
     const [editingService, setEditingService] = useState<ServiceItem | null>(
         null,
     );
-
     const form = useForm({
         codigo: '',
         nombre: '',
@@ -86,9 +77,9 @@ export default function ServiciosIndex() {
         unidad_medida: 'ZZ',
         precio_venta: '',
         aplica_igv: true,
+        tipo_afectacion_igv: '10',
         activo: true,
     });
-
     const openCreateModal = () => {
         setEditingService(null);
         form.reset();
@@ -99,11 +90,11 @@ export default function ServiciosIndex() {
             unidad_medida: 'ZZ',
             precio_venta: '',
             aplica_igv: true,
+            tipo_afectacion_igv: '10',
             activo: true,
         });
         setModalOpen(true);
     };
-
     const openEditModal = (service: ServiceItem) => {
         setEditingService(service);
         form.setData({
@@ -113,17 +104,18 @@ export default function ServiciosIndex() {
             unidad_medida: service.unidad_medida,
             precio_venta: String(service.precio_venta),
             aplica_igv: service.aplica_igv,
+            tipo_afectacion_igv: service.igv_requiere_revision
+                ? ''
+                : (service.tipo_afectacion_igv ?? '10'),
             activo: service.activo,
         });
         setModalOpen(true);
     };
-
     const closeModal = () => {
         setModalOpen(false);
         setEditingService(null);
         form.reset();
     };
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (editingService) {
@@ -139,7 +131,6 @@ export default function ServiciosIndex() {
             });
         }
     };
-
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
@@ -151,7 +142,6 @@ export default function ServiciosIndex() {
             { preserveState: true },
         );
     };
-
     const handleFilterEstado = (estado: string) => {
         router.get(
             `/${currentTeam.slug}/gerente/servicios`,
@@ -162,7 +152,6 @@ export default function ServiciosIndex() {
             { preserveState: true },
         );
     };
-
     const handleToggleStatus = (service: ServiceItem) => {
         router.patch(
             `/${currentTeam.slug}/gerente/servicios/${service.id}/toggle-status`,
@@ -170,7 +159,6 @@ export default function ServiciosIndex() {
             { preserveScroll: true },
         );
     };
-
     const handleDelete = (service: ServiceItem) => {
         if (
             confirm(
@@ -185,7 +173,6 @@ export default function ServiciosIndex() {
             );
         }
     };
-
     return (
         <GerenteLayout title="Catálogo de Servicios">
             <div className="space-y-6">
@@ -202,7 +189,6 @@ export default function ServiciosIndex() {
                         <span>{flash.error}</span>
                     </div>
                 )}
-
                 {/* Cabecera y Botón Nuevo */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
@@ -214,7 +200,6 @@ export default function ServiciosIndex() {
                             inspecciones técnicas.
                         </p>
                     </div>
-
                     <button
                         type="button"
                         onClick={openCreateModal}
@@ -224,7 +209,6 @@ export default function ServiciosIndex() {
                         <span>Nuevo Servicio</span>
                     </button>
                 </div>
-
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
@@ -238,7 +222,6 @@ export default function ServiciosIndex() {
                             {kpis.totalServicios}
                         </div>
                     </div>
-
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
                         <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
@@ -251,7 +234,6 @@ export default function ServiciosIndex() {
                         </div>
                     </div>
                 </div>
-
                 {/* Barra de Filtros y Búsqueda */}
                 <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 shadow-xs md:flex-row md:items-center md:justify-between">
                     <form
@@ -275,7 +257,6 @@ export default function ServiciosIndex() {
                             Buscar
                         </button>
                     </form>
-
                     <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
                         <button
                             type="button"
@@ -312,7 +293,6 @@ export default function ServiciosIndex() {
                         </button>
                     </div>
                 </div>
-
                 {/* Tabla de Servicios */}
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
@@ -376,9 +356,15 @@ export default function ServiciosIndex() {
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
-                                                    {s.aplica_igv
-                                                        ? 'Aplica (18%)'
-                                                        : 'Exonerado'}
+                                                    {s.igv_requiere_revision
+                                                        ? 'Elegir afectación'
+                                                        : s.tipo_afectacion_igv ===
+                                                            '20'
+                                                          ? 'Exonerado'
+                                                          : s.tipo_afectacion_igv ===
+                                                              '30'
+                                                            ? 'Inafecto'
+                                                            : 'Gravado (18%)'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-center">
@@ -444,7 +430,6 @@ export default function ServiciosIndex() {
                             </tbody>
                         </table>
                     </div>
-
                     {/* Paginación */}
                     {servicios.links && servicios.links.length > 3 && (
                         <div className="border-border bg-muted/40 text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
@@ -488,7 +473,6 @@ export default function ServiciosIndex() {
                         </div>
                     )}
                 </div>
-
                 {/* Modal Crear / Editar Servicio */}
                 {modalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -507,7 +491,6 @@ export default function ServiciosIndex() {
                                     <X className="size-4" />
                                 </button>
                             </div>
-
                             <form
                                 onSubmit={handleSubmit}
                                 className="mt-4 space-y-4 text-xs"
@@ -536,7 +519,6 @@ export default function ServiciosIndex() {
                                             </p>
                                         )}
                                     </div>
-
                                     <div>
                                         <label className="text-foreground/80 block font-semibold">
                                             U.M. *
@@ -556,7 +538,6 @@ export default function ServiciosIndex() {
                                         />
                                     </div>
                                 </div>
-
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Nombre del Servicio *
@@ -580,7 +561,6 @@ export default function ServiciosIndex() {
                                         </p>
                                     )}
                                 </div>
-
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Descripción
@@ -598,7 +578,6 @@ export default function ServiciosIndex() {
                                         className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                     />
                                 </div>
-
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Precio Venta (S/) *
@@ -624,25 +603,42 @@ export default function ServiciosIndex() {
                                         </p>
                                     )}
                                 </div>
-
                                 <div className="flex items-center gap-6 pt-1">
-                                    <label className="flex cursor-pointer items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={form.data.aplica_igv}
+                                    <label className="flex flex-col gap-1">
+                                        Afectación del IGV
+                                        <select
+                                            value={
+                                                form.data.tipo_afectacion_igv
+                                            }
+                                            required
                                             onChange={(e) =>
                                                 form.setData(
-                                                    'aplica_igv',
-                                                    e.target.checked,
+                                                    'tipo_afectacion_igv',
+                                                    e.target.value,
                                                 )
                                             }
-                                            className="border-border text-primary-strong rounded"
-                                        />
-                                        <span className="text-foreground/80">
-                                            Aplica IGV (18%)
-                                        </span>
+                                            className="border-border rounded border p-2"
+                                        >
+                                            <option value="" disabled>
+                                                Elige la afectación
+                                            </option>
+                                            <option value="10">
+                                                Gravado (IGV incluido: 18%)
+                                            </option>
+                                            <option value="20">
+                                                Exonerado
+                                            </option>
+                                            <option value="30">Inafecto</option>
+                                        </select>
+                                        {form.errors.tipo_afectacion_igv && (
+                                            <span className="text-red-600">
+                                                {
+                                                    form.errors
+                                                        .tipo_afectacion_igv
+                                                }
+                                            </span>
+                                        )}
                                     </label>
-
                                     <label className="flex cursor-pointer items-center gap-2">
                                         <input
                                             type="checkbox"
@@ -660,7 +656,6 @@ export default function ServiciosIndex() {
                                         </span>
                                     </label>
                                 </div>
-
                                 <div className="border-border flex justify-end gap-2 border-t pt-3">
                                     <button
                                         type="button"

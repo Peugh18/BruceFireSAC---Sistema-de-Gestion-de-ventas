@@ -4,6 +4,7 @@ namespace App\Actions\Billing;
 
 use App\Models\ElectronicDocument;
 use App\Models\NoteRequest;
+use App\Services\Billing\DesgloseNota;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -27,6 +28,8 @@ class NotaPorAprobar
         $tipo === 'nota_credito'
             ? $this->issueCreditNote->validar($original, $motivoCatalogo)
             : $this->issueDebitNote->validar($original);
+
+        app(DesgloseNota::class)->calcular($original, $tipo, $motivoCatalogo, $importe);
 
         return NoteRequest::create([
             'electronic_document_id' => $original->id,

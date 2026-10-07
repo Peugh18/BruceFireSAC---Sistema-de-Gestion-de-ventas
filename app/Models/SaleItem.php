@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property float $precio_unitario
  * @property float $descuento
  * @property float $subtotal
+ * @property string|null $tipo_afectacion_igv
  * @property bool $aplica_igv
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -33,7 +34,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'sale_id', 'product_id', 'service_id', 'tipo_linea', 'inventory_unit_id', 'equipment_id',
-    'cantidad', 'precio_unitario', 'descuento', 'subtotal',
+    'cantidad', 'precio_unitario', 'descuento', 'subtotal', 'tipo_afectacion_igv',
 ])]
 class SaleItem extends Model
 {

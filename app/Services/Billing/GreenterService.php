@@ -94,6 +94,12 @@ class GreenterService
 
         $details = $sale->lineasComprobante()->map(fn (SaleItem $item) => $this->buildDetail($item))->values()->all();
 
+        $bases = ['10' => 0.0, '20' => 0.0, '30' => 0.0];
+        $igv = 0.0;
+        foreach ($details as $detail) {
+            $bases[$detail->getTipAfeIgv()] += (float) $detail->getMtoValorVenta();
+            $igv += (float) $detail->getIgv();
+        }
         $detraccionCalc = $this->detraccionCalculator->paraVenta($sale, $document->tipo);
 
         $invoice = (new Invoice)
@@ -108,10 +114,12 @@ class GreenterService
             ->setTipoMoneda('PEN')
             ->setCompany($company)
             ->setClient($client)
-            ->setMtoOperGravadas((float) $sale->subtotal)
-            ->setMtoIGV((float) $sale->igv)
-            ->setTotalImpuestos((float) $sale->igv)
-            ->setValorVenta((float) $sale->subtotal)
+            ->setMtoOperGravadas(round($bases['10'], 2))
+            ->setMtoOperExoneradas(round($bases['20'], 2))
+            ->setMtoOperInafectas(round($bases['30'], 2))
+            ->setMtoIGV(round($igv, 2))
+            ->setTotalImpuestos(round($igv, 2))
+            ->setValorVenta(round(array_sum($bases), 2))
             ->setSubTotal((float) $sale->total)
             ->setMtoImpVenta((float) $sale->total)
             ->setDetails($details)
@@ -238,28 +246,28 @@ class GreenterService
         $importe = (float) $note->importe;
         $descripcion = $esCredito ? $this->descripcionMotivoCredito($note->motivo_catalogo) : $this->descripcionMotivoDebito($note->motivo_catalogo);
 
-        // S10: el motivo 13 (penalidades, R.S. 000048-2026) es inafecto al IGV.
-        // Los demas motivos heredan la afectacion gravada (10) del original.
-        $esInafecto = $note->motivo_catalogo === '13';
-        $base = $esInafecto ? $importe : round($importe / 1.18, 2);
-        $igv = $esInafecto ? 0.0 : round($importe - $base, 2);
-        $tipAfeIgv = $esInafecto ? '30' : '10';
-        $porcentajeIgv = $esInafecto ? 0.0 : 18.00;
-        $mtoBaseIgv = $esInafecto ? 0.0 : $base;
-
-        $detail = (new SaleDetail)
-            ->setCodProducto($esCredito ? 'NC-01' : 'ND-01')
-            ->setUnidad('ZZ')
-            ->setCantidad(1)
-            ->setDescripcion($descripcion)
-            ->setMtoValorUnitario($base)
-            ->setMtoValorVenta($base)
-            ->setMtoBaseIgv($mtoBaseIgv)
-            ->setPorcentajeIgv($porcentajeIgv)
-            ->setIgv($igv)
-            ->setTipAfeIgv($tipAfeIgv)
-            ->setTotalImpuestos($igv)
-            ->setMtoPrecioUnitario($importe);
+        $desglose = app(DesgloseNota::class)->calcular($original, $note->tipo, (string) $note->motivo_catalogo, $importe);
+        $bases = ['10' => 0.0, '20' => 0.0, '30' => 0.0];
+        $igv = 0.0;
+        $details = [];
+        foreach ($desglose['lineas'] as $linea) {
+            $bases[$linea['tipo_afectacion_igv']] += $linea['base'];
+            $igv += $linea['igv'];
+            $detail = (new SaleDetail)
+                ->setCodProducto($linea['codigo'])->setUnidad($linea['unidad_medida'])
+                ->setCantidad($linea['cantidad'])->setDescripcion($linea['nombre'])
+                ->setMtoValorUnitario($linea['valor_unitario'])->setMtoValorVenta($linea['base'])
+                ->setMtoBaseIgv($linea['base'])->setPorcentajeIgv($linea['tipo_afectacion_igv'] === '10' ? 18 : 0)
+                ->setIgv($linea['igv'])->setTipAfeIgv($linea['tipo_afectacion_igv'])
+                ->setTotalImpuestos($linea['igv'])->setMtoPrecioUnitario($linea['precio_unitario']);
+            if (($linea['descuento_base'] ?? 0) > 0) {
+                $detail->setDescuentos([(new Charge)->setCodTipo('00')->setMontoBase(round($linea['cantidad'] * $linea['valor_unitario'], 2))->setMonto($linea['descuento_base'])]);
+            }
+            $details[] = $detail;
+        }
+        $cliente = $desglose['cliente'];
+        $client = (new GreenterClient)->setTipoDoc($cliente['tipo_documento'])->setNumDoc($cliente['numero_documento'])
+            ->setRznSocial($cliente['razon_social'])->setAddress((new Address)->setDireccion($cliente['direccion_fiscal'] ?: '-'));
 
         // S5/S6: usa la fecha persistida en la nota (no now()), para que los
         // reintentos no cambien la fecha de emision del XML.
@@ -277,13 +285,14 @@ class GreenterService
             ->setDesMotivo($descripcion)
             ->setTipoMoneda('PEN')
             ->setCompany($this->buildCompany())
-            ->setClient($this->buildClient($sale))
-            ->setMtoOperGravadas($esInafecto ? 0.0 : $base)
-            ->setMtoOperInafectas($esInafecto ? $importe : 0.0)
+            ->setClient($client)
+            ->setMtoOperGravadas(round($bases['10'], 2))
+            ->setMtoOperExoneradas(round($bases['20'], 2))
+            ->setMtoOperInafectas(round($bases['30'], 2))
             ->setMtoIGV($igv)
             ->setTotalImpuestos($igv)
             ->setMtoImpVenta($importe)
-            ->setDetails([$detail])
+            ->setDetails($details)
             ->setLegends([
                 (new Legend)
                     ->setCode('1000')
@@ -307,13 +316,22 @@ class GreenterService
             default => throw new RuntimeException("No se da de baja un documento de tipo {$document->tipo}."),
         };
         $fechaEmision = $document->fecha_emision ?? $document->created_at ?? now();
+        $datos = app(DatosEmision::class)->recuperar($document);
+        if ($datos === null) {
+            throw new RuntimeException('No se puede comunicar la baja: falta el XML o la copia del comprobante original.');
+        }
+        $emisor = $datos['emisor'];
+        $company = (new Company)->setRuc($emisor['ruc'])->setRazonSocial($emisor['razon_social'])
+            ->setNombreComercial($emisor['nombre_comercial'])->setAddress((new Address)
+            ->setDireccion($emisor['direccion'])->setUbigueo($emisor['ubigeo'])
+            ->setDepartamento($emisor['departamento'])->setProvincia($emisor['provincia'])->setDistrito($emisor['distrito'])->setCodLocal('0000'));
 
         if (! self::seInformaPorResumen($document)) {
             return (new Voided)
                 ->setCorrelativo((string) $correlativo)
                 ->setFecGeneracion($fechaEmision)
                 ->setFecComunicacion(now())
-                ->setCompany($this->buildCompany())
+                ->setCompany($company)
                 ->setDetails([
                     (new VoidedDetail)
                         ->setTipoDoc($tipoDoc)
@@ -323,28 +341,20 @@ class GreenterService
                 ]);
         }
 
-        // Los montos y el cliente salen del mismo armado que el comprobante.
-        $document->loadMissing('sale.client', 'sale.items.product', 'sale.items.service', 'sale.installments', 'cpeAfectado');
-        $comprobante = in_array($document->tipo, ['nota_credito', 'nota_debito'], true)
-            ? $this->buildNote($document)
-            : $this->buildInvoice($document->sale, $document);
-
+        $totales = $datos['totales'];
         $detalle = (new SummaryDetail)
             ->setTipoDoc($tipoDoc)
-            ->setSerieNro("{$document->serie}-{$document->correlativo}")
-            ->setClienteTipo($comprobante->getClient()?->getTipoDoc())
-            ->setClienteNro($comprobante->getClient()?->getNumDoc())
+            ->setSerieNro($datos['numero'])
+            ->setClienteTipo($datos['cliente']['tipo_documento'])
+            ->setClienteNro($datos['cliente']['numero_documento'])
             ->setEstado('3')
-            ->setTotal((float) $comprobante->getMtoImpVenta())
-            ->setMtoOperGravadas((float) $comprobante->getMtoOperGravadas())
-            ->setMtoOperInafectas((float) $comprobante->getMtoOperInafectas())
-            ->setMtoOperExoneradas((float) $comprobante->getMtoOperExoneradas())
-            ->setMtoIGV((float) $comprobante->getMtoIGV());
-
-        if ($document->cpeAfectado) {
-            $detalle->setDocReferencia((new Document)
-                ->setTipoDoc($document->cpeAfectado->tipo === 'factura' ? '01' : '03')
-                ->setNroDoc("{$document->cpeAfectado->serie}-{$document->cpeAfectado->correlativo}"));
+            ->setTotal($totales['total'])
+            ->setMtoOperGravadas($totales['gravadas'])
+            ->setMtoOperInafectas($totales['inafectas'])
+            ->setMtoOperExoneradas($totales['exoneradas'])
+            ->setMtoIGV($totales['igv']);
+        if ($datos['referencia']['numero'] !== '') {
+            $detalle->setDocReferencia((new Document)->setTipoDoc($datos['referencia']['tipo'])->setNroDoc($datos['referencia']['numero']));
         }
 
         return (new Summary)
@@ -352,7 +362,7 @@ class GreenterService
             ->setFecGeneracion($fechaEmision)
             ->setFecResumen(now())
             ->setMoneda('PEN')
-            ->setCompany($this->buildCompany())
+            ->setCompany($company)
             ->setDetails([$detalle]);
     }
 
@@ -405,10 +415,7 @@ class GreenterService
     protected function buildDetail(SaleItem $item): SaleDetail
     {
         $productOrService = $item->product ?? $item->service;
-        $product = $item->product;
-        $tipAfeIgv = ($product !== null && $product->tipo_afectacion_igv !== null)
-            ? $product->tipo_afectacion_igv
-            : ($item->aplica_igv ? '10' : '30');
+        $tipAfeIgv = $item->tipo_afectacion_igv ?? AfectacionIgv::codigo($productOrService);
         $esGravado = $tipAfeIgv === '10';
 
         if ($esGravado) {
@@ -423,7 +430,7 @@ class GreenterService
             $valorUnitario = $precioUnitario;
             $igvLinea = 0.0;
             $porcentajeIgv = 0.0;
-            $mtoBaseIgv = 0.0;
+            $mtoBaseIgv = $valorVenta;
         }
 
         $detail = (new SaleDetail)
@@ -445,7 +452,7 @@ class GreenterService
                 (new Charge)
                     ->setCodTipo('00')
                     ->setMontoBase(round((float) $item->cantidad * $valorUnitario, 2))
-                    ->setMonto(round((float) $item->descuento / (1 + PrecioConIgv::TASA), 2)),
+                    ->setMonto(round((float) $item->descuento / ($esGravado ? 1 + PrecioConIgv::TASA : 1), 2)),
             ]);
         }
 

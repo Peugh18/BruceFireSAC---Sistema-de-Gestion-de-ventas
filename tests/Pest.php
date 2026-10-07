@@ -9,7 +9,9 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\User;
+use App\Services\Billing\GreenterService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /*
@@ -102,6 +104,8 @@ if (! function_exists('ventaConFactura')) {
             'sunat_estado' => 'aceptado',
         ]);
 
+        guardarXmlOriginalDePrueba($documento);
+
         return [$sale->refresh(), $documento, $unit];
     }
 }
@@ -117,4 +121,14 @@ if (! function_exists('aceptarNota')) {
 
         return $nota;
     }
+}
+
+function guardarXmlOriginalDePrueba(ElectronicDocument $documento): void
+{
+    config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
+    $service = app(GreenterService::class);
+    $xml = $service->sign($service->buildInvoice($documento->sale, $documento));
+    $path = "xml/prueba-{$documento->id}.xml";
+    Storage::disk('local')->put($path, $xml);
+    $documento->update(['xml_path' => $path]);
 }

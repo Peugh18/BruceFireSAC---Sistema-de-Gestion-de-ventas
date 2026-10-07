@@ -10,8 +10,9 @@ use App\Http\Controllers\Vendedor\Concerns\FiltraPorFechas;
 use App\Models\ElectronicDocument;
 use App\Models\Team;
 use App\Services\Billing\ComprobantePdfService;
+use App\Services\Billing\DatosEmision;
+use App\Services\Billing\DesgloseNota;
 use App\Services\Billing\MensajeSunat;
-use App\Services\Billing\PrecioConIgv;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -141,17 +142,34 @@ class BillingController extends Controller
     {
         $documentos = $this->seleccion($request)->with(['sale.client', 'cpeAfectado'])->orderBy('created_at')->get();
 
-        return response()->streamDownload(function () use ($documentos) {
+        $copias = [];
+        foreach ($documentos as $documento) {
+            $datos = app(DatosEmision::class)->recuperar($documento);
+            abort_if($datos === null && ($documento->enviado_at !== null || $documento->intento_envio_at !== null || in_array($documento->sunat_estado, ['aceptado', 'observado', 'rechazado', 'excepcion', 'anulado', 'baja_pendiente'], true)), 422, 'Falta el XML o la copia del comprobante emitido para exportar sus datos históricos.');
+            if ($datos === null && in_array($documento->tipo, ['nota_credito', 'nota_debito'], true)) {
+                abort_unless($documento->cpeAfectado !== null, 422, 'La nota no tiene comprobante original para exportar su desglose.');
+                $desglose = app(DesgloseNota::class)->calcular($documento->cpeAfectado, $documento->tipo, (string) $documento->motivo_catalogo, (float) $documento->importe);
+                $datos = [
+                    'cliente' => $desglose['cliente'],
+                    'totales' => ['base' => array_sum(array_column($desglose['lineas'], 'base')), 'igv' => array_sum(array_column($desglose['lineas'], 'igv')), 'total' => (float) $documento->importe],
+                ];
+            }
+            $copias[$documento->id] = $datos;
+        }
+
+        return response()->streamDownload(function () use ($documentos, $copias) {
             $salida = fopen('php://output', 'w');
             fwrite($salida, "\xEF\xBB\xBF");
             fputcsv($salida, ['Fecha emisión', 'Tipo', 'Serie', 'Número', 'Tipo doc. cliente', 'N° doc. cliente', 'Razón social', 'Base imponible', 'IGV', 'Total', 'Estado SUNAT', 'Código SUNAT', 'Comprobante afectado', 'Referencia'], ';');
 
             foreach ($documentos as $documento) {
                 $sale = $documento->sale;
-                $esNota = in_array($documento->tipo, ['nota_credito', 'nota_debito'], true);
-                $montos = $esNota
-                    ? PrecioConIgv::desglosar((float) $documento->importe)
+                $datos = $copias[$documento->id];
+                $totales = $datos['totales'] ?? null;
+                $montos = $totales !== null
+                    ? ['base' => $totales['base'] ?? ($totales['gravadas'] + $totales['exoneradas'] + $totales['inafectas']), 'igv' => $totales['igv'], 'total' => $totales['total']]
                     : ['base' => (float) $sale->subtotal, 'igv' => (float) $sale->igv, 'total' => (float) $sale->total];
+                $cliente = $datos['cliente'] ?? null;
                 $signo = $documento->tipo === 'nota_credito' ? -1 : 1;
 
                 fputcsv($salida, [
@@ -159,15 +177,17 @@ class BillingController extends Controller
                     strtoupper(str_replace('_', ' ', $documento->tipo)),
                     $documento->serie,
                     str_pad((string) $documento->correlativo, 8, '0', STR_PAD_LEFT),
-                    strtoupper($sale->client->tipo_documento),
-                    $sale->client->numero_documento,
-                    $sale->client->razon_social,
+                    $cliente !== null ? match ($cliente['tipo_documento']) {
+                        '6' => 'RUC', '1' => 'DNI', default => 'VARIOS'
+                    } : strtoupper($sale->client->tipo_documento),
+                    $cliente['numero_documento'] ?? $sale->client->numero_documento,
+                    $cliente['razon_social'] ?? $sale->client->razon_social,
                     number_format($signo * $montos['base'], 2, '.', ''),
                     number_format($signo * $montos['igv'], 2, '.', ''),
                     number_format($signo * $montos['total'], 2, '.', ''),
                     $documento->sunat_estado,
                     $documento->sunat_codigo_respuesta,
-                    $documento->cpeAfectado ? "{$documento->cpeAfectado->serie}-{$documento->cpeAfectado->correlativo}" : '',
+                    $datos['referencia']['numero'] ?? ($documento->cpeAfectado ? "{$documento->cpeAfectado->serie}-{$documento->cpeAfectado->correlativo}" : ''),
                     $sale->referencia,
                 ], ';');
             }

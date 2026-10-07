@@ -76,6 +76,8 @@ function boletaAceptada(): array
         'sunat_estado' => 'aceptado',
     ]);
 
+    guardarXmlOriginalDePrueba($boleta);
+
     return [$sale->refresh(), $boleta];
 }
 
@@ -144,7 +146,7 @@ test('S3: la ND con motivo 13 usa afectacion inafecta 30 en el XML', function ()
     $detalle = $noteObj->getDetails()[0];
     expect($detalle->getTipAfeIgv())->toBe('30')
         ->and((float) $detalle->getIgv())->toBe(0.0)
-        ->and((float) $detalle->getMtoBaseIgv())->toBe(0.0);
+        ->and((float) $detalle->getMtoBaseIgv())->toBe(50.0);
 });
 
 // ---------------------------------------------------------------------------
@@ -310,13 +312,11 @@ test('S8: detecta cuando un comprobante por enviar esta por vencer', function ()
 
 test('S12/S13: reutiliza el XML congelado existente en los reintentos', function () {
     [, $factura] = ventaConFactura();
-    $xmlPath = "xml/RUC-01-{$factura->serie}-{$factura->correlativo}.xml";
-    Storage::disk('local')->put($xmlPath, '<XML_CONGELADO/>');
-    $factura->update(['xml_path' => $xmlPath]);
+    $xmlOriginal = (string) Storage::disk('local')->get($factura->xml_path);
 
     $prepared = app(EmitElectronicDocument::class)->prepararDocumento($factura);
 
-    expect($prepared['xml'])->toBe('<XML_CONGELADO/>');
+    expect($prepared['xml'])->toBe($xmlOriginal);
 });
 
 // ---------------------------------------------------------------------------

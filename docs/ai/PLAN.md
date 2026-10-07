@@ -29,14 +29,14 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 - [x] S1: elegir el servidor beta o producción según `SUNAT_BETA` y verificar el certificado TLS (envío propio con `verify_peer`, sin `See`)
 - [x] S2: bloquear las NC con motivo 04, 05 u 08 sobre boletas
 - [x] S3: ND motivo 13 para penalidades, inafecto; el 03 pasa a "otros conceptos" (R.S. 000048-2026)
-- [ ] S4: agregar campo de tipo de afectación IGV (Catálogo 07: 10/20/30) en el producto e ítem de venta — **parcial:** existe la columna y el XML la usa; falta el select en el catálogo del Gerente y reemplazar `aplica_igv`
+- [x] S4: tipo de afectación IGV (catálogo 07) en productos, servicios y líneas de venta, con su select en el catálogo del Gerente (Codex). *Falta correr la suite completa.*
 - [x] S5: guardar la hora de emisión y usar la misma en el XML y en el PDF
 - [x] S6: guardar la fecha de la NC y la ND al crearla y reutilizarla en los reintentos
 - [x] S9: catálogo 09 completo
-- [ ] S10: notas que cuadran con un original que no sea todo gravado — **pendiente:** `buildNote` sigue con 1.18 fijo salvo el motivo 13
+- [x] S10: las notas usan la afectación del comprobante original (`DesgloseNota`); los casos mixtos o los motivos 11, 12 y 13 sin datos se bloquean con un mensaje claro (Codex). *Falta correr la suite completa.*
 - [x] S8: aviso en Facturación del vendedor y en el dashboard del Gerente (vence hoy o mañana, y vencidos), con lista filtrada
 - [x] S7: comunicación de baja real (RA para serie F, RC estado 3 para serie B, ticket y consulta), solo no entregados y dentro de 7 días desde el CDR
-- [ ] S12: congelar el comprobante emitido — **parcial:** el XML se congela al primer envío y el reintento reutiliza el mismo firmado; falta guardar los datos del cliente y de las líneas (el PDF y la baja por RC aún leen los actuales)
+- [x] S12: se guarda una copia de los datos de emisión (cliente y líneas) en `datos_emision`, y el PDF y la baja la leen (Codex). *Falta correr la suite completa.*
 - [x] S13: no se acepta nada sin un CDR válido
 - [x] V2 y S17: permisos Spatie en rutas y FormRequest; la NC y la ND del vendedor esperan la aprobación del Gerente
 

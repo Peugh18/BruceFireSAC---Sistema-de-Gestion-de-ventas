@@ -6,6 +6,7 @@ use App\Contracts\SunatClientInterface;
 use App\Models\ElectronicDocument;
 use App\Models\Sale;
 use App\Services\Billing\ComprobantePdfService;
+use App\Services\Billing\DatosEmision;
 use App\Services\Billing\GreenterService;
 use App\Services\Billing\ResponseClassifier;
 use Carbon\CarbonInterface;
@@ -55,6 +56,8 @@ class EmitElectronicDocument
     {
         ['xml' => $xmlSigned, 'nombre' => $documentName] = $this->prepararDocumento($document);
 
+        $document->forceFill(['intento_envio_at' => $document->intento_envio_at ?? now()])->saveQuietly();
+
         $response = app(SunatClientInterface::class)->send($xmlSigned, $documentName);
         $notas = $response['notas'] ?? [];
         $cdrPath = null;
@@ -88,11 +91,17 @@ class EmitElectronicDocument
      */
     public function prepararDocumento(ElectronicDocument $document): array
     {
-        if (! $document->estaPorEnviar() && $document->xml_path && Storage::disk('local')->exists($document->xml_path)) {
+        if ((! $document->estaPorEnviar() || $document->intento_envio_at !== null) && $document->xml_path && Storage::disk('local')->exists($document->xml_path)) {
+            app(DatosEmision::class)->recuperar($document);
+
             return [
                 'xml' => (string) Storage::disk('local')->get($document->xml_path),
                 'nombre' => pathinfo($document->xml_path, PATHINFO_FILENAME),
             ];
+        }
+
+        if ($document->intento_envio_at !== null || $document->enviado_at !== null || in_array($document->sunat_estado, ['aceptado', 'observado', 'rechazado', 'excepcion', 'baja_pendiente', 'anulado'], true)) {
+            throw new \RuntimeException('No se puede reenviar el comprobante: falta el XML firmado original.');
         }
 
         $document->unsetRelation('sale');
@@ -107,6 +116,8 @@ class EmitElectronicDocument
         $documentName = $invoice->getName();
 
         Storage::disk('local')->put("xml/{$documentName}.xml", $xmlSigned);
+
+        $document->forceFill(['datos_emision' => app(DatosEmision::class)->desdeXml($xmlSigned)])->saveQuietly();
 
         $pdfPath = $this->pdfService->generate($document, $xmlSigned);
 
@@ -124,8 +135,8 @@ class EmitElectronicDocument
      */
     public function descartarPorEnviar(ElectronicDocument $document): void
     {
-        if (! $document->estaPorEnviar()) {
-            throw new InvalidArgumentException('Solo se descarta un comprobante que aún no se envió a SUNAT.');
+        if (! $document->estaPorEnviar() || $document->intento_envio_at !== null) {
+            throw new InvalidArgumentException('Solo se descarta un comprobante que aún no tuvo ningún intento de envío a SUNAT.');
         }
 
         Storage::disk('local')->delete(array_filter([$document->xml_path, $document->pdf_path]));

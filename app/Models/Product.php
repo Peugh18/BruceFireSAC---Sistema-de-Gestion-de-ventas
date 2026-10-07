@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $descripcion
  * @property string $unidad_medida
  * @property float $precio_venta
+ * @property Carbon|null $igv_revisado_at
  * @property bool $aplica_igv
  * @property string|null $tipo_afectacion_igv
  * @property bool $serializado
@@ -48,7 +49,7 @@ use Illuminate\Support\Facades\DB;
     'descripcion',
     'unidad_medida',
     'precio_venta',
-    'aplica_igv',
+    'aplica_igv', 'igv_revisado_at',
     'tipo_afectacion_igv',
     'serializado',
     'controla_lote',
@@ -67,6 +68,7 @@ class Product extends Model
         return [
             'precio_venta' => 'decimal:2',
             'aplica_igv' => 'boolean',
+            'igv_revisado_at' => 'datetime',
             'serializado' => 'boolean',
             'controla_lote' => 'boolean',
             'factor_compra' => 'integer',

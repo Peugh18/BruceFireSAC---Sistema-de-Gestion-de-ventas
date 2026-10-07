@@ -3,6 +3,7 @@
 namespace App\Actions\Billing;
 
 use App\Models\ElectronicDocument;
+use App\Services\Billing\DesgloseNota;
 use Illuminate\Validation\ValidationException;
 
 class IssueDebitNote
@@ -26,6 +27,7 @@ class IssueDebitNote
     public function handle(ElectronicDocument $original, string $motivoCatalogo10, string $detalle, float $importe): ElectronicDocument
     {
         $this->validar($original);
+        app(DesgloseNota::class)->calcular($original, 'nota_debito', $motivoCatalogo10, $importe);
 
         $serie = $original->tipo === 'factura' ? 'FD01' : 'BD01';
         $correlativo = $this->reserveNextCorrelativo->handle('nota_debito', $serie);

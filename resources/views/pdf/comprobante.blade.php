@@ -268,6 +268,12 @@
                         <tr><td class="t-label">Descuentos</td><td class="t-value">S/ {{ number_format($descuentoTotal, 2) }}</td></tr>
                     @endif
                     <tr><td class="t-label">Op. gravada</td><td class="t-value">S/ {{ number_format((float) ($montos['subtotal'] ?? $sale->subtotal), 2) }}</td></tr>
+                    @if(($montos['exoneradas'] ?? 0) > 0)
+                    <tr><td class="t-label">Op. exonerada</td><td class="t-value">S/ {{ number_format($montos['exoneradas'], 2) }}</td></tr>
+                    @endif
+                    @if(($montos['inafectas'] ?? 0) > 0)
+                    <tr><td class="t-label">Op. inafecta</td><td class="t-value">S/ {{ number_format($montos['inafectas'], 2) }}</td></tr>
+                    @endif
                     <tr><td class="t-label">I.G.V. 18%</td><td class="t-value">S/ {{ number_format((float) ($montos['igv'] ?? $sale->igv), 2) }}</td></tr>
                     <tr class="grand"><td>IMPORTE TOTAL</td><td class="t-value">S/ {{ number_format((float) ($montos['total'] ?? $sale->total), 2) }}</td></tr>
                 </table>

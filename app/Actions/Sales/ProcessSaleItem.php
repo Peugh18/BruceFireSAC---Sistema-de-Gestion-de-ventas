@@ -11,6 +11,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Sede;
 use App\Models\Service;
+use App\Services\Billing\AfectacionIgv;
 use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -69,6 +70,7 @@ class ProcessSaleItem
 
         return $sale->items()->create([
             'product_id' => $product->id,
+            'tipo_afectacion_igv' => AfectacionIgv::codigo($product),
             'tipo_linea' => 'producto',
             'cantidad' => $cantidad,
             'precio_unitario' => $itemData['precio_unitario'],
@@ -85,10 +87,11 @@ class ProcessSaleItem
      */
     protected function processServicio(Sale $sale, array $itemData): SaleItem
     {
-        $service = Service::query()->findOrFail($itemData['service_id']);
+        $service = Service::query()->findOrFail((int) $itemData['service_id']);
 
         return $sale->items()->create([
             'service_id' => $service->id,
+            'tipo_afectacion_igv' => AfectacionIgv::codigo($service),
             'tipo_linea' => 'servicio',
             'cantidad' => (int) $itemData['cantidad'],
             'precio_unitario' => $itemData['precio_unitario'],
@@ -161,6 +164,7 @@ class ProcessSaleItem
 
         return $sale->items()->create([
             'product_id' => $unit->product_id,
+            'tipo_afectacion_igv' => AfectacionIgv::codigo($unit->product),
             'service_id' => null,
             'tipo_linea' => 'unidad_nueva',
             'inventory_unit_id' => $unit->id,
@@ -203,6 +207,7 @@ class ProcessSaleItem
         return $sale->items()->create([
             'product_id' => null,
             'service_id' => $itemData['service_id'] ?? null,
+            'tipo_afectacion_igv' => $service ? AfectacionIgv::codigo($service) : '10',
             'tipo_linea' => 'recarga_servicio',
             'inventory_unit_id' => null,
             'equipment_id' => $equipment->id,

@@ -144,7 +144,7 @@ class Sale extends Model
 
         $documento = $this->comprobanteElectronico();
 
-        return $documento !== null && ($documento->estaPorEnviar() || $documento->fueRechazado());
+        return $documento !== null && (($documento->estaPorEnviar() && $documento->intento_envio_at === null) || $documento->fueRechazado());
     }
 
     protected function casts(): array
@@ -279,6 +279,7 @@ class Sale extends Model
                 $item->product_id,
                 $item->service_id,
                 $item->precio_unitario,
+                $item->tipo_afectacion_igv,
             ]))
             ->map(function (Collection $grupo) {
                 /** @var SaleItem $primero */
@@ -289,6 +290,7 @@ class Sale extends Model
                     'product_id' => $primero->product_id,
                     'service_id' => $primero->service_id,
                     'tipo_linea' => $primero->tipo_linea,
+                    'tipo_afectacion_igv' => $primero->tipo_afectacion_igv,
                     'cantidad' => $grupo->sum('cantidad'),
                     'precio_unitario' => $primero->precio_unitario,
                     'descuento' => round($grupo->sum(fn (SaleItem $item) => (float) $item->descuento), 2),

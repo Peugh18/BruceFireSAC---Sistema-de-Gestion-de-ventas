@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Gerente;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreServiceRequest extends FormRequest
 {
@@ -23,6 +24,7 @@ class StoreServiceRequest extends FormRequest
             'unidad_medida' => ['required', 'string', 'max:10'],
             'precio_venta' => ['required', 'numeric', 'min:0'],
             'aplica_igv' => ['boolean'],
+            'tipo_afectacion_igv' => ['sometimes', 'required', Rule::in(['10', '20', '30'])],
             'activo' => ['boolean'],
         ];
     }

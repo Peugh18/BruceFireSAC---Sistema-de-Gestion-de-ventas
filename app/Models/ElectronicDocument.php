@@ -21,6 +21,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $cpe_afectado_id
  * @property string|null $motivo_catalogo
  * @property string|null $importe
+ * @property array<string, mixed>|null $datos_emision
+ * @property Carbon|null $intento_envio_at
  * @property string|null $xml_path
  * @property string|null $cdr_path
  * @property string|null $pdf_path
@@ -44,7 +46,7 @@ use Illuminate\Support\Carbon;
     'sale_id', 'tipo', 'serie', 'correlativo', 'fecha_emision', 'cpe_afectado_id', 'motivo_catalogo', 'importe',
     'xml_path', 'cdr_path', 'pdf_path', 'pdf_firma', 'sunat_estado', 'sunat_codigo_respuesta',
     'sunat_mensaje', 'enviar_desde', 'enviado_at',
-    'baja_nombre', 'baja_ticket', 'baja_motivo', 'baja_mensaje', 'baja_estado_previo',
+    'datos_emision', 'intento_envio_at', 'baja_nombre', 'baja_ticket', 'baja_motivo', 'baja_mensaje', 'baja_estado_previo',
 ])]
 class ElectronicDocument extends Model
 {
@@ -54,6 +56,8 @@ class ElectronicDocument extends Model
     protected function casts(): array
     {
         return [
+            'datos_emision' => 'array',
+            'intento_envio_at' => 'datetime',
             'correlativo' => 'integer',
             'importe' => 'decimal:2',
             // S5: guardamos la hora de emision (no solo la fecha) para cumplir

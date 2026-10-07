@@ -6,6 +6,7 @@ use App\Actions\Sales\RevertSale;
 use App\Models\CashRegister;
 use App\Models\ElectronicDocument;
 use App\Models\Sale;
+use App\Services\Billing\DesgloseNota;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -42,6 +43,7 @@ class IssueCreditNote
     public function handle(ElectronicDocument $original, string $motivoCatalogo09, string $detalle, float $importe): ElectronicDocument
     {
         $this->validar($original, $motivoCatalogo09);
+        app(DesgloseNota::class)->calcular($original, 'nota_credito', $motivoCatalogo09, $importe);
 
         return DB::transaction(function () use ($original, $motivoCatalogo09, $detalle, $importe) {
             // Leida de nuevo y bloqueada: la venta pudo anularse desde que se

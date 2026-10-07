@@ -7,6 +7,7 @@ use App\Http\Requests\Gerente\StoreServiceRequest;
 use App\Http\Requests\Gerente\UpdateServiceRequest;
 use App\Models\Service;
 use App\Models\Team;
+use App\Services\Billing\AfectacionIgv;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -42,6 +43,8 @@ class ServiceController extends Controller
                 'unidad_medida' => $s->unidad_medida,
                 'precio_venta' => (float) $s->precio_venta,
                 'aplica_igv' => (bool) $s->aplica_igv,
+                'tipo_afectacion_igv' => $s->tipo_afectacion_igv,
+                'igv_requiere_revision' => AfectacionIgv::requiereRevision($s),
                 'activo' => (bool) $s->activo,
             ];
         });
@@ -64,7 +67,13 @@ class ServiceController extends Controller
 
     public function store(StoreServiceRequest $request, Team $current_team): RedirectResponse
     {
-        Service::create($request->validated());
+        $datos = $request->validated();
+        if (isset($datos['tipo_afectacion_igv'])) {
+            $datos['igv_revisado_at'] = now();
+        } else {
+            $datos['tipo_afectacion_igv'] = '10';
+        }
+        Service::create($datos);
 
         return redirect()->route('gerente.servicios.index', ['current_team' => $current_team])
             ->with('success', 'Servicio creado exitosamente.');
@@ -72,7 +81,11 @@ class ServiceController extends Controller
 
     public function update(UpdateServiceRequest $request, Team $current_team, Service $servicio): RedirectResponse
     {
-        $servicio->update($request->validated());
+        $datos = $request->validated();
+        if (isset($datos['tipo_afectacion_igv'])) {
+            $datos['igv_revisado_at'] = now();
+        }
+        $servicio->update($datos);
 
         return redirect()->route('gerente.servicios.index', ['current_team' => $current_team])
             ->with('success', 'Servicio actualizado exitosamente.');
