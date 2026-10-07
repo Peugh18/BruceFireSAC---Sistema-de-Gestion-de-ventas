@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import ConversacionOrden, {
@@ -141,6 +142,11 @@ export default function EjecucionShow({
                 preserveScroll: true,
                 onStart: () => setAvanzando(true),
                 onFinish: () => setAvanzando(false),
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo avanzar la orden.',
+                    ),
             },
         );
     };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
@@ -113,6 +114,11 @@ export default function RecepcionShow({ asignacion, order }: Props) {
         e.preventDefault();
         confirmForm.post(`${teamPrefix}/recepciones/${order.id}/confirmar`, {
             preserveScroll: true,
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo confirmar la recepción.',
+                ),
         });
     };
 
@@ -149,6 +155,11 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                 setScanResult(null);
                 setBarcodeScanInput('');
             },
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo registrar el equipo.',
+                ),
         });
     };
 
@@ -159,6 +170,11 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                 setShowRegisterModal(false);
                 equipmentForm.reset();
             },
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo registrar el equipo.',
+                ),
         });
     };
 
