@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -126,6 +127,7 @@ class CommunicationController extends Controller
             ...$this->tarjeta($orden),
             'estado' => $orden->estado,
             'referencia' => $orden->referencia,
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($orden),
             'observaciones' => $orden->observaciones,
             'etapas' => collect(self::ETAPAS)->pluck('titulo')->values(),
             'etapa_actual' => $etapaActual === false ? 0 : $etapaActual,

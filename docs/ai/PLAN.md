@@ -70,11 +70,11 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 
 ### D. Técnicos ⚠️ DRS
 
-- [ ] Evidencias únicas (§33): foto, audio o archivo por orden, equipo y etapa
-- [ ] Conversación de la orden sobre `ServiceOrderEvent`: todos escriben y adjuntan (T3)
-- [ ] Firma táctil en recojo, entrega, instalación, inspección y mantenimiento (T1)
-- [ ] Motor único de visitas de campo con plantillas; mantenimiento en sitio incluido (T2)
-- [ ] Instalación escaneando cada unidad vendida (T4); deficiencia fuera del checklist (T5)
+- [x] Evidencias únicas (§33): foto, audio o archivo por orden, equipo y etapa (tabla `evidencias`, disco privado, ruta con sesión)
+- [x] Conversación de la orden sobre `ServiceOrderEvent`: todos escriben y adjuntan (T3)
+- [x] Firma táctil en recojo, entrega, instalación, inspección y mantenimiento (T1); impresa en el acta y en la constancia de recojo
+- [x] Mantenimiento en sitio (T2) con checklist por extintor, fotos antes y después, firma y acta. ⚠️ El motor único queda parcial: recojo, entrega, instalación e inspección siguen con su pantalla; comparten componentes (firma, fotos, conversación, checklist). Falta: estados "en camino" y "en sitio" y checklist por plantilla.
+- [x] Instalación escaneando cada unidad vendida (T4); deficiencia fuera del checklist con foto (T5)
 
 ### E. Almacén y Gerente
 

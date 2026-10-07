@@ -3,14 +3,12 @@ import {
     AlertTriangle,
     Check,
     ExternalLink,
-    MessageSquarePlus,
-    Send,
     Wrench,
     X,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
 
 import { TarjetaCargando } from '@/components/cargando';
+import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
 import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Button } from '@/components/ui/button';
@@ -34,39 +32,19 @@ type Tarjeta = {
     por_autorizar: boolean;
 };
 
-type Evento = {
-    id: number;
-    titulo: string;
-    mensaje: string | null;
-    autor: string;
-    de_ventas: boolean;
-    fecha: string | null;
-};
-
 type Detalle = Tarjeta & {
     estado: string;
     referencia: string | null;
     observaciones: string | null;
     etapas: string[];
     etapa_actual: number;
-    eventos: Evento[];
+    conversacion: ConversacionProps;
 };
 
 type Props = {
     columnas: { clave: string; titulo: string; ordenes: Tarjeta[] }[];
     seleccionada: Detalle | null;
 };
-
-function fecha(valor: string | null) {
-    return valor
-        ? new Intl.DateTimeFormat('es-PE', {
-              day: '2-digit',
-              month: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-          }).format(new Date(valor))
-        : '';
-}
 
 /**
  * Seguimiento de taller: tablero de las órdenes de la sede por etapa y, al
@@ -78,8 +56,6 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
         sidebarCounts?: { deficiencias?: number } | null;
     }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const [nota, setNota] = useState('');
-    const [enviando, setEnviando] = useState(false);
     const recargando = useRecargando();
 
     const abrir = (id: number | null) =>
@@ -90,24 +66,6 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
             {},
             { preserveScroll: true, preserveState: true },
         );
-
-    const enviarNota = (event: FormEvent) => {
-        event.preventDefault();
-        if (!seleccionada || !nota.trim()) return;
-        setEnviando(true);
-        router.post(
-            comunicacion.nota.url({
-                current_team: teamSlug,
-                service_order: seleccionada.id,
-            }),
-            { mensaje: nota.trim() },
-            {
-                preserveScroll: true,
-                onSuccess: () => setNota(''),
-                onFinish: () => setEnviando(false),
-            },
-        );
-    };
 
     const total = columnas.reduce((s, c) => s + c.ordenes.length, 0);
 
@@ -293,53 +251,10 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                             </p>
                         ) : null}
 
-                        <div className="space-y-2">
-                            {seleccionada.eventos.map((evento) => (
-                                <div
-                                    key={evento.id}
-                                    className={`rounded-[10px] border px-3 py-2 ${evento.de_ventas ? 'border-primary/30 bg-destructive/5' : 'border-border'}`}
-                                >
-                                    <div className="flex items-center justify-between gap-2 text-[11.5px]">
-                                        <span className="text-foreground font-bold">
-                                            {evento.titulo}
-                                            <span className="text-muted-foreground font-normal">
-                                                {' '}
-                                                · {evento.autor}
-                                            </span>
-                                        </span>
-                                        <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace]">
-                                            {fecha(evento.fecha)}
-                                        </span>
-                                    </div>
-                                    {evento.mensaje ? (
-                                        <p className="text-foreground/90 mt-0.5 text-[12.5px]">
-                                            {evento.mensaje}
-                                        </p>
-                                    ) : null}
-                                </div>
-                            ))}
-                        </div>
-
-                        <form onSubmit={enviarNota} className="flex gap-2">
-                            <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
-                                <MessageSquarePlus className="text-muted-foreground size-4 shrink-0" />
-                                <input
-                                    value={nota}
-                                    maxLength={500}
-                                    onChange={(e) => setNota(e.target.value)}
-                                    placeholder="Nota para el técnico (ej. el cliente recoge el viernes)"
-                                    className="h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
-                                />
-                            </div>
-                            <Button
-                                type="submit"
-                                disabled={enviando || !nota.trim()}
-                                className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] text-white shadow-none"
-                            >
-                                <Send className="size-4" />
-                                Enviar
-                            </Button>
-                        </form>
+                        <ConversacionOrden
+                            ordenId={seleccionada.id}
+                            conversacion={seleccionada.conversacion}
+                        />
                     </Card>
                 ) : null}
             </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\TecnicoPlanta;
 
+use App\Actions\Tecnico\GuardarEvidencia;
 use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Http\Controllers\Controller;
 use App\Models\Deficiency;
@@ -104,7 +105,8 @@ class DeficiencyController extends Controller
     public function store(
         Request $request,
         Team $current_team,
-        ServiceOrder $service_order
+        ServiceOrder $service_order,
+        GuardarEvidencia $guardarEvidencia,
     ): RedirectResponse {
         $validated = $request->validate([
             'equipment_id' => ['nullable', 'exists:equipment,id'],
@@ -114,8 +116,8 @@ class DeficiencyController extends Controller
             'accion_recomendada' => ['nullable', 'string', 'max:255'],
             'repuesto_sugerido' => ['nullable', 'string', 'max:255'],
             'requiere_autorizacion' => ['nullable', 'boolean'],
-            'foto_path' => ['nullable', 'string', 'max:255'],
-        ]);
+            'foto' => ['required', 'image', 'max:15360'],
+        ], ['foto.required' => 'Toma una foto de la deficiencia.']);
 
         // Con el certificado emitido (o la orden anulada) ya no se agregan
         // deficiencias: devolverían la orden a esperar autorización.
@@ -142,6 +144,9 @@ class DeficiencyController extends Controller
             'estado' => $requiereAuth ? 'esperando_autorizacion' : 'detectada',
             'reported_by_user_id' => $request->user()->id,
         ]);
+
+        $evidencia = $guardarEvidencia->archivo($service_order, $request->file('foto'), 'deficiencia', $request->user(), $equipmentId, null, $deficiency);
+        $deficiency->update(['foto_path' => $evidencia->path]);
 
         if ($requiereAuth) {
             $service_order->update(['estado' => 'esperando_autorizacion']);

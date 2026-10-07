@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { BotonFoto } from '@/components/captura-evidencia';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
 import {
@@ -25,6 +26,7 @@ interface ItemState {
     accion_recomendada: string;
     repuesto_sugerido: string;
     requiere_autorizacion: boolean;
+    foto: File | null;
 }
 
 interface Props {
@@ -67,6 +69,7 @@ export default function ChecklistCreate({
             accion_recomendada: '',
             repuesto_sugerido: '',
             requiere_autorizacion: true,
+            foto: null,
         };
     });
 
@@ -124,6 +127,7 @@ export default function ChecklistCreate({
         });
         form.post(
             `${teamPrefix}/ordenes/${order.id}/equipos/${equipment.id}/checklist`,
+            { forceFormData: true },
         );
     };
 
@@ -222,6 +226,7 @@ export default function ChecklistCreate({
                             accion_recomendada: '',
                             repuesto_sugerido: '',
                             requiere_autorizacion: true,
+                            foto: null,
                         };
                         const isObservado = item.estado === 'observado';
 
@@ -389,6 +394,26 @@ export default function ChecklistCreate({
                                                 </div>
                                             </div>
 
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <BotonFoto
+                                                    archivo={item.foto}
+                                                    etiqueta="Tomar foto *"
+                                                    onFoto={(f) =>
+                                                        handleFieldChange(el.clave, 'foto', f)
+                                                    }
+                                                />
+                                                <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                                    {item.foto
+                                                        ? item.foto.name
+                                                        : 'La foto es obligatoria en un componente observado.'}
+                                                </span>
+                                                {form.errors[`items.${el.clave}.foto` as keyof typeof form.errors] && (
+                                                    <span className="text-[11px] font-semibold text-red-600" role="alert">
+                                                        {form.errors[`items.${el.clave}.foto` as keyof typeof form.errors]}
+                                                    </span>
+                                                )}
+                                            </div>
+
                                             <div>
                                                 <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                     Nota Técnica
@@ -441,7 +466,10 @@ export default function ChecklistCreate({
                         </div>
                         <button
                             type="submit"
-                            disabled={form.processing}
+                            disabled={
+                                form.processing ||
+                                Object.values(items).some((i) => i.estado === 'observado' && !i.foto)
+                            }
                             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-md hover:bg-amber-700 active:bg-amber-800"
                         >
                             <ClipboardCheck className="h-4 w-4" />

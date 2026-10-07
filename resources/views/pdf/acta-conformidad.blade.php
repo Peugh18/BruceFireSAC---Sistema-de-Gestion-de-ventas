@@ -116,7 +116,7 @@
         .signatures-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 45px;
+            margin-top: 20px;
         }
         .signature-cell {
             width: 50%;
@@ -234,6 +234,22 @@
         </div>
     @endif
 
+    @if(!empty($fotos))
+        <div class="section-title">4. Evidencia fotográfica (antes y después)</div>
+        <table style="width: 100%; border-collapse: collapse;">
+            @foreach(array_chunk($fotos, 3) as $fila)
+                <tr>
+                    @foreach($fila as $foto)
+                        <td style="width: 33%; padding: 3px; text-align: center; font-size: 8px; color: #6B6965;">
+                            <img src="{{ $foto['src'] }}" alt="Foto" style="width: 100%; max-height: 120px;">
+                            {{ ucfirst($foto['etapa']) }}{{ $foto['equipo'] ? ' - '.$foto['equipo'] : '' }}
+                        </td>
+                    @endforeach
+                </tr>
+            @endforeach
+        </table>
+    @endif
+
     <!-- Declaración de Conformidad (§23) -->
     <div class="statement-box">
         <strong>DECLARACIÓN DE CONFORMIDAD:</strong> Por medio del presente documento, el CLIENTE declara haber recibido
@@ -246,6 +262,7 @@
     <table class="signatures-table">
         <tr>
             <td class="signature-cell">
+                <div style="height: 56px;"></div>
                 <div class="signature-line"></div>
                 <div class="signature-name">
                     {{ $custody['responsable_nombre'] ?? 'TÉCNICO DE CAMPO' }}
@@ -254,6 +271,9 @@
                 <div class="signature-sub">Dpto. de Operaciones y Mantenimiento</div>
             </td>
             <td class="signature-cell">
+                @if(!empty($firmaCliente))
+                    <img src="{{ $firmaCliente }}" alt="Firma del cliente" style="height: 60px; margin-bottom: -4px;">
+                @endif
                 <div class="signature-line"></div>
                 <div class="signature-name">
                     {{ $custody['receptor_nombre'] ?? $custody['conformidad_nombre'] ?? 'RECEPTOR DEL CLIENTE' }}

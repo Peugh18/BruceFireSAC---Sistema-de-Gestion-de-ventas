@@ -214,3 +214,26 @@
 - X6 solo vence lo que permite Quote::TRANSITIONS. X7 `registro_iniciado_at`/`confirmada_at`, `emitida_at`, `origen_alerta_equipment_id`; tres tarjetas en el dashboard del Gerente. X8/X9 alertas por sede, tabla `alert_contacts` ("Marcar contactado", equipo validado visible y del cliente), servicios con agente y capacidad.
 - Pruebas: `tests/Feature/FaseCVentasCajaCobranzasTest.php` (nuevo) y ajustes en SaleModuleTest, CashRegisterModuleTest y MejorasProcesosTest. **No ejecutadas: MySQL apagado.** Pint, PHPStan (0) y tsc en verde.
 - Dudas: el adicional cobrado es cuota sin comprobante (¿ND o venta aparte?); los avisos del sistema anterior no tienen sede y los ve todo vendedor; una NC mayor al saldo solo queda en auditoría como saldo a favor.
+
+## [2026-10-07] — Fase D: evidencias, conversación, firma y mantenimiento en sitio
+
+- **Evidencias (§33):** tabla `evidencias` (orden, equipo, evento, deficiencia, usuario, tipo foto/audio/archivo/firma, etapa, archivo). Archivos en el disco privado (`evidencias/{orden}/…`), fotos enderezadas y comprimidas a JPEG de 1600 px, servidas por `evidencias.show` con sesión y con la misma regla de acceso de la orden. Cámara con `<input capture="environment">`; audio con `MediaRecorder`.
+- **Conversación (T3):** sobre `ServiceOrderEvent` (columna `equipment_id`), sin chat aparte. Escriben Gerente, vendedor y técnicos (`ordenes.mensajes.store`), con foto, audio o archivo y etiqueta de equipo; los eventos del sistema salen en la misma línea de tiempo. Está en Comunicación (vendedor), ejecución de planta y las pantallas de campo.
+- **Firma táctil (T1):** `FirmaCanvas` propio, PNG guardado como evidencia (`etapa` recojo, entrega, instalacion, inspeccion, mantenimiento) e impreso en el acta PDF y en la constancia de recojo. El acta suma las fotos antes y después.
+- **Planta:** foto obligatoria en cada ítem observado del checklist (servidor y pantalla) y en la deficiencia suelta (T5, formulario nuevo en la ejecución).
+- **Mantenimiento en sitio (T2):** `MaintenanceController`, pantallas `tecnico-campo/mantenimientos`, mismo checklist por extintor, exige checklist, fotos antes y después y firma; deja la orden en `listo_entrega`, emite certificado de operatividad (atención "mantenimiento") a los conformes y genera el acta. Se identifica por servicio con "mantenim" en el nombre y área de campo; aparece en el Inicio de campo.
+- **T4:** la instalación lista las unidades vendidas de la venta de la orden y no se registra hasta escanear todas.
+- **Pruebas:** `FaseDEvidenciasYVisitasTest` (nueva) y ajuste de 4 pruebas que ahora mandan foto. **No ejecutadas: MySQL apagado.** Pint, PHPStan (0, sin baseline nuevo) y `tsc` en verde.
+- **Dudas:** la firma es obligatoria en pantalla y en mantenimiento, pero el servidor la acepta vacía en recojo, entrega, instalación e inspección para no romper el flujo anterior (decidir si se exige). Faltan estados "en camino/en sitio", el enlace de Mantenimiento en la barra inferior (ya hay 5) y las columnas `foto_*_path` viejas (siguen sin uso).
+- **Requisitos nuevos para el DRS (el dueño debe agregarlos):**
+    - REQ-EVI-01: el sistema guarda fotos, audios y archivos de cada orden, con equipo, etapa, usuario y fecha, en almacenamiento privado.
+    - REQ-EVI-02: las fotos se comprimen al guardarse y solo las ven usuarios con acceso a la orden.
+    - REQ-EVI-03: un ítem observado del checklist de planta y toda deficiencia exigen foto.
+    - REQ-COM-01: cada orden tiene una conversación donde escriben vendedor, técnicos y Gerente, con adjuntos y etiqueta de equipo.
+    - REQ-COM-02: los eventos del sistema aparecen en la misma línea de tiempo de la conversación.
+    - REQ-FIR-01: el cliente firma con el dedo en recojo, entrega, instalación, inspección y mantenimiento.
+    - REQ-FIR-02: la firma y las fotos de antes y después se imprimen en el acta PDF.
+    - REQ-MAN-01: el técnico de campo registra mantenimiento en sitio con checklist por extintor, fotos antes y después, firma y acta.
+    - REQ-INS-01: la instalación exige escanear cada unidad vendida antes de registrarse.
+    - REQ-DEF-01: el técnico de planta registra una deficiencia fuera del checklist.
+
