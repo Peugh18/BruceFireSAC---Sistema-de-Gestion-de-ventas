@@ -22,6 +22,7 @@ type ServiceItem = {
     aplica_igv: boolean;
     tipo_afectacion_igv: string | null;
     igv_requiere_revision: boolean;
+    certificate_type_id: number | null;
     activo: boolean;
 };
 type PaginationLink = {
@@ -49,6 +50,7 @@ type PageProps = {
     servicios: PaginatedServices;
     filters: ServiceFilters;
     kpis: ServiceKpis;
+    tiposCertificado: { id: number; nombre: string }[];
     flash?: {
         success?: string;
         error?: string;
@@ -63,7 +65,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 export default function ServiciosIndex() {
-    const { currentTeam, servicios, filters, kpis, flash } =
+    const { currentTeam, servicios, filters, kpis, tiposCertificado, flash } =
         usePage<PageProps>().props;
     const [buscar, setBuscar] = useState(filters.buscar || '');
     const [modalOpen, setModalOpen] = useState(false);
@@ -78,6 +80,7 @@ export default function ServiciosIndex() {
         precio_venta: '',
         aplica_igv: true,
         tipo_afectacion_igv: '10',
+        certificate_type_id: '',
         activo: true,
     });
     const openCreateModal = () => {
@@ -91,6 +94,7 @@ export default function ServiciosIndex() {
             precio_venta: '',
             aplica_igv: true,
             tipo_afectacion_igv: '10',
+            certificate_type_id: '',
             activo: true,
         });
         setModalOpen(true);
@@ -107,6 +111,9 @@ export default function ServiciosIndex() {
             tipo_afectacion_igv: service.igv_requiere_revision
                 ? ''
                 : (service.tipo_afectacion_igv ?? '10'),
+            certificate_type_id: service.certificate_type_id
+                ? String(service.certificate_type_id)
+                : '',
             activo: service.activo,
         });
         setModalOpen(true);
@@ -603,6 +610,31 @@ export default function ServiciosIndex() {
                                         </p>
                                     )}
                                 </div>
+                                <label className="flex flex-col gap-1">
+                                    Certificado que emite
+                                    <select
+                                        value={form.data.certificate_type_id}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'certificate_type_id',
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="border-border rounded border p-2"
+                                    >
+                                        <option value="">Ninguno</option>
+                                        {tiposCertificado.map((tipo) => (
+                                            <option key={tipo.id} value={tipo.id}>
+                                                {tipo.nombre}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {form.errors.certificate_type_id && (
+                                        <span className="text-red-600">
+                                            {form.errors.certificate_type_id}
+                                        </span>
+                                    )}
+                                </label>
                                 <div className="flex items-center gap-6 pt-1">
                                     <label className="flex flex-col gap-1">
                                         Afectación del IGV

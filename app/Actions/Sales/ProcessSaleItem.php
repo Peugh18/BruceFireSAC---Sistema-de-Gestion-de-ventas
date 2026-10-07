@@ -152,7 +152,8 @@ class ProcessSaleItem
         $equipment = Equipment::updateOrCreate(['numero_serie' => $unit->numero_serie], [
             'client_id' => $sale->client_id,
             'product_id' => $unit->product_id,
-            'capacidad' => $unit->capacidad,
+            'tipo_agente' => $unit->agenteParaEquipo(),
+            'capacidad' => $unit->capacidad ?? $unit->product->capacidad,
             'marca' => $unit->marca,
             'serie_fabricante' => $unit->serie_fabricante,
             'anio_fabricacion' => $unit->anio_fabricacion,

@@ -12,6 +12,7 @@ import {
     ShieldCheck,
     MessageSquare,
 } from 'lucide-react';
+import OpcionesAgente from '@/components/opciones-agente';
 
 interface CustodyEventItem {
     id: number;
@@ -296,7 +297,8 @@ export default function RecojoShow({
                                 className="w-full rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                             />
                             <div className="grid grid-cols-2 gap-2">
-                                <input
+                                <select
+                                    aria-label="Agente extintor"
                                     value={equipmentForm.data.tipo_agente}
                                     onChange={(event) =>
                                         equipmentForm.setData(
@@ -304,9 +306,10 @@ export default function RecojoShow({
                                             event.target.value,
                                         )
                                     }
-                                    placeholder="Agente (alta nueva)"
                                     className="rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
-                                />
+                                >
+                                    <OpcionesAgente vacia="Agente (alta nueva)" />
+                                </select>
                                 <input
                                     value={equipmentForm.data.capacidad}
                                     onChange={(event) =>

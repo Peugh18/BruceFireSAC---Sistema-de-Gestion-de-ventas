@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\SaleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -303,5 +304,18 @@ class Sale extends Model
             })
             ->values()
             ->toBase();
+    }
+
+    /**
+     * Ventas que el usuario puede ver: el Gerente, todas; los demás, las de
+     * su sede y solo las que hicieron ellos (§90.1).
+     *
+     * @param  Builder<Sale>  $query
+     */
+    public function scopeVisiblePara(Builder $query, User $user): void
+    {
+        $query
+            ->when($user->sedeRestringidaId(), fn (Builder $query, int $sedeId) => $query->where('sede_id', $sedeId))
+            ->when($user->vendedorRestringidoId(), fn (Builder $query, int $vendedorId) => $query->where('vendedor_id', $vendedorId));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Gerente;
 
+use App\Enums\EquipmentType;
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,6 +25,9 @@ class StoreProductRequest extends FormRequest
             // repite entre productos.
             'codigo_barras' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9-]+$/', 'unique:products,codigo_barras'],
             'categoria' => ['nullable', Rule::in(array_keys(Product::CATEGORIAS))],
+            // C1: el agente y la capacidad pasan a la unidad y al equipo vendido.
+            'agente' => ['nullable', Rule::enum(EquipmentType::class)],
+            'capacidad' => ['nullable', 'string', 'max:20'],
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
             'unidad_medida' => ['required', 'string', 'max:10'],

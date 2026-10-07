@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $codigo_barras
  * @property string $nombre
  * @property string|null $categoria
+ * @property string|null $agente
+ * @property string|null $capacidad
  * @property string|null $descripcion
  * @property string $unidad_medida
  * @property float $precio_venta
@@ -46,6 +48,8 @@ use Illuminate\Support\Facades\DB;
     'codigo_barras',
     'nombre',
     'categoria',
+    'agente',
+    'capacidad',
     'descripcion',
     'unidad_medida',
     'precio_venta',

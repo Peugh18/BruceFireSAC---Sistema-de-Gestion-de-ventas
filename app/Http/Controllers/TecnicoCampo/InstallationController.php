@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\TecnicoCampo;
 
 use App\Actions\TecnicoCampo\RegisterInstallation;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\CertificateType;
 use App\Models\Equipment;
@@ -10,6 +11,7 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -130,7 +132,7 @@ class InstallationController extends Controller
             'equipos' => ['required', 'array', 'min:1'],
             'equipos.*.equipment_id' => ['nullable', 'integer', 'exists:equipment,id'],
             'equipos.*.numero_serie' => ['nullable', 'string', 'max:50'],
-            'equipos.*.tipo_agente' => ['nullable', 'string', 'max:50'],
+            'equipos.*.tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
             'equipos.*.capacidad' => ['nullable', 'string', 'max:30'],
             'equipos.*.marca' => ['nullable', 'string', 'max:100'],
             'equipos.*.ubicacion_actual' => ['nullable', 'string', 'max:150'],

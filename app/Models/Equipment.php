@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\EquipmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -86,5 +87,34 @@ class Equipment extends Model
     public function checklists(): HasMany
     {
         return $this->hasMany(TechnicalChecklist::class);
+    }
+
+    /**
+     * @return HasMany<SaleItem, $this>
+     */
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
+    /**
+     * Equipos que el usuario puede ver: el Gerente, todos; los demás, los
+     * vendidos, cotizados o atendidos en su sede. El cliente se comparte
+     * entre sedes, pero sus equipos no.
+     *
+     * @param  Builder<Equipment>  $query
+     */
+    public function scopeVisiblePara(Builder $query, User $user): void
+    {
+        $sedeId = $user->sedeRestringidaId();
+
+        if ($sedeId === null) {
+            return;
+        }
+
+        $query->where(fn (Builder $query) => $query
+            ->whereHas('saleItems.sale', fn (Builder $venta) => $venta->where('sede_id', $sedeId))
+            ->orWhereHas('serviceOrders', fn (Builder $orden) => $orden->where('service_orders.sede_id', $sedeId))
+            ->orWhereHas('quotes', fn (Builder $cotizacion) => $cotizacion->where('quotes.sede_id', $sedeId)));
     }
 }

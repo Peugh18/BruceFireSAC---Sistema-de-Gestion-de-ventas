@@ -16,6 +16,7 @@ import React, { useState } from 'react';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
+import OpcionesAgente, { useAgentesExtintor } from '@/components/opciones-agente';
 
 type Client = {
     id: number;
@@ -94,6 +95,7 @@ export default function InstalacionShow({
     const isFinalizada = ['listo_entrega', 'entregado', 'cerrado'].includes(
         order.estado,
     );
+    const agentes = useAgentesExtintor();
 
     // Lista de equipos a instalar en el formulario
     const [equiposList, setEquiposList] = useState<InstalledItem[]>(
@@ -101,7 +103,9 @@ export default function InstalacionShow({
             ? order.equipments.map((eq) => ({
                   equipment_id: eq.id,
                   numero_serie: eq.numero_serie,
-                  tipo_agente: eq.tipo_agente || 'PQS',
+                  tipo_agente: agentes.includes(eq.tipo_agente ?? '')
+                      ? (eq.tipo_agente as string)
+                      : '',
                   capacidad: eq.capacidad || '6 kg',
                   marca: eq.marca || 'Bruce Fire',
                   ubicacion_actual: eq.ubicacion_actual || '',
@@ -110,7 +114,7 @@ export default function InstalacionShow({
                   {
                       equipment_id: null,
                       numero_serie: '',
-                      tipo_agente: 'PQS',
+                      tipo_agente: '',
                       capacidad: '6 kg',
                       marca: 'Bruce Fire',
                       ubicacion_actual: '',
@@ -139,7 +143,7 @@ export default function InstalacionShow({
             {
                 equipment_id: null,
                 numero_serie: '',
-                tipo_agente: 'PQS',
+                tipo_agente: '',
                 capacidad: '6 kg',
                 marca: 'Bruce Fire',
                 ubicacion_actual: form.data.ubicacion_instalada || '',
@@ -414,12 +418,7 @@ export default function InstalacionShow({
                                             }
                                             className="border-border bg-card w-full rounded-[6px] border p-1.5 text-xs"
                                         >
-                                            <option value="PQS">PQS</option>
-                                            <option value="CO2">CO2</option>
-                                            <option value="Agua">Agua</option>
-                                            <option value="Acetato de Potasio">
-                                                Acetato K
-                                            </option>
+                                            <OpcionesAgente vacia="Sin registrar" />
                                         </select>
                                     </div>
                                     <div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vendedor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
 use App\Models\Sede;
 use App\Models\Service;
@@ -21,6 +22,8 @@ use Inertia\Response;
 
 class ServiceOrderController extends Controller
 {
+    use AcotaPorSede;
+
     public function index(Team $current_team, Request $request): Response
     {
         $estado = $request->string('estado')->toString();
@@ -35,7 +38,7 @@ class ServiceOrderController extends Controller
 
         $orders = ServiceOrder::query()
             ->with(['client', 'service', 'tecnico'])
-            ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
+            ->visiblePara($request->user())
             ->when(isset($estadoMap[$estado]), fn ($query) => $query->whereIn('estado', $estadoMap[$estado]))
             ->orderByDesc('created_at')
             ->paginate(15)
@@ -109,8 +112,7 @@ class ServiceOrderController extends Controller
 
     public function show(Team $current_team, ServiceOrder $service_order, Request $request): Response
     {
-        $sedeId = $request->user()->sedeRestringidaId();
-        abort_if($sedeId !== null && (int) $service_order->sede_id !== $sedeId, 404);
+        $this->asegurarVisible($service_order);
 
         $service_order->load([
             'client',
@@ -131,8 +133,7 @@ class ServiceOrderController extends Controller
 
     public function assign(Team $current_team, ServiceOrder $service_order, Request $request): RedirectResponse
     {
-        $sedeId = $request->user()->sedeRestringidaId();
-        abort_if($sedeId !== null && (int) $service_order->sede_id !== $sedeId, 404);
+        $this->asegurarVisible($service_order);
 
         $validated = $request->validate(['tecnico_id' => ['required', 'integer', 'exists:users,id']]);
         $technician = $this->tecnicosQueAtienden($service_order)->findOrFail($validated['tecnico_id']);
@@ -154,8 +155,7 @@ class ServiceOrderController extends Controller
      */
     public function anular(Team $current_team, ServiceOrder $service_order, Request $request): RedirectResponse
     {
-        $sedeId = $request->user()->sedeRestringidaId();
-        abort_if($sedeId !== null && (int) $service_order->sede_id !== $sedeId, 404);
+        $this->asegurarVisible($service_order);
 
         $datos = $request->validate(['motivo' => ['required', 'string', 'min:5', 'max:500']], [
             'motivo.required' => 'Escribe por qué se anula la orden.',
@@ -205,8 +205,7 @@ class ServiceOrderController extends Controller
      */
     public function update(Team $current_team, ServiceOrder $service_order, Request $request): RedirectResponse
     {
-        $sedeId = $request->user()->sedeRestringidaId();
-        abort_if($sedeId !== null && (int) $service_order->sede_id !== $sedeId, 404);
+        $this->asegurarVisible($service_order);
 
         if (in_array($service_order->estado, ['entregado', 'cerrado', 'anulada'], true)) {
             throw ValidationException::withMessages(['estado' => $service_order->estado === 'anulada' ? 'La orden está anulada.' : 'La orden ya se entregó: ya no se puede editar.']);

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\CertificateFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -145,5 +146,22 @@ class Certificate extends Model
     public function anuladoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'anulado_por');
+    }
+
+    /**
+     * Certificados que el usuario puede ver: el Gerente, todos; los demás,
+     * los de una venta suya (§90.1) o de una orden de su sede.
+     *
+     * @param  Builder<Certificate>  $query
+     */
+    public function scopeVisiblePara(Builder $query, User $user): void
+    {
+        if ($user->sedeRestringidaId() === null) {
+            return;
+        }
+
+        $query->where(fn (Builder $query) => $query
+            ->whereHas('sale', fn (Builder $venta) => $venta->visiblePara($user))
+            ->orWhereHas('serviceOrder', fn (Builder $orden) => $orden->visiblePara($user)));
     }
 }

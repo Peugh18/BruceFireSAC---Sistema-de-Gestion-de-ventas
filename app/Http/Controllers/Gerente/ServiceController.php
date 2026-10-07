@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Gerente;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreServiceRequest;
 use App\Http\Requests\Gerente\UpdateServiceRequest;
+use App\Models\CertificateType;
 use App\Models\Service;
 use App\Models\Team;
 use App\Services\Billing\AfectacionIgv;
@@ -45,6 +46,7 @@ class ServiceController extends Controller
                 'aplica_igv' => (bool) $s->aplica_igv,
                 'tipo_afectacion_igv' => $s->tipo_afectacion_igv,
                 'igv_requiere_revision' => AfectacionIgv::requiereRevision($s),
+                'certificate_type_id' => $s->certificate_type_id,
                 'activo' => (bool) $s->activo,
             ];
         });
@@ -54,6 +56,7 @@ class ServiceController extends Controller
 
         return Inertia::render('gerente/servicios/index', [
             'servicios' => $servicios,
+            'tiposCertificado' => CertificateType::query()->orderBy('nombre')->get(['id', 'nombre']),
             'filters' => [
                 'buscar' => $buscar,
                 'estado' => $estado,

@@ -159,16 +159,20 @@ class ClientController extends Controller
      */
     public function show(Team $current_team, Client $client, Request $request): Response
     {
-        $sedeId = $request->user()->sedeRestringidaId();
+        $user = $request->user();
         $client->load(['sites.ubicacion', 'vehicles', 'ubicacion']);
 
-        $quotes = $client->quotes()->with('sale')->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->latest('fecha')->get();
-        $sales = $client->sales()->with(['electronicDocuments', 'installments.payments'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->latest('fecha')->latest('id')->get();
-        $equipos = $client->equipment()->with('product:id,nombre')->latest('fecha_venta')->get();
-        $serviceOrders = $client->serviceOrders()->with(['service:id,nombre', 'tecnico:id,name'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->latest('fecha')->get();
-        $certificates = $client->certificates()->with(['certificateType:id,nombre', 'sale:id,numero_interno'])->latest('fecha_emision')->get();
-        $installments = $client->sales()->with(['installments.payments'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->get()->flatMap->installments->sortByDesc('fecha_vencimiento')->values();
-        $payments = $client->sales()->with('payments')->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->get()->flatMap->payments->sortByDesc('fecha')->values();
+        // Cada vendedor ve solo lo suyo dentro de su sede (§90.1); el Gerente, todo.
+        $quotes = $client->quotes()->with('sale')
+            ->when($user->sedeRestringidaId(), fn ($query, int $sedeId) => $query->where('sede_id', $sedeId))
+            ->when($user->vendedorRestringidoId(), fn ($query, int $vendedorId) => $query->where('vendedor_id', $vendedorId))
+            ->latest('fecha')->get();
+        $sales = $client->sales()->with(['electronicDocuments', 'installments.payments', 'payments'])->visiblePara($user)->latest('fecha')->latest('id')->get();
+        $equipos = $client->equipment()->with('product:id,nombre')->visiblePara($user)->latest('fecha_venta')->get();
+        $serviceOrders = $client->serviceOrders()->with(['service:id,nombre', 'tecnico:id,name'])->visiblePara($user)->latest('fecha')->get();
+        $certificates = $client->certificates()->with(['certificateType:id,nombre', 'sale:id,numero_interno'])->visiblePara($user)->latest('fecha_emision')->get();
+        $installments = $sales->flatMap->installments->sortByDesc('fecha_vencimiento')->values();
+        $payments = $sales->flatMap->payments->sortByDesc('fecha')->values();
 
         $confirmadas = $sales->where('estado', 'confirmada');
         $saldoDe = fn ($installment) => max(0, round((float) $installment->monto - (float) $installment->payments->sum('monto'), 2));

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Certificates;
 
+use App\Enums\EquipmentType;
 use App\Models\Certificate;
 use App\Models\CertificateRevision;
 use App\Models\CertificateType;
@@ -22,6 +23,9 @@ use Illuminate\Validation\ValidationException;
 
 class IssueCertificate
 {
+    /** Certificados que listan extintores: cada uno necesita su agente (C1). */
+    public const TIPOS_DE_EXTINTOR = ['operatividad_garantia', 'prueba_hidrostatica'];
+
     public function __construct(protected CertificateNumberGenerator $numeros) {}
 
     /**
@@ -49,6 +53,7 @@ class IssueCertificate
         array $extra = [],
     ): Certificate {
         $this->asegurarMismoCliente($client, $saleId, $serviceOrderId);
+        $this->exigirAgente($tipo, $unidades);
 
         return DB::transaction(function () use ($tipo, $client, $unidades, $saleId, $serviceOrderId, $extra) {
             $numero = $this->numeros->siguiente($tipo);
@@ -101,6 +106,8 @@ class IssueCertificate
      */
     public function corregir(Certificate $certificate, array $unidades, array $extra, string $motivo, ?int $userId = null): Certificate
     {
+        $this->exigirAgente($certificate->certificateType, $unidades);
+
         return DB::transaction(function () use ($certificate, $unidades, $extra, $motivo, $userId) {
             $antes = $this->resumen($certificate->load('certificateUnits'));
 
@@ -155,6 +162,35 @@ class IssueCertificate
         if ($esperado !== null && (int) $esperado !== $client->id) {
             throw ValidationException::withMessages([
                 'client_id' => 'El certificado debe ser del mismo cliente de su venta u orden de servicio.',
+            ]);
+        }
+    }
+
+    /**
+     * Un certificado de extintores no se emite si alguno no tiene su agente
+     * registrado: nunca se asume PQS (C1).
+     *
+     * @param  array<int, array<string, mixed>>  $unidades
+     */
+    protected function exigirAgente(CertificateType $tipo, array $unidades): void
+    {
+        if (! in_array($tipo->codigo, self::TIPOS_DE_EXTINTOR, true)) {
+            return;
+        }
+
+        $equipos = Equipment::query()
+            ->whereIn('id', array_filter(array_column($unidades, 'equipment_id')))
+            ->get()
+            ->keyBy('id');
+
+        $sinAgente = collect($unidades)
+            ->map(fn (array $u) => [$u, $equipos->get($u['equipment_id'] ?? 0)])
+            ->reject(fn (array $par) => EquipmentType::esConocido($par[0]['tipo_agente'] ?? $par[1]?->tipo_agente))
+            ->map(fn (array $par) => $par[0]['numero_serie'] ?? $par[0]['numero_serie_snapshot'] ?? $par[1]->numero_serie ?? 'sin serie');
+
+        if ($sinAgente->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'unidades' => 'Falta el agente extintor (PQS, CO2, etc.) de: '.$sinAgente->implode(', ').'. Regístralo en el producto del catálogo o en el equipo antes de emitir el certificado.',
             ]);
         }
     }
@@ -228,7 +264,7 @@ class IssueCertificate
                 'numero_serie_snapshot' => $u['numero_serie'] ?? ($u['numero_serie_snapshot'] ?? ($equipo?->serie_fabricante ?: $equipo?->numero_serie ?? '')),
                 'capacidad' => $u['capacidad'] ?? $equipo?->capacidad,
                 'marca' => $u['marca'] ?? $equipo?->marca,
-                'tipo_agente' => $u['tipo_agente'] ?? ($equipo?->tipo_agente ?: 'PQS-ABC'),
+                'tipo_agente' => $u['tipo_agente'] ?? $equipo?->tipo_agente,
                 'anio_fabricacion' => $u['anio_fabricacion'] ?? $equipo?->anio_fabricacion,
                 'fecha_ultima_ph' => ! empty($u['fecha_ultima_ph']) ? Carbon::parse($u['fecha_ultima_ph']) : null,
                 'fecha_ultima_recarga' => ! empty($u['fecha_ultima_recarga']) ? Carbon::parse($u['fecha_ultima_recarga']) : null,

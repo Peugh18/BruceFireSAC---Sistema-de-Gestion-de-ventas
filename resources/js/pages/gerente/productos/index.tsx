@@ -17,6 +17,8 @@ type ProductItem = {
     codigo: string;
     codigo_barras: string | null;
     categoria: string | null;
+    agente: string | null;
+    capacidad: string | null;
     nombre: string;
     descripcion: string | null;
     unidad_medida: string;
@@ -60,6 +62,7 @@ type PageProps = {
     filters: ProductFilters;
     kpis: ProductKpis;
     categorias: Record<string, string>;
+    agentes: { valor: string; etiqueta: string }[];
     flash?: {
         success?: string;
         error?: string;
@@ -74,8 +77,15 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 export default function ProductosIndex() {
-    const { currentTeam, productos, filters, kpis, categorias, flash } =
-        usePage<PageProps>().props;
+    const {
+        currentTeam,
+        productos,
+        filters,
+        kpis,
+        categorias,
+        agentes,
+        flash,
+    } = usePage<PageProps>().props;
     const [buscar, setBuscar] = useState(filters.buscar || '');
     const [modalOpen, setModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<ProductItem | null>(
@@ -85,6 +95,8 @@ export default function ProductosIndex() {
         codigo: '',
         codigo_barras: '',
         categoria: '',
+        agente: '',
+        capacidad: '',
         nombre: '',
         descripcion: '',
         unidad_medida: 'NIU',
@@ -105,6 +117,8 @@ export default function ProductosIndex() {
             codigo: '',
             codigo_barras: '',
             categoria: '',
+            agente: '',
+            capacidad: '',
             nombre: '',
             descripcion: '',
             unidad_medida: 'NIU',
@@ -126,6 +140,8 @@ export default function ProductosIndex() {
             codigo: product.codigo,
             codigo_barras: product.codigo_barras ?? '',
             categoria: product.categoria ?? '',
+            agente: product.agente ?? '',
+            capacidad: product.capacidad ?? '',
             nombre: product.nombre,
             descripcion: product.descripcion || '',
             unidad_medida: product.unidad_medida,
@@ -659,6 +675,77 @@ export default function ProductosIndex() {
                                         </select>
                                     </div>
                                 </div>
+                                {form.data.categoria === 'extintor' ? (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label
+                                                htmlFor="producto-agente"
+                                                className="text-foreground/80 block font-semibold"
+                                            >
+                                                Agente extintor
+                                            </label>
+                                            <select
+                                                id="producto-agente"
+                                                value={form.data.agente}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'agente',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                            >
+                                                <option value="">
+                                                    Sin registrar
+                                                </option>
+                                                {agentes.map((agente) => (
+                                                    <option
+                                                        key={agente.valor}
+                                                        value={agente.valor}
+                                                    >
+                                                        {agente.etiqueta}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <p className="text-muted-foreground mt-1">
+                                                Sin agente no se emite el
+                                                certificado del extintor.
+                                            </p>
+                                            {form.errors.agente && (
+                                                <p className="mt-1 text-red-600">
+                                                    {form.errors.agente}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label
+                                                htmlFor="producto-capacidad"
+                                                className="text-foreground/80 block font-semibold"
+                                            >
+                                                Capacidad
+                                            </label>
+                                            <input
+                                                id="producto-capacidad"
+                                                type="text"
+                                                maxLength={20}
+                                                value={form.data.capacidad}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'capacidad',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Ej. 6 kg"
+                                                className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                            />
+                                            {form.errors.capacidad && (
+                                                <p className="mt-1 text-red-600">
+                                                    {form.errors.capacidad}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : null}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="text-foreground/80 block font-semibold">

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EquipmentType;
 use Database\Factories\InventoryUnitFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property int $sede_almacen_id
  * @property string $numero_serie
  * @property string|null $capacidad
+ * @property string|null $agente
  * @property string|null $serie_fabricante
  * @property string|null $marca
  * @property int|null $anio_fabricacion
@@ -30,7 +32,7 @@ use Illuminate\Support\Carbon;
  * @property-read Product $product
  * @property-read Sede $sedeAlmacen
  */
-#[Fillable(['product_id', 'sede_almacen_id', 'numero_serie', 'capacidad', 'serie_fabricante', 'marca', 'anio_fabricacion', 'estado', 'fecha_ingreso'])]
+#[Fillable(['product_id', 'sede_almacen_id', 'numero_serie', 'capacidad', 'agente', 'serie_fabricante', 'marca', 'anio_fabricacion', 'estado', 'fecha_ingreso'])]
 class InventoryUnit extends Model
 {
     /** @use HasFactory<InventoryUnitFactory> */
@@ -76,5 +78,15 @@ class InventoryUnit extends Model
     public function getCodigoInternoAttribute(): string
     {
         return $this->numero_serie;
+    }
+
+    /**
+     * Agente que pasa al equipo del cliente (la etiqueta que se imprime):
+     * el de la unidad o, si no lo tiene, el de su producto. Null si nadie lo
+     * registró; nunca se asume uno (C1).
+     */
+    public function agenteParaEquipo(): ?string
+    {
+        return EquipmentType::tryFrom((string) ($this->agente ?? $this->product->agente))?->etiqueta();
     }
 }

@@ -46,7 +46,7 @@ class GuardarImagenDeFirma
         $png = (string) ob_get_clean();
 
         $ruta = trim($carpeta, '/').'/'.Str::uuid().'.png';
-        Storage::disk('public')->put($ruta, $png);
+        Storage::disk('local')->put($ruta, $png);
 
         return $ruta;
     }

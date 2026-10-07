@@ -178,3 +178,21 @@
 - Codex dejó, sin commit, el tipo de afectación IGV en servicios y líneas, el desglose de las notas según el original (`DesgloseNota`) y la copia de los datos de emisión (`DatosEmision`, columna `datos_emision`).
 - Claude revisó el código; `php -l` y `tsc` pasan. **No se corrió la suite completa:** el dueño pidió dejar las pruebas largas para el final.
 
+## [2026-10-06] — Fases A2 (seguridad) y B (certificados y agente)
+
+- **X1:** scope `visiblePara(User)` en `Sale` (sede + vendedor), `ServiceOrder` (sede), `Certificate` (venta propia u orden de la sede) y `Equipment` (vendido, cotizado o atendido en la sede). `AcotaPorSede`, ventas, órdenes, certificados y la ficha del cliente lo usan. Sin global scopes.
+- **X2:** firmas, sellos y fotos de capacitación pasan al disco `local`; ruta `gerente.configuracion.firmas.imagen`; migración que mueve los archivos (la ruta relativa no cambia). Las fotos de capacitación no se publican: el QR no las muestra, solo van dentro del PDF.
+- **X3:** `users.must_change_password` (lo pone `CrearTrabajador`) y middleware `ExigirSeguridadDeLaCuenta`: manda a Ajustes → Seguridad hasta cambiar la contraseña; el Gerente sin 2FA confirmado también (`SEGURIDAD_EXIGIR_2FA_GERENTE`, apagado en `phpunit.xml`).
+- **X4/X5:** `config/seguridad.php`; `TRUSTED_PROXIES` aplicado en `AppServiceProvider` (para que funcione con `config:cache`); HSTS solo por https; CSP con nonce de Vite y el servidor de Vite en desarrollo, enviada como `Report-Only` (`SEGURIDAD_CSP_SOLO_REPORTE`).
+- **C1:** `products.agente` y `products.capacidad`, `inventory_units.agente`; se copian al recibir y al vender (el equipo guarda la etiqueta, p. ej. "PQS ABC"). `EquipmentType` suma PQS BC. Técnicos y vendedor eligen el agente de la lista (`Rule::in`). `IssueCertificate` ya no usa "PQS-ABC": sin agente conocido no emite y dice qué extintor falta. El PDF ya no rellena tipo, presión ni tiempo inventados.
+- **C2:** al confirmar la venta solo sale operatividad y garantía de extintores nuevos (si alguno no tiene agente, no sale nada y la venta no se bloquea). P.H. y capacitación quedan "pendientes de datos técnicos" en Armar certificados; la P.H. exige fecha, presión, tiempo y resultado aprobado; la presión de trabajo sale del agente real.
+- **Regla única:** `tiposPorDestino`; se borró `CertificateRuleEngine` y `tests/Unit/CertificateRuleEngineTest.php`.
+- **A4:** `certificate_type_id` en el formulario de servicios del Gerente.
+- **Pruebas nuevas:** `VisibilidadPorSedeTest`, `SeguridadDeLaCuentaTest`, `AgenteDelExtintorTest`, casos nuevos en `CertificadosDeVentaTest`, `FirmasYSellosTest` y `ProductionReadinessTest`. Ajustadas: `FichaClienteYSunatTest` (ventas del propio vendedor), técnicos con "PQS ABC", fábricas con agente. **No se ejecutaron:** MySQL estaba apagado. Pint, PHPStan (0 errores) y `tsc` pasan.
+- **Dudas:**
+    - `CambiarUnidadVendida.php:139` lee `tipo_agente` de un `CertificateUnit` (existe); se corrigió además que el equipo tome el agente de la unidad nueva.
+    - Equipos registrados como "No legible" no se certifican hasta que alguien registre su agente: puede frenar el cierre en el taller.
+    - La CSP queda en modo solo reporte hasta revisarla en el navegador; con `SEGURIDAD_CSP_SOLO_REPORTE=false` se aplica.
+    - En local, el Gerente debe activar el 2FA o poner `SEGURIDAD_EXIGIR_2FA_GERENTE=false` en su `.env`.
+    - La capacitación no pide datos nuevos: queda pendiente hasta que el vendedor la marque y la emita.
+

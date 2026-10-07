@@ -17,6 +17,7 @@ import {
     Wrench,
     MessageSquare,
 } from 'lucide-react';
+import OpcionesAgente from '@/components/opciones-agente';
 
 interface EquipmentItem {
     id: number;
@@ -96,7 +97,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
     // Form for Alta Técnica Rápida (Caso A and B)
     const equipmentForm = useForm({
         numero_serie: '',
-        tipo_agente: 'PQS ABC',
+        tipo_agente: '',
         capacidad: '6 kg',
         marca: '',
         serie_fabricante: '',
@@ -647,22 +648,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 }
                                                 className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                             >
-                                                <option value="PQS ABC">
-                                                    PQS ABC
-                                                </option>
-                                                <option value="CO2">CO2</option>
-                                                <option value="Agua Presurizada">
-                                                    Agua Presurizada
-                                                </option>
-                                                <option value="Acetato de Potasio (K)">
-                                                    Acetato de Potasio (K)
-                                                </option>
-                                                <option value="Espuma AFFF">
-                                                    Espuma AFFF
-                                                </option>
-                                                <option value="Otro">
-                                                    Otro
-                                                </option>
+                                                <OpcionesAgente vacia="Sin registrar" />
                                             </select>
                                         </div>
 

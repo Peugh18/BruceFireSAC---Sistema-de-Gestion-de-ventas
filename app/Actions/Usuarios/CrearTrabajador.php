@@ -29,6 +29,8 @@ class CrearTrabajador
                 'name' => $nombre,
                 'email' => mb_strtolower($correo),
                 'password' => Hash::make($clave),
+                // La contraseña inicial la conoce el Gerente: se cambia al primer ingreso (X3).
+                'must_change_password' => true,
                 'current_team_id' => $team->id,
                 'sede_id' => $sede?->id,
             ]);

@@ -280,4 +280,15 @@ class ServiceOrder extends Model
     {
         return self::COARSE_LABELS[$this->estado] ?? 'asignada';
     }
+
+    /**
+     * Órdenes que el usuario puede ver: el Gerente, todas; los demás, las de
+     * su sede.
+     *
+     * @param  Builder<ServiceOrder>  $query
+     */
+    public function scopeVisiblePara(Builder $query, User $user): void
+    {
+        $query->when($user->sedeRestringidaId(), fn (Builder $query, int $sedeId) => $query->where('sede_id', $sedeId));
+    }
 }

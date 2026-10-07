@@ -4,12 +4,14 @@ namespace App\Http\Controllers\TecnicoCampo;
 
 use App\Actions\Equipment\QuickRegisterEquipment;
 use App\Actions\TecnicoCampo\RegisterCollection;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Reports\ServiceOrderReceiptPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -176,7 +178,7 @@ class CollectionController extends Controller
     ): RedirectResponse {
         $data = $request->validate([
             'numero_serie' => ['nullable', 'string', 'max:100'],
-            'tipo_agente' => ['required_without:numero_serie', 'nullable', 'string', 'max:100'],
+            'tipo_agente' => ['required_without:numero_serie', 'nullable', Rule::in(EquipmentType::etiquetas())],
             'capacidad' => ['required_without:numero_serie', 'nullable', 'string', 'max:100'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],

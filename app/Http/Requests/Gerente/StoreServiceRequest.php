@@ -25,6 +25,8 @@ class StoreServiceRequest extends FormRequest
             'precio_venta' => ['required', 'numeric', 'min:0'],
             'aplica_igv' => ['boolean'],
             'tipo_afectacion_igv' => ['sometimes', 'required', Rule::in(['10', '20', '30'])],
+            // A4: el certificado que sale al terminar el servicio.
+            'certificate_type_id' => ['nullable', 'integer', 'exists:certificate_types,id'],
             'activo' => ['boolean'],
         ];
     }

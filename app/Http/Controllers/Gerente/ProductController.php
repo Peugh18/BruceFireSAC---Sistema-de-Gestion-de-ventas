@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gerente;
 
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreProductRequest;
 use App\Http\Requests\Gerente\UpdateProductRequest;
@@ -46,6 +47,8 @@ class ProductController extends Controller
                 'codigo' => $p->codigo,
                 'codigo_barras' => $p->codigo_barras,
                 'categoria' => $p->categoria,
+                'agente' => $p->agente,
+                'capacidad' => $p->capacidad,
                 'nombre' => $p->nombre,
                 'descripcion' => $p->descripcion,
                 'unidad_medida' => $p->unidad_medida,
@@ -70,6 +73,7 @@ class ProductController extends Controller
 
         return Inertia::render('gerente/productos/index', [
             'categorias' => Product::CATEGORIAS,
+            'agentes' => EquipmentType::opciones(),
             'productos' => $productos,
             'filters' => [
                 'buscar' => $buscar,

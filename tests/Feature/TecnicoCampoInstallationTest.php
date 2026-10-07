@@ -94,7 +94,7 @@ test('tecnico campo can register installation, creating client equipments and ce
                     'ubicacion_actual' => 'Pilar central junto a montacargas',
                 ],
                 [
-                    'tipo_agente' => 'PQS',
+                    'tipo_agente' => 'PQS ABC',
                     'capacidad' => '6 kg',
                     'marca' => 'Bruce Fire',
                     'ubicacion_actual' => 'Pilar este',
@@ -148,7 +148,7 @@ test('installation requires customer conformity acceptance', function () {
             'conformidad_aceptada' => false,
             'equipos' => [
                 [
-                    'tipo_agente' => 'PQS',
+                    'tipo_agente' => 'PQS ABC',
                     'capacidad' => '6 kg',
                 ],
             ],

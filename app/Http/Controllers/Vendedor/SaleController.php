@@ -49,14 +49,11 @@ class SaleController extends Controller
         $comprobante = $request->string('comprobante')->toString();
         $buscar = trim($request->string('buscar')->toString());
         [$desde, $hasta] = $this->rangoDeFechas($request);
-        $sedeId = $request->user()->sedeRestringidaId();
-        $soloDe = $request->user()->vendedorRestringidoId();
 
         // Cada vendedor ve solo sus ventas; el Gerente, las de todos.
         $sales = Sale::query()
             ->with(['client', 'electronicDocuments'])
-            ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
-            ->when($soloDe, fn ($query) => $query->where('vendedor_id', $soloDe))
+            ->visiblePara($request->user())
             ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
             ->when($comprobante === 'nota_venta', fn ($query) => $query->where('comprobante_tipo', Sale::NOTA_VENTA))
@@ -93,8 +90,7 @@ class SaleController extends Controller
         // KPIs con el mismo alcance que la tabla: el Vendedor ve solo lo suyo y
         // el acumulado de la empresa queda para el Gerente (Documento Maestro §77.3).
         $emitidas = Sale::query()
-            ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
-            ->when($soloDe, fn ($q) => $q->where('vendedor_id', $soloDe))
+            ->visiblePara($request->user())
             ->where('estado', 'confirmada')
             ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
             ->get(['total', 'condicion_pago']);
@@ -118,13 +114,11 @@ class SaleController extends Controller
                 'por_enviar' => ElectronicDocument::query()
                     ->where('sunat_estado', 'por_enviar')
                     ->whereHas('sale', fn ($query) => $query
-                        ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
-                        ->when($soloDe, fn ($q) => $q->where('vendedor_id', $soloDe))
+                        ->visiblePara($request->user())
                     )
                     ->count(),
                 'borradores' => Sale::query()
-                    ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
-                    ->when($soloDe, fn ($q) => $q->where('vendedor_id', $soloDe))
+                    ->visiblePara($request->user())
                     ->where('estado', 'borrador')
                     ->count(),
             ],
@@ -562,12 +556,7 @@ class SaleController extends Controller
      */
     protected function assertSedeAccess(Request $request, Sale $sale): void
     {
-        $sedeId = $request->user()->sedeRestringidaId();
-
-        abort_if($sedeId !== null && (int) $sale->sede_id !== $sedeId, 404);
-
         // Cada vendedor corrige solo sus ventas; el Gerente, las de todos.
-        $vendedorId = $request->user()->vendedorRestringidoId();
-        abort_if($vendedorId !== null && (int) $sale->vendedor_id !== $vendedorId, 404);
+        abort_unless(Sale::query()->visiblePara($request->user())->whereKey($sale->id)->exists(), 404);
     }
 }

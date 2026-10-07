@@ -42,17 +42,17 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 
 ### A2. Seguridad (antes de producción)
 
-- [ ] X1: filtro de sede en la capa de datos (scope o trait en `Sale`, `ServiceOrder`, `Certificate`, `Equipment`) y pruebas de acceso cruzado por ruta; corregir la ficha del cliente
-- [ ] X2: firmas y sellos al disco privado, servidos con una ruta autenticada
-- [ ] X3: obligar a cambiar la contraseña en el primer ingreso; 2FA obligatorio para el Gerente
-- [ ] X4 y X5: `.env` de producción (`APP_DEBUG=false`, `LOG_LEVEL=warning`, cookie segura), `trustProxies` del hosting, CSP y HSTS
+- [x] X1: scope `visiblePara(User)` en `Sale`, `ServiceOrder`, `Certificate` y `Equipment` (lo usan `AcotaPorSede` y los controladores de ventas, órdenes, certificados y la ficha del cliente). *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] X2: firmas, sellos y fotos de capacitación en el disco privado; la firma se ve por una ruta solo del Gerente; migración que mueve los archivos. *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] X3: `must_change_password` y middleware `ExigirSeguridadDeLaCuenta` (contraseña inicial y 2FA del Gerente, interruptor `SEGURIDAD_EXIGIR_2FA_GERENTE`). *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] X4 y X5: bloque de producción en `.env.example`, `TRUSTED_PROXIES`, HSTS por https y CSP con nonce (en modo solo reporte). *Pruebas escritas; sin suite completa (MySQL apagado).*
 
 ### B. Certificados y tipo de extintor
 
-- [ ] C1: agente y capacidad en el producto, copiados a la unidad y al equipo; si falta el agente, no se emite el certificado
-- [ ] C2: los certificados técnicos (P.H., capacitación) se emiten solo después de que un técnico los valide, no al cobrar
-- [ ] Una sola regla de certificados: `CertificateRuleEngine` o la regla por destino, no las dos
-- [ ] A4: el servicio elige su tipo de certificado en el formulario del Gerente
+- [x] C1: agente (lista `EquipmentType`, con PQS BC) y capacidad en el producto, copiados a la unidad y al equipo; técnicos eligen de la lista; sin agente no se emite. *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] C2: al cobrar solo sale operatividad de extintores nuevos; P.H. y capacitación quedan pendientes y la P.H. exige fecha, presión, tiempo y resultado reales. *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] Una sola regla de certificados: `EmitirCertificadosDeVenta::tiposPorDestino`; se borró `CertificateRuleEngine` (sin uso) y su prueba unitaria.
+- [x] A4: el servicio elige su tipo de certificado en el formulario del Gerente. *Pruebas escritas; sin suite completa (MySQL apagado).*
 
 ### C. Ventas, caja y cobranzas
 
@@ -62,7 +62,7 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 - [ ] V5: renovar el vencimiento del equipo solo al cerrar el trabajo técnico
 - [ ] V6: un adicional autorizado genera deuda real
 - [ ] V7: pago ligado al turno de caja; bloqueo contra doble apertura o confirmación
-- [ ] V8: decidir si el vendedor ve en la ficha del cliente solo sus propias ventas
+- [x] V8: la ficha del cliente muestra al vendedor solo sus ventas, cotizaciones y certificados (§90.1); hecho con X1. *Pruebas escritas; sin suite completa (MySQL apagado).*
 
 - [ ] X6: la tarea diaria no debe vencer cotizaciones "aceptadas"
 - [ ] X7: medir los KPI del proyecto (tiempo de venta, tiempo de cotización, clientes recuperados por alertas: la cotización guarda la alerta de origen)

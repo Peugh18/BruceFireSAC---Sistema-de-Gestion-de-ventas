@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Vendedor\Concerns;
 
 use App\Models\Certificate;
+use App\Models\Equipment;
 use App\Models\Sale;
+use App\Models\ServiceOrder;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Cada vendedor opera solo lo de su sede (el Gerente ve todas). Lo que no
- * es de su sede responde 404, como si no existiera.
+ * es de su sede responde 404, como si no existiera. La regla vive en el
+ * scope `visiblePara()` de cada modelo; aquí solo se aplica.
  */
 trait AcotaPorSede
 {
@@ -25,26 +28,37 @@ trait AcotaPorSede
     }
 
     /**
+     * 404 si el usuario no puede ver el registro (scope `visiblePara`).
+     */
+    protected function asegurarVisible(Sale|ServiceOrder|Certificate|Equipment $modelo): void
+    {
+        $user = request()->user();
+
+        abort_if($user === null, 404);
+
+        $visible = match (true) {
+            $modelo instanceof Sale => Sale::query()->visiblePara($user),
+            $modelo instanceof ServiceOrder => ServiceOrder::query()->visiblePara($user),
+            $modelo instanceof Certificate => Certificate::query()->visiblePara($user),
+            $modelo instanceof Equipment => Equipment::query()->visiblePara($user),
+        };
+
+        abort_unless($visible->whereKey($modelo->getKey())->exists(), 404);
+    }
+
+    /**
      * Una venta (y sus comprobantes) solo la opera quien la hizo, dentro de
      * su sede; el Gerente opera todas.
      */
     protected function asegurarVenta(?Sale $sale): void
     {
         abort_if($sale === null, 404);
-        $this->asegurarSede($sale->sede_id);
-
-        $vendedorId = request()->user()?->vendedorRestringidoId();
-        abort_if($vendedorId !== null && (int) $sale->vendedor_id !== $vendedorId, 404);
+        $this->asegurarVisible($sale);
     }
 
-    /**
-     * Sede de un certificado: la de su venta o la de su orden de servicio.
-     */
     protected function asegurarSedeDeCertificado(Certificate $certificate): void
     {
-        $certificate->loadMissing('sale:id,sede_id', 'serviceOrder:id,sede_id');
-
-        $this->asegurarSede($certificate->sale?->sede_id ?? $certificate->serviceOrder?->sede_id);
+        $this->asegurarVisible($certificate);
     }
 
     /**
@@ -53,10 +67,8 @@ trait AcotaPorSede
      */
     protected function certificadosDeMiSede(Builder $query): Builder
     {
-        $miSede = $this->sedeDelUsuario();
+        $user = request()->user();
 
-        return $query->when($miSede, fn (Builder $query) => $query->where(fn (Builder $query) => $query
-            ->whereHas('sale', fn (Builder $venta) => $venta->where('sede_id', $miSede))
-            ->orWhereHas('serviceOrder', fn (Builder $orden) => $orden->where('sede_id', $miSede))));
+        return $user ? $query->visiblePara($user) : $query;
     }
 }

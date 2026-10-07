@@ -21,13 +21,9 @@ class ProductFactory extends Factory
     {
         return [
             'codigo' => 'PRD-'.fake()->unique()->numerify('####'),
-            'nombre' => fake()->randomElement([
-                'Extintor PQS ABC 6 Kg',
-                'Extintor CO2 10 Lb',
-                'Extintor PQS 12 Kg',
-                'Extintor Acetato 6L',
-                'Extintor Agua Presurizada 2.5 Gal',
-            ]),
+            'nombre' => 'Extintor PQS ABC 6 Kg',
+            'agente' => 'pqs',
+            'capacidad' => '6 kg',
             'descripcion' => fake()->optional()->sentence(),
             'unidad_medida' => 'UND',
             'precio_venta' => fake()->randomFloat(2, 40, 250),

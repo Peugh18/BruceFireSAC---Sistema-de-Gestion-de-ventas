@@ -5,6 +5,7 @@ namespace App\Http\Controllers\TecnicoCampo;
 use App\Actions\Certificates\IssueCertificate;
 use App\Actions\Tecnico\ProcessChecklist;
 use App\Actions\TecnicoCampo\EquipoDeLaOrden;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\CertificateType;
 use App\Models\Equipment;
@@ -13,6 +14,7 @@ use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -113,7 +115,7 @@ class InspectionController extends Controller
         $validated = $request->validate([
             'equipment_id' => ['nullable', 'exists:equipment,id'],
             'numero_serie' => ['nullable', 'string', 'max:50'],
-            'tipo_agente' => ['nullable', 'string', 'max:50'],
+            'tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
             'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'ubicacion_actual' => ['nullable', 'string', 'max:150'],

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->seed(CertificateTypeSeeder::class);
-    Storage::fake('public');
+    Storage::fake('local');
 });
 
 function gerenteDeFirmas(): User
@@ -79,7 +79,7 @@ test('la foto de la firma queda sin fondo, recortada y se comparte con el mismo 
     $ruta = $administrador->fresh()->firma_path;
     expect($ruta)->toEndWith('.png');
 
-    $png = imagecreatefromstring(Storage::disk('public')->get($ruta));
+    $png = imagecreatefromstring(Storage::disk('local')->get($ruta));
     $alfaEsquina = (imagecolorat($png, 0, 0) >> 24) & 0x7F;
 
     expect($alfaEsquina)->toBe(127)
@@ -165,4 +165,28 @@ test('el gerente agrega un firmante nuevo y otros roles no entran', function () 
     $this->actingAs($vendedor)
         ->get(route('gerente.configuracion.firmas.index', ['current_team' => $vendedor->currentTeam]))
         ->assertForbidden();
+});
+
+test('la firma queda en el disco privado y solo el gerente la ve por su ruta', function () {
+    Storage::fake('public');
+    $user = gerenteDeFirmas();
+    $signer = Signer::firstOrFail();
+
+    $this->actingAs($user)->post(rutaFirmas($user, $signer), ['nombre' => $signer->nombre, 'cargo' => $signer->cargo, 'firma' => fotoDeFirma()]);
+    $ruta = $signer->fresh()->firma_path;
+    $imagen = route('gerente.configuracion.firmas.imagen', ['current_team' => $user->currentTeam, 'firmante' => $signer, 'tipo' => 'firma']);
+
+    Storage::disk('local')->assertExists($ruta);
+    Storage::disk('public')->assertMissing($ruta);
+
+    $this->actingAs($user)->get($imagen)->assertOk()->assertHeader('content-type', 'image/png');
+
+    $vendedor = User::factory()->create();
+    $vendedor->assignRole('Vendedor');
+    $this->actingAs($vendedor)
+        ->get(route('gerente.configuracion.firmas.imagen', ['current_team' => $vendedor->currentTeam, 'firmante' => $signer, 'tipo' => 'firma']))
+        ->assertForbidden();
+
+    auth()->logout();
+    $this->get($imagen)->assertRedirect();
 });

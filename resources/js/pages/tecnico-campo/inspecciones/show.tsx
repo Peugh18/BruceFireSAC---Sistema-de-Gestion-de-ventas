@@ -19,6 +19,7 @@ import React, { useState } from 'react';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
+import OpcionesAgente from '@/components/opciones-agente';
 
 type TechnicalChecklistItem = {
     clave?: string;
@@ -123,7 +124,7 @@ export default function InspeccionShow({
     const addEquipmentForm = useForm({
         equipment_id: '',
         numero_serie: '',
-        tipo_agente: 'PQS',
+        tipo_agente: '',
         capacidad: '6 kg',
         marca: 'Genérica',
         ubicacion_actual: '',
@@ -404,12 +405,7 @@ export default function InspeccionShow({
                                             }
                                             className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                         >
-                                            <option value="PQS">PQS</option>
-                                            <option value="CO2">CO2</option>
-                                            <option value="Agua">Agua</option>
-                                            <option value="Acetato de Potasio">
-                                                Acetato K
-                                            </option>
+                                            <OpcionesAgente vacia="Sin registrar" />
                                         </select>
                                     </div>
                                     <div>

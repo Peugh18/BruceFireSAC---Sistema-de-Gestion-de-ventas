@@ -65,7 +65,7 @@ class GuardarFirmante
     protected function reemplazar(?string $actual, ?string $nueva, bool $quitar): ?string
     {
         if (($nueva || $quitar) && $actual) {
-            Storage::disk('public')->delete($actual);
+            Storage::disk('local')->delete($actual);
         }
 
         return $nueva ?? ($quitar ? null : $actual);
@@ -84,7 +84,7 @@ class GuardarFirmante
             ->get()
             ->each(function (Signer $otro) use ($signer) {
                 $copia = preg_replace('/\.png$/', '', $signer->firma_path).'-'.$otro->id.'.png';
-                Storage::disk('public')->copy($signer->firma_path, $copia);
+                Storage::disk('local')->copy($signer->firma_path, $copia);
                 $otro->update(['firma_path' => $copia]);
             });
     }

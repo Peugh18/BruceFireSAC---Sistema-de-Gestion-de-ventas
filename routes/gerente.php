@@ -74,6 +74,9 @@ Route::prefix('gerente')
         Route::get('configuracion/firmas', [SignerController::class, 'index'])->name('configuracion.firmas.index');
         Route::post('configuracion/firmas', [SignerController::class, 'store'])->name('configuracion.firmas.store');
         Route::post('configuracion/firmas/{firmante}', [SignerController::class, 'update'])->name('configuracion.firmas.update');
+        Route::get('configuracion/firmas/{firmante}/{tipo}', [SignerController::class, 'imagen'])
+            ->whereIn('tipo', ['firma', 'sello'])
+            ->name('configuracion.firmas.imagen');
         Route::get('configuracion/firmas/vista-previa/{tipo:codigo}', [SignerController::class, 'vistaPrevia'])
             ->withoutScopedBindings()
             ->name('configuracion.firmas.vista-previa');

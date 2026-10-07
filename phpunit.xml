@@ -22,6 +22,7 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BRUCE_EXIGIR_SEDE" value="false"/>
+        <env name="SEGURIDAD_EXIGIR_2FA_GERENTE" value="false"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <!-- Las pruebas no escriben en storage/logs/laravel.log: ahí solo van errores reales. -->

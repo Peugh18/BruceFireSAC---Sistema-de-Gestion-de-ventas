@@ -121,7 +121,7 @@ test('una venta se reparte en dos locales con la numeracion y el orden del clien
         ->and($capacitacion->certificateUnits()->count())->toBe(0);
 });
 
-test('al confirmar la venta los certificados salen solos segun el destino y en el orden escaneado', function (string $destino, array $tipos) {
+test('al confirmar la venta solo sale solo el de operatividad, en el orden escaneado', function (string $destino, array $tipos) {
     [$sale, $equipos] = ventaConExtintores(3, $destino);
     $sale->update(['estado' => 'borrador', 'comprobante_tipo' => 'nota_venta']);
 
@@ -133,8 +133,8 @@ test('al confirmar la venta los certificados salen solos segun el destino y en e
         ->and($certificados->first()->certificateUnits->sortBy('orden')->pluck('equipment_id')->all())
         ->toBe(array_map(fn ($e) => $e->id, $equipos));
 })->with([
-    'local' => ['local_cliente', ['operatividad_garantia', 'capacitacion']],
-    'vehiculo' => ['vehiculo', ['operatividad_garantia', 'prueba_hidrostatica']],
+    'local' => ['local_cliente', ['operatividad_garantia']],
+    'vehiculo' => ['vehiculo', ['operatividad_garantia']],
 ]);
 
 test('una venta sin extintores no emite certificados al confirmarse', function () {
@@ -147,7 +147,10 @@ test('ajustar el orden conserva el numero del certificado y deja una revision co
     [$sale, $equipos] = ventaConExtintores(2);
     $user = vendedorUser();
     $emitir = app(EmitirCertificadosDeVenta::class);
-    [$operatividad, $capacitacion] = $emitir->automaticos($sale)->all();
+    [$operatividad, $capacitacion] = $emitir->handle($sale, [[
+        'tipos' => ['operatividad_garantia', 'capacitacion'],
+        'unidades' => array_map(fn ($e) => ['equipment_id' => $e->id], $equipos),
+    ]])->all();
 
     $ajustados = $emitir->handle($sale, [[
         'tipos' => ['operatividad_garantia', 'capacitacion'],
@@ -172,7 +175,10 @@ test('ajustar el orden conserva el numero del certificado y deja una revision co
 test('al reagrupar solo el certificado nuevo pide numero y el que sobra se anula', function () {
     [$sale, $equipos] = ventaConExtintores(2);
     $emitir = app(EmitirCertificadosDeVenta::class);
-    [$operatividad, $capacitacion] = $emitir->automaticos($sale)->all();
+    [$operatividad, $capacitacion] = $emitir->handle($sale, [[
+        'tipos' => ['operatividad_garantia', 'capacitacion'],
+        'unidades' => array_map(fn ($e) => ['equipment_id' => $e->id], $equipos),
+    ]])->all();
 
     $ajustados = $emitir->handle($sale, [
         ['referencia' => 'SEDE: Chimbote', 'tipos' => ['operatividad_garantia'], 'unidades' => [['equipment_id' => $equipos[0]->id]]],
@@ -238,7 +244,13 @@ test('los tres certificados generan su pdf con qr', function (string $destino, i
     $certificados = app(EmitirCertificadosDeVenta::class)->handle($sale, [[
         'referencia' => $sale->referencia,
         'tipos' => $tipos,
-        'unidades' => array_map(fn ($e) => ['equipment_id' => $e->id], $equipos),
+        'unidades' => array_map(fn ($e) => [
+            'equipment_id' => $e->id,
+            'fecha_ultima_ph' => today()->toDateString(),
+            'presion_ph' => '600 PSI',
+            'tiempo_ph' => '60 SEG',
+            'resultado_ph' => 'aprobado',
+        ], $equipos),
     ]]);
 
     foreach ($certificados as $certificado) {
@@ -306,7 +318,7 @@ test('el modo normal conserva el certificado de capacitacion a nombre del client
 });
 
 test('el modo con fotos guarda hasta tres imagenes dentro del certificado', function () {
-    Storage::fake('public');
+    Storage::fake('local');
     [$sale] = ventaConExtintores(1);
 
     $certificate = app(EmitirCertificadosDeVenta::class)->handle($sale, [[
@@ -320,7 +332,7 @@ test('el modo con fotos guarda hasta tres imagenes dentro del certificado', func
 
     expect($certificate->datos['modo'])->toBe('con_fotos')
         ->and($certificate->datos['fotos'])->toHaveCount(1);
-    Storage::disk('public')->assertExists($certificate->datos['fotos'][0]);
+    Storage::disk('local')->assertExists($certificate->datos['fotos'][0]);
     expect(app(CertificatePdfService::class)->generate($certificate)->output())->toStartWith('%PDF');
 });
 
@@ -394,4 +406,58 @@ test('el word del certificado es valido aunque la razon social tenga & o <', fun
         expect(@simplexml_load_string($xml))->not->toBeFalse()
             ->and($xml)->toContain('PANADERÍA &amp; PASTELERÍA &lt;ANYLI&gt; S.A.C.');
     }
+});
+
+test('la prueba hidrostatica y la capacitacion quedan pendientes al cobrar y la P.H. pide sus datos reales', function () {
+    [$sale, $equipos] = ventaConExtintores(1, 'vehiculo');
+    $emitir = app(EmitirCertificadosDeVenta::class);
+
+    expect($emitir->automaticos($sale)->map(fn (Certificate $c) => $c->certificateType->codigo)->all())->toBe(['operatividad_garantia']);
+
+    expect(fn () => $emitir->handle($sale, [[
+        'tipos' => ['prueba_hidrostatica'],
+        'unidades' => [['equipment_id' => $equipos[0]->id]],
+    ]]))->toThrow(ValidationException::class, 'fecha, la presión, el tiempo y el resultado');
+
+    expect(fn () => $emitir->handle($sale, [[
+        'tipos' => ['prueba_hidrostatica'],
+        'unidades' => [['equipment_id' => $equipos[0]->id, 'fecha_ultima_ph' => '2026-09-30', 'presion_ph' => '600 PSI', 'tiempo_ph' => '30 SEG', 'resultado_ph' => 'desaprobado']],
+    ]]))->toThrow(ValidationException::class, 'no aprobó');
+
+    $ph = $emitir->handle($sale, [[
+        'tipos' => ['prueba_hidrostatica'],
+        'unidades' => [['equipment_id' => $equipos[0]->id, 'fecha_ultima_ph' => '2026-09-30', 'presion_ph' => '610 PSI', 'tiempo_ph' => '30 SEG', 'resultado_ph' => 'aprobado']],
+    ]])->first()->certificateUnits->first();
+
+    expect($ph->fecha_ultima_ph->toDateString())->toBe('2026-09-30')
+        ->and($ph->presion_ph)->toBe('610 PSI')
+        ->and($ph->tiempo_ph)->toBe('30 SEG')
+        ->and($ph->presion_trabajo)->toBe('195 PSI');
+});
+
+test('la presion de trabajo de la P.H. sale del agente real: un CO2 no lleva la de PQS', function () {
+    [$sale, $equipos] = ventaConExtintores(1, 'vehiculo');
+    $equipos[0]->update(['tipo_agente' => 'CO2']);
+
+    $unidad = app(EmitirCertificadosDeVenta::class)->handle($sale, [[
+        'tipos' => ['prueba_hidrostatica'],
+        'unidades' => [['equipment_id' => $equipos[0]->id, 'fecha_ultima_ph' => '2026-09-30', 'presion_ph' => '3000 PSI', 'tiempo_ph' => '30 SEG', 'resultado_ph' => 'aprobado']],
+    ]])->first()->certificateUnits->first();
+
+    expect($unidad->tipo_agente)->toBe('CO2')
+        ->and($unidad->presion_trabajo)->toBe('850 PSI');
+});
+
+test('sin agente no se emite el certificado del extintor y la venta no se bloquea', function () {
+    [$sale, $equipos] = ventaConExtintores(1);
+    $equipos[0]->update(['tipo_agente' => 'No legible']);
+    $emitir = app(EmitirCertificadosDeVenta::class);
+
+    expect($emitir->automaticos($sale))->toBeEmpty()
+        ->and(fn () => $emitir->handle($sale, [[
+            'tipos' => ['operatividad_garantia'],
+            'unidades' => [['equipment_id' => $equipos[0]->id]],
+        ]]))->toThrow(ValidationException::class, 'Falta el agente extintor');
+
+    expect(Certificate::where('sale_id', $sale->id)->count())->toBe(0);
 });
