@@ -23,6 +23,7 @@ type ProductItem = {
     categoria: string | null;
     agente: string | null;
     capacidad: string | null;
+    peso_kg: string | null;
     nombre: string;
     descripcion: string | null;
     unidad_medida: string;
@@ -103,6 +104,7 @@ export default function ProductosIndex() {
         categoria: "",
         agente: "",
         capacidad: "",
+        peso_kg: "",
         nombre: "",
         descripcion: "",
         unidad_medida: "NIU",
@@ -125,6 +127,7 @@ export default function ProductosIndex() {
             categoria: "",
             agente: "",
             capacidad: "",
+            peso_kg: "",
             nombre: "",
             descripcion: "",
             unidad_medida: "NIU",
@@ -148,6 +151,7 @@ export default function ProductosIndex() {
             categoria: product.categoria ?? "",
             agente: product.agente ?? "",
             capacidad: product.capacidad ?? "",
+            peso_kg: product.peso_kg ?? "",
             nombre: product.nombre,
             descripcion: product.descripcion || "",
             unidad_medida: product.unidad_medida,
@@ -732,6 +736,31 @@ export default function ProductosIndex() {
                                         </div>
                                     </div>
                                 ) : null}
+                                <div>
+                                    <label
+                                        htmlFor="producto-peso"
+                                        className="text-foreground/80 block font-semibold"
+                                    >
+                                        Peso unitario (kg)
+                                    </label>
+                                    <input
+                                        id="producto-peso"
+                                        type="number"
+                                        step="0.001"
+                                        min="0"
+                                        value={form.data.peso_kg}
+                                        onChange={(e) =>
+                                            form.setData("peso_kg", e.target.value)
+                                        }
+                                        placeholder="Para el peso de la guía de remisión"
+                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                    />
+                                    {form.errors.peso_kg && (
+                                        <p className="mt-1 text-red-600">
+                                            {form.errors.peso_kg}
+                                        </p>
+                                    )}
+                                </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="text-foreground/80 block font-semibold">

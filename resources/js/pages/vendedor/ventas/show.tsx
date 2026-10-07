@@ -28,6 +28,7 @@ import {
     type SolicitudNota,
 } from '@/components/sale-notes-panel';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import guias from '@/routes/guias';
 import facturacion from '@/routes/vendedor/facturacion';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
@@ -325,6 +326,22 @@ export default function VentasShow({
                                 : 'Anular nota de venta'}
                         </Button>
                     ) : null}
+                    {sale.estado === 'confirmada' && (
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
+                        >
+                            <Link
+                                href={guias.create.url(teamSlug, {
+                                    query: { origen: 'venta', id: sale.id },
+                                })}
+                            >
+                                <FileText className="size-4" />
+                                Emitir guía
+                            </Link>
+                        </Button>
+                    )}
                     {editable && (
                         <Button
                             asChild

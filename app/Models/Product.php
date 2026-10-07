@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $categoria
  * @property string|null $agente
  * @property string|null $capacidad
+ * @property string|null $peso_kg
  * @property string|null $descripcion
  * @property string $unidad_medida
  * @property float $precio_venta
@@ -50,7 +51,7 @@ use Illuminate\Support\Facades\DB;
     'nombre',
     'categoria',
     'agente',
-    'capacidad',
+    'capacidad', 'peso_kg',
     'descripcion',
     'unidad_medida',
     'precio_venta',
@@ -73,6 +74,7 @@ class Product extends Model
     {
         return [
             'precio_venta' => 'decimal:2',
+            'peso_kg' => 'decimal:3',
             'costo_promedio' => 'decimal:4',
             'aplica_igv' => 'boolean',
             'igv_revisado_at' => 'datetime',

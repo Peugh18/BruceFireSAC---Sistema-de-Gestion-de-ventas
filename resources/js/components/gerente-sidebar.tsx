@@ -7,6 +7,7 @@ import {
     LayoutDashboard,
     MapPin,
     ShieldCheck,
+    Truck,
     Users,
     Wallet,
     Wrench,
@@ -14,6 +15,8 @@ import {
 } from 'lucide-react';
 
 import { AppNavSidebar } from '@/components/app-nav-sidebar';
+import guias from '@/routes/guias';
+import transporte from '@/routes/gerente/transporte';
 import type { Auth } from '@/types';
 
 type SidebarCounts = {
@@ -111,6 +114,16 @@ function buildNavGroups(
                     title: 'Sedes',
                     href: `/${teamSlug}/gerente/sedes`,
                     icon: MapPin,
+                },
+                {
+                    title: 'Guías de remisión',
+                    href: guias.index.url(teamSlug),
+                    icon: Truck,
+                },
+                {
+                    title: 'Vehículos y conductores',
+                    href: transporte.index.url(teamSlug),
+                    icon: Truck,
                 },
                 {
                     title: 'Usuarios y Roles',

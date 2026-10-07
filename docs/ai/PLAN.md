@@ -110,10 +110,10 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 Diseño en `SUNAT.md` §5.
 
 - [ ] **Ya, sin código:** emitir las GRE desde el portal SOL o la app Emprender mientras el sistema no las tenga
-- [ ] Actualizar Greenter de **v4.3.1 (2021) a v5.3** y agregar `greenter/gre-api` (requiere aprobación: cambia dependencias); volver a pasar toda la suite de facturación
-- [ ] Credenciales de la API (`client_id` y `client_secret`) desde Menú SOL; confirmar cómo probar sin afectar producción
-- [ ] Datos maestros: vehículos (placa y categoría M1, L o N), conductores, peso por producto y código de establecimiento por sede
-- [ ] Módulo único "Guías de remisión": emitir desde la venta (motivo 01), desde la orden de recojo o entrega (motivo 13, por confirmar) y desde el traslado entre sedes (04, con "en tránsito", A8); CDR aceptado antes de salir
+- [x] Actualizar Greenter de **v4.3.1 (2021) a v5.3** y agregar `greenter/gre-api` (autorizado por el dueño). PHPStan no encontró cambios que afecten a la facturación; falta correr la suite de facturación con MySQL
+- [ ] Credenciales de la API (`client_id` y `client_secret`) desde Menú SOL (van en `.env`: `SUNAT_GRE_CLIENT_ID` y `SUNAT_GRE_CLIENT_SECRET`); el ambiente de pruebas por defecto es `gre-test.nubefact.com` (`SUNAT_GRE_AUTH_HOST` y `SUNAT_GRE_API_HOST`): confirmarlo con una guía real de prueba
+- [x] Datos maestros: vehículos (placa y categoría M1, L o N), conductores, peso por producto y código de establecimiento por sede
+- [x] (código hecho, sin probar contra SUNAT ni con MySQL) Módulo único "Guías de remisión": emitir desde la venta (motivo 01), desde la orden de recojo o entrega (motivo 13, por confirmar) y desde el traslado entre sedes (04, con "en tránsito", A8); CDR aceptado antes de salir
 
 ## Decisiones pendientes del dueño o del contador
 

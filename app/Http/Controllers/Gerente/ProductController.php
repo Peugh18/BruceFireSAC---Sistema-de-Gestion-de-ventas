@@ -51,6 +51,7 @@ class ProductController extends Controller
                 'categoria' => $p->categoria,
                 'agente' => $p->agente,
                 'capacidad' => $p->capacidad,
+                'peso_kg' => $p->peso_kg,
                 'nombre' => $p->nombre,
                 'descripcion' => $p->descripcion,
                 'unidad_medida' => $p->unidad_medida,

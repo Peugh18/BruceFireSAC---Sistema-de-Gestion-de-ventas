@@ -21,6 +21,7 @@ Route::prefix('almacen')
         Route::get('stock', [StockController::class, 'index'])->name('stock.index');
         Route::get('traslados', [TransferController::class, 'index'])->name('traslados.index');
         Route::post('traslados', [TransferController::class, 'store'])->name('traslados.store');
+        Route::post('traslados/{traslado}/confirmar', [TransferController::class, 'confirm'])->name('traslados.confirmar');
 
         // Recepciones de proveedor (§84.8)
         Route::get('recepciones', [ReceptionController::class, 'index'])->name('recepciones.index');

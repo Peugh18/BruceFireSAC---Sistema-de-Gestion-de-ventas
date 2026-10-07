@@ -19,6 +19,24 @@ return [
         'client_secret' => env('SUNAT_GRE_CLIENT_SECRET'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Guía de remisión electrónica (GRE) por API REST
+    |--------------------------------------------------------------------------
+    | Solo ambiente de pruebas por ahora. Las credenciales (client_id y
+    | client_secret) salen de .env: SUNAT_GRE_CLIENT_ID y SUNAT_GRE_CLIENT_SECRET.
+    | Motivo y descripción de las guías que nacen de una orden de servicio
+    | (recojo y entrega) están "por confirmar con el contador": se cambian aquí
+    | sin tocar el código.
+    */
+    'gre' => [
+        'auth_host' => env('SUNAT_GRE_AUTH_HOST', 'https://gre-test.nubefact.com/v1'),
+        'api_host' => env('SUNAT_GRE_API_HOST', 'https://gre-test.nubefact.com/v1'),
+        'motivo_ordenes' => env('GRE_MOTIVO_ORDENES', '13'),
+        'descripcion_recojo' => env('GRE_DESCRIPCION_RECOJO', 'Recojo para recarga/mantenimiento'),
+        'descripcion_entrega' => env('GRE_DESCRIPCION_ENTREGA', 'Entrega de equipos recargados/mantenidos'),
+    ],
+
     'company' => [
         'ruc' => env('BILLING_COMPANY_RUC'),
         'razon_social' => env('BILLING_COMPANY_RAZON_SOCIAL', 'BRUCE FIRE S.A.C.'),

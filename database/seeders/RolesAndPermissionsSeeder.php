@@ -79,6 +79,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'inventory.print_stickers',
         'inventory.lookup',
         'sedes.view',
+        'guias_remision.view', 'guias_remision.create',
     ];
 
     /**
@@ -125,6 +126,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'communication.create_event',
         'equipment.view',
         'equipment.create',
+        'guias_remision.view', 'guias_remision.create',
         'equipment.update',
         'sedes.view',
     ];
@@ -158,6 +160,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'sales.view',
         'certificates.view',
         'billing.view',
+        'guias_remision.view', 'guias_remision.create',
         'collections.view',
         'cashregister.view_history',
         'cashregister.view_all',
