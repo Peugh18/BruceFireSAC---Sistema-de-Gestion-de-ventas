@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Storage;
 
 const FIRMA_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
-function usuarioConRol(string $rol, Team $team, array $extra = []): User
+function usuarioDeVisita(string $rol, Team $team, array $extra = []): User
 {
     $user = User::factory()->create(['current_team_id' => $team->id, ...$extra]);
     $team->members()->attach($user, ['role' => TeamRole::Admin->value]);
@@ -39,9 +39,9 @@ beforeEach(function () {
 });
 
 test('vendedor, tecnicos y gerente escriben en la conversacion y se etiqueta el equipo', function () {
-    $gerente = usuarioConRol('Gerente', $this->team);
-    $vendedor = usuarioConRol('Vendedor', $this->team, ['sede_id' => $this->sede->id]);
-    $campo = usuarioConRol('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
+    $gerente = usuarioDeVisita('Gerente', $this->team);
+    $vendedor = usuarioDeVisita('Vendedor', $this->team, ['sede_id' => $this->sede->id]);
+    $campo = usuarioDeVisita('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
 
     foreach ([[$gerente, 'gerente'], [$vendedor, 'vendedor'], [$campo, 'campo']] as [$usuario, $origen]) {
         $this->actingAs($usuario)
@@ -55,7 +55,7 @@ test('vendedor, tecnicos y gerente escriben en la conversacion y se etiqueta el 
 });
 
 test('el mensaje con foto guarda una evidencia privada comprimida y se sirve con sesion', function () {
-    $vendedor = usuarioConRol('Vendedor', $this->team, ['sede_id' => $this->sede->id]);
+    $vendedor = usuarioDeVisita('Vendedor', $this->team, ['sede_id' => $this->sede->id]);
 
     $this->actingAs($vendedor)
         ->post(($this->url)('ordenes.mensajes.store'), ['archivo' => UploadedFile::fake()->image('foto.png', 3000, 2000)])
@@ -73,14 +73,14 @@ test('el mensaje con foto guarda una evidencia privada comprimida y se sirve con
     $ruta = route('evidencias.show', ['current_team' => $this->team, 'evidencia' => $evidencia]);
     $this->actingAs($vendedor)->get($ruta)->assertOk();
 
-    $otraSede = usuarioConRol('Vendedor', $this->team, ['sede_id' => Sede::factory()->create()->id]);
+    $otraSede = usuarioDeVisita('Vendedor', $this->team, ['sede_id' => Sede::factory()->create()->id]);
     $this->actingAs($otraSede)->get($ruta)->assertNotFound();
     auth()->logout();
     $this->get($ruta)->assertRedirect();
 });
 
 test('un audio y un archivo se guardan con su tipo y no se aceptan ejecutables', function () {
-    $campo = usuarioConRol('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
+    $campo = usuarioDeVisita('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
 
     $this->actingAs($campo)->post(($this->url)('ordenes.mensajes.store'), ['archivo' => UploadedFile::fake()->create('nota.webm', 40, 'audio/webm')])->assertSessionHasNoErrors();
     $this->actingAs($campo)->post(($this->url)('ordenes.mensajes.store'), ['archivo' => UploadedFile::fake()->create('parte.pdf', 40, 'application/pdf')])->assertSessionHasNoErrors();
@@ -90,7 +90,7 @@ test('un audio y un archivo se guardan con su tipo y no se aceptan ejecutables',
 });
 
 test('el mensaje necesita texto o adjunto y el equipo debe ser de la orden', function () {
-    $vendedor = usuarioConRol('Vendedor', $this->team, ['sede_id' => $this->sede->id]);
+    $vendedor = usuarioDeVisita('Vendedor', $this->team, ['sede_id' => $this->sede->id]);
     $ajeno = Equipment::factory()->create();
 
     $this->actingAs($vendedor)->post(($this->url)('ordenes.mensajes.store'), [])->assertSessionHasErrors('mensaje');
@@ -98,7 +98,7 @@ test('el mensaje necesita texto o adjunto y el equipo debe ser de la orden', fun
 });
 
 test('en planta un item observado exige su foto y la deficiencia la guarda como evidencia', function () {
-    $planta = usuarioConRol('TecnicoPlanta', $this->team, ['sede_id' => $this->sede->id]);
+    $planta = usuarioDeVisita('TecnicoPlanta', $this->team, ['sede_id' => $this->sede->id]);
     $this->orden->update(['estado' => 'recibido_planta', 'departamento_tecnico' => 'planta']);
     $ruta = route('tecnico-planta.checklist.store', ['current_team' => $this->team, 'service_order' => $this->orden, 'equipment' => $this->equipo]);
     $items = fn (?UploadedFile $foto) => ['items' => ['manometro' => ['estado' => 'observado', 'condicion' => 'Roto', 'foto' => $foto]]];
@@ -114,7 +114,7 @@ test('en planta un item observado exige su foto y la deficiencia la guarda como 
 });
 
 test('T5 la deficiencia fuera del checklist exige foto', function () {
-    $planta = usuarioConRol('TecnicoPlanta', $this->team, ['sede_id' => $this->sede->id]);
+    $planta = usuarioDeVisita('TecnicoPlanta', $this->team, ['sede_id' => $this->sede->id]);
     $this->orden->update(['estado' => 'recibido_planta', 'departamento_tecnico' => 'planta']);
     $ruta = route('tecnico-planta.deficiencias.store', ['current_team' => $this->team, 'service_order' => $this->orden]);
     $datos = ['componente' => 'Manguera', 'condicion' => 'Rota', 'equipment_id' => $this->equipo->id];
@@ -126,7 +126,7 @@ test('T5 la deficiencia fuera del checklist exige foto', function () {
 });
 
 test('el tecnico de planta ya puede responder en la conversacion de la orden', function () {
-    $planta = usuarioConRol('TecnicoPlanta', $this->team, ['sede_id' => $this->sede->id]);
+    $planta = usuarioDeVisita('TecnicoPlanta', $this->team, ['sede_id' => $this->sede->id]);
     $this->orden->update(['estado' => 'recibido_planta', 'departamento_tecnico' => 'planta']);
 
     $this->actingAs($planta)->post(($this->url)('ordenes.mensajes.store'), ['mensaje' => 'Recibido, reviso hoy'])->assertSessionHasNoErrors();
@@ -136,7 +136,7 @@ test('el tecnico de planta ya puede responder en la conversacion de la orden', f
 });
 
 test('la entrega guarda la firma tactil y la rechaza si no es un PNG valido', function () {
-    $campo = usuarioConRol('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
+    $campo = usuarioDeVisita('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
     $this->orden->update(['estado' => 'listo_entrega']);
     $datos = ['receptor_nombre' => 'Rosa Díaz', 'conformidad_aceptada' => true];
 
@@ -152,7 +152,7 @@ test('la entrega guarda la firma tactil y la rechaza si no es un PNG valido', fu
 });
 
 test('T2 el mantenimiento en sitio exige checklist, fotos antes y despues y firma, y genera el acta', function () {
-    $campo = usuarioConRol('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
+    $campo = usuarioDeVisita('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
     $this->orden->update(['service_id' => Service::factory()->create(['nombre' => 'Mantenimiento en sitio'])->id]);
     $cierre = ['conformidad_nombre' => 'Jefe de local', 'conformidad_aceptada' => true, 'firma' => FIRMA_PNG];
 
@@ -182,7 +182,7 @@ test('T2 el mantenimiento en sitio exige checklist, fotos antes y despues y firm
 });
 
 test('T4 la instalacion exige escanear cada unidad vendida', function () {
-    $campo = usuarioConRol('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
+    $campo = usuarioDeVisita('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
     $venta = Sale::factory()->create(['client_id' => $this->orden->client_id, 'sede_id' => $this->sede->id]);
     $vendida = Equipment::factory()->create(['client_id' => $venta->client_id, 'numero_serie' => 'BF-EQ-777001']);
     $otra = Equipment::factory()->create(['client_id' => $venta->client_id, 'numero_serie' => 'BF-EQ-777002']);
