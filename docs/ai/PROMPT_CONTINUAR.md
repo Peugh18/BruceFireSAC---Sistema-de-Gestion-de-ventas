@@ -11,7 +11,8 @@ ESTADO (2026-10-07), rama principal fix/correcciones-auditoria-completa:
 - HECHO y con commit: fase A (facturación SUNAT), A2 (seguridad) y B (certificados y tipo de extintor). Commits fc024ec y 2b0fd02.
 - FASE C (ventas, caja, cobranzas, KPI): HECHA con commit (pruebas escritas sin ejecutar).
 - FASE E (almacén y Gerente): HECHA y unida a la rama principal (merge d4a36ed).
-- FASE D (técnicos): rama `worktree-agent-a433661a5d96bddf7` (casi sin avance). FASE H (guía de remisión): rama `worktree-agent-a381db1eab387b5e3` (recién empezada). Termínalas y únelas a la rama principal.
+- FASE D (técnicos) y FASE H (guía de remisión, Greenter 5.3 + gre-api): HECHAS y unidas a la rama principal (último commit 2a290db).
+- PENDIENTE: subir la rama (git push), correr la suite completa (`composer ci:check`, con MySQL encendido) y corregir lo que falle; después, la fase F (interfaces con prototipos). Pendientes menores anotados en docs/ai/PLAN.md: motor único de visitas, estados "en camino"/"en sitio", firma vacía rechazada en servidor, PDF/QR de la guía y reintento automático de su consulta.
 - NO hacer: fase F (rediseño de interfaces: va al final, con prototipos) ni G (servidor).
 
 REGLAS DEL DUEÑO:
