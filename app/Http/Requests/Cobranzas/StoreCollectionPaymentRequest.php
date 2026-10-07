@@ -39,7 +39,9 @@ class StoreCollectionPaymentRequest extends FormRequest
                 return;
             }
 
-            $saldo = max(0, round((float) $installment->monto - (float) $installment->payments()->sum('monto'), 2));
+            // El saldo real resta lo que una nota de crédito ya acreditó:
+            // sin eso se deja cobrar de más.
+            $saldo = $installment->saldo();
 
             if ((float) $this->input('monto') > $saldo) {
                 $validator->errors()->add('monto', 'El monto no puede superar el saldo de S/ '.number_format($saldo, 2).'.');

@@ -32,12 +32,21 @@ type InventarioData = {
     totalProductos: number;
     totalUnidades: number;
     totalBajoMinimo: number;
+    productosSinCosto: number;
+    paginacion: {
+        pagina: number;
+        ultima: number;
+        total: number;
+        anterior: string | null;
+        siguiente: string | null;
+    } | null;
     productos: Array<{
         id: number;
         codigo: string;
         nombre: string;
         unidad_medida: string;
-        precio_venta: number;
+        costo_promedio: number | null;
+        sin_costo: boolean;
         serializado: boolean;
         stock_minimo: number | null;
         stock_disponible: number;
@@ -609,6 +618,18 @@ export default function ReportesIndex() {
                             </div>
                         </div>
 
+                        {reporteInventario.productosSinCosto > 0 && (
+                            <div
+                                role="alert"
+                                className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-medium"
+                            >
+                                {reporteInventario.productosSinCosto}{' '}
+                                producto(s) con stock no tienen costo de compra:
+                                la valorización está incompleta. Registra el
+                                costo al recibir la mercadería.
+                            </div>
+                        )}
+
                         {/* KPIs de Inventario */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
@@ -624,7 +645,7 @@ export default function ReportesIndex() {
                                     )}
                                 </div>
                                 <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Stock disponible × precio venta
+                                    Stock disponible × costo promedio de compra
                                 </p>
                             </div>
 
@@ -693,7 +714,7 @@ export default function ReportesIndex() {
                                                 U.M.
                                             </th>
                                             <th className="px-4 py-3 text-right">
-                                                Precio Venta
+                                                Costo promedio
                                             </th>
                                             <th className="px-4 py-3 text-center">
                                                 Stock Mínimo
@@ -746,9 +767,12 @@ export default function ReportesIndex() {
                                                             {p.unidad_medida}
                                                         </td>
                                                         <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
-                                                            {formatCurrency(
-                                                                p.precio_venta,
-                                                            )}
+                                                            {p.costo_promedio !==
+                                                            null
+                                                                ? formatCurrency(
+                                                                      p.costo_promedio,
+                                                                  )
+                                                                : 'Sin costo'}
                                                         </td>
                                                         <td className="text-foreground/80 px-4 py-3 text-center font-mono">
                                                             {p.stock_minimo !==
@@ -797,6 +821,66 @@ export default function ReportesIndex() {
                                     </tbody>
                                 </table>
                             </div>
+                            {reporteInventario.paginacion &&
+                                reporteInventario.paginacion.ultima > 1 && (
+                                    <div className="border-border text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
+                                        <span>
+                                            Página{' '}
+                                            {
+                                                reporteInventario.paginacion
+                                                    .pagina
+                                            }{' '}
+                                            de{' '}
+                                            {
+                                                reporteInventario.paginacion
+                                                    .ultima
+                                            }{' '}
+                                            (
+                                            {reporteInventario.paginacion.total}{' '}
+                                            productos)
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                disabled={
+                                                    !reporteInventario
+                                                        .paginacion.anterior
+                                                }
+                                                onClick={() =>
+                                                    reporteInventario.paginacion
+                                                        ?.anterior &&
+                                                    router.get(
+                                                        reporteInventario
+                                                            .paginacion
+                                                            .anterior,
+                                                    )
+                                                }
+                                                className="border-border rounded-md border px-3 py-1 font-semibold disabled:opacity-40"
+                                            >
+                                                Anterior
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={
+                                                    !reporteInventario
+                                                        .paginacion.siguiente
+                                                }
+                                                onClick={() =>
+                                                    reporteInventario.paginacion
+                                                        ?.siguiente &&
+                                                    router.get(
+                                                        reporteInventario
+                                                            .paginacion
+                                                            .siguiente,
+                                                    )
+                                                }
+                                                className="border-border rounded-md border px-3 py-1 font-semibold disabled:opacity-40"
+                                            >
+                                                Siguiente
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                         </div>
                     </div>
                 )}

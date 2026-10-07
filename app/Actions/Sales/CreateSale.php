@@ -10,7 +10,11 @@ use App\Models\Sale;
 use App\Models\Service;
 use App\Models\Vehicle;
 use App\Services\AuditLogger;
+use App\Services\Billing\AfectacionIgv;
 use App\Services\Billing\PrecioConIgv;
+use App\Services\NumeracionInterna;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -28,16 +32,22 @@ class CreateSale
      */
     public function handle(array $data, array $items, int $vendedorId): Sale
     {
-        return DB::transaction(function () use ($data, $items, $vendedorId) {
+        $iniciadoAt = $data['iniciado_at'] ?? null;
+        unset($data['iniciado_at']);
+
+        return DB::transaction(function () use ($data, $items, $vendedorId, $iniciadoAt) {
             // Los precios ya incluyen IGV: el subtotal de cada línea es lo que
             // paga el cliente y la base/IGV se separan de ahí.
             $lineas = array_map(function (array $item) {
                 $descuento = $item['descuento'] ?? 0;
 
-                return [...$item, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
+                $catalogo = ! empty($item['service_id']) ? Service::findOrFail((int) $item['service_id']) : Product::findOrFail((int) $item['product_id']);
+                $afectacion = AfectacionIgv::codigo($catalogo);
+
+                return [...$item, 'tipo_afectacion_igv' => $afectacion, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
             }, $items);
 
-            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totales(array_column($lineas, 'subtotal'));
+            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totalesConAfectacion($lineas);
 
             $this->validarVehiculo($data);
             $this->validarCatalogoActivo($lineas);
@@ -50,7 +60,8 @@ class CreateSale
 
             $sale = Sale::create([
                 ...$data,
-                'numero_interno' => 'VTA-'.str_pad((string) (Sale::max('id') + 1), 4, '0', STR_PAD_LEFT),
+                'numero_interno' => app(NumeracionInterna::class)->siguiente('VTA', 'sales', 'numero_interno'),
+                'registro_iniciado_at' => $this->inicioDelRegistro($iniciadoAt),
                 'vendedor_id' => $vendedorId,
                 'subtotal' => $subtotal,
                 'igv' => $igv,
@@ -98,14 +109,18 @@ class CreateSale
         return DB::transaction(function () use ($sale, $data, $items, $userId) {
             $sale = Sale::query()->lockForUpdate()->findOrFail($sale->id);
             $antes = $sale->only(['client_id', 'comprobante_tipo', 'condicion_pago', 'total']);
+            unset($data['iniciado_at']);
 
             $lineas = array_map(function (array $item) {
                 $descuento = $item['descuento'] ?? 0;
 
-                return [...$item, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
+                $catalogo = ! empty($item['service_id']) ? Service::findOrFail((int) $item['service_id']) : Product::findOrFail((int) $item['product_id']);
+                $afectacion = AfectacionIgv::codigo($catalogo);
+
+                return [...$item, 'tipo_afectacion_igv' => $afectacion, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
             }, $items);
 
-            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totales(array_column($lineas, 'subtotal'));
+            ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totalesConAfectacion($lineas);
 
             $this->validarComprobanteCliente->handle(
                 Client::query()->findOrFail($data['client_id']),
@@ -197,6 +212,24 @@ class CreateSale
         }
 
         app(TransitionQuoteState::class)->convertToSale($quote);
+    }
+
+    /**
+     * X7: el registro empieza cuando se abrió el formulario. Una hora del
+     * navegador vacía, futura o de hace más de 12 horas no se cree: se usa
+     * la de ahora.
+     */
+    protected function inicioDelRegistro(mixed $iniciadoAt): CarbonInterface
+    {
+        $ahora = now();
+
+        try {
+            $inicio = $iniciadoAt ? Carbon::parse((string) $iniciadoAt)->setTimezone($ahora->getTimezone()) : null;
+        } catch (\Throwable) {
+            $inicio = null;
+        }
+
+        return $inicio && $inicio->lte($ahora) && $inicio->gte($ahora->copy()->subHours(12)) ? $inicio : $ahora;
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AddSecurityHeaders;
+use App\Http\Middleware\ExigirSeguridadDeLaCuenta;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetTeamUrlDefaults;
@@ -22,12 +23,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: ['127.0.0.1', '::1']);
+        // Proxies de confianza: TRUSTED_PROXIES (config/seguridad.php), que
+        // AppServiceProvider aplica para que también funcione con `config:cache`.
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
             AddSecurityHeaders::class,
+            ExigirSeguridadDeLaCuenta::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
@@ -67,7 +70,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             $renderBranded = in_array($status, [403, 404], true)
-                || (in_array($status, [500, 503], true) && ! app()->environment(['local', 'testing']));
+                || (in_array($status, [500, 503], true) && (! config('app.debug') || ! app()->environment(['local', 'testing'])));
 
             if ($renderBranded) {
                 return Inertia::render('errors/error', ['status' => $status])

@@ -84,7 +84,7 @@ test('tecnico campo can register new equipment on site and submit digital checkl
             'current_team' => $this->team,
             'service_order' => $order->id,
         ]), [
-            'tipo_agente' => 'PQS',
+            'tipo_agente' => 'PQS ABC',
             'capacidad' => '6 kg',
             'ubicacion_actual' => 'Recepción principal',
         ])

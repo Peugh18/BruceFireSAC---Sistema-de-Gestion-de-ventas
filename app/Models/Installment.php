@@ -16,12 +16,15 @@ use Illuminate\Support\Carbon;
  * @property int $numero_cuota
  * @property Carbon $fecha_vencimiento
  * @property float $monto
+ * @property float $monto_acreditado
  * @property string $estado
+ * @property int|null $electronic_document_id
+ * @property int|null $deficiency_authorization_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Sale $sale
  */
-#[Fillable(['sale_id', 'numero_cuota', 'fecha_vencimiento', 'monto', 'estado'])]
+#[Fillable(['sale_id', 'numero_cuota', 'fecha_vencimiento', 'monto', 'monto_acreditado', 'estado', 'electronic_document_id', 'deficiency_authorization_id'])]
 class Installment extends Model
 {
     /** @use HasFactory<InstallmentFactory> */
@@ -32,7 +35,45 @@ class Installment extends Model
         return [
             'fecha_vencimiento' => 'date',
             'monto' => 'decimal:2',
+            'monto_acreditado' => 'decimal:2',
         ];
+    }
+
+    /**
+     * Lo que falta cobrar (V4/S11): el monto de la cuota, menos lo que le
+     * rebajaron las notas de crédito aceptadas, menos lo pagado. Usa los
+     * pagos ya cargados si los hay.
+     */
+    public function saldo(): float
+    {
+        $pagado = $this->relationLoaded('payments') ? $this->payments->sum('monto') : $this->payments()->sum('monto');
+
+        return max(0, round((float) $this->monto - (float) $this->monto_acreditado - (float) $pagado, 2));
+    }
+
+    /**
+     * Estado según su saldo conciliado (pagos y notas de crédito).
+     */
+    public function recalcularEstado(): void
+    {
+        $pagado = (float) $this->payments()->sum('monto');
+        $cubierto = $pagado + (float) $this->monto_acreditado;
+
+        $this->update(['estado' => match (true) {
+            $cubierto >= (float) $this->monto - 0.001 => 'pagado',
+            $cubierto > 0 => 'parcial',
+            $this->fecha_vencimiento->isBefore(today()) => 'vencido',
+            default => 'pendiente',
+        }]);
+    }
+
+    /**
+     * Cuota del comprobante original (no una nota de débito ni un adicional):
+     * solo esas van en el XML de la factura.
+     */
+    public function esDelComprobante(): bool
+    {
+        return $this->electronic_document_id === null && $this->deficiency_authorization_id === null;
     }
 
     /**

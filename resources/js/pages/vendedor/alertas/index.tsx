@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import rutasAlertas from '@/routes/vendedor/alertas';
 import type { Team } from '@/types';
 
 export type AlertItem = {
@@ -35,6 +36,12 @@ export type AlertItem = {
     whatsapp?: string;
     origen: 'equipo_registrado' | 'estimado_historico';
     recompra: Recompra | null;
+    /** X8: último contacto registrado (30 días), para no ofrecer dos veces. */
+    contactado?: {
+        fecha: string;
+        usuario: string | null;
+        nota: string | null;
+    } | null;
     tipo_alerta?:
         | 'recarga_anual'
         | 'prueba_hidrostatica'
@@ -374,6 +381,18 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
                                                     )}
                                                 </div>
 
+                                                {item.contactado && (
+                                                    <div className="text-success-strong mt-1 text-[12px] font-semibold">
+                                                        Contactado el{' '}
+                                                        {item.contactado.fecha}
+                                                        {item.contactado
+                                                            .usuario &&
+                                                            ` por ${item.contactado.usuario}`}
+                                                        {item.contactado.nota &&
+                                                            `: ${item.contactado.nota}`}
+                                                    </div>
+                                                )}
+
                                                 <div className="text-muted-foreground mt-1 text-[12px]">
                                                     {item.cantidad} extintor(es){' '}
                                                     <b className="text-foreground/80 font-semibold">
@@ -419,7 +438,9 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
                                                     onClick={() =>
                                                         item.equipment_id &&
                                                         router.post(
-                                                            `/${teamSlug}/vendedor/alertas/ofrecer-recarga`,
+                                                            rutasAlertas.ofrecerRecarga.url(
+                                                                teamSlug,
+                                                            ),
                                                             {
                                                                 client_id:
                                                                     item.client_id,
@@ -434,6 +455,41 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
                                                     <FilePlus2 className="size-3.5" />
                                                     <span>Ofrecer recarga</span>
                                                 </button>
+
+                                                {!item.contactado && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const nota =
+                                                                window.prompt(
+                                                                    'Nota corta del contacto (opcional)',
+                                                                );
+
+                                                            if (nota === null) {
+                                                                return;
+                                                            }
+
+                                                            router.post(
+                                                                rutasAlertas.contactado.url(
+                                                                    teamSlug,
+                                                                ),
+                                                                {
+                                                                    client_id:
+                                                                        item.client_id,
+                                                                    equipment_id:
+                                                                        item.equipment_id,
+                                                                    nota,
+                                                                },
+                                                                {
+                                                                    preserveScroll: true,
+                                                                },
+                                                            );
+                                                        }}
+                                                        className="border-border bg-card text-foreground/80 hover:bg-background inline-flex h-9 items-center gap-1 rounded-[9px] border px-3 text-[12px] font-semibold"
+                                                    >
+                                                        Marcar contactado
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     );

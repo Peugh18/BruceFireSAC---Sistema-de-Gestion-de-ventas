@@ -28,16 +28,18 @@ class ComprobanteQrGenerator
             default => '0',
         };
 
+        $snapshot = str_contains($xmlSigned, 'AccountingCustomerParty') ? app(DatosEmision::class)->desdeXml($xmlSigned) : null;
+
         $texto = implode('|', [
-            $company->ruc,
-            $tipoDocSunat,
+            $snapshot['emisor']['ruc'] ?? $company->ruc,
+            $snapshot['tipo_documento'] ?? $tipoDocSunat,
             $document->serie,
             str_pad((string) $document->correlativo, 8, '0', STR_PAD_LEFT),
-            number_format((float) $sale->igv, 2, '.', ''),
-            number_format((float) $sale->total, 2, '.', ''),
+            number_format((float) ($snapshot['totales']['igv'] ?? $sale->igv), 2, '.', ''),
+            number_format((float) ($snapshot['totales']['total'] ?? $sale->total), 2, '.', ''),
             ($document->fecha_emision ?? $sale->fecha)->toDateString(),
-            $tipoDocCliente,
-            $sale->client->numero_documento,
+            $snapshot['cliente']['tipo_documento'] ?? $tipoDocCliente,
+            $snapshot['cliente']['numero_documento'] ?? $sale->client->numero_documento,
             $this->extractDigestValue($xmlSigned),
         ]).'|';
 

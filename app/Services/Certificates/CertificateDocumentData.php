@@ -185,12 +185,12 @@ class CertificateDocumentData
                 'capacidad' => $unit->capacidad ?: $unit->equipment?->capacidad,
                 'serie' => $unit->numero_serie_snapshot,
                 'marca' => $unit->marca ?: $unit->equipment?->marca,
-                'tipo' => $unit->tipo_agente ?: 'PQS-ABC',
+                'tipo' => $unit->tipo_agente ?: '—',
                 'anio' => (string) ($unit->anio_fabricacion ?: $unit->equipment?->anio_fabricacion),
                 'proxima_ph' => $this->mesAnio($this->proximaPh($certificate, $unit)),
                 'vencimiento' => $this->mesAnio($certificate->fecha_vigencia_hasta),
-                'presion_ph' => $unit->presion_ph ?: '600 PSI',
-                'tiempo_ph' => $unit->tiempo_ph ?: '60 SEG',
+                'presion_ph' => $unit->presion_ph ?: '—',
+                'tiempo_ph' => $unit->tiempo_ph ?: '—',
                 'resultado' => 'operativo',
             ])
             ->all();
@@ -344,7 +344,7 @@ class CertificateDocumentData
      */
     protected function firmaConSello(?string $firmaPath, ?string $selloPath): ?string
     {
-        $disco = Storage::disk('public');
+        $disco = Storage::disk('local');
         $firma = $firmaPath && $disco->exists($firmaPath) ? @imagecreatefromstring($disco->get($firmaPath)) : null;
         $sello = $selloPath && $disco->exists($selloPath) ? @imagecreatefromstring($disco->get($selloPath)) : null;
 
@@ -377,13 +377,13 @@ class CertificateDocumentData
 
     protected function imagenDelDisco(?string $ruta): ?string
     {
-        if (! $ruta || ! Storage::disk('public')->exists($ruta)) {
+        if (! $ruta || ! Storage::disk('local')->exists($ruta)) {
             return null;
         }
 
-        $tipo = Storage::disk('public')->mimeType($ruta) ?: 'image/png';
+        $tipo = Storage::disk('local')->mimeType($ruta) ?: 'image/png';
 
-        return 'data:'.$tipo.';base64,'.base64_encode(Storage::disk('public')->get($ruta));
+        return 'data:'.$tipo.';base64,'.base64_encode(Storage::disk('local')->get($ruta));
     }
 
     /**

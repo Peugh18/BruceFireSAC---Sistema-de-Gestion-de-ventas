@@ -90,6 +90,7 @@ class ChecklistController extends Controller
             'items.*.accion_recomendada' => ['nullable', 'string', 'max:255'],
             'items.*.repuesto_sugerido' => ['nullable', 'string', 'max:255'],
             'items.*.requiere_autorizacion' => ['nullable', 'boolean'],
+            'items.*.foto' => ['nullable', 'image', 'max:15360'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
 

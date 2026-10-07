@@ -16,9 +16,17 @@ import {
     MessageSquare,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
+import FirmaCanvas from '@/components/firma-canvas';
+import SubirEvidencia, {
+    type EvidenciaListada,
+} from '@/components/subir-evidencia';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
+import OpcionesAgente from '@/components/opciones-agente';
 
 type TechnicalChecklistItem = {
     clave?: string;
@@ -98,6 +106,8 @@ type Props = {
     order: ServiceOrder;
     customerEquipments: Equipment[];
     elementosChecklist: Record<string, string>;
+    conversacion: ConversacionProps;
+    evidencias: EvidenciaListada[];
 };
 
 export default function InspeccionShow({
@@ -106,6 +116,8 @@ export default function InspeccionShow({
     order,
     customerEquipments,
     elementosChecklist,
+    conversacion,
+    evidencias,
 }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
     const { auth, flash } = usePage<{
@@ -123,7 +135,7 @@ export default function InspeccionShow({
     const addEquipmentForm = useForm({
         equipment_id: '',
         numero_serie: '',
-        tipo_agente: 'PQS',
+        tipo_agente: '',
         capacidad: '6 kg',
         marca: 'Genérica',
         ubicacion_actual: '',
@@ -150,6 +162,7 @@ export default function InspeccionShow({
         conformidad_nombre: '',
         conformidad_aceptada: false,
         observaciones_generales: '',
+        firma: null as string | null,
     });
 
     const handleComplete = (e: React.FormEvent) => {
@@ -404,12 +417,7 @@ export default function InspeccionShow({
                                             }
                                             className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                         >
-                                            <option value="PQS">PQS</option>
-                                            <option value="CO2">CO2</option>
-                                            <option value="Agua">Agua</option>
-                                            <option value="Acetato de Potasio">
-                                                Acetato K
-                                            </option>
+                                            <OpcionesAgente vacia="Sin registrar" />
                                         </select>
                                     </div>
                                     <div>
@@ -740,6 +748,25 @@ export default function InspeccionShow({
                             />
                         </div>
 
+                        <SubirEvidencia
+                            ordenId={order.id}
+                            etapa="antes"
+                            titulo="Fotos antes"
+                            evidencias={evidencias}
+                            equipos={conversacion.equipos}
+                        />
+                        <SubirEvidencia
+                            ordenId={order.id}
+                            etapa="despues"
+                            titulo="Fotos después"
+                            evidencias={evidencias}
+                            equipos={conversacion.equipos}
+                        />
+
+                        <FirmaCanvas
+                            onChange={(f) => completeForm.setData('firma', f)}
+                        />
+
                         {/* Checkbox de conformidad (§85.6.2) */}
                         <div className="rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3">
                             <label className="flex cursor-pointer items-start gap-2.5">
@@ -774,6 +801,7 @@ export default function InspeccionShow({
                             type="submit"
                             disabled={
                                 completeForm.processing ||
+                                !completeForm.data.firma ||
                                 !completeForm.data.conformidad_aceptada
                             }
                             className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
@@ -784,6 +812,13 @@ export default function InspeccionShow({
                     </form>
                 </div>
             )}
+
+            <div className="mt-5">
+                <ConversacionOrden
+                    ordenId={order.id}
+                    conversacion={conversacion}
+                />
+            </div>
         </TecnicoCampoLayout>
     );
 }

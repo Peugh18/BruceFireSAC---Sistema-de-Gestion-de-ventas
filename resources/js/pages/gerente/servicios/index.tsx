@@ -11,26 +11,32 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
-
+import {
+    CategoriaSelect,
+    type CategoriaItem,
+} from '@/components/categoria-select';
 import GerenteLayout from '@/layouts/gerente-layout';
-
 type ServiceItem = {
     id: number;
     codigo: string;
     nombre: string;
     descripcion: string | null;
+    categoria: string | null;
     unidad_medida: string;
+    agente: string | null;
+    capacidad: string | null;
     precio_venta: number;
     aplica_igv: boolean;
+    tipo_afectacion_igv: string | null;
+    igv_requiere_revision: boolean;
+    certificate_type_id: number | null;
     activo: boolean;
 };
-
 type PaginationLink = {
     url: string | null;
     label: string;
     active: boolean;
 };
-
 type PaginatedServices = {
     data: ServiceItem[];
     links: PaginationLink[];
@@ -38,29 +44,29 @@ type PaginatedServices = {
     last_page: number;
     total: number;
 };
-
 type ServiceFilters = {
     buscar: string;
     estado: string;
 };
-
 type ServiceKpis = {
     totalServicios: number;
     totalActivos: number;
 };
-
 type PageProps = {
     currentTeam: { slug: string };
     servicios: PaginatedServices;
     filters: ServiceFilters;
     kpis: ServiceKpis;
+    tiposCertificado: { id: number; nombre: string }[];
+    categorias: CategoriaItem[];
+    unidadesMedida: { codigo: string; nombre: string }[];
+    agentes: { valor: string; etiqueta: string }[];
     flash?: {
         success?: string;
         error?: string;
     };
     [key: string]: unknown;
 };
-
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-PE', {
         style: 'currency',
@@ -68,27 +74,37 @@ function formatCurrency(amount: number): string {
         minimumFractionDigits: 2,
     }).format(amount);
 }
-
 export default function ServiciosIndex() {
-    const { currentTeam, servicios, filters, kpis, flash } =
-        usePage<PageProps>().props;
-
+    const {
+        currentTeam,
+        servicios,
+        filters,
+        kpis,
+        tiposCertificado,
+        categorias,
+        unidadesMedida,
+        agentes,
+        flash,
+    } = usePage<PageProps>().props;
     const [buscar, setBuscar] = useState(filters.buscar || '');
     const [modalOpen, setModalOpen] = useState(false);
     const [editingService, setEditingService] = useState<ServiceItem | null>(
         null,
     );
-
     const form = useForm({
         codigo: '',
         nombre: '',
         descripcion: '',
+        categoria: '',
         unidad_medida: 'ZZ',
+        agente: '',
+        capacidad: '',
         precio_venta: '',
         aplica_igv: true,
+        tipo_afectacion_igv: '10',
+        certificate_type_id: '',
         activo: true,
     });
-
     const openCreateModal = () => {
         setEditingService(null);
         form.reset();
@@ -96,34 +112,45 @@ export default function ServiciosIndex() {
             codigo: '',
             nombre: '',
             descripcion: '',
+            categoria: '',
             unidad_medida: 'ZZ',
+            agente: '',
+            capacidad: '',
             precio_venta: '',
             aplica_igv: true,
+            tipo_afectacion_igv: '10',
+            certificate_type_id: '',
             activo: true,
         });
         setModalOpen(true);
     };
-
     const openEditModal = (service: ServiceItem) => {
         setEditingService(service);
         form.setData({
             codigo: service.codigo,
             nombre: service.nombre,
             descripcion: service.descripcion || '',
+            categoria: service.categoria ?? '',
             unidad_medida: service.unidad_medida,
+            agente: service.agente ?? '',
+            capacidad: service.capacidad ?? '',
             precio_venta: String(service.precio_venta),
             aplica_igv: service.aplica_igv,
+            tipo_afectacion_igv: service.igv_requiere_revision
+                ? ''
+                : (service.tipo_afectacion_igv ?? '10'),
+            certificate_type_id: service.certificate_type_id
+                ? String(service.certificate_type_id)
+                : '',
             activo: service.activo,
         });
         setModalOpen(true);
     };
-
     const closeModal = () => {
         setModalOpen(false);
         setEditingService(null);
         form.reset();
     };
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (editingService) {
@@ -139,7 +166,6 @@ export default function ServiciosIndex() {
             });
         }
     };
-
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
@@ -151,7 +177,6 @@ export default function ServiciosIndex() {
             { preserveState: true },
         );
     };
-
     const handleFilterEstado = (estado: string) => {
         router.get(
             `/${currentTeam.slug}/gerente/servicios`,
@@ -162,7 +187,6 @@ export default function ServiciosIndex() {
             { preserveState: true },
         );
     };
-
     const handleToggleStatus = (service: ServiceItem) => {
         router.patch(
             `/${currentTeam.slug}/gerente/servicios/${service.id}/toggle-status`,
@@ -170,7 +194,6 @@ export default function ServiciosIndex() {
             { preserveScroll: true },
         );
     };
-
     const handleDelete = (service: ServiceItem) => {
         if (
             confirm(
@@ -185,7 +208,6 @@ export default function ServiciosIndex() {
             );
         }
     };
-
     return (
         <GerenteLayout title="Catálogo de Servicios">
             <div className="space-y-6">
@@ -202,7 +224,6 @@ export default function ServiciosIndex() {
                         <span>{flash.error}</span>
                     </div>
                 )}
-
                 {/* Cabecera y Botón Nuevo */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
@@ -214,7 +235,6 @@ export default function ServiciosIndex() {
                             inspecciones técnicas.
                         </p>
                     </div>
-
                     <button
                         type="button"
                         onClick={openCreateModal}
@@ -224,7 +244,6 @@ export default function ServiciosIndex() {
                         <span>Nuevo Servicio</span>
                     </button>
                 </div>
-
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
@@ -238,7 +257,6 @@ export default function ServiciosIndex() {
                             {kpis.totalServicios}
                         </div>
                     </div>
-
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
                         <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
@@ -251,7 +269,6 @@ export default function ServiciosIndex() {
                         </div>
                     </div>
                 </div>
-
                 {/* Barra de Filtros y Búsqueda */}
                 <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 shadow-xs md:flex-row md:items-center md:justify-between">
                     <form
@@ -275,7 +292,6 @@ export default function ServiciosIndex() {
                             Buscar
                         </button>
                     </form>
-
                     <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
                         <button
                             type="button"
@@ -312,7 +328,6 @@ export default function ServiciosIndex() {
                         </button>
                     </div>
                 </div>
-
                 {/* Tabla de Servicios */}
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
@@ -376,9 +391,15 @@ export default function ServiciosIndex() {
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
-                                                    {s.aplica_igv
-                                                        ? 'Aplica (18%)'
-                                                        : 'Exonerado'}
+                                                    {s.igv_requiere_revision
+                                                        ? 'Elegir afectación'
+                                                        : s.tipo_afectacion_igv ===
+                                                            '20'
+                                                          ? 'Exonerado'
+                                                          : s.tipo_afectacion_igv ===
+                                                              '30'
+                                                            ? 'Inafecto'
+                                                            : 'Gravado (18%)'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-center">
@@ -444,7 +465,6 @@ export default function ServiciosIndex() {
                             </tbody>
                         </table>
                     </div>
-
                     {/* Paginación */}
                     {servicios.links && servicios.links.length > 3 && (
                         <div className="border-border bg-muted/40 text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
@@ -488,7 +508,6 @@ export default function ServiciosIndex() {
                         </div>
                     )}
                 </div>
-
                 {/* Modal Crear / Editar Servicio */}
                 {modalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -507,7 +526,6 @@ export default function ServiciosIndex() {
                                     <X className="size-4" />
                                 </button>
                             </div>
-
                             <form
                                 onSubmit={handleSubmit}
                                 className="mt-4 space-y-4 text-xs"
@@ -536,14 +554,11 @@ export default function ServiciosIndex() {
                                             </p>
                                         )}
                                     </div>
-
                                     <div>
                                         <label className="text-foreground/80 block font-semibold">
                                             U.M. *
                                         </label>
-                                        <input
-                                            type="text"
-                                            required
+                                        <select
                                             value={form.data.unidad_medida}
                                             onChange={(e) =>
                                                 form.setData(
@@ -551,12 +566,31 @@ export default function ServiciosIndex() {
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="ZZ"
-                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
-                                        />
+                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                        >
+                                            {unidadesMedida.map((u) => (
+                                                <option
+                                                    key={u.codigo}
+                                                    value={u.codigo}
+                                                >
+                                                    {u.codigo} ({u.nombre})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {form.errors.unidad_medida && (
+                                            <p className="mt-1 text-red-600">
+                                                {form.errors.unidad_medida}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
-
+                                <CategoriaSelect
+                                    value={form.data.categoria}
+                                    onChange={(clave) =>
+                                        form.setData('categoria', clave)
+                                    }
+                                    categorias={categorias}
+                                />
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Nombre del Servicio *
@@ -580,7 +614,6 @@ export default function ServiciosIndex() {
                                         </p>
                                     )}
                                 </div>
-
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Descripción
@@ -598,7 +631,6 @@ export default function ServiciosIndex() {
                                         className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                     />
                                 </div>
-
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Precio Venta (S/) *
@@ -624,25 +656,117 @@ export default function ServiciosIndex() {
                                         </p>
                                     )}
                                 </div>
-
-                                <div className="flex items-center gap-6 pt-1">
-                                    <label className="flex cursor-pointer items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={form.data.aplica_igv}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className="flex flex-col gap-1">
+                                        Agente que recarga
+                                        <select
+                                            value={form.data.agente}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    'aplica_igv',
-                                                    e.target.checked,
+                                                    'agente',
+                                                    e.target.value,
                                                 )
                                             }
-                                            className="border-border text-primary-strong rounded"
-                                        />
-                                        <span className="text-foreground/80">
-                                            Aplica IGV (18%)
-                                        </span>
+                                            className="border-border rounded border p-2"
+                                        >
+                                            <option value="">
+                                                No es una recarga
+                                            </option>
+                                            {agentes.map((agente) => (
+                                                <option
+                                                    key={agente.valor}
+                                                    value={agente.valor}
+                                                >
+                                                    {agente.etiqueta}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </label>
-
+                                    <label className="flex flex-col gap-1">
+                                        Capacidad
+                                        <input
+                                            type="text"
+                                            value={form.data.capacidad}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'capacidad',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="6 kg"
+                                            className="border-border rounded border p-2"
+                                        />
+                                        {form.errors.capacidad && (
+                                            <span className="text-red-600">
+                                                {form.errors.capacidad}
+                                            </span>
+                                        )}
+                                    </label>
+                                </div>
+                                <label className="flex flex-col gap-1">
+                                    Certificado que emite
+                                    <select
+                                        value={form.data.certificate_type_id}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'certificate_type_id',
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="border-border rounded border p-2"
+                                    >
+                                        <option value="">Ninguno</option>
+                                        {tiposCertificado.map((tipo) => (
+                                            <option
+                                                key={tipo.id}
+                                                value={tipo.id}
+                                            >
+                                                {tipo.nombre}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {form.errors.certificate_type_id && (
+                                        <span className="text-red-600">
+                                            {form.errors.certificate_type_id}
+                                        </span>
+                                    )}
+                                </label>
+                                <div className="flex items-center gap-6 pt-1">
+                                    <label className="flex flex-col gap-1">
+                                        Afectación del IGV
+                                        <select
+                                            value={
+                                                form.data.tipo_afectacion_igv
+                                            }
+                                            required
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'tipo_afectacion_igv',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="border-border rounded border p-2"
+                                        >
+                                            <option value="" disabled>
+                                                Elige la afectación
+                                            </option>
+                                            <option value="10">
+                                                Gravado (IGV incluido: 18%)
+                                            </option>
+                                            <option value="20">
+                                                Exonerado
+                                            </option>
+                                            <option value="30">Inafecto</option>
+                                        </select>
+                                        {form.errors.tipo_afectacion_igv && (
+                                            <span className="text-red-600">
+                                                {
+                                                    form.errors
+                                                        .tipo_afectacion_igv
+                                                }
+                                            </span>
+                                        )}
+                                    </label>
                                     <label className="flex cursor-pointer items-center gap-2">
                                         <input
                                             type="checkbox"
@@ -660,7 +784,6 @@ export default function ServiciosIndex() {
                                         </span>
                                     </label>
                                 </div>
-
                                 <div className="border-border flex justify-end gap-2 border-t pt-3">
                                     <button
                                         type="button"

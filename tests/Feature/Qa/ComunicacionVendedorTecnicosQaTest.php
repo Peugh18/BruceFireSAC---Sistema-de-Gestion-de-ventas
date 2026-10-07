@@ -10,6 +10,7 @@ use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -136,6 +137,7 @@ it('comunica una deficiencia de planta al vendedor y devuelve la autorización a
             'condicion' => 'Presenta fisura',
             'accion_recomendada' => 'Cambiar manguera',
             'requiere_autorizacion' => true,
+            'foto' => UploadedFile::fake()->image('foto.jpg'),
         ])
         ->assertSessionHasNoErrors();
 
@@ -187,6 +189,7 @@ it('impide que vendedor y técnicos ejecuten acciones del otro rol', function ()
         ]), [
             'componente' => 'Válvula',
             'condicion' => 'Dañada',
+            'foto' => UploadedFile::fake()->image('foto.jpg'),
         ])
         ->assertForbidden();
 

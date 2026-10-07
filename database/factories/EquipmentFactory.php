@@ -17,6 +17,7 @@ class EquipmentFactory extends Factory
         return [
             'client_id' => Client::factory(),
             'product_id' => Product::factory(),
+            'tipo_agente' => 'PQS ABC',
             'numero_serie' => 'EQ-'.fake()->year().'-'.fake()->unique()->numerify('####'),
             'fecha_venta' => fake()->dateTimeBetween('-1 year', 'now'),
             'ubicacion_actual' => fake()->optional()->streetAddress(),

@@ -10,8 +10,6 @@ use App\Models\ProductLot;
 use App\Models\Sede;
 use App\Models\Team;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,82 +34,49 @@ class StockController extends Controller
             ->orderBy('id')
             ->with('ubicacion')->get(['id', 'nombre', 'tipo', 'ubigeo']);
 
-        // 2a. Para productos serializados: conteo de InventoryUnit en estado 'disponible'
-        $stockUnits = InventoryUnit::query()
+        // Los productos se paginan en la base de datos; el stock por sede se
+        // calcula solo para los de esta página.
+        $paginaProductos = Product::query()
+            ->where('activo', true)
+            ->when(! in_array($tipo, ['', 'todos', 'producto'], true), fn ($q) => $q->whereRaw('1 = 0'))
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('codigo', 'like', "%{$search}%")
+                        ->orWhere('codigo_barras', $search)
+                        ->orWhere('nombre', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('nombre')
+            ->paginate(15)
+            ->withQueryString();
+
+        $ids = $paginaProductos->getCollection()->pluck('id')->all();
+
+        // Con serie: unidades 'disponible' por sede. Sin serie (§84.11): saldo del Kardex.
+        $stockMatrix = [];
+        InventoryUnit::query()
             ->where('estado', 'disponible')
+            ->whereIn('product_id', $ids)
             ->selectRaw('product_id, sede_almacen_id as sede_id, count(*) as total')
             ->groupBy('product_id', 'sede_almacen_id')
-            ->get();
-
-        // 2b. Para productos no serializados (repuestos / componentes a granel, §84.11): saldo de Kardex
-        $bulkMovements = InventoryMovement::query()
+            ->get()
+            ->each(function ($fila) use (&$stockMatrix) {
+                $stockMatrix[$fila->product_id][$fila->sede_id] = (int) $fila->total;
+            });
+        InventoryMovement::query()
             ->join('products', 'inventory_movements.product_id', '=', 'products.id')
             ->where('products.serializado', false)
+            ->whereIn('inventory_movements.product_id', $ids)
             ->selectRaw('inventory_movements.product_id, inventory_movements.sede_id, sum(inventory_movements.cantidad) as total')
             ->groupBy('inventory_movements.product_id', 'inventory_movements.sede_id')
-            ->get();
-
-        $stockMatrix = [];
-        foreach ($stockUnits as $unit) {
-            $stockMatrix[$unit->product_id][$unit->sede_id] = (int) $unit->total;
-        }
-        foreach ($bulkMovements as $bm) {
-            $stockMatrix[$bm->product_id][$bm->sede_id] = (int) $bm->total;
-        }
-
-        // 3. Obtener Productos
-        $products = collect();
-        if ($tipo === '' || $tipo === 'todos' || $tipo === 'producto') {
-            $products = Product::query()
-                ->when($search !== '', function ($query) use ($search) {
-                    $query->where(function ($q) use ($search) {
-                        $q->where('codigo', 'like', "%{$search}%")
-                            ->orWhere('codigo_barras', $search)
-                            ->orWhere('nombre', 'like', "%{$search}%");
-                    });
-                })
-                ->where('activo', true)
-                ->orderBy('nombre')
-                ->get()
-                ->map(function (Product $product) use ($sedes, $stockMatrix) {
-                    $stockPorSede = [];
-                    $totalDisponible = 0;
-
-                    foreach ($sedes as $sede) {
-                        $qty = $stockMatrix[$product->id][$sede->id] ?? 0;
-                        $stockPorSede[$sede->id] = $qty;
-                        $totalDisponible += $qty;
-                    }
-
-                    return [
-                        'id' => $product->id,
-                        'tipo' => 'producto',
-                        'codigo' => $product->codigo,
-                        'nombre' => $product->nombre,
-                        'unidad_medida' => $product->unidad_medida,
-                        'precio_venta' => (float) $product->precio_venta,
-                        'serializado' => $product->serializado,
-                        'controla_lote' => $product->controla_lote,
-                        'stock_minimo' => $product->stock_minimo,
-                        'stock_disponible_total' => $totalDisponible,
-                        'stock_por_sede' => $stockPorSede,
-                    ];
-                });
-        }
-
-        $allItems = $products->sortBy('nombre')->values()->all();
-
-        // El catálogo se arma en PHP a partir de dos fuentes (Productos +
-        // Servicios) con stock por sede ya calculado, así que se pagina el
-        // arreglo resultante a mano en vez de un Eloquent::paginate().
-        $itemsPerPage = 15;
-        $itemsPage = Paginator::resolveCurrentPage('page') ?: 1;
-        $pagina = array_slice($allItems, ($itemsPage - 1) * $itemsPerPage, $itemsPerPage);
+            ->get()
+            ->each(function ($fila) use (&$stockMatrix) {
+                $stockMatrix[$fila->product_id][$fila->sede_id] = (int) $fila->total;
+            });
 
         // Lotes con saldo de los productos de esta página que llevan lote.
-        $conLote = collect($pagina)->where('controla_lote', true)->pluck('id')->all();
         $lotes = ProductLot::query()
-            ->whereIn('product_id', $conLote)
+            ->whereIn('product_id', $paginaProductos->getCollection()->where('controla_lote', true)->pluck('id')->all())
             ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
             ->with('sede:id,nombre')
             ->withSum('movements as saldo', 'cantidad')
@@ -119,25 +84,39 @@ class StockController extends Controller
             ->get()
             ->filter(fn (ProductLot $lote) => (int) $lote->getAttribute('saldo') > 0)
             ->groupBy('product_id');
-        $pagina = array_map(fn (array $item) => [
-            ...$item,
-            'lotes' => ($lotes->get($item['id']) ?? collect())->map(fn (ProductLot $lote) => [
-                'lote' => $lote->lote,
-                'sede' => $lote->sede->nombre,
-                'fecha_vencimiento' => $lote->fecha_vencimiento?->toDateString(),
-                'vencido' => $lote->estaVencido(),
-                'por_vencer' => ! $lote->estaVencido() && $lote->fecha_vencimiento !== null && $lote->fecha_vencimiento->lte(today()->addDays(ProductLot::DIAS_AVISO)),
-                'saldo' => (int) $lote->getAttribute('saldo'),
-            ])->values()->all(),
-        ], $pagina);
 
-        $items = new LengthAwarePaginator(
-            $pagina,
-            count($allItems),
-            $itemsPerPage,
-            $itemsPage,
-            ['path' => $request->url(), 'query' => $request->query()],
-        );
+        $items = $paginaProductos->through(function (Product $product) use ($sedes, $stockMatrix, $lotes) {
+            $stockPorSede = [];
+            $totalDisponible = 0;
+
+            foreach ($sedes as $sede) {
+                $qty = $stockMatrix[$product->id][$sede->id] ?? 0;
+                $stockPorSede[$sede->id] = $qty;
+                $totalDisponible += $qty;
+            }
+
+            return [
+                'id' => $product->id,
+                'tipo' => 'producto',
+                'codigo' => $product->codigo,
+                'nombre' => $product->nombre,
+                'unidad_medida' => $product->unidad_medida,
+                'precio_venta' => (float) $product->precio_venta,
+                'serializado' => $product->serializado,
+                'controla_lote' => $product->controla_lote,
+                'stock_minimo' => $product->stock_minimo,
+                'stock_disponible_total' => $totalDisponible,
+                'stock_por_sede' => $stockPorSede,
+                'lotes' => ($lotes->get($product->id) ?? collect())->map(fn (ProductLot $lote) => [
+                    'lote' => $lote->lote,
+                    'sede' => $lote->sede->nombre,
+                    'fecha_vencimiento' => $lote->fecha_vencimiento?->toDateString(),
+                    'vencido' => $lote->estaVencido(),
+                    'por_vencer' => ! $lote->estaVencido() && $lote->fecha_vencimiento !== null && $lote->fecha_vencimiento->lte(today()->addDays(ProductLot::DIAS_AVISO)),
+                    'saldo' => (int) $lote->getAttribute('saldo'),
+                ])->values()->all(),
+            ];
+        });
 
         // 6. Kardex filtrable
         $kardexProductId = $request->integer('kardex_product_id');

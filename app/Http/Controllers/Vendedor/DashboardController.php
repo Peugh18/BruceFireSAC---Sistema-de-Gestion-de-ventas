@@ -120,7 +120,7 @@ class DashboardController extends Controller
                     'sale_id' => $inst->sale_id,
                     'sale_numero' => $inst->sale?->numero_interno,
                     'numero_cuota' => $inst->numero_cuota,
-                    'monto' => max(0, round((float) $inst->monto - (float) $inst->payments->sum('monto'), 2)),
+                    'monto' => $inst->saldo(),
                     'fecha_vencimiento' => $fechaVenc->toDateString(),
                     'estado' => $diasVencido > 0 ? 'vencido' : $inst->estado,
                     'dias_vencido' => $diasVencido,
@@ -158,11 +158,11 @@ class DashboardController extends Controller
             'cobros_pendientes' => $cobrosPendientes,
             'alertas_top' => $alertasTop,
             'agenda_hoy' => $agendaHoy,
-            'por_vencer_semana' => app(ExtintoresPorVencer::class)->segmentos(today(), 5)['esta_semana'],
+            'por_vencer_semana' => app(ExtintoresPorVencer::class)->segmentos(today(), 5, $user)['esta_semana'],
             'pendientes' => $this->pendientes($user->id, $user->sedeRestringidaId()),
             // Clientes para ofrecer la recarga: con extintores vencidos o que
             // vencen en los próximos 3 meses, del más urgente al más lejano.
-            'oportunidades' => collect(app(ExtintoresPorVencer::class)->porEmpresa(today()))
+            'oportunidades' => collect(app(ExtintoresPorVencer::class)->porEmpresa(today(), user: $user))
                 ->filter(fn (array $empresa) => $empresa['vencidos'] > 0 || ($empresa['dias'] !== null && $empresa['dias'] <= 90))
                 ->take(5)
                 ->map(fn (array $empresa) => collect($empresa)->except('equipos')->all())

@@ -46,12 +46,25 @@ class ConfirmSale
      */
     public function handle(Sale $sale): Sale
     {
-        if ($sale->estado !== 'borrador') {
-            throw ValidationException::withMessages([
-                'estado' => 'Solo se puede confirmar una venta en estado borrador.',
-            ]);
-        }
+        // V7: se vuelve a leer bloqueada dentro de la transacción; dos clics a
+        // la vez no confirman (ni cobran) dos veces la misma venta.
+        return DB::transaction(function () use ($sale) {
+            $bloqueada = Sale::query()->lockForUpdate()->find($sale->id);
 
+            if ($bloqueada === null || $bloqueada->estado !== 'borrador') {
+                throw ValidationException::withMessages([
+                    'estado' => 'Solo se puede confirmar una venta en estado borrador.',
+                ]);
+            }
+
+            $sale->setRawAttributes($bloqueada->getAttributes(), true);
+
+            return $this->confirmarBloqueada($sale);
+        });
+    }
+
+    protected function confirmarBloqueada(Sale $sale): Sale
+    {
         $sale->loadMissing('client');
 
         // Un borrador que se emite otro día sale con la fecha en que se
@@ -73,7 +86,7 @@ class ConfirmSale
         $this->validarAntesDeEmitir($sale);
 
         return DB::transaction(function () use ($sale) {
-            $sale->update(['estado' => 'confirmada']);
+            $sale->update(['estado' => 'confirmada', 'confirmada_at' => now()]);
 
             $this->emitElectronicDocument->programar($sale);
             $this->emitirCertificados->automaticos($sale);
@@ -106,6 +119,7 @@ class ConfirmSale
 
             $sale->update([
                 'estado' => 'confirmada',
+                'confirmada_at' => now(),
                 'numero_nota_venta' => 'NV-'.str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT),
             ]);
 

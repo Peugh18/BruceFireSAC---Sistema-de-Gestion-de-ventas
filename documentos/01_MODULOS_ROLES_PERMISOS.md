@@ -1,5 +1,13 @@
 # BRUCE FIRE — Mapa de Módulos, Conexiones y Permisos por Rol
 
+> **Estado (2026-10-06): parcialmente obsoleto.** Sirve como referencia de la matriz de permisos, que cita `database/seeders/RolesAndPermissionsSeeder.php`. Ojo con tres cosas:
+>
+> - El rol **Administrador** no existe; lo absorbe el Gerente.
+> - El conteo de "27 módulos" no coincide con los **21 módulos del DRS v3.1**.
+> - Los menús reales están en `docs/ai/PROYECTO.md` §3.
+>
+> El seeder manda sobre este documento.
+
 Versión visual (diagrama + matriz interactiva): [Artifact — Mapa de Módulos BRUCE FIRE](https://claude.ai/artifact/4Z3eJX4keKoukPgbfv1qmm)
 
 Este documento congela la decisión de **qué módulos existen, cómo se

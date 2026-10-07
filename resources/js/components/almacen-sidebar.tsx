@@ -14,6 +14,7 @@ import { dashboard } from '@/routes/almacen';
 import recepciones from '@/routes/almacen/recepciones';
 import stickers from '@/routes/almacen/stickers';
 import stock from '@/routes/almacen/stock';
+import guias from '@/routes/guias';
 import type { Auth } from '@/types';
 
 type SidebarCounts = {
@@ -81,6 +82,11 @@ function buildNavGroups(
                     title: 'Ajustes de Stock',
                     href: `/${teamSlug}/almacen/ajustes`,
                     icon: ArrowLeftRight,
+                },
+                {
+                    title: 'Guías de remisión',
+                    href: guias.index.url(teamSlug),
+                    icon: Truck,
                 },
                 {
                     title: 'Traslados',

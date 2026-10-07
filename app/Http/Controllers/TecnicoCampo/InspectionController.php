@@ -3,16 +3,20 @@
 namespace App\Http\Controllers\TecnicoCampo;
 
 use App\Actions\Certificates\IssueCertificate;
+use App\Actions\Tecnico\GuardarEvidencia;
 use App\Actions\Tecnico\ProcessChecklist;
 use App\Actions\TecnicoCampo\EquipoDeLaOrden;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\CertificateType;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -55,22 +59,18 @@ class InspectionController extends Controller
 
         $inspecciones = $query->paginate(15)->withQueryString();
 
+        $baseStatsQuery = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
+            ->where(function ($q) {
+                $q->where('departamento_tecnico', 'campo')
+                    ->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%'));
+            });
+
         $stats = [
-            'total' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')))
-                ->count(),
-            'pendientes' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')))
-                ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta'])
-                ->count(),
-            'en_proceso' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')))
-                ->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion'])
-                ->count(),
-            'finalizadas' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')))
-                ->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])
-                ->count(),
+            'total' => (clone $baseStatsQuery)->count(),
+            'pendientes' => (clone $baseStatsQuery)->whereIn('estado', ['pendiente_recepcion', 'recibido_planta'])->count(),
+            'en_proceso' => (clone $baseStatsQuery)->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion'])->count(),
+            'finalizadas' => (clone $baseStatsQuery)->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
         ];
 
         return Inertia::render('tecnico-campo/inspecciones/index', [
@@ -103,6 +103,8 @@ class InspectionController extends Controller
 
         return Inertia::render('tecnico-campo/inspecciones/show', [
             'asignacion' => $serviceOrder->asignacionPara(request()->user()),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($serviceOrder),
+            'evidencias' => $serviceOrder->evidencias()->whereIn('etapa', ['antes', 'despues'])->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'order' => $serviceOrder,
             'customerEquipments' => $customerEquipments,
             'elementosChecklist' => ProcessChecklist::ELEMENTOS,
@@ -117,7 +119,7 @@ class InspectionController extends Controller
         $validated = $request->validate([
             'equipment_id' => ['nullable', 'exists:equipment,id'],
             'numero_serie' => ['nullable', 'string', 'max:50'],
-            'tipo_agente' => ['nullable', 'string', 'max:50'],
+            'tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
             'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'ubicacion_actual' => ['nullable', 'string', 'max:150'],
@@ -165,6 +167,7 @@ class InspectionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'items' => ['required', 'array'],
+            'items.*.foto' => ['nullable', 'image', 'max:15360'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -189,11 +192,16 @@ class InspectionController extends Controller
             'cargo' => ['nullable', 'string', 'max:100'],
             'conformidad_nombre' => ['required', 'string', 'max:150'],
             'conformidad_aceptada' => ['required', 'accepted'],
+            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
             'observaciones_generales' => ['nullable', 'string', 'max:1000'],
         ]);
 
         // Finalizar dos veces duplicaría el certificado.
         EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+
+        if (filled($validated['firma'] ?? null)) {
+            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'inspeccion', $request->user());
+        }
 
         $responsable = ($validated['responsable'] ?? null) ?: $request->user()->name;
         $cargo = ($validated['cargo'] ?? null) ?: 'Técnico de Campo';

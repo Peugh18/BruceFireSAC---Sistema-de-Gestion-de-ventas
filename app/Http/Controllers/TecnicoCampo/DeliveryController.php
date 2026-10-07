@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\TecnicoCampo;
 
 use App\Actions\Equipment\RenewEquipmentAttentionDate;
+use App\Actions\Tecnico\GuardarEvidencia;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use App\Services\Reports\ActaConformidadPdfService;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -53,11 +55,18 @@ class DeliveryController extends Controller
 
         $entregas = $query->paginate(15)->withQueryString();
 
+        $baseStatsQuery = ServiceOrder::query()
+            ->accessibleToTechnician($request->user())
+            ->where(function ($q) {
+                $q->where('departamento_tecnico', 'campo')
+                    ->orWhereIn('estado', ['listo_entrega', 'entregado', 'cerrado']);
+            });
+
         $stats = [
-            'total' => ServiceOrder::query()->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
-            'listas' => ServiceOrder::query()->where('estado', 'listo_entrega')->count(),
-            'entregadas' => ServiceOrder::query()->where('estado', 'entregado')->count(),
-            'cerradas' => ServiceOrder::query()->where('estado', 'cerrado')->count(),
+            'total' => (clone $baseStatsQuery)->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
+            'listas' => (clone $baseStatsQuery)->where('estado', 'listo_entrega')->count(),
+            'entregadas' => (clone $baseStatsQuery)->where('estado', 'entregado')->count(),
+            'cerradas' => (clone $baseStatsQuery)->where('estado', 'cerrado')->count(),
         ];
 
         return Inertia::render('tecnico-campo/entregas/index', [
@@ -95,6 +104,8 @@ class DeliveryController extends Controller
 
         return Inertia::render('tecnico-campo/entregas/show', [
             'asignacion' => $serviceOrder->asignacionPara(request()->user()),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($serviceOrder),
+            'evidencias' => $serviceOrder->evidencias()->where('etapa', 'entrega')->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'order' => $serviceOrder,
             'custodyEvents' => $custodyEvents,
         ]);
@@ -119,7 +130,12 @@ class DeliveryController extends Controller
             'observaciones_entrega' => ['nullable', 'string', 'max:1000'],
             'conformidad_aceptada' => ['required', 'accepted'],
             'cerrar_orden' => ['nullable', 'boolean'],
+            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
         ]);
+
+        if (filled($validated['firma'] ?? null)) {
+            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'entrega', $request->user());
+        }
 
         $yaRenovadas = $serviceOrder->events()->where('tipo', 'trabajo_completado')->exists();
 

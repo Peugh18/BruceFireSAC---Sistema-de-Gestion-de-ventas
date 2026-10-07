@@ -1,9 +1,11 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Barcode, Building2, FileText, Printer } from 'lucide-react';
+import { useState } from 'react';
 
 import { Card } from '@/components/ui/card';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import recepciones from '@/routes/almacen/recepciones';
+import stickersRutas from '@/routes/almacen/stickers';
 import type { Team } from '@/types';
 
 export type StickerReceptionRow = {
@@ -43,6 +45,8 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
             ? window.location.pathname.split('/')[1]
             : '');
 
+    const [inicio, setInicio] = useState('1');
+
     return (
         <AlmacenLayout title="Stickers de Barras">
             <Head title="Stickers de Barras - Almacén" />
@@ -61,6 +65,64 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                 </div>
 
                 <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <div className="grid gap-4 text-xs sm:grid-cols-2">
+                        <div>
+                            <label
+                                htmlFor="sticker-inicio"
+                                className="text-foreground/80 block font-semibold"
+                            >
+                                Empezar en la posición (1 a 20)
+                            </label>
+                            <input
+                                id="sticker-inicio"
+                                type="number"
+                                min={1}
+                                max={20}
+                                value={inicio}
+                                onChange={(e) => setInicio(e.target.value)}
+                                className="border-border mt-1 w-24 rounded-lg border px-3 py-1.5"
+                            />
+                            <p className="text-muted-foreground mt-1">
+                                La hoja A4 trae 20 stickers de 5 × 5 cm. Si ya
+                                usaste los primeros, indica desde cuál seguir.
+                            </p>
+                        </div>
+                        <form
+                            method="get"
+                            action={stickersRutas.unidad.url({
+                                current_team: teamSlug,
+                            })}
+                            target="_blank"
+                        >
+                            <label
+                                htmlFor="sticker-serie"
+                                className="text-foreground/80 block font-semibold"
+                            >
+                                Reimprimir un sticker
+                            </label>
+                            <div className="mt-1 flex items-center gap-2">
+                                <input
+                                    id="sticker-serie"
+                                    name="serie"
+                                    required
+                                    placeholder="BF-EQ-000001"
+                                    className="border-border rounded-lg border px-3 py-1.5 font-mono"
+                                />
+                                <input
+                                    type="hidden"
+                                    name="inicio"
+                                    value={inicio}
+                                />
+                                <button
+                                    type="submit"
+                                    className="bg-foreground text-background rounded-md px-3 py-1.5 font-bold"
+                                >
+                                    Imprimir
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                     {receptions.data.length === 0 ? (
                         <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
                             <Barcode className="text-muted-foreground size-10" />
@@ -140,6 +202,11 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                                     teamSlug,
                                                                 reception:
                                                                     rec.id,
+                                                            },
+                                                            {
+                                                                query: {
+                                                                    inicio,
+                                                                },
                                                             },
                                                         )}
                                                         target="_blank"

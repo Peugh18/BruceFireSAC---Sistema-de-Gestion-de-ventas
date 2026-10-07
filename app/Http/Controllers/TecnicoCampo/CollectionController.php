@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\TecnicoCampo;
 
 use App\Actions\Equipment\QuickRegisterEquipment;
+use App\Actions\Tecnico\GuardarEvidencia;
 use App\Actions\TecnicoCampo\RegisterCollection;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Reports\ServiceOrderReceiptPdfService;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -37,6 +41,7 @@ class CollectionController extends Controller
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento,direccion_fiscal',
                 'vehicle:id,placa,marca',
                 'equipments',
+                'events' => fn ($events) => $events->where('payload->eslabon_custodia', 'recojo_campo'),
             ])
             ->latest('id');
 
@@ -52,10 +57,7 @@ class CollectionController extends Controller
         }
 
         $recojos = $query->paginate(15)->through(function (ServiceOrder $order) {
-            $custodyEvent = $order->events()
-                ->where('payload->eslabon_custodia', 'recojo_campo')
-                ->latest('created_at')
-                ->first();
+            $custodyEvent = $order->events->sortByDesc('created_at')->first();
 
             return [
                 'id' => $order->id,
@@ -106,6 +108,8 @@ class CollectionController extends Controller
 
         return Inertia::render('tecnico-campo/recojos/show', [
             'asignacion' => $service_order->asignacionPara(request()->user()),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
+            'evidencias' => $service_order->evidencias()->where('etapa', 'recojo')->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -156,6 +160,7 @@ class CollectionController extends Controller
             'observaciones' => ['nullable', 'string', 'max:1000'],
             'conformidad_cliente' => ['required', 'accepted'],
             'foto_path' => ['nullable', 'string', 'max:255'],
+            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
         ]);
 
         $action->execute($service_order, $request->user(), [
@@ -166,6 +171,10 @@ class CollectionController extends Controller
             'conformidad_cliente' => true,
             'foto_path' => $validated['foto_path'] ?? null,
         ]);
+
+        if (filled($validated['firma'] ?? null)) {
+            app(GuardarEvidencia::class)->firma($service_order, $validated['firma'], 'recojo', $request->user());
+        }
 
         return back()->with('success', 'Recojo y cadena de custodia registrados exitosamente.');
     }
@@ -178,7 +187,7 @@ class CollectionController extends Controller
     ): RedirectResponse {
         $data = $request->validate([
             'numero_serie' => ['nullable', 'string', 'max:100'],
-            'tipo_agente' => ['required_without:numero_serie', 'nullable', 'string', 'max:100'],
+            'tipo_agente' => ['required_without:numero_serie', 'nullable', Rule::in(EquipmentType::etiquetas())],
             'capacidad' => ['required_without:numero_serie', 'nullable', 'string', 'max:100'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],

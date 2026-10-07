@@ -8,6 +8,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -121,6 +122,28 @@ test('ruc lookup sends an http request when the document is not local', function
 
     Http::assertSent(fn (Request $request) => $request->url() === 'https://dniruc.apisperu.com/api/v1/ruc/20601111222?token=test-token');
     Http::assertSentCount(1);
+});
+
+test('el error de la consulta de ruc no filtra el token de APIsPeru ni al navegador ni al log', function () {
+    config(['services.apisperu.token' => 'SECRETO-123']);
+    $user = vendedorUser();
+
+    Http::preventStrayRequests();
+    Http::fake(fn () => throw new RuntimeException('cURL error for https://dniruc.apisperu.com/api/v1/ruc/20601111222?token=SECRETO-123'));
+
+    Log::spy();
+
+    $respuesta = $this->actingAs($user)
+        ->getJson(route('vendedor.ruc-lookup', ['current_team' => $user->currentTeam, 'numero_documento' => '20601111222']));
+
+    $respuesta->assertStatus(422);
+
+    expect($respuesta->getContent())->not->toContain('SECRETO-123')
+        ->and($respuesta->json('message'))->not->toContain('token=');
+
+    Log::shouldHaveReceived('warning')->withArgs(function (string $mensaje, array $context = []): bool {
+        return ! str_contains($mensaje.json_encode($context), 'SECRETO-123');
+    });
 });
 
 test('clientes index shows the latest sale date per client', function () {

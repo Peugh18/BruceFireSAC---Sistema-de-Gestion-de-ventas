@@ -36,6 +36,8 @@ class SedeController extends Controller
                 'tipo' => $sede->tipo,
                 'ciudad' => $sede->ciudad,
                 'ubigeo' => $sede->ubigeo,
+                'direccion' => $sede->direccion,
+                'cod_establecimiento_anexo' => $sede->cod_establecimiento_anexo,
                 'ubicacion' => $sede->ubicacion?->paraFormulario(),
                 'almacen_id' => $sede->almacen_id,
                 'almacen_nombre' => $sede->almacen?->nombre,

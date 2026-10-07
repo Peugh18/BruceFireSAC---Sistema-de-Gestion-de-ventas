@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChispaController;
+use App\Http\Controllers\ConversacionOrdenController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublicCertificateVerificationController;
@@ -26,9 +27,17 @@ Route::prefix('{current_team}')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
+        // Conversación y evidencias de la orden (Fase D): vendedor, técnicos y Gerente.
+        Route::middleware('role:Gerente|Vendedor|TecnicoPlanta|TecnicoCampo')->group(function () {
+            Route::post('ordenes/{service_order}/mensajes', [ConversacionOrdenController::class, 'mensaje'])->name('ordenes.mensajes.store');
+            Route::post('ordenes/{service_order}/evidencias', [ConversacionOrdenController::class, 'guardarEvidencia'])->name('ordenes.evidencias.store');
+            Route::get('evidencias/{evidencia}', [ConversacionOrdenController::class, 'evidencia'])->name('evidencias.show');
+        });
+
         require __DIR__.'/vendedor.php';
         require __DIR__.'/gerente.php';
         require __DIR__.'/almacen.php';
+        require __DIR__.'/guias.php';
         require __DIR__.'/tecnico-planta.php';
         require __DIR__.'/tecnico-campo.php';
     });

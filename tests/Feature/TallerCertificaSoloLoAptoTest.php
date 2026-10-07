@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\Inventory\StockPorLote;
 use Database\Seeders\CertificateTypeSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Http\UploadedFile;
 
 beforeEach(function () {
     $this->seed([RolesAndPermissionsSeeder::class, CertificateTypeSeeder::class]);
@@ -65,7 +66,7 @@ test('con el certificado emitido no se agregan deficiencias y sin recibir no hay
         ->assertSessionHasErrors('equipment');
 
     $this->orden->update(['estado' => 'listo_certificado']);
-    $this->actingAs($this->tecnico)->post(($this->ruta)('deficiencias.store'), ['componente' => 'Manguera', 'condicion' => 'Rota'])
+    $this->actingAs($this->tecnico)->post(($this->ruta)('deficiencias.store'), ['componente' => 'Manguera', 'condicion' => 'Rota', 'foto' => UploadedFile::fake()->image('foto.jpg')])
         ->assertSessionHasErrors('componente');
 
     expect(Deficiency::count())->toBe(0)

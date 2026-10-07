@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Certificates\EmitirCertificadosDeVenta;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\EmitirCertificadosRequest;
 use App\Models\Certificate;
+use App\Models\CertificateUnit;
 use App\Models\CompanySetting;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,6 +29,7 @@ class SaleCertificateController extends Controller
         $this->assertSedeAccess($request, $sale);
 
         $sale->load('client', 'items.equipment', 'items.product', 'items.inventoryUnit');
+        $pruebas = $this->pruebasRegistradas($sale);
 
         return Inertia::render('vendedor/ventas/certificados', [
             'sale' => [
@@ -46,6 +50,14 @@ class SaleCertificateController extends Controller
                     'capacidad' => $item->equipment->capacidad,
                     'marca' => $item->equipment->marca,
                     'numero_cliente' => $item->equipment->numero_cliente,
+                    'agente' => $item->equipment->tipo_agente,
+                    'agente_conocido' => EquipmentType::esConocido($item->equipment->tipo_agente),
+                    'presion_ph_sugerida' => EquipmentType::esConocido($item->equipment->tipo_agente)
+                        ? EquipmentType::fromDescription($item->equipment->tipo_agente)->presionPruebaHidrostatica()
+                        : null,
+                    'fecha_ultima_ph' => $pruebas->get($item->equipment->id)?->fecha_ultima_ph?->toDateString(),
+                    'presion_ph' => $pruebas->get($item->equipment->id)?->presion_ph,
+                    'tiempo_ph' => $pruebas->get($item->equipment->id)?->tiempo_ph,
                 ])
                 ->values(),
             'tiposSugeridos' => EmitirCertificadosDeVenta::tiposPorDestino($sale->destino),
@@ -53,6 +65,24 @@ class SaleCertificateController extends Controller
             'emitidos' => $this->certificados($sale),
             'gruposActuales' => $this->gruposActuales($sale),
         ]);
+    }
+
+    /**
+     * Datos de la prueba hidrostática ya certificada de cada extintor.
+     *
+     * @return Collection<int, CertificateUnit>
+     */
+    protected function pruebasRegistradas(Sale $sale): Collection
+    {
+        return Certificate::query()
+            ->with('certificateUnits')
+            ->where('sale_id', $sale->id)
+            ->whereIn('estado', ['vigente', 'vencido'])
+            ->whereHas('certificateType', fn ($query) => $query->where('codigo', 'prueba_hidrostatica'))
+            ->get()
+            ->flatMap(fn (Certificate $certificate) => $certificate->certificateUnits)
+            ->filter(fn (CertificateUnit $unit) => $unit->equipment_id !== null)
+            ->keyBy('equipment_id');
     }
 
     /**
@@ -143,12 +173,7 @@ class SaleCertificateController extends Controller
 
     protected function assertSedeAccess(Request $request, Sale $sale): void
     {
-        $sedeId = $request->user()->sedeRestringidaId();
-
-        abort_if($sedeId !== null && (int) $sale->sede_id !== $sedeId, 404);
-
         // Cada vendedor corrige solo sus ventas; el Gerente, las de todos.
-        $vendedorId = $request->user()->vendedorRestringidoId();
-        abort_if($vendedorId !== null && (int) $sale->vendedor_id !== $vendedorId, 404);
+        abort_unless(Sale::query()->visiblePara($request->user())->whereKey($sale->id)->exists(), 404);
     }
 }

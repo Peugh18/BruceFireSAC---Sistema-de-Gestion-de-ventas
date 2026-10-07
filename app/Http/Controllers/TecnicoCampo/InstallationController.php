@@ -2,14 +2,20 @@
 
 namespace App\Http\Controllers\TecnicoCampo;
 
+use App\Actions\Tecnico\GuardarEvidencia;
 use App\Actions\TecnicoCampo\RegisterInstallation;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\CertificateType;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -103,6 +109,14 @@ class InstallationController extends Controller
             'asignacion' => $serviceOrder->asignacionPara(request()->user()),
             'order' => $serviceOrder,
             'customerEquipments' => $customerEquipments,
+            'unidadesVendidas' => $this->unidadesVendidas($serviceOrder)->map(fn (Equipment $unidad) => [
+                'id' => $unidad->id,
+                'numero_serie' => $unidad->numero_serie,
+                'tipo_agente' => $unidad->tipo_agente,
+                'capacidad' => $unidad->capacidad,
+            ])->values(),
+            'evidencias' => $serviceOrder->evidencias()->whereIn('etapa', ['antes', 'despues'])->get(['id', 'etapa', 'tipo', 'equipment_id']),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($serviceOrder),
             'certificateTypes' => $certificateTypes,
         ]);
     }
@@ -127,10 +141,11 @@ class InstallationController extends Controller
             'conformidad_aceptada' => ['required', 'accepted'],
             'emitir_certificado' => ['nullable', 'boolean'],
             'tipo_certificado_codigo' => ['nullable', 'string', 'max:50'],
+            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
             'equipos' => ['required', 'array', 'min:1'],
             'equipos.*.equipment_id' => ['nullable', 'integer', 'exists:equipment,id'],
             'equipos.*.numero_serie' => ['nullable', 'string', 'max:50'],
-            'equipos.*.tipo_agente' => ['nullable', 'string', 'max:50'],
+            'equipos.*.tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
             'equipos.*.capacidad' => ['nullable', 'string', 'max:30'],
             'equipos.*.marca' => ['nullable', 'string', 'max:100'],
             'equipos.*.ubicacion_actual' => ['nullable', 'string', 'max:150'],
@@ -138,7 +153,21 @@ class InstallationController extends Controller
             'equipos.*.anio_fabricacion' => ['nullable', 'integer', 'min:1970', 'max:'.(date('Y') + 1)],
         ]);
 
+        // T4: cada unidad vendida se escanea; no se instala "a ojo".
+        $escaneados = array_map(fn (array $linea) => (int) ($linea['equipment_id'] ?? 0), $validated['equipos']);
+        $faltantes = $this->unidadesVendidas($serviceOrder)
+            ->reject(fn (Equipment $unidad) => in_array($unidad->id, $escaneados, true))
+            ->pluck('numero_serie');
+
+        if ($faltantes->isNotEmpty()) {
+            throw ValidationException::withMessages(['equipos' => 'Falta escanear: '.$faltantes->implode(', ').'.']);
+        }
+
         $registerInstallation->execute($serviceOrder, $request->user(), $validated);
+
+        if (filled($validated['firma'] ?? null)) {
+            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'instalacion', $request->user());
+        }
 
         return redirect()
             ->route('tecnico-campo.instalaciones.show', [
@@ -146,5 +175,22 @@ class InstallationController extends Controller
                 'service_order' => $serviceOrder->id,
             ])
             ->with('success', 'Instalación registrada con éxito. Equipos vinculados al historial del cliente.');
+    }
+
+    /**
+     * Los extintores que se vendieron en la venta de esta orden.
+     *
+     * @return Collection<int, Equipment>
+     */
+    protected function unidadesVendidas(ServiceOrder $orden): Collection
+    {
+        if (! $orden->sale_id) {
+            return new Collection;
+        }
+
+        return Equipment::query()
+            ->whereIn('id', $orden->sale->items()->whereNotNull('equipment_id')->pluck('equipment_id'))
+            ->orderBy('numero_serie')
+            ->get();
     }
 }

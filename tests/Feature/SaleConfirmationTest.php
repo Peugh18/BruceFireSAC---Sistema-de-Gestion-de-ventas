@@ -10,13 +10,14 @@ use App\Models\SaleItem;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Validation\ValidationException;
+use Tests\Fixtures\SunatSoloEnvio;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
 
-    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    $this->app->bind(SunatClientInterface::class, fn () => new class extends SunatSoloEnvio
     {
         public function send(string $xmlSigned, string $documentName): array
         {

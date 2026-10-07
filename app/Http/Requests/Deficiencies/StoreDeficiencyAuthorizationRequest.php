@@ -24,6 +24,8 @@ class StoreDeficiencyAuthorizationRequest extends FormRequest
             'fecha' => ['required', 'date'],
             'observacion' => ['nullable', 'string'],
             'cotizacion_adicional_id' => ['nullable', 'integer', 'exists:quotes,id'],
+            // V6: lo que el cliente aceptó pagar por el adicional.
+            'importe' => ['nullable', 'numeric', 'min:0.01', 'max:999999'],
         ];
     }
 }

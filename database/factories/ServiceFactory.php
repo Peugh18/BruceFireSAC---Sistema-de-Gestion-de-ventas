@@ -31,6 +31,7 @@ class ServiceFactory extends Factory
             'unidad_medida' => 'ZZ',
             'precio_venta' => fake()->randomFloat(2, 30, 150),
             'aplica_igv' => true,
+            'tipo_afectacion_igv' => '10',
             'activo' => true,
         ];
     }

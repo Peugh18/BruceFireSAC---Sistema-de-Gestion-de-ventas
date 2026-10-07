@@ -15,6 +15,7 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             currentTeam: Team | null;
             teams: Team[];
+            agentesExtintor?: string[];
             [key: string]: unknown;
         };
     }

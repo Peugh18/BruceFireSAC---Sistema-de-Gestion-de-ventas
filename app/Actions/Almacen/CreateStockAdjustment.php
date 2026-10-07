@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CreateStockAdjustment
 {
@@ -35,6 +36,18 @@ class CreateStockAdjustment
             $stock = app(StockPorLote::class);
 
             if ($unitId) {
+                // Con la unidad bloqueada: dos ajustes a la vez no la dan de
+                // baja (ni la reingresan) dos veces.
+                $estadoActual = InventoryUnit::query()->lockForUpdate()->findOrFail($unitId)->estado;
+                if (($tipoAjuste === 'decremento' && $estadoActual !== 'disponible')
+                    || ($tipoAjuste === 'incremento' && $estadoActual !== 'baja')) {
+                    throw ValidationException::withMessages([
+                        'inventory_unit_id' => $tipoAjuste === 'decremento'
+                            ? "Esa unidad ya no está disponible en el almacén (estado: {$estadoActual})."
+                            : "Solo se puede reingresar una unidad dada de baja (esta está: {$estadoActual}).",
+                    ]);
+                }
+
                 $movement = InventoryMovement::create([
                     'inventory_unit_id' => $unitId,
                     'product_id' => $productId,

@@ -1,7 +1,9 @@
 <?php
 
 use App\Actions\Almacen\CreateReception;
+use App\Actions\Almacen\TransferInventory;
 use App\Models\InventoryMovement;
+use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\Sede;
@@ -91,6 +93,10 @@ test('el traslado no saca mas de lo que hay y el gerente elige el almacen de ori
     $this->actingAs($gerente)->post(route('almacen.traslados.store', ['current_team' => $gerente->currentTeam]), [
         'origen_sede_id' => $this->almacen->id, 'destination_sede_id' => $this->otroAlmacen->id, 'product_id' => $cascos->id, 'quantity' => 2,
     ])->assertSessionHasNoErrors();
+
+    // En tránsito: ya salió del origen, todavía no entró al destino.
+    expect(InventoryMovement::saldo($cascos->id, $this->otroAlmacen->id))->toBe(0);
+    app(TransferInventory::class)->confirmar(InventoryTransfer::query()->sole(), $gerente);
 
     expect(InventoryMovement::saldo($cascos->id, $this->almacen->id))->toBe(3)
         ->and(InventoryMovement::saldo($cascos->id, $this->otroAlmacen->id))->toBe(2);

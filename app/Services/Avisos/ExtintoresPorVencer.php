@@ -2,9 +2,12 @@
 
 namespace App\Services\Avisos;
 
+use App\Models\AlertContact;
 use App\Models\Client;
 use App\Models\ClientRetentionScore;
 use App\Models\Equipment;
+use App\Models\ProductCategory;
+use App\Models\User;
 use App\Services\Ml\RetentionModel;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -21,8 +24,11 @@ class ExtintoresPorVencer
     /**
      * @return array{vencidas: Collection<int, array<string, mixed>>, esta_semana: Collection<int, array<string, mixed>>, este_mes: Collection<int, array<string, mixed>>}
      */
-    public function segmentos(CarbonInterface $today, int $porSegmento = 100): array
+    public function segmentos(CarbonInterface $today, int $porSegmento = 100, ?User $user = null): array
     {
+        // X8: el vendedor ve las alertas de su sede; el Gerente (o sin usuario), todas.
+        $sedeId = $user?->sedeRestringidaId();
+
         // Solo lo que entra en alguna lista (vencido, descargado o que vence
         // en los próximos 30 días): el resto no se trae de la base de datos.
         $limite = $today->copy()->addDays(30)->toDateString();
@@ -30,6 +36,7 @@ class ExtintoresPorVencer
         $rows = Equipment::query()
             ->select(['id', 'client_id', 'product_id', 'numero_serie', 'estado', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica'])
             ->with(['client:id,razon_social,telefono,whatsapp', 'product:id,nombre'])
+            ->when($user, fn ($query) => $query->visiblePara($user))
             ->where(fn ($query) => $query
                 ->whereDate('proxima_fecha_atencion', '<=', $limite)
                 ->orWhereDate('proxima_prueba_hidrostatica', '<=', $limite)
@@ -48,7 +55,7 @@ class ExtintoresPorVencer
                 ];
             })
             ->values()
-            ->concat($this->historicalRows($today))
+            ->concat($this->historicalRows($today, $sedeId))
             ->concat($this->sistemaAnteriorRows($today));
 
         // Cada segmento se trunca por separado (no un límite global) para
@@ -60,20 +67,22 @@ class ExtintoresPorVencer
             ->values();
 
         $scores = ClientRetentionScore::query()->whereIn('client_id', $rows->pluck('client_id')->unique())->get()->keyBy('client_id');
+        $contactos = AlertContact::ultimosPorCliente($rows->pluck('client_id'));
 
         /**
          * @param  Collection<int, mixed>  $lista
          * @return Collection<int, array<string, mixed>>
          */
-        $conRecompra = function (Collection $lista) use ($scores): Collection {
+        $conRecompra = function (Collection $lista) use ($scores, $contactos): Collection {
             /** @var Collection<int, array<string, mixed>> $result */
-            $result = $lista->map(function ($row) use ($scores): array {
+            $result = $lista->map(function ($row) use ($scores, $contactos): array {
                 /** @var array<string, mixed> $rowArray */
                 $rowArray = (array) $row;
                 $score = $scores->get($rowArray['client_id'] ?? null);
 
                 return [
                     ...$rowArray,
+                    'contactado' => $contactos->get($rowArray['client_id'] ?? null),
                     'recompra' => $score
                         ? RetentionModel::paraPantalla(['probabilidad' => $score->probabilidad, 'categoria' => $score->categoria, 'factores' => $score->factores_json])
                         : null,
@@ -103,9 +112,12 @@ class ExtintoresPorVencer
      *
      * @return array<int, array<string, mixed>>
      */
-    public function porEmpresa(CarbonInterface $today, int $limite = 300): array
+    public function porEmpresa(CarbonInterface $today, int $limite = 300, ?User $user = null): array
     {
+        $sedeId = $user?->sedeRestringidaId();
+
         $registrados = Equipment::query()
+            ->when($user, fn ($query) => $query->visiblePara($user))
             // Solo las columnas que se muestran, y sin CLIENTES VARIOS.
             ->select(['id', 'client_id', 'product_id', 'numero_serie', 'estado', 'capacidad', 'ubicacion_actual', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica'])
             ->with('product:id,nombre')
@@ -135,7 +147,7 @@ class ExtintoresPorVencer
                 ];
             });
 
-        $vendidosSinSerie = $this->vendidosSinSerie($today);
+        $vendidosSinSerie = $this->vendidosSinSerie($today, $sedeId);
         $conDatos = $registrados->pluck('client_id')->merge($vendidosSinSerie->pluck('client_id'))->unique();
         $equipos = $registrados
             ->concat($vendidosSinSerie)
@@ -147,11 +159,12 @@ class ExtintoresPorVencer
             ->where('tipo_documento', '!=', Client::TIPO_DOCUMENTO_VARIOS)
             ->get()
             ->keyBy('id');
+        $contactos = AlertContact::ultimosPorCliente($clientes->keys());
 
         return $equipos
             ->filter(fn (array $equipo) => $clientes->has($equipo['client_id']))
             ->groupBy('client_id')
-            ->map(function (Collection $deLaEmpresa, int $clientId) use ($clientes): array {
+            ->map(function (Collection $deLaEmpresa, int $clientId) use ($clientes, $contactos): array {
                 /** @var Client $client */
                 $client = $clientes->get($clientId);
                 $detalle = $deLaEmpresa
@@ -172,6 +185,7 @@ class ExtintoresPorVencer
                     'proximo_vencimiento' => $proximo['proxima'] ?? null,
                     'dias' => $proximo['dias'] ?? null,
                     'equipos' => $detalle->all(),
+                    'contactado' => $contactos->get($clientId),
                 ];
             })
             ->sortBy(fn (array $empresa) => $empresa['proximo_vencimiento'] ?? '9999-12-31')
@@ -226,17 +240,18 @@ class ExtintoresPorVencer
      *
      * @return Collection<int, array<string, mixed>>
      */
-    protected function vendidosSinSerie(CarbonInterface $today): Collection
+    protected function vendidosSinSerie(CarbonInterface $today, ?int $sedeId = null): Collection
     {
         return DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->when($sedeId, fn ($query) => $query->where('sales.sede_id', $sedeId))
             ->leftJoin('services', 'services.id', '=', 'sale_items.service_id')
             ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
             ->where('sales.estado', 'confirmada')
             ->whereNull('sale_items.equipment_id')
             ->where(fn ($query) => $query
                 ->where('services.nombre', 'like', '%RECARGA%')
-                ->orWhere('products.categoria', 'extintor'))
+                ->orWhereIn('products.categoria', ProductCategory::clavesConAlertaDeVencimiento()))
             ->get([
                 'sales.client_id',
                 'sales.fecha',
@@ -475,7 +490,7 @@ class ExtintoresPorVencer
      *
      * @return Collection<int, array<string, mixed>>
      */
-    protected function historicalRows(CarbonInterface $today): Collection
+    protected function historicalRows(CarbonInterface $today, ?int $sedeId = null): Collection
     {
         // Solo interesan compras cuyo vencimiento (fecha + 1 año) cae dentro
         // de la misma ventana que ya usa alertRow() (vencidas sin límite
@@ -489,13 +504,14 @@ class ExtintoresPorVencer
             ->leftJoin('services', 'services.id', '=', 'sale_items.service_id')
             ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
             ->where('sales.estado', '!=', 'anulada')
+            ->when($sedeId, fn ($query) => $query->where('sales.sede_id', $sedeId))
             ->where('sales.fecha', '<=', $limiteSuperior->toDateString())
             ->where(function ($query) {
                 $query->where(function ($q) {
                     $q->whereNotNull('services.nombre')
                         ->where('services.nombre', 'like', '%RECARGA%')
                         ->where('services.nombre', 'like', '%EXTINTOR%');
-                })->orWhere('products.categoria', 'extintor');
+                })->orWhereIn('products.categoria', ProductCategory::clavesConAlertaDeVencimiento());
             })
             ->select([
                 'sales.client_id',

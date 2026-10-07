@@ -35,6 +35,7 @@ interface OrderItem {
         | 'entrega'
         | 'inspeccion'
         | 'instalacion'
+        | 'mantenimiento'
         | 'ver';
     observaciones: string | null;
 }
@@ -106,6 +107,8 @@ export default function TecnicoCampoDashboard({
                 return `${teamPrefix}/inspecciones/${order.id}`;
             case 'instalacion':
                 return `${teamPrefix}/instalaciones/${order.id}`;
+            case 'mantenimiento':
+                return `${teamPrefix}/mantenimientos/${order.id}`;
             default:
                 return `${teamPrefix}/recojos/${order.id}`;
         }
@@ -121,6 +124,8 @@ export default function TecnicoCampoDashboard({
                 return 'Checklist Campo';
             case 'instalacion':
                 return 'Instalación';
+            case 'mantenimiento':
+                return 'Mantenimiento';
             default:
                 return 'Ver Servicio';
         }

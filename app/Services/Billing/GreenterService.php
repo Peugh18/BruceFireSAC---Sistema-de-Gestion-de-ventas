@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
+use App\Support\UnidadMedidaSunat;
 use Greenter\Model\Client\Client as GreenterClient;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
@@ -16,50 +17,22 @@ use Greenter\Model\DocumentInterface;
 use Greenter\Model\Sale\Charge;
 use Greenter\Model\Sale\Cuota;
 use Greenter\Model\Sale\Detraction;
+use Greenter\Model\Sale\Document;
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\FormaPagos\FormaPagoCredito;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
 use Greenter\Model\Sale\Note;
 use Greenter\Model\Sale\SaleDetail;
+use Greenter\Model\Summary\Summary;
+use Greenter\Model\Summary\SummaryDetail;
+use Greenter\Model\Voided\Voided;
+use Greenter\Model\Voided\VoidedDetail;
 use Greenter\See;
 use RuntimeException;
 
 class GreenterService
 {
-    /**
-     * Catálogo 03 (Unidad de Medida) simplificado a los casos que BRUCE FIRE
-     * usa hoy. Si aparece una unidad nueva, se agrega aquí; por defecto cae
-     * a NIU (unidad) para no romper la emisión.
-     */
-    protected const UNIDADES_SUNAT = [
-        'und' => 'NIU',
-        'unidad' => 'NIU',
-        // Los códigos SUNAT que ya vienen como unidad del producto.
-        'niu' => 'NIU',
-        'kgm' => 'KGM',
-        'mtr' => 'MTR',
-        'ltr' => 'LTR',
-        'gll' => 'GLL',
-        'gli' => 'GLL',
-        'set' => 'SET',
-        'servicio' => 'ZZ',
-        'metro' => 'MTR',
-        'kilogramo' => 'KGM',
-        'kg' => 'KGM',
-        'litro' => 'LTR',
-        'galon' => 'GLL',
-        // EPP: guantes y botas por par; cajas, paquetes y docenas.
-        'par' => 'PR',
-        'pr' => 'PR',
-        'caja' => 'BX',
-        'bx' => 'BX',
-        'paquete' => 'PK',
-        'pk' => 'PK',
-        'docena' => 'DZN',
-        'dzn' => 'DZN',
-    ];
-
     public function __construct(
         protected DetraccionCalculator $detraccionCalculator,
         protected NumeroEnLetrasService $numeroEnLetras,
@@ -89,6 +62,12 @@ class GreenterService
 
         $details = $sale->lineasComprobante()->map(fn (SaleItem $item) => $this->buildDetail($item))->values()->all();
 
+        $bases = ['10' => 0.0, '20' => 0.0, '30' => 0.0];
+        $igv = 0.0;
+        foreach ($details as $detail) {
+            $bases[$detail->getTipAfeIgv()] += (float) $detail->getMtoValorVenta();
+            $igv += (float) $detail->getIgv();
+        }
         $detraccionCalc = $this->detraccionCalculator->paraVenta($sale, $document->tipo);
 
         $invoice = (new Invoice)
@@ -103,10 +82,12 @@ class GreenterService
             ->setTipoMoneda('PEN')
             ->setCompany($company)
             ->setClient($client)
-            ->setMtoOperGravadas((float) $sale->subtotal)
-            ->setMtoIGV((float) $sale->igv)
-            ->setTotalImpuestos((float) $sale->igv)
-            ->setValorVenta((float) $sale->subtotal)
+            ->setMtoOperGravadas(round($bases['10'], 2))
+            ->setMtoOperExoneradas(round($bases['20'], 2))
+            ->setMtoOperInafectas(round($bases['30'], 2))
+            ->setMtoIGV(round($igv, 2))
+            ->setTotalImpuestos(round($igv, 2))
+            ->setValorVenta(round(array_sum($bases), 2))
             ->setSubTotal((float) $sale->total)
             ->setMtoImpVenta((float) $sale->total)
             ->setDetails($details)
@@ -217,7 +198,7 @@ class GreenterService
     public function buildNote(ElectronicDocument $note): Note
     {
         if (! in_array($note->tipo, ['nota_credito', 'nota_debito'], true)) {
-            throw new RuntimeException("GreenterService::buildNote solo soporta notas de crédito o débito (recibido: {$note->tipo}).");
+            throw new RuntimeException("GreenterService::buildNote solo soporta notas de credito o debito (recibido: {$note->tipo}).");
         }
 
         $original = $note->cpeAfectado;
@@ -231,42 +212,55 @@ class GreenterService
         $esCredito = $note->tipo === 'nota_credito';
 
         $importe = (float) $note->importe;
-        $base = round($importe / 1.18, 2);
-        $igv = round($importe - $base, 2);
         $descripcion = $esCredito ? $this->descripcionMotivoCredito($note->motivo_catalogo) : $this->descripcionMotivoDebito($note->motivo_catalogo);
 
-        $detail = (new SaleDetail)
-            ->setCodProducto($esCredito ? 'NC-01' : 'ND-01')
-            ->setUnidad('ZZ')
-            ->setCantidad(1)
-            ->setDescripcion($descripcion)
-            ->setMtoValorUnitario($base)
-            ->setMtoValorVenta($base)
-            ->setMtoBaseIgv($base)
-            ->setPorcentajeIgv(18.00)
-            ->setIgv($igv)
-            ->setTipAfeIgv('10')
-            ->setTotalImpuestos($igv)
-            ->setMtoPrecioUnitario($importe);
+        $desglose = app(DesgloseNota::class)->calcular($original, $note->tipo, (string) $note->motivo_catalogo, $importe);
+        $bases = ['10' => 0.0, '20' => 0.0, '30' => 0.0];
+        $igv = 0.0;
+        $details = [];
+        foreach ($desglose['lineas'] as $linea) {
+            $bases[$linea['tipo_afectacion_igv']] += $linea['base'];
+            $igv += $linea['igv'];
+            $detail = (new SaleDetail)
+                ->setCodProducto($linea['codigo'])->setUnidad($linea['unidad_medida'])
+                ->setCantidad($linea['cantidad'])->setDescripcion($linea['nombre'])
+                ->setMtoValorUnitario($linea['valor_unitario'])->setMtoValorVenta($linea['base'])
+                ->setMtoBaseIgv($linea['base'])->setPorcentajeIgv($linea['tipo_afectacion_igv'] === '10' ? 18 : 0)
+                ->setIgv($linea['igv'])->setTipAfeIgv($linea['tipo_afectacion_igv'])
+                ->setTotalImpuestos($linea['igv'])->setMtoPrecioUnitario($linea['precio_unitario']);
+            if (($linea['descuento_base'] ?? 0) > 0) {
+                $detail->setDescuentos([(new Charge)->setCodTipo('00')->setMontoBase(round($linea['cantidad'] * $linea['valor_unitario'], 2))->setMonto($linea['descuento_base'])]);
+            }
+            $details[] = $detail;
+        }
+        $cliente = $desglose['cliente'];
+        $client = (new GreenterClient)->setTipoDoc($cliente['tipo_documento'])->setNumDoc($cliente['numero_documento'])
+            ->setRznSocial($cliente['razon_social'])->setAddress((new Address)->setDireccion($cliente['direccion_fiscal'] ?: '-'));
+
+        // S5/S6: usa la fecha persistida en la nota (no now()), para que los
+        // reintentos no cambien la fecha de emision del XML.
+        $fechaEmision = $note->fecha_emision ?? now();
 
         return (new Note)
             ->setUblVersion('2.1')
             ->setTipoDoc($esCredito ? '07' : '08')
             ->setSerie($note->serie)
             ->setCorrelativo((string) $note->correlativo)
-            ->setFechaEmision(now())
+            ->setFechaEmision($fechaEmision)
             ->setTipDocAfectado($original->tipo === 'factura' ? '01' : '03')
             ->setNumDocfectado("{$original->serie}-{$original->correlativo}")
             ->setCodMotivo($note->motivo_catalogo)
             ->setDesMotivo($descripcion)
             ->setTipoMoneda('PEN')
             ->setCompany($this->buildCompany())
-            ->setClient($this->buildClient($sale))
-            ->setMtoOperGravadas($base)
+            ->setClient($client)
+            ->setMtoOperGravadas(round($bases['10'], 2))
+            ->setMtoOperExoneradas(round($bases['20'], 2))
+            ->setMtoOperInafectas(round($bases['30'], 2))
             ->setMtoIGV($igv)
             ->setTotalImpuestos($igv)
             ->setMtoImpVenta($importe)
-            ->setDetails([$detail])
+            ->setDetails($details)
             ->setLegends([
                 (new Legend)
                     ->setCode('1000')
@@ -274,8 +268,84 @@ class GreenterService
             ]);
     }
 
-    protected function descripcionMotivoCredito(?string $codigo): string
+    /**
+     * Comunicación de baja de un comprobante aceptado (S7). Las facturas y
+     * sus notas (serie F...) van en una Comunicación de Baja (RA); las
+     * boletas y sus notas (serie B...) en un Resumen Diario (RC) con estado
+     * 3 = anulado. La fecha de generación es la de emisión del comprobante.
+     */
+    public function buildBaja(ElectronicDocument $document, string $motivo, int $correlativo): Voided|Summary
     {
+        $tipoDoc = match ($document->tipo) {
+            'factura' => '01',
+            'boleta' => '03',
+            'nota_credito' => '07',
+            'nota_debito' => '08',
+            default => throw new RuntimeException("No se da de baja un documento de tipo {$document->tipo}."),
+        };
+        $fechaEmision = $document->fecha_emision ?? $document->created_at ?? now();
+        $datos = app(DatosEmision::class)->recuperar($document);
+        if ($datos === null) {
+            throw new RuntimeException('No se puede comunicar la baja: falta el XML o la copia del comprobante original.');
+        }
+        $emisor = $datos['emisor'];
+        $company = (new Company)->setRuc($emisor['ruc'])->setRazonSocial($emisor['razon_social'])
+            ->setNombreComercial($emisor['nombre_comercial'])->setAddress((new Address)
+            ->setDireccion($emisor['direccion'])->setUbigueo($emisor['ubigeo'])
+            ->setDepartamento($emisor['departamento'])->setProvincia($emisor['provincia'])->setDistrito($emisor['distrito'])->setCodLocal('0000'));
+
+        if (! self::seInformaPorResumen($document)) {
+            return (new Voided)
+                ->setCorrelativo((string) $correlativo)
+                ->setFecGeneracion($fechaEmision)
+                ->setFecComunicacion(now())
+                ->setCompany($company)
+                ->setDetails([
+                    (new VoidedDetail)
+                        ->setTipoDoc($tipoDoc)
+                        ->setSerie($document->serie)
+                        ->setCorrelativo((string) $document->correlativo)
+                        ->setDesMotivoBaja(mb_substr($motivo, 0, 100)),
+                ]);
+        }
+
+        $totales = $datos['totales'];
+        $detalle = (new SummaryDetail)
+            ->setTipoDoc($tipoDoc)
+            ->setSerieNro($datos['numero'])
+            ->setClienteTipo($datos['cliente']['tipo_documento'])
+            ->setClienteNro($datos['cliente']['numero_documento'])
+            ->setEstado('3')
+            ->setTotal($totales['total'])
+            ->setMtoOperGravadas($totales['gravadas'])
+            ->setMtoOperInafectas($totales['inafectas'])
+            ->setMtoOperExoneradas($totales['exoneradas'])
+            ->setMtoIGV($totales['igv']);
+        if ($datos['referencia']['numero'] !== '') {
+            $detalle->setDocReferencia((new Document)->setTipoDoc($datos['referencia']['tipo'])->setNroDoc($datos['referencia']['numero']));
+        }
+
+        return (new Summary)
+            ->setCorrelativo((string) $correlativo)
+            ->setFecGeneracion($fechaEmision)
+            ->setFecResumen(now())
+            ->setMoneda('PEN')
+            ->setCompany($company)
+            ->setDetails([$detalle]);
+    }
+
+    /**
+     * Boletas y sus notas (series B...) se anulan por Resumen Diario.
+     */
+    public static function seInformaPorResumen(ElectronicDocument $document): bool
+    {
+        return str_starts_with(strtoupper($document->serie), 'B');
+    }
+
+    public static function descripcionMotivoCredito(?string $codigo): string
+    {
+        // S9: Catalogo 09 completo (01 al 13) segun SUNAT.
+        // El 07 es "devolucion por item" (no "devolucion total", que es el 06).
         return match ($codigo) {
             '01' => 'ANULACION DE LA OPERACION',
             '02' => 'ANULACION POR ERROR EN EL RUC',
@@ -283,17 +353,29 @@ class GreenterService
             '04' => 'DESCUENTO GLOBAL',
             '05' => 'DESCUENTO POR ITEM',
             '06' => 'DEVOLUCION TOTAL',
-            '07' => 'DEVOLUCION POR ITEM',
+            '07' => 'DEVOLUCION PARCIAL',
+            '08' => 'BONIFICACION',
+            '09' => 'DISMINUCION EN EL VALOR',
+            '10' => 'OTROS CONCEPTOS',
+            '11' => 'AJUSTES DE OPERACIONES DE EXPORTACION',
+            '12' => 'AJUSTES AFECTOS AL IVAP',
+            '13' => 'CORRECCION DE LA DESCRIPCION O DEL MONTO NETO PENDIENTE DE PAGO',
             default => 'AJUSTE DEL COMPROBANTE',
         };
     }
 
-    protected function descripcionMotivoDebito(?string $codigo): string
+    public static function descripcionMotivoDebito(?string $codigo): string
     {
+        // S3: Catalogo 10 actualizado por R.S. 000048-2026 (vigente 1/08/2026).
+        // 03 = Otros conceptos (ya NO incluye penalidades).
+        // 13 = Penalidades, inafectas al IGV.
         return match ($codigo) {
             '01' => 'INTERESES POR MORA',
             '02' => 'AUMENTO EN EL VALOR',
-            '03' => 'PENALIDADES U OTROS CONCEPTOS',
+            '03' => 'OTROS CONCEPTOS',
+            '11' => 'AJUSTES DE OPERACIONES DE EXPORTACION',
+            '12' => 'AJUSTES AFECTOS AL IVAP',
+            '13' => 'PENALIDADES',
             default => 'AJUSTE DEL COMPROBANTE',
         };
     }
@@ -301,10 +383,23 @@ class GreenterService
     protected function buildDetail(SaleItem $item): SaleDetail
     {
         $productOrService = $item->product ?? $item->service;
-        // El subtotal de la línea ya incluye IGV: se separa en base e IGV.
-        ['base' => $valorVenta, 'igv' => $igvLinea] = PrecioConIgv::desglosar((float) $item->subtotal);
-        $precioUnitario = (float) $item->precio_unitario;
-        $valorUnitario = round($precioUnitario / (1 + PrecioConIgv::TASA), 10);
+        $tipAfeIgv = $item->tipo_afectacion_igv ?? AfectacionIgv::codigo($productOrService);
+        $esGravado = $tipAfeIgv === '10';
+
+        if ($esGravado) {
+            ['base' => $valorVenta, 'igv' => $igvLinea] = PrecioConIgv::desglosar((float) $item->subtotal);
+            $precioUnitario = (float) $item->precio_unitario;
+            $valorUnitario = round($precioUnitario / (1 + PrecioConIgv::TASA), 10);
+            $porcentajeIgv = 18.00;
+            $mtoBaseIgv = $valorVenta;
+        } else {
+            $valorVenta = (float) $item->subtotal;
+            $precioUnitario = (float) $item->precio_unitario;
+            $valorUnitario = $precioUnitario;
+            $igvLinea = 0.0;
+            $porcentajeIgv = 0.0;
+            $mtoBaseIgv = $valorVenta;
+        }
 
         $detail = (new SaleDetail)
             ->setCodProducto($productOrService->codigo)
@@ -313,10 +408,10 @@ class GreenterService
             ->setDescripcion($productOrService->nombre)
             ->setMtoValorUnitario($valorUnitario)
             ->setMtoValorVenta($valorVenta)
-            ->setMtoBaseIgv($valorVenta)
-            ->setPorcentajeIgv(18.00)
+            ->setMtoBaseIgv($mtoBaseIgv)
+            ->setPorcentajeIgv($porcentajeIgv)
             ->setIgv($igvLinea)
-            ->setTipAfeIgv('10')
+            ->setTipAfeIgv($tipAfeIgv)
             ->setTotalImpuestos($igvLinea)
             ->setMtoPrecioUnitario($precioUnitario);
 
@@ -325,7 +420,7 @@ class GreenterService
                 (new Charge)
                     ->setCodTipo('00')
                     ->setMontoBase(round((float) $item->cantidad * $valorUnitario, 2))
-                    ->setMonto(round((float) $item->descuento / (1 + PrecioConIgv::TASA), 2)),
+                    ->setMonto(round((float) $item->descuento / ($esGravado ? 1 + PrecioConIgv::TASA : 1), 2)),
             ]);
         }
 
@@ -356,6 +451,7 @@ class GreenterService
     protected function cuotasNetas(Sale $sale, float $detraccion): array
     {
         $cuotas = $sale->installments
+            ->filter(fn ($installment) => $installment->esDelComprobante())
             ->map(fn ($installment) => ['monto' => (float) $installment->monto, 'fecha' => $installment->fecha_vencimiento])
             ->values()
             ->all();
@@ -396,12 +492,13 @@ class GreenterService
 
     protected function unidadCatalogo03(Product|Service $item): string
     {
-        if ($item->esServicio()) {
-            return 'ZZ';
+        $codigo = mb_strtoupper(trim((string) $item->unidad_medida));
+
+        // Una unidad desconocida se rechaza: no se cambia por NIU o ZZ sin avisar.
+        if (! UnidadMedidaSunat::esValida($codigo)) {
+            throw new RuntimeException("La unidad de medida «{$item->unidad_medida}» de «{$item->nombre}» no está en el catálogo 03 de SUNAT: corrígela en el catálogo antes de emitir.");
         }
 
-        $clave = mb_strtolower(trim($item->unidad_medida));
-
-        return self::UNIDADES_SUNAT[$clave] ?? 'NIU';
+        return $codigo;
     }
 }

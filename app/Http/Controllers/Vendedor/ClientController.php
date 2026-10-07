@@ -12,6 +12,7 @@ use App\Models\AuditLog;
 use App\Models\Client;
 use App\Models\ClientSite;
 use App\Models\Equipment;
+use App\Models\Installment;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\Team;
@@ -159,19 +160,23 @@ class ClientController extends Controller
      */
     public function show(Team $current_team, Client $client, Request $request): Response
     {
-        $sedeId = $request->user()->sedeRestringidaId();
+        $user = $request->user();
         $client->load(['sites.ubicacion', 'vehicles', 'ubicacion']);
 
-        $quotes = $client->quotes()->with('sale')->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->latest('fecha')->get();
-        $sales = $client->sales()->with(['electronicDocuments', 'installments.payments'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->latest('fecha')->latest('id')->get();
-        $equipos = $client->equipment()->with('product:id,nombre')->latest('fecha_venta')->get();
-        $serviceOrders = $client->serviceOrders()->with(['service:id,nombre', 'tecnico:id,name'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->latest('fecha')->get();
-        $certificates = $client->certificates()->with(['certificateType:id,nombre', 'sale:id,numero_interno'])->latest('fecha_emision')->get();
-        $installments = $client->sales()->with(['installments.payments'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->get()->flatMap->installments->sortByDesc('fecha_vencimiento')->values();
-        $payments = $client->sales()->with('payments')->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->get()->flatMap->payments->sortByDesc('fecha')->values();
+        // Cada vendedor ve solo lo suyo dentro de su sede (§90.1); el Gerente, todo.
+        $quotes = $client->quotes()->with('sale')
+            ->when($user->sedeRestringidaId(), fn ($query, int $sedeId) => $query->where('sede_id', $sedeId))
+            ->when($user->vendedorRestringidoId(), fn ($query, int $vendedorId) => $query->where('vendedor_id', $vendedorId))
+            ->latest('fecha')->get();
+        $sales = $client->sales()->with(['electronicDocuments', 'installments.payments', 'payments'])->visiblePara($user)->latest('fecha')->latest('id')->get();
+        $equipos = $client->equipment()->with('product:id,nombre')->visiblePara($user)->latest('fecha_venta')->get();
+        $serviceOrders = $client->serviceOrders()->with(['service:id,nombre', 'tecnico:id,name'])->visiblePara($user)->latest('fecha')->get();
+        $certificates = $client->certificates()->with(['certificateType:id,nombre', 'sale:id,numero_interno'])->visiblePara($user)->latest('fecha_emision')->get();
+        $installments = $sales->flatMap->installments->sortByDesc('fecha_vencimiento')->values();
+        $payments = $sales->flatMap->payments->sortByDesc('fecha')->values();
 
         $confirmadas = $sales->where('estado', 'confirmada');
-        $saldoDe = fn ($installment) => max(0, round((float) $installment->monto - (float) $installment->payments->sum('monto'), 2));
+        $saldoDe = fn (Installment $installment) => $installment->saldo();
         $cuotasConSaldo = $confirmadas->flatMap->installments->filter(fn ($installment) => $saldoDe($installment) > 0);
         $en30Dias = fn ($fecha) => $fecha && $fecha->between(today(), today()->addDays(30));
 
@@ -201,7 +206,8 @@ class ClientController extends Controller
                 'sunat_estado' => $sale->electronicDocuments->whereIn('tipo', ['factura', 'boleta'])->sortBy('id')->last()?->sunat_estado,
                 'condicion_pago' => $sale->esCredito() ? 'credito' : 'contado',
                 'medio_pago' => $sale->medioPagoTexto(),
-                'saldo_pendiente' => $sale->estado === 'confirmada' && $sale->esCredito() ? round((float) $sale->installments->sum($saldoDe), 2) : 0.0,
+                // Al contado puede deber una nota de débito o un adicional (V4, V6).
+                'saldo_pendiente' => $sale->estado === 'confirmada' ? round((float) $sale->installments->sum($saldoDe), 2) : 0.0,
             ]),
             'extintores' => $equipos->map(function ($equipment) {
                 $esDescargado = in_array($equipment->estado, ['descargado', 'usado'], true);
@@ -235,7 +241,7 @@ class ClientController extends Controller
             'certificados' => $certificates->map(fn ($certificate) => ['id' => $certificate->id, 'numero' => $certificate->numero, 'tipo' => $certificate->certificateType->nombre, 'fecha_emision' => $certificate->fecha_emision?->toDateString(), 'fecha_vigencia_hasta' => $certificate->fecha_vigencia_hasta?->toDateString(), 'estado' => $certificate->estado, 'venta' => $certificate->sale ? ['id' => $certificate->sale->id, 'numero' => $certificate->sale->numero_interno] : null]),
             'servicios' => $serviceOrders->map(fn ($order) => ['id' => $order->id, 'numero' => $order->codigo, 'servicio' => $order->service->nombre, 'area' => $order->departamento_tecnico, 'estado' => $order->estado, 'estado_texto' => $order->coarseLabel(), 'tecnico' => $order->tecnico?->name, 'fecha' => $order->fecha?->toDateString()]),
             'cobranzas' => [
-                'cuotas' => $installments->map(fn ($installment) => ['id' => $installment->id, 'venta' => ['id' => $installment->sale_id, 'numero' => $sales->firstWhere('id', $installment->sale_id)?->numero_interno], 'numero_cuota' => $installment->numero_cuota, 'monto' => (float) $installment->monto, 'saldo' => max(0, (float) $installment->monto - (float) $installment->payments->sum('monto')), 'fecha_vencimiento' => $installment->fecha_vencimiento?->toDateString(), 'estado' => $installment->estado, 'dias_vencido' => $installment->fecha_vencimiento?->isPast() ? (int) $installment->fecha_vencimiento->diffInDays(today()) : 0]),
+                'cuotas' => $installments->map(fn ($installment) => ['id' => $installment->id, 'venta' => ['id' => $installment->sale_id, 'numero' => $sales->firstWhere('id', $installment->sale_id)?->numero_interno], 'numero_cuota' => $installment->numero_cuota, 'monto' => (float) $installment->monto, 'saldo' => $installment->saldo(), 'fecha_vencimiento' => $installment->fecha_vencimiento?->toDateString(), 'estado' => $installment->estado, 'dias_vencido' => $installment->fecha_vencimiento?->isPast() ? (int) $installment->fecha_vencimiento->diffInDays(today()) : 0]),
                 'pagos' => $payments->map(fn ($payment) => ['id' => $payment->id, 'fecha' => $payment->fecha?->toDateString(), 'monto' => (float) $payment->monto, 'forma_pago' => $payment->forma_pago, 'numero_operacion' => $payment->numero_operacion, 'venta' => ['id' => $payment->sale_id, 'numero' => $sales->firstWhere('id', $payment->sale_id)?->numero_interno]]),
             ],
             'historial' => AuditLog::query()->with('user:id,name')->where(function ($query) use ($client, $sales, $quotes) {

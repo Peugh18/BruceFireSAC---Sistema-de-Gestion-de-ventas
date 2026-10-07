@@ -26,7 +26,7 @@ class AnularVentaPorEnviar
             ->latest('id')
             ->first();
 
-        if ($sale->estado !== 'confirmada' || ! $documento?->estaPorEnviar()) {
+        if ($sale->estado !== 'confirmada' || ! $documento?->estaPorEnviar() || $documento->intento_envio_at !== null) {
             throw ValidationException::withMessages([
                 'comprobante' => 'Solo se anula sin nota de crédito una venta cuyo comprobante aún no se envió a SUNAT.',
             ]);

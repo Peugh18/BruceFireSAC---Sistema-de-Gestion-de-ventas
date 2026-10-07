@@ -4,6 +4,7 @@ namespace App\Http\Controllers\TecnicoPlanta;
 
 use App\Actions\TecnicoPlanta\QuickRegisterEquipment;
 use App\Actions\TecnicoPlanta\ReceiveServiceOrder;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
@@ -13,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -237,7 +239,7 @@ class ReceptionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'numero_serie' => ['nullable', 'string', 'max:100'],
-            'tipo_agente' => ['nullable', 'string', 'max:100'],
+            'tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
             'capacidad' => ['nullable', 'string', 'max:100'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],

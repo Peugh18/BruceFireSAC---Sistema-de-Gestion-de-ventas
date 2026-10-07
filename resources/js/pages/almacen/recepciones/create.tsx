@@ -51,6 +51,7 @@ export type ReceptionItemForm = {
     product_id: number;
     cantidad: number;
     cantidad_conforme: number;
+    costo_unitario: string;
     observacion_item: string;
     lote: string;
     fecha_vencimiento: string;
@@ -121,6 +122,7 @@ export default function RecepcionesCreate({
                 product_id: firstProd.id,
                 cantidad: 1,
                 cantidad_conforme: 1,
+                costo_unitario: '',
                 observacion_item: '',
                 lote: '',
                 fecha_vencimiento: '',
@@ -168,6 +170,7 @@ export default function RecepcionesCreate({
                     product_id: prod.id,
                     cantidad: 1,
                     cantidad_conforme: 1,
+                    costo_unitario: '',
                     observacion_item: '',
                     lote: '',
                     fecha_vencimiento: '',
@@ -816,6 +819,51 @@ export default function RecepcionesCreate({
                                                     )}
                                                 </div>
                                             )}
+
+                                        <div>
+                                            <Label
+                                                htmlFor={`recepcion-costo-${index}`}
+                                                className="text-[11px] font-bold"
+                                            >
+                                                Costo de compra por unidad, sin
+                                                IGV (S/):
+                                            </Label>
+                                            <Input
+                                                id={`recepcion-costo-${index}`}
+                                                type="number"
+                                                min="0"
+                                                step="0.0001"
+                                                value={item.costo_unitario}
+                                                onChange={(e) => {
+                                                    const next = [
+                                                        ...data.items,
+                                                    ];
+                                                    next[index] = {
+                                                        ...next[index],
+                                                        costo_unitario:
+                                                            e.target.value,
+                                                    };
+                                                    setData('items', next);
+                                                }}
+                                                className="border-border bg-card mt-1 h-8 w-40 text-xs"
+                                            />
+                                            <p className="text-muted-foreground mt-1 text-[11px]">
+                                                Si lo dejas vacío, el producto
+                                                no se valoriza en el reporte de
+                                                inventario.
+                                            </p>
+                                            {errors[
+                                                `items.${index}.costo_unitario` as keyof typeof errors
+                                            ] && (
+                                                <p className="text-destructive-strong mt-1 text-xs">
+                                                    {
+                                                        errors[
+                                                            `items.${index}.costo_unitario` as keyof typeof errors
+                                                        ]
+                                                    }
+                                                </p>
+                                            )}
+                                        </div>
 
                                         {/* Motivo de no conformidad (obligatorio si cantidad_conforme < cantidad) */}
                                         {hasNoConforme && (

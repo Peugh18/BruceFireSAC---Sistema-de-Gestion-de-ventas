@@ -18,6 +18,7 @@ use App\Services\Billing\ResponseClassifier;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Tests\Fixtures\SunatSoloEnvio;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -56,7 +57,7 @@ test('emit electronic document builds and signs a real greenter invoice, stores 
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
     config(['billing.company.ruc' => '20600000001']);
 
-    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    $this->app->bind(SunatClientInterface::class, fn () => new class extends SunatSoloEnvio
     {
         public function send(string $xmlSigned, string $documentName): array
         {
@@ -84,7 +85,7 @@ test('emit electronic document builds and signs a real greenter invoice, stores 
 test('emit electronic document marks accepted-with-observations code as observado', function () {
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
 
-    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    $this->app->bind(SunatClientInterface::class, fn () => new class extends SunatSoloEnvio
     {
         public function send(string $xmlSigned, string $documentName): array
         {
@@ -101,7 +102,7 @@ test('emit electronic document marks accepted-with-observations code as observad
 test('emit electronic document prints the detraccion legend and bank account when it applies', function () {
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
 
-    $this->app->bind(SunatClientInterface::class, fn () => new class implements SunatClientInterface
+    $this->app->bind(SunatClientInterface::class, fn () => new class extends SunatSoloEnvio
     {
         public function send(string $xmlSigned, string $documentName): array
         {
@@ -163,6 +164,9 @@ test('issue credit note rejects unsupported originals and creates valid note', f
 
     expect(fn () => app(IssueCreditNote::class)->handle($invalidOriginal, '01', 'Anulación', 10))
         ->toThrow(ValidationException::class);
+
+    SaleItem::factory()->create(['sale_id' => $sale->id, 'cantidad' => 1, 'precio_unitario' => $sale->total, 'subtotal' => $sale->total, 'descuento' => 0]);
+    guardarXmlOriginalDePrueba($validOriginal);
 
     $creditNote = app(IssueCreditNote::class)->handle($validOriginal, '01', 'Anulación', 10);
 
@@ -256,7 +260,8 @@ test('la descarga masiva arma un zip con xml cdr y pdf solo de los comprobantes 
         'sale_id' => Sale::factory()->create()->id,
         'xml_path' => 'xml/ajeno.xml',
     ]);
-    Storage::disk('local')->put('xml/a.xml', '<xml/>');
+    SaleItem::factory()->create(['sale_id' => $marcado->sale_id, 'cantidad' => 1, 'precio_unitario' => $marcado->sale->total, 'subtotal' => $marcado->sale->total, 'descuento' => 0]);
+    guardarXmlOriginalDePrueba($marcado);
     Storage::disk('local')->put('cdr/a.zip', 'cdr');
     Storage::disk('local')->put('pdf/a.pdf', '%PDF');
     Storage::disk('local')->put('xml/ajeno.xml', '<ajeno/>');
@@ -278,6 +283,8 @@ test('el registro de ventas en excel lista lo filtrado y la nota de credito rest
     $user = vendedorUser();
     $sale = Sale::factory()->create(['vendedor_id' => $user->id, 'subtotal' => 67.80, 'igv' => 12.20, 'total' => 80]);
     $factura = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 65]);
+    SaleItem::factory()->create(['sale_id' => $sale->id, 'cantidad' => 1, 'precio_unitario' => 80, 'subtotal' => 80, 'descuento' => 0]);
+    guardarXmlOriginalDePrueba($factura);
     ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'nota_credito', 'serie' => 'FC01', 'correlativo' => 1, 'importe' => 80, 'cpe_afectado_id' => $factura->id]);
 
     $csv = $this->actingAs($user)
@@ -327,6 +334,8 @@ test('una nota de credito por devolucion total anula la venta cuando sunat la ac
     foreach (['06' => 'anulada', '07' => 'confirmada'] as $motivo => $esperado) {
         $sale = Sale::factory()->create(['estado' => 'confirmada', 'total' => 100, 'condicion_pago' => 'credito']);
         $original = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'sunat_estado' => 'aceptado']);
+        SaleItem::factory()->create(['sale_id' => $sale->id, 'cantidad' => 1, 'precio_unitario' => 100, 'subtotal' => 100, 'descuento' => 0]);
+        guardarXmlOriginalDePrueba($original);
 
         $nota = app(IssueCreditNote::class)->handle($original, $motivo, 'Devolución del cliente', 100);
         // Emitida pero aún sin respuesta de SUNAT: la venta sigue vigente.
@@ -342,6 +351,8 @@ test('una nota de credito por devolucion total anula la venta cuando sunat la ac
 test('si sunat rechaza la nota de anulacion la venta sigue vigente y se puede emitir otra', function () {
     $sale = Sale::factory()->create(['estado' => 'confirmada', 'total' => 100, 'condicion_pago' => 'credito']);
     $original = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'sunat_estado' => 'aceptado']);
+    SaleItem::factory()->create(['sale_id' => $sale->id, 'cantidad' => 1, 'precio_unitario' => 100, 'subtotal' => 100, 'descuento' => 0]);
+    guardarXmlOriginalDePrueba($original);
 
     $rechazada = app(IssueCreditNote::class)->handle($original, '01', 'Anulación', 100);
     $rechazada->update(['sunat_estado' => 'rechazado']);

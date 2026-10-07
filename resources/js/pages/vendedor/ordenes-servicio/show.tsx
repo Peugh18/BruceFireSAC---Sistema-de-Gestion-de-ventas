@@ -23,6 +23,7 @@ import comunicacion from '@/routes/vendedor/comunicacion';
 import ordenes from '@/routes/vendedor/ordenes-servicio';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
+import OpcionesAgente from '@/components/opciones-agente';
 
 export type ServiceOrderEvent = {
     id: number;
@@ -458,9 +459,9 @@ export default function ServiceOrderShow({
                                     equipo.setData('capacidad', e.target.value)
                                 }
                             />
-                            <input
+                            <select
+                                aria-label="Agente extintor"
                                 className="rounded-md border p-2 text-sm"
-                                placeholder="Agente"
                                 value={equipo.data.tipo_agente}
                                 onChange={(e) =>
                                     equipo.setData(
@@ -468,7 +469,9 @@ export default function ServiceOrderShow({
                                         e.target.value,
                                     )
                                 }
-                            />
+                            >
+                                <OpcionesAgente vacia="Agente" />
+                            </select>
                             <input
                                 className="rounded-md border p-2 text-sm"
                                 placeholder="Marca"

@@ -6,11 +6,14 @@ use App\Http\Controllers\Gerente\CollectionConsolidatedController;
 use App\Http\Controllers\Gerente\CompanyBankAccountController;
 use App\Http\Controllers\Gerente\CompanySettingController;
 use App\Http\Controllers\Gerente\DashboardController;
+use App\Http\Controllers\Gerente\NoteRequestController;
+use App\Http\Controllers\Gerente\ProductCategoryController;
 use App\Http\Controllers\Gerente\ProductController;
 use App\Http\Controllers\Gerente\ReportController;
 use App\Http\Controllers\Gerente\SedeController;
 use App\Http\Controllers\Gerente\ServiceController;
 use App\Http\Controllers\Gerente\SignerController;
+use App\Http\Controllers\Gerente\TransporteController;
 use App\Http\Controllers\Gerente\UserController;
 use App\Http\Controllers\Vendedor\CollectionController as VendedorCollectionController;
 use Illuminate\Support\Facades\Route;
@@ -24,9 +27,26 @@ Route::prefix('gerente')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
+        // Notas de crédito y débito que piden los vendedores (V2/S17).
+        Route::get('notas-por-aprobar', [NoteRequestController::class, 'index'])->name('notas.index');
+        Route::post('notas-por-aprobar/{note_request}/aprobar', [NoteRequestController::class, 'aprobar'])->name('notas.aprobar');
+        Route::post('notas-por-aprobar/{note_request}/rechazar', [NoteRequestController::class, 'rechazar'])->name('notas.rechazar');
+
+        // Vehículos y conductores de las guías de remisión (Fase H)
+        Route::get('transporte', [TransporteController::class, 'index'])->name('transporte.index');
+        Route::post('transporte/vehiculos', [TransporteController::class, 'storeVehiculo'])->name('transporte.vehiculos.store');
+        Route::patch('transporte/vehiculos/{vehiculo}/toggle', [TransporteController::class, 'toggleVehiculo'])->name('transporte.vehiculos.toggle');
+        Route::post('transporte/conductores', [TransporteController::class, 'storeConductor'])->name('transporte.conductores.store');
+        Route::patch('transporte/conductores/{conductor}/toggle', [TransporteController::class, 'toggleConductor'])->name('transporte.conductores.toggle');
+
         // Catálogo de Productos y Servicios (§86.4.2)
         Route::resource('productos', ProductController::class)->except(['create', 'edit', 'show']);
         Route::patch('productos/{producto}/toggle-status', [ProductController::class, 'toggleStatus'])->name('productos.toggle-status');
+
+        // Categorías del catálogo: las usan productos y servicios (A2)
+        Route::post('categorias', [ProductCategoryController::class, 'store'])->name('categorias.store');
+        Route::put('categorias/{categoria}', [ProductCategoryController::class, 'update'])->name('categorias.update');
+        Route::delete('categorias/{categoria}', [ProductCategoryController::class, 'destroy'])->name('categorias.destroy');
 
         Route::resource('servicios', ServiceController::class)->except(['create', 'edit', 'show']);
         Route::patch('servicios/{servicio}/toggle-status', [ServiceController::class, 'toggleStatus'])->name('servicios.toggle-status');
@@ -68,6 +88,9 @@ Route::prefix('gerente')
         Route::get('configuracion/firmas', [SignerController::class, 'index'])->name('configuracion.firmas.index');
         Route::post('configuracion/firmas', [SignerController::class, 'store'])->name('configuracion.firmas.store');
         Route::post('configuracion/firmas/{firmante}', [SignerController::class, 'update'])->name('configuracion.firmas.update');
+        Route::get('configuracion/firmas/{firmante}/{tipo}', [SignerController::class, 'imagen'])
+            ->whereIn('tipo', ['firma', 'sello'])
+            ->name('configuracion.firmas.imagen');
         Route::get('configuracion/firmas/vista-previa/{tipo:codigo}', [SignerController::class, 'vistaPrevia'])
             ->withoutScopedBindings()
             ->name('configuracion.firmas.vista-previa');

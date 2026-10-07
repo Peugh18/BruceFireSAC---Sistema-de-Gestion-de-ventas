@@ -30,12 +30,19 @@ type Unidad = {
     capacidad: string | null;
     marca: string | null;
     numero_cliente: string | null;
+    agente: string | null;
+    agente_conocido: boolean;
+    fecha_ultima_ph: string | null;
+    presion_ph: string | null;
+    tiempo_ph: string | null;
+    presion_ph_sugerida: string | null;
 };
 
 type Emitido = {
     id: number;
     numero: string;
     tipo: string;
+    tipo_codigo: string;
     estado: string;
     referencia: string | null;
     unidades: number;
@@ -114,6 +121,17 @@ function tiposPorDestino(destino: string) {
 
 let secuencia = 1;
 
+// La P.H. se certifica solo con lo que registró el técnico (C2): nada se
+// llena solo, salvo la presión que corresponde al agente como sugerencia.
+function datosDePrueba(u: Unidad) {
+    return {
+        ph_fecha: u.fecha_ultima_ph ?? '',
+        ph_presion: u.presion_ph ?? '',
+        ph_tiempo: u.tiempo_ph ?? '',
+        ph_resultado: u.fecha_ultima_ph ? 'aprobado' : '',
+    };
+}
+
 export default function ArmarCertificados({
     sale,
     unidades,
@@ -153,6 +171,7 @@ export default function ArmarCertificados({
                 grupos: [grupo],
                 filas: unidades.map((u) => ({
                     ...u,
+                    ...datosDePrueba(u),
                     grupo: grupo.id,
                     numero_cliente: u.numero_cliente ?? '',
                 })),
@@ -187,6 +206,7 @@ export default function ArmarCertificados({
                     ? [
                           {
                               ...unidad,
+                              ...datosDePrueba(unidad),
                               grupo: armados[indice].id,
                               numero_cliente: u.numero_cliente ?? '',
                           },
@@ -200,6 +220,7 @@ export default function ArmarCertificados({
             )
             .map((u) => ({
                 ...u,
+                ...datosDePrueba(u),
                 grupo: armados[0].id,
                 numero_cliente: u.numero_cliente ?? '',
             }));
@@ -271,6 +292,14 @@ export default function ArmarCertificados({
                         .map((f) => ({
                             equipment_id: f.equipment_id,
                             numero_cliente: f.numero_cliente || null,
+                            ...(g.tipos.includes('prueba_hidrostatica')
+                                ? {
+                                      fecha_ultima_ph: f.ph_fecha || null,
+                                      presion_ph: f.ph_presion || null,
+                                      tiempo_ph: f.ph_tiempo || null,
+                                      resultado_ph: f.ph_resultado || null,
+                                  }
+                                : {}),
                         })),
                     capacitacion: g.tipos.includes('capacitacion')
                         ? {
@@ -297,6 +326,22 @@ export default function ArmarCertificados({
     };
 
     const vigentes = emitidos.filter((e) => e.estado === 'vigente');
+    const pendientes = TIPOS.filter(
+        (t) =>
+            tiposSugeridos.includes(t.codigo) &&
+            !vigentes.some((e) => e.tipo_codigo === t.codigo),
+    );
+    const sinAgente = unidades.filter((u) => !u.agente_conocido);
+
+    const cambiarFila = (
+        equipmentId: number,
+        cambio: Partial<(typeof filas)[number]>,
+    ) =>
+        setFilas(
+            filas.map((f) =>
+                f.equipment_id === equipmentId ? { ...f, ...cambio } : f,
+            ),
+        );
 
     return (
         <VendedorLayout title="Armar certificados">
@@ -348,6 +393,30 @@ export default function ArmarCertificados({
                                 className="bg-card mt-1 h-9 rounded-[9px] text-[13px] normal-case"
                             />
                         </label>
+                    </Card>
+                ) : null}
+
+                {pendientes.length > 0 ? (
+                    <Card className="gap-1 rounded-[14px] border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
+                        <p className="font-semibold">
+                            Pendientes de datos técnicos:{' '}
+                            {pendientes.map((t) => t.nombre).join(' y ')}.
+                        </p>
+                        <p className="text-muted-foreground">
+                            No salen al cobrar. Márcalos en el grupo cuando se
+                            hayan hecho y registra los datos reales (fecha,
+                            presión, tiempo y resultado de la prueba
+                            hidrostática).
+                        </p>
+                    </Card>
+                ) : null}
+
+                {sinAgente.length > 0 ? (
+                    <Card className="border-destructive/40 bg-destructive/5 rounded-[14px] p-4 text-[12.5px] shadow-none">
+                        Falta el agente extintor de{' '}
+                        {sinAgente.map((u) => u.codigo_interno).join(', ')}.
+                        Regístralo en el producto del catálogo o en el equipo:
+                        sin él no se emite el certificado.
                     </Card>
                 ) : null}
 
@@ -869,6 +938,7 @@ export default function ArmarCertificados({
                                                                 {fila.marca
                                                                     ? ` · ${fila.marca}`
                                                                     : ''}
+                                                                {` · ${fila.agente_conocido ? fila.agente : 'Sin agente'}`}
                                                             </span>
                                                         </td>
                                                         <td className="px-2.5 py-1.5 font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
@@ -925,6 +995,124 @@ export default function ArmarCertificados({
                                             )}
                                         </tbody>
                                     </table>
+                                    {grupo.tipos.includes(
+                                        'prueba_hidrostatica',
+                                    ) ? (
+                                        <div className="border-border grid gap-2 border-t p-2">
+                                            <div className="text-foreground/80 text-[11px] font-bold uppercase">
+                                                Datos reales de la prueba
+                                                hidrostática
+                                            </div>
+                                            {filasDelGrupo.map((fila) => (
+                                                <div
+                                                    key={fila.equipment_id}
+                                                    className="grid items-end gap-2 sm:grid-cols-[120px_repeat(4,minmax(0,1fr))]"
+                                                >
+                                                    <span className="font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                        {fila.codigo_interno}
+                                                    </span>
+                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
+                                                        Fecha
+                                                        <Input
+                                                            type="date"
+                                                            value={
+                                                                fila.ph_fecha
+                                                            }
+                                                            onChange={(e) =>
+                                                                cambiarFila(
+                                                                    fila.equipment_id,
+                                                                    {
+                                                                        ph_fecha:
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                    },
+                                                                )
+                                                            }
+                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
+                                                        />
+                                                    </label>
+                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
+                                                        Presión
+                                                        <Input
+                                                            value={
+                                                                fila.ph_presion
+                                                            }
+                                                            maxLength={20}
+                                                            placeholder={
+                                                                fila.presion_ph_sugerida ??
+                                                                'Ej. 600 PSI'
+                                                            }
+                                                            onChange={(e) =>
+                                                                cambiarFila(
+                                                                    fila.equipment_id,
+                                                                    {
+                                                                        ph_presion:
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                    },
+                                                                )
+                                                            }
+                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
+                                                        />
+                                                    </label>
+                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
+                                                        Tiempo
+                                                        <Input
+                                                            value={
+                                                                fila.ph_tiempo
+                                                            }
+                                                            maxLength={20}
+                                                            placeholder="Ej. 60 SEG"
+                                                            onChange={(e) =>
+                                                                cambiarFila(
+                                                                    fila.equipment_id,
+                                                                    {
+                                                                        ph_tiempo:
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                    },
+                                                                )
+                                                            }
+                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
+                                                        />
+                                                    </label>
+                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
+                                                        Resultado
+                                                        <select
+                                                            value={
+                                                                fila.ph_resultado
+                                                            }
+                                                            onChange={(e) =>
+                                                                cambiarFila(
+                                                                    fila.equipment_id,
+                                                                    {
+                                                                        ph_resultado:
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                    },
+                                                                )
+                                                            }
+                                                            className="border-border bg-card mt-1 h-8 w-full rounded-[7px] border px-2 text-[12px] normal-case"
+                                                        >
+                                                            <option value="">
+                                                                Elegir
+                                                            </option>
+                                                            <option value="aprobado">
+                                                                Aprobado
+                                                            </option>
+                                                            <option value="desaprobado">
+                                                                No aprobado
+                                                            </option>
+                                                        </select>
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : null}
                                     <div className="border-border border-t p-2">
                                         <Button
                                             type="button"

@@ -6,10 +6,13 @@ use App\Contracts\SunatClientInterface;
 use App\Models\ElectronicDocument;
 use App\Models\Sale;
 use App\Services\Billing\ComprobantePdfService;
+use App\Services\Billing\DatosEmision;
 use App\Services\Billing\GreenterService;
 use App\Services\Billing\ResponseClassifier;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class EmitElectronicDocument
@@ -53,13 +56,41 @@ class EmitElectronicDocument
 
     public function sendDocument(ElectronicDocument $document): ElectronicDocument
     {
-        ['xml' => $xmlSigned, 'nombre' => $documentName] = $this->prepararDocumento($document);
+        // Un doble clic en «Enviar ya» puede coincidir con el programador: el
+        // bloqueo por documento garantiza un solo envío a la vez y que solo
+        // una respuesta escriba el estado.
+        $lock = Cache::lock("sunat-envio-{$document->id}", 300);
 
-        $response = app(SunatClientInterface::class)->send($xmlSigned, $documentName);
+        if (! $lock->get()) {
+            throw ValidationException::withMessages([
+                'estado' => 'Este comprobante ya se está enviando a SUNAT. Espera su respuesta antes de volver a intentarlo.',
+            ]);
+        }
+
+        try {
+            ['xml' => $xmlSigned, 'nombre' => $documentName] = $this->prepararDocumento($document);
+
+            $document->forceFill(['intento_envio_at' => $document->intento_envio_at ?? now()])->saveQuietly();
+
+            return $this->registrarRespuesta($document, app(SunatClientInterface::class)->send($xmlSigned, $documentName), $documentName);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Deja registrado en el comprobante lo que SUNAT respondió, con CDR o sin
+     * él. Lo usan el envío y la consulta del CDR de un comprobante ya enviado.
+     *
+     * @param  array{cdr_zip:string|null,codigo:int,mensaje:string,notas?:list<string>}  $response
+     */
+    public function registrarRespuesta(ElectronicDocument $document, array $response, ?string $documentName = null): ElectronicDocument
+    {
+        $documentName ??= pathinfo((string) $document->xml_path, PATHINFO_FILENAME);
         $notas = $response['notas'] ?? [];
         $cdrPath = null;
 
-        if ($response['cdr_zip'] !== null) {
+        if ($response['cdr_zip'] !== null && $documentName !== '') {
             $cdrPath = "cdr/R-{$documentName}.zip";
             Storage::disk('local')->put($cdrPath, $response['cdr_zip']);
         }
@@ -74,18 +105,35 @@ class EmitElectronicDocument
 
         // Una nota de crédito de anulación aceptada anula la venta.
         app(IssueCreditNote::class)->aplicarSiFueAceptada($document->refresh());
+        // V4/S11: la nota aceptada ajusta el saldo por cobrar.
+        app(AplicarNotaAlSaldo::class)->handle($document->refresh());
 
         return $document->refresh();
     }
 
     /**
      * Arma y firma el XML con los datos actuales de la venta y regenera el
-     * PDF. Se llama al programar, al corregir y justo antes de enviar.
+     * PDF mientras el comprobante está "por enviar" (aún se puede corregir).
+     * Una vez que llegó a SUNAT al menos una vez, el XML queda congelado: un
+     * reintento envía exactamente el mismo XML firmado.
      *
      * @return array{xml: string, nombre: string}
      */
     public function prepararDocumento(ElectronicDocument $document): array
     {
+        if ((! $document->estaPorEnviar() || $document->intento_envio_at !== null) && $document->xml_path && Storage::disk('local')->exists($document->xml_path)) {
+            app(DatosEmision::class)->recuperar($document);
+
+            return [
+                'xml' => (string) Storage::disk('local')->get($document->xml_path),
+                'nombre' => pathinfo($document->xml_path, PATHINFO_FILENAME),
+            ];
+        }
+
+        if ($document->intento_envio_at !== null || $document->enviado_at !== null || in_array($document->sunat_estado, ['aceptado', 'observado', 'rechazado', 'excepcion', 'baja_pendiente', 'anulado'], true)) {
+            throw new \RuntimeException('No se puede reenviar el comprobante: falta el XML firmado original.');
+        }
+
         $document->unsetRelation('sale');
         $document->loadMissing('sale.client', 'sale.items.product', 'sale.items.service', 'sale.installments', 'cpeAfectado');
 
@@ -99,11 +147,13 @@ class EmitElectronicDocument
 
         Storage::disk('local')->put("xml/{$documentName}.xml", $xmlSigned);
 
-        $pdfPath = $esNota ? null : $this->pdfService->generate($document, $xmlSigned);
+        $document->forceFill(['datos_emision' => app(DatosEmision::class)->desdeXml($xmlSigned)])->saveQuietly();
+
+        $pdfPath = $this->pdfService->generate($document, $xmlSigned);
 
         $document->update([
             'xml_path' => "xml/{$documentName}.xml",
-            'pdf_path' => $pdfPath ?? $document->pdf_path,
+            'pdf_path' => $pdfPath,
         ]);
 
         return ['xml' => $xmlSigned, 'nombre' => $documentName];
@@ -115,8 +165,8 @@ class EmitElectronicDocument
      */
     public function descartarPorEnviar(ElectronicDocument $document): void
     {
-        if (! $document->estaPorEnviar()) {
-            throw new InvalidArgumentException('Solo se descarta un comprobante que aún no se envió a SUNAT.');
+        if (! $document->estaPorEnviar() || $document->intento_envio_at !== null) {
+            throw new InvalidArgumentException('Solo se descarta un comprobante que aún no tuvo ningún intento de envío a SUNAT.');
         }
 
         Storage::disk('local')->delete(array_filter([$document->xml_path, $document->pdf_path]));
@@ -141,7 +191,9 @@ class EmitElectronicDocument
             'tipo' => $tipo,
             'serie' => $serie,
             'correlativo' => $correlativo,
-            'fecha_emision' => ($fechaEmision ?? $sale->fecha)->toDateString(),
+            // S5: se guarda como datetime (con hora) para que el XML y el PDF
+            // muestren la hora de emision real, no las 00:00:00 del DATE.
+            'fecha_emision' => $fechaEmision ?? now(),
             'sunat_estado' => $estado,
         ]);
     }

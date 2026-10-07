@@ -1,5 +1,7 @@
 # GUÍA TÉCNICA MAESTRA: FACTURACIÓN ELECTRÓNICA CON GREENTER & SUNAT (PERÚ)
 
+> **Normativa vigente 2026 y estado real del código:** ver `docs/ai/SUNAT.md`. Esta guía explica cómo se usa Greenter; si algo de aquí choca con `docs/ai/SUNAT.md`, manda `docs/ai/SUNAT.md`.
+
 ## Bruce Fire S.A.C. — Estándar UBL 2.1
 
 Este documento constituye la fuente técnica oficial y completa para la integración de Facturación Electrónica con **Greenter (UBL 2.1)** y los servicios de **SUNAT** en el sistema Bruce Fire.
@@ -36,7 +38,7 @@ _(Para códigos QR y utilitarios adicionales: `simplesoftwareio/simple-qrcode`).
 Greenter provee los endpoints oficiales en `Greenter\Ws\Services\SunatEndpoints`:
 
 - **Beta / Pruebas:** `SunatEndpoints::FE_BETA` (`https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService`)
-- **Producción:** `SunatEndpoints::FE_PRODUCCION` (`https://e-factura.sunat.gob.pe/ol-it-wscontain/billService`)
+- **Producción:** `SunatEndpoints::FE_PRODUCCION` (`https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService`). Ojo: `ol-it-wscontain/billConsultService` es el servicio de **consulta**, no el de envío.
 - **Consultas CDR:** `SunatEndpoints::FE_CONSULTA_CDR` (`https://e-factura.sunat.gob.pe/ol-it-wsconscdr/billConsultService`)
 - **Guías de Remisión (API REST 2022+):**
     - Auth: `https://api-seguridad.sunat.gob.pe/v1`

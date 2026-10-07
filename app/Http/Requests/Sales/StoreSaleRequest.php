@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Sales;
 
+use App\Actions\Sales\ProcessSaleItem;
 use App\Models\Sale;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -40,6 +41,7 @@ class StoreSaleRequest extends FormRequest
             'referencia' => ['nullable', 'string', 'max:150'],
             'comprobante_tipo' => ['required', Rule::in(['factura', 'boleta', 'nota_venta'])],
             'observaciones' => ['nullable', 'string'],
+            'iniciado_at' => ['nullable', 'date'],
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.tipo_linea' => ['required', Rule::in(['unidad_nueva', 'recarga_servicio', 'producto', 'servicio'])],
@@ -69,6 +71,11 @@ class StoreSaleRequest extends FormRequest
     {
         $validator->after(function ($validator): void {
             foreach ($this->input('items', []) as $index => $item) {
+                // V1: cada serie es una unidad; la cantidad sale de las series.
+                if (in_array($item['tipo_linea'] ?? null, ProcessSaleItem::LINEAS_POR_SERIE, true) && (int) ($item['cantidad'] ?? 0) !== 1) {
+                    $validator->errors()->add("items.{$index}.cantidad", ProcessSaleItem::MENSAJE_CANTIDAD_POR_SERIE);
+                }
+
                 $importe = (float) ($item['cantidad'] ?? 0) * (float) ($item['precio_unitario'] ?? 0);
 
                 // Ninguna línea puede quedar en S/ 0.00: un regalo se registra

@@ -6,6 +6,7 @@ use App\Actions\Sales\RevertSale;
 use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\InventoryMovement;
+use App\Models\InventoryTransfer;
 use App\Models\Product;
 use App\Models\ProductLot;
 use App\Models\Sale;
@@ -124,6 +125,7 @@ test('el traslado lleva el lote con su vencimiento al otro almacen', function ()
     $gerente->assignRole('Gerente');
 
     app(TransferInventory::class)->handle($this->almacen->id, ['destination_sede_id' => $destino->id, 'product_id' => $this->guantes->id, 'quantity' => 4], $gerente);
+    app(TransferInventory::class)->confirmar(InventoryTransfer::query()->sole(), $gerente);
 
     $llegado = ProductLot::where('sede_id', $destino->id)->sole();
 

@@ -40,7 +40,7 @@ class SyncCertificateTraining
     protected function reemplazarFotos(Certificate $certificate, array &$datos, array $fotos): void
     {
         foreach ($datos['fotos'] ?? [] as $anterior) {
-            Storage::disk('public')->delete($anterior);
+            Storage::disk('local')->delete($anterior);
         }
 
         $datos['fotos'] = collect($fotos)
@@ -77,7 +77,7 @@ class SyncCertificateTraining
         imagedestroy($destino);
 
         $ruta = "certificados/fotos/{$certificate->id}/{$indice}-".Str::uuid().'.jpg';
-        Storage::disk('public')->put($ruta, $jpeg ?: '');
+        Storage::disk('local')->put($ruta, $jpeg ?: '');
 
         return $ruta;
     }

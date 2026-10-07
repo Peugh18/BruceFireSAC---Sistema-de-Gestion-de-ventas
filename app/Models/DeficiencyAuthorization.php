@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $observacion
  * @property string|null $evidencia_path
  * @property int|null $cotizacion_adicional_id
+ * @property float|null $importe
  * @property int $vendedor_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -33,6 +34,7 @@ use Illuminate\Support\Carbon;
     'observacion',
     'evidencia_path',
     'cotizacion_adicional_id',
+    'importe',
     'vendedor_id',
 ])]
 class DeficiencyAuthorization extends Model
@@ -44,6 +46,7 @@ class DeficiencyAuthorization extends Model
     {
         return [
             'fecha' => 'date',
+            'importe' => 'decimal:2',
         ];
     }
 

@@ -70,6 +70,7 @@ class CambiarUnidadVendida
             $item->update(['inventory_unit_id' => $nueva->id]);
             $item->equipment?->update([
                 'numero_serie' => $nueva->numero_serie,
+                'tipo_agente' => $nueva->agenteParaEquipo() ?? $item->equipment->tipo_agente,
                 'capacidad' => $nueva->capacidad,
                 'marca' => $nueva->marca,
                 'serie_fabricante' => $nueva->serie_fabricante,

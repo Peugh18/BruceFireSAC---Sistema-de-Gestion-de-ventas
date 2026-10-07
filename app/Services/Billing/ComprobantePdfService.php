@@ -7,6 +7,7 @@ use App\Models\ClientSite;
 use App\Models\CompanyBankAccount;
 use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
+use App\Models\Installment;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -50,9 +51,7 @@ class ComprobantePdfService
     {
         $path = "pdf/{$document->tipo}-{$document->serie}-{$document->correlativo}.pdf";
         $firma = $this->firmaDeDiseno($document);
-
         Storage::disk('local')->put($path, $this->render($document, $xmlSigned));
-
         if ($document->exists) {
             $document->forceFill(['pdf_firma' => $firma])->saveQuietly();
         }
@@ -67,14 +66,12 @@ class ComprobantePdfService
      */
     public function vigente(ElectronicDocument $document): ?string
     {
-        if (! in_array($document->tipo, ['factura', 'boleta'], true)
+        if (! in_array($document->tipo, ['factura', 'boleta', 'nota_credito', 'nota_debito'], true)
             || ! $document->xml_path
             || ! Storage::disk('local')->exists($document->xml_path)) {
             return $document->pdf_path;
         }
-
         $tieneArchivo = $document->pdf_path && Storage::disk('local')->exists($document->pdf_path);
-
         if ($tieneArchivo && $document->pdf_firma === $this->firmaDeDiseno($document)) {
             return $document->pdf_path;
         }
@@ -83,19 +80,17 @@ class ComprobantePdfService
     }
 
     /**
-     * Vuelve a dibujar el PDF de una factura o boleta con su XML firmado, sin
-     * importar cuándo se generó. Devuelve null si no tiene XML guardado.
+     * Vuelve a dibujar el PDF de una factura, boleta o nota con su XML firmado,
+     * sin importar cuándo se generó. Devuelve null si no tiene XML guardado.
      */
     public function redibujar(ElectronicDocument $document): ?string
     {
-        if (! in_array($document->tipo, ['factura', 'boleta'], true)
+        if (! in_array($document->tipo, ['factura', 'boleta', 'nota_credito', 'nota_debito'], true)
             || ! $document->xml_path
             || ! Storage::disk('local')->exists($document->xml_path)) {
             return null;
         }
-
         $path = $this->generate($document, (string) Storage::disk('local')->get($document->xml_path));
-
         if ($path !== $document->pdf_path) {
             $document->update(['pdf_path' => $path]);
         }
@@ -115,7 +110,6 @@ class ComprobantePdfService
             'razon_social' => 'CLIENTE DE EJEMPLO S.A.C.',
             'direccion_fiscal' => 'AV. ESPAÑA 1234, TRUJILLO - LA LIBERTAD',
         ]);
-
         $lineas = collect([
             ['EXT-6KG', 'Extintor de 6 kg PQS - ABC', 'NIU', 2, 95.00, 0.0],
             ['REC-CO2', 'Recarga de extintor CO2 10 lb', 'ZZ', 3, 45.00, 5.0],
@@ -139,10 +133,8 @@ class ComprobantePdfService
 
             return $item;
         });
-
         $total = round($lineas->sum('subtotal'), 2);
         $subtotal = round($total / 1.18, 2);
-
         $sale = new Sale([
             'fecha' => today(),
             'comprobante_tipo' => 'factura',
@@ -163,7 +155,6 @@ class ComprobantePdfService
         $sale->setRelation('installments', new EloquentCollection);
         $sale->setRelation('vendedor', new User(['name' => 'Vendedor de ejemplo']));
         $sale->setRelation('vehicle', null);
-
         $document = new ElectronicDocument([
             'tipo' => 'factura',
             'serie' => (string) config('billing.series.factura', 'F001'),
@@ -185,7 +176,6 @@ class ComprobantePdfService
         $document = new ElectronicDocument(['tipo' => 'nota_venta', 'fecha_emision' => $sale->fecha]);
         $document->created_at = $sale->created_at;
         $document->setRelation('sale', $sale);
-
         $this->olvidarPlantillaCompilada();
 
         return Pdf::loadView('pdf.comprobante', $this->datos($document, null))->setPaper('a4')->output();
@@ -220,9 +210,75 @@ class ComprobantePdfService
         $document->loadMissing('sale.client.sites', 'sale.client.vehicles', 'sale.vehicle', 'sale.vendedor', 'sale.items.product', 'sale.items.service', 'sale.installments');
         $sale = $document->sale;
         $company = CompanySetting::current();
-
         $lineas = $sale->lineasComprobante()->values();
         $medioPago ??= $sale->exists ? $sale->medioPagoTexto() : null;
+        $esNota = in_array($document->tipo, ['nota_credito', 'nota_debito'], true) && $document->importe !== null;
+        $totalDoc = (float) ($esNota ? $document->importe : $sale->total);
+        $motivoNota = null;
+        if ($esNota) {
+            // La nota va a SUNAT con una sola línea (el motivo por el importe):
+            // la representación impresa tiene que mostrar lo mismo que el XML.
+            $motivoNota = $document->tipo === 'nota_credito'
+                ? GreenterService::descripcionMotivoCredito($document->motivo_catalogo)
+                : GreenterService::descripcionMotivoDebito($document->motivo_catalogo);
+            $linea = new SaleItem(['cantidad' => 1, 'precio_unitario' => $totalDoc, 'descuento' => 0, 'subtotal' => $totalDoc]);
+            $linea->setRelation('product', null);
+            $linea->setRelation('service', new Service(['codigo' => $document->tipo === 'nota_credito' ? 'NC-01' : 'ND-01', 'nombre' => $motivoNota]));
+            $lineas = collect([$linea]);
+            $desglose = PrecioConIgv::desglosar($totalDoc);
+            $montos = ['subtotal' => $desglose['base'], 'igv' => $desglose['igv'], 'total' => $desglose['total']];
+        } else {
+            $montos = ['subtotal' => (float) $sale->subtotal, 'igv' => (float) $sale->igv, 'total' => (float) $sale->total];
+        }
+        if ($document->exists && $document->tipo !== 'nota_venta' && $xmlSigned !== null && ! str_contains($xmlSigned, 'AccountingCustomerParty') && $document->datos_emision === null) {
+            throw new \RuntimeException('No se puede regenerar este PDF histórico: falta el XML o la copia del comprobante emitido.');
+        }
+        $snapshot = $xmlSigned !== null && str_contains($xmlSigned, 'AccountingCustomerParty')
+            ? (app(DatosEmision::class)->recuperar($document) ?? app(DatosEmision::class)->desdeXml($xmlSigned))
+            : null;
+        if ($snapshot !== null) {
+            $sale = clone $sale;
+            $client = new Client([
+                ...$snapshot['cliente'],
+                'tipo_documento' => match ($snapshot['cliente']['tipo_documento']) {
+                    '6' => 'ruc', '1' => 'dni', default => Client::TIPO_DOCUMENTO_VARIOS
+                },
+            ]);
+            $client->setRelation('sites', new EloquentCollection);
+            $client->setRelation('vehicles', new EloquentCollection);
+            $sale->setRelation('client', $client);
+            if (! is_array($snapshot['lineas'])) {
+                throw new \RuntimeException('La copia del comprobante no contiene líneas válidas.');
+            }
+            $lineas = collect($snapshot['lineas'])->map(function (array $linea): SaleItem {
+                $item = new SaleItem($linea);
+                $catalogo = new Product(['codigo' => $linea['codigo'], 'nombre' => $linea['nombre'], 'unidad_medida' => $linea['unidad_medida']]);
+                $item->setRelation('product', $catalogo);
+                $item->setRelation('service', null);
+
+                return $item;
+            });
+            $totales = $snapshot['totales'];
+            $montos = ['subtotal' => $totales['gravadas'], 'exoneradas' => $totales['exoneradas'], 'inafectas' => $totales['inafectas'], 'igv' => $totales['igv'], 'total' => $totales['total']];
+            $totalDoc = $totales['total'];
+            $company = clone $company;
+            $company->fill($snapshot['emisor']);
+            $company->cuenta_detraccion = $snapshot['detraccion']['cuenta'];
+            $sale->observaciones = $snapshot['observaciones'];
+            $sale->condicion_pago = $snapshot['pago']['tipo'] === 'Credito' ? 'credito' : 'contado';
+            $installments = [];
+            foreach ($snapshot['pago']['cuotas'] as $cuota) {
+                $installments[] = new Installment([
+                    'numero_cuota' => count($installments) + 1, 'monto' => $cuota['monto'], 'fecha_vencimiento' => $cuota['fecha'],
+                ]);
+            }
+            $sale->setRelation('installments', new EloquentCollection($installments));
+            if ($snapshot['referencia']['numero'] !== '') {
+                [$serie, $correlativo] = explode('-', $snapshot['referencia']['numero'], 2);
+                $document = clone $document;
+                $document->setRelation('cpeAfectado', new ElectronicDocument(['tipo' => $snapshot['referencia']['tipo'] === '01' ? 'factura' : 'boleta', 'serie' => $serie, 'correlativo' => (int) $correlativo]));
+            }
+        }
 
         return [
             'document' => $document,
@@ -244,9 +300,11 @@ class ComprobantePdfService
                 ? 'Crédito '.str_pad((string) $sale->diasCredito(), 2, '0', STR_PAD_LEFT).' días'
                 : 'Contado'.($medioPago ? ' · '.$medioPago : ''),
             'qrBase64' => $xmlSigned !== null ? base64_encode($this->qrGenerator->generate($document, $xmlSigned)) : null,
-            'montoEnLetras' => $this->numeroEnLetras->convertir((float) $sale->total),
+            'montos' => $montos,
+            'motivoNota' => $motivoNota,
+            'montoEnLetras' => $this->numeroEnLetras->convertir($totalDoc),
             'bankAccounts' => CompanyBankAccount::query()->where('activo', true)->orderBy('orden')->get(),
-            'detraccion' => $this->detraccionCalculator->paraVenta($sale, $document->tipo),
+            'detraccion' => $snapshot['detraccion'] ?? $this->detraccionCalculator->paraVenta($sale, $document->tipo),
         ];
     }
 
@@ -255,7 +313,6 @@ class ComprobantePdfService
         if ($item->service) {
             return 'SERV';
         }
-
         $unidad = trim((string) $item->product?->unidad_medida);
 
         return self::UNIDADES_IMPRESAS[mb_strtolower($unidad)] ?? mb_strtoupper($unidad);
@@ -276,7 +333,6 @@ class ComprobantePdfService
     protected function olvidarPlantillaCompilada(): void
     {
         $compilada = app('blade.compiler')->getCompiledPath(resource_path('views/pdf/comprobante.blade.php'));
-
         if (is_file($compilada)) {
             @unlink($compilada);
         }
@@ -290,7 +346,6 @@ class ComprobantePdfService
     {
         $empresa = CompanySetting::current();
         $cuentas = CompanyBankAccount::query()->orderBy('id')->get(['id', 'updated_at', 'activo']);
-
         $firma = hash('sha256', implode('|', [
             (string) @file_get_contents(resource_path('views/pdf/comprobante.blade.php')),
             (string) @file_get_contents(__FILE__),

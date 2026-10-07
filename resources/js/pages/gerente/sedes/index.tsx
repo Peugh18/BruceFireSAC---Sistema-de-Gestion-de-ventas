@@ -21,6 +21,8 @@ type SedeItem = {
     tipo: SedeTipo;
     ciudad: string | null;
     ubigeo: string | null;
+    direccion: string | null;
+    cod_establecimiento_anexo: string;
     ubicacion: UbigeoOption | null;
     almacen_id: number | null;
     almacen_nombre: string | null;
@@ -65,6 +67,8 @@ type SedeFormData = {
     nombre: string;
     tipo: SedeTipo;
     ubigeo: string;
+    direccion: string;
+    cod_establecimiento_anexo: string;
     almacen_id: string;
     activo: boolean;
 };
@@ -73,6 +77,8 @@ const EMPTY_FORM: SedeFormData = {
     nombre: '',
     tipo: 'mixta',
     ubigeo: '',
+    direccion: '',
+    cod_establecimiento_anexo: '0000',
     almacen_id: '',
     activo: true,
 };
@@ -104,6 +110,8 @@ export default function SedesIndex() {
             nombre: sede.nombre,
             tipo: sede.tipo,
             ubigeo: sede.ubigeo ?? '',
+            direccion: sede.direccion ?? '',
+            cod_establecimiento_anexo: sede.cod_establecimiento_anexo,
             almacen_id: sede.almacen_id ? String(sede.almacen_id) : '',
             activo: sede.activo,
         });
@@ -472,6 +480,69 @@ export default function SedesIndex() {
                                         }}
                                         error={form.errors.ubigeo}
                                     />
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="sede-direccion"
+                                        className="text-foreground/80 block font-semibold"
+                                    >
+                                        Dirección (para las guías de remisión)
+                                    </label>
+                                    <input
+                                        id="sede-direccion"
+                                        type="text"
+                                        maxLength={255}
+                                        value={form.data.direccion}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'direccion',
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                    />
+                                    {form.errors.direccion && (
+                                        <p className="mt-1 text-red-600">
+                                            {form.errors.direccion}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="sede-anexo"
+                                        className="text-foreground/80 block font-semibold"
+                                    >
+                                        Código de establecimiento anexo SUNAT
+                                    </label>
+                                    <input
+                                        id="sede-anexo"
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength={4}
+                                        value={
+                                            form.data.cod_establecimiento_anexo
+                                        }
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'cod_establecimiento_anexo',
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                    />
+                                    <p className="text-muted-foreground mt-1 text-xs">
+                                        0000 es la sede principal.
+                                    </p>
+                                    {form.errors.cod_establecimiento_anexo && (
+                                        <p className="mt-1 text-red-600">
+                                            {
+                                                form.errors
+                                                    .cod_establecimiento_anexo
+                                            }
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="border-border flex justify-end gap-2 border-t pt-4">

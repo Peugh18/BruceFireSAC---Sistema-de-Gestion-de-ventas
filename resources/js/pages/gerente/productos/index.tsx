@@ -11,19 +11,26 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
-
+import {
+    CategoriaSelect,
+    type CategoriaItem,
+} from '@/components/categoria-select';
 import GerenteLayout from '@/layouts/gerente-layout';
-
 type ProductItem = {
     id: number;
     codigo: string;
     codigo_barras: string | null;
     categoria: string | null;
+    agente: string | null;
+    capacidad: string | null;
+    peso_kg: string | null;
     nombre: string;
     descripcion: string | null;
     unidad_medida: string;
     precio_venta: number;
     aplica_igv: boolean;
+    tipo_afectacion_igv: string | null;
+    igv_requiere_revision: boolean;
     serializado: boolean;
     controla_lote: boolean;
     unidad_compra: string | null;
@@ -32,13 +39,11 @@ type ProductItem = {
     activo: boolean;
     stock_disponible: number;
 };
-
 type PaginationLink = {
     url: string | null;
     label: string;
     active: boolean;
 };
-
 type PaginatedProducts = {
     data: ProductItem[];
     links: PaginationLink[];
@@ -46,32 +51,30 @@ type PaginatedProducts = {
     last_page: number;
     total: number;
 };
-
 type ProductFilters = {
     buscar: string;
     estado: string;
     bajo_minimo: boolean;
 };
-
 type ProductKpis = {
     totalProductos: number;
     totalActivos: number;
     totalBajoMinimo: number;
 };
-
 type PageProps = {
     currentTeam: { slug: string };
     productos: PaginatedProducts;
     filters: ProductFilters;
     kpis: ProductKpis;
-    categorias: Record<string, string>;
+    categorias: CategoriaItem[];
+    unidadesMedida: { codigo: string; nombre: string }[];
+    agentes: { valor: string; etiqueta: string }[];
     flash?: {
         success?: string;
         error?: string;
     };
     [key: string]: unknown;
 };
-
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-PE', {
         style: 'currency',
@@ -79,26 +82,35 @@ function formatCurrency(amount: number): string {
         minimumFractionDigits: 2,
     }).format(amount);
 }
-
 export default function ProductosIndex() {
-    const { currentTeam, productos, filters, kpis, categorias, flash } =
-        usePage<PageProps>().props;
-
+    const {
+        currentTeam,
+        productos,
+        filters,
+        kpis,
+        categorias,
+        unidadesMedida,
+        agentes,
+        flash,
+    } = usePage<PageProps>().props;
     const [buscar, setBuscar] = useState(filters.buscar || '');
     const [modalOpen, setModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<ProductItem | null>(
         null,
     );
-
     const form = useForm({
         codigo: '',
         codigo_barras: '',
         categoria: '',
+        agente: '',
+        capacidad: '',
+        peso_kg: '',
         nombre: '',
         descripcion: '',
         unidad_medida: 'NIU',
         precio_venta: '',
         aplica_igv: true,
+        tipo_afectacion_igv: '10',
         serializado: false,
         controla_lote: false,
         unidad_compra: '',
@@ -106,7 +118,6 @@ export default function ProductosIndex() {
         stock_minimo: '',
         activo: true,
     });
-
     const openCreateModal = () => {
         setEditingProduct(null);
         form.reset();
@@ -114,11 +125,15 @@ export default function ProductosIndex() {
             codigo: '',
             codigo_barras: '',
             categoria: '',
+            agente: '',
+            capacidad: '',
+            peso_kg: '',
             nombre: '',
             descripcion: '',
             unidad_medida: 'NIU',
             precio_venta: '',
             aplica_igv: true,
+            tipo_afectacion_igv: '10',
             serializado: false,
             controla_lote: false,
             unidad_compra: '',
@@ -128,18 +143,23 @@ export default function ProductosIndex() {
         });
         setModalOpen(true);
     };
-
     const openEditModal = (product: ProductItem) => {
         setEditingProduct(product);
         form.setData({
             codigo: product.codigo,
             codigo_barras: product.codigo_barras ?? '',
             categoria: product.categoria ?? '',
+            agente: product.agente ?? '',
+            capacidad: product.capacidad ?? '',
+            peso_kg: product.peso_kg ?? '',
             nombre: product.nombre,
             descripcion: product.descripcion || '',
             unidad_medida: product.unidad_medida,
             precio_venta: String(product.precio_venta),
             aplica_igv: product.aplica_igv,
+            tipo_afectacion_igv: product.igv_requiere_revision
+                ? ''
+                : (product.tipo_afectacion_igv ?? '10'),
             serializado: product.serializado,
             controla_lote: product.controla_lote,
             unidad_compra: product.unidad_compra ?? '',
@@ -152,13 +172,11 @@ export default function ProductosIndex() {
         });
         setModalOpen(true);
     };
-
     const closeModal = () => {
         setModalOpen(false);
         setEditingProduct(null);
         form.reset();
     };
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (editingProduct) {
@@ -174,7 +192,6 @@ export default function ProductosIndex() {
             });
         }
     };
-
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
@@ -187,7 +204,6 @@ export default function ProductosIndex() {
             { preserveState: true },
         );
     };
-
     const handleFilterEstado = (estado: string) => {
         router.get(
             `/${currentTeam.slug}/gerente/productos`,
@@ -199,7 +215,6 @@ export default function ProductosIndex() {
             { preserveState: true },
         );
     };
-
     const handleToggleBajoMinimo = () => {
         router.get(
             `/${currentTeam.slug}/gerente/productos`,
@@ -211,7 +226,6 @@ export default function ProductosIndex() {
             { preserveState: true },
         );
     };
-
     const handleToggleStatus = (product: ProductItem) => {
         router.patch(
             `/${currentTeam.slug}/gerente/productos/${product.id}/toggle-status`,
@@ -219,7 +233,6 @@ export default function ProductosIndex() {
             { preserveScroll: true },
         );
     };
-
     const handleDelete = (product: ProductItem) => {
         if (
             confirm(
@@ -234,7 +247,6 @@ export default function ProductosIndex() {
             );
         }
     };
-
     return (
         <GerenteLayout title="Catálogo de Productos">
             <div className="space-y-6">
@@ -251,7 +263,6 @@ export default function ProductosIndex() {
                         <span>{flash.error}</span>
                     </div>
                 )}
-
                 {/* Cabecera y Botón Nuevo */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
@@ -263,7 +274,6 @@ export default function ProductosIndex() {
                             umbrales de stock mínimo.
                         </p>
                     </div>
-
                     <button
                         type="button"
                         onClick={openCreateModal}
@@ -273,7 +283,6 @@ export default function ProductosIndex() {
                         <span>Nuevo Producto</span>
                     </button>
                 </div>
-
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
@@ -287,7 +296,6 @@ export default function ProductosIndex() {
                             {kpis.totalProductos}
                         </div>
                     </div>
-
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
                         <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
@@ -299,7 +307,6 @@ export default function ProductosIndex() {
                             {kpis.totalActivos}
                         </div>
                     </div>
-
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
                         <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
@@ -312,7 +319,6 @@ export default function ProductosIndex() {
                         </div>
                     </div>
                 </div>
-
                 {/* Barra de Filtros y Búsqueda */}
                 <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 shadow-xs md:flex-row md:items-center md:justify-between">
                     <form
@@ -336,7 +342,6 @@ export default function ProductosIndex() {
                             Buscar
                         </button>
                     </form>
-
                     <div className="flex flex-wrap items-center gap-2">
                         <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
                             <button
@@ -373,7 +378,6 @@ export default function ProductosIndex() {
                                 Inactivos
                             </button>
                         </div>
-
                         <button
                             type="button"
                             onClick={handleToggleBajoMinimo}
@@ -388,7 +392,6 @@ export default function ProductosIndex() {
                         </button>
                     </div>
                 </div>
-
                 {/* Tabla de Productos */}
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
@@ -438,7 +441,6 @@ export default function ProductosIndex() {
                                             p.stock_minimo > 0 &&
                                             p.stock_disponible <=
                                                 p.stock_minimo;
-
                                         return (
                                             <tr
                                                 key={p.id}
@@ -560,7 +562,6 @@ export default function ProductosIndex() {
                             </tbody>
                         </table>
                     </div>
-
                     {/* Paginación */}
                     {productos.links && productos.links.length > 3 && (
                         <div className="border-border bg-muted/40 text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
@@ -604,7 +605,6 @@ export default function ProductosIndex() {
                         </div>
                     )}
                 </div>
-
                 {/* Modal Crear / Editar Producto */}
                 {modalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -623,7 +623,6 @@ export default function ProductosIndex() {
                                     <X className="size-4" />
                                 </button>
                             </div>
-
                             <form
                                 onSubmit={handleSubmit}
                                 className="mt-4 space-y-4 text-xs"
@@ -656,35 +655,114 @@ export default function ProductosIndex() {
                                             </p>
                                         )}
                                     </div>
-                                    <div>
-                                        <label className="text-foreground/80 block font-semibold">
-                                            Categoría
-                                        </label>
-                                        <select
-                                            value={form.data.categoria}
-                                            onChange={(e) =>
-                                                form.setData(
-                                                    'categoria',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                        >
-                                            <option value="">
-                                                Sin categoría
-                                            </option>
-                                            {Object.entries(categorias).map(
-                                                ([valor, etiqueta]) => (
+                                    <CategoriaSelect
+                                        value={form.data.categoria}
+                                        onChange={(clave) =>
+                                            form.setData('categoria', clave)
+                                        }
+                                        categorias={categorias}
+                                    />
+                                </div>
+                                {categorias.find(
+                                    (c) => c.clave === form.data.categoria,
+                                )?.genera_alertas_vencimiento ? (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label
+                                                htmlFor="producto-agente"
+                                                className="text-foreground/80 block font-semibold"
+                                            >
+                                                Agente extintor
+                                            </label>
+                                            <select
+                                                id="producto-agente"
+                                                value={form.data.agente}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'agente',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                            >
+                                                <option value="">
+                                                    Sin registrar
+                                                </option>
+                                                {agentes.map((agente) => (
                                                     <option
-                                                        key={valor}
-                                                        value={valor}
+                                                        key={agente.valor}
+                                                        value={agente.valor}
                                                     >
-                                                        {etiqueta}
+                                                        {agente.etiqueta}
                                                     </option>
-                                                ),
+                                                ))}
+                                            </select>
+                                            <p className="text-muted-foreground mt-1">
+                                                Sin agente no se emite el
+                                                certificado del extintor.
+                                            </p>
+                                            {form.errors.agente && (
+                                                <p className="mt-1 text-red-600">
+                                                    {form.errors.agente}
+                                                </p>
                                             )}
-                                        </select>
+                                        </div>
+                                        <div>
+                                            <label
+                                                htmlFor="producto-capacidad"
+                                                className="text-foreground/80 block font-semibold"
+                                            >
+                                                Capacidad
+                                            </label>
+                                            <input
+                                                id="producto-capacidad"
+                                                type="text"
+                                                maxLength={20}
+                                                value={form.data.capacidad}
+                                                onChange={(e) =>
+                                                    form.setData(
+                                                        'capacidad',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Ej. 6 kg"
+                                                className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                            />
+                                            {form.errors.capacidad && (
+                                                <p className="mt-1 text-red-600">
+                                                    {form.errors.capacidad}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
+                                ) : null}
+                                <div>
+                                    <label
+                                        htmlFor="producto-peso"
+                                        className="text-foreground/80 block font-semibold"
+                                    >
+                                        Peso unitario (kg)
+                                    </label>
+                                    <input
+                                        id="producto-peso"
+                                        type="number"
+                                        step="0.001"
+                                        min="0"
+                                        value={form.data.peso_kg}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'peso_kg',
+                                                e.target.value,
+                                            )
+                                        }
+                                        placeholder="Para el peso de la guía de remisión"
+                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                    />
+                                    {form.errors.peso_kg && (
+                                        <p className="mt-1 text-red-600">
+                                            {form.errors.peso_kg}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
@@ -710,7 +788,6 @@ export default function ProductosIndex() {
                                             </p>
                                         )}
                                     </div>
-
                                     <div>
                                         <label className="text-foreground/80 block font-semibold">
                                             U.M. *
@@ -725,37 +802,17 @@ export default function ProductosIndex() {
                                             }
                                             className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                         >
-                                            <option value="NIU">
-                                                NIU (Unidad)
-                                            </option>
-                                            <option value="KGM">
-                                                KGM (Kilogramos)
-                                            </option>
-                                            <option value="MTR">
-                                                MTR (Metros)
-                                            </option>
-                                            <option value="GLI">
-                                                GLI (Galones)
-                                            </option>
-                                            <option value="SET">
-                                                SET (Juego)
-                                            </option>
-                                            <option value="PR">
-                                                PR (Par: guantes, botas)
-                                            </option>
-                                            <option value="BX">
-                                                BX (Caja)
-                                            </option>
-                                            <option value="PK">
-                                                PK (Paquete)
-                                            </option>
-                                            <option value="DZN">
-                                                DZN (Docena)
-                                            </option>
+                                            {unidadesMedida.map((u) => (
+                                                <option
+                                                    key={u.codigo}
+                                                    value={u.codigo}
+                                                >
+                                                    {u.codigo} ({u.nombre})
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
-
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Nombre del Producto *
@@ -779,7 +836,6 @@ export default function ProductosIndex() {
                                         </p>
                                     )}
                                 </div>
-
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Descripción
@@ -797,7 +853,6 @@ export default function ProductosIndex() {
                                         className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                     />
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="text-foreground/80 block font-semibold">
@@ -824,7 +879,6 @@ export default function ProductosIndex() {
                                             </p>
                                         )}
                                     </div>
-
                                     <div>
                                         <label className="text-foreground/80 block font-semibold">
                                             Stock Mínimo (Alerta Almacén)
@@ -848,7 +902,6 @@ export default function ProductosIndex() {
                                         </p>
                                     </div>
                                 </div>
-
                                 {!form.data.serializado && (
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
@@ -897,25 +950,42 @@ export default function ProductosIndex() {
                                         </div>
                                     </div>
                                 )}
-
                                 <div className="flex items-center gap-6 pt-1">
-                                    <label className="flex cursor-pointer items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={form.data.aplica_igv}
+                                    <label className="flex flex-col gap-1">
+                                        Afectación del IGV
+                                        <select
+                                            value={
+                                                form.data.tipo_afectacion_igv
+                                            }
+                                            required
                                             onChange={(e) =>
                                                 form.setData(
-                                                    'aplica_igv',
-                                                    e.target.checked,
+                                                    'tipo_afectacion_igv',
+                                                    e.target.value,
                                                 )
                                             }
-                                            className="border-border text-primary-strong rounded"
-                                        />
-                                        <span className="text-foreground/80">
-                                            Aplica IGV (18%)
-                                        </span>
+                                            className="border-border rounded border p-2"
+                                        >
+                                            <option value="" disabled>
+                                                Elige la afectación
+                                            </option>
+                                            <option value="10">
+                                                Gravado (IGV incluido: 18%)
+                                            </option>
+                                            <option value="20">
+                                                Exonerado
+                                            </option>
+                                            <option value="30">Inafecto</option>
+                                        </select>
+                                        {form.errors.tipo_afectacion_igv && (
+                                            <span className="text-red-600">
+                                                {
+                                                    form.errors
+                                                        .tipo_afectacion_igv
+                                                }
+                                            </span>
+                                        )}
                                     </label>
-
                                     <label className="flex cursor-pointer items-center gap-2">
                                         <input
                                             type="checkbox"
@@ -937,7 +1007,6 @@ export default function ProductosIndex() {
                                             Control por Serie (Serializado)
                                         </span>
                                     </label>
-
                                     <label className="flex cursor-pointer items-center gap-2">
                                         <input
                                             type="checkbox"
@@ -955,7 +1024,6 @@ export default function ProductosIndex() {
                                             Lote y vencimiento (EPP)
                                         </span>
                                     </label>
-
                                     <label className="flex cursor-pointer items-center gap-2">
                                         <input
                                             type="checkbox"
@@ -973,7 +1041,6 @@ export default function ProductosIndex() {
                                         </span>
                                     </label>
                                 </div>
-
                                 <div className="border-border flex justify-end gap-2 border-t pt-3">
                                     <button
                                         type="button"

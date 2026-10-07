@@ -15,6 +15,15 @@ import {
     MessageSquare,
 } from 'lucide-react';
 import React from 'react';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
+import FirmaCanvas from '@/components/firma-canvas';
+import SubirEvidencia, {
+    type EvidenciaListada,
+} from '@/components/subir-evidencia';
+import guias from '@/routes/guias';
+import entregas from '@/routes/tecnico-campo/entregas';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
@@ -79,6 +88,8 @@ type Props = {
     currentTeam?: Team | null;
     order: ServiceOrder;
     custodyEvents: CustodyEvent[];
+    conversacion: ConversacionProps;
+    evidencias: EvidenciaListada[];
 };
 
 const ESLABONES_MAP: Record<
@@ -122,6 +133,8 @@ export default function EntregaShow({
     currentTeam,
     order,
     custodyEvents,
+    conversacion,
+    evidencias,
 }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
     const { flash } = usePage<{
@@ -137,11 +150,17 @@ export default function EntregaShow({
         observaciones_entrega: '',
         conformidad_aceptada: false,
         cerrar_orden: true,
+        firma: null as string | null,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post(`/${teamSlug}/tecnico-campo/entregas/${order.id}/confirmar`);
+        form.post(
+            entregas.confirm.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+        );
     };
 
     return (
@@ -156,6 +175,14 @@ export default function EntregaShow({
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver a entregas</span>
+                </Link>
+                <Link
+                    href={guias.create.url(teamSlug, {
+                        query: { origen: 'entrega', id: order.id },
+                    })}
+                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white"
+                >
+                    Guía de remisión
                 </Link>
                 <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
                     {order.codigo}
@@ -504,6 +531,19 @@ export default function EntregaShow({
                             )}
                         </div>
 
+                        <SubirEvidencia
+                            ordenId={order.id}
+                            etapa="entrega"
+                            titulo="Fotos de la entrega"
+                            evidencias={evidencias}
+                            equipos={conversacion.equipos}
+                        />
+
+                        <FirmaCanvas
+                            etiqueta="Firma de quien recibe"
+                            onChange={(f) => form.setData('firma', f)}
+                        />
+
                         <label className="text-foreground flex cursor-pointer items-center gap-2 text-xs font-bold">
                             <input
                                 type="checkbox"
@@ -524,7 +564,7 @@ export default function EntregaShow({
 
                         <button
                             type="submit"
-                            disabled={form.processing}
+                            disabled={form.processing || !form.data.firma}
                             className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
@@ -544,6 +584,13 @@ export default function EntregaShow({
                     </form>
                 </div>
             )}
+
+            <div className="mt-5">
+                <ConversacionOrden
+                    ordenId={order.id}
+                    conversacion={conversacion}
+                />
+            </div>
         </TecnicoCampoLayout>
     );
 }

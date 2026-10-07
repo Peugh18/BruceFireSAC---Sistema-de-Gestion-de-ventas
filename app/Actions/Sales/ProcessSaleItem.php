@@ -2,7 +2,6 @@
 
 namespace App\Actions\Sales;
 
-use App\Actions\Equipment\RenewEquipmentAttentionDate;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
@@ -11,6 +10,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Sede;
 use App\Models\Service;
+use App\Services\Billing\AfectacionIgv;
 use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -18,10 +18,23 @@ use Illuminate\Validation\ValidationException;
 class ProcessSaleItem
 {
     /**
+     * Líneas que se venden por número de serie: una serie, una unidad (V1).
+     *
+     * @var list<string>
+     */
+    public const LINEAS_POR_SERIE = ['unidad_nueva', 'recarga_servicio'];
+
+    public const MENSAJE_CANTIDAD_POR_SERIE = 'Cada serie es una unidad: la cantidad de esta línea debe ser 1. Para vender más, agrega cada serie.';
+
+    /**
      * @param  array<string, mixed>  $itemData
      */
     public function handle(Sale $sale, array $itemData): SaleItem
     {
+        if (in_array($itemData['tipo_linea'], self::LINEAS_POR_SERIE, true) && (int) $itemData['cantidad'] !== 1) {
+            throw ValidationException::withMessages(['items' => self::MENSAJE_CANTIDAD_POR_SERIE]);
+        }
+
         return DB::transaction(function () use ($sale, $itemData) {
             return match ($itemData['tipo_linea']) {
                 'recarga_servicio' => $this->processServiceRecharge($sale, $itemData),
@@ -69,6 +82,7 @@ class ProcessSaleItem
 
         return $sale->items()->create([
             'product_id' => $product->id,
+            'tipo_afectacion_igv' => AfectacionIgv::codigo($product),
             'tipo_linea' => 'producto',
             'cantidad' => $cantidad,
             'precio_unitario' => $itemData['precio_unitario'],
@@ -85,10 +99,11 @@ class ProcessSaleItem
      */
     protected function processServicio(Sale $sale, array $itemData): SaleItem
     {
-        $service = Service::query()->findOrFail($itemData['service_id']);
+        $service = Service::query()->findOrFail((int) $itemData['service_id']);
 
         return $sale->items()->create([
             'service_id' => $service->id,
+            'tipo_afectacion_igv' => AfectacionIgv::codigo($service),
             'tipo_linea' => 'servicio',
             'cantidad' => (int) $itemData['cantidad'],
             'precio_unitario' => $itemData['precio_unitario'],
@@ -149,7 +164,8 @@ class ProcessSaleItem
         $equipment = Equipment::updateOrCreate(['numero_serie' => $unit->numero_serie], [
             'client_id' => $sale->client_id,
             'product_id' => $unit->product_id,
-            'capacidad' => $unit->capacidad,
+            'tipo_agente' => $unit->agenteParaEquipo(),
+            'capacidad' => $unit->capacidad ?? $unit->product->capacidad,
             'marca' => $unit->marca,
             'serie_fabricante' => $unit->serie_fabricante,
             'anio_fabricacion' => $unit->anio_fabricacion,
@@ -161,11 +177,12 @@ class ProcessSaleItem
 
         return $sale->items()->create([
             'product_id' => $unit->product_id,
+            'tipo_afectacion_igv' => AfectacionIgv::codigo($unit->product),
             'service_id' => null,
             'tipo_linea' => 'unidad_nueva',
             'inventory_unit_id' => $unit->id,
             'equipment_id' => $equipment->id,
-            'cantidad' => $itemData['cantidad'],
+            'cantidad' => 1,
             'precio_unitario' => $itemData['precio_unitario'],
             'descuento' => $itemData['descuento'] ?? 0,
             'subtotal' => $itemData['subtotal'],
@@ -189,24 +206,21 @@ class ProcessSaleItem
         }
 
         $service = ! empty($itemData['service_id'])
-            ? Service::with('certificateType')->whereKey($itemData['service_id'])->first()
+            ? Service::query()->whereKey($itemData['service_id'])->first()
             : null;
 
-        $esPH = $service && (
-            $service->certificateType?->codigo === 'prueba_hidrostatica'
-            || str_contains(mb_strtoupper($service->nombre), 'PRUEBA HIDROST')
-            || str_contains(mb_strtoupper($service->nombre), 'P.H.')
-        );
-
-        app(RenewEquipmentAttentionDate::class)->execute(collect([$equipment]), (bool) $esPH);
+        // V5: la fecha de la próxima atención se renueva al cerrar el trabajo
+        // técnico de la orden (certificado o entrega), nunca al guardar la
+        // venta: un borrador o una venta descartada no acreditan la recarga.
 
         return $sale->items()->create([
             'product_id' => null,
             'service_id' => $itemData['service_id'] ?? null,
+            'tipo_afectacion_igv' => $service ? AfectacionIgv::codigo($service) : '10',
             'tipo_linea' => 'recarga_servicio',
             'inventory_unit_id' => null,
             'equipment_id' => $equipment->id,
-            'cantidad' => $itemData['cantidad'],
+            'cantidad' => 1,
             'precio_unitario' => $itemData['precio_unitario'],
             'descuento' => $itemData['descuento'] ?? 0,
             'subtotal' => $itemData['subtotal'],

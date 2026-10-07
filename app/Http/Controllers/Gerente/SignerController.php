@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SignerController extends Controller
 {
@@ -37,8 +38,8 @@ class SignerController extends Controller
                     'cargo' => $signer->cargo,
                     'cip' => $signer->cip,
                     'activo' => $signer->activo,
-                    'firma_url' => $signer->firma_path ? Storage::disk('public')->url($signer->firma_path) : null,
-                    'sello_url' => $signer->sello_path ? Storage::disk('public')->url($signer->sello_path) : null,
+                    'firma_url' => $signer->firma_path ? route('gerente.configuracion.firmas.imagen', ['current_team' => $current_team, 'firmante' => $signer, 'tipo' => 'firma', 'v' => md5($signer->firma_path)]) : null,
+                    'sello_url' => $signer->sello_path ? route('gerente.configuracion.firmas.imagen', ['current_team' => $current_team, 'firmante' => $signer, 'tipo' => 'sello', 'v' => md5($signer->sello_path)]) : null,
                     'tipos' => $signer->certificateTypes->pluck('codigo')->values(),
                 ]),
             'tipos' => $tipos->map(fn (CertificateType $tipo) => [
@@ -66,6 +67,19 @@ class SignerController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => "Cambios de {$firmante->nombre} guardados."]);
 
         return back();
+    }
+
+    /**
+     * Firma o sello guardados en el disco privado: solo el Gerente los ve
+     * (X2). Los certificados los leen directo del disco.
+     */
+    public function imagen(Team $current_team, Signer $firmante, string $tipo): StreamedResponse
+    {
+        $ruta = $tipo === 'sello' ? $firmante->sello_path : $firmante->firma_path;
+
+        abort_if($ruta === null || ! Storage::disk('local')->exists($ruta), 404);
+
+        return Storage::disk('local')->response($ruta, null, ['Cache-Control' => 'private, max-age=3600']);
     }
 
     /**

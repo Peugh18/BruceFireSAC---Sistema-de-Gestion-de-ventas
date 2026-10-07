@@ -41,6 +41,8 @@ test('gerente accede al dashboard y recibe las 12 metricas y 6 graficos', functi
                 ->has('equiposProximosAtencion')
                 ->has('stockCritico')
                 ->has('documentosSunatError')
+                ->has('notasPorAprobar')
+                ->has('plazoSunat')
             )
             ->has('charts', fn (Assert $charts) => $charts
                 ->has('ventasMensuales')

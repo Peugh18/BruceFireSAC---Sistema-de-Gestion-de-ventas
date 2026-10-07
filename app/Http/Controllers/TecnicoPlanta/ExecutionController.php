@@ -9,6 +9,7 @@ use App\Models\Deficiency;
 use App\Models\Product;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,7 @@ class ExecutionController extends Controller
         $service_order->load([
             'client:id,nombre_comercial,razon_social,telefono,numero_documento',
             'sede:id,nombre',
+            'service:id,nombre',
             'equipments',
             'deficiencies.authorization',
             'events' => fn ($q) => $q->latest('created_at')->limit(10),
@@ -49,6 +51,7 @@ class ExecutionController extends Controller
 
         return Inertia::render('tecnico-planta/ejecucion/show', [
             'asignacion' => $service_order->asignacionPara(request()->user()),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -56,7 +59,7 @@ class ExecutionController extends Controller
                 'cliente_doc' => $service_order->client->numero_documento,
                 'telefono' => $service_order->client->telefono,
                 'sede' => $service_order->sede?->nombre,
-                'tipo_servicio' => $service_order->service->nombre,
+                'tipo_servicio' => $service_order->service->nombre ?? $service_order->tipo_servicio ?? 'Servicio general',
                 'fecha' => $service_order->fecha->toDateString(),
                 'prioridad' => $service_order->prioridad,
                 'estado' => $service_order->estado,

@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
+import pagosRutas from '@/routes/gerente/cobranzas/pagos';
 
 type PaymentItem = {
     id: number;
@@ -103,6 +104,26 @@ export default function CobranzasConsolidadasIndex() {
     const [periodo, setPeriodo] = useState(filters.periodo || 'todos');
     const [viewingPayments, setViewingPayments] =
         useState<InstallmentItem | null>(null);
+
+    const [anulandoId, setAnulandoId] = useState<number | null>(null);
+    const [motivo, setMotivo] = useState('');
+
+    const anularPago = (pagoId: number) => {
+        router.delete(
+            pagosRutas.anular.url({
+                current_team: currentTeam.slug,
+                payment: pagoId,
+            }),
+            {
+                data: { motivo },
+                preserveScroll: true,
+                onSuccess: () => {
+                    setAnulandoId(null);
+                    setViewingPayments(null);
+                },
+            },
+        );
+    };
 
     const applyFilters = () => {
         router.get(
@@ -628,6 +649,62 @@ export default function CobranzasConsolidadasIndex() {
                                                     <div className="text-muted-foreground text-[10px]">
                                                         {p.fecha}
                                                     </div>
+                                                    {anulandoId === p.id ? (
+                                                        <div className="mt-1 flex items-center justify-end gap-1">
+                                                            <input
+                                                                aria-label="Motivo de la anulación"
+                                                                value={motivo}
+                                                                onChange={(e) =>
+                                                                    setMotivo(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                placeholder="Motivo"
+                                                                className="border-border w-32 rounded border px-2 py-0.5 text-[11px]"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                disabled={
+                                                                    motivo.trim()
+                                                                        .length <
+                                                                    3
+                                                                }
+                                                                onClick={() =>
+                                                                    anularPago(
+                                                                        p.id,
+                                                                    )
+                                                                }
+                                                                className="rounded bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white disabled:opacity-40"
+                                                            >
+                                                                Confirmar
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setAnulandoId(
+                                                                        null,
+                                                                    )
+                                                                }
+                                                                className="text-[11px] underline"
+                                                            >
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setMotivo('');
+                                                                setAnulandoId(
+                                                                    p.id,
+                                                                );
+                                                            }}
+                                                            className="mt-1 text-[11px] font-semibold text-red-600 underline"
+                                                        >
+                                                            Anular pago
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))

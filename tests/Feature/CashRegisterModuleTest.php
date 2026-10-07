@@ -88,6 +88,7 @@ test('cerrar turno calcula monto_esperado_calculado sumando solo SalePayments en
         'sale_id' => $sale->id,
         'forma_pago' => 'efectivo',
         'monto' => 70.00,
+        'cash_register_id' => null, // V7: cobro de otro turno (el turno manda, no la hora)
         'created_at' => now()->subHours(5),
     ]);
 

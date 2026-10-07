@@ -1,28 +1,41 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AlmacenLayout from '@/layouts/almacen-layout';
-import { index, store } from '@/routes/almacen/traslados';
+import { confirmar, index, store } from '@/routes/almacen/traslados';
+import guias from '@/routes/guias';
 import type { Team } from '@/types';
 
 type Option = { id: number; nombre: string; codigo?: string };
+
+type EnTransito = {
+    id: number;
+    origen: string;
+    destino: string;
+    bienes: number;
+    puede_confirmar: boolean;
+    guia_aceptada: boolean;
+    tiene_guia: boolean;
+};
 
 export default function Transfers({
     sourceSede,
     origenes,
     destinations,
     bulkProducts,
+    enTransito,
 }: {
-    sourceSede: Option;
+    sourceSede: Option | null;
     origenes: Option[];
     destinations: Option[];
     bulkProducts: Option[];
+    enTransito: EnTransito[];
 }) {
     const form = useForm({
-        origen_sede_id: String(sourceSede.id),
+        origen_sede_id: sourceSede ? String(sourceSede.id) : '',
         destination_sede_id: '',
         serials_text: '',
         product_id: '',
@@ -31,6 +44,21 @@ export default function Transfers({
     });
     const teamSlug =
         usePage<{ currentTeam?: Team | null }>().props.currentTeam?.slug ?? '';
+
+    if (!sourceSede) {
+        return (
+            <AlmacenLayout title="Traslados">
+                <Head title="Traslados entre sedes" />
+                <Card className="mx-auto max-w-2xl space-y-2 p-6">
+                    <h1 className="text-xl font-bold">Traslado entre sedes</h1>
+                    <p className="text-muted-foreground text-sm">
+                        No hay un almacén activo desde el cual trasladar. Activa
+                        una sede de tipo almacén o mixta en Sedes para empezar.
+                    </p>
+                </Card>
+            </AlmacenLayout>
+        );
+    }
 
     return (
         <AlmacenLayout title="Traslados">
@@ -179,6 +207,63 @@ export default function Transfers({
                     </Button>
                 </form>
             </Card>
+            {enTransito.length > 0 ? (
+                <Card className="mx-auto mt-4 max-w-2xl space-y-3 p-6">
+                    <h2 className="text-lg font-bold">Traslados en tránsito</h2>
+                    <p className="text-muted-foreground text-sm">
+                        El stock entra al almacén destino cuando confirma la
+                        llegada. La guía de remisión (motivo 04) debe tener el
+                        CDR aceptado antes de que salga el vehículo.
+                    </p>
+                    <ul className="divide-border divide-y">
+                        {enTransito.map((traslado) => (
+                            <li
+                                key={traslado.id}
+                                className="flex flex-wrap items-center gap-2 py-3 text-sm"
+                            >
+                                <span className="flex-1">
+                                    {traslado.origen} → {traslado.destino} ·{' '}
+                                    {traslado.bienes} bienes
+                                    {traslado.guia_aceptada
+                                        ? ' · guía lista para trasladar'
+                                        : traslado.tiene_guia
+                                          ? ' · guía pendiente de SUNAT'
+                                          : ' · sin guía'}
+                                </span>
+                                {!traslado.tiene_guia ? (
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link
+                                            href={guias.create.url(teamSlug, {
+                                                query: {
+                                                    origen: 'traslado',
+                                                    id: traslado.id,
+                                                },
+                                            })}
+                                        >
+                                            Emitir guía
+                                        </Link>
+                                    </Button>
+                                ) : null}
+                                {traslado.puede_confirmar ? (
+                                    <Button
+                                        size="sm"
+                                        onClick={() =>
+                                            router.post(
+                                                confirmar.url({
+                                                    current_team: teamSlug,
+                                                    traslado: traslado.id,
+                                                }),
+                                            )
+                                        }
+                                    >
+                                        Confirmar llegada
+                                    </Button>
+                                ) : null}
+                            </li>
+                        ))}
+                    </ul>
+                </Card>
+            ) : null}
         </AlmacenLayout>
     );
 }

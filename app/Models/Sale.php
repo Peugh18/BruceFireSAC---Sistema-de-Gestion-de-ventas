@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\SaleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,8 @@ use Illuminate\Support\Collection as SupportCollection;
 /**
  * @property int $id
  * @property string $numero_interno
+ * @property Carbon|null $registro_iniciado_at
+ * @property Carbon|null $confirmada_at
  * @property string|null $numero_nota_venta
  * @property int|null $quote_id
  * @property int $client_id
@@ -47,6 +50,7 @@ use Illuminate\Support\Collection as SupportCollection;
 #[Fillable([
     'numero_interno', 'numero_nota_venta', 'quote_id', 'client_id', 'sede_id', 'vehicle_id', 'vendedor_id', 'fecha',
     'destino', 'referencia', 'condicion_pago', 'medio_pago', 'numero_operacion', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones',
+    'registro_iniciado_at', 'confirmada_at',
 ])]
 class Sale extends Model
 {
@@ -100,7 +104,7 @@ class Sale extends Model
             return null;
         }
 
-        $ultima = $this->installments->max('fecha_vencimiento');
+        $ultima = $this->installments->filter(fn (Installment $cuota) => $cuota->esDelComprobante())->max('fecha_vencimiento');
 
         return $ultima ? (int) $this->fecha->diffInDays($ultima) : 30;
     }
@@ -144,13 +148,15 @@ class Sale extends Model
 
         $documento = $this->comprobanteElectronico();
 
-        return $documento !== null && ($documento->estaPorEnviar() || $documento->fueRechazado());
+        return $documento !== null && (($documento->estaPorEnviar() && $documento->intento_envio_at === null) || $documento->fueRechazado());
     }
 
     protected function casts(): array
     {
         return [
             'fecha' => 'date',
+            'registro_iniciado_at' => 'datetime',
+            'confirmada_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'igv' => 'decimal:2',
             'total' => 'decimal:2',
@@ -279,6 +285,7 @@ class Sale extends Model
                 $item->product_id,
                 $item->service_id,
                 $item->precio_unitario,
+                $item->tipo_afectacion_igv,
             ]))
             ->map(function (Collection $grupo) {
                 /** @var SaleItem $primero */
@@ -289,6 +296,7 @@ class Sale extends Model
                     'product_id' => $primero->product_id,
                     'service_id' => $primero->service_id,
                     'tipo_linea' => $primero->tipo_linea,
+                    'tipo_afectacion_igv' => $primero->tipo_afectacion_igv,
                     'cantidad' => $grupo->sum('cantidad'),
                     'precio_unitario' => $primero->precio_unitario,
                     'descuento' => round($grupo->sum(fn (SaleItem $item) => (float) $item->descuento), 2),
@@ -301,5 +309,18 @@ class Sale extends Model
             })
             ->values()
             ->toBase();
+    }
+
+    /**
+     * Ventas que el usuario puede ver: el Gerente, todas; los demás, las de
+     * su sede y solo las que hicieron ellos (§90.1).
+     *
+     * @param  Builder<Sale>  $query
+     */
+    public function scopeVisiblePara(Builder $query, User $user): void
+    {
+        $query
+            ->when($user->sedeRestringidaId(), fn (Builder $query, int $sedeId) => $query->where('sede_id', $sedeId))
+            ->when($user->vendedorRestringidoId(), fn (Builder $query, int $vendedorId) => $query->where('vendedor_id', $vendedorId));
     }
 }

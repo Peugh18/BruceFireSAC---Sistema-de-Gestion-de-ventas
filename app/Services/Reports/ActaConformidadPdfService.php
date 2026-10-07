@@ -4,12 +4,15 @@ namespace App\Services\Reports;
 
 use App\Models\CompanySetting;
 use App\Models\ServiceOrder;
+use App\Services\Tecnico\EvidenciasParaPdf;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DompdfWrapper;
 use Illuminate\Support\Facades\Storage;
 
 class ActaConformidadPdfService
 {
+    public function __construct(protected EvidenciasParaPdf $evidencias) {}
+
     /**
      * Genera el PDF del Acta de Conformidad de Servicio y Entrega de Equipos (§23).
      */
@@ -37,6 +40,8 @@ class ActaConformidadPdfService
             'company' => $company,
             'logoBase64' => $this->logoBase64($company),
             'custody' => $custodyEvent?->payload ?? [],
+            'firmaCliente' => $this->evidencias->firma($serviceOrder, ['entrega', 'instalacion', 'inspeccion', 'mantenimiento']),
+            'fotos' => $this->evidencias->fotos($serviceOrder, ['antes', 'despues']),
             'fechaEntrega' => $custodyEvent?->created_at?->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i'),
         ])->setPaper('a4', 'portrait');
     }

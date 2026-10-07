@@ -9,6 +9,7 @@ use App\Models\SaleItem;
 use App\Models\SaleRefund;
 use App\Services\AuditLogger;
 use App\Services\Inventory\StockPorLote;
+use Illuminate\Support\Facades\DB;
 
 class RevertSale
 {
@@ -20,6 +21,21 @@ class RevertSale
      * tocan: el dinero se devuelve al cliente de forma manual.
      */
     public function handle(Sale $sale, string $motivo = 'por nota de crédito'): Sale
+    {
+        // Bloqueada y releída: dos anulaciones a la vez no deben devolver dos
+        // veces el stock ni duplicar la devolución del cobro.
+        return DB::transaction(function () use ($sale, $motivo): Sale {
+            $bloqueada = Sale::query()->lockForUpdate()->findOrFail($sale->id);
+
+            if ($bloqueada->estado === 'anulada') {
+                return $bloqueada;
+            }
+
+            return $this->revertir($bloqueada, $motivo);
+        });
+    }
+
+    protected function revertir(Sale $sale, string $motivo): Sale
     {
         $sale->loadMissing('items.inventoryUnit', 'items.equipment');
 

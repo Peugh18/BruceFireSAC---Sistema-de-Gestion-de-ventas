@@ -1,4 +1,13 @@
 import React from 'react';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
+import FirmaCanvas from '@/components/firma-canvas';
+import SubirEvidencia, {
+    type EvidenciaListada,
+} from '@/components/subir-evidencia';
+import guias from '@/routes/guias';
+import recojos from '@/routes/tecnico-campo/recojos';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
@@ -12,6 +21,7 @@ import {
     ShieldCheck,
     MessageSquare,
 } from 'lucide-react';
+import OpcionesAgente from '@/components/opciones-agente';
 
 interface CustodyEventItem {
     id: number;
@@ -53,12 +63,16 @@ interface Props {
         }>;
     };
     custodyEvents: CustodyEventItem[];
+    conversacion: ConversacionProps;
+    evidencias: EvidenciaListada[];
 }
 
 export default function RecojoShow({
     asignacion,
     order,
     custodyEvents,
+    conversacion,
+    evidencias,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
@@ -69,6 +83,7 @@ export default function RecojoShow({
         contacto_telefono: order.cliente.telefono || '',
         observaciones: '',
         conformidad_cliente: false,
+        firma: null as string | null,
     });
 
     const equipmentForm = useForm({
@@ -81,9 +96,15 @@ export default function RecojoShow({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post(`${teamPrefix}/recojos/${order.id}`, {
-            preserveScroll: true,
-        });
+        form.post(
+            recojos.store.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+            {
+                preserveScroll: true,
+            },
+        );
     };
 
     const yaRecogido = custodyEvents.some((e) => e.eslabon === 'recojo_campo');
@@ -100,6 +121,14 @@ export default function RecojoShow({
                 >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Volver a Lista de Recojos</span>
+                </Link>
+                <Link
+                    href={guias.create.url(teamSlug, {
+                        query: { origen: 'recojo', id: order.id },
+                    })}
+                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white"
+                >
+                    Emitir guía de remisión (antes de salir)
                 </Link>
 
                 {/* Client & Service Info Card */}
@@ -296,7 +325,8 @@ export default function RecojoShow({
                                 className="w-full rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                             />
                             <div className="grid grid-cols-2 gap-2">
-                                <input
+                                <select
+                                    aria-label="Agente extintor"
                                     value={equipmentForm.data.tipo_agente}
                                     onChange={(event) =>
                                         equipmentForm.setData(
@@ -304,9 +334,10 @@ export default function RecojoShow({
                                             event.target.value,
                                         )
                                     }
-                                    placeholder="Agente (alta nueva)"
                                     className="rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
-                                />
+                                >
+                                    <OpcionesAgente vacia="Agente (alta nueva)" />
+                                </select>
                                 <input
                                     value={equipmentForm.data.capacidad}
                                     onChange={(event) =>
@@ -428,9 +459,22 @@ export default function RecojoShow({
                                 </label>
                             </div>
 
+                            <SubirEvidencia
+                                ordenId={order.id}
+                                etapa="recojo"
+                                titulo="Fotos del recojo"
+                                evidencias={evidencias}
+                                equipos={conversacion.equipos}
+                            />
+
+                            <FirmaCanvas
+                                etiqueta="Firma de quien entrega"
+                                onChange={(f) => form.setData('firma', f)}
+                            />
+
                             <button
                                 type="submit"
-                                disabled={form.processing}
+                                disabled={form.processing || !form.data.firma}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
                             >
                                 <CheckCircle2 className="h-4 w-4" />
@@ -458,6 +502,11 @@ export default function RecojoShow({
                         </span>
                     </div>
                 )}
+
+                <ConversacionOrden
+                    ordenId={order.id}
+                    conversacion={conversacion}
+                />
             </div>
         </TecnicoCampoLayout>
     );

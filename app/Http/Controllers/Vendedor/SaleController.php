@@ -16,6 +16,7 @@ use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
+use App\Models\NoteRequest;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\Sale;
@@ -48,15 +49,11 @@ class SaleController extends Controller
         $comprobante = $request->string('comprobante')->toString();
         $buscar = trim($request->string('buscar')->toString());
         [$desde, $hasta] = $this->rangoDeFechas($request);
-        $vendedorId = $request->user()->id;
-        $sedeId = $request->user()->sedeRestringidaId();
-        $soloDe = $request->user()->vendedorRestringidoId();
 
         // Cada vendedor ve solo sus ventas; el Gerente, las de todos.
         $sales = Sale::query()
             ->with(['client', 'electronicDocuments'])
-            ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
-            ->when($soloDe, fn ($query) => $query->where('vendedor_id', $soloDe))
+            ->visiblePara($request->user())
             ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
             ->when($estado !== '' && $estado !== 'todas', fn ($query) => $query->where('estado', $estado))
             ->when($comprobante === 'nota_venta', fn ($query) => $query->where('comprobante_tipo', Sale::NOTA_VENTA))
@@ -90,10 +87,10 @@ class SaleController extends Controller
                 'editable' => $sale->sePuedeEditar(),
             ]);
 
-        // KPIs siempre acotados al vendedor autenticado: NUNCA acumulado de
-        // toda la empresa (regla de la sección 77.3 del doc maestro).
+        // KPIs con el mismo alcance que la tabla: el Vendedor ve solo lo suyo y
+        // el acumulado de la empresa queda para el Gerente (Documento Maestro §77.3).
         $emitidas = Sale::query()
-            ->where('vendedor_id', $vendedorId)
+            ->visiblePara($request->user())
             ->where('estado', 'confirmada')
             ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
             ->get(['total', 'condicion_pago']);
@@ -116,9 +113,14 @@ class SaleController extends Controller
                 // Lo que falta enviar a SUNAT no depende del rango: tiene plazo.
                 'por_enviar' => ElectronicDocument::query()
                     ->where('sunat_estado', 'por_enviar')
-                    ->whereHas('sale', fn ($query) => $query->where('vendedor_id', $vendedorId))
+                    ->whereHas('sale', fn ($query) => $query
+                        ->visiblePara($request->user())
+                    )
                     ->count(),
-                'borradores' => Sale::query()->where('vendedor_id', $vendedorId)->where('estado', 'borrador')->count(),
+                'borradores' => Sale::query()
+                    ->visiblePara($request->user())
+                    ->where('estado', 'borrador')
+                    ->count(),
             ],
         ]);
     }
@@ -304,7 +306,11 @@ class SaleController extends Controller
      * Cotización aceptada que se pasa a venta: precarga el cliente y
      * muestra los ítems cotizados para escanear sus series.
      *
-     * @return array{id: int, numero: string, client: array{id: int, tipo_documento: string, razon_social: string, numero_documento: string}, items: list<array{tipo: string, product_id: int|null, service_id: int|null, nombre: string, codigo: string|null, serializado: bool, cantidad: int, precio_unitario: float}>, referencia: string|null}|null
+     * Conserva lo pactado con el cliente (V3): descuento por línea, condición
+     * de pago, observaciones, vehículo y referencia. El formulario solo pide
+     * lo que falta (series y calendario de cuotas).
+     *
+     * @return array{id: int, numero: string, client: array{id: int, tipo_documento: string, razon_social: string, numero_documento: string}, items: list<array{tipo: string, product_id: int|null, service_id: int|null, nombre: string|null, codigo: string|null, serializado: bool, cantidad: int, precio_unitario: float, descuento: float}>, referencia: string|null, condicion_pago: string, observaciones: string|null, vehicle_id: int|null, destino: string}|null
      */
     protected function cotizacionParaVenta(int $quoteId, ?int $sedeId): ?array
     {
@@ -322,7 +328,7 @@ class SaleController extends Controller
             'id' => $quote->id,
             'numero' => $quote->numero,
             'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
-            'items' => $quote->items->map(fn (QuoteItem $item) => [
+            'items' => array_values($quote->items->map(fn (QuoteItem $item) => [
                 'tipo' => $item->esServicio() ? 'service' : 'product',
                 'product_id' => $item->product_id,
                 'service_id' => $item->service_id,
@@ -331,8 +337,14 @@ class SaleController extends Controller
                 'serializado' => (bool) $item->product?->serializado,
                 'cantidad' => (int) $item->cantidad,
                 'precio_unitario' => (float) $item->precio_unitario,
-            ])->values()->all(),
+                'descuento' => (float) $item->descuento,
+            ])->all()),
             'referencia' => $quote->referencia,
+            // La condición propuesta es texto libre ("Contado", "Crédito 30 días").
+            'condicion_pago' => str_starts_with(mb_strtolower(trim((string) $quote->condicion_pago_propuesta)), 'cr') ? 'credito' : 'contado',
+            'observaciones' => $quote->observaciones,
+            'vehicle_id' => $quote->vehicle_id,
+            'destino' => $quote->vehicle_id ? 'vehiculo' : 'local_cliente',
         ];
     }
 
@@ -407,11 +419,13 @@ class SaleController extends Controller
 
             return ['tipo_linea' => $equipment ? 'recarga_servicio' : 'servicio', 'numero_serie' => $equipment?->numero_serie, 'service_id' => $service->id, 'nombre' => $service->nombre, 'cantidad' => 1, 'precio_unitario' => (float) $service->precio_venta, 'descuento' => 0];
         });
-        $additionalItems = $order->deficiencies->where('estado', 'autorizada')->flatMap(function ($deficiency) {
-            $cotizacion = $deficiency->authorization?->cotizacionAdicional;
-
-            return $cotizacion === null ? [] : $cotizacion->items;
-        })->map(fn (QuoteItem $item): array => ['tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service_id ? $item->service->nombre : $item->product->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
+        // V6: una misma cotización usada en varias autorizaciones se cobra una vez.
+        $additionalItems = $order->deficiencies->where('estado', 'autorizada')
+            ->map(fn ($deficiency) => $deficiency->authorization?->cotizacionAdicional)
+            ->filter()
+            ->unique('id')
+            ->flatMap(fn (Quote $cotizacion) => $cotizacion->items)
+            ->map(fn (QuoteItem $item): array => ['tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service_id ? $item->service->nombre : $item->product->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
         $items = $items->concat($additionalItems)->values()->all();
 
         return ['id' => null, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => 'local_cliente', 'referencia' => $order->codigo, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items];
@@ -437,6 +451,12 @@ class SaleController extends Controller
             'editable' => $sale->sePuedeEditar(),
             'certificados' => SaleCertificateController::certificados($sale),
             'tieneEquipos' => $sale->items->contains(fn ($item) => $item->equipment_id !== null),
+            // Notas pedidas al Gerente que aún no se emiten (por aprobar o rechazadas).
+            'solicitudesNota' => NoteRequest::query()
+                ->whereIn('electronic_document_id', $sale->electronicDocuments->pluck('id'))
+                ->where('estado', '!=', 'aprobada')
+                ->latest('id')
+                ->get(['id', 'tipo', 'motivo_catalogo', 'importe', 'estado', 'motivo_rechazo']),
             'tiposServicio' => EmitirCertificadoDeServicio::tiposDeServicio()
                 ->map(fn ($tipo) => ['codigo' => $tipo->codigo, 'nombre' => $tipo->nombre])
                 ->values(),
@@ -548,12 +568,7 @@ class SaleController extends Controller
      */
     protected function assertSedeAccess(Request $request, Sale $sale): void
     {
-        $sedeId = $request->user()->sedeRestringidaId();
-
-        abort_if($sedeId !== null && (int) $sale->sede_id !== $sedeId, 404);
-
         // Cada vendedor corrige solo sus ventas; el Gerente, las de todos.
-        $vendedorId = $request->user()->vendedorRestringidoId();
-        abort_if($vendedorId !== null && (int) $sale->vendedor_id !== $vendedorId, 404);
+        abort_unless(Sale::query()->visiblePara($request->user())->whereKey($sale->id)->exists(), 404);
     }
 }

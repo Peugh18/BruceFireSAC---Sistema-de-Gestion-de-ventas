@@ -15,6 +15,7 @@ import {
 
 import { Card } from '@/components/ui/card';
 import AlmacenLayout from '@/layouts/almacen-layout';
+import recepcionesRutas from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
 
 export type SedeStock = {
@@ -300,7 +301,9 @@ export default function AlmacenDashboard({
 
                         <div className="border-border mt-5 border-t pt-4">
                             <Link
-                                href={`/${teamSlug}/almacen/recepciones`}
+                                href={recepcionesRutas.create.url({
+                                    current_team: teamSlug,
+                                })}
                                 className="text-primary-strong inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
                             >
                                 <span>Registrar nueva recepción</span>

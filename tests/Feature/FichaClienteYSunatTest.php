@@ -20,9 +20,9 @@ it('entrega el contrato completo de la ficha respetando la sede del vendedor', f
     $vendedor = User::factory()->create(['sede_id' => $sede->id]);
     $vendedor->assignRole('Vendedor');
     $client = Client::factory()->create();
-    Quote::factory()->create(['client_id' => $client->id, 'sede_id' => $sede->id]);
+    Quote::factory()->create(['client_id' => $client->id, 'sede_id' => $sede->id, 'vendedor_id' => $vendedor->id]);
     Quote::factory()->create(['client_id' => $client->id, 'sede_id' => $otraSede->id]);
-    Sale::factory()->create(['client_id' => $client->id, 'sede_id' => $sede->id]);
+    Sale::factory()->create(['client_id' => $client->id, 'sede_id' => $sede->id, 'vendedor_id' => $vendedor->id]);
     Sale::factory()->create(['client_id' => $client->id, 'sede_id' => $otraSede->id]);
     ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $sede->id]);
     ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $otraSede->id]);
@@ -80,10 +80,10 @@ it('resume lo comprado y lo que debe: al contado no queda deuda y la anulada no 
     $vendedor->assignRole('Vendedor');
     $client = Client::factory()->create();
 
-    Sale::factory()->create(['client_id' => $client->id, 'estado' => 'confirmada', 'condicion_pago' => 'contado', 'total' => 460.20, 'fecha' => '2026-09-20']);
-    $credito = Sale::factory()->create(['client_id' => $client->id, 'estado' => 'confirmada', 'condicion_pago' => 'credito', 'total' => 100, 'fecha' => '2026-09-25']);
+    Sale::factory()->create(['client_id' => $client->id, 'vendedor_id' => $vendedor->id, 'estado' => 'confirmada', 'condicion_pago' => 'contado', 'total' => 460.20, 'fecha' => '2026-09-20']);
+    $credito = Sale::factory()->create(['client_id' => $client->id, 'vendedor_id' => $vendedor->id, 'estado' => 'confirmada', 'condicion_pago' => 'credito', 'total' => 100, 'fecha' => '2026-09-25']);
     $credito->installments()->create(['numero_cuota' => 1, 'fecha_vencimiento' => now()->subDay(), 'monto' => 100, 'estado' => 'pendiente']);
-    Sale::factory()->create(['client_id' => $client->id, 'estado' => 'anulada', 'condicion_pago' => 'contado', 'total' => 999, 'fecha' => '2026-09-01']);
+    Sale::factory()->create(['client_id' => $client->id, 'vendedor_id' => $vendedor->id, 'estado' => 'anulada', 'condicion_pago' => 'contado', 'total' => 999, 'fecha' => '2026-09-01']);
 
     $this->actingAs($vendedor)
         ->get(route('vendedor.clientes.show', ['current_team' => $vendedor->currentTeam, 'client' => $client]))

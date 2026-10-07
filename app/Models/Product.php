@@ -20,10 +20,16 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $codigo_barras
  * @property string $nombre
  * @property string|null $categoria
+ * @property string|null $agente
+ * @property string|null $capacidad
+ * @property string|null $peso_kg
  * @property string|null $descripcion
  * @property string $unidad_medida
  * @property float $precio_venta
+ * @property string|null $costo_promedio
+ * @property Carbon|null $igv_revisado_at
  * @property bool $aplica_igv
+ * @property string|null $tipo_afectacion_igv
  * @property bool $serializado
  * @property bool $controla_lote
  * @property string|null $unidad_compra
@@ -44,10 +50,14 @@ use Illuminate\Support\Facades\DB;
     'codigo_barras',
     'nombre',
     'categoria',
+    'agente',
+    'capacidad', 'peso_kg',
     'descripcion',
     'unidad_medida',
     'precio_venta',
-    'aplica_igv',
+    'costo_promedio',
+    'aplica_igv', 'igv_revisado_at',
+    'tipo_afectacion_igv',
     'serializado',
     'controla_lote',
     'unidad_compra',
@@ -64,7 +74,10 @@ class Product extends Model
     {
         return [
             'precio_venta' => 'decimal:2',
+            'peso_kg' => 'decimal:3',
+            'costo_promedio' => 'decimal:4',
             'aplica_igv' => 'boolean',
+            'igv_revisado_at' => 'datetime',
             'serializado' => 'boolean',
             'controla_lote' => 'boolean',
             'factor_compra' => 'integer',
@@ -72,21 +85,6 @@ class Product extends Model
             'activo' => 'boolean',
         ];
     }
-
-    /**
-     * Categorías del catálogo: ordenan el catálogo y deciden qué se avisa
-     * en Por vencer (los extintores).
-     *
-     * @var array<string, string>
-     */
-    public const CATEGORIAS = [
-        'extintor' => 'Extintor',
-        'epp' => 'EPP (seguridad personal)',
-        'senalizacion' => 'Señalización',
-        'repuesto' => 'Repuesto / componente',
-        'accesorio' => 'Accesorio (gabinete, soporte)',
-        'otro' => 'Otro',
-    ];
 
     /**
      * Agrega el stock disponible a la consulta: los que llevan serie cuentan
@@ -123,6 +121,24 @@ class Product extends Model
             ->where(fn (Builder $q) => $q
                 ->where(fn (Builder $q) => $q->where('products.serializado', true)->where(self::unidadesDisponibles($sedeIds), '<=', $minimo))
                 ->orWhere(fn (Builder $q) => $q->where('products.serializado', false)->where(self::saldoKardex($sedeIds), '<=', $minimo)));
+    }
+
+    /**
+     * Costo promedio ponderado: mezcla el stock que hay hoy (a su costo
+     * promedio) con la cantidad que entra a este costo. Se llama antes de
+     * registrar el ingreso, para que el stock sea el de antes de la compra.
+     */
+    public function registrarCostoDeCompra(int $cantidad, float $costoUnitario): void
+    {
+        $actual = self::query()->conStock()->whereKey($this->id)->lockForUpdate()->firstOrFail();
+        $stock = max(0, $actual->stockDisponible());
+        $costoActual = $actual->costo_promedio;
+
+        $nuevo = $costoActual === null || $stock === 0
+            ? $costoUnitario
+            : ($stock * (float) $costoActual + $cantidad * $costoUnitario) / ($stock + $cantidad);
+
+        $this->update(['costo_promedio' => round($nuevo, 4)]);
     }
 
     /**

@@ -7,13 +7,18 @@ use Illuminate\Validation\Rule;
 
 class StoreDebitNoteRequest extends FormRequest
 {
+    /**
+     * El permiso se revisa de verdad: sin billing.credit_note, 403.
+     */
     public function authorize(): bool
     {
-        return true;
+        return (bool) $this->user()?->can('billing.credit_note');
     }
 
     /**
-     * Motivos del Catálogo 10 SUNAT: intereses por mora, aumento en el valor y penalidades.
+     * Catalogo 10 SUNAT actualizado por R.S. 000048-2026 (vigente 1/08/2026).
+     * 01 = intereses por mora, 02 = aumento en el valor, 03 = otros conceptos,
+     * 11 = ajustes exportacion, 12 = ajustes IVAP, 13 = penalidades (inafecto).
      *
      * @return array<string, mixed>
      */
@@ -21,7 +26,7 @@ class StoreDebitNoteRequest extends FormRequest
     {
         return [
             'electronic_document_id' => ['required', 'integer', 'exists:electronic_documents,id'],
-            'motivo_catalogo' => ['required', Rule::in(['01', '02', '03'])],
+            'motivo_catalogo' => ['required', Rule::in(['01', '02', '03', '11', '12', '13'])],
             'detalle' => ['required', 'string'],
             'importe' => ['required', 'numeric', 'min:0.01'],
         ];

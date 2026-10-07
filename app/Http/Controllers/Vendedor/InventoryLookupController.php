@@ -22,6 +22,17 @@ class InventoryLookupController extends Controller
             'sede_almacen_id' => ['required', 'integer', 'exists:sedes,id'],
         ]);
 
+        $sede = Sede::query()->whereKey($data['sede_almacen_id'])->first();
+        $almacenId = $sede?->almacenEfectivoId() ?? (int) $data['sede_almacen_id'];
+
+        // El almacén que pide la pantalla no decide qué puede consultar el
+        // usuario: solo puede escanear el stock de su propia sede.
+        $almacenPermitido = $request->user()?->almacenRestringidoId();
+
+        if ($almacenPermitido !== null && $almacenPermitido !== $almacenId) {
+            return response()->json(['message' => 'Esa unidad no pertenece al almacén de la sede activa.'], 422);
+        }
+
         $unit = InventoryUnit::with('product')
             ->where('numero_serie', $data['numero_serie'])
             ->first();
@@ -29,8 +40,6 @@ class InventoryLookupController extends Controller
         if (! $unit) {
             return response()->json(['message' => 'No se encontró ninguna unidad con esa serie.'], 404);
         }
-
-        $almacenId = Sede::find($data['sede_almacen_id'])?->almacenEfectivoId() ?? (int) $data['sede_almacen_id'];
 
         if ($unit->sede_almacen_id !== $almacenId) {
             return response()->json(['message' => 'Esa unidad no pertenece al almacén de la sede activa.'], 422);

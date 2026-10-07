@@ -4,7 +4,7 @@ Este archivo guarda tal cual las notas de voz que el usuario ha ido
 dictando sobre cómo debe funcionar el sistema, para no perder contexto
 entre sesiones ni tener que pedírselas de nuevo. Es material fuente sin
 editar; la versión organizada, deduplicada y con fuentes está en
-`BRUCE_FIRE_Documento_Maestro_v9.md` (secciones 76-77). Cuando el
+`archivo/Documento_Maestro_v9_historial_76-90.md` (secciones 76-77). Cuando el
 usuario dicte algo nuevo, se agrega aquí como una entrada nueva y luego
 se integra al documento maestro.
 

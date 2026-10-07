@@ -35,6 +35,7 @@ class StoreReceptionRequest extends FormRequest
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
             'items.*.cantidad_conforme' => ['required', 'integer', 'min:0'],
+            'items.*.costo_unitario' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
             'items.*.observacion_item' => ['nullable', 'string'],
             'items.*.lote' => ['nullable', 'string', 'max:50'],
             'items.*.fecha_vencimiento' => ['nullable', 'date'],

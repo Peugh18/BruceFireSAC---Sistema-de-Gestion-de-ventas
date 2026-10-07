@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Gerente;
 
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreProductRequest;
 use App\Http\Requests\Gerente\UpdateProductRequest;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\Team;
 use App\Services\AuditLogger;
+use App\Services\Billing\AfectacionIgv;
+use App\Support\UnidadMedidaSunat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -45,11 +49,16 @@ class ProductController extends Controller
                 'codigo' => $p->codigo,
                 'codigo_barras' => $p->codigo_barras,
                 'categoria' => $p->categoria,
+                'agente' => $p->agente,
+                'capacidad' => $p->capacidad,
+                'peso_kg' => $p->peso_kg,
                 'nombre' => $p->nombre,
                 'descripcion' => $p->descripcion,
                 'unidad_medida' => $p->unidad_medida,
                 'precio_venta' => (float) $p->precio_venta,
                 'aplica_igv' => (bool) $p->aplica_igv,
+                'tipo_afectacion_igv' => $p->tipo_afectacion_igv,
+                'igv_requiere_revision' => AfectacionIgv::requiereRevision($p),
                 'serializado' => (bool) $p->serializado,
                 'controla_lote' => (bool) $p->controla_lote,
                 'unidad_compra' => $p->unidad_compra,
@@ -66,7 +75,9 @@ class ProductController extends Controller
         $totalBajoMinimo = Product::query()->bajoMinimo()->count();
 
         return Inertia::render('gerente/productos/index', [
-            'categorias' => Product::CATEGORIAS,
+            'categorias' => ProductCategory::conUsos(),
+            'unidadesMedida' => UnidadMedidaSunat::opciones(),
+            'agentes' => EquipmentType::opciones(),
             'productos' => $productos,
             'filters' => [
                 'buscar' => $buscar,
@@ -83,7 +94,13 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request, Team $current_team): RedirectResponse
     {
-        Product::create($request->validated());
+        $datos = $request->validated();
+        if (isset($datos['tipo_afectacion_igv'])) {
+            $datos['igv_revisado_at'] = now();
+        } else {
+            $datos['tipo_afectacion_igv'] = '10';
+        }
+        Product::create($datos);
 
         return redirect()->route('gerente.productos.index', ['current_team' => $current_team])
             ->with('success', 'Producto creado exitosamente.');
@@ -92,6 +109,9 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Team $current_team, Product $producto): RedirectResponse
     {
         $datos = $request->validated();
+        if (isset($datos['tipo_afectacion_igv'])) {
+            $datos['igv_revisado_at'] = now();
+        }
 
         // Con stock o ventas registradas, cambiar "con serie" / "sin serie"
         // descuadraría el Kardex: se crea otro producto.

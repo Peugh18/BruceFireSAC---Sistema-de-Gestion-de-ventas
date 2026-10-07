@@ -66,6 +66,7 @@ class DashboardController extends Controller
                 'entregas' => $query->where(fn ($q) => $q->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%entrega%'))->orWhereIn('estado', ['listo_entrega', 'entregado'])),
                 'inspecciones' => $query->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')),
                 'instalaciones' => $query->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')),
+                'mantenimientos' => $query->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%mantenim%')),
                 default => null,
             };
         }
@@ -77,6 +78,7 @@ class DashboardController extends Controller
                 $order->estado === 'listo_entrega' || $order->estado === 'entregado' => 'entrega',
                 str_contains(strtolower($order->service->nombre), 'inspecci') => 'inspeccion',
                 str_contains(strtolower($order->service->nombre), 'instalac') => 'instalacion',
+                str_contains(strtolower($order->service->nombre), 'mantenim') => 'mantenimiento',
                 default => 'ver',
             };
 

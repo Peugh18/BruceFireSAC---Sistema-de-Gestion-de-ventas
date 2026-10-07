@@ -21,11 +21,14 @@ import {
     Wrench,
 } from 'lucide-react';
 
+import { Link, usePage } from '@inertiajs/react';
+
 import SaludDelSistema, {
     type SaludDelSistemaData,
 } from '@/components/salud-del-sistema';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { fechaCorta } from '@/lib/utils';
+import notas from '@/routes/gerente/notas';
 
 type DashboardMetrics = {
     ventasDia: number;
@@ -40,6 +43,18 @@ type DashboardMetrics = {
     equiposProximosAtencion: number;
     stockCritico: number;
     documentosSunatError: number;
+    notasPorAprobar: number;
+    /** S8: sin enviar a SUNAT que vencen hoy o mañana, y ya vencidos. */
+    plazoSunat: { por_vencer: number; vencidos: number };
+};
+
+/** X7: indicadores del proyecto (promedios del mes). */
+type KpisProyecto = {
+    venta_minutos: number | null;
+    ventas_medidas: number;
+    cotizacion_minutos: number | null;
+    cotizaciones_medidas: number;
+    clientes_recuperados: number;
 };
 
 type DashboardCharts = {
@@ -105,6 +120,7 @@ type GerenteDashboardProps = {
     charts: DashboardCharts;
     aiRetention?: AiRetentionData;
     sistema: SaludDelSistemaData;
+    kpisProyecto?: KpisProyecto;
 };
 
 function formatCurrency(amount: number): string {
@@ -124,7 +140,9 @@ export default function GerenteDashboard({
     charts,
     aiRetention,
     sistema,
+    kpisProyecto,
 }: GerenteDashboardProps) {
+    const { currentTeam } = usePage<{ currentTeam: { slug: string } }>().props;
     const maxVentaMensual = Math.max(
         ...charts.ventasMensuales.map((m) => m.monto),
         1,
@@ -170,6 +188,40 @@ export default function GerenteDashboard({
                 </div>
 
                 <SaludDelSistema salud={sistema} />
+
+                {(metrics.plazoSunat.por_vencer > 0 ||
+                    metrics.plazoSunat.vencidos > 0) && (
+                    <div
+                        role="alert"
+                        className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+                    >
+                        <AlertTriangle className="mt-0.5 size-5 shrink-0" />
+                        <p>
+                            <strong>Plazo de SUNAT:</strong>{' '}
+                            {metrics.plazoSunat.por_vencer} comprobante(s) sin
+                            enviar vencen hoy o mañana y{' '}
+                            {metrics.plazoSunat.vencidos} ya vencieron. Cada
+                            vendedor los ve y los reenvía desde su página de
+                            Facturación.
+                        </p>
+                    </div>
+                )}
+
+                {metrics.notasPorAprobar > 0 && (
+                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-200">
+                        <FileCheck className="size-5 shrink-0" />
+                        <p className="min-w-0 flex-1">
+                            Tienes {metrics.notasPorAprobar} nota(s) de crédito
+                            o débito esperando tu aprobación.
+                        </p>
+                        <Link
+                            href={notas.index.url(currentTeam.slug)}
+                            className="font-semibold underline underline-offset-2"
+                        >
+                            Revisar notas
+                        </Link>
+                    </div>
+                )}
 
                 {/* Grid de 12 Tarjetas KPI */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -280,6 +332,69 @@ export default function GerenteDashboard({
                             Cuotas con mora superada
                         </p>
                     </div>
+
+                    {/* X7: indicadores del proyecto */}
+                    {kpisProyecto && (
+                        <>
+                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium tracking-wider uppercase">
+                                        Tiempo de registro de venta
+                                    </span>
+                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
+                                        <Clock className="size-4 text-indigo-600" />
+                                    </div>
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {kpisProyecto.venta_minutos === null
+                                        ? '—'
+                                        : `${kpisProyecto.venta_minutos} min`}
+                                </div>
+                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                    Promedio del mes ·{' '}
+                                    {kpisProyecto.ventas_medidas} ventas
+                                </p>
+                            </div>
+                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium tracking-wider uppercase">
+                                        Tiempo de cotización
+                                    </span>
+                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
+                                        <Clock className="size-4 text-purple-600" />
+                                    </div>
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {kpisProyecto.cotizacion_minutos === null
+                                        ? '—'
+                                        : `${kpisProyecto.cotizacion_minutos} min`}
+                                </div>
+                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                    De crearla a emitirla ·{' '}
+                                    {kpisProyecto.cotizaciones_medidas}{' '}
+                                    cotizaciones
+                                </p>
+                            </div>
+                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium tracking-wider uppercase">
+                                        Clientes recuperados
+                                    </span>
+                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
+                                        <AlertTriangle className="size-4 text-amber-500" />
+                                    </div>
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {formatNumber(
+                                        kpisProyecto.clientes_recuperados,
+                                    )}
+                                </div>
+                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                    Por alertas, con venta este mes
+                                </p>
+                            </div>
+                        </>
+                    )}
 
                     {/* 7. Cotizaciones Pendientes */}
                     <div className="border-border bg-card rounded-xl border p-5 shadow-xs">

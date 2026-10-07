@@ -43,4 +43,28 @@ class PrecioConIgv
 
         return ['subtotal' => round($subtotal, 2), 'igv' => round($igv, 2), 'total' => round($total, 2)];
     }
+
+    /**
+     * @param  list<array<string, mixed>>  $lineas
+     * @return array{subtotal: float, igv: float, total: float}
+     */
+    public static function totalesConAfectacion(array $lineas): array
+    {
+        $grupos = [];
+        foreach ($lineas as $linea) {
+            $clave = implode('|', [$linea['product_id'] ?? null, $linea['service_id'] ?? null, number_format((float) $linea['precio_unitario'], 2, '.', ''), $linea['tipo_afectacion_igv']]);
+            $grupos[$clave] ??= ['subtotal' => 0.0, 'tipo_afectacion_igv' => $linea['tipo_afectacion_igv']];
+            $grupos[$clave]['subtotal'] += (float) $linea['subtotal'];
+        }
+        $subtotal = $igv = $total = 0.0;
+        foreach ($grupos as $linea) {
+            $monto = (float) $linea['subtotal'];
+            $desglose = $linea['tipo_afectacion_igv'] === '10' ? self::desglosar($monto) : ['base' => $monto, 'igv' => 0.0];
+            $subtotal += $desglose['base'];
+            $igv += $desglose['igv'];
+            $total += $monto;
+        }
+
+        return ['subtotal' => round($subtotal, 2), 'igv' => round($igv, 2), 'total' => round($total, 2)];
+    }
 }
