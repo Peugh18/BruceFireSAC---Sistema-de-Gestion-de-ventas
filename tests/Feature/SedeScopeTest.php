@@ -167,6 +167,32 @@ test('una tienda vende con el stock del almacén al que está asignada', functio
         ->assertStatus(422);
 });
 
+test('el escáner de series no consulta el stock de otra sede aunque se pida su almacén', function () {
+    $product = Product::factory()->create();
+    $ajena = InventoryUnit::factory()->create([
+        'product_id' => $product->id,
+        'sede_almacen_id' => $this->sedeB->id,
+        'estado' => 'disponible',
+    ]);
+    $vendedor = vendedorEnSede($this->sedeA);
+
+    $this->actingAs($vendedor)
+        ->getJson(route('vendedor.ventas.escanear-serie', [...teamOf($vendedor), 'numero_serie' => $ajena->numero_serie, 'sede_almacen_id' => $this->sedeB->id]))
+        ->assertStatus(422)
+        ->assertJsonMissingPath('inventory_unit_id');
+
+    $propia = InventoryUnit::factory()->create([
+        'product_id' => $product->id,
+        'sede_almacen_id' => $this->sedeA->id,
+        'estado' => 'disponible',
+    ]);
+
+    $this->actingAs($vendedor)
+        ->getJson(route('vendedor.ventas.escanear-serie', [...teamOf($vendedor), 'numero_serie' => $propia->numero_serie, 'sede_almacen_id' => $this->sedeA->id]))
+        ->assertOk()
+        ->assertJsonPath('inventory_unit_id', $propia->id);
+});
+
 test('las cotizaciones y las órdenes de servicio se acotan a la sede del trabajador', function () {
     $vendedor = vendedorEnSede($this->sedeA);
     Quote::factory()->create(['sede_id' => $this->sedeA->id]);

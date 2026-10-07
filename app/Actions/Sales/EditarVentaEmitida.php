@@ -2,6 +2,7 @@
 
 namespace App\Actions\Sales;
 
+use App\Actions\Billing\ConsultarCdrSunat;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\ReserveNextCorrelativo;
 use App\Actions\Certificates\EmitirCertificadosDeVenta;
@@ -45,6 +46,10 @@ class EditarVentaEmitida
      */
     public function handle(Sale $sale, array $data, array $items, int $userId): Sale
     {
+        // Antes de la transacción: el CDR que se recupere de SUNAT debe quedar
+        // guardado aunque después se aborte la edición.
+        $this->consultarAntesDeReemplazar($sale);
+
         return DB::transaction(function () use ($sale, $data, $items, $userId) {
             $sale = Sale::query()->with('electronicDocuments', 'items')->lockForUpdate()->findOrFail($sale->id);
 
@@ -63,6 +68,7 @@ class EditarVentaEmitida
             }
 
             $documento = $sale->esNotaVenta() ? null : $sale->comprobanteElectronico();
+
             $antes = [
                 ...$sale->only(['client_id', 'comprobante_tipo', 'condicion_pago', 'total', 'destino', 'referencia']),
                 'comprobante' => $sale->numeroComprobante(),
@@ -136,6 +142,27 @@ class EditarVentaEmitida
 
             return $sale;
         });
+    }
+
+    /**
+     * Un comprobante que ya salió hacia SUNAT nunca se reemplaza sin saber qué
+     * pasó con él: pudo quedar aceptado y perderse solo la respuesta. Se
+     * consulta fuera de la transacción para que el CDR que se recupere quede
+     * guardado aunque la edición se aborte después.
+     */
+    protected function consultarAntesDeReemplazar(Sale $sale): void
+    {
+        if ($sale->esNotaVenta()) {
+            return;
+        }
+
+        $documento = $sale->load('electronicDocuments')->comprobanteElectronico();
+
+        if ($documento === null || ! $documento->resultadoDesconocidoDeSunat()) {
+            return;
+        }
+
+        app(ConsultarCdrSunat::class)->exigirReemplazable($documento);
     }
 
     /**

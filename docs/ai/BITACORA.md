@@ -279,3 +279,63 @@
 - **Pruebas:** `GuiaRemisionTest` (nueva, SUNAT siempre simulado). **No se ejecutó ninguna prueba con base de datos: MySQL apagado.** Pint, PHPStan (0) y `tsc` pasan. Pendiente al encender MySQL: `BillingModuleTest`, `CreditDebitNoteTest`, `ComprobanteEnvioDiferidoTest`, `FaseASunatTest`, `GuiaRemisionTest`, `InventoryTransferTest`, `AlmacenControlesTest`, `LotesEppTest`.
 - **Dudas / no hecho:** no hay PDF ni QR de la guía; el ubigeo se escribe a mano (6 dígitos) en el formulario; no se descargan XML ni CDR; sin reintento automático de la consulta del ticket (botón manual "Consultar CDR"); no hay guía para la devolución desde la sede; la venta a crédito y los servicios no generan ítems de guía (solo productos).
 - **Requisitos nuevos para el DRS:** REQ-GRE-01 la guía de remisión se emite desde venta, orden de recojo o entrega, y traslado entre sedes; REQ-GRE-02 solo con CDR aceptado la mercadería puede salir; REQ-GRE-03 el traslado entre sedes queda en tránsito hasta que el destino confirma; REQ-GRE-04 vehículos, conductores, peso por producto y anexo por sede son datos maestros.
+
+
+## [2026-10-07] — Métricas e instrumentos terminados 07/10/2026
+
+- Entregados dos DOCX en Entregables/Semana 8: Métricas de Calidad (12 páginas) e Instrumentos de medición (21 páginas), versión 1.1.
+- Cinco métricas del producto vinculadas a ISO, SUS complementario y cinco VD; ocho campos, unidades, fórmulas y criterios completos.
+- Trece formatos A1–A13; inventario A1 de los 122 REQ del DRS v3.1, pruebas funcionales, tiempos, SUS, VD, diagnóstico, expertos y piloto.
+- Protocolos propuestos: 30 intentos medidos por escenario y 14 días de seguimiento; revisar antes de aplicación.
+- Conservada la matriz 3.7 y todas las partes de la plantilla salvo word/document.xml; no se afirman certificación ISO ni resultados medidos.
+- QA: 33 páginas revisadas visualmente, fórmulas y denominadores comprobados; Word exportó en solo lectura y Poppler renderizó. LibreOffice del runtime no disponible.
+- Versiones anteriores respaldadas en la carpeta de trabajo de esta entrega; SHA de los archivos finales coincide con QA.
+- Pendiente: aplicación real, revisión de expertos y piloto; continuar informe, Scrum y demo. No se ejecutaron pruebas del software.
+
+
+## [2026-10-07] — Aclaración instrumentos de tesis y cinco VI
+
+- Pedido nuevo: exactamente cinco VI y cinco VD, coherentes también en Informe Final; primero comprender, investigar y responder.
+- Contrastados ejemplos de tesis UPT/UNE, investigación comercial con Scrum, validez de contenido UDG, guía institucional Huaraz y fuentes oficiales PMI/ISO.
+- Confirmado: métricas se definen y aplican durante desarrollo; resultados finales VD requieren C1/C2 reales y comparables.
+- Formatos actuales útiles; pendiente añadir fichas técnicas uniformes y separar medición, diagnóstico y formatos de validación.
+- Recomendación presentada: retirar PTR como ficha independiente y mantener SUS dentro de cinco VI. Falta aplicar la corrección y concordar Informe Final.
+- Investigación guardada en la carpeta de trabajo semana8-metricas-instrumentos-v2. No se modificaron DOCX, Excel ni código en esta investigación.
+
+
+## [2026-10-07] — Corrección concordante de cinco VI y cinco VD — 07/10/2026
+
+- Instalados tres DOCX: métricas v1.2 en Semana 8, Informe Final en Semana 6 y matriz en Semana 2; originales respaldados y SHA verificados.
+- Cinco VI: PRI, PCF, PEU, SUS y TRP. Cinco VD conservados; fórmulas, unidades y metas concordantes entre documentos.
+- Informe: 3.7, 3.8, 3.9, 3.10, 5.14 y notas de resultados pendientes; tres dimensiones, alcance de 122 REQ/11 RNF y muestra planificada distinta de 942.
+- Ocho instrumentos principales declarados I01–I08; fichas y registros del documento de instrumentos pendientes de elaboración por pedido del usuario.
+- Se retiró el plazo no conciliado de catorce días; definir plazo común compatible con C1/C2 antes de medir. Cronograma sin cambios.
+- QA: 109 páginas revisadas visualmente con Word/Poppler; diez fichas, 18 ecuaciones nativas, índice, fórmulas y coherencia cruzada comprobados.
+- Se conservan todas las partes ZIP excepto el cuerpo XML; resultados, expertos y piloto pendientes. Sin cambios de código ni pruebas del sistema.
+- Siguiente paso: elaborar instrumentos; después informe de estado, Scrum y demostración. La consulta de Semana 13 no modifica fechas.
+
+## [2026-10-07] — Correcciones de la auditoría externa (9 hallazgos)
+
+- **Suite rota reparada y dos correcciones previas commiteadas:** `RevertSale` revierte dentro de `DB::transaction` con `lockForUpdate` y sale si la venta ya está anulada; el helper `usuarioConRol` de `FaseDEvidenciasYVisitasTest` pasó a `usuarioDeVisita` (el nombre repetido con firma distinta rompía toda la suite con `Cannot redeclare usuarioConRol()`).
+- **1. Doble emisión ante SUNAT:** nuevo `ConsultarCdrSunat` y `SunatClientInterface::consultCdr()` (Greenter `ConsultCdrService` con el cliente TLS). Un comprobante ya enviado nunca se reemplaza sin consultar antes su estado; `EditarVentaEmitida` consulta **antes** de la transacción para que el CDR recuperado no se pierda con el rollback. Si SUNAT lo tenía, se exige nota de crédito.
+- **2. Comprobantes `pendiente`/`excepcion` estancados:** `billing:enviar-programados` ahora también los toma. Si ya hubo un intento consulta el CDR y solo reenvía el mismo XML firmado cuando SUNAT confirma que no lo tiene.
+- **3. GRE:** un error de comunicación ya no es un rechazo. Solo `codRespuesta 99` rechaza; el resto queda «enviada» y se reintenta (`GreApiClient::SIN_RESPUESTA`, `GuiaRemisionService::consultar`).
+- **4. Detracción:** verificado y **sin cambios**, por decisión. `DetraccionCalculator.php:33` usa `$total > 700` («mayor a S/ 700», Anexo 3 de la R.S. 183-2004/SUNAT), que es lo que manda la norma. Sigue pendiente con el contador si la recarga entra en el 020, 022 o 037 y si aplica a bienes del Catálogo 54.
+- **5. Carrera al tomar órdenes:** `TechnicalOrderAssignmentController::take` con `DB::transaction` + `lockForUpdate` y la orden releída bajo bloqueo.
+- **6. Envío a SUNAT idempotente:** `EmitElectronicDocument::sendDocument` con `Cache::lock` por documento: un doble clic o el programador y un clic a la vez ya no envían dos veces.
+- **7. Saldo de cobranzas:** `ClientController` y `StoreCollectionPaymentRequest` calculaban el saldo sin restar `monto_acreditado`, con deuda inflada y cobros de más permitidos. Ahora usan `Installment::saldo()`.
+- **8. Token de APIsPeru:** `RucLookupController` devuelve un mensaje genérico al navegador y deja en el log el error con el token tachado.
+- **9. Aislamiento por sede:** `InventoryLookupController::bySerial` (también el escáner de series de ventas) acota con `almacenRestringidoId()` y ya no confía en el `sede_almacen_id` que manda el formulario.
+- **Extra (no era hallazgo):** `GuiaRemisionService` pasaba `CarbonImmutable` a los setters de Greenter, que exigen `DateTime`; la GRE no llegaba a emitirse. Convertido con `->toDateTime()`. Se comprobó que el fallo era anterior a esta tanda.
+- **Verificación:** `pint --dirty` limpio, PHPStan nivel 7 con **0 errores**, 118 pruebas de las áreas tocadas en verde (617 aserciones) y `tsc` sin cambios de frontend. PHPStan sin línea base sobre los archivos tocados: 0 errores introducidos; quedan 14 preexistentes en `ClientController.php`, ya cubiertos por la línea base.
+- **Pendiente:** la entrada de la línea base de PHPStan para `InventoryLookupController` quedó obsoleta (ese error ya no existe) y puede retirarse en la próxima pasada de reducción de la línea base.
+
+
+## [2026-10-07] — Plan de elaboración de instrumentos por bloques — 07/10/2026
+
+- Por pedido del usuario, planificación primero. Guardado PLAN_INSTRUMENTOS_SEMANA8.md con cinco bloques y controles para retomar.
+- Definidos ocho instrumentos: ficha técnica, instrucciones, formatos de registro y consolidación; diez indicadores, SUS VI04 y software/procesos diferenciados.
+- Revisado el borrador A1–A13: reusar formatos y 122 REQ, corregir VI06/PTR/catorce días, separar diagnóstico y validación.
+- Registrado el nombre VD04 aprobado: porcentaje de productos con diferencias de stock en el inventario; pendiente ajuste de redacción mínimo en documentos relacionados.
+- QA del plan: ocho códigos, cinco bloques, archivos/fuentes, pruebas de cálculo, respaldo, revisión visual y punto de reanudación definidos.
+- Sin cambios a Word, calendario, código ni resultados. Siguiente: Bloque 1; ejecución y mediciones reales pendientes.

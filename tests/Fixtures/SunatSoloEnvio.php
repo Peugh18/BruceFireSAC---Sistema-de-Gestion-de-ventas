@@ -20,4 +20,9 @@ abstract class SunatSoloEnvio implements SunatClientInterface
     {
         throw new LogicException('Esta prueba no simula la consulta de tickets.');
     }
+
+    public function consultCdr(string $ruc, string $tipoDoc, string $serie, int $numero): array
+    {
+        throw new LogicException('Esta prueba no simula la consulta del CDR de un comprobante.');
+    }
 }

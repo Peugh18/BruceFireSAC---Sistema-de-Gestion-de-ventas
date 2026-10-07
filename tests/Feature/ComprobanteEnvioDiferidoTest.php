@@ -18,6 +18,7 @@ use App\Models\Sede;
 use App\Models\User;
 use App\Services\Billing\ComprobantePdfService;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Tests\Fixtures\SunatSoloEnvio;
@@ -37,6 +38,9 @@ beforeEach(function () {
 
         public bool $caido = false;
 
+        /** @var array{estado:'registrado'|'no_registrado'|'sin_respuesta',cdr_zip:string|null,codigo:int,mensaje:string,notas:list<string>} */
+        public array $cdr = ['estado' => 'sin_respuesta', 'cdr_zip' => null, 'codigo' => 0, 'mensaje' => 'Sin consultar.', 'notas' => []];
+
         public function send(string $xmlSigned, string $documentName): array
         {
             if ($this->caido) {
@@ -46,6 +50,11 @@ beforeEach(function () {
             $this->enviados++;
 
             return ['cdr_zip' => 'fake-zip-content', 'codigo' => 0, 'mensaje' => 'Aceptado', 'notas' => []];
+        }
+
+        public function consultCdr(string $ruc, string $tipoDoc, string $serie, int $numero): array
+        {
+            return $this->cdr;
         }
     };
 
@@ -338,6 +347,112 @@ test('un comprobante rechazado se corrige emitiendo uno nuevo con otro numero y 
         ->and($nuevo->fecha_emision->isToday())->toBeTrue()
         ->and($nuevo->sunat_estado)->toBe('por_enviar')
         ->and($rechazado->fresh()->sunat_estado)->toBe('rechazado');
+});
+
+test('un comprobante enviado que SUNAT si tenia no se reemplaza y queda con su cdr', function () {
+    $sale = ventaConfirmada(Client::factory()->dni()->create(), 'boleta');
+    $enviado = comprobanteDe($sale);
+    $enviado->update(['sunat_estado' => 'excepcion', 'intento_envio_at' => now()]);
+    $this->sunat->cdr = ['estado' => 'registrado', 'cdr_zip' => 'cdr-zip', 'codigo' => 0, 'mensaje' => 'Aceptado', 'notas' => []];
+
+    expect(fn () => editarVenta($sale, ['comprobante_tipo' => 'factura']))
+        ->toThrow(ValidationException::class, 'nota de crédito');
+
+    expect($sale->fresh()->comprobante_tipo)->toBe('boleta')
+        ->and($sale->electronicDocuments()->count())->toBe(1)
+        ->and($enviado->fresh()->sunat_estado)->toBe('aceptado')
+        ->and($enviado->fresh()->cdr_path)->not->toBeNull();
+});
+
+test('el comprobante enviado si se reemplaza cuando SUNAT confirma que no lo tiene', function () {
+    $sale = ventaConfirmada(Client::factory()->dni()->create(), 'boleta');
+    $incierto = comprobanteDe($sale);
+    $incierto->update(['sunat_estado' => 'excepcion', 'intento_envio_at' => now()]);
+    $this->sunat->cdr = ['estado' => 'no_registrado', 'cdr_zip' => null, 'codigo' => 0, 'mensaje' => 'No existe.', 'notas' => []];
+
+    $nuevo = comprobanteDe(editarVenta($sale));
+
+    expect($nuevo->id)->not->toBe($incierto->id)
+        ->and($nuevo->correlativo)->toBe($incierto->correlativo + 1)
+        ->and($nuevo->tipo)->toBe('boleta')
+        ->and($nuevo->sunat_estado)->toBe('por_enviar');
+});
+
+test('sin respuesta de SUNAT el comprobante enviado no se reemplaza', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $enviado = comprobanteDe($sale);
+    $enviado->update(['sunat_estado' => 'excepcion', 'intento_envio_at' => now()]);
+    $this->sunat->cdr = ['estado' => 'sin_respuesta', 'cdr_zip' => null, 'codigo' => 0, 'mensaje' => 'Corte de red.', 'notas' => []];
+
+    expect(fn () => editarVenta($sale))
+        ->toThrow(ValidationException::class, 'no se puede saber si lo tiene');
+
+    expect($sale->electronicDocuments()->count())->toBe(1)
+        ->and($enviado->fresh()->sunat_estado)->toBe('excepcion');
+});
+
+test('el programador reintenta el comprobante con excepcion reenviando el mismo xml firmado', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $documento = comprobanteDe($sale);
+    $documento->update(['sunat_estado' => 'excepcion', 'intento_envio_at' => now()]);
+    $original = Storage::disk('local')->get($documento->xml_path);
+    $this->sunat->cdr = ['estado' => 'no_registrado', 'cdr_zip' => null, 'codigo' => 0, 'mensaje' => 'No existe.', 'notas' => []];
+
+    $this->travel(7)->hours();
+    $this->artisan('billing:enviar-programados');
+
+    expect($this->sunat->enviados)->toBe(1)
+        ->and($documento->fresh()->sunat_estado)->toBe('aceptado')
+        ->and(Storage::disk('local')->get($documento->fresh()->xml_path))->toBe($original);
+});
+
+test('el programador tambien reintenta el comprobante pendiente de la emision inmediata', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $documento = comprobanteDe($sale);
+    $documento->update(['sunat_estado' => 'pendiente', 'intento_envio_at' => now(), 'enviar_desde' => null]);
+    $this->sunat->cdr = ['estado' => 'no_registrado', 'cdr_zip' => null, 'codigo' => 0, 'mensaje' => 'No existe.', 'notas' => []];
+
+    $this->artisan('billing:enviar-programados');
+
+    expect($this->sunat->enviados)->toBe(1)
+        ->and($documento->fresh()->sunat_estado)->toBe('aceptado');
+});
+
+test('el programador no reenvia un comprobante que SUNAT si tenia', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $documento = comprobanteDe($sale);
+    $documento->update(['sunat_estado' => 'excepcion', 'intento_envio_at' => now()]);
+    $this->sunat->cdr = ['estado' => 'registrado', 'cdr_zip' => 'cdr-zip', 'codigo' => 0, 'mensaje' => 'Aceptado', 'notas' => []];
+
+    $this->travel(7)->hours();
+    $this->artisan('billing:enviar-programados');
+
+    expect($this->sunat->enviados)->toBe(0)
+        ->and($documento->fresh()->sunat_estado)->toBe('aceptado')
+        ->and($documento->fresh()->cdr_path)->not->toBeNull();
+});
+
+test('el programador envia sin consultar al comprobante que nunca tuvo un intento', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $documento = comprobanteDe($sale);
+    $documento->update(['sunat_estado' => 'pendiente', 'intento_envio_at' => null, 'enviar_desde' => null]);
+
+    // El fake tira LogicException si se lo consulta: no debe consultarse.
+    $this->artisan('billing:enviar-programados');
+
+    expect($this->sunat->enviados)->toBe(1)
+        ->and($documento->fresh()->sunat_estado)->toBe('aceptado');
+});
+
+test('un envio en curso bloquea el segundo envio del mismo comprobante', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $documento = comprobanteDe($sale);
+    Cache::lock("sunat-envio-{$documento->id}", 300)->get();
+
+    expect(fn () => app(EmitElectronicDocument::class)->sendDocument($documento->fresh()))
+        ->toThrow(ValidationException::class, 'ya se está enviando');
+
+    expect($this->sunat->enviados)->toBe(0);
 });
 
 test('anular una venta por enviar devuelve la unidad al stock y el numero a la serie', function () {

@@ -10,7 +10,9 @@ use App\Services\Billing\DatosEmision;
 use App\Services\Billing\GreenterService;
 use App\Services\Billing\ResponseClassifier;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class EmitElectronicDocument
@@ -54,15 +56,41 @@ class EmitElectronicDocument
 
     public function sendDocument(ElectronicDocument $document): ElectronicDocument
     {
-        ['xml' => $xmlSigned, 'nombre' => $documentName] = $this->prepararDocumento($document);
+        // Un doble clic en «Enviar ya» puede coincidir con el programador: el
+        // bloqueo por documento garantiza un solo envío a la vez y que solo
+        // una respuesta escriba el estado.
+        $lock = Cache::lock("sunat-envio-{$document->id}", 300);
 
-        $document->forceFill(['intento_envio_at' => $document->intento_envio_at ?? now()])->saveQuietly();
+        if (! $lock->get()) {
+            throw ValidationException::withMessages([
+                'estado' => 'Este comprobante ya se está enviando a SUNAT. Espera su respuesta antes de volver a intentarlo.',
+            ]);
+        }
 
-        $response = app(SunatClientInterface::class)->send($xmlSigned, $documentName);
+        try {
+            ['xml' => $xmlSigned, 'nombre' => $documentName] = $this->prepararDocumento($document);
+
+            $document->forceFill(['intento_envio_at' => $document->intento_envio_at ?? now()])->saveQuietly();
+
+            return $this->registrarRespuesta($document, app(SunatClientInterface::class)->send($xmlSigned, $documentName), $documentName);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Deja registrado en el comprobante lo que SUNAT respondió, con CDR o sin
+     * él. Lo usan el envío y la consulta del CDR de un comprobante ya enviado.
+     *
+     * @param  array{cdr_zip:string|null,codigo:int,mensaje:string,notas?:list<string>}  $response
+     */
+    public function registrarRespuesta(ElectronicDocument $document, array $response, ?string $documentName = null): ElectronicDocument
+    {
+        $documentName ??= pathinfo((string) $document->xml_path, PATHINFO_FILENAME);
         $notas = $response['notas'] ?? [];
         $cdrPath = null;
 
-        if ($response['cdr_zip'] !== null) {
+        if ($response['cdr_zip'] !== null && $documentName !== '') {
             $cdrPath = "cdr/R-{$documentName}.zip";
             Storage::disk('local')->put($cdrPath, $response['cdr_zip']);
         }

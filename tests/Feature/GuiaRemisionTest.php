@@ -15,6 +15,7 @@ use App\Models\Sede;
 use App\Models\Team;
 use App\Models\TransportVehicle;
 use App\Models\User;
+use App\Services\Billing\GreApiClient;
 use App\Services\Billing\GuiaRemisionService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Storage;
@@ -133,6 +134,24 @@ test('una guía rechazada por SUNAT no queda lista para trasladar', function () 
     expect($guia->estado_sunat)->toBe(DispatchGuide::RECHAZADA)
         ->and($guia->estaListaParaTrasladar())->toBeFalse()
         ->and($guia->sunat_mensaje)->toBe('Dato inválido');
+});
+
+test('un error de comunicación al consultar no rechaza la guía: sigue enviada y se reintenta', function () {
+    $servicio = app(GuiaRemisionService::class);
+    $guia = $servicio->enviar(app(CreateDispatchGuide::class)->handle(datosGuia(), $this->user));
+
+    $this->sunat->respuesta = ['en_proceso' => false, 'aceptada' => false, 'cdr_zip' => null, 'codigo' => GreApiClient::SIN_RESPUESTA, 'mensaje' => 'SUNAT no respondió al consultar el ticket.'];
+    $guia = $servicio->consultar($guia);
+
+    expect($guia->estado_sunat)->toBe(DispatchGuide::ENVIADA)
+        ->and($guia->estaListaParaTrasladar())->toBeFalse();
+
+    // Cuando SUNAT por fin responde, se acepta sin haberla vuelto a enviar.
+    $this->sunat->respuesta = ['en_proceso' => false, 'aceptada' => true, 'cdr_zip' => 'cdr-simulado', 'codigo' => '0', 'mensaje' => 'ok'];
+    $guia = $servicio->consultar($guia);
+
+    expect($guia->estado_sunat)->toBe(DispatchGuide::ACEPTADA)
+        ->and($this->sunat->enviados)->toBe(1);
 });
 
 test('el transporte privado exige vehículo y conductor y el peso debe ser mayor que cero', function () {

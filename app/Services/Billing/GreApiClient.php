@@ -20,6 +20,12 @@ use RuntimeException;
  */
 class GreApiClient implements GreClientInterface
 {
+    /**
+     * Código con el que se marca una consulta sin respuesta útil: no dice nada
+     * sobre el destino de la guía y por lo tanto no la rechaza.
+     */
+    public const SIN_RESPUESTA = 'sin_respuesta';
+
     public function enviar(string $nombreArchivo, string $zip): string
     {
         $documento = (new CpeDocument)->setArchivo(
@@ -44,7 +50,9 @@ class GreApiClient implements GreClientInterface
         try {
             $estado = $this->cpeApi()->consultarEnvio($ticket);
         } catch (ApiException $e) {
-            return ['en_proceso' => false, 'aceptada' => false, 'cdr_zip' => null, 'codigo' => '99', 'mensaje' => 'SUNAT respondió con un error: '.$e->getMessage()];
+            // Un error de comunicación no es un rechazo: no se sabe qué pasó con
+            // la guía y se vuelve a consultar. Solo el código 99 la rechaza.
+            return ['en_proceso' => false, 'aceptada' => false, 'cdr_zip' => null, 'codigo' => self::SIN_RESPUESTA, 'mensaje' => 'SUNAT no respondió al consultar el ticket.'];
         }
 
         $codigo = (string) $estado->getCodRespuesta();
@@ -66,7 +74,8 @@ class GreApiClient implements GreClientInterface
             'en_proceso' => false,
             'aceptada' => false,
             'cdr_zip' => $cdrZip === false ? null : $cdrZip,
-            'codigo' => $codigo === '' ? '99' : $codigo,
+            // Sin código no hay rechazo que valga: queda sin respuesta.
+            'codigo' => $codigo === '' ? self::SIN_RESPUESTA : $codigo,
             'mensaje' => $error?->getDesError() ?: 'SUNAT no aceptó la guía.',
         ];
     }

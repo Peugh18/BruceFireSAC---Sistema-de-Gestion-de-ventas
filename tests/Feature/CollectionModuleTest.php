@@ -77,6 +77,38 @@ test('registerPayment marca el installment como parcial cuando el pago es menor 
     ]);
 });
 
+test('el cobro no supera el saldo que queda tras lo acreditado por notas de crédito', function () {
+    $user = vendedorUser();
+    CashRegister::factory()->create(['vendedor_id' => $user->id]);
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $user->id]);
+
+    // Cuota de 300 de la que una nota de crédito ya acreditó 100: quedan 200.
+    $installment = Installment::factory()->create([
+        'sale_id' => $sale->id,
+        'monto' => 300.00,
+        'monto_acreditado' => 100.00,
+        'estado' => 'pendiente',
+    ]);
+
+    expect($installment->saldo())->toBe(200.0);
+
+    $this->actingAs($user)
+        ->post(route('vendedor.cobranzas.pagar', [
+            'current_team' => $user->currentTeam,
+            'installment' => $installment,
+        ]), ['monto' => 250.00, 'forma_pago' => 'efectivo', 'numero_operacion' => 'OP-001'])
+        ->assertSessionHasErrors('monto');
+
+    $this->actingAs($user)
+        ->post(route('vendedor.cobranzas.pagar', [
+            'current_team' => $user->currentTeam,
+            'installment' => $installment,
+        ]), ['monto' => 200.00, 'forma_pago' => 'efectivo', 'numero_operacion' => 'OP-002'])
+        ->assertSessionHasNoErrors();
+
+    expect($installment->fresh()->estado)->toBe('pagado');
+});
+
 test('la tarea nocturna marca como vencidas las cuotas atrasadas y abrir cobranzas no cambia datos', function () {
     $user = vendedorUser();
     $sale = Sale::factory()->create(['estado' => 'confirmada', 'vendedor_id' => $user->id]);

@@ -7,6 +7,7 @@ use Greenter\Model\Response\BaseResult;
 use Greenter\Model\Response\BillResult;
 use Greenter\Model\Response\SummaryResult;
 use Greenter\Ws\Services\BillSender;
+use Greenter\Ws\Services\ConsultCdrService;
 use Greenter\Ws\Services\ExtService;
 use Greenter\Ws\Services\SoapClient;
 use Greenter\Ws\Services\SummarySender;
@@ -100,6 +101,59 @@ class GreenterSunatClient implements SunatClientInterface
         }
 
         return ['en_proceso' => false, ...($result->getCdrResponse() ? $this->conCdr($result) : $this->error($result))];
+    }
+
+    /**
+     * Estado real de un comprobante ya enviado, por si la respuesta de SUNAT
+     * se perdio. Se usa ConsultCdrService (getStatusCdr) con el mismo cliente
+     * TLS que el envio.
+     *
+     * @return array{estado:'registrado'|'no_registrado'|'sin_respuesta',cdr_zip:string|null,codigo:int,mensaje:string,notas:list<string>}
+     */
+    public function consultCdr(string $ruc, string $tipoDoc, string $serie, int $numero): array
+    {
+        $service = new ConsultCdrService;
+        $service->setClient($this->soapClient());
+
+        try {
+            $result = $service->getStatusCdr($ruc, $tipoDoc, $serie, $numero);
+        } catch (\Throwable $e) {
+            return $this->sinRespuesta('No hubo respuesta de SUNAT al consultar el comprobante.');
+        }
+
+        $cdr = $result->getCdrResponse();
+
+        if ($cdr !== null && $cdr->getCode() !== null) {
+            return [
+                'estado' => 'registrado',
+                'cdr_zip' => $result->getCdrZip(),
+                'codigo' => (int) $cdr->getCode(),
+                'mensaje' => $cdr->getDescription() ?? 'Sin descripcion SUNAT',
+                'notas' => array_values($cdr->getNotes() ?? []),
+            ];
+        }
+
+        // Un SoapFault no trae codigo: no prueba que el comprobante no exista,
+        // asi que no se puede dar por no registrado.
+        if ($result->isSuccess() || $result->getCode() !== null) {
+            return [
+                'estado' => 'no_registrado',
+                'cdr_zip' => null,
+                'codigo' => 0,
+                'mensaje' => 'SUNAT no tiene registrado este comprobante.',
+                'notas' => [],
+            ];
+        }
+
+        return $this->sinRespuesta($result->getError()?->getMessage() ?: 'No hubo respuesta de SUNAT al consultar el comprobante.');
+    }
+
+    /**
+     * @return array{estado:'sin_respuesta',cdr_zip:null,codigo:0,mensaje:string,notas:list<string>}
+     */
+    protected function sinRespuesta(string $mensaje): array
+    {
+        return ['estado' => 'sin_respuesta', 'cdr_zip' => null, 'codigo' => 0, 'mensaje' => $mensaje, 'notas' => []];
     }
 
     /**

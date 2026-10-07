@@ -44,7 +44,7 @@ class GuiaRemisionService
             ->setCodTraslado($guia->motivo)
             ->setDesTraslado($guia->motivo_descripcion ?? DispatchGuide::MOTIVOS[$guia->motivo] ?? null)
             ->setModTraslado($guia->modalidad)
-            ->setFecTraslado($guia->fecha_traslado)
+            ->setFecTraslado($guia->fecha_traslado->toDateTime())
             ->setPesoTotal((float) $guia->peso_bruto)
             ->setUndPesoTotal('KGM')
             ->setPartida($this->direccion($guia->partida_ubigeo, $guia->partida_direccion, $guia->partida_cod_establecimiento, $empresa->ruc))
@@ -75,7 +75,7 @@ class GuiaRemisionService
             ->setTipoDoc('09')
             ->setSerie($guia->serie)
             ->setCorrelativo((string) $guia->correlativo)
-            ->setFechaEmision($guia->fecha_emision)
+            ->setFechaEmision($guia->fecha_emision->toDateTime())
             ->setCompany($company)
             ->setDestinatario(
                 (new GreenterClient)
@@ -131,7 +131,9 @@ class GuiaRemisionService
 
     /**
      * Consulta el ticket. Con código 0 y CDR queda aceptada ("lista para
-     * trasladar"); con 98 sigue en proceso; cualquier otra cosa, rechazada.
+     * trasladar"); con 98 sigue en proceso; con 99, rechazada. Cualquier otra
+     * respuesta —incluido un error de comunicación— no dice nada sobre el
+     * destino de la guía: queda «enviada» y se vuelve a consultar.
      */
     public function consultar(DispatchGuide $guia): DispatchGuide
     {
@@ -149,9 +151,20 @@ class GuiaRemisionService
             $cdrPath = 'gre/cdr/R-'.config('billing.sunat.ruc').'-09-'.$guia->serie.'-'.$guia->correlativo.'.zip';
             Storage::disk('local')->put($cdrPath, $respuesta['cdr_zip']);
             $guia->update(['estado_sunat' => DispatchGuide::ACEPTADA, 'cdr_path' => $cdrPath, 'sunat_codigo' => $respuesta['codigo'], 'sunat_mensaje' => $respuesta['mensaje']]);
-        } else {
-            $guia->update(['estado_sunat' => DispatchGuide::RECHAZADA, 'sunat_codigo' => $respuesta['codigo'], 'sunat_mensaje' => $respuesta['mensaje']]);
+
+            return $guia->refresh();
         }
+
+        if ($respuesta['codigo'] === '99') {
+            $guia->update(['estado_sunat' => DispatchGuide::RECHAZADA, 'sunat_codigo' => $respuesta['codigo'], 'sunat_mensaje' => $respuesta['mensaje']]);
+
+            return $guia->refresh();
+        }
+
+        // Sin respuesta concluyente no hay rechazo: la guía sigue «enviada» y
+        // se consulta otra vez más adelante. El código de SUNAT no cambia
+        // porque no hubo ninguno.
+        $guia->update(['sunat_mensaje' => $respuesta['mensaje']]);
 
         return $guia->refresh();
     }

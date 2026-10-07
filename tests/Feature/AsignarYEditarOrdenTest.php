@@ -79,6 +79,22 @@ test('el tecnico toma la orden libre y queda en la bitacora', function () {
         ->and($this->orden->events()->where('payload->accion', 'orden_tomada')->exists())->toBeTrue();
 });
 
+test('un segundo tecnico no le quita la orden al que ya la tomo', function () {
+    $otro = User::factory()->create(['sede_id' => $this->almacen->id, 'name' => 'Otro técnico']);
+    $otro->assignRole('TecnicoPlanta');
+
+    $this->actingAs($this->tecnico)
+        ->post(rutaDeOrden($this->tecnico, 'tecnico-planta.ordenes.tomar', $this->orden))
+        ->assertRedirect();
+
+    $this->actingAs($otro)
+        ->post(rutaDeOrden($otro, 'tecnico-planta.ordenes.tomar', $this->orden))
+        ->assertNotFound();
+
+    expect($this->orden->fresh()->tecnico_id)->toBe($this->tecnico->id)
+        ->and($this->orden->events()->where('payload->accion', 'orden_tomada')->count())->toBe(1);
+});
+
 test('la vendedora edita fecha, prioridad, tecnico e indicaciones y el tecnico lo ve en la bitacora', function () {
     $this->actingAs($this->vendedor)
         ->put(rutaDeOrden($this->vendedor, 'vendedor.ordenes-servicio.update', $this->orden), [

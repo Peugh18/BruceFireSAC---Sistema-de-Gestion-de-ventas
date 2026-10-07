@@ -198,6 +198,32 @@ class ElectronicDocument extends Model
      */
     protected const SQL_FECHA_LIMITE = "DATE_ADD(DATE(COALESCE(fecha_emision, created_at)), INTERVAL IF(tipo = 'factura' OR (tipo <> 'boleta' AND serie LIKE 'F%'), 3, 4) DAY)";
 
+    /**
+     * Se envió a SUNAT pero no se sabe qué pasó con el comprobante: no hay CDR
+     * ni rechazo. Solo en ese caso hace falta consultar su estado antes de
+     * reemplazarlo.
+     */
+    public function resultadoDesconocidoDeSunat(): bool
+    {
+        return $this->intento_envio_at !== null
+            && ! in_array($this->sunat_estado, ['aceptado', 'observado', 'rechazado'], true);
+    }
+
+    /**
+     * Código SUNAT (catálogo 01) del tipo de comprobante, para consultar su
+     * estado y su CDR.
+     */
+    public function tipoDocSunat(): string
+    {
+        return match ($this->tipo) {
+            'factura' => '01',
+            'boleta' => '03',
+            'nota_credito' => '07',
+            'nota_debito' => '08',
+            default => '01',
+        };
+    }
+
     protected function esDeFactura(): bool
     {
         // Las notas siguen al comprobante que afectan: su serie empieza con F o B.
