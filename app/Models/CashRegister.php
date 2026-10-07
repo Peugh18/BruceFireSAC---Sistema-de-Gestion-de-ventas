@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\CarbonInterface;
 use Database\Factories\CashRegisterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -78,33 +77,23 @@ class CashRegister extends Model
     }
 
     /**
-     * Lo que entró al turno por forma de pago: los cobros de las ventas del
-     * vendedor menos lo que se devolvió a clientes, desde la apertura hasta
-     * el cierre (o hasta ahora si sigue abierto).
+     * Lo que entró al turno por forma de pago (V7): los cobros registrados en
+     * este turno, menos las devoluciones y los cobros anulados en este turno.
+     * Anular después un cobro de un turno cerrado no cambia ese turno: la
+     * reversión cae en el turno donde se anuló.
      *
      * @return array<string, float>
      */
-    public function movimientosPorFormaDePago(?CarbonInterface $hasta = null): array
+    public function movimientosPorFormaDePago(): array
     {
-        $rango = [$this->fecha_apertura, $hasta ?? $this->fecha_cierre ?? now()];
-        $deSusVentas = fn ($query) => $query->where('vendedor_id', $this->vendedor_id);
+        $porForma = fn ($query) => $query->selectRaw('forma_pago, SUM(monto) as total')->groupBy('forma_pago')->pluck('total', 'forma_pago');
 
-        $cobros = SalePayment::query()
-            ->whereHas('sale', $deSusVentas)
-            ->whereBetween('created_at', $rango)
-            ->selectRaw('forma_pago, SUM(monto) as total')
-            ->groupBy('forma_pago')
-            ->pluck('total', 'forma_pago');
+        $cobros = $porForma(SalePayment::withTrashed()->where('cash_register_id', $this->id));
+        $anulados = $porForma(SalePayment::onlyTrashed()->where('anulacion_cash_register_id', $this->id));
+        $devoluciones = $porForma(SaleRefund::query()->where('cash_register_id', $this->id));
 
-        $devoluciones = SaleRefund::query()
-            ->whereHas('sale', $deSusVentas)
-            ->whereBetween('created_at', $rango)
-            ->selectRaw('forma_pago, SUM(monto) as total')
-            ->groupBy('forma_pago')
-            ->pluck('total', 'forma_pago');
-
-        return $cobros->keys()->merge($devoluciones->keys())->unique()
-            ->mapWithKeys(fn ($forma) => [(string) $forma => round((float) $cobros->get($forma, 0) - (float) $devoluciones->get($forma, 0), 2)])
+        return $cobros->keys()->merge($anulados->keys())->merge($devoluciones->keys())->unique()
+            ->mapWithKeys(fn ($forma) => [(string) $forma => round((float) $cobros->get($forma, 0) - (float) $anulados->get($forma, 0) - (float) $devoluciones->get($forma, 0), 2)])
             ->all();
     }
 

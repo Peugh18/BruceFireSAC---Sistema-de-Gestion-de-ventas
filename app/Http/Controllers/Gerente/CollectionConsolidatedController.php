@@ -27,7 +27,8 @@ class CollectionConsolidatedController extends Controller
     {
         $ids = (clone $cuotas)->pluck('installments.id');
 
-        return round((float) (clone $cuotas)->sum('installments.monto') - (float) SalePayment::query()->whereIn('installment_id', $ids)->sum('monto'), 2);
+        // V4/S11: menos lo rebajado por notas de crédito aceptadas.
+        return round((float) (clone $cuotas)->sum('installments.monto') - (float) (clone $cuotas)->sum('installments.monto_acreditado') - (float) SalePayment::query()->whereIn('installment_id', $ids)->sum('monto'), 2);
     }
 
     /**
@@ -94,7 +95,7 @@ class CollectionConsolidatedController extends Controller
                 ->all();
 
             $totalPagado = array_sum(array_column($pagos, 'monto'));
-            $saldoPendiente = max(0, (float) $inst->monto - $totalPagado);
+            $saldoPendiente = $inst->saldo();
 
             return [
                 'id' => $inst->id,
@@ -103,6 +104,7 @@ class CollectionConsolidatedController extends Controller
                 'numero_cuota' => $inst->numero_cuota,
                 'monto' => (float) $inst->monto,
                 'monto_pagado' => round($totalPagado, 2),
+                'monto_acreditado' => (float) $inst->monto_acreditado,
                 'saldo_pendiente' => round($saldoPendiente, 2),
                 'fecha_vencimiento' => $fechaVenc->toDateString(),
                 'estado' => $inst->estado,

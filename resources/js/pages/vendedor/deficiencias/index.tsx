@@ -38,7 +38,10 @@ export type DeficiencyItem = {
         canal: string;
         fecha: string;
         observacion?: string | null;
+        importe?: number | null;
     } | null;
+    orden_cobrada?: boolean;
+    cotizaciones?: { id: number; numero: string; total: number }[];
 };
 
 export type PaginationLink = {
@@ -150,6 +153,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
         canal: 'whatsapp',
         fecha: fechaLocal(),
         observacion: '',
+        cotizacion_adicional_id: '' as number | '',
+        importe: '',
     });
 
     const openActionDialog = (item: DeficiencyItem, isApproving: boolean) => {
@@ -160,6 +165,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
             canal: 'whatsapp',
             fecha: fechaLocal(),
             observacion: '',
+            cotizacion_adicional_id: '',
+            importe: '',
         });
     };
 
@@ -324,6 +331,9 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                     ({item.authorization.canal})
                                                     el{' '}
                                                     {item.authorization.fecha}
+                                                    {item.authorization.importe !=
+                                                        null &&
+                                                        ` · S/ ${item.authorization.importe.toFixed(2)}`}
                                                 </span>
                                             )}
                                         </div>
@@ -551,6 +561,85 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 />
                             </div>
                         </div>
+
+                        {actionModal?.isApproving && (
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div>
+                                    <Label
+                                        htmlFor="cotizacion_adicional_id"
+                                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    >
+                                        Cotización del adicional
+                                    </Label>
+                                    <select
+                                        id="cotizacion_adicional_id"
+                                        value={
+                                            authForm.data
+                                                .cotizacion_adicional_id
+                                        }
+                                        onChange={(e) =>
+                                            authForm.setData(
+                                                'cotizacion_adicional_id',
+                                                e.target.value
+                                                    ? Number(e.target.value)
+                                                    : '',
+                                            )
+                                        }
+                                        className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                    >
+                                        <option value="">Sin cotización</option>
+                                        {(
+                                            actionModal.item.cotizaciones ?? []
+                                        ).map((cotizacion) => (
+                                            <option
+                                                key={cotizacion.id}
+                                                value={cotizacion.id}
+                                            >
+                                                {cotizacion.numero} · S/{' '}
+                                                {cotizacion.total.toFixed(2)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <Label
+                                        htmlFor="importe"
+                                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    >
+                                        Importe aceptado (S/)
+                                        {actionModal.item.orden_cobrada &&
+                                            ' *'}
+                                    </Label>
+                                    <Input
+                                        id="importe"
+                                        type="number"
+                                        min="0.01"
+                                        step="0.01"
+                                        value={authForm.data.importe}
+                                        onChange={(e) =>
+                                            authForm.setData(
+                                                'importe',
+                                                e.target.value,
+                                            )
+                                        }
+                                        placeholder="Total de la cotización"
+                                        className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                                    />
+                                    {authForm.errors.importe && (
+                                        <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+                                            {authForm.errors.importe}
+                                        </p>
+                                    )}
+                                </div>
+                                {actionModal.item.orden_cobrada && (
+                                    <p className="text-muted-foreground text-[11px] sm:col-span-2">
+                                        La orden ya se cobró: el adicional
+                                        quedará como saldo por cobrar en
+                                        Cobranzas.
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         <div>
                             <Label className="text-foreground/80 text-[11px] font-bold uppercase">

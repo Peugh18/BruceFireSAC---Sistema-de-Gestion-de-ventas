@@ -196,3 +196,21 @@
     - En local, el Gerente debe activar el 2FA o poner `SEGURIDAD_EXIGIR_2FA_GERENTE=false` en su `.env`.
     - La capacitación no pide datos nuevos: queda pendiente hasta que el vendedor la marque y la emita.
 
+## [2026-10-07] — Memoria de entregables Semana 8 Sprint 7
+
+- Usuario solicita primero planear cuatro entregables y conservar contexto; periodo confirmado 02/10–09/10, entrega 09/10. Repositorio actual confirmado en Documents/BRUCE FIRE/BruceFireSacv2.
+- Revisados Word/Excel de plantillas, Semana 8, matriz, Informe Final, S5/S6, Scrum anterior, cronograma, Curva S y notas vigentes de Obsidian.
+- Hallazgos: unidades incompletas, instrumentos sin fichas utilizables ni VI, SUS divergente, denominadores diferentes, 100% en tareas en curso y costos reales sin sustento.
+- Fechas, costos, nombres y fórmulas de las celdas de ambos cronogramas coinciden; hashes diferentes. No hubo cambios a entregables ni código. No se ejecutaron pruebas del sistema.
+- Plan detallado en Obsidian: 27 - Plan de entregables Semana 8 Sprint 7.md. PLAN.md añade tareas pendientes y el índice de Obsidian enlaza la nota.
+- Planes de pruebas quedan como referencia pendiente: el usuario pidió guardar memoria, no confirmó ampliar el alcance. Falta sustentar avances reales al cierre y preparar los cuatro documentos.
+
+## [2026-10-07] — Fase C: ventas, caja, cobranzas y alertas
+
+- V1 cantidad 1 por serie (StoreSaleRequest y ProcessSaleItem). V3 la cotización pasa con descuento, condición, observaciones, vehículo y referencia. V5 la venta ya no renueva fechas: lo hace el cierre de la orden (certificado o entrega).
+- V4/S11 `AplicarNotaAlSaldo`: ND aceptada = cuota nueva ligada a la nota; NC parcial = `installments.monto_acreditado` (cuotas originales intactas), idempotente con `saldo_aplicado_at` y auditoría. Cobranzas vendedor/Gerente, Inicio y ficha usan `Installment::saldo()`.
+- V6 la autorización guarda importe/cotización; con la orden cobrada crea una cuota ligada (`deficiency_authorization_id`). El cobro de la orden ya no suma dos veces la misma cotización.
+- V7 `cash_register_id` en cobros y devoluciones (migración liga los antiguos por hora); la anulación cae en el turno abierto (`anulacion_cash_register_id`). Apertura con bloqueo del usuario, ConfirmSale relee con lock, numeración VTA/COT con `NumeracionInterna` (document_series).
+- X6 solo vence lo que permite Quote::TRANSITIONS. X7 `registro_iniciado_at`/`confirmada_at`, `emitida_at`, `origen_alerta_equipment_id`; tres tarjetas en el dashboard del Gerente. X8/X9 alertas por sede, tabla `alert_contacts` ("Marcar contactado", equipo validado visible y del cliente), servicios con agente y capacidad.
+- Pruebas: `tests/Feature/FaseCVentasCajaCobranzasTest.php` (nuevo) y ajustes en SaleModuleTest, CashRegisterModuleTest y MejorasProcesosTest. **No ejecutadas: MySQL apagado.** Pint, PHPStan (0) y tsc en verde.
+- Dudas: el adicional cobrado es cuota sin comprobante (¿ND o venta aparte?); los avisos del sistema anterior no tienen sede y los ve todo vendedor; una NC mayor al saldo solo queda en auditoría como saldo a favor.

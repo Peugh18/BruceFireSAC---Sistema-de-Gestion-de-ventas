@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gerente;
 
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreServiceRequest;
 use App\Http\Requests\Gerente\UpdateServiceRequest;
@@ -42,6 +43,8 @@ class ServiceController extends Controller
                 'nombre' => $s->nombre,
                 'descripcion' => $s->descripcion,
                 'unidad_medida' => $s->unidad_medida,
+                'agente' => $s->agente,
+                'capacidad' => $s->capacidad,
                 'precio_venta' => (float) $s->precio_venta,
                 'aplica_igv' => (bool) $s->aplica_igv,
                 'tipo_afectacion_igv' => $s->tipo_afectacion_igv,
@@ -57,6 +60,7 @@ class ServiceController extends Controller
         return Inertia::render('gerente/servicios/index', [
             'servicios' => $servicios,
             'tiposCertificado' => CertificateType::query()->orderBy('nombre')->get(['id', 'nombre']),
+            'agentes' => EquipmentType::opciones(),
             'filters' => [
                 'buscar' => $buscar,
                 'estado' => $estado,

@@ -77,7 +77,7 @@ class EditarVentaEmitida
             $pagosAntes = $sale->payments()->whereNull('installment_id')->get();
             $turno = CashRegister::abiertaDe((int) $sale->vendedor_id);
             $rehacerCobro = $pagosAntes->isEmpty() || ($turno !== null && $pagosAntes->every(
-                fn (SalePayment $pago) => $pago->created_at !== null && $pago->created_at->gte($turno->fecha_apertura),
+                fn (SalePayment $pago) => $pago->cash_register_id === $turno->id,
             ));
             $fechaCobro = $pagosAntes->sortBy('id')->first()?->fecha;
 

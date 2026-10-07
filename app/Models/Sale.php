@@ -16,6 +16,8 @@ use Illuminate\Support\Collection as SupportCollection;
 /**
  * @property int $id
  * @property string $numero_interno
+ * @property Carbon|null $registro_iniciado_at
+ * @property Carbon|null $confirmada_at
  * @property string|null $numero_nota_venta
  * @property int|null $quote_id
  * @property int $client_id
@@ -48,6 +50,7 @@ use Illuminate\Support\Collection as SupportCollection;
 #[Fillable([
     'numero_interno', 'numero_nota_venta', 'quote_id', 'client_id', 'sede_id', 'vehicle_id', 'vendedor_id', 'fecha',
     'destino', 'referencia', 'condicion_pago', 'medio_pago', 'numero_operacion', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones',
+    'registro_iniciado_at', 'confirmada_at',
 ])]
 class Sale extends Model
 {
@@ -101,7 +104,7 @@ class Sale extends Model
             return null;
         }
 
-        $ultima = $this->installments->max('fecha_vencimiento');
+        $ultima = $this->installments->filter(fn (Installment $cuota) => $cuota->esDelComprobante())->max('fecha_vencimiento');
 
         return $ultima ? (int) $this->fecha->diffInDays($ultima) : 30;
     }
@@ -152,6 +155,8 @@ class Sale extends Model
     {
         return [
             'fecha' => 'date',
+            'registro_iniciado_at' => 'datetime',
+            'confirmada_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'igv' => 'decimal:2',
             'total' => 'decimal:2',

@@ -20,6 +20,7 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Ml\RetentionModel;
 use App\Services\SaludDelSistema;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -253,6 +254,7 @@ class DashboardController extends Controller
         }
 
         return Inertia::render('gerente/dashboard', [
+            'kpisProyecto' => self::kpisDelProyecto($inicioMes, $finMes),
             'metrics' => [
                 'ventasDia' => round($ventasDia, 2),
                 'ventasMes' => round($ventasMes, 2),
@@ -284,5 +286,43 @@ class DashboardController extends Controller
             'aiRetention' => $aiRetention,
             'sistema' => $saludDelSistema->resumen(),
         ]);
+    }
+
+    /**
+     * X7: los tres indicadores del proyecto, del mes.
+     * - Registro de venta: de abrir el formulario a confirmarla (minutos).
+     * - Cotización: de crearla a emitirla o enviarla (minutos).
+     * - Clientes recuperados: cotizaciones nacidas de "Ofrecer recarga" que
+     *   terminaron en una venta confirmada este mes.
+     *
+     * @return array{venta_minutos: float|null, ventas_medidas: int, cotizacion_minutos: float|null, cotizaciones_medidas: int, clientes_recuperados: int}
+     */
+    public static function kpisDelProyecto(CarbonInterface $inicio, CarbonInterface $fin): array
+    {
+        $ventas = Sale::query()
+            ->where('estado', 'confirmada')
+            ->whereNotNull('registro_iniciado_at')
+            ->whereBetween('confirmada_at', [$inicio, $fin])
+            ->get(['registro_iniciado_at', 'confirmada_at'])
+            ->map(fn (Sale $sale) => $sale->registro_iniciado_at->diffInSeconds($sale->confirmada_at) / 60);
+
+        $cotizaciones = Quote::query()
+            ->whereBetween('emitida_at', [$inicio, $fin])
+            ->get(['created_at', 'emitida_at'])
+            ->map(fn (Quote $quote) => $quote->created_at->diffInSeconds($quote->emitida_at) / 60);
+
+        $recuperados = Quote::query()
+            ->whereNotNull('origen_alerta_equipment_id')
+            ->whereHas('sale', fn ($query) => $query->where('estado', 'confirmada')->whereBetween('confirmada_at', [$inicio, $fin]))
+            ->distinct()
+            ->count('client_id');
+
+        return [
+            'venta_minutos' => $ventas->isEmpty() ? null : round((float) $ventas->avg(), 1),
+            'ventas_medidas' => $ventas->count(),
+            'cotizacion_minutos' => $cotizaciones->isEmpty() ? null : round((float) $cotizaciones->avg(), 1),
+            'cotizaciones_medidas' => $cotizaciones->count(),
+            'clientes_recuperados' => $recuperados,
+        ];
     }
 }

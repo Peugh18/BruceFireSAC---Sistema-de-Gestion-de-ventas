@@ -15,7 +15,11 @@ class TransitionQuoteState
             ]);
         }
 
-        $quote->update(['estado' => $estado]);
+        $quote->update([
+            'estado' => $estado,
+            // X7: el tiempo de cotización termina la primera vez que se emite o envía.
+            'emitida_at' => $quote->emitida_at ?? (in_array($estado, ['emitida', 'enviada'], true) ? now() : null),
+        ]);
 
         return $quote;
     }

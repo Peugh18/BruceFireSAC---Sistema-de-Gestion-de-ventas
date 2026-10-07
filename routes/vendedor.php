@@ -112,6 +112,7 @@ Route::prefix('vendedor')
 
         Route::get('alertas', [AlertController::class, 'index'])->name('alertas.index');
         Route::post('alertas/ofrecer-recarga', [AlertController::class, 'offerRecharge'])->name('alertas.ofrecer-recarga');
+        Route::post('alertas/contactado', [AlertController::class, 'contactado'])->name('alertas.contactado');
 
         Route::get('certificados', [CertificateController::class, 'index'])->name('certificados.index');
         Route::get('certificados/{certificate}', [CertificateController::class, 'show'])->name('certificados.show');

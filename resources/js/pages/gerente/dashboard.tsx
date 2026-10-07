@@ -48,6 +48,15 @@ type DashboardMetrics = {
     plazoSunat: { por_vencer: number; vencidos: number };
 };
 
+/** X7: indicadores del proyecto (promedios del mes). */
+type KpisProyecto = {
+    venta_minutos: number | null;
+    ventas_medidas: number;
+    cotizacion_minutos: number | null;
+    cotizaciones_medidas: number;
+    clientes_recuperados: number;
+};
+
 type DashboardCharts = {
     ventasMensuales: Array<{ mes: string; monto: number }>;
     ventasPorItem: Array<{ nombre: string; monto: number }>;
@@ -111,6 +120,7 @@ type GerenteDashboardProps = {
     charts: DashboardCharts;
     aiRetention?: AiRetentionData;
     sistema: SaludDelSistemaData;
+    kpisProyecto?: KpisProyecto;
 };
 
 function formatCurrency(amount: number): string {
@@ -130,6 +140,7 @@ export default function GerenteDashboard({
     charts,
     aiRetention,
     sistema,
+    kpisProyecto,
 }: GerenteDashboardProps) {
     const { currentTeam } = usePage<{ currentTeam: { slug: string } }>().props;
     const maxVentaMensual = Math.max(
@@ -321,6 +332,69 @@ export default function GerenteDashboard({
                             Cuotas con mora superada
                         </p>
                     </div>
+
+                    {/* X7: indicadores del proyecto */}
+                    {kpisProyecto && (
+                        <>
+                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium tracking-wider uppercase">
+                                        Tiempo de registro de venta
+                                    </span>
+                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
+                                        <Clock className="size-4 text-indigo-600" />
+                                    </div>
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {kpisProyecto.venta_minutos === null
+                                        ? '—'
+                                        : `${kpisProyecto.venta_minutos} min`}
+                                </div>
+                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                    Promedio del mes ·{' '}
+                                    {kpisProyecto.ventas_medidas} ventas
+                                </p>
+                            </div>
+                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium tracking-wider uppercase">
+                                        Tiempo de cotización
+                                    </span>
+                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
+                                        <Clock className="size-4 text-purple-600" />
+                                    </div>
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {kpisProyecto.cotizacion_minutos === null
+                                        ? '—'
+                                        : `${kpisProyecto.cotizacion_minutos} min`}
+                                </div>
+                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                    De crearla a emitirla ·{' '}
+                                    {kpisProyecto.cotizaciones_medidas}{' '}
+                                    cotizaciones
+                                </p>
+                            </div>
+                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium tracking-wider uppercase">
+                                        Clientes recuperados
+                                    </span>
+                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
+                                        <AlertTriangle className="size-4 text-amber-500" />
+                                    </div>
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {formatNumber(
+                                        kpisProyecto.clientes_recuperados,
+                                    )}
+                                </div>
+                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                    Por alertas, con venta este mes
+                                </p>
+                            </div>
+                        </>
+                    )}
 
                     {/* 7. Cotizaciones Pendientes */}
                     <div className="border-border bg-card rounded-xl border p-5 shadow-xs">

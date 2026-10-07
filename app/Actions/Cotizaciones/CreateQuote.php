@@ -4,6 +4,7 @@ namespace App\Actions\Cotizaciones;
 
 use App\Models\Quote;
 use App\Services\Billing\PrecioConIgv;
+use App\Services\NumeracionInterna;
 use Illuminate\Support\Facades\DB;
 
 class CreateQuote
@@ -26,7 +27,7 @@ class CreateQuote
 
             $quote = Quote::create([
                 ...$data,
-                'numero' => 'COT-'.str_pad((string) (Quote::max('id') + 1), 4, '0', STR_PAD_LEFT),
+                'numero' => app(NumeracionInterna::class)->siguiente('COT', 'quotes', 'numero'),
                 'vendedor_id' => $vendedorId,
                 'subtotal' => $subtotal,
                 'igv' => $igv,

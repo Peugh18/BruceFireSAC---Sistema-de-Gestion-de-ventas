@@ -40,7 +40,7 @@ test('por vencer crea una cotizacion de recarga con el extintor ligado', functio
     $seller = vendedorUser();
     $client = Client::factory()->create();
     $equipment = Equipment::factory()->create(['client_id' => $client->id]);
-    Service::factory()->create(['nombre' => 'Recarga de extintor', 'activo' => true, 'precio_venta' => 50]);
+    Service::factory()->create(['nombre' => 'Recarga de extintor', 'agente' => 'pqs', 'capacidad' => '6 kg', 'activo' => true, 'precio_venta' => 50]);
 
     $this->actingAs($seller)->post(route('vendedor.alertas.ofrecer-recarga', ['current_team' => $seller->currentTeam]), ['client_id' => $client->id, 'equipment_ids' => [$equipment->id]])->assertRedirect();
 

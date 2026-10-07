@@ -77,6 +77,8 @@ class EmitElectronicDocument
 
         // Una nota de crédito de anulación aceptada anula la venta.
         app(IssueCreditNote::class)->aplicarSiFueAceptada($document->refresh());
+        // V4/S11: la nota aceptada ajusta el saldo por cobrar.
+        app(AplicarNotaAlSaldo::class)->handle($document->refresh());
 
         return $document->refresh();
     }
