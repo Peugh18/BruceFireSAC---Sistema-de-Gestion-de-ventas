@@ -138,20 +138,20 @@ Diseño en `SUNAT.md` §5.
 
 ## Entregables académicos Semana 8 Sprint 7
 
-**Estado al 07/10/2026:** revisión inicial y plan propuesto guardados; Word y Excel sin modificar. Periodo 02/10–09/10, entrega el 09/10. El usuario confirmó este repositorio y pidió conservar toda la memoria.
+**Estado al 07/10/2026:** métricas versión 1.2 corregidas a cinco VI y cinco VD; Informe Final y matriz concordantes. Los instrumentos requieren actualización y son el siguiente paso; informe de estado, Scrum y demostración pendientes. Periodo 02/10–09/10, entrega el 09/10. El usuario confirmó este repositorio y pidió conservar toda la memoria.
 
 Detalle y fuentes en Obsidian: `D:/TiomiguelonGgs/Documents/Recuerda/Cerebro/Documentación de Bruce Fire SAC/27 - Plan de entregables Semana 8 Sprint 7.md`.
 
 - [x] Revisar plantillas, matriz, informe final, Scrum anterior, Obsidian y cronograma.
 - [x] Guardar el plan y los hallazgos de la conversación.
-- [ ] Métricas: mínimo cinco VI alineadas a ISO y cinco VD de proceso; ocho filas completas, unidad, rangos e instrumento existente. Mantener SUS y corregir denominadores.
-- [ ] Instrumentos: formularios aplicables para ambas variables, instrucciones, muestra, C1/C2 y evidencia.
+- [x] Métricas: exactamente cinco VI (PRI, PCF, PEU, SUS y TRP) y cinco VD; ocho campos completos, unidades, fórmulas y criterios concordantes.
+- [ ] Instrumentos: actualizar los anteriores formatos A1–A13 al diseño de ocho instrumentos principales I01–I08; añadir fichas técnicas, registros y relación con las diez métricas. El inventario de 122 REQ existente sirve de base.
 - [ ] Scrum Sprint 7: periodo completo 02/10–09/10, códigos EDT y estados sustentados.
 - [ ] Informe Sprint 7: concordar con Scrum, recalcular anexos, porcentajes y semáforos. No copiar AC ni CPI sin sustento.
 - [ ] Verificar Word/Excel y coherencia cruzada antes de entregar.
 - [ ] Después revisar el sistema y las pruebas pendientes; no dar por validado lo implementado.
 
-**Siguiente paso documental:** retomar el plan con el usuario y preparar los cuatro archivos de Semana 8 conservando las plantillas. Planes de pruebas Funcionales y Unitarias quedan como referencia pendiente de alcance; el pedido de guardar memoria no confirma incorporarlos. No confundir fechas planificadas con terminación real. Este bloque no cambia las prioridades ni el estado de las fases técnicas anteriores.
+**Siguiente paso documental:** preparar los instrumentos de medición conforme a las diez métricas corregidas; después continuar informe de estado, Scrum y demostración. Planes de pruebas Funcionales y Unitarias quedan como referencia pendiente de alcance; el pedido de guardar memoria no confirma incorporarlos. No confundir fechas planificadas con terminación real. Este bloque no cambia las prioridades ni el estado de las fases técnicas anteriores.
 
 
 ### Investigación oficial de Semana 8 completada 07/10/2026
@@ -160,9 +160,58 @@ Detalle y fuentes en Obsidian: `D:/TiomiguelonGgs/Documents/Recuerda/Cerebro/Doc
 - [x] Conectar Obsidian en lectura y confirmar Semana 8 = Sprint 7, 02/10–09/10.
 - [x] Revisar 3.7, 3.9 y 3.10: tres indicadores VI y cinco VD; propuesta de cinco métricas con dos complementarias y SUS conservado.
 - [x] Verificar PV S7 = S/ 890.59 en Curva S actual, respetando la distribución especial de actas; no hay EV/AC de S7.
-- [ ] Resolver la trazabilidad de métricas complementarias y la terminología ISO 2023; unidad explícita en Tipo de medida.
-- [ ] Completar A1 con los 122 REQ del alcance vigente y enlazar todos los instrumentos declarados con sus anexos.
+- [x] Resolver la trazabilidad de métricas complementarias y la terminología ISO 2023; unidad explícita en Tipo de medida.
+- [x] Completar A1 con los 122 REQ del alcance vigente y enlazar todos los instrumentos declarados con sus anexos.
 - [ ] Conciliar las cifras históricas de Obsidian con los Excel actuales y sustentar EV, AC y cierres reales.
 - [ ] Preparar la demostración del avance del software de la foto, concordante con el informe y Scrum; pruebas funcionales siguen sin ejecución según la bitácora.
 
-Siguiente paso: presentar la investigación y luego redactar los cuatro archivos y preparar la demo dentro del alcance pedido. No dar por confirmados resultados del 8 y 9 antes de disponer de evidencia. Investigación detallada: C:/Users/migue/.codex/visualizations/2026/10/07/01a11448-9708-7930-933f-5d7d8b01b516/investigacion-semana8/Investigacion previa Semana 8.md
+Siguiente paso: aplicar los instrumentos tras revisión del equipo y expertos; continuar informe, Scrum y demo con datos sustentados. No dar por confirmados resultados del 8 y 9 antes de disponer de evidencia. Investigación detallada: C:/Users/migue/.codex/visualizations/2026/10/07/01a11448-9708-7930-933f-5d7d8b01b516/investigacion-semana8/Investigacion previa Semana 8.md
+
+
+### Métricas e instrumentos terminados 07/10/2026
+
+- [x] Entregar los dos DOCX en Entregables/Semana 8: métricas 12 páginas e instrumentos 21 páginas.
+- [x] Verificar las 33 páginas, fórmulas, 122 REQ y conservación de todas las partes de la plantilla salvo el cuerpo XML.
+- [ ] Aplicar juicio de tres expertos y piloto; resultados, firmas y aprobación permanecen pendientes.
+- [ ] Confirmar antes de aplicar los protocolos propuestos: 30 intentos medidos por escenario y ventana de seguimiento de 14 días.
+- SUS se conserva como sexta ficha VI complementaria; el mínimo cinco se cumple con medidas del producto. No modificar la matriz 3.7 sin revisión académica.
+- Informe de estado, Scrum y demostración quedan pendientes; no se ejecutaron pruebas del software en esta tarea.
+
+
+### Aclaración instrumentos de tesis y cinco VI — 07/10/2026
+
+- [x] Investigar presentación de instrumentos en tesis y guías institucionales; contrastar PMI e ISO sobre medición durante el desarrollo.
+- [x] Ajustar a EXACTAMENTE cinco VI y cinco VD: completitud, corrección, prevención de errores, SUS y promedio de respuesta; PTR retirado como ficha independiente.
+- [x] Actualizar Informe Final 3.7, 3.8, 3.9, 3.10 y 5.14, notas de resultados pendientes y matriz externa, conforme a las diez métricas y ocho instrumentos declarados.
+- [ ] Añadir fichas técnicas uniformes y matriz de relación; distinguir instrumentos de medición de diagnóstico y hojas de validación.
+- [x] Precisar el diseño de aplicación progresiva durante desarrollo, versión/alcance y C1/C2; la aplicación real, los resultados y la aprobación siguen pendientes.
+- Las versiones entregadas anteriormente todavía tienen seis fichas VI contando SUS. Esta instrucción reemplaza la decisión anterior de mantener SUS como sexta, sin borrar su historia.
+- La corrección autorizada posteriormente ya se ejecutó en tres DOCX; los instrumentos se prepararán en la siguiente fase, por pedido del usuario.
+- Investigación: C:\Users\migue\.codex\visualizations\2026\10\07\01a11448-9708-7930-933f-5d7d8b01b516\semana8-metricas-instrumentos-v2\Investigacion instrumentos tesis y etapa de medicion.md
+
+
+### Corrección concordante de cinco VI y cinco VD — 07/10/2026
+
+- [x] Instalar métricas v1.2 (11 páginas), Informe Final (96 páginas) y matriz (2 páginas), con respaldo y SHA comprobados.
+- [x] VI01 PRI; VI02 PCF; VI03 PEU; VI04 SUS; VI05 TRP. SUS forma parte de los cinco. PTR deja de ser ficha; el umbral RNF-05 se comprueba también por lectura individual.
+- [x] VD01 tiempo de venta; VD02 tiempo de cotización; VD03 porcentaje de monto pendiente; VD04 porcentaje de productos con diferencias; VD05 porcentaje de clientes recuperados.
+- [x] Tres dimensiones VI conservadas, 122 REQ y 11 RNF; muestra planificada 216/88/216/343/295, total distinto 942 sujeto a confirmar marcos de los periodos reales.
+- [ ] Elaborar ocho instrumentos I01–I08: requisitos, pruebas funcionales válidas e inválidas, SUS, respuesta del software, cronometraje comercial (ventas/cotizaciones separados), cobranzas, inventario y clientes.
+- [ ] Fijar antes de aplicar un plazo común de seguimiento de clientes viable para C1/C2. La propuesta previa de catorce días queda retirada hasta conciliación; 30 intentos/5 preparatorios sigue como protocolo propuesto.
+- [ ] Aplicar revisión de expertos y piloto, después medir. No hay resultados ni aprobación acreditados.
+- Las fechas y el cierre siguen el cronograma. Semana 13 fue una consulta del usuario, no una instrucción de cambiar fechas.
+- Esta versión reemplaza las decisiones históricas de seis VI y los formatos anteriores aún sin actualizar. Siguiente paso: instrumentos; luego informe de estado, Scrum y demo.
+
+
+### Plan de elaboración de instrumentos por bloques — 07/10/2026
+
+- [x] Guardar plan detallado en `docs/ai/PLAN_INSTRUMENTOS_SEMANA8.md`, por pedido de planificar primero y conservar el contexto.
+- [ ] Bloque 1: respaldos, matriz diez métricas→ocho instrumentos y ocho fichas técnicas.
+- [ ] Bloque 2: I01–I04 (122 REQ, pruebas válidas/inválidas, SUS y tiempos del software).
+- [ ] Bloque 3: I05–I08 (ventas/cotizaciones separadas, cobranzas, inventario y clientes).
+- [ ] Bloque 4: apoyos de diagnóstico/validación, fuentes y concordancia de nombres/códigos.
+- [ ] Bloque 5: cálculos, revisión visual de todas las páginas, instalación con respaldo y memoria.
+- Cada instrumento tendrá ficha técnica, procedimiento y formato llenable; los registros reales se incorporarán solo con evidencia. No hay nueva aplicación ni resultados en esta planificación.
+- El borrador A1–A13 sigue sin actualizar; corregir VI06, PTR y catorce días durante elaboración. Mantener I02 con secciones y I05 con dos registros.
+- Nombre VD04 aprobado: «Porcentaje de productos con diferencias de stock en el inventario (PDS)». Pendiente aplicar esa redacción mínima en los documentos relacionados, sin cambiar fórmula/objetivo.
+- Siguiente paso: ejecutar Bloque 1 y guardar avance. El usuario solicitó primero el plan; no se elaboró ni instaló otro Word en este turno.

@@ -1,14 +1,14 @@
-import { router, usePage } from "@inertiajs/react";
-import { useState } from "react";
+import { router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
-import categoriasRoutes from "@/routes/gerente/categorias";
+import categoriasRoutes from '@/routes/gerente/categorias';
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 
 export type CategoriaItem = {
     id: number;
@@ -35,7 +35,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
         errors: Record<string, string>;
     }>().props;
     const [abierto, setAbierto] = useState(false);
-    const [nombreNueva, setNombreNueva] = useState("");
+    const [nombreNueva, setNombreNueva] = useState('');
     const [alertasNueva, setAlertasNueva] = useState(false);
     const [renombrando, setRenombrando] = useState<Record<number, string>>({});
 
@@ -52,7 +52,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
             {
                 ...opciones,
                 onSuccess: () => {
-                    setNombreNueva("");
+                    setNombreNueva('');
                     setAlertasNueva(false);
                 },
             },
@@ -64,7 +64,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
         cambios: Partial<
             Pick<
                 CategoriaItem,
-                "nombre" | "genera_alertas_vencimiento" | "activo"
+                'nombre' | 'genera_alertas_vencimiento' | 'activo'
             >
         >,
     ) => {
@@ -119,7 +119,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                     .map((c) => (
                         <option key={c.clave} value={c.clave}>
                             {c.nombre}
-                            {c.activo ? "" : " (desactivada)"}
+                            {c.activo ? '' : ' (desactivada)'}
                         </option>
                     ))}
             </select>
@@ -192,7 +192,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                                     </label>
                                     <span>
                                         {c.usos === 0
-                                            ? "Sin uso"
+                                            ? 'Sin uso'
                                             : `${c.usos} en uso`}
                                     </span>
                                     <button
@@ -202,7 +202,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                                         }
                                         className="font-semibold underline"
                                     >
-                                        {c.activo ? "Desactivar" : "Activar"}
+                                        {c.activo ? 'Desactivar' : 'Activar'}
                                     </button>
                                     {c.usos === 0 && (
                                         <button
@@ -234,7 +234,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                             />
                             <button
                                 type="button"
-                                disabled={nombreNueva.trim() === ""}
+                                disabled={nombreNueva.trim() === ''}
                                 onClick={crear}
                                 className="bg-foreground text-background rounded-lg px-3 py-1.5 font-semibold disabled:opacity-40"
                             >

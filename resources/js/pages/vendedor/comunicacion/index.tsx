@@ -1,14 +1,10 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    Check,
-    ExternalLink,
-    Wrench,
-    X,
-} from 'lucide-react';
+import { AlertTriangle, Check, ExternalLink, Wrench, X } from 'lucide-react';
 
 import { TarjetaCargando } from '@/components/cargando';
-import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
 import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Button } from '@/components/ui/button';

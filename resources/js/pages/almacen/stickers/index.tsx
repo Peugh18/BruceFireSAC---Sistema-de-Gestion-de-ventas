@@ -1,12 +1,12 @@
-import { Head, Link, router, usePage } from "@inertiajs/react";
-import { Barcode, Building2, FileText, Printer } from "lucide-react";
-import { useState } from "react";
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Barcode, Building2, FileText, Printer } from 'lucide-react';
+import { useState } from 'react';
 
-import { Card } from "@/components/ui/card";
-import AlmacenLayout from "@/layouts/almacen-layout";
-import recepciones from "@/routes/almacen/recepciones";
-import stickersRutas from "@/routes/almacen/stickers";
-import type { Team } from "@/types";
+import { Card } from '@/components/ui/card';
+import AlmacenLayout from '@/layouts/almacen-layout';
+import recepciones from '@/routes/almacen/recepciones';
+import stickersRutas from '@/routes/almacen/stickers';
+import type { Team } from '@/types';
 
 export type StickerReceptionRow = {
     id: number;
@@ -33,7 +33,7 @@ export type Props = {
 };
 
 function formatDate(dateStr: string): string {
-    const [year, month, day] = dateStr.split("-");
+    const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
 }
 
@@ -41,11 +41,11 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
-        (typeof window !== "undefined"
-            ? window.location.pathname.split("/")[1]
-            : "");
+        (typeof window !== 'undefined'
+            ? window.location.pathname.split('/')[1]
+            : '');
 
-    const [inicio, setInicio] = useState("1");
+    const [inicio, setInicio] = useState('1');
 
     return (
         <AlmacenLayout title="Stickers de Barras">
@@ -172,7 +172,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                     <Building2 className="text-muted-foreground size-3.5" />
                                                     <span>
                                                         {rec.sede_almacen
-                                                            ?.nombre ?? "—"}
+                                                            ?.nombre ?? '—'}
                                                     </span>
                                                 </div>
                                             </td>
@@ -226,8 +226,8 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                             {receptions.links.length > 3 && (
                                 <div className="border-border text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-xs">
                                     <span>
-                                        Mostrando{" "}
-                                        <b>{receptions.data.length}</b> de{" "}
+                                        Mostrando{' '}
+                                        <b>{receptions.data.length}</b> de{' '}
                                         <b>{receptions.total}</b> recepciones
                                     </span>
                                     <div className="flex items-center gap-1">
@@ -252,13 +252,13 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                     __html: link.label,
                                                 }}
                                                 className={[
-                                                    "h-8 min-w-[32px] rounded-md px-2 font-medium transition-colors",
+                                                    'h-8 min-w-[32px] rounded-md px-2 font-medium transition-colors',
                                                     link.active
-                                                        ? "bg-foreground text-background font-bold shadow-xs"
+                                                        ? 'bg-foreground text-background font-bold shadow-xs'
                                                         : link.url
-                                                          ? "text-foreground hover:bg-muted"
-                                                          : "cursor-not-allowed opacity-40",
-                                                ].join(" ")}
+                                                          ? 'text-foreground hover:bg-muted'
+                                                          : 'cursor-not-allowed opacity-40',
+                                                ].join(' ')}
                                             />
                                         ))}
                                     </div>

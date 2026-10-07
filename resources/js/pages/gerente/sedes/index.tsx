@@ -495,7 +495,10 @@ export default function SedesIndex() {
                                         maxLength={255}
                                         value={form.data.direccion}
                                         onChange={(e) =>
-                                            form.setData('direccion', e.target.value)
+                                            form.setData(
+                                                'direccion',
+                                                e.target.value,
+                                            )
                                         }
                                         className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                     />
@@ -518,7 +521,9 @@ export default function SedesIndex() {
                                         type="text"
                                         inputMode="numeric"
                                         maxLength={4}
-                                        value={form.data.cod_establecimiento_anexo}
+                                        value={
+                                            form.data.cod_establecimiento_anexo
+                                        }
                                         onChange={(e) =>
                                             form.setData(
                                                 'cod_establecimiento_anexo',
@@ -532,7 +537,10 @@ export default function SedesIndex() {
                                     </p>
                                     {form.errors.cod_establecimiento_anexo && (
                                         <p className="mt-1 text-red-600">
-                                            {form.errors.cod_establecimiento_anexo}
+                                            {
+                                                form.errors
+                                                    .cod_establecimiento_anexo
+                                            }
                                         </p>
                                     )}
                                 </div>

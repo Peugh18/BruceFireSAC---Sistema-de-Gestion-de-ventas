@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     AlertTriangle,
@@ -11,16 +11,16 @@ import {
     ScanBarcode,
     Trash2,
     Truck,
-} from "lucide-react";
-import { FormEvent, KeyboardEvent, useState } from "react";
+} from 'lucide-react';
+import { FormEvent, KeyboardEvent, useState } from 'react';
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import AlmacenLayout from "@/layouts/almacen-layout";
-import recepciones from "@/routes/almacen/recepciones";
-import type { Team } from "@/types";
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AlmacenLayout from '@/layouts/almacen-layout';
+import recepciones from '@/routes/almacen/recepciones';
+import type { Team } from '@/types';
 
 export type SedeOption = {
     id: number;
@@ -74,23 +74,23 @@ export default function RecepcionesCreate({
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
-        (typeof window !== "undefined"
-            ? window.location.pathname.split("/")[1]
-            : "");
+        (typeof window !== 'undefined'
+            ? window.location.pathname.split('/')[1]
+            : '');
 
     const { data, setData, post, processing, errors } = useForm({
-        proveedor: "",
-        documento_referencia: "",
+        proveedor: '',
+        documento_referencia: '',
         fecha: today,
-        sede_almacen_id: sedes.length > 0 ? sedes[0].id : "",
-        observacion: "",
+        sede_almacen_id: sedes.length > 0 ? sedes[0].id : '',
+        observacion: '',
         items: [] as ReceptionItemForm[],
     });
 
     const newUnit = (): UnidadSerializadaForm => ({
-        capacidad: "",
-        serie_fabricante: "",
-        marca: "",
+        capacidad: '',
+        serie_fabricante: '',
+        marca: '',
         anio_fabricacion: current_year,
     });
 
@@ -110,28 +110,28 @@ export default function RecepcionesCreate({
                 })),
             ],
         };
-        setData("items", next);
+        setData('items', next);
     };
 
     const addLine = () => {
         if (products.length === 0) return;
         const firstProd = products[0];
-        setData("items", [
+        setData('items', [
             ...data.items,
             {
                 product_id: firstProd.id,
                 cantidad: 1,
                 cantidad_conforme: 1,
-                costo_unitario: "",
-                observacion_item: "",
-                lote: "",
-                fecha_vencimiento: "",
+                costo_unitario: '',
+                observacion_item: '',
+                lote: '',
+                fecha_vencimiento: '',
                 unidades: firstProd.serializado ? [newUnit()] : [],
             },
         ]);
     };
 
-    const [escaneo, setEscaneo] = useState("");
+    const [escaneo, setEscaneo] = useState('');
     const [avisoEscaneo, setAvisoEscaneo] = useState<string | null>(null);
 
     /**
@@ -140,7 +140,7 @@ export default function RecepcionesCreate({
      * código interno.
      */
     const alEscanear = (event: KeyboardEvent<HTMLInputElement>) => {
-        if (event.key !== "Enter") return;
+        if (event.key !== 'Enter') return;
         event.preventDefault();
 
         const codigo = escaneo.trim();
@@ -151,7 +151,7 @@ export default function RecepcionesCreate({
                 p.codigo_barras === codigo ||
                 p.codigo.toUpperCase() === codigo.toUpperCase(),
         );
-        setEscaneo("");
+        setEscaneo('');
 
         if (!prod) {
             setAvisoEscaneo(
@@ -164,16 +164,16 @@ export default function RecepcionesCreate({
         const index = data.items.findIndex((i) => i.product_id === prod.id);
 
         if (index === -1) {
-            setData("items", [
+            setData('items', [
                 ...data.items,
                 {
                     product_id: prod.id,
                     cantidad: 1,
                     cantidad_conforme: 1,
-                    costo_unitario: "",
-                    observacion_item: "",
-                    lote: "",
-                    fecha_vencimiento: "",
+                    costo_unitario: '',
+                    observacion_item: '',
+                    lote: '',
+                    fecha_vencimiento: '',
                     unidades: prod.serializado ? [newUnit()] : [],
                 },
             ]);
@@ -190,13 +190,13 @@ export default function RecepcionesCreate({
                 ? [...linea.unidades, newUnit()]
                 : linea.unidades,
         };
-        setData("items", next);
+        setData('items', next);
     };
 
     const removeLine = (index: number) => {
         const next = [...data.items];
         next.splice(index, 1);
-        setData("items", next);
+        setData('items', next);
     };
 
     const updateLineProduct = (index: number, productId: number) => {
@@ -211,7 +211,7 @@ export default function RecepcionesCreate({
                 ? Array.from({ length: conforme }, () => newUnit())
                 : [],
         };
-        setData("items", next);
+        setData('items', next);
     };
 
     const updateLineCantidad = (index: number, cantidad: number) => {
@@ -235,7 +235,7 @@ export default function RecepcionesCreate({
             cantidad_conforme: newConforme,
             unidades,
         };
-        setData("items", next);
+        setData('items', next);
     };
 
     const updateLineConforme = (index: number, conforme: number) => {
@@ -256,7 +256,7 @@ export default function RecepcionesCreate({
             cantidad_conforme: val,
             unidades,
         };
-        setData("items", next);
+        setData('items', next);
     };
 
     const updateLineUnidad = (
@@ -275,17 +275,17 @@ export default function RecepcionesCreate({
             ...next[itemIndex],
             unidades,
         };
-        setData("items", next);
+        setData('items', next);
     };
 
     const updateLineLote = (
         index: number,
-        campo: "lote" | "fecha_vencimiento",
+        campo: 'lote' | 'fecha_vencimiento',
         valor: string,
     ) => {
         const next = [...data.items];
         next[index] = { ...next[index], [campo]: valor };
-        setData("items", next);
+        setData('items', next);
     };
 
     const updateLineObs = (index: number, obs: string) => {
@@ -294,7 +294,7 @@ export default function RecepcionesCreate({
             ...next[index],
             observacion_item: obs,
         };
-        setData("items", next);
+        setData('items', next);
     };
 
     const handleSubmit = (e: FormEvent) => {
@@ -362,14 +362,14 @@ export default function RecepcionesCreate({
                                 htmlFor="recepcion-proveedor-razon-social"
                                 className="text-foreground/80 text-xs font-bold"
                             >
-                                Proveedor / Razón Social{" "}
+                                Proveedor / Razón Social{' '}
                                 <span className="text-primary-strong">*</span>
                             </Label>
                             <Input
                                 id="recepcion-proveedor-razon-social"
                                 value={data.proveedor}
                                 onChange={(e) =>
-                                    setData("proveedor", e.target.value)
+                                    setData('proveedor', e.target.value)
                                 }
                                 placeholder="Ej. EXTINTORES INDUSTRIALES S.A.C."
                                 className="mt-1 h-9 text-xs"
@@ -394,7 +394,7 @@ export default function RecepcionesCreate({
                                 value={data.documento_referencia}
                                 onChange={(e) =>
                                     setData(
-                                        "documento_referencia",
+                                        'documento_referencia',
                                         e.target.value,
                                     )
                                 }
@@ -408,7 +408,7 @@ export default function RecepcionesCreate({
                                 htmlFor="recepcion-fecha-de-recepcion"
                                 className="text-foreground/80 text-xs font-bold"
                             >
-                                Fecha de Recepción{" "}
+                                Fecha de Recepción{' '}
                                 <span className="text-primary-strong">*</span>
                             </Label>
                             <Input
@@ -417,7 +417,7 @@ export default function RecepcionesCreate({
                                 max={today}
                                 value={data.fecha}
                                 onChange={(e) =>
-                                    setData("fecha", e.target.value)
+                                    setData('fecha', e.target.value)
                                 }
                                 className="mt-1 h-9 text-xs"
                                 required
@@ -434,7 +434,7 @@ export default function RecepcionesCreate({
                                 htmlFor="recepcion-sede-de-almacen-destino"
                                 className="text-foreground/80 text-xs font-bold"
                             >
-                                Sede de Almacén Destino{" "}
+                                Sede de Almacén Destino{' '}
                                 <span className="text-primary-strong">*</span>
                             </Label>
                             <select
@@ -442,7 +442,7 @@ export default function RecepcionesCreate({
                                 value={data.sede_almacen_id}
                                 onChange={(e) =>
                                     setData(
-                                        "sede_almacen_id",
+                                        'sede_almacen_id',
                                         Number(e.target.value),
                                     )
                                 }
@@ -452,7 +452,7 @@ export default function RecepcionesCreate({
                                 {sedes.map((sede) => (
                                     <option key={sede.id} value={sede.id}>
                                         {sede.nombre} (
-                                        {sede.ciudad || "Principal"})
+                                        {sede.ciudad || 'Principal'})
                                     </option>
                                 ))}
                             </select>
@@ -469,7 +469,7 @@ export default function RecepcionesCreate({
                                 id="almacen-recepciones-create-observacion-general-de-recepcion"
                                 value={data.observacion}
                                 onChange={(e) =>
-                                    setData("observacion", e.target.value)
+                                    setData('observacion', e.target.value)
                                 }
                                 placeholder="Notas del transporte, precintos, chofer, etc."
                                 className="mt-1 h-9 text-xs"
@@ -577,7 +577,7 @@ export default function RecepcionesCreate({
                                                     htmlFor={`recepcion-producto-${index}`}
                                                     className="text-foreground/80 text-[11px] font-bold"
                                                 >
-                                                    Producto{" "}
+                                                    Producto{' '}
                                                     <span className="text-primary-strong">
                                                         *
                                                     </span>
@@ -600,11 +600,11 @@ export default function RecepcionesCreate({
                                                             key={p.id}
                                                             value={p.id}
                                                         >
-                                                            {p.codigo} -{" "}
-                                                            {p.nombre}{" "}
+                                                            {p.codigo} -{' '}
+                                                            {p.nombre}{' '}
                                                             {p.serializado
-                                                                ? "(Serializado)"
-                                                                : ""}
+                                                                ? '(Serializado)'
+                                                                : ''}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -615,7 +615,7 @@ export default function RecepcionesCreate({
                                                     htmlFor={`recepcion-cant-recibida-${index}`}
                                                     className="text-foreground/80 text-[11px] font-bold"
                                                 >
-                                                    Cant. Recibida{" "}
+                                                    Cant. Recibida{' '}
                                                     <span className="text-primary-strong">
                                                         *
                                                     </span>
@@ -643,7 +643,7 @@ export default function RecepcionesCreate({
                                                     htmlFor={`recepcion-cant-conforme-${index}`}
                                                     className="text-foreground/80 text-[11px] font-bold"
                                                 >
-                                                    Cant. Conforme{" "}
+                                                    Cant. Conforme{' '}
                                                     <span className="text-primary-strong">
                                                         *
                                                     </span>
@@ -676,7 +676,7 @@ export default function RecepcionesCreate({
                                                             <AlertTriangle className="size-3" />
                                                             <span>
                                                                 {item.cantidad -
-                                                                    item.cantidad_conforme}{" "}
+                                                                    item.cantidad_conforme}{' '}
                                                                 Observado
                                                             </span>
                                                         </span>
@@ -707,8 +707,8 @@ export default function RecepcionesCreate({
                                                                 <Label className="text-foreground/80 text-[11px] font-bold">
                                                                     {
                                                                         prod.unidad_compra
-                                                                    }{" "}
-                                                                    recibidas (×{" "}
+                                                                    }{' '}
+                                                                    recibidas (×{' '}
                                                                     {
                                                                         prod.factor_compra
                                                                     }
@@ -741,13 +741,13 @@ export default function RecepcionesCreate({
                                                                     className="mt-1 h-8 text-xs"
                                                                 />
                                                                 <p className="text-muted-foreground mt-0.5 text-[10px]">
-                                                                    ={" "}
+                                                                    ={' '}
                                                                     {
                                                                         item.cantidad
-                                                                    }{" "}
+                                                                    }{' '}
                                                                     {
                                                                         prod.unidad_medida
-                                                                    }{" "}
+                                                                    }{' '}
                                                                     al stock
                                                                 </p>
                                                             </div>
@@ -759,7 +759,7 @@ export default function RecepcionesCreate({
                                                                     htmlFor={`recepcion-lote-${index}`}
                                                                     className="text-foreground/80 text-[11px] font-bold"
                                                                 >
-                                                                    Lote{" "}
+                                                                    Lote{' '}
                                                                     <span className="text-primary-strong">
                                                                         *
                                                                     </span>
@@ -774,7 +774,7 @@ export default function RecepcionesCreate({
                                                                     ) =>
                                                                         updateLineLote(
                                                                             index,
-                                                                            "lote",
+                                                                            'lote',
                                                                             e.target.value.toUpperCase(),
                                                                         )
                                                                     }
@@ -788,7 +788,7 @@ export default function RecepcionesCreate({
                                                                     htmlFor={`recepcion-vence-${index}`}
                                                                     className="text-foreground/80 text-[11px] font-bold"
                                                                 >
-                                                                    Vence{" "}
+                                                                    Vence{' '}
                                                                     <span className="text-primary-strong">
                                                                         *
                                                                     </span>
@@ -805,7 +805,7 @@ export default function RecepcionesCreate({
                                                                     ) =>
                                                                         updateLineLote(
                                                                             index,
-                                                                            "fecha_vencimiento",
+                                                                            'fecha_vencimiento',
                                                                             e
                                                                                 .target
                                                                                 .value,
@@ -843,7 +843,7 @@ export default function RecepcionesCreate({
                                                         costo_unitario:
                                                             e.target.value,
                                                     };
-                                                    setData("items", next);
+                                                    setData('items', next);
                                                 }}
                                                 className="border-border bg-card mt-1 h-8 w-40 text-xs"
                                             />
@@ -907,7 +907,7 @@ export default function RecepcionesCreate({
                                                                 (
                                                                 {
                                                                     item.cantidad_conforme
-                                                                }{" "}
+                                                                }{' '}
                                                                 conformes)
                                                             </span>
                                                             <span className="text-muted-foreground text-[11px] font-normal">
@@ -988,7 +988,7 @@ export default function RecepcionesCreate({
                                                                                         updateLineUnidad(
                                                                                             index,
                                                                                             uIdx,
-                                                                                            "capacidad",
+                                                                                            'capacidad',
                                                                                             e
                                                                                                 .target
                                                                                                 .value,
@@ -1010,7 +1010,7 @@ export default function RecepcionesCreate({
                                                                                         updateLineUnidad(
                                                                                             index,
                                                                                             uIdx,
-                                                                                            "serie_fabricante",
+                                                                                            'serie_fabricante',
                                                                                             e
                                                                                                 .target
                                                                                                 .value,
@@ -1031,7 +1031,7 @@ export default function RecepcionesCreate({
                                                                                         updateLineUnidad(
                                                                                             index,
                                                                                             uIdx,
-                                                                                            "marca",
+                                                                                            'marca',
                                                                                             e
                                                                                                 .target
                                                                                                 .value,
@@ -1058,7 +1058,7 @@ export default function RecepcionesCreate({
                                                                                         updateLineUnidad(
                                                                                             index,
                                                                                             uIdx,
-                                                                                            "anio_fabricacion",
+                                                                                            'anio_fabricacion',
                                                                                             Number(
                                                                                                 e
                                                                                                     .target

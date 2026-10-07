@@ -215,7 +215,6 @@
 - Pruebas: `tests/Feature/FaseCVentasCajaCobranzasTest.php` (nuevo) y ajustes en SaleModuleTest, CashRegisterModuleTest y MejorasProcesosTest. **No ejecutadas: MySQL apagado.** Pint, PHPStan (0) y tsc en verde.
 - Dudas: el adicional cobrado es cuota sin comprobante (¿ND o venta aparte?); los avisos del sistema anterior no tienen sede y los ve todo vendedor; una NC mayor al saldo solo queda en auditoría como saldo a favor.
 
-
 ## [2026-10-07] — Fase E: almacén y Gerente
 
 - **A2:** tabla `product_categories` (clave fija, nombre, `genera_alertas_vencimiento`, activo) con las 6 categorías migradas (más cualquier otra que ya tuvieran los productos). `products.categoria` y la nueva `services.categoria` guardan la clave, así renombrar no rompe nada. Componente `CategoriaSelect` (select + botón "Gestionar" con modal para crear, renombrar, desactivar y borrar solo lo que nadie usa). `ExtintoresPorVencer` usa la marca en vez del nombre "extintor". Se quitó `Product::CATEGORIAS`.
@@ -254,8 +253,6 @@
     - REQ-INS-01: la instalación exige escanear cada unidad vendida antes de registrarse.
     - REQ-DEF-01: el técnico de planta registra una deficiencia fuera del checklist.
 
-
-
 ## [2026-10-07] — Investigación oficial previa Semana 8 Sprint 7
 
 - Pedido vigente: investigar antes de editar; foto incluye métricas, instrumentos, informe, Scrum y demo. Entregables y código no se modificaron en esta investigación.
@@ -280,7 +277,6 @@
 - **Dudas / no hecho:** no hay PDF ni QR de la guía; el ubigeo se escribe a mano (6 dígitos) en el formulario; no se descargan XML ni CDR; sin reintento automático de la consulta del ticket (botón manual "Consultar CDR"); no hay guía para la devolución desde la sede; la venta a crédito y los servicios no generan ítems de guía (solo productos).
 - **Requisitos nuevos para el DRS:** REQ-GRE-01 la guía de remisión se emite desde venta, orden de recojo o entrega, y traslado entre sedes; REQ-GRE-02 solo con CDR aceptado la mercadería puede salir; REQ-GRE-03 el traslado entre sedes queda en tránsito hasta que el destino confirma; REQ-GRE-04 vehículos, conductores, peso por producto y anexo por sede son datos maestros.
 
-
 ## [2026-10-07] — Métricas e instrumentos terminados 07/10/2026
 
 - Entregados dos DOCX en Entregables/Semana 8: Métricas de Calidad (12 páginas) e Instrumentos de medición (21 páginas), versión 1.1.
@@ -292,7 +288,6 @@
 - Versiones anteriores respaldadas en la carpeta de trabajo de esta entrega; SHA de los archivos finales coincide con QA.
 - Pendiente: aplicación real, revisión de expertos y piloto; continuar informe, Scrum y demo. No se ejecutaron pruebas del software.
 
-
 ## [2026-10-07] — Aclaración instrumentos de tesis y cinco VI
 
 - Pedido nuevo: exactamente cinco VI y cinco VD, coherentes también en Informe Final; primero comprender, investigar y responder.
@@ -301,7 +296,6 @@
 - Formatos actuales útiles; pendiente añadir fichas técnicas uniformes y separar medición, diagnóstico y formatos de validación.
 - Recomendación presentada: retirar PTR como ficha independiente y mantener SUS dentro de cinco VI. Falta aplicar la corrección y concordar Informe Final.
 - Investigación guardada en la carpeta de trabajo semana8-metricas-instrumentos-v2. No se modificaron DOCX, Excel ni código en esta investigación.
-
 
 ## [2026-10-07] — Corrección concordante de cinco VI y cinco VD — 07/10/2026
 
@@ -329,7 +323,6 @@
 - **Extra (no era hallazgo):** `GuiaRemisionService` pasaba `CarbonImmutable` a los setters de Greenter, que exigen `DateTime`; la GRE no llegaba a emitirse. Convertido con `->toDateTime()`. Se comprobó que el fallo era anterior a esta tanda.
 - **Verificación:** `pint --dirty` limpio, PHPStan nivel 7 con **0 errores**, 118 pruebas de las áreas tocadas en verde (617 aserciones) y `tsc` sin cambios de frontend. PHPStan sin línea base sobre los archivos tocados: 0 errores introducidos; quedan 14 preexistentes en `ClientController.php`, ya cubiertos por la línea base.
 - **Pendiente:** la entrada de la línea base de PHPStan para `InventoryLookupController` quedó obsoleta (ese error ya no existe) y puede retirarse en la próxima pasada de reducción de la línea base.
-
 
 ## [2026-10-07] — Plan de elaboración de instrumentos por bloques — 07/10/2026
 

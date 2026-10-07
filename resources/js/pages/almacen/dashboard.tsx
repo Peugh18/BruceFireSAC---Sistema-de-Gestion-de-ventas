@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     ArrowRight,
@@ -11,12 +11,12 @@ import {
     TrendingDown,
     Truck,
     User,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Card } from "@/components/ui/card";
-import AlmacenLayout from "@/layouts/almacen-layout";
-import recepcionesRutas from "@/routes/almacen/recepciones";
-import type { Team } from "@/types";
+import { Card } from '@/components/ui/card';
+import AlmacenLayout from '@/layouts/almacen-layout';
+import recepcionesRutas from '@/routes/almacen/recepciones';
+import type { Team } from '@/types';
 
 export type SedeStock = {
     sede_id: number;
@@ -79,18 +79,18 @@ export type LotePorVencer = {
 };
 
 function formatNumber(value: number): string {
-    return new Intl.NumberFormat("es-PE").format(value);
+    return new Intl.NumberFormat('es-PE').format(value);
 }
 
 function formatDate(isoString: string | null): string {
-    if (!isoString) return "—";
+    if (!isoString) return '—';
     const date = new Date(isoString);
-    return date.toLocaleString("es-PE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+    return date.toLocaleString('es-PE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
     });
 }
 
@@ -99,40 +99,40 @@ function getTipoMovimientoBadge(tipo: string): {
     className: string;
 } {
     switch (tipo) {
-        case "ingreso":
+        case 'ingreso':
             return {
-                label: "Ingreso",
+                label: 'Ingreso',
                 className:
-                    "bg-emerald-500/10 text-success-strong border border-emerald-500/20 border-emerald-500/20",
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20 border-emerald-500/20',
             };
-        case "salida_venta":
+        case 'salida_venta':
             return {
-                label: "Venta",
+                label: 'Venta',
                 className:
-                    "bg-destructive/10 text-primary-strong border-destructive/20",
+                    'bg-destructive/10 text-primary-strong border-destructive/20',
             };
-        case "salida_servicio":
+        case 'salida_servicio':
             return {
-                label: "Consumo Taller",
+                label: 'Consumo Taller',
                 className:
-                    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+                    'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
             };
-        case "ajuste":
+        case 'ajuste':
             return {
-                label: "Ajuste",
+                label: 'Ajuste',
                 className:
-                    "bg-amber-500/10 text-warning-strong border-amber-500/20",
+                    'bg-amber-500/10 text-warning-strong border-amber-500/20',
             };
-        case "traslado":
+        case 'traslado':
             return {
-                label: "Traslado",
+                label: 'Traslado',
                 className:
-                    "bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20",
+                    'bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20',
             };
         default:
             return {
                 label: tipo,
-                className: "bg-muted text-muted-foreground border-border",
+                className: 'bg-muted text-muted-foreground border-border',
             };
     }
 }
@@ -147,9 +147,9 @@ export default function AlmacenDashboard({
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
-        (typeof window !== "undefined"
-            ? window.location.pathname.split("/")[1]
-            : "");
+        (typeof window !== 'undefined'
+            ? window.location.pathname.split('/')[1]
+            : '');
 
     return (
         <AlmacenLayout title="Dashboard de Almacén">
@@ -161,8 +161,8 @@ export default function AlmacenDashboard({
                     <div className="flex items-center gap-3 rounded-[14px] bg-gradient-to-r from-[#B9151A] to-[#E31E24] px-5 py-3.5 text-white shadow-xs">
                         <AlertTriangle className="size-5 shrink-0 text-white" />
                         <span className="flex-1 text-[13px]">
-                            Hay{" "}
-                            <b>{productos_bajo_minimo.length} producto(s)</b>{" "}
+                            Hay{' '}
+                            <b>{productos_bajo_minimo.length} producto(s)</b>{' '}
                             con existencias bajo el nivel mínimo en el almacén.
                             Se requiere compra / reabastecimiento.
                         </span>
@@ -205,22 +205,22 @@ export default function AlmacenDashboard({
                                             {lote.producto}
                                         </div>
                                         <div className="text-muted-foreground text-[11px]">
-                                            Lote {lote.lote} · {lote.saldo}{" "}
+                                            Lote {lote.lote} · {lote.saldo}{' '}
                                             {lote.unidad_medida} · {lote.sede}
                                         </div>
                                     </div>
                                     <span
                                         className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${
                                             lote.vencido
-                                                ? "bg-destructive/10 text-destructive-strong"
-                                                : "text-warning-strong bg-amber-500/10"
+                                                ? 'bg-destructive/10 text-destructive-strong'
+                                                : 'text-warning-strong bg-amber-500/10'
                                         }`}
                                     >
-                                        {lote.vencido ? "Vencido" : "Vence"}{" "}
+                                        {lote.vencido ? 'Vencido' : 'Vence'}{' '}
                                         {lote.fecha_vencimiento
-                                            ?.split("-")
+                                            ?.split('-')
                                             .reverse()
-                                            .join("/")}
+                                            .join('/')}
                                     </span>
                                 </div>
                             ))}
@@ -396,7 +396,7 @@ export default function AlmacenDashboard({
                                                         </div>
                                                         <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-[11px]">
                                                             <span>
-                                                                Cód:{" "}
+                                                                Cód:{' '}
                                                                 {
                                                                     mov.producto
                                                                         .codigo
@@ -425,7 +425,7 @@ export default function AlmacenDashboard({
                                                         {Number(mov.cantidad) <
                                                         0
                                                             ? `${mov.cantidad}`
-                                                            : `+${mov.cantidad}`}{" "}
+                                                            : `+${mov.cantidad}`}{' '}
                                                         <span className="text-muted-foreground text-[10px] font-normal">
                                                             {
                                                                 mov.producto
@@ -494,10 +494,10 @@ export default function AlmacenDashboard({
                                             <div className="text-muted-foreground mt-1 flex items-center justify-between text-[11px]">
                                                 <span>Cód: {prod.codigo}</span>
                                                 <span>
-                                                    Disp:{" "}
+                                                    Disp:{' '}
                                                     <b className="text-foreground">
                                                         {prod.stock_disponible}
-                                                    </b>{" "}
+                                                    </b>{' '}
                                                     / Mín: {prod.stock_minimo}
                                                 </span>
                                             </div>

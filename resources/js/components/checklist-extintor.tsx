@@ -27,19 +27,32 @@ const ETIQUETAS: Record<Estado, string> = {
 };
 
 /** Checklist por extintor, con foto en cada ítem observado. */
-export default function ChecklistExtintor({ elementos, url, serie, esCo2, onCerrar }: Props) {
-    const inicial = Object.keys(elementos).reduce<Record<string, Item>>((acc, clave) => {
-        acc[clave] = {
-            estado: esCo2 && clave === 'manometro' ? 'no_aplica' : 'conforme',
-            condicion: '',
-            requiere_autorizacion: false,
-            foto: null,
-        };
+export default function ChecklistExtintor({
+    elementos,
+    url,
+    serie,
+    esCo2,
+    onCerrar,
+}: Props) {
+    const inicial = Object.keys(elementos).reduce<Record<string, Item>>(
+        (acc, clave) => {
+            acc[clave] = {
+                estado:
+                    esCo2 && clave === 'manometro' ? 'no_aplica' : 'conforme',
+                condicion: '',
+                requiere_autorizacion: false,
+                foto: null,
+            };
 
-        return acc;
-    }, {});
+            return acc;
+        },
+        {},
+    );
 
-    const form = useForm<{ items: Record<string, Item>; observaciones: string }>({
+    const form = useForm<{
+        items: Record<string, Item>;
+        observaciones: string;
+    }>({
         items: inicial,
         observaciones: '',
     });
@@ -50,18 +63,31 @@ export default function ChecklistExtintor({ elementos, url, serie, esCo2, onCerr
             [clave]: { ...form.data.items[clave], ...cambios },
         });
 
-    const sinFoto = Object.values(form.data.items).some((i) => i.estado === 'observado' && !i.foto);
+    const sinFoto = Object.values(form.data.items).some(
+        (i) => i.estado === 'observado' && !i.foto,
+    );
 
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post(url, { forceFormData: true, preserveScroll: true, onSuccess: onCerrar });
+        form.post(url, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: onCerrar,
+        });
     };
 
     return (
-        <form onSubmit={enviar} className="mt-3 space-y-2.5 rounded-xl border border-sky-500/30 bg-sky-500/5 p-3">
+        <form
+            onSubmit={enviar}
+            className="mt-3 space-y-2.5 rounded-xl border border-sky-500/30 bg-sky-500/5 p-3"
+        >
             <div className="flex items-center justify-between">
                 <span className="text-xs font-black">Checklist de {serie}</span>
-                <button type="button" onClick={onCerrar} className="min-h-[44px] px-2 text-[11px] font-bold">
+                <button
+                    type="button"
+                    onClick={onCerrar}
+                    className="min-h-[44px] px-2 text-[11px] font-bold"
+                >
                     Cerrar
                 </button>
             </div>
@@ -70,28 +96,37 @@ export default function ChecklistExtintor({ elementos, url, serie, esCo2, onCerr
                 const item = form.data.items[clave];
 
                 return (
-                    <fieldset key={clave} className="space-y-1.5 rounded-lg border border-neutral-200 p-2 dark:border-neutral-700">
-                        <legend className="px-1 text-[11px] font-bold">{nombre}</legend>
+                    <fieldset
+                        key={clave}
+                        className="space-y-1.5 rounded-lg border border-neutral-200 p-2 dark:border-neutral-700"
+                    >
+                        <legend className="px-1 text-[11px] font-bold">
+                            {nombre}
+                        </legend>
                         <div className="grid grid-cols-3 gap-1">
-                            {(Object.keys(ETIQUETAS) as Estado[]).map((estado) => (
-                                <button
-                                    key={estado}
-                                    type="button"
-                                    aria-pressed={item.estado === estado}
-                                    onClick={() => cambiar(clave, { estado })}
-                                    className={`min-h-[44px] rounded-lg text-[11px] font-bold ${
-                                        item.estado === estado
-                                            ? estado === 'observado'
-                                                ? 'bg-amber-600 text-white'
-                                                : estado === 'conforme'
-                                                  ? 'bg-emerald-600 text-white'
-                                                  : 'bg-neutral-600 text-white'
-                                            : 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200'
-                                    }`}
-                                >
-                                    {ETIQUETAS[estado]}
-                                </button>
-                            ))}
+                            {(Object.keys(ETIQUETAS) as Estado[]).map(
+                                (estado) => (
+                                    <button
+                                        key={estado}
+                                        type="button"
+                                        aria-pressed={item.estado === estado}
+                                        onClick={() =>
+                                            cambiar(clave, { estado })
+                                        }
+                                        className={`min-h-[44px] rounded-lg text-[11px] font-bold ${
+                                            item.estado === estado
+                                                ? estado === 'observado'
+                                                    ? 'bg-amber-600 text-white'
+                                                    : estado === 'conforme'
+                                                      ? 'bg-emerald-600 text-white'
+                                                      : 'bg-neutral-600 text-white'
+                                                : 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200'
+                                        }`}
+                                    >
+                                        {ETIQUETAS[estado]}
+                                    </button>
+                                ),
+                            )}
                         </div>
                         {item.estado === 'observado' && (
                             <div className="space-y-1.5">
@@ -99,7 +134,11 @@ export default function ChecklistExtintor({ elementos, url, serie, esCo2, onCerr
                                     required
                                     aria-label={`Qué le pasa a: ${nombre}`}
                                     value={item.condicion}
-                                    onChange={(e) => cambiar(clave, { condicion: e.target.value })}
+                                    onChange={(e) =>
+                                        cambiar(clave, {
+                                            condicion: e.target.value,
+                                        })
+                                    }
                                     placeholder="¿Qué le pasa?"
                                     className="min-h-[44px] w-full rounded-lg border border-neutral-300 bg-white px-2 text-xs dark:border-neutral-600 dark:bg-neutral-900"
                                 />
@@ -107,14 +146,29 @@ export default function ChecklistExtintor({ elementos, url, serie, esCo2, onCerr
                                     <input
                                         type="checkbox"
                                         checked={item.requiere_autorizacion}
-                                        onChange={(e) => cambiar(clave, { requiere_autorizacion: e.target.checked })}
+                                        onChange={(e) =>
+                                            cambiar(clave, {
+                                                requiere_autorizacion:
+                                                    e.target.checked,
+                                            })
+                                        }
                                         className="h-4 w-4"
                                     />
                                     Necesita la autorización del cliente
                                 </label>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <BotonFoto archivo={item.foto} etiqueta="Tomar foto *" onFoto={(f) => cambiar(clave, { foto: f })} />
-                                    <span className="text-[11px]">{item.foto ? item.foto.name : 'La foto es obligatoria.'}</span>
+                                    <BotonFoto
+                                        archivo={item.foto}
+                                        etiqueta="Tomar foto *"
+                                        onFoto={(f) =>
+                                            cambiar(clave, { foto: f })
+                                        }
+                                    />
+                                    <span className="text-[11px]">
+                                        {item.foto
+                                            ? item.foto.name
+                                            : 'La foto es obligatoria.'}
+                                    </span>
                                 </div>
                             </div>
                         )}
@@ -126,13 +180,18 @@ export default function ChecklistExtintor({ elementos, url, serie, esCo2, onCerr
                 Observaciones
                 <textarea
                     value={form.data.observaciones}
-                    onChange={(e) => form.setData('observaciones', e.target.value)}
+                    onChange={(e) =>
+                        form.setData('observaciones', e.target.value)
+                    }
                     rows={2}
                     className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2 text-xs dark:border-neutral-600 dark:bg-neutral-900"
                 />
             </label>
             {Object.values(form.errors)[0] && (
-                <p className="text-[11px] font-semibold text-red-600" role="alert">
+                <p
+                    className="text-[11px] font-semibold text-red-600"
+                    role="alert"
+                >
                     {Object.values(form.errors)[0]}
                 </p>
             )}

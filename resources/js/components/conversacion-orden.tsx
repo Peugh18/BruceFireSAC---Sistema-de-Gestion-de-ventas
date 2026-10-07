@@ -123,10 +123,17 @@ export default function ConversacionOrden({
 
                             if (adjunto.tipo === 'foto') {
                                 return (
-                                    <a key={adjunto.id} href={url} target="_blank" rel="noreferrer">
+                                    <a
+                                        key={adjunto.id}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
                                         <img
                                             src={url}
-                                            alt={adjunto.nombre ?? 'Foto adjunta'}
+                                            alt={
+                                                adjunto.nombre ?? 'Foto adjunta'
+                                            }
                                             className="mt-1.5 max-h-48 rounded-lg"
                                         />
                                     </a>
@@ -177,7 +184,10 @@ export default function ConversacionOrden({
                 <div className="flex flex-wrap items-center gap-2">
                     {conversacion.equipos.length > 0 && (
                         <>
-                            <label htmlFor={`equipo-${ordenId}`} className="sr-only">
+                            <label
+                                htmlFor={`equipo-${ordenId}`}
+                                className="sr-only"
+                            >
                                 Extintor del que hablas
                             </label>
                             <select
@@ -212,7 +222,10 @@ export default function ConversacionOrden({
                             type="file"
                             className="sr-only"
                             onChange={(e) =>
-                                form.setData('archivo', e.target.files?.[0] ?? null)
+                                form.setData(
+                                    'archivo',
+                                    e.target.files?.[0] ?? null,
+                                )
                             }
                         />
                     </label>
@@ -234,7 +247,10 @@ export default function ConversacionOrden({
                     </p>
                 )}
                 {(form.errors.mensaje || form.errors.archivo) && (
-                    <p className="text-[11px] font-semibold text-red-600" role="alert">
+                    <p
+                        className="text-[11px] font-semibold text-red-600"
+                        role="alert"
+                    >
                         {form.errors.mensaje ?? form.errors.archivo}
                     </p>
                 )}

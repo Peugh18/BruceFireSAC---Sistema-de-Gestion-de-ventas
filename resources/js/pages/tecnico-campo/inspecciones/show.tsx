@@ -16,9 +16,13 @@ import {
     MessageSquare,
 } from 'lucide-react';
 import React, { useState } from 'react';
-import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
-import SubirEvidencia, { type EvidenciaListada } from '@/components/subir-evidencia';
+import SubirEvidencia, {
+    type EvidenciaListada,
+} from '@/components/subir-evidencia';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
@@ -759,7 +763,9 @@ export default function InspeccionShow({
                             equipos={conversacion.equipos}
                         />
 
-                        <FirmaCanvas onChange={(f) => completeForm.setData('firma', f)} />
+                        <FirmaCanvas
+                            onChange={(f) => completeForm.setData('firma', f)}
+                        />
 
                         {/* Checkbox de conformidad (§85.6.2) */}
                         <div className="rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3">
@@ -808,7 +814,10 @@ export default function InspeccionShow({
             )}
 
             <div className="mt-5">
-                <ConversacionOrden ordenId={order.id} conversacion={conversacion} />
+                <ConversacionOrden
+                    ordenId={order.id}
+                    conversacion={conversacion}
+                />
             </div>
         </TecnicoCampoLayout>
     );

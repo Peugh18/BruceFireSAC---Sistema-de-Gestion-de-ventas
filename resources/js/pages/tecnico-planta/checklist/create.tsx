@@ -399,7 +399,11 @@ export default function ChecklistCreate({
                                                     archivo={item.foto}
                                                     etiqueta="Tomar foto *"
                                                     onFoto={(f) =>
-                                                        handleFieldChange(el.clave, 'foto', f)
+                                                        handleFieldChange(
+                                                            el.clave,
+                                                            'foto',
+                                                            f,
+                                                        )
                                                     }
                                                 />
                                                 <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
@@ -407,9 +411,18 @@ export default function ChecklistCreate({
                                                         ? item.foto.name
                                                         : 'La foto es obligatoria en un componente observado.'}
                                                 </span>
-                                                {form.errors[`items.${el.clave}.foto` as keyof typeof form.errors] && (
-                                                    <span className="text-[11px] font-semibold text-red-600" role="alert">
-                                                        {form.errors[`items.${el.clave}.foto` as keyof typeof form.errors]}
+                                                {form.errors[
+                                                    `items.${el.clave}.foto` as keyof typeof form.errors
+                                                ] && (
+                                                    <span
+                                                        className="text-[11px] font-semibold text-red-600"
+                                                        role="alert"
+                                                    >
+                                                        {
+                                                            form.errors[
+                                                                `items.${el.clave}.foto` as keyof typeof form.errors
+                                                            ]
+                                                        }
                                                     </span>
                                                 )}
                                             </div>
@@ -468,7 +481,9 @@ export default function ChecklistCreate({
                             type="submit"
                             disabled={
                                 form.processing ||
-                                Object.values(items).some((i) => i.estado === 'observado' && !i.foto)
+                                Object.values(items).some(
+                                    (i) => i.estado === 'observado' && !i.foto,
+                                )
                             }
                             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-md hover:bg-amber-700 active:bg-amber-800"
                         >

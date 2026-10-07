@@ -115,7 +115,10 @@ export function GrabadoraAudio({ onAudio, archivo }: AudioProps) {
                       : 'Grabar nota de voz'}
             </button>
             {error && (
-                <span className="text-[11px] font-semibold text-red-600" role="alert">
+                <span
+                    className="text-[11px] font-semibold text-red-600"
+                    role="alert"
+                >
                     {error}
                 </span>
             )}

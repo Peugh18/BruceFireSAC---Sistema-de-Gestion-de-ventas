@@ -80,7 +80,9 @@ export default function DeficienciaSuelta({ ordenId, equipos }: Props) {
                 Extintor
                 <select
                     value={form.data.equipment_id}
-                    onChange={(e) => form.setData('equipment_id', e.target.value)}
+                    onChange={(e) =>
+                        form.setData('equipment_id', e.target.value)
+                    }
                     className={campo}
                 >
                     {equipos.map((e) => (
@@ -114,7 +116,9 @@ export default function DeficienciaSuelta({ ordenId, equipos }: Props) {
                 Qué se recomienda
                 <input
                     value={form.data.accion_recomendada}
-                    onChange={(e) => form.setData('accion_recomendada', e.target.value)}
+                    onChange={(e) =>
+                        form.setData('accion_recomendada', e.target.value)
+                    }
                     className={campo}
                 />
             </label>
@@ -122,7 +126,9 @@ export default function DeficienciaSuelta({ ordenId, equipos }: Props) {
                 Repuesto sugerido
                 <input
                     value={form.data.repuesto_sugerido}
-                    onChange={(e) => form.setData('repuesto_sugerido', e.target.value)}
+                    onChange={(e) =>
+                        form.setData('repuesto_sugerido', e.target.value)
+                    }
                     className={campo}
                 />
             </label>
@@ -130,7 +136,9 @@ export default function DeficienciaSuelta({ ordenId, equipos }: Props) {
                 <input
                     type="checkbox"
                     checked={form.data.requiere_autorizacion}
-                    onChange={(e) => form.setData('requiere_autorizacion', e.target.checked)}
+                    onChange={(e) =>
+                        form.setData('requiere_autorizacion', e.target.checked)
+                    }
                     className="h-4 w-4"
                 />
                 Necesita la autorización del cliente
@@ -148,7 +156,10 @@ export default function DeficienciaSuelta({ ordenId, equipos }: Props) {
                 )}
             </div>
             {Object.values(form.errors)[0] && (
-                <p className="text-[11px] font-semibold text-red-600" role="alert">
+                <p
+                    className="text-[11px] font-semibold text-red-600"
+                    role="alert"
+                >
                     {Object.values(form.errors)[0]}
                 </p>
             )}

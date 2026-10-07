@@ -15,9 +15,13 @@ import {
     MessageSquare,
 } from 'lucide-react';
 import React from 'react';
-import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
-import SubirEvidencia, { type EvidenciaListada } from '@/components/subir-evidencia';
+import SubirEvidencia, {
+    type EvidenciaListada,
+} from '@/components/subir-evidencia';
 import guias from '@/routes/guias';
 import entregas from '@/routes/tecnico-campo/entregas';
 
@@ -151,7 +155,12 @@ export default function EntregaShow({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post(entregas.confirm.url({ current_team: teamSlug, service_order: order.id }));
+        form.post(
+            entregas.confirm.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+        );
     };
 
     return (
@@ -577,7 +586,10 @@ export default function EntregaShow({
             )}
 
             <div className="mt-5">
-                <ConversacionOrden ordenId={order.id} conversacion={conversacion} />
+                <ConversacionOrden
+                    ordenId={order.id}
+                    conversacion={conversacion}
+                />
             </div>
         </TecnicoCampoLayout>
     );

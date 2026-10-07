@@ -1,7 +1,11 @@
 import React from 'react';
-import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
-import SubirEvidencia, { type EvidenciaListada } from '@/components/subir-evidencia';
+import SubirEvidencia, {
+    type EvidenciaListada,
+} from '@/components/subir-evidencia';
 import guias from '@/routes/guias';
 import recojos from '@/routes/tecnico-campo/recojos';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
@@ -92,9 +96,15 @@ export default function RecojoShow({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post(recojos.store.url({ current_team: teamSlug, service_order: order.id }), {
-            preserveScroll: true,
-        });
+        form.post(
+            recojos.store.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+            {
+                preserveScroll: true,
+            },
+        );
     };
 
     const yaRecogido = custodyEvents.some((e) => e.eslabon === 'recojo_campo');
@@ -493,7 +503,10 @@ export default function RecojoShow({
                     </div>
                 )}
 
-                <ConversacionOrden ordenId={order.id} conversacion={conversacion} />
+                <ConversacionOrden
+                    ordenId={order.id}
+                    conversacion={conversacion}
+                />
             </div>
         </TecnicoCampoLayout>
     );

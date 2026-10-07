@@ -49,10 +49,9 @@ export default function GuiasIndex({
             <div className="mx-auto max-w-5xl space-y-4 p-4">
                 <h1 className="text-xl font-bold">Guías de remisión</h1>
                 <p className="text-muted-foreground text-sm">
-                    Crea la guía desde una venta, una orden de recojo o
-                    entrega, o un traslado entre sedes. La mercadería solo
-                    puede salir con la guía lista para trasladar (CDR aceptado
-                    por SUNAT).
+                    Crea la guía desde una venta, una orden de recojo o entrega,
+                    o un traslado entre sedes. La mercadería solo puede salir
+                    con la guía lista para trasladar (CDR aceptado por SUNAT).
                 </p>
                 {flash?.success ? (
                     <p role="status" className="text-sm text-emerald-700">

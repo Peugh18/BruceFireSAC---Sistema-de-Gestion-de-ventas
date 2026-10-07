@@ -175,7 +175,10 @@ export default function GuiaForm({
                             >
                                 <option value="">Seleccionar</option>
                                 {vehiculos.map((vehiculo) => (
-                                    <option key={vehiculo.id} value={vehiculo.id}>
+                                    <option
+                                        key={vehiculo.id}
+                                        value={vehiculo.id}
+                                    >
                                         {vehiculo.placa} ({vehiculo.categoria})
                                     </option>
                                 ))}
@@ -193,7 +196,10 @@ export default function GuiaForm({
                                 className={SELECT}
                                 value={form.data.driver_id}
                                 onChange={(event) =>
-                                    form.setData('driver_id', event.target.value)
+                                    form.setData(
+                                        'driver_id',
+                                        event.target.value,
+                                    )
                                 }
                             >
                                 <option value="">Seleccionar</option>
@@ -308,7 +314,10 @@ export default function GuiaForm({
                 {Object.entries(form.errors)
                     .filter(([clave]) => clave.startsWith('items.'))
                     .map(([clave, error]) => (
-                        <p key={clave} className="text-destructive-strong text-xs">
+                        <p
+                            key={clave}
+                            className="text-destructive-strong text-xs"
+                        >
                             {error}
                         </p>
                     ))}

@@ -115,14 +115,19 @@ export default function Transporte({
                                 className="border-border bg-background h-10 w-full rounded-md border px-3"
                                 value={vehiculo.data.categoria}
                                 onChange={(e) =>
-                                    vehiculo.setData('categoria', e.target.value)
+                                    vehiculo.setData(
+                                        'categoria',
+                                        e.target.value,
+                                    )
                                 }
                             >
-                                {Object.entries(categorias).map(([k, texto]) => (
-                                    <option key={k} value={k}>
-                                        {texto}
-                                    </option>
-                                ))}
+                                {Object.entries(categorias).map(
+                                    ([k, texto]) => (
+                                        <option key={k} value={k}>
+                                            {texto}
+                                        </option>
+                                    ),
+                                )}
                             </select>
                         </div>
                         <Button

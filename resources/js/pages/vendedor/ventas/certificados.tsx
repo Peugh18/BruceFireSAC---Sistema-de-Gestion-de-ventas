@@ -1015,7 +1015,9 @@ export default function ArmarCertificados({
                                                         Fecha
                                                         <Input
                                                             type="date"
-                                                            value={fila.ph_fecha}
+                                                            value={
+                                                                fila.ph_fecha
+                                                            }
                                                             onChange={(e) =>
                                                                 cambiarFila(
                                                                     fila.equipment_id,

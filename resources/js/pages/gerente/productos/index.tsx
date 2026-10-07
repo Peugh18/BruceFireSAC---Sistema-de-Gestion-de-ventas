@@ -1,4 +1,4 @@
-import { router, useForm, usePage } from "@inertiajs/react";
+import { router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     CheckCircle2,
@@ -9,13 +9,13 @@ import {
     Search,
     Trash2,
     X,
-} from "lucide-react";
-import { useState } from "react";
+} from 'lucide-react';
+import { useState } from 'react';
 import {
     CategoriaSelect,
     type CategoriaItem,
-} from "@/components/categoria-select";
-import GerenteLayout from "@/layouts/gerente-layout";
+} from '@/components/categoria-select';
+import GerenteLayout from '@/layouts/gerente-layout';
 type ProductItem = {
     id: number;
     codigo: string;
@@ -76,9 +76,9 @@ type PageProps = {
     [key: string]: unknown;
 };
 function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat("es-PE", {
-        style: "currency",
-        currency: "PEN",
+    return new Intl.NumberFormat('es-PE', {
+        style: 'currency',
+        currency: 'PEN',
         minimumFractionDigits: 2,
     }).format(amount);
 }
@@ -93,52 +93,52 @@ export default function ProductosIndex() {
         agentes,
         flash,
     } = usePage<PageProps>().props;
-    const [buscar, setBuscar] = useState(filters.buscar || "");
+    const [buscar, setBuscar] = useState(filters.buscar || '');
     const [modalOpen, setModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<ProductItem | null>(
         null,
     );
     const form = useForm({
-        codigo: "",
-        codigo_barras: "",
-        categoria: "",
-        agente: "",
-        capacidad: "",
-        peso_kg: "",
-        nombre: "",
-        descripcion: "",
-        unidad_medida: "NIU",
-        precio_venta: "",
+        codigo: '',
+        codigo_barras: '',
+        categoria: '',
+        agente: '',
+        capacidad: '',
+        peso_kg: '',
+        nombre: '',
+        descripcion: '',
+        unidad_medida: 'NIU',
+        precio_venta: '',
         aplica_igv: true,
-        tipo_afectacion_igv: "10",
+        tipo_afectacion_igv: '10',
         serializado: false,
         controla_lote: false,
-        unidad_compra: "",
-        factor_compra: "1",
-        stock_minimo: "",
+        unidad_compra: '',
+        factor_compra: '1',
+        stock_minimo: '',
         activo: true,
     });
     const openCreateModal = () => {
         setEditingProduct(null);
         form.reset();
         form.setData({
-            codigo: "",
-            codigo_barras: "",
-            categoria: "",
-            agente: "",
-            capacidad: "",
-            peso_kg: "",
-            nombre: "",
-            descripcion: "",
-            unidad_medida: "NIU",
-            precio_venta: "",
+            codigo: '',
+            codigo_barras: '',
+            categoria: '',
+            agente: '',
+            capacidad: '',
+            peso_kg: '',
+            nombre: '',
+            descripcion: '',
+            unidad_medida: 'NIU',
+            precio_venta: '',
             aplica_igv: true,
-            tipo_afectacion_igv: "10",
+            tipo_afectacion_igv: '10',
             serializado: false,
             controla_lote: false,
-            unidad_compra: "",
-            factor_compra: "1",
-            stock_minimo: "",
+            unidad_compra: '',
+            factor_compra: '1',
+            stock_minimo: '',
             activo: true,
         });
         setModalOpen(true);
@@ -147,27 +147,27 @@ export default function ProductosIndex() {
         setEditingProduct(product);
         form.setData({
             codigo: product.codigo,
-            codigo_barras: product.codigo_barras ?? "",
-            categoria: product.categoria ?? "",
-            agente: product.agente ?? "",
-            capacidad: product.capacidad ?? "",
-            peso_kg: product.peso_kg ?? "",
+            codigo_barras: product.codigo_barras ?? '',
+            categoria: product.categoria ?? '',
+            agente: product.agente ?? '',
+            capacidad: product.capacidad ?? '',
+            peso_kg: product.peso_kg ?? '',
             nombre: product.nombre,
-            descripcion: product.descripcion || "",
+            descripcion: product.descripcion || '',
             unidad_medida: product.unidad_medida,
             precio_venta: String(product.precio_venta),
             aplica_igv: product.aplica_igv,
             tipo_afectacion_igv: product.igv_requiere_revision
-                ? ""
-                : (product.tipo_afectacion_igv ?? "10"),
+                ? ''
+                : (product.tipo_afectacion_igv ?? '10'),
             serializado: product.serializado,
             controla_lote: product.controla_lote,
-            unidad_compra: product.unidad_compra ?? "",
+            unidad_compra: product.unidad_compra ?? '',
             factor_compra: String(product.factor_compra || 1),
             stock_minimo:
                 product.stock_minimo !== null
                     ? String(product.stock_minimo)
-                    : "",
+                    : '',
             activo: product.activo,
         });
         setModalOpen(true);
@@ -199,7 +199,7 @@ export default function ProductosIndex() {
             {
                 buscar,
                 estado: filters.estado,
-                bajo_minimo: filters.bajo_minimo ? "1" : undefined,
+                bajo_minimo: filters.bajo_minimo ? '1' : undefined,
             },
             { preserveState: true },
         );
@@ -210,7 +210,7 @@ export default function ProductosIndex() {
             {
                 buscar,
                 estado,
-                bajo_minimo: filters.bajo_minimo ? "1" : undefined,
+                bajo_minimo: filters.bajo_minimo ? '1' : undefined,
             },
             { preserveState: true },
         );
@@ -221,7 +221,7 @@ export default function ProductosIndex() {
             {
                 buscar,
                 estado: filters.estado,
-                bajo_minimo: !filters.bajo_minimo ? "1" : undefined,
+                bajo_minimo: !filters.bajo_minimo ? '1' : undefined,
             },
             { preserveState: true },
         );
@@ -346,33 +346,33 @@ export default function ProductosIndex() {
                         <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
                             <button
                                 type="button"
-                                onClick={() => handleFilterEstado("todos")}
+                                onClick={() => handleFilterEstado('todos')}
                                 className={`rounded-md px-3 py-1.5 transition-colors ${
-                                    filters.estado === "todos"
-                                        ? "bg-card text-foreground font-bold shadow-xs"
-                                        : "text-muted-foreground hover:text-foreground"
+                                    filters.estado === 'todos'
+                                        ? 'bg-card text-foreground font-bold shadow-xs'
+                                        : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
                                 Todos
                             </button>
                             <button
                                 type="button"
-                                onClick={() => handleFilterEstado("activos")}
+                                onClick={() => handleFilterEstado('activos')}
                                 className={`rounded-md px-3 py-1.5 transition-colors ${
-                                    filters.estado === "activos"
-                                        ? "bg-card text-foreground font-bold shadow-xs"
-                                        : "text-muted-foreground hover:text-foreground"
+                                    filters.estado === 'activos'
+                                        ? 'bg-card text-foreground font-bold shadow-xs'
+                                        : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
                                 Activos
                             </button>
                             <button
                                 type="button"
-                                onClick={() => handleFilterEstado("inactivos")}
+                                onClick={() => handleFilterEstado('inactivos')}
                                 className={`rounded-md px-3 py-1.5 transition-colors ${
-                                    filters.estado === "inactivos"
-                                        ? "bg-card text-foreground font-bold shadow-xs"
-                                        : "text-muted-foreground hover:text-foreground"
+                                    filters.estado === 'inactivos'
+                                        ? 'bg-card text-foreground font-bold shadow-xs'
+                                        : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
                                 Inactivos
@@ -383,8 +383,8 @@ export default function ProductosIndex() {
                             onClick={handleToggleBajoMinimo}
                             className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
                                 filters.bajo_minimo
-                                    ? "border-primary bg-primary text-white"
-                                    : "border-border bg-card text-foreground/80 hover:bg-background"
+                                    ? 'border-primary bg-primary text-white'
+                                    : 'border-border bg-card text-foreground/80 hover:bg-background'
                             }`}
                         >
                             <AlertTriangle className="size-3.5" />
@@ -476,8 +476,8 @@ export default function ProductosIndex() {
                                                     <span
                                                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
                                                             isBajoMinimo
-                                                                ? "text-primary-strong bg-red-100"
-                                                                : "bg-background text-foreground"
+                                                                ? 'text-primary-strong bg-red-100'
+                                                                : 'bg-background text-foreground'
                                                         }`}
                                                     >
                                                         {isBajoMinimo && (
@@ -489,26 +489,26 @@ export default function ProductosIndex() {
                                                 <td className="text-foreground/80 px-4 py-3 text-center font-mono">
                                                     {p.stock_minimo !== null
                                                         ? p.stock_minimo
-                                                        : "—"}
+                                                        : '—'}
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
                                                         {p.serializado
-                                                            ? "Serializado"
-                                                            : "A Granel"}
+                                                            ? 'Serializado'
+                                                            : 'A Granel'}
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                             p.activo
-                                                                ? "bg-emerald-100 text-emerald-800"
-                                                                : "bg-zinc-100 text-zinc-600"
+                                                                ? 'bg-emerald-100 text-emerald-800'
+                                                                : 'bg-zinc-100 text-zinc-600'
                                                         }`}
                                                     >
                                                         {p.activo
-                                                            ? "Activo"
-                                                            : "Inactivo"}
+                                                            ? 'Activo'
+                                                            : 'Inactivo'}
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-right">
@@ -532,13 +532,13 @@ export default function ProductosIndex() {
                                                             }
                                                             className={`rounded-md p-1.5 transition-colors ${
                                                                 p.activo
-                                                                    ? "text-warning-strong hover:bg-amber-50"
-                                                                    : "text-success-strong hover:bg-emerald-50"
+                                                                    ? 'text-warning-strong hover:bg-amber-50'
+                                                                    : 'text-success-strong hover:bg-emerald-50'
                                                             }`}
                                                             title={
                                                                 p.activo
-                                                                    ? "Desactivar producto"
-                                                                    : "Activar producto"
+                                                                    ? 'Desactivar producto'
+                                                                    : 'Activar producto'
                                                             }
                                                         >
                                                             <Power className="size-3.5" />
@@ -595,8 +595,8 @@ export default function ProductosIndex() {
                                             }}
                                             className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                                                 link.active
-                                                    ? "bg-foreground text-background font-bold shadow-xs"
-                                                    : "text-foreground/80 hover:bg-muted/40"
+                                                    ? 'bg-foreground text-background font-bold shadow-xs'
+                                                    : 'text-foreground/80 hover:bg-muted/40'
                                             }`}
                                         />
                                     );
@@ -612,8 +612,8 @@ export default function ProductosIndex() {
                             <div className="border-border flex items-center justify-between border-b pb-3">
                                 <h3 className="text-foreground font-['Oswald',sans-serif] text-lg font-bold uppercase">
                                     {editingProduct
-                                        ? "Editar Producto / Stock Mínimo"
-                                        : "Nuevo Producto"}
+                                        ? 'Editar Producto / Stock Mínimo'
+                                        : 'Nuevo Producto'}
                                 </h3>
                                 <button
                                     type="button"
@@ -637,7 +637,7 @@ export default function ProductosIndex() {
                                             value={form.data.codigo_barras}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    "codigo_barras",
+                                                    'codigo_barras',
                                                     e.target.value.trim(),
                                                 )
                                             }
@@ -658,7 +658,7 @@ export default function ProductosIndex() {
                                     <CategoriaSelect
                                         value={form.data.categoria}
                                         onChange={(clave) =>
-                                            form.setData("categoria", clave)
+                                            form.setData('categoria', clave)
                                         }
                                         categorias={categorias}
                                     />
@@ -679,7 +679,7 @@ export default function ProductosIndex() {
                                                 value={form.data.agente}
                                                 onChange={(e) =>
                                                     form.setData(
-                                                        "agente",
+                                                        'agente',
                                                         e.target.value,
                                                     )
                                                 }
@@ -721,7 +721,7 @@ export default function ProductosIndex() {
                                                 value={form.data.capacidad}
                                                 onChange={(e) =>
                                                     form.setData(
-                                                        "capacidad",
+                                                        'capacidad',
                                                         e.target.value,
                                                     )
                                                 }
@@ -750,7 +750,10 @@ export default function ProductosIndex() {
                                         min="0"
                                         value={form.data.peso_kg}
                                         onChange={(e) =>
-                                            form.setData("peso_kg", e.target.value)
+                                            form.setData(
+                                                'peso_kg',
+                                                e.target.value,
+                                            )
                                         }
                                         placeholder="Para el peso de la guía de remisión"
                                         className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
@@ -772,7 +775,7 @@ export default function ProductosIndex() {
                                             value={form.data.codigo}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    "codigo",
+                                                    'codigo',
                                                     e.target.value.toUpperCase(),
                                                 )
                                             }
@@ -793,7 +796,7 @@ export default function ProductosIndex() {
                                             value={form.data.unidad_medida}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    "unidad_medida",
+                                                    'unidad_medida',
                                                     e.target.value,
                                                 )
                                             }
@@ -820,7 +823,7 @@ export default function ProductosIndex() {
                                         value={form.data.nombre}
                                         onChange={(e) =>
                                             form.setData(
-                                                "nombre",
+                                                'nombre',
                                                 e.target.value,
                                             )
                                         }
@@ -842,7 +845,7 @@ export default function ProductosIndex() {
                                         value={form.data.descripcion}
                                         onChange={(e) =>
                                             form.setData(
-                                                "descripcion",
+                                                'descripcion',
                                                 e.target.value,
                                             )
                                         }
@@ -863,7 +866,7 @@ export default function ProductosIndex() {
                                             value={form.data.precio_venta}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    "precio_venta",
+                                                    'precio_venta',
                                                     e.target.value,
                                                 )
                                             }
@@ -886,7 +889,7 @@ export default function ProductosIndex() {
                                             value={form.data.stock_minimo}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    "stock_minimo",
+                                                    'stock_minimo',
                                                     e.target.value,
                                                 )
                                             }
@@ -911,7 +914,7 @@ export default function ProductosIndex() {
                                                 value={form.data.unidad_compra}
                                                 onChange={(e) =>
                                                     form.setData(
-                                                        "unidad_compra",
+                                                        'unidad_compra',
                                                         e.target.value.toUpperCase(),
                                                     )
                                                 }
@@ -932,7 +935,7 @@ export default function ProductosIndex() {
                                                 value={form.data.factor_compra}
                                                 onChange={(e) =>
                                                     form.setData(
-                                                        "factor_compra",
+                                                        'factor_compra',
                                                         e.target.value,
                                                     )
                                                 }
@@ -957,7 +960,7 @@ export default function ProductosIndex() {
                                             required
                                             onChange={(e) =>
                                                 form.setData(
-                                                    "tipo_afectacion_igv",
+                                                    'tipo_afectacion_igv',
                                                     e.target.value,
                                                 )
                                             }
@@ -1011,7 +1014,7 @@ export default function ProductosIndex() {
                                             disabled={form.data.serializado}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    "controla_lote",
+                                                    'controla_lote',
                                                     e.target.checked,
                                                 )
                                             }
@@ -1027,7 +1030,7 @@ export default function ProductosIndex() {
                                             checked={form.data.activo}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    "activo",
+                                                    'activo',
                                                     e.target.checked,
                                                 )
                                             }
@@ -1052,8 +1055,8 @@ export default function ProductosIndex() {
                                         className="bg-primary hover:bg-primary/90 rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
                                     >
                                         {editingProduct
-                                            ? "Guardar Cambios"
-                                            : "Crear Producto"}
+                                            ? 'Guardar Cambios'
+                                            : 'Crear Producto'}
                                     </button>
                                     {Object.values(form.errors)[0] ? (
                                         <p

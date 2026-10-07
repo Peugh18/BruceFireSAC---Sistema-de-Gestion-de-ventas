@@ -1,4 +1,4 @@
-﻿import { router, usePage } from "@inertiajs/react";
+﻿import { router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Boxes,
@@ -9,10 +9,10 @@ import {
     Layers,
     Percent,
     TrendingUp,
-} from "lucide-react";
-import { useState } from "react";
+} from 'lucide-react';
+import { useState } from 'react';
 
-import GerenteLayout from "@/layouts/gerente-layout";
+import GerenteLayout from '@/layouts/gerente-layout';
 
 type ComercialData = {
     fechaDesde: string;
@@ -57,7 +57,7 @@ type InventarioData = {
 
 type PageProps = {
     currentTeam: { slug: string };
-    tipo: "comercial" | "inventario";
+    tipo: 'comercial' | 'inventario';
     reporteComercial?: ComercialData;
     reporteInventario?: InventarioData;
     vendedores: Array<{ id: number; name: string }>;
@@ -67,9 +67,9 @@ type PageProps = {
 };
 
 function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat("es-PE", {
-        style: "currency",
-        currency: "PEN",
+    return new Intl.NumberFormat('es-PE', {
+        style: 'currency',
+        currency: 'PEN',
         minimumFractionDigits: 2,
     }).format(amount);
 }
@@ -87,22 +87,22 @@ export default function ReportesIndex() {
 
     // Filtros Comercial
     const [fechaDesde, setFechaDesde] = useState(
-        (filters.fecha_desde as string) || "",
+        (filters.fecha_desde as string) || '',
     );
     const [fechaHasta, setFechaHasta] = useState(
-        (filters.fecha_hasta as string) || "",
+        (filters.fecha_hasta as string) || '',
     );
     const [vendedorId, setVendedorId] = useState(
-        (filters.vendedor_id as string) || "",
+        (filters.vendedor_id as string) || '',
     );
 
     // Filtros Inventario
-    const [sedeId, setSedeId] = useState((filters.sede_id as string) || "");
+    const [sedeId, setSedeId] = useState((filters.sede_id as string) || '');
     const [soloBajoMinimo, setSoloBajoMinimo] = useState(
         (filters.solo_bajo_minimo as boolean) || false,
     );
 
-    const switchTipo = (newTipo: "comercial" | "inventario") => {
+    const switchTipo = (newTipo: 'comercial' | 'inventario') => {
         router.get(
             `/${currentTeam.slug}/gerente/reportes`,
             { tipo: newTipo },
@@ -114,7 +114,7 @@ export default function ReportesIndex() {
         router.get(
             `/${currentTeam.slug}/gerente/reportes`,
             {
-                tipo: "comercial",
+                tipo: 'comercial',
                 fecha_desde: fechaDesde || undefined,
                 fecha_hasta: fechaHasta || undefined,
                 vendedor_id: vendedorId || undefined,
@@ -127,9 +127,9 @@ export default function ReportesIndex() {
         router.get(
             `/${currentTeam.slug}/gerente/reportes`,
             {
-                tipo: "inventario",
+                tipo: 'inventario',
                 sede_id: sedeId || undefined,
-                solo_bajo_minimo: soloBajoMinimo ? "1" : undefined,
+                solo_bajo_minimo: soloBajoMinimo ? '1' : undefined,
             },
             { preserveState: true },
         );
@@ -144,19 +144,19 @@ export default function ReportesIndex() {
 
         window.open(
             `/${currentTeam.slug}/gerente/reportes/comercial/pdf?${query}`,
-            "_blank",
+            '_blank',
         );
     };
 
     const handleDownloadInventarioPdf = () => {
         const query = new URLSearchParams({
             ...(sedeId ? { sede_id: sedeId } : {}),
-            ...(soloBajoMinimo ? { solo_bajo_minimo: "1" } : {}),
+            ...(soloBajoMinimo ? { solo_bajo_minimo: '1' } : {}),
         }).toString();
 
         window.open(
             `/${currentTeam.slug}/gerente/reportes/inventario/pdf?${query}`,
-            "_blank",
+            '_blank',
         );
     };
 
@@ -179,11 +179,11 @@ export default function ReportesIndex() {
                     <div className="border-border bg-card inline-flex rounded-xl border p-1 text-xs font-semibold shadow-xs">
                         <button
                             type="button"
-                            onClick={() => switchTipo("comercial")}
+                            onClick={() => switchTipo('comercial')}
                             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 transition-colors ${
-                                tipo === "comercial"
-                                    ? "bg-foreground text-background"
-                                    : "text-muted-foreground hover:text-foreground"
+                                tipo === 'comercial'
+                                    ? 'bg-foreground text-background'
+                                    : 'text-muted-foreground hover:text-foreground'
                             }`}
                         >
                             <TrendingUp className="size-4" />
@@ -191,11 +191,11 @@ export default function ReportesIndex() {
                         </button>
                         <button
                             type="button"
-                            onClick={() => switchTipo("inventario")}
+                            onClick={() => switchTipo('inventario')}
                             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 transition-colors ${
-                                tipo === "inventario"
-                                    ? "bg-foreground text-background"
-                                    : "text-muted-foreground hover:text-foreground"
+                                tipo === 'inventario'
+                                    ? 'bg-foreground text-background'
+                                    : 'text-muted-foreground hover:text-foreground'
                             }`}
                         >
                             <Boxes className="size-4" />
@@ -205,7 +205,7 @@ export default function ReportesIndex() {
                 </div>
 
                 {/* VISTA REPORTE COMERCIAL */}
-                {tipo === "comercial" && reporteComercial && (
+                {tipo === 'comercial' && reporteComercial && (
                     <div className="space-y-6">
                         {/* Filtros Comercial */}
                         <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
@@ -462,7 +462,7 @@ export default function ReportesIndex() {
                                                             <td className="text-foreground max-w-xs truncate px-3 py-2.5 font-medium">
                                                                 <b className="text-primary-strong mr-1">
                                                                     #{i + 1}
-                                                                </b>{" "}
+                                                                </b>{' '}
                                                                 {c.cliente}
                                                             </td>
                                                             <td className="px-3 py-2.5 text-center font-mono">
@@ -525,7 +525,7 @@ export default function ReportesIndex() {
                                                         <td className="text-foreground px-4 py-3 font-medium">
                                                             <b className="text-primary-strong mr-2">
                                                                 #{i + 1}
-                                                            </b>{" "}
+                                                            </b>{' '}
                                                             {item.nombre}
                                                         </td>
                                                         <td className="text-foreground/80 px-4 py-3 text-center font-mono font-semibold">
@@ -548,7 +548,7 @@ export default function ReportesIndex() {
                 )}
 
                 {/* VISTA REPORTE INVENTARIO */}
-                {tipo === "inventario" && reporteInventario && (
+                {tipo === 'inventario' && reporteInventario && (
                     <div className="space-y-6">
                         {/* Filtros Inventario */}
                         <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-4 text-xs shadow-xs md:flex-row md:items-end md:justify-between">
@@ -623,7 +623,7 @@ export default function ReportesIndex() {
                                 role="alert"
                                 className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-medium"
                             >
-                                {reporteInventario.productosSinCosto}{" "}
+                                {reporteInventario.productosSinCosto}{' '}
                                 producto(s) con stock no tienen costo de compra:
                                 la valorización está incompleta. Registra el
                                 costo al recibir la mercadería.
@@ -759,8 +759,8 @@ export default function ReportesIndex() {
                                                         <td className="px-4 py-3 text-center">
                                                             <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px]">
                                                                 {p.serializado
-                                                                    ? "Serializado"
-                                                                    : "A Granel"}
+                                                                    ? 'Serializado'
+                                                                    : 'A Granel'}
                                                             </span>
                                                         </td>
                                                         <td className="text-foreground/80 px-4 py-3 text-center font-mono">
@@ -772,20 +772,20 @@ export default function ReportesIndex() {
                                                                 ? formatCurrency(
                                                                       p.costo_promedio,
                                                                   )
-                                                                : "Sin costo"}
+                                                                : 'Sin costo'}
                                                         </td>
                                                         <td className="text-foreground/80 px-4 py-3 text-center font-mono">
                                                             {p.stock_minimo !==
                                                             null
                                                                 ? p.stock_minimo
-                                                                : "—"}
+                                                                : '—'}
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
                                                             <span
                                                                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
                                                                     p.bajo_minimo
-                                                                        ? "text-primary-strong bg-red-100"
-                                                                        : "bg-background text-foreground"
+                                                                        ? 'text-primary-strong bg-red-100'
+                                                                        : 'bg-background text-foreground'
                                                                 }`}
                                                             >
                                                                 {p.bajo_minimo && (
@@ -805,13 +805,13 @@ export default function ReportesIndex() {
                                                             <span
                                                                 className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                                     p.bajo_minimo
-                                                                        ? "text-primary-strong bg-red-100"
-                                                                        : "bg-emerald-100 text-emerald-800"
+                                                                        ? 'text-primary-strong bg-red-100'
+                                                                        : 'bg-emerald-100 text-emerald-800'
                                                                 }`}
                                                             >
                                                                 {p.bajo_minimo
-                                                                    ? "Bajo Mínimo"
-                                                                    : "Normal"}
+                                                                    ? 'Bajo Mínimo'
+                                                                    : 'Normal'}
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -825,18 +825,18 @@ export default function ReportesIndex() {
                                 reporteInventario.paginacion.ultima > 1 && (
                                     <div className="border-border text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
                                         <span>
-                                            Página{" "}
+                                            Página{' '}
                                             {
                                                 reporteInventario.paginacion
                                                     .pagina
-                                            }{" "}
-                                            de{" "}
+                                            }{' '}
+                                            de{' '}
                                             {
                                                 reporteInventario.paginacion
                                                     .ultima
-                                            }{" "}
+                                            }{' '}
                                             (
-                                            {reporteInventario.paginacion.total}{" "}
+                                            {reporteInventario.paginacion.total}{' '}
                                             productos)
                                         </span>
                                         <div className="flex gap-2">

@@ -1,8 +1,12 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
-import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
-import SubirEvidencia, { type EvidenciaListada } from '@/components/subir-evidencia';
+import SubirEvidencia, {
+    type EvidenciaListada,
+} from '@/components/subir-evidencia';
 import {
     ArrowLeft,
     Check,
@@ -21,7 +25,9 @@ import React, { useState } from 'react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import instalaciones from '@/routes/tecnico-campo/instalaciones';
 import type { Team } from '@/types';
-import OpcionesAgente, { useAgentesExtintor } from '@/components/opciones-agente';
+import OpcionesAgente, {
+    useAgentesExtintor,
+} from '@/components/opciones-agente';
 
 type Client = {
     id: number;
@@ -113,26 +119,26 @@ export default function InstalacionShow({
         unidadesVendidas.length > 0
             ? []
             : order.equipments.length > 0
-            ? order.equipments.map((eq) => ({
-                  equipment_id: eq.id,
-                  numero_serie: eq.numero_serie,
-                  tipo_agente: agentes.includes(eq.tipo_agente ?? '')
-                      ? (eq.tipo_agente as string)
-                      : '',
-                  capacidad: eq.capacidad || '6 kg',
-                  marca: eq.marca || 'Bruce Fire',
-                  ubicacion_actual: eq.ubicacion_actual || '',
-              }))
-            : [
-                  {
-                      equipment_id: null,
-                      numero_serie: '',
-                      tipo_agente: '',
-                      capacidad: '6 kg',
-                      marca: 'Bruce Fire',
-                      ubicacion_actual: '',
-                  },
-              ],
+              ? order.equipments.map((eq) => ({
+                    equipment_id: eq.id,
+                    numero_serie: eq.numero_serie,
+                    tipo_agente: agentes.includes(eq.tipo_agente ?? '')
+                        ? (eq.tipo_agente as string)
+                        : '',
+                    capacidad: eq.capacidad || '6 kg',
+                    marca: eq.marca || 'Bruce Fire',
+                    ubicacion_actual: eq.ubicacion_actual || '',
+                }))
+              : [
+                    {
+                        equipment_id: null,
+                        numero_serie: '',
+                        tipo_agente: '',
+                        capacidad: '6 kg',
+                        marca: 'Bruce Fire',
+                        ubicacion_actual: '',
+                    },
+                ],
     );
 
     const form = useForm({
@@ -161,7 +167,9 @@ export default function InstalacionShow({
         );
 
         if (!unidad) {
-            setErrorEscaneo('Ese código no es de una unidad vendida a este cliente.');
+            setErrorEscaneo(
+                'Ese código no es de una unidad vendida a este cliente.',
+            );
 
             return;
         }
@@ -225,7 +233,12 @@ export default function InstalacionShow({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         form.setData('equipos', equiposList);
-        form.post(instalaciones.store.url({ current_team: teamSlug, service_order: order.id }));
+        form.post(
+            instalaciones.store.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+        );
     };
 
     return (
@@ -405,11 +418,16 @@ export default function InstalacionShow({
                 {unidadesVendidas.length > 0 && (
                     <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
                         <h2 className="text-foreground text-xs font-black tracking-wider uppercase">
-                            Escanear unidades vendidas ({unidadesVendidas.length - faltantes.length}/{unidadesVendidas.length})
+                            Escanear unidades vendidas (
+                            {unidadesVendidas.length - faltantes.length}/
+                            {unidadesVendidas.length})
                         </h2>
                         {!isFinalizada && (
                             <div className="flex gap-2">
-                                <label htmlFor="codigo-unidad" className="sr-only">
+                                <label
+                                    htmlFor="codigo-unidad"
+                                    className="sr-only"
+                                >
                                     Código del extintor
                                 </label>
                                 <input
@@ -435,19 +453,27 @@ export default function InstalacionShow({
                             </div>
                         )}
                         {errorEscaneo && (
-                            <p className="text-[11px] font-semibold text-red-600" role="alert">
+                            <p
+                                className="text-[11px] font-semibold text-red-600"
+                                role="alert"
+                            >
                                 {errorEscaneo}
                             </p>
                         )}
                         <ul className="space-y-1">
                             {unidadesVendidas.map((u) => (
-                                <li key={u.id} className="flex items-center gap-2 text-xs">
+                                <li
+                                    key={u.id}
+                                    className="flex items-center gap-2 text-xs"
+                                >
                                     {escaneadas.has(u.id) ? (
                                         <Check className="text-success-strong size-4" />
                                     ) : (
                                         <span className="size-4 rounded-full border border-neutral-400" />
                                     )}
-                                    <span className="font-mono font-semibold">{u.numero_serie}</span>
+                                    <span className="font-mono font-semibold">
+                                        {u.numero_serie}
+                                    </span>
                                     <span className="text-muted-foreground">
                                         {u.tipo_agente} {u.capacidad}
                                     </span>
@@ -456,7 +482,8 @@ export default function InstalacionShow({
                         </ul>
                         {faltantes.length > 0 && (
                             <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
-                                Faltan {faltantes.length} unidad(es) por escanear.
+                                Faltan {faltantes.length} unidad(es) por
+                                escanear.
                             </p>
                         )}
                     </div>
@@ -714,9 +741,13 @@ export default function InstalacionShow({
                             equipos={conversacion.equipos}
                         />
 
-                        <FirmaCanvas onChange={(f) => form.setData('firma', f)} />
+                        <FirmaCanvas
+                            onChange={(f) => form.setData('firma', f)}
+                        />
                         {form.errors.firma && (
-                            <p className="text-[10px] text-red-500">{form.errors.firma}</p>
+                            <p className="text-[10px] text-red-500">
+                                {form.errors.firma}
+                            </p>
                         )}
 
                         <div>
@@ -767,7 +798,11 @@ export default function InstalacionShow({
 
                         <button
                             type="submit"
-                            disabled={form.processing || !form.data.firma || faltantes.length > 0}
+                            disabled={
+                                form.processing ||
+                                !form.data.firma ||
+                                faltantes.length > 0
+                            }
                             className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
@@ -787,7 +822,10 @@ export default function InstalacionShow({
             </form>
 
             <div className="mt-5">
-                <ConversacionOrden ordenId={order.id} conversacion={conversacion} />
+                <ConversacionOrden
+                    ordenId={order.id}
+                    conversacion={conversacion}
+                />
             </div>
         </TecnicoCampoLayout>
     );

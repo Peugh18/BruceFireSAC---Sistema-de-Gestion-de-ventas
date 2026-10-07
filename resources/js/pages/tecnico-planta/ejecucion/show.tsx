@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
 import DeficienciaSuelta from '@/components/deficiencia-suelta';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -228,10 +230,16 @@ export default function EjecucionShow({
 
                 <TomarOrden asignacion={asignacion} />
 
-                <ConversacionOrden ordenId={order.id} conversacion={conversacion} />
+                <ConversacionOrden
+                    ordenId={order.id}
+                    conversacion={conversacion}
+                />
 
                 {order.equipments.length > 0 && (
-                    <DeficienciaSuelta ordenId={order.id} equipos={conversacion.equipos} />
+                    <DeficienciaSuelta
+                        ordenId={order.id}
+                        equipos={conversacion.equipos}
+                    />
                 )}
 
                 {/* Indicaciones de Ventas / Notas de Coordinación */}

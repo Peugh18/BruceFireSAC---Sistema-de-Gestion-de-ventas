@@ -40,7 +40,10 @@ export default function SubirEvidencia({
         }
 
         router.post(
-            guardarEvidencia.url({ current_team: equipo, service_order: ordenId }),
+            guardarEvidencia.url({
+                current_team: equipo,
+                service_order: ordenId,
+            }),
             { archivo, etapa, equipment_id: equipoId || null },
             {
                 forceFormData: true,
@@ -74,7 +77,9 @@ export default function SubirEvidencia({
                 )}
                 <BotonFoto onFoto={subir} etiqueta="Agregar foto" />
                 {subiendo && (
-                    <span className="text-[11px] text-neutral-500">Subiendo...</span>
+                    <span className="text-[11px] text-neutral-500">
+                        Subiendo...
+                    </span>
                 )}
             </div>
             {propias.length > 0 && (
@@ -82,12 +87,18 @@ export default function SubirEvidencia({
                     {propias.map((e) => (
                         <a
                             key={e.id}
-                            href={verEvidencia.url({ current_team: equipo, evidencia: e.id })}
+                            href={verEvidencia.url({
+                                current_team: equipo,
+                                evidencia: e.id,
+                            })}
                             target="_blank"
                             rel="noreferrer"
                         >
                             <img
-                                src={verEvidencia.url({ current_team: equipo, evidencia: e.id })}
+                                src={verEvidencia.url({
+                                    current_team: equipo,
+                                    evidencia: e.id,
+                                })}
                                 alt={`Foto ${titulo.toLowerCase()}`}
                                 className="h-16 w-16 rounded-lg object-cover"
                             />

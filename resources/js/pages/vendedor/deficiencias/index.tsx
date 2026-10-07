@@ -331,8 +331,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                     ({item.authorization.canal})
                                                     el{' '}
                                                     {item.authorization.fecha}
-                                                    {item.authorization.importe !=
-                                                        null &&
+                                                    {item.authorization
+                                                        .importe != null &&
                                                         ` · S/ ${item.authorization.importe.toFixed(2)}`}
                                                 </span>
                                             )}
@@ -607,8 +607,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                         className="text-foreground/80 text-[11px] font-bold uppercase"
                                     >
                                         Importe aceptado (S/)
-                                        {actionModal.item.orden_cobrada &&
-                                            ' *'}
+                                        {actionModal.item.orden_cobrada && ' *'}
                                     </Label>
                                     <Input
                                         id="importe"
