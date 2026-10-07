@@ -6,6 +6,7 @@ use App\Http\Controllers\TecnicoCampo\DashboardController;
 use App\Http\Controllers\TecnicoCampo\DeliveryController;
 use App\Http\Controllers\TecnicoCampo\InspectionController;
 use App\Http\Controllers\TecnicoCampo\InstallationController;
+use App\Http\Controllers\TecnicoCampo\MaintenanceController;
 use App\Http\Middleware\EnsureTechnicalOrderAccess;
 use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,14 @@ Route::prefix('tecnico-campo')
         Route::get('instalaciones', [InstallationController::class, 'index'])->name('instalaciones.index');
         Route::get('instalaciones/{service_order}', [InstallationController::class, 'show'])->name('instalaciones.show');
         Route::post('instalaciones/{service_order}', [InstallationController::class, 'store'])->name('instalaciones.store');
+
+        // Mantenimiento en sitio (T2, Fase D)
+        Route::get('mantenimientos', [MaintenanceController::class, 'index'])->name('mantenimientos.index');
+        Route::get('mantenimientos/{service_order}', [MaintenanceController::class, 'show'])->name('mantenimientos.show');
+        Route::post('mantenimientos/{service_order}/equipos', [MaintenanceController::class, 'storeEquipment'])->name('mantenimientos.equipos.store');
+        Route::post('mantenimientos/{service_order}/equipos/{equipment}/checklist', [MaintenanceController::class, 'storeChecklist'])->name('mantenimientos.checklist.store');
+        Route::post('mantenimientos/{service_order}/finalizar', [MaintenanceController::class, 'complete'])->name('mantenimientos.complete');
+        Route::get('mantenimientos/{service_order}/acta-pdf', [MaintenanceController::class, 'pdf'])->name('mantenimientos.pdf');
 
         // Entrega Final y Acta de Conformidad (§22.3, §23, Fase 10)
         Route::get('entregas', [DeliveryController::class, 'index'])->name('entregas.index');

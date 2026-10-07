@@ -10,7 +10,7 @@ LEE PRIMERO: CLAUDE.md, AGENTS.md, .ai/rules/*.md, docs/ai/PROYECTO.md, docs/ai/
 ESTADO (2026-10-07), rama principal fix/correcciones-auditoria-completa:
 - HECHO y con commit: fase A (facturación SUNAT), A2 (seguridad) y B (certificados y tipo de extintor). Commits fc024ec y 2b0fd02.
 - FASE C (ventas, caja, cobranzas, KPI): HECHA con commit (pruebas escritas sin ejecutar).
-- FASE E (almacén y Gerente): a medias en la rama `worktree-agent-a768c68fdf84cdc6b` (carpeta .claude/worktrees/agent-a768c68fdf84cdc6b). Termínala allí, haz el commit y luego únela a la rama principal.
+- FASE E (almacén y Gerente): HECHA y unida a la rama principal (merge d4a36ed).
 - FASE D (técnicos): rama `worktree-agent-a433661a5d96bddf7` (casi sin avance). FASE H (guía de remisión): rama `worktree-agent-a381db1eab387b5e3` (recién empezada). Termínalas y únelas a la rama principal.
 - NO hacer: fase F (rediseño de interfaces: va al final, con prototipos) ni G (servidor).
 

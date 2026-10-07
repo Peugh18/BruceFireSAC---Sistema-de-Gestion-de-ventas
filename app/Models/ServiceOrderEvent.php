@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,12 +18,13 @@ use Illuminate\Support\Carbon;
  * @property int $service_order_id
  * @property string $tipo
  * @property int|null $user_id
+ * @property int|null $equipment_id
  * @property array<string, mixed>|null $payload
  * @property Carbon|null $created_at
  * @property-read ServiceOrder $serviceOrder
  * @property-read User|null $user
  */
-#[Fillable(['service_order_id', 'tipo', 'user_id', 'payload', 'created_at'])]
+#[Fillable(['service_order_id', 'tipo', 'user_id', 'equipment_id', 'payload', 'created_at'])]
 class ServiceOrderEvent extends Model
 {
     /** @use HasFactory<ServiceOrderEventFactory> */
@@ -52,5 +54,21 @@ class ServiceOrderEvent extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Equipment, $this>
+     */
+    public function equipment(): BelongsTo
+    {
+        return $this->belongsTo(Equipment::class);
+    }
+
+    /**
+     * @return HasMany<Evidencia, $this>
+     */
+    public function evidencias(): HasMany
+    {
+        return $this->hasMany(Evidencia::class);
     }
 }

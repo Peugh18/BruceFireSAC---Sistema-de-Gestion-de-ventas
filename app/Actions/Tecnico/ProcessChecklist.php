@@ -9,12 +9,14 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\TechnicalChecklist;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
 
 class ProcessChecklist
 {
+    public function __construct(protected GuardarEvidencia $guardarEvidencia) {}
+
     /**
      * Elementos estándar del checklist técnico (§19.1).
      */
@@ -49,7 +51,7 @@ class ProcessChecklist
      *         accion_recomendada?: string|null,
      *         repuesto_sugerido?: string|null,
      *         requiere_autorizacion?: bool|null,
-     *         foto_path?: string|null
+     *         foto?: UploadedFile|null
      *     }>,
      *     observaciones?: string|null
      * }  $data
@@ -60,10 +62,6 @@ class ProcessChecklist
         User $user,
         array $data
     ): TechnicalChecklist {
-        if (! isset($data['items']) || ! is_array($data['items'])) {
-            throw new InvalidArgumentException('El checklist debe incluir los elementos evaluados.');
-        }
-
         // En planta se revisa lo recibido y antes de cerrar el trabajo.
         if (in_array($serviceOrder->estado, ServiceOrder::ESTADOS_CERRADOS_AL_TALLER, true)
             || (($data['origen'] ?? null) === 'planta' && $serviceOrder->estado === 'pendiente_recepcion')) {
@@ -77,6 +75,15 @@ class ProcessChecklist
             throw ValidationException::withMessages(['equipment' => 'Ese extintor no está registrado en esta orden.']);
         }
 
+        // En planta, cada ítem observado lleva su foto (§19.2, §33).
+        if (($data['origen'] ?? null) === 'planta') {
+            foreach ($data['items'] as $clave => $item) {
+                if ($item['estado'] === 'observado' && ! ($item['foto'] ?? null) instanceof UploadedFile) {
+                    throw ValidationException::withMessages(["items.{$clave}.foto" => 'Toma una foto del componente observado.']);
+                }
+            }
+        }
+
         return DB::transaction(function () use ($serviceOrder, $equipment, $user, $data) {
             $origen = $data['origen'] ?? ($serviceOrder->departamento_tecnico ?: 'planta');
             $checklistItems = [];
@@ -86,7 +93,7 @@ class ProcessChecklist
 
             foreach ($data['items'] as $clave => $itemData) {
                 $nombreElemento = self::ELEMENTOS[$clave] ?? ucfirst(str_replace('_', ' ', $clave));
-                $estado = $itemData['estado'] ?? 'conforme';
+                $estado = $itemData['estado'];
 
                 $checklistItems[] = [
                     'clave' => $clave,
@@ -120,7 +127,6 @@ class ProcessChecklist
                         'equipment_id' => $equipment->id,
                         'componente' => $nombreElemento,
                         'condicion' => $itemData['condicion'] ?? 'Observado durante inspección técnica',
-                        'foto_path' => $itemData['foto_path'] ?? null,
                         'nota' => trim(($itemData['nota'] ?? '')."\nCondición observada: ".($itemData['condicion'] ?? 'Observado durante inspección técnica')),
                         'accion_recomendada' => $itemData['accion_recomendada'] ?? null,
                         'repuesto_sugerido' => $itemData['repuesto_sugerido'] ?? null,
@@ -128,6 +134,11 @@ class ProcessChecklist
                         'estado' => $requiereAuth ? 'esperando_autorizacion' : 'detectada',
                         'reported_by_user_id' => $user->id,
                     ]);
+
+                    if (($itemData['foto'] ?? null) instanceof UploadedFile) {
+                        $evidencia = $this->guardarEvidencia->archivo($serviceOrder, $itemData['foto'], 'deficiencia', $user, $equipment->id, null, $deficiency);
+                        $deficiency->update(['foto_path' => $evidencia->path]);
+                    }
 
                     $deficienciesCreated[] = $deficiency;
                 }

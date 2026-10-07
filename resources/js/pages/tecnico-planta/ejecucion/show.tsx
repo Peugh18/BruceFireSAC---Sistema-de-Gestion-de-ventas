@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import DeficienciaSuelta from '@/components/deficiencia-suelta';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
 import {
@@ -78,6 +80,7 @@ interface OrderDetail {
 }
 
 interface Props {
+    conversacion: ConversacionProps;
     asignacion: AsignacionOrden;
     order: OrderDetail;
     repuestos: ProductItem[];
@@ -85,6 +88,7 @@ interface Props {
 }
 
 export default function EjecucionShow({
+    conversacion,
     asignacion,
     order,
     repuestos,
@@ -223,6 +227,12 @@ export default function EjecucionShow({
                 </div>
 
                 <TomarOrden asignacion={asignacion} />
+
+                <ConversacionOrden ordenId={order.id} conversacion={conversacion} />
+
+                {order.equipments.length > 0 && (
+                    <DeficienciaSuelta ordenId={order.id} equipos={conversacion.equipos} />
+                )}
 
                 {/* Indicaciones de Ventas / Notas de Coordinación */}
                 {(() => {

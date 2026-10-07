@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\TecnicoCampo;
 
 use App\Actions\Certificates\IssueCertificate;
+use App\Actions\Tecnico\GuardarEvidencia;
 use App\Actions\Tecnico\ProcessChecklist;
 use App\Actions\TecnicoCampo\EquipoDeLaOrden;
 use App\Enums\EquipmentType;
@@ -12,6 +13,7 @@ use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -101,6 +103,8 @@ class InspectionController extends Controller
 
         return Inertia::render('tecnico-campo/inspecciones/show', [
             'asignacion' => $serviceOrder->asignacionPara(request()->user()),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($serviceOrder),
+            'evidencias' => $serviceOrder->evidencias()->whereIn('etapa', ['antes', 'despues'])->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'order' => $serviceOrder,
             'customerEquipments' => $customerEquipments,
             'elementosChecklist' => ProcessChecklist::ELEMENTOS,
@@ -163,6 +167,7 @@ class InspectionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'items' => ['required', 'array'],
+            'items.*.foto' => ['nullable', 'image', 'max:15360'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -187,11 +192,16 @@ class InspectionController extends Controller
             'cargo' => ['nullable', 'string', 'max:100'],
             'conformidad_nombre' => ['required', 'string', 'max:150'],
             'conformidad_aceptada' => ['required', 'accepted'],
+            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
             'observaciones_generales' => ['nullable', 'string', 'max:1000'],
         ]);
 
         // Finalizar dos veces duplicaría el certificado.
         EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+
+        if (filled($validated['firma'] ?? null)) {
+            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'inspeccion', $request->user());
+        }
 
         $responsable = ($validated['responsable'] ?? null) ?: $request->user()->name;
         $cargo = ($validated['cargo'] ?? null) ?: 'Técnico de Campo';
