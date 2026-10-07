@@ -90,13 +90,17 @@ class DispatchGuideController extends Controller
         // Lo que enlaza la guía se verifica contra lo que el usuario puede ver.
         $sede = $user->sedeRestringidaId();
         if (! empty($datos['sale_id'])) {
-            $sede ??= Sale::query()->visiblePara($user)->whereKey($datos['sale_id'])->firstOrFail()->sede_id;
+            // Siempre se valida el acceso; ??= no debe saltarse la consulta.
+            $venta = Sale::query()->visiblePara($user)->whereKey($datos['sale_id'])->firstOrFail();
+            $sede ??= $venta->sede_id;
         }
         if (! empty($datos['service_order_id'])) {
-            $sede ??= $this->orden($user, (int) $datos['service_order_id'])->sede_id;
+            $orden = $this->orden($user, (int) $datos['service_order_id']);
+            $sede ??= $orden->sede_id;
         }
         if (! empty($datos['inventory_transfer_id'])) {
-            $sede ??= $this->traslado($user, (int) $datos['inventory_transfer_id'])->origen_sede_id;
+            $traslado = $this->traslado($user, (int) $datos['inventory_transfer_id']);
+            $sede ??= $traslado->origen_sede_id;
         }
         $datos['sede_id'] = $sede ?? Sede::query()->orderBy('id')->value('id');
 
@@ -168,9 +172,10 @@ class DispatchGuideController extends Controller
     protected function traslado(User $user, int $id): InventoryTransfer
     {
         $traslado = InventoryTransfer::query()->findOrFail($id);
-        $almacen = $user->almacenRestringidoId();
+        // Solo quien pertenece al almacén de origen o de destino (el Gerente ve todo).
+        $propias = array_filter([$user->sedeRestringidaId(), $user->almacenRestringidoId()]);
 
-        abort_if($almacen !== null && $traslado->origen_sede_id !== $almacen, 404);
+        abort_if($propias !== [] && array_intersect($propias, [$traslado->origen_sede_id, $traslado->destino_sede_id]) === [], 404);
 
         return $traslado;
     }
