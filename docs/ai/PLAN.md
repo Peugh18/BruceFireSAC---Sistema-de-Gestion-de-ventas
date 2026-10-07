@@ -152,3 +152,17 @@ Detalle y fuentes en Obsidian: `D:/TiomiguelonGgs/Documents/Recuerda/Cerebro/Doc
 - [ ] Después revisar el sistema y las pruebas pendientes; no dar por validado lo implementado.
 
 **Siguiente paso documental:** retomar el plan con el usuario y preparar los cuatro archivos de Semana 8 conservando las plantillas. Planes de pruebas Funcionales y Unitarias quedan como referencia pendiente de alcance; el pedido de guardar memoria no confirma incorporarlos. No confundir fechas planificadas con terminación real. Este bloque no cambia las prioridades ni el estado de las fases técnicas anteriores.
+
+
+### Investigación oficial de Semana 8 completada 07/10/2026
+
+- [x] Contrastar PMBOK/PMI, ISO y Scrum con las plantillas y los documentos actuales, sin editar entregables.
+- [x] Conectar Obsidian en lectura y confirmar Semana 8 = Sprint 7, 02/10–09/10.
+- [x] Revisar 3.7, 3.9 y 3.10: tres indicadores VI y cinco VD; propuesta de cinco métricas con dos complementarias y SUS conservado.
+- [x] Verificar PV S7 = S/ 890.59 en Curva S actual, respetando la distribución especial de actas; no hay EV/AC de S7.
+- [ ] Resolver la trazabilidad de métricas complementarias y la terminología ISO 2023; unidad explícita en Tipo de medida.
+- [ ] Completar A1 con los 122 REQ del alcance vigente y enlazar todos los instrumentos declarados con sus anexos.
+- [ ] Conciliar las cifras históricas de Obsidian con los Excel actuales y sustentar EV, AC y cierres reales.
+- [ ] Preparar la demostración del avance del software de la foto, concordante con el informe y Scrum; pruebas funcionales siguen sin ejecución según la bitácora.
+
+Siguiente paso: presentar la investigación y luego redactar los cuatro archivos y preparar la demo dentro del alcance pedido. No dar por confirmados resultados del 8 y 9 antes de disponer de evidencia. Investigación detallada: C:/Users/migue/.codex/visualizations/2026/10/07/01a11448-9708-7930-933f-5d7d8b01b516/investigacion-semana8/Investigacion previa Semana 8.md

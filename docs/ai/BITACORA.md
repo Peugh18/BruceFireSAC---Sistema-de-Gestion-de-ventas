@@ -254,3 +254,17 @@
     - REQ-INS-01: la instalación exige escanear cada unidad vendida antes de registrarse.
     - REQ-DEF-01: el técnico de planta registra una deficiencia fuera del checklist.
 
+
+
+## [2026-10-07] — Investigación oficial previa Semana 8 Sprint 7
+
+- Pedido vigente: investigar antes de editar; foto incluye métricas, instrumentos, informe, Scrum y demo. Entregables y código no se modificaron en esta investigación.
+- Obsidian leído mediante API local autenticada; periodo 02/10–09/10 confirmado. Revisados Word, Excel, Informe Final 3.7/3.9/3.10, S4–S6, cronograma y Curva S.
+- VI declara 3 indicadores, VD 5. Propuesta de dos métricas VI complementarias manteniendo SUS; diferenciar medidas de adaptación de fórmulas normativas.
+- Correcciones pendientes: unidad en Tipo de medida, A1 solo 12 de 122 REQ, relación de instrumentos y anexos, terminología ISO por edición.
+- Verificación numérica: 129 paquetes y BAC S/ 14250; PV S7 S/ 890.59 recalculado con asignación especial de actas. EV y AC S7 vacíos; no se calculó CPI ficticio.
+- Cronograma: 41 actividades con solapamiento positivo del 2 al 9, 16 con fin previsto y 25 continúan; 13 inician el 9. Son datos planificados, no ejecución.
+- Notas antiguas de Obsidian y Excel actual contienen cifras históricas distintas; reconciliar bases y horas/costos antes de afirmar resultados.
+- Fuentes: extractos oficiales PMBOK 5/6, PMI sobre valor ganado, fichas ISO 25010/25023 y Scrum Guide 2020. No se accedió a las guías completas licenciadas.
+- Artefacto: C:/Users/migue/.codex/visualizations/2026/10/07/01a11448-9708-7930-933f-5d7d8b01b516/investigacion-semana8/Investigacion previa Semana 8.md
+- Pendiente: redactar entregables con datos sustentados y preparar demo; no se ejecutaron pruebas del software.
