@@ -71,23 +71,35 @@ export default function GuiaForm({
         id: keyof Datos,
         etiqueta: string,
         tipo: 'text' | 'date' | 'number' = 'text',
-    ) => (
-        <div>
-            <Label htmlFor={`guia-${id}`}>{etiqueta}</Label>
-            <Input
-                id={`guia-${id}`}
-                type={tipo}
-                step={tipo === 'number' ? '0.001' : undefined}
-                value={String(form.data[id] ?? '')}
-                onChange={(event) => form.setData(id, event.target.value)}
-            />
-            {form.errors[id] ? (
-                <p className="text-destructive-strong mt-1 text-xs">
-                    {form.errors[id]}
-                </p>
-            ) : null}
-        </div>
-    );
+    ) => {
+        // Solo los campos de texto: un campo de más (como `items`) daría
+        // "[object Object]" al convertirlo.
+        const valor = form.data[id];
+        const texto =
+            typeof valor === 'number'
+                ? valor.toString()
+                : typeof valor === 'string'
+                  ? valor
+                  : '';
+
+        return (
+            <div>
+                <Label htmlFor={`guia-${id}`}>{etiqueta}</Label>
+                <Input
+                    id={`guia-${id}`}
+                    type={tipo}
+                    step={tipo === 'number' ? '0.001' : undefined}
+                    value={texto}
+                    onChange={(event) => form.setData(id, event.target.value)}
+                />
+                {form.errors[id] ? (
+                    <p className="text-destructive-strong mt-1 text-xs">
+                        {form.errors[id]}
+                    </p>
+                ) : null}
+            </div>
+        );
+    };
 
     const cambiarItem = (indice: number, cambios: Partial<Item>) =>
         form.setData(
