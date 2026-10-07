@@ -11,12 +11,17 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
+import {
+    CategoriaSelect,
+    type CategoriaItem,
+} from '@/components/categoria-select';
 import GerenteLayout from '@/layouts/gerente-layout';
 type ServiceItem = {
     id: number;
     codigo: string;
     nombre: string;
     descripcion: string | null;
+    categoria: string | null;
     unidad_medida: string;
     agente: string | null;
     capacidad: string | null;
@@ -53,6 +58,8 @@ type PageProps = {
     filters: ServiceFilters;
     kpis: ServiceKpis;
     tiposCertificado: { id: number; nombre: string }[];
+    categorias: CategoriaItem[];
+    unidadesMedida: { codigo: string; nombre: string }[];
     agentes: { valor: string; etiqueta: string }[];
     flash?: {
         success?: string;
@@ -74,6 +81,8 @@ export default function ServiciosIndex() {
         filters,
         kpis,
         tiposCertificado,
+        categorias,
+        unidadesMedida,
         agentes,
         flash,
     } = usePage<PageProps>().props;
@@ -86,6 +95,7 @@ export default function ServiciosIndex() {
         codigo: '',
         nombre: '',
         descripcion: '',
+        categoria: '',
         unidad_medida: 'ZZ',
         agente: '',
         capacidad: '',
@@ -102,6 +112,7 @@ export default function ServiciosIndex() {
             codigo: '',
             nombre: '',
             descripcion: '',
+            categoria: '',
             unidad_medida: 'ZZ',
             agente: '',
             capacidad: '',
@@ -119,6 +130,7 @@ export default function ServiciosIndex() {
             codigo: service.codigo,
             nombre: service.nombre,
             descripcion: service.descripcion || '',
+            categoria: service.categoria ?? '',
             unidad_medida: service.unidad_medida,
             agente: service.agente ?? '',
             capacidad: service.capacidad ?? '',
@@ -546,9 +558,7 @@ export default function ServiciosIndex() {
                                         <label className="text-foreground/80 block font-semibold">
                                             U.M. *
                                         </label>
-                                        <input
-                                            type="text"
-                                            required
+                                        <select
                                             value={form.data.unidad_medida}
                                             onChange={(e) =>
                                                 form.setData(
@@ -556,11 +566,31 @@ export default function ServiciosIndex() {
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="ZZ"
-                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
-                                        />
+                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                        >
+                                            {unidadesMedida.map((u) => (
+                                                <option
+                                                    key={u.codigo}
+                                                    value={u.codigo}
+                                                >
+                                                    {u.codigo} ({u.nombre})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {form.errors.unidad_medida && (
+                                            <p className="mt-1 text-red-600">
+                                                {form.errors.unidad_medida}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
+                                <CategoriaSelect
+                                    value={form.data.categoria}
+                                    onChange={(clave) =>
+                                        form.setData('categoria', clave)
+                                    }
+                                    categorias={categorias}
+                                />
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Nombre del Servicio *
@@ -687,7 +717,10 @@ export default function ServiciosIndex() {
                                     >
                                         <option value="">Ninguno</option>
                                         {tiposCertificado.map((tipo) => (
-                                            <option key={tipo.id} value={tipo.id}>
+                                            <option
+                                                key={tipo.id}
+                                                value={tipo.id}
+                                            >
                                                 {tipo.nombre}
                                             </option>
                                         ))}

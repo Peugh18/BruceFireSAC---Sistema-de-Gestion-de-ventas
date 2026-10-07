@@ -40,6 +40,7 @@ class CreateReception
                     'product_id' => $itemData['product_id'],
                     'cantidad' => $itemData['cantidad'],
                     'cantidad_conforme' => $itemData['cantidad_conforme'],
+                    'costo_unitario' => filled($itemData['costo_unitario'] ?? null) ? $itemData['costo_unitario'] : null,
                     'observacion_item' => $itemData['observacion_item'] ?? null,
                     'lote' => filled($itemData['lote'] ?? null) ? mb_strtoupper(trim((string) $itemData['lote'])) : null,
                     'fecha_vencimiento' => $itemData['fecha_vencimiento'] ?? null,
@@ -52,6 +53,10 @@ class CreateReception
                 }
 
                 $product = Product::query()->findOrFail((int) $itemData['product_id']);
+
+                if ($item->costo_unitario !== null) {
+                    $product->registrarCostoDeCompra($conforme, (float) $item->costo_unitario);
+                }
 
                 if ($product->serializado) {
                     // Para producto serializado: crear N InventoryUnit + N InventoryMovement (cantidad = 1)

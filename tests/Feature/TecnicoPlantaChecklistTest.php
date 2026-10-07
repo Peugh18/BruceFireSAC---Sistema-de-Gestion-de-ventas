@@ -10,6 +10,7 @@ use App\Models\Team;
 use App\Models\TechnicalChecklist;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -113,6 +114,7 @@ test('checklist with observed element creates deficiency and advances order to e
             'repuesto_sugerido' => 'Manómetro 1/8 195 PSI',
             'requiere_autorizacion' => true,
             'nota' => 'Extintor sin presión aparente',
+            'foto' => UploadedFile::fake()->image('foto.jpg'),
         ],
     ];
 

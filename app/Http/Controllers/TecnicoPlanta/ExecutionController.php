@@ -9,6 +9,7 @@ use App\Models\Deficiency;
 use App\Models\Product;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -50,6 +51,7 @@ class ExecutionController extends Controller
 
         return Inertia::render('tecnico-planta/ejecucion/show', [
             'asignacion' => $service_order->asignacionPara(request()->user()),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,

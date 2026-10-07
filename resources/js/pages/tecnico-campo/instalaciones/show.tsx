@@ -1,7 +1,11 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
+import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import FirmaCanvas from '@/components/firma-canvas';
+import SubirEvidencia, { type EvidenciaListada } from '@/components/subir-evidencia';
 import {
     ArrowLeft,
+    Check,
     FileCheck,
     Flame,
     MapPin,
@@ -15,6 +19,7 @@ import {
 import React, { useState } from 'react';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
+import instalaciones from '@/routes/tecnico-campo/instalaciones';
 import type { Team } from '@/types';
 import OpcionesAgente, { useAgentesExtintor } from '@/components/opciones-agente';
 
@@ -68,6 +73,9 @@ type Props = {
     currentTeam?: Team | null;
     order: ServiceOrder;
     customerEquipments: Equipment[];
+    unidadesVendidas: Equipment[];
+    evidencias: EvidenciaListada[];
+    conversacion: ConversacionProps;
     certificateTypes: CertificateType[];
 };
 
@@ -84,6 +92,9 @@ export default function InstalacionShow({
     asignacion,
     currentTeam,
     order,
+    unidadesVendidas,
+    evidencias,
+    conversacion,
     certificateTypes,
 }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
@@ -99,7 +110,9 @@ export default function InstalacionShow({
 
     // Lista de equipos a instalar en el formulario
     const [equiposList, setEquiposList] = useState<InstalledItem[]>(
-        order.equipments.length > 0
+        unidadesVendidas.length > 0
+            ? []
+            : order.equipments.length > 0
             ? order.equipments.map((eq) => ({
                   equipment_id: eq.id,
                   numero_serie: eq.numero_serie,
@@ -127,15 +140,53 @@ export default function InstalacionShow({
         ubicacion_instalada: '',
         pruebas:
             'Soporte fijado a 1.50m sobre nivel de piso. Verificación de manómetro y precinto de seguridad conforme NTP 350.043.',
-        foto_antes_path: '',
-        foto_despues_path: '',
         observaciones: '',
         conformidad_nombre: '',
         conformidad_aceptada: false,
         emitir_certificado: true,
         tipo_certificado_codigo: 'operatividad_garantia',
+        firma: null as string | null,
         equipos: equiposList,
     });
+
+    // T4: cada unidad vendida se escanea (o se escribe su código BF-EQ).
+    const [codigo, setCodigo] = useState('');
+    const [errorEscaneo, setErrorEscaneo] = useState<string | null>(null);
+    const escaneadas = new Set(equiposList.map((i) => i.equipment_id));
+    const faltantes = unidadesVendidas.filter((u) => !escaneadas.has(u.id));
+
+    const escanear = () => {
+        const unidad = unidadesVendidas.find(
+            (u) => u.numero_serie.toLowerCase() === codigo.trim().toLowerCase(),
+        );
+
+        if (!unidad) {
+            setErrorEscaneo('Ese código no es de una unidad vendida a este cliente.');
+
+            return;
+        }
+
+        setErrorEscaneo(null);
+        setCodigo('');
+
+        if (escaneadas.has(unidad.id)) {
+            return;
+        }
+
+        const updated = [
+            ...equiposList,
+            {
+                equipment_id: unidad.id,
+                numero_serie: unidad.numero_serie,
+                tipo_agente: unidad.tipo_agente ?? '',
+                capacidad: unidad.capacidad ?? '',
+                marca: 'Bruce Fire',
+                ubicacion_actual: form.data.ubicacion_instalada || '',
+            },
+        ];
+        setEquiposList(updated);
+        form.setData('equipos', updated);
+    };
 
     const addEquipmentRow = () => {
         const updated = [
@@ -174,7 +225,7 @@ export default function InstalacionShow({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         form.setData('equipos', equiposList);
-        form.post(`/${teamSlug}/tecnico-campo/instalaciones/${order.id}`);
+        form.post(instalaciones.store.url({ current_team: teamSlug, service_order: order.id }));
     };
 
     return (
@@ -350,6 +401,66 @@ export default function InstalacionShow({
                         />
                     </div>
                 </div>
+
+                {unidadesVendidas.length > 0 && (
+                    <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
+                        <h2 className="text-foreground text-xs font-black tracking-wider uppercase">
+                            Escanear unidades vendidas ({unidadesVendidas.length - faltantes.length}/{unidadesVendidas.length})
+                        </h2>
+                        {!isFinalizada && (
+                            <div className="flex gap-2">
+                                <label htmlFor="codigo-unidad" className="sr-only">
+                                    Código del extintor
+                                </label>
+                                <input
+                                    id="codigo-unidad"
+                                    value={codigo}
+                                    onChange={(e) => setCodigo(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            escanear();
+                                        }
+                                    }}
+                                    placeholder="Escanea o escribe BF-EQ-..."
+                                    className="border-border bg-card min-h-[44px] flex-1 rounded-[8px] border p-2 font-mono text-xs"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={escanear}
+                                    className="min-h-[44px] rounded-[8px] bg-sky-600 px-4 text-xs font-bold text-white"
+                                >
+                                    Agregar
+                                </button>
+                            </div>
+                        )}
+                        {errorEscaneo && (
+                            <p className="text-[11px] font-semibold text-red-600" role="alert">
+                                {errorEscaneo}
+                            </p>
+                        )}
+                        <ul className="space-y-1">
+                            {unidadesVendidas.map((u) => (
+                                <li key={u.id} className="flex items-center gap-2 text-xs">
+                                    {escaneadas.has(u.id) ? (
+                                        <Check className="text-success-strong size-4" />
+                                    ) : (
+                                        <span className="size-4 rounded-full border border-neutral-400" />
+                                    )}
+                                    <span className="font-mono font-semibold">{u.numero_serie}</span>
+                                    <span className="text-muted-foreground">
+                                        {u.tipo_agente} {u.capacidad}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                        {faltantes.length > 0 && (
+                            <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                                Faltan {faltantes.length} unidad(es) por escanear.
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 {/* 2. Equipos Instalados -> Pasan a Equipos del Cliente (§25) */}
                 <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
@@ -588,6 +699,26 @@ export default function InstalacionShow({
                             )}
                         </div>
 
+                        <SubirEvidencia
+                            ordenId={order.id}
+                            etapa="antes"
+                            titulo="Fotos antes"
+                            evidencias={evidencias}
+                            equipos={conversacion.equipos}
+                        />
+                        <SubirEvidencia
+                            ordenId={order.id}
+                            etapa="despues"
+                            titulo="Fotos después"
+                            evidencias={evidencias}
+                            equipos={conversacion.equipos}
+                        />
+
+                        <FirmaCanvas onChange={(f) => form.setData('firma', f)} />
+                        {form.errors.firma && (
+                            <p className="text-[10px] text-red-500">{form.errors.firma}</p>
+                        )}
+
                         <div>
                             <label className="text-foreground mb-1 block text-[11px] font-bold">
                                 Observaciones Adicionales
@@ -636,7 +767,7 @@ export default function InstalacionShow({
 
                         <button
                             type="submit"
-                            disabled={form.processing}
+                            disabled={form.processing || !form.data.firma || faltantes.length > 0}
                             className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
@@ -654,6 +785,10 @@ export default function InstalacionShow({
                     </div>
                 )}
             </form>
+
+            <div className="mt-5">
+                <ConversacionOrden ordenId={order.id} conversacion={conversacion} />
+            </div>
         </TecnicoCampoLayout>
     );
 }

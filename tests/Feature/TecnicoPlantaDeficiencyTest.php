@@ -8,6 +8,7 @@ use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -62,6 +63,7 @@ test('storing deficiency requiring authorization updates order state and notifie
             'repuesto_sugerido' => 'Manguera de alta presión',
             'requiere_autorizacion' => true,
             'nota' => 'Riesgo de rotura al disparar',
+            'foto' => UploadedFile::fake()->image('foto.jpg'),
         ])
         ->assertRedirect();
 

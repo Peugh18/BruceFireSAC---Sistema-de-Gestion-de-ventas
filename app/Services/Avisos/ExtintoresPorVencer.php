@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\ClientRetentionScore;
 use App\Models\Equipment;
 use App\Models\User;
+use App\Models\ProductCategory;
 use App\Services\Ml\RetentionModel;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -250,7 +251,7 @@ class ExtintoresPorVencer
             ->whereNull('sale_items.equipment_id')
             ->where(fn ($query) => $query
                 ->where('services.nombre', 'like', '%RECARGA%')
-                ->orWhere('products.categoria', 'extintor'))
+                ->orWhereIn('products.categoria', ProductCategory::clavesConAlertaDeVencimiento()))
             ->get([
                 'sales.client_id',
                 'sales.fecha',
@@ -510,7 +511,7 @@ class ExtintoresPorVencer
                     $q->whereNotNull('services.nombre')
                         ->where('services.nombre', 'like', '%RECARGA%')
                         ->where('services.nombre', 'like', '%EXTINTOR%');
-                })->orWhere('products.categoria', 'extintor');
+                })->orWhereIn('products.categoria', ProductCategory::clavesConAlertaDeVencimiento());
             })
             ->select([
                 'sales.client_id',

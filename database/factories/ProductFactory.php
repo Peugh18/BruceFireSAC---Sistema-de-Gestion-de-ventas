@@ -25,7 +25,7 @@ class ProductFactory extends Factory
             'agente' => 'pqs',
             'capacidad' => '6 kg',
             'descripcion' => fake()->optional()->sentence(),
-            'unidad_medida' => 'UND',
+            'unidad_medida' => 'NIU',
             'precio_venta' => fake()->randomFloat(2, 40, 250),
             'aplica_igv' => true,
             'tipo_afectacion_igv' => '10',

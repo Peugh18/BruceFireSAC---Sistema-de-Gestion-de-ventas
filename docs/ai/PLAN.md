@@ -70,21 +70,21 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 
 ### D. Técnicos ⚠️ DRS
 
-- [ ] Evidencias únicas (§33): foto, audio o archivo por orden, equipo y etapa
-- [ ] Conversación de la orden sobre `ServiceOrderEvent`: todos escriben y adjuntan (T3)
-- [ ] Firma táctil en recojo, entrega, instalación, inspección y mantenimiento (T1)
-- [ ] Motor único de visitas de campo con plantillas; mantenimiento en sitio incluido (T2)
-- [ ] Instalación escaneando cada unidad vendida (T4); deficiencia fuera del checklist (T5)
+- [x] Evidencias únicas (§33): foto, audio o archivo por orden, equipo y etapa (tabla `evidencias`, disco privado, ruta con sesión)
+- [x] Conversación de la orden sobre `ServiceOrderEvent`: todos escriben y adjuntan (T3)
+- [x] Firma táctil en recojo, entrega, instalación, inspección y mantenimiento (T1); impresa en el acta y en la constancia de recojo
+- [x] Mantenimiento en sitio (T2) con checklist por extintor, fotos antes y después, firma y acta. ⚠️ El motor único queda parcial: recojo, entrega, instalación e inspección siguen con su pantalla; comparten componentes (firma, fotos, conversación, checklist). Falta: estados "en camino" y "en sitio" y checklist por plantilla.
+- [x] Instalación escaneando cada unidad vendida (T4); deficiencia fuera del checklist con foto (T5)
 
 ### E. Almacén y Gerente
 
-- [ ] A2: tabla de categorías y botón "Gestionar" junto al select; categoría también en servicios ⚠️ DRS
-- [ ] A3: unidad de medida del servicio con el catálogo SUNAT 03; rechazar unidades desconocidas
-- [ ] A5: no permitir dar de baja dos veces la misma unidad
-- [ ] A6: arreglar los botones sin acción (nueva recepción y anular pago)
-- [ ] A1: costo de compra en la recepción y valorización correcta del inventario ⚠️ DRS
-- [ ] Stickers de 5 × 5 cm, 20 por hoja, con opción de empezar en la posición N (cambia el REQ-INV-07)
-- [ ] A7: paginar en la base de datos; quitar el N+1 de Consulta Rápida
+- [x] A2: tabla de categorías y botón "Gestionar" junto al select; categoría también en servicios ⚠️ DRS
+- [x] A3: unidad de medida del servicio con el catálogo SUNAT 03; rechazar unidades desconocidas
+- [x] A5: no permitir dar de baja dos veces la misma unidad
+- [x] A6: arreglar los botones sin acción (nueva recepción y anular pago)
+- [x] A1: costo de compra en la recepción y valorización correcta del inventario ⚠️ DRS
+- [x] Stickers de 5 × 5 cm, 20 por hoja, con opción de empezar en la posición N (cambia el REQ-INV-07)
+- [x] A7: paginar en la base de datos; quitar el N+1 de Consulta Rápida
 
 ### F. Interfaz y nombres — al final, con prototipos aprobados antes (decisión del dueño, 2026-10-06)
 

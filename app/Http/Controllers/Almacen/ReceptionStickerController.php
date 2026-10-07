@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Almacen;
 
 use App\Http\Controllers\Controller;
+use App\Models\InventoryUnit;
 use App\Models\Reception;
 use App\Models\Team;
 use App\Services\Inventory\StickerPdfService;
@@ -54,11 +55,45 @@ class ReceptionStickerController extends Controller
     ): Response {
         ReceptionController::asegurarAlmacen($request, $reception);
 
-        $pdf = $stickerPdfService->generate($reception);
+        $pdf = $stickerPdfService->generate($reception, $this->posicionInicial($request));
 
         return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => sprintf('inline; filename="stickers-recepcion-%d.pdf"', $reception->id),
         ]);
+    }
+
+    /**
+     * Reimprime el sticker de una sola unidad, por su serie (BF-EQ-...).
+     */
+    public function unidad(Team $current_team, StickerPdfService $stickerPdfService, Request $request): Response
+    {
+        $serie = trim((string) $request->validate(['serie' => ['required', 'string', 'max:50']])['serie']);
+        $almacenId = $request->user()->almacenRestringidoId();
+
+        $unidad = InventoryUnit::query()
+            ->where('numero_serie', mb_strtoupper($serie))
+            ->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))
+            ->first();
+        abort_if($unidad === null, 404, 'No se encontró esa serie en tu almacén.');
+
+        $pdf = $stickerPdfService->generateForUnit($unidad, $this->posicionInicial($request));
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => sprintf('inline; filename="sticker-%s.pdf"', $unidad->numero_serie),
+        ]);
+    }
+
+    /**
+     * Posición de la hoja (1 a 20) donde empieza la impresión.
+     */
+    protected function posicionInicial(Request $request): int
+    {
+        $datos = $request->validate([
+            'inicio' => ['nullable', 'integer', 'min:1', 'max:'.StickerPdfService::POR_HOJA],
+        ]);
+
+        return (int) ($datos['inicio'] ?? 1);
     }
 }

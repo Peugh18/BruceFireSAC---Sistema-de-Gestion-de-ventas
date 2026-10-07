@@ -176,6 +176,14 @@ class ServiceOrder extends Model
     }
 
     /**
+     * @return HasMany<Evidencia, $this>
+     */
+    public function evidencias(): HasMany
+    {
+        return $this->hasMany(Evidencia::class);
+    }
+
+    /**
      * @return BelongsTo<Sale, $this>
      */
     public function sale(): BelongsTo

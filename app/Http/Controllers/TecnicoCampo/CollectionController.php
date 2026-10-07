@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\TecnicoCampo;
 
 use App\Actions\Equipment\QuickRegisterEquipment;
+use App\Actions\Tecnico\GuardarEvidencia;
 use App\Actions\TecnicoCampo\RegisterCollection;
 use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Reports\ServiceOrderReceiptPdfService;
+use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -106,6 +108,8 @@ class CollectionController extends Controller
 
         return Inertia::render('tecnico-campo/recojos/show', [
             'asignacion' => $service_order->asignacionPara(request()->user()),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
+            'evidencias' => $service_order->evidencias()->where('etapa', 'recojo')->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -156,6 +160,7 @@ class CollectionController extends Controller
             'observaciones' => ['nullable', 'string', 'max:1000'],
             'conformidad_cliente' => ['required', 'accepted'],
             'foto_path' => ['nullable', 'string', 'max:255'],
+            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
         ]);
 
         $action->execute($service_order, $request->user(), [
@@ -166,6 +171,10 @@ class CollectionController extends Controller
             'conformidad_cliente' => true,
             'foto_path' => $validated['foto_path'] ?? null,
         ]);
+
+        if (filled($validated['firma'] ?? null)) {
+            app(GuardarEvidencia::class)->firma($service_order, $validated['firma'], 'recojo', $request->user());
+        }
 
         return back()->with('success', 'Recojo y cadena de custodia registrados exitosamente.');
     }

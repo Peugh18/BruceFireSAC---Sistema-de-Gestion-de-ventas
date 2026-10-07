@@ -14,7 +14,7 @@ test('el gerente registra un epp con su codigo de barras y no se repite entre pr
     $team = ['current_team' => $gerente->currentTeam];
     $guante = [
         'codigo' => 'EPP-GUA-NIT-M', 'codigo_barras' => '7751234567890', 'categoria' => 'epp',
-        'nombre' => 'Guante de nitrilo talla M', 'unidad_medida' => 'PAR', 'precio_venta' => 12.5,
+        'nombre' => 'Guante de nitrilo talla M', 'unidad_medida' => 'PR', 'precio_venta' => 12.5,
         'aplica_igv' => true, 'serializado' => false, 'stock_minimo' => 20, 'activo' => true,
     ];
 

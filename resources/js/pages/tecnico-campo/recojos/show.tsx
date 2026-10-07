@@ -1,4 +1,8 @@
 import React from 'react';
+import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
+import FirmaCanvas from '@/components/firma-canvas';
+import SubirEvidencia, { type EvidenciaListada } from '@/components/subir-evidencia';
+import recojos from '@/routes/tecnico-campo/recojos';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
@@ -54,12 +58,16 @@ interface Props {
         }>;
     };
     custodyEvents: CustodyEventItem[];
+    conversacion: ConversacionProps;
+    evidencias: EvidenciaListada[];
 }
 
 export default function RecojoShow({
     asignacion,
     order,
     custodyEvents,
+    conversacion,
+    evidencias,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
@@ -70,6 +78,7 @@ export default function RecojoShow({
         contacto_telefono: order.cliente.telefono || '',
         observaciones: '',
         conformidad_cliente: false,
+        firma: null as string | null,
     });
 
     const equipmentForm = useForm({
@@ -82,7 +91,7 @@ export default function RecojoShow({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post(`${teamPrefix}/recojos/${order.id}`, {
+        form.post(recojos.store.url({ current_team: teamSlug, service_order: order.id }), {
             preserveScroll: true,
         });
     };
@@ -431,9 +440,22 @@ export default function RecojoShow({
                                 </label>
                             </div>
 
+                            <SubirEvidencia
+                                ordenId={order.id}
+                                etapa="recojo"
+                                titulo="Fotos del recojo"
+                                evidencias={evidencias}
+                                equipos={conversacion.equipos}
+                            />
+
+                            <FirmaCanvas
+                                etiqueta="Firma de quien entrega"
+                                onChange={(f) => form.setData('firma', f)}
+                            />
+
                             <button
                                 type="submit"
-                                disabled={form.processing}
+                                disabled={form.processing || !form.data.firma}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
                             >
                                 <CheckCircle2 className="h-4 w-4" />
@@ -461,6 +483,8 @@ export default function RecojoShow({
                         </span>
                     </div>
                 )}
+
+                <ConversacionOrden ordenId={order.id} conversacion={conversacion} />
             </div>
         </TecnicoCampoLayout>
     );
