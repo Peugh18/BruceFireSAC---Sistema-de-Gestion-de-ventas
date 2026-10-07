@@ -2,10 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Stickers - {{ isset($reception) && $reception ? 'Recepción ' . $reception->id : ($serviceOrder->codigo ?? 'Equipos') }}</title>
+    <title>Stickers de código de barras</title>
     <style>
+        /* Hoja A4 con 20 stickers de 5 x 5 cm (4 columnas x 5 filas). */
         @page {
-            margin: 1.2cm 1.0cm;
+            margin: 2cm 0.5cm 0 0.5cm;
             size: A4 portrait;
         }
 
@@ -13,14 +14,11 @@
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            color: #1a1a1a;
-            font-size: 11px;
-            line-height: 1.2;
+            color: #111827;
         }
 
         .page {
             page-break-after: always;
-            height: 100%;
         }
 
         .page:last-child {
@@ -28,199 +26,77 @@
         }
 
         .grid {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0.8cm 1.0cm;
+            width: 20cm;
+            table-layout: fixed;
+            border-collapse: collapse;
         }
 
-        .sticker-cell {
-            width: 50%;
-            vertical-align: top;
-        }
-
-        .sticker-box {
-            border: 1px dashed #9ca3af;
-            border-radius: 6px;
-            padding: 8px 10px;
-            height: 5.6cm;
-            box-sizing: border-box;
-            background-color: #ffffff;
-            position: relative;
-        }
-
-        .sticker-header {
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 4px;
-            margin-bottom: 6px;
-            display: table;
-            width: 100%;
-        }
-
-        .header-logo {
-            display: table-cell;
+        .grid td {
+            width: 5cm;
+            height: 5cm;
+            padding: 0;
+            text-align: center;
             vertical-align: middle;
-            text-align: left;
         }
 
-        .header-brand {
-            font-size: 10px;
+        .logo {
+            max-height: 1.1cm;
+            max-width: 3.6cm;
+        }
+
+        .brand {
+            font-size: 11px;
             font-weight: bold;
             color: #b91c1c;
-            letter-spacing: 0.5px;
         }
 
-        .header-sede {
-            display: table-cell;
-            vertical-align: middle;
-            text-align: right;
-            font-size: 8.5px;
-            color: #6b7280;
+        .barcode {
+            width: 4.2cm;
+            height: 2cm;
+            margin-top: 0.25cm;
         }
 
-        .barcode-section {
-            text-align: center;
-            margin: 6px 0 4px 0;
-        }
-
-        .barcode-img {
-            max-width: 85%;
-            height: 38px;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .serial-text {
+        .serie {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: bold;
-            letter-spacing: 1.5px;
-            color: #111827;
-            margin-top: 3px;
-        }
-
-        .product-info {
-            margin-top: 6px;
-            text-align: center;
-        }
-
-        .product-name {
-            font-size: 10.5px;
-            font-weight: 600;
-            color: #1f2937;
-            line-height: 1.25;
-            max-height: 2.5em;
-            overflow: hidden;
-        }
-
-        .product-details {
-            margin-top: 5px;
-            font-size: 8.5px;
-            color: #4b5563;
-            border-top: 1px dotted #d1d5db;
-            padding-top: 3px;
-        }
-
-        .detail-badge {
-            display: inline-block;
-            margin: 0 4px;
-        }
-
-        .detail-label {
-            color: #9ca3af;
-            text-transform: uppercase;
-        }
-
-        .detail-value {
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .empty-cell {
-            visibility: hidden;
+            letter-spacing: 1px;
+            margin-top: 0.15cm;
         }
     </style>
 </head>
 <body>
     @php
-        // Agrupar los stickers en páginas de 4 (grilla 2x2)
-        $stickerChunks = $stickers->chunk(4);
+        // Los huecos de las posiciones ya usadas van vacíos; luego los stickers.
+        $celdas = array_merge(array_fill(0, max(0, $inicio - 1), null), $stickers->all());
+        $paginas = array_chunk($celdas, 20);
     @endphp
 
-    @forelse ($stickerChunks as $chunkIndex => $pageStickers)
+    @forelse ($paginas as $pagina)
         <div class="page">
             <table class="grid">
-                @php
-                    $rows = $pageStickers->chunk(2);
-                @endphp
-                @foreach ($rows as $rowIndex => $rowStickers)
+                @foreach (array_chunk(array_pad($pagina, 20, null), 4) as $fila)
                     <tr>
-                        @foreach ($rowStickers as $sticker)
-                            <td class="sticker-cell">
-                                <div class="sticker-box">
-                                    <div class="sticker-header">
-                                        <div class="header-logo">
-                                            @if ($logoBase64)
-                                                <img src="{{ $logoBase64 }}" style="height: 16px; vertical-align: middle;">
-                                            @else
-                                                <span class="header-brand">BRUCE FIRE S.A.C.</span>
-                                            @endif
-                                        </div>
-                                        <div class="header-sede">
-                                            {{ $reception->sedeAlmacen->nombre ?? $serviceOrder->sede?->nombre ?? 'TALLER PLANTA' }}
-                                        </div>
-                                    </div>
-
-                                    <div class="barcode-section">
-                                        <img src="data:image/png;base64,{{ $sticker['barcode_base64'] }}" class="barcode-img" alt="Barcode">
-                                        <div class="serial-text">{{ $sticker['numero_serie'] }}</div>
-                                    </div>
-
-                                    <div class="product-info">
-                                        <div class="product-name">
-                                            {{ Str::limit($sticker['producto'], 50) }}
-                                        </div>
-                                        <div class="product-details">
-                                            @if ($sticker['marca'])
-                                                <span class="detail-badge">
-                                                    <span class="detail-label">Marca:</span>
-                                                    <span class="detail-value">{{ $sticker['marca'] }}</span>
-                                                </span>
-                                            @endif
-                                            @if ($sticker['anio_fabricacion'])
-                                                <span class="detail-badge">
-                                                    <span class="detail-label">Año:</span>
-                                                    <span class="detail-value">{{ $sticker['anio_fabricacion'] }}</span>
-                                                </span>
-                                            @endif
-                                            @if (isset($sticker['order_codigo']) && $sticker['order_codigo'])
-                                                <span class="detail-badge">
-                                                    <span class="detail-label">OS:</span>
-                                                    <span class="detail-value">{{ $sticker['order_codigo'] }}</span>
-                                                </span>
-                                            @elseif (isset($reception) && $reception)
-                                                <span class="detail-badge">
-                                                    <span class="detail-label">Recep:</span>
-                                                    <span class="detail-value">#{{ $reception->id }}</span>
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
+                        @foreach ($fila as $sticker)
+                            <td>
+                                @if ($sticker)
+                                    @if ($logoBase64)
+                                        <img src="{{ $logoBase64 }}" class="logo" alt="Logo">
+                                    @else
+                                        <div class="brand">BRUCE FIRE S.A.C.</div>
+                                    @endif
+                                    <img src="data:image/png;base64,{{ $sticker['barcode_base64'] }}" class="barcode" alt="Código de barras">
+                                    <div class="serie">{{ $sticker['numero_serie'] }}</div>
+                                @endif
                             </td>
                         @endforeach
-
-                        @if ($rowStickers->count() < 2)
-                            <td class="sticker-cell empty-cell">
-                                <div class="sticker-box"></div>
-                            </td>
-                        @endif
                     </tr>
                 @endforeach
             </table>
         </div>
     @empty
         <div style="padding: 2cm; text-align: center; color: #6b7280;">
-            <h3>Esta recepción no contiene unidades serializadas para generar stickers.</h3>
+            <h3>No hay unidades con serie para generar stickers.</h3>
         </div>
     @endforelse
 </body>

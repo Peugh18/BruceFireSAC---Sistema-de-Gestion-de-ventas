@@ -78,13 +78,13 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 
 ### E. Almacén y Gerente
 
-- [ ] A2: tabla de categorías y botón "Gestionar" junto al select; categoría también en servicios ⚠️ DRS
-- [ ] A3: unidad de medida del servicio con el catálogo SUNAT 03; rechazar unidades desconocidas
-- [ ] A5: no permitir dar de baja dos veces la misma unidad
-- [ ] A6: arreglar los botones sin acción (nueva recepción y anular pago)
-- [ ] A1: costo de compra en la recepción y valorización correcta del inventario ⚠️ DRS
-- [ ] Stickers de 5 × 5 cm, 20 por hoja, con opción de empezar en la posición N (cambia el REQ-INV-07)
-- [ ] A7: paginar en la base de datos; quitar el N+1 de Consulta Rápida
+- [x] A2: tabla de categorías y botón "Gestionar" junto al select; categoría también en servicios ⚠️ DRS
+- [x] A3: unidad de medida del servicio con el catálogo SUNAT 03; rechazar unidades desconocidas
+- [x] A5: no permitir dar de baja dos veces la misma unidad
+- [x] A6: arreglar los botones sin acción (nueva recepción y anular pago)
+- [x] A1: costo de compra en la recepción y valorización correcta del inventario ⚠️ DRS
+- [x] Stickers de 5 × 5 cm, 20 por hoja, con opción de empezar en la posición N (cambia el REQ-INV-07)
+- [x] A7: paginar en la base de datos; quitar el N+1 de Consulta Rápida
 
 ### F. Interfaz y nombres — al final, con prototipos aprobados antes (decisión del dueño, 2026-10-06)
 

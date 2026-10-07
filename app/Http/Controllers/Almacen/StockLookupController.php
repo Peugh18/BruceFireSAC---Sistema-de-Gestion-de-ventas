@@ -95,17 +95,24 @@ class StockLookupController extends Controller
                     $stockPorSede = [];
                     $totalStock = 0;
 
+                    // Una sola consulta agrupada por sede (sin una por almacén).
+                    $porSede = $product->serializado
+                        ? InventoryUnit::query()
+                            ->where('product_id', $product->id)
+                            ->where('estado', 'disponible')
+                            ->whereIn('sede_almacen_id', $sedes->pluck('id'))
+                            ->selectRaw('sede_almacen_id as sede_id, count(*) as total')
+                            ->groupBy('sede_almacen_id')
+                            ->pluck('total', 'sede_id')
+                        : InventoryMovement::query()
+                            ->where('product_id', $product->id)
+                            ->whereIn('sede_id', $sedes->pluck('id'))
+                            ->selectRaw('sede_id, sum(cantidad) as total')
+                            ->groupBy('sede_id')
+                            ->pluck('total', 'sede_id');
+
                     foreach ($sedes as $s) {
-                        if ($product->serializado) {
-                            $qty = InventoryUnit::where('product_id', $product->id)
-                                ->where('sede_almacen_id', $s->id)
-                                ->where('estado', 'disponible')
-                                ->count();
-                        } else {
-                            $qty = (int) InventoryMovement::where('product_id', $product->id)
-                                ->where('sede_id', $s->id)
-                                ->sum('cantidad');
-                        }
+                        $qty = (int) ($porSede[$s->id] ?? 0);
 
                         $stockPorSede[$s->id] = $qty;
                         $totalStock += $qty;

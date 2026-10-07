@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreServiceRequest;
 use App\Http\Requests\Gerente\UpdateServiceRequest;
 use App\Models\CertificateType;
+use App\Models\ProductCategory;
 use App\Models\Service;
 use App\Models\Team;
 use App\Services\Billing\AfectacionIgv;
+use App\Support\UnidadMedidaSunat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -42,6 +44,7 @@ class ServiceController extends Controller
                 'codigo' => $s->codigo,
                 'nombre' => $s->nombre,
                 'descripcion' => $s->descripcion,
+                'categoria' => $s->categoria,
                 'unidad_medida' => $s->unidad_medida,
                 'agente' => $s->agente,
                 'capacidad' => $s->capacidad,
@@ -59,6 +62,8 @@ class ServiceController extends Controller
 
         return Inertia::render('gerente/servicios/index', [
             'servicios' => $servicios,
+            'categorias' => ProductCategory::conUsos(),
+            'unidadesMedida' => UnidadMedidaSunat::opciones(),
             'tiposCertificado' => CertificateType::query()->orderBy('nombre')->get(['id', 'nombre']),
             'agentes' => EquipmentType::opciones(),
             'filters' => [

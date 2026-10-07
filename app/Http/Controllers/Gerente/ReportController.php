@@ -15,6 +15,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -81,7 +82,7 @@ class ReportController extends Controller
 
     public function exportInventarioPdf(Team $current_team, Request $request): HttpResponse
     {
-        $data = $this->getInventarioData($request);
+        $data = $this->getInventarioData($request, paginar: false);
 
         $pdf = Pdf::loadView('pdf.reporte-inventario', $data)->setPaper('a4');
 
@@ -196,9 +197,13 @@ class ReportController extends Controller
     }
 
     /**
+     * Inventario valorizado al COSTO promedio de compra (no al precio de
+     * venta). Los totales salen de la base de datos; la lista se pagina
+     * ahí también (el PDF pide todo el listado).
+     *
      * @return array<string, mixed>
      */
-    protected function getInventarioData(Request $request): array
+    protected function getInventarioData(Request $request, bool $paginar = true): array
     {
         $sedeId = $request->input('sede_id');
         $soloBajoMinimo = $request->boolean('solo_bajo_minimo', false);
@@ -214,16 +219,28 @@ class ReportController extends Controller
             }
         }
 
-        $productsQuery = Product::query()
+        $disponible = 'CASE WHEN p.serializado = 1 THEN p.stock_unidades ELSE p.stock_kardex END';
+        $totales = DB::query()
+            ->fromSub(Product::query()->where('activo', true)->conStock($almacenes), 'p')
+            ->selectRaw("COUNT(*) as productos,
+                COALESCE(SUM({$disponible}), 0) as unidades,
+                COALESCE(SUM(({$disponible}) * COALESCE(p.costo_promedio, 0)), 0) as valor,
+                COALESCE(SUM(CASE WHEN p.costo_promedio IS NULL AND ({$disponible}) > 0 THEN 1 ELSE 0 END), 0) as sin_costo,
+                COALESCE(SUM(CASE WHEN p.stock_minimo > 0 AND ({$disponible}) <= p.stock_minimo THEN 1 ELSE 0 END), 0) as bajo_minimo")
+            ->first();
+
+        $lista = Product::query()
             ->where('activo', true)
             ->conStock($almacenes)
+            ->when($soloBajoMinimo, fn ($q) => $q->bajoMinimo($almacenes))
             ->orderBy('nombre');
 
-        $allProducts = $productsQuery->get()->map(function (Product $p) {
-            $disponible = $p->stockDisponible();
+        $paginador = $paginar ? $lista->paginate(25)->withQueryString() : null;
+        $filas = $paginador !== null ? collect($paginador->items()) : $lista->get();
+        $productos = $filas->map(function (Product $p) {
+            $stock = $p->stockDisponible();
             $minimo = $p->stock_minimo !== null ? (int) $p->stock_minimo : null;
-            $bajoMinimo = $minimo !== null && $minimo > 0 && $disponible <= $minimo;
-            $valorizacion = round($disponible * (float) $p->precio_venta, 2);
+            $costo = $p->costo_promedio !== null ? (float) $p->costo_promedio : null;
 
             return [
                 'id' => $p->id,
@@ -231,30 +248,31 @@ class ReportController extends Controller
                 'nombre' => $p->nombre,
                 'unidad_medida' => $p->unidad_medida,
                 'precio_venta' => (float) $p->precio_venta,
+                'costo_promedio' => $costo,
+                'sin_costo' => $costo === null && $stock > 0,
                 'serializado' => (bool) $p->serializado,
                 'stock_minimo' => $minimo,
-                'stock_disponible' => $disponible,
-                'bajo_minimo' => $bajoMinimo,
-                'valorizacion' => $valorizacion,
+                'stock_disponible' => $stock,
+                'bajo_minimo' => $minimo !== null && $minimo > 0 && $stock <= $minimo,
+                'valorizacion' => round($stock * ($costo ?? 0), 2),
             ];
-        });
-
-        $filteredProducts = $soloBajoMinimo
-            ? $allProducts->filter(fn ($p) => $p['bajo_minimo'])->values()
-            : $allProducts;
-
-        $valorizacionTotal = round($allProducts->sum('valorizacion'), 2);
-        $totalProductos = $allProducts->count();
-        $totalUnidades = (int) $allProducts->sum('stock_disponible');
-        $totalBajoMinimo = $allProducts->filter(fn ($p) => $p['bajo_minimo'])->count();
+        })->values()->all();
 
         return [
             'sedeNombre' => $sedeNombre,
-            'valorizacionTotal' => $valorizacionTotal,
-            'totalProductos' => $totalProductos,
-            'totalUnidades' => $totalUnidades,
-            'totalBajoMinimo' => $totalBajoMinimo,
-            'productos' => $filteredProducts->all(),
+            'valorizacionTotal' => round((float) $totales->valor, 2),
+            'totalProductos' => (int) $totales->productos,
+            'totalUnidades' => (int) $totales->unidades,
+            'totalBajoMinimo' => (int) $totales->bajo_minimo,
+            'productosSinCosto' => (int) $totales->sin_costo,
+            'productos' => $productos,
+            'paginacion' => $paginador !== null ? [
+                'pagina' => $paginador->currentPage(),
+                'ultima' => $paginador->lastPage(),
+                'total' => $paginador->total(),
+                'anterior' => $paginador->previousPageUrl(),
+                'siguiente' => $paginador->nextPageUrl(),
+            ] : null,
         ];
     }
 }

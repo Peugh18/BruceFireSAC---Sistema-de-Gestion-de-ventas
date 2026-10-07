@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property string $codigo
  * @property string $nombre
  * @property string|null $descripcion
+ * @property string|null $categoria
  * @property string $unidad_medida
  * @property string|null $agente
  * @property string|null $capacidad
@@ -34,6 +35,7 @@ use Illuminate\Support\Carbon;
     'codigo',
     'nombre',
     'descripcion',
+    'categoria',
     'unidad_medida',
     'agente',
     'capacidad',

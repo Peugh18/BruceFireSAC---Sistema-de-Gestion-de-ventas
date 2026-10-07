@@ -214,3 +214,20 @@
 - X6 solo vence lo que permite Quote::TRANSITIONS. X7 `registro_iniciado_at`/`confirmada_at`, `emitida_at`, `origen_alerta_equipment_id`; tres tarjetas en el dashboard del Gerente. X8/X9 alertas por sede, tabla `alert_contacts` ("Marcar contactado", equipo validado visible y del cliente), servicios con agente y capacidad.
 - Pruebas: `tests/Feature/FaseCVentasCajaCobranzasTest.php` (nuevo) y ajustes en SaleModuleTest, CashRegisterModuleTest y MejorasProcesosTest. **No ejecutadas: MySQL apagado.** Pint, PHPStan (0) y tsc en verde.
 - Dudas: el adicional cobrado es cuota sin comprobante (¿ND o venta aparte?); los avisos del sistema anterior no tienen sede y los ve todo vendedor; una NC mayor al saldo solo queda en auditoría como saldo a favor.
+
+
+## [2026-10-07] — Fase E: almacén y Gerente
+
+- **A2:** tabla `product_categories` (clave fija, nombre, `genera_alertas_vencimiento`, activo) con las 6 categorías migradas (más cualquier otra que ya tuvieran los productos). `products.categoria` y la nueva `services.categoria` guardan la clave, así renombrar no rompe nada. Componente `CategoriaSelect` (select + botón "Gestionar" con modal para crear, renombrar, desactivar y borrar solo lo que nadie usa). `ExtintoresPorVencer` usa la marca en vez del nombre "extintor". Se quitó `Product::CATEGORIAS`.
+- **A3:** `App\Support\UnidadMedidaSunat` (catálogo 03 con 21 códigos) alimenta el select de productos y servicios y la validación. `GreenterService::unidadCatalogo03` lanza error ante una unidad desconocida (antes la cambiaba por NIU o ZZ). Migración que pasa el texto libre antiguo a códigos (UND→NIU, PAR→PR, GLI→GLL…). La fábrica de productos usa NIU.
+- **A5:** el ajuste bloquea la unidad dentro de la transacción y vuelve a revisar su estado (la validación del request ya existía).
+- **A6:** "Registrar nueva recepción" usa la ruta Wayfinder `recepciones.create`; Cobranzas del Gerente tiene "Anular pago" con motivo y confirmación (ruta ya existente).
+- **A1:** `reception_items.costo_unitario` (sin IGV) y `products.costo_promedio` (promedio ponderado al recibir, `Product::registrarCostoDeCompra`). El reporte de inventario valoriza al costo con totales en SQL y avisa cuántos productos con stock no tienen costo (pantalla y PDF).
+- **Stickers:** 5 × 5 cm, 20 por hoja A4 (4 × 5), solo logo + Code128 + serie debajo; query `inicio` (posición 1–20) y ruta `almacen.stickers.unidad` para reimprimir uno. El taller usa la misma plantilla.
+- **A7:** Stock paginado en BD (stock por sede solo de la página) y Consulta Rápida con una consulta agrupada en vez de una por almacén. El reporte de inventario también se pagina (25) y el PDF trae todo.
+- **Pruebas:** `FaseEAlmacenGerenteTest` (nuevo). **No se ejecutaron:** MySQL apagado. Pint, PHPStan (0 errores) y `tsc` pasan.
+- **Dudas:**
+    - El costo se pide al crear la recepción; corregirlo después (UpdateReception) no recalcula el promedio.
+    - El catálogo 03 incluye solo las unidades de uso probable; si falta una, se agrega en `UnidadMedidaSunat`.
+    - Un producto o servicio con unidad antigua no reconocida debe corregirse para poder editarse o emitirse.
+- **Requisitos nuevos para el DRS:** categorías gestionables con marca de alertas de vencimiento; costo de compra por recepción y costo promedio; inventario valorizado al costo; stickers de 5 × 5 cm sin datos del producto (cambia REQ-INV-07).

@@ -3,7 +3,8 @@
 namespace App\Http\Requests\Gerente;
 
 use App\Enums\EquipmentType;
-use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Support\UnidadMedidaSunat;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,13 +25,13 @@ class StoreProductRequest extends FormRequest
             // El del fabricante (EAN/UPC): solo letras y números, y no se
             // repite entre productos.
             'codigo_barras' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9-]+$/', 'unique:products,codigo_barras'],
-            'categoria' => ['nullable', Rule::in(array_keys(Product::CATEGORIAS))],
+            'categoria' => ['nullable', 'string', 'max:40', ProductCategory::regla()],
             // C1: el agente y la capacidad pasan a la unidad y al equipo vendido.
             'agente' => ['nullable', Rule::enum(EquipmentType::class)],
             'capacidad' => ['nullable', 'string', 'max:20'],
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
-            'unidad_medida' => ['required', 'string', 'max:10'],
+            'unidad_medida' => ['required', Rule::in(UnidadMedidaSunat::codigos())],
             'precio_venta' => ['required', 'numeric', 'min:0'],
             'aplica_igv' => ['boolean'],
             'tipo_afectacion_igv' => ['sometimes', 'required', Rule::in(['10', '20', '30'])],
