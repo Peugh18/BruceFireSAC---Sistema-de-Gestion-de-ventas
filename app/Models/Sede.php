@@ -19,6 +19,8 @@ use Illuminate\Support\Str;
  * @property string $nombre
  * @property string $tipo
  * @property string|null $ubigeo
+ * @property string|null $direccion
+ * @property string $cod_establecimiento_anexo
  * @property-read string|null $ciudad
  * @property int|null $almacen_id
  * @property bool $activo
@@ -27,7 +29,7 @@ use Illuminate\Support\Str;
  * @property-read Sede|null $almacen
  * @property-read Collection<int, Sede> $tiendas
  */
-#[Fillable(['nombre', 'tipo', 'ubigeo', 'almacen_id', 'activo'])]
+#[Fillable(['nombre', 'tipo', 'ubigeo', 'direccion', 'cod_establecimiento_anexo', 'almacen_id', 'activo'])]
 class Sede extends Model
 {
     /** @use HasFactory<SedeFactory> */

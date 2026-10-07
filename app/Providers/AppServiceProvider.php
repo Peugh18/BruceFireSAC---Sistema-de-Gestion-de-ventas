@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Contracts\GreClientInterface;
 use App\Contracts\SunatClientInterface;
 use App\Models\Sede;
 use App\Observers\SedeObserver;
+use App\Services\Billing\GreApiClient;
 use App\Services\Billing\GreenterSunatClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Middleware\TrustProxies;
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(SunatClientInterface::class, GreenterSunatClient::class);
+        $this->app->bind(GreClientInterface::class, GreApiClient::class);
     }
 
     /**
