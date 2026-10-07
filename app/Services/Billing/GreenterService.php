@@ -483,6 +483,7 @@ class GreenterService
     protected function cuotasNetas(Sale $sale, float $detraccion): array
     {
         $cuotas = $sale->installments
+            ->filter(fn ($installment) => $installment->esDelComprobante())
             ->map(fn ($installment) => ['monto' => (float) $installment->monto, 'fecha' => $installment->fecha_vencimiento])
             ->values()
             ->all();

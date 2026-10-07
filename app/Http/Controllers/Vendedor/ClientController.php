@@ -12,6 +12,7 @@ use App\Models\AuditLog;
 use App\Models\Client;
 use App\Models\ClientSite;
 use App\Models\Equipment;
+use App\Models\Installment;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\Team;
@@ -175,7 +176,7 @@ class ClientController extends Controller
         $payments = $sales->flatMap->payments->sortByDesc('fecha')->values();
 
         $confirmadas = $sales->where('estado', 'confirmada');
-        $saldoDe = fn ($installment) => max(0, round((float) $installment->monto - (float) $installment->payments->sum('monto'), 2));
+        $saldoDe = fn (Installment $installment) => $installment->saldo();
         $cuotasConSaldo = $confirmadas->flatMap->installments->filter(fn ($installment) => $saldoDe($installment) > 0);
         $en30Dias = fn ($fecha) => $fecha && $fecha->between(today(), today()->addDays(30));
 
@@ -205,7 +206,8 @@ class ClientController extends Controller
                 'sunat_estado' => $sale->electronicDocuments->whereIn('tipo', ['factura', 'boleta'])->sortBy('id')->last()?->sunat_estado,
                 'condicion_pago' => $sale->esCredito() ? 'credito' : 'contado',
                 'medio_pago' => $sale->medioPagoTexto(),
-                'saldo_pendiente' => $sale->estado === 'confirmada' && $sale->esCredito() ? round((float) $sale->installments->sum($saldoDe), 2) : 0.0,
+                // Al contado puede deber una nota de débito o un adicional (V4, V6).
+                'saldo_pendiente' => $sale->estado === 'confirmada' ? round((float) $sale->installments->sum($saldoDe), 2) : 0.0,
             ]),
             'extintores' => $equipos->map(function ($equipment) {
                 $esDescargado = in_array($equipment->estado, ['descargado', 'usado'], true);

@@ -306,7 +306,11 @@ class SaleController extends Controller
      * Cotización aceptada que se pasa a venta: precarga el cliente y
      * muestra los ítems cotizados para escanear sus series.
      *
-     * @return array{id: int, numero: string, client: array{id: int, tipo_documento: string, razon_social: string, numero_documento: string}, items: list<array{tipo: string, product_id: int|null, service_id: int|null, nombre: string, codigo: string|null, serializado: bool, cantidad: int, precio_unitario: float}>, referencia: string|null}|null
+     * Conserva lo pactado con el cliente (V3): descuento por línea, condición
+     * de pago, observaciones, vehículo y referencia. El formulario solo pide
+     * lo que falta (series y calendario de cuotas).
+     *
+     * @return array{id: int, numero: string, client: array{id: int, tipo_documento: string, razon_social: string, numero_documento: string}, items: list<array{tipo: string, product_id: int|null, service_id: int|null, nombre: string|null, codigo: string|null, serializado: bool, cantidad: int, precio_unitario: float, descuento: float}>, referencia: string|null, condicion_pago: string, observaciones: string|null, vehicle_id: int|null, destino: string}|null
      */
     protected function cotizacionParaVenta(int $quoteId, ?int $sedeId): ?array
     {
@@ -324,7 +328,7 @@ class SaleController extends Controller
             'id' => $quote->id,
             'numero' => $quote->numero,
             'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
-            'items' => $quote->items->map(fn (QuoteItem $item) => [
+            'items' => array_values($quote->items->map(fn (QuoteItem $item) => [
                 'tipo' => $item->esServicio() ? 'service' : 'product',
                 'product_id' => $item->product_id,
                 'service_id' => $item->service_id,
@@ -333,8 +337,14 @@ class SaleController extends Controller
                 'serializado' => (bool) $item->product?->serializado,
                 'cantidad' => (int) $item->cantidad,
                 'precio_unitario' => (float) $item->precio_unitario,
-            ])->values()->all(),
+                'descuento' => (float) $item->descuento,
+            ])->all()),
             'referencia' => $quote->referencia,
+            // La condición propuesta es texto libre ("Contado", "Crédito 30 días").
+            'condicion_pago' => str_starts_with(mb_strtolower(trim((string) $quote->condicion_pago_propuesta)), 'cr') ? 'credito' : 'contado',
+            'observaciones' => $quote->observaciones,
+            'vehicle_id' => $quote->vehicle_id,
+            'destino' => $quote->vehicle_id ? 'vehiculo' : 'local_cliente',
         ];
     }
 
@@ -409,11 +419,13 @@ class SaleController extends Controller
 
             return ['tipo_linea' => $equipment ? 'recarga_servicio' : 'servicio', 'numero_serie' => $equipment?->numero_serie, 'service_id' => $service->id, 'nombre' => $service->nombre, 'cantidad' => 1, 'precio_unitario' => (float) $service->precio_venta, 'descuento' => 0];
         });
-        $additionalItems = $order->deficiencies->where('estado', 'autorizada')->flatMap(function ($deficiency) {
-            $cotizacion = $deficiency->authorization?->cotizacionAdicional;
-
-            return $cotizacion === null ? [] : $cotizacion->items;
-        })->map(fn (QuoteItem $item): array => ['tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service_id ? $item->service->nombre : $item->product->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
+        // V6: una misma cotización usada en varias autorizaciones se cobra una vez.
+        $additionalItems = $order->deficiencies->where('estado', 'autorizada')
+            ->map(fn ($deficiency) => $deficiency->authorization?->cotizacionAdicional)
+            ->filter()
+            ->unique('id')
+            ->flatMap(fn (Quote $cotizacion) => $cotizacion->items)
+            ->map(fn (QuoteItem $item): array => ['tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service_id ? $item->service->nombre : $item->product->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
         $items = $items->concat($additionalItems)->values()->all();
 
         return ['id' => null, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => 'local_cliente', 'referencia' => $order->codigo, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items];

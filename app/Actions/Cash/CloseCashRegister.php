@@ -18,7 +18,7 @@ class CloseCashRegister
         $now = now();
 
         // Efectivo cobrado en el turno menos el devuelto a clientes.
-        $totalEfectivo = $cashRegister->movimientosPorFormaDePago($now)['efectivo'] ?? 0.0;
+        $totalEfectivo = $cashRegister->movimientosPorFormaDePago()['efectivo'] ?? 0.0;
 
         $montoEsperadoCalculado = round((float) $cashRegister->monto_apertura + $totalEfectivo, 2);
 

@@ -28,6 +28,8 @@ use Illuminate\Support\Carbon;
  * @property float $total
  * @property string|null $observaciones
  * @property string $estado
+ * @property Carbon|null $emitida_at
+ * @property int|null $origen_alerta_equipment_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $vendedor
@@ -39,6 +41,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'numero', 'vendedor_id', 'client_id', 'sede_id', 'vehicle_id', 'referencia', 'fecha', 'vigencia_hasta',
     'condicion_pago_propuesta', 'subtotal', 'igv', 'total', 'observaciones', 'estado',
+    'emitida_at', 'origen_alerta_equipment_id',
 ])]
 class Quote extends Model
 {
@@ -67,6 +70,7 @@ class Quote extends Model
         return [
             'fecha' => 'date',
             'vigencia_hasta' => 'date',
+            'emitida_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'igv' => 'decimal:2',
             'total' => 'decimal:2',

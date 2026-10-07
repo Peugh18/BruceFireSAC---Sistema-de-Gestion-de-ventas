@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Gerente;
 
+use App\Enums\EquipmentType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,6 +30,9 @@ class UpdateServiceRequest extends FormRequest
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
             'unidad_medida' => ['required', 'string', 'max:10'],
+            // X9: "Ofrecer recarga" elige el servicio por agente y capacidad del extintor.
+            'agente' => ['nullable', Rule::enum(EquipmentType::class)],
+            'capacidad' => ['nullable', 'string', 'max:20'],
             'precio_venta' => ['required', 'numeric', 'min:0'],
             'aplica_igv' => ['boolean'],
             'tipo_afectacion_igv' => ['sometimes', 'required', Rule::in(['10', '20', '30'])],

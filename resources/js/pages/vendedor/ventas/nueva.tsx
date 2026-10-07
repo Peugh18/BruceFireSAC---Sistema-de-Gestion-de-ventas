@@ -87,6 +87,9 @@ type SaleFormData = {
     client_id: number | '';
     sede_id: number | '';
     quote_id: number | '';
+    vehicle_id: number | '';
+    /** X7: cuándo se abrió el formulario (mide el tiempo de registro). */
+    iniciado_at: string;
     fecha: string;
     destino: Destination;
     referencia: string;
@@ -108,14 +111,20 @@ type QuoteLine = {
     serializado: boolean;
     cantidad: number;
     precio_unitario: number;
+    descuento: number;
 };
 
+/** Lo pactado en la cotización pasa completo a la venta (V3). */
 type QuoteOption = {
     id: number;
     numero: string;
     client: ClientOption;
     items: QuoteLine[];
     referencia: string | null;
+    condicion_pago: PaymentCondition;
+    observaciones: string | null;
+    vehicle_id: number | null;
+    destino: Destination;
 };
 
 /**
@@ -262,10 +271,13 @@ export default function NuevaVenta({
         client_id: clienteInicial?.id ?? '',
         sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
         quote_id: quote?.id ?? '',
+        vehicle_id: quote?.vehicle_id ?? '',
+        iniciado_at: new Date().toISOString(),
         fecha: venta?.fecha ?? today(),
-        destino: venta?.destino ?? 'local_cliente',
+        destino: venta?.destino ?? quote?.destino ?? 'local_cliente',
         referencia: venta?.referencia ?? quote?.referencia ?? '',
-        condicion_pago: venta?.condicion_pago ?? 'contado',
+        condicion_pago:
+            venta?.condicion_pago ?? quote?.condicion_pago ?? 'contado',
         medio_pago: venta?.medio_pago ?? 'efectivo',
         numero_operacion: venta?.numero_operacion ?? '',
         cuotas: venta?.cuotas ?? [],
@@ -275,7 +287,7 @@ export default function NuevaVenta({
             clienteInicial.tipo_documento !== 'ruc'
                 ? 'boleta'
                 : 'factura'),
-        observaciones: venta?.observaciones ?? '',
+        observaciones: venta?.observaciones ?? quote?.observaciones ?? '',
         items: venta
             ? venta.items.map((line) => ({ ...line, key: nuevaClave() }))
             : (quote?.items ?? [])
@@ -289,7 +301,7 @@ export default function NuevaVenta({
                       nombre: line.nombre,
                       cantidad: line.cantidad,
                       precio_unitario: line.precio_unitario,
-                      descuento: 0,
+                      descuento: line.descuento,
                   })),
     });
 
@@ -400,6 +412,8 @@ export default function NuevaVenta({
             client_id: ficha?.id ?? '',
             referencia:
                 ficha && ficha.id === data.client_id ? data.referencia : '',
+            vehicle_id:
+                ficha && ficha.id === data.client_id ? data.vehicle_id : '',
             comprobante_tipo:
                 ficha &&
                 ficha.tipo_documento !== 'ruc' &&
@@ -431,6 +445,15 @@ export default function NuevaVenta({
                 (serviceId && l.service_id === serviceId),
         )?.precio_unitario;
 
+    // El descuento cotizado de una línea con serie se reparte por unidad.
+    const descuentoCotizado = (productId?: number) => {
+        const linea = quote?.items.find((l) => l.product_id === productId);
+
+        return linea && linea.cantidad > 0
+            ? Math.round((linea.descuento / linea.cantidad) * 100) / 100
+            : 0;
+    };
+
     const agregarUnidades = (unidades: CatalogUnit[]) => {
         const nuevas = unidades.filter(
             (u) =>
@@ -455,7 +478,7 @@ export default function NuevaVenta({
                 detalle: [u.capacidad, u.marca].filter(Boolean).join(' · '),
                 cantidad: 1,
                 precio_unitario: precioCotizado(u.product_id) ?? u.precio_venta,
-                descuento: 0,
+                descuento: descuentoCotizado(u.product_id),
             })),
         ]);
     };
@@ -598,8 +621,10 @@ export default function NuevaVenta({
             return;
         }
 
-        form.transform((data) => ({
+        form.transform(({ vehicle_id, ...data }) => ({
             ...data,
+            // Solo se envía si viene de la cotización: editar no lo borra.
+            ...(vehicle_id ? { vehicle_id } : {}),
             emitir,
             cuotas: data.condicion_pago === 'credito' ? data.cuotas : [],
             medio_pago:
@@ -919,6 +944,7 @@ export default function NuevaVenta({
                                                 ...data,
                                                 destino: 'local_cliente',
                                                 referencia: '',
+                                                vehicle_id: '',
                                             }))
                                         }
                                     >
@@ -934,6 +960,7 @@ export default function NuevaVenta({
                                                 ...data,
                                                 destino: 'vehiculo',
                                                 referencia: '',
+                                                vehicle_id: '',
                                             }))
                                         }
                                     >

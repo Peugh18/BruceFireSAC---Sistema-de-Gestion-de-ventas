@@ -56,17 +56,17 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 
 ### C. Ventas, caja y cobranzas
 
-- [ ] V1: línea serializada siempre con cantidad 1
-- [ ] V3: la cotización pasa completa a la venta (descuento, condición de pago, observaciones, vehículo)
-- [ ] V4 y S11: las notas aceptadas cambian el saldo por cobrar
-- [ ] V5: renovar el vencimiento del equipo solo al cerrar el trabajo técnico
-- [ ] V6: un adicional autorizado genera deuda real
-- [ ] V7: pago ligado al turno de caja; bloqueo contra doble apertura o confirmación
+- [x] V1: línea serializada siempre con cantidad 1 *Código y pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] V3: la cotización pasa completa a la venta (descuento, condición de pago, observaciones, vehículo) *Código y pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] V4 y S11: las notas aceptadas cambian el saldo por cobrar *Código y pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] V5: renovar el vencimiento del equipo solo al cerrar el trabajo técnico *Código y pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] V6: un adicional autorizado genera deuda real *Código y pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] V7: pago ligado al turno de caja; bloqueo contra doble apertura o confirmación *Código y pruebas escritas; sin suite completa (MySQL apagado).*
 - [x] V8: la ficha del cliente muestra al vendedor solo sus ventas, cotizaciones y certificados (§90.1); hecho con X1. *Pruebas escritas; sin suite completa (MySQL apagado).*
 
-- [ ] X6: la tarea diaria no debe vencer cotizaciones "aceptadas"
-- [ ] X7: medir los KPI del proyecto (tiempo de venta, tiempo de cotización, clientes recuperados por alertas: la cotización guarda la alerta de origen)
-- [ ] X8 y X9: alertas filtradas por sede o vendedor, con registro de contacto; "ofrecer recarga" según la capacidad y el agente
+- [x] X6: la tarea diaria no debe vencer cotizaciones "aceptadas" *Código y pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] X7: medir los KPI del proyecto (tiempo de venta, tiempo de cotización, clientes recuperados por alertas: la cotización guarda la alerta de origen) *Código y pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] X8 y X9: alertas filtradas por sede o vendedor, con registro de contacto; "ofrecer recarga" según la capacidad y el agente *Código y pruebas escritas; sin suite completa (MySQL apagado).*
 
 ### D. Técnicos ⚠️ DRS
 
@@ -135,3 +135,20 @@ Diseño en `SUNAT.md` §5.
 - [x] Video v2 final 9:16 renderizado (Chispa ilustrada, voz Jair Solano, música Eleven Music, 3 clips de Veo).
 - [ ] Versión 1:1 para LinkedIn y captions por red.
 - [ ] Crear los perfiles en TikTok, Instagram, Facebook, YouTube, LinkedIn y Google.
+
+## Entregables académicos Semana 8 Sprint 7
+
+**Estado al 07/10/2026:** revisión inicial y plan propuesto guardados; Word y Excel sin modificar. Periodo 02/10–09/10, entrega el 09/10. El usuario confirmó este repositorio y pidió conservar toda la memoria.
+
+Detalle y fuentes en Obsidian: `D:/TiomiguelonGgs/Documents/Recuerda/Cerebro/Documentación de Bruce Fire SAC/27 - Plan de entregables Semana 8 Sprint 7.md`.
+
+- [x] Revisar plantillas, matriz, informe final, Scrum anterior, Obsidian y cronograma.
+- [x] Guardar el plan y los hallazgos de la conversación.
+- [ ] Métricas: mínimo cinco VI alineadas a ISO y cinco VD de proceso; ocho filas completas, unidad, rangos e instrumento existente. Mantener SUS y corregir denominadores.
+- [ ] Instrumentos: formularios aplicables para ambas variables, instrucciones, muestra, C1/C2 y evidencia.
+- [ ] Scrum Sprint 7: periodo completo 02/10–09/10, códigos EDT y estados sustentados.
+- [ ] Informe Sprint 7: concordar con Scrum, recalcular anexos, porcentajes y semáforos. No copiar AC ni CPI sin sustento.
+- [ ] Verificar Word/Excel y coherencia cruzada antes de entregar.
+- [ ] Después revisar el sistema y las pruebas pendientes; no dar por validado lo implementado.
+
+**Siguiente paso documental:** retomar el plan con el usuario y preparar los cuatro archivos de Semana 8 conservando las plantillas. Planes de pruebas Funcionales y Unitarias quedan como referencia pendiente de alcance; el pedido de guardar memoria no confirma incorporarlos. No confundir fechas planificadas con terminación real. Este bloque no cambia las prioridades ni el estado de las fases técnicas anteriores.

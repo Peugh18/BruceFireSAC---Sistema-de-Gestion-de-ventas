@@ -64,7 +64,7 @@ class CollectionController extends Controller
                     ? (int) $fechaVenc->diffInDays(today())
                     : 0;
 
-                $saldo = max(0, round((float) $inst->monto - (float) $inst->payments->sum('monto'), 2));
+                $saldo = $inst->saldo();
 
                 return [
                     'id' => $inst->id,
@@ -72,6 +72,8 @@ class CollectionController extends Controller
                     'sale_numero' => $inst->sale->numero_interno,
                     'numero_cuota' => $inst->numero_cuota,
                     'monto' => $inst->monto,
+                    // V4/S11: lo rebajado por notas de crédito aceptadas.
+                    'acreditado' => (float) $inst->monto_acreditado,
                     'saldo' => $saldo,
                     'fecha_vencimiento' => $fechaVenc->toDateString(),
                     'estado' => $inst->estado,
@@ -121,7 +123,7 @@ class CollectionController extends Controller
 
         DB::transaction(function () use ($installment, $request): void {
             $installment = Installment::query()->lockForUpdate()->findOrFail($installment->id);
-            $saldo = max(0, round((float) $installment->monto - (float) $installment->payments()->sum('monto'), 2));
+            $saldo = $installment->saldo();
             $monto = (float) $request->validated('monto');
 
             if ($monto > $saldo) {
@@ -139,7 +141,7 @@ class CollectionController extends Controller
                 'fecha' => today(),
             ]);
 
-            $this->recalculateInstallmentState($installment);
+            $installment->recalcularEstado();
         });
 
         return back();
@@ -166,25 +168,12 @@ class CollectionController extends Controller
             );
 
             $payment->anular($data['motivo'], $request->user()->id);
-            $this->recalculateInstallmentState($installment);
+            $installment->recalcularEstado();
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cobro anulado. El saldo de la cuota se actualizó.']);
 
         return back();
-    }
-
-    protected function recalculateInstallmentState(Installment $installment): void
-    {
-        $totalPagado = (float) $installment->payments()->sum('monto');
-        $estado = match (true) {
-            $totalPagado >= (float) $installment->monto => 'pagado',
-            $totalPagado > 0 => 'parcial',
-            $installment->fecha_vencimiento->isBefore(today()) => 'vencido',
-            default => 'pendiente',
-        };
-
-        $installment->update(['estado' => $estado]);
     }
 
     protected function assertInstallmentAccess(Request $request, Installment $installment): void

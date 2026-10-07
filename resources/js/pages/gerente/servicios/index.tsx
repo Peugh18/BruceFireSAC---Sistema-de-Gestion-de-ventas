@@ -18,6 +18,8 @@ type ServiceItem = {
     nombre: string;
     descripcion: string | null;
     unidad_medida: string;
+    agente: string | null;
+    capacidad: string | null;
     precio_venta: number;
     aplica_igv: boolean;
     tipo_afectacion_igv: string | null;
@@ -51,6 +53,7 @@ type PageProps = {
     filters: ServiceFilters;
     kpis: ServiceKpis;
     tiposCertificado: { id: number; nombre: string }[];
+    agentes: { valor: string; etiqueta: string }[];
     flash?: {
         success?: string;
         error?: string;
@@ -65,8 +68,15 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 export default function ServiciosIndex() {
-    const { currentTeam, servicios, filters, kpis, tiposCertificado, flash } =
-        usePage<PageProps>().props;
+    const {
+        currentTeam,
+        servicios,
+        filters,
+        kpis,
+        tiposCertificado,
+        agentes,
+        flash,
+    } = usePage<PageProps>().props;
     const [buscar, setBuscar] = useState(filters.buscar || '');
     const [modalOpen, setModalOpen] = useState(false);
     const [editingService, setEditingService] = useState<ServiceItem | null>(
@@ -77,6 +87,8 @@ export default function ServiciosIndex() {
         nombre: '',
         descripcion: '',
         unidad_medida: 'ZZ',
+        agente: '',
+        capacidad: '',
         precio_venta: '',
         aplica_igv: true,
         tipo_afectacion_igv: '10',
@@ -91,6 +103,8 @@ export default function ServiciosIndex() {
             nombre: '',
             descripcion: '',
             unidad_medida: 'ZZ',
+            agente: '',
+            capacidad: '',
             precio_venta: '',
             aplica_igv: true,
             tipo_afectacion_igv: '10',
@@ -106,6 +120,8 @@ export default function ServiciosIndex() {
             nombre: service.nombre,
             descripcion: service.descripcion || '',
             unidad_medida: service.unidad_medida,
+            agente: service.agente ?? '',
+            capacidad: service.capacidad ?? '',
             precio_venta: String(service.precio_venta),
             aplica_igv: service.aplica_igv,
             tipo_afectacion_igv: service.igv_requiere_revision
@@ -609,6 +625,53 @@ export default function ServiciosIndex() {
                                             {form.errors.precio_venta}
                                         </p>
                                     )}
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className="flex flex-col gap-1">
+                                        Agente que recarga
+                                        <select
+                                            value={form.data.agente}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'agente',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="border-border rounded border p-2"
+                                        >
+                                            <option value="">
+                                                No es una recarga
+                                            </option>
+                                            {agentes.map((agente) => (
+                                                <option
+                                                    key={agente.valor}
+                                                    value={agente.valor}
+                                                >
+                                                    {agente.etiqueta}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <label className="flex flex-col gap-1">
+                                        Capacidad
+                                        <input
+                                            type="text"
+                                            value={form.data.capacidad}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'capacidad',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="6 kg"
+                                            className="border-border rounded border p-2"
+                                        />
+                                        {form.errors.capacidad && (
+                                            <span className="text-red-600">
+                                                {form.errors.capacidad}
+                                            </span>
+                                        )}
+                                    </label>
                                 </div>
                                 <label className="flex flex-col gap-1">
                                     Certificado que emite

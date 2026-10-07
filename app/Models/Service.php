@@ -17,6 +17,8 @@ use Illuminate\Support\Carbon;
  * @property string $nombre
  * @property string|null $descripcion
  * @property string $unidad_medida
+ * @property string|null $agente
+ * @property string|null $capacidad
  * @property float $precio_venta
  * @property Carbon|null $igv_revisado_at
  * @property string|null $tipo_afectacion_igv
@@ -33,6 +35,8 @@ use Illuminate\Support\Carbon;
     'nombre',
     'descripcion',
     'unidad_medida',
+    'agente',
+    'capacidad',
     'precio_venta',
     'aplica_igv', 'igv_revisado_at', 'tipo_afectacion_igv',
     'certificate_type_id',
@@ -82,5 +86,39 @@ class Service extends Model
     public function esServicio(): bool
     {
         return true;
+    }
+
+    /**
+     * Capacidad escrita en un texto ("RECARGA PQS 6 KG" → "6 kg"), o null.
+     */
+    public static function capacidadDelTexto(?string $texto): ?string
+    {
+        if (preg_match('/(\d+(?:[.,]\d+)?)\s*(kg|kgs|lb|lbs|lt|lts|l|gal)\b/i', (string) $texto, $partes) !== 1) {
+            return null;
+        }
+
+        return str_replace(',', '.', $partes[1]).' '.mb_strtolower($partes[2]);
+    }
+
+    /**
+     * Capacidad comparable: "6 KG", "6kg" y "6,0 kgs" son la misma.
+     */
+    public static function normalizarCapacidad(?string $capacidad): ?string
+    {
+        $capacidad = self::capacidadDelTexto($capacidad);
+
+        if ($capacidad === null) {
+            return null;
+        }
+
+        [$numero, $unidad] = explode(' ', $capacidad);
+        $unidad = match ($unidad) {
+            'kgs' => 'kg',
+            'lbs' => 'lb',
+            'lt', 'lts' => 'l',
+            default => $unidad,
+        };
+
+        return ((float) $numero).$unidad;
     }
 }

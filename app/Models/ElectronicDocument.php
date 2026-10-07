@@ -39,6 +39,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $baja_estado_previo
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property Carbon|null $saldo_aplicado_at
  * @property-read Sale $sale
  * @property-read ElectronicDocument|null $cpeAfectado
  */
@@ -47,6 +48,7 @@ use Illuminate\Support\Carbon;
     'xml_path', 'cdr_path', 'pdf_path', 'pdf_firma', 'sunat_estado', 'sunat_codigo_respuesta',
     'sunat_mensaje', 'enviar_desde', 'enviado_at',
     'datos_emision', 'intento_envio_at', 'baja_nombre', 'baja_ticket', 'baja_motivo', 'baja_mensaje', 'baja_estado_previo',
+    'saldo_aplicado_at',
 ])]
 class ElectronicDocument extends Model
 {
@@ -65,6 +67,7 @@ class ElectronicDocument extends Model
             'fecha_emision' => 'datetime',
             'enviar_desde' => 'datetime',
             'enviado_at' => 'datetime',
+            'saldo_aplicado_at' => 'datetime',
         ];
     }
 
