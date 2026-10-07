@@ -23,7 +23,11 @@ beforeEach(function () {
 test('traslado serializado registra salida entrada y mueve la unidad atomicamente', function () {
     $unit = InventoryUnit::factory()->create(['sede_almacen_id' => $this->source->id, 'estado' => 'disponible']);
 
-    app(TransferInventory::class)->handle($this->source->id, ['destination_sede_id' => $this->destination->id, 'serials' => [$unit->numero_serie]], $this->user);
+    $traslado = app(TransferInventory::class)->handle($this->source->id, ['destination_sede_id' => $this->destination->id, 'serials' => [$unit->numero_serie]], $this->user);
+
+    // Fase H: queda en tránsito hasta que el destino confirma la llegada.
+    expect($unit->refresh()->estado)->toBe('en_transito')->and($unit->sede_almacen_id)->toBe($this->source->id);
+    app(TransferInventory::class)->confirmar($traslado, $this->user);
 
     expect($unit->refresh()->sede_almacen_id)->toBe($this->destination->id)
         ->and(InventoryMovement::where('inventory_unit_id', $unit->id)->where('tipo', 'traslado')->pluck('cantidad')->sort()->values()->all())->toBe([-1, 1]);
@@ -33,7 +37,9 @@ test('traslado de producto sin serie conserva el saldo total', function () {
     $product = Product::factory()->create(['serializado' => false]);
     InventoryMovement::create(['product_id' => $product->id, 'sede_id' => $this->source->id, 'tipo' => 'ingreso', 'cantidad' => 10, 'user_id' => $this->user->id]);
 
-    app(TransferInventory::class)->handle($this->source->id, ['destination_sede_id' => $this->destination->id, 'product_id' => $product->id, 'quantity' => 4], $this->user);
+    $traslado = app(TransferInventory::class)->handle($this->source->id, ['destination_sede_id' => $this->destination->id, 'product_id' => $product->id, 'quantity' => 4], $this->user);
+    expect((int) InventoryMovement::where('product_id', $product->id)->where('sede_id', $this->destination->id)->sum('cantidad'))->toBe(0);
+    app(TransferInventory::class)->confirmar($traslado, $this->user);
 
     expect((int) InventoryMovement::where('product_id', $product->id)->sum('cantidad'))->toBe(10)
         ->and((int) InventoryMovement::where('product_id', $product->id)->where('sede_id', $this->destination->id)->sum('cantidad'))->toBe(4);

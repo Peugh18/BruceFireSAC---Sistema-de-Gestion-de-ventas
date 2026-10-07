@@ -18,6 +18,7 @@ import React from 'react';
 import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, { type EvidenciaListada } from '@/components/subir-evidencia';
+import guias from '@/routes/guias';
 import entregas from '@/routes/tecnico-campo/entregas';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
@@ -165,6 +166,14 @@ export default function EntregaShow({
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver a entregas</span>
+                </Link>
+                <Link
+                    href={guias.create.url(teamSlug, {
+                        query: { origen: 'entrega', id: order.id },
+                    })}
+                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white"
+                >
+                    Guía de remisión
                 </Link>
                 <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
                     {order.codigo}

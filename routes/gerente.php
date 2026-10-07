@@ -13,6 +13,7 @@ use App\Http\Controllers\Gerente\ReportController;
 use App\Http\Controllers\Gerente\SedeController;
 use App\Http\Controllers\Gerente\ServiceController;
 use App\Http\Controllers\Gerente\SignerController;
+use App\Http\Controllers\Gerente\TransporteController;
 use App\Http\Controllers\Gerente\UserController;
 use App\Http\Controllers\Vendedor\CollectionController as VendedorCollectionController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,13 @@ Route::prefix('gerente')
         Route::get('notas-por-aprobar', [NoteRequestController::class, 'index'])->name('notas.index');
         Route::post('notas-por-aprobar/{note_request}/aprobar', [NoteRequestController::class, 'aprobar'])->name('notas.aprobar');
         Route::post('notas-por-aprobar/{note_request}/rechazar', [NoteRequestController::class, 'rechazar'])->name('notas.rechazar');
+
+        // Vehículos y conductores de las guías de remisión (Fase H)
+        Route::get('transporte', [TransporteController::class, 'index'])->name('transporte.index');
+        Route::post('transporte/vehiculos', [TransporteController::class, 'storeVehiculo'])->name('transporte.vehiculos.store');
+        Route::patch('transporte/vehiculos/{vehiculo}/toggle', [TransporteController::class, 'toggleVehiculo'])->name('transporte.vehiculos.toggle');
+        Route::post('transporte/conductores', [TransporteController::class, 'storeConductor'])->name('transporte.conductores.store');
+        Route::patch('transporte/conductores/{conductor}/toggle', [TransporteController::class, 'toggleConductor'])->name('transporte.conductores.toggle');
 
         // Catálogo de Productos y Servicios (§86.4.2)
         Route::resource('productos', ProductController::class)->except(['create', 'edit', 'show']);

@@ -2,6 +2,7 @@ import React from 'react';
 import ConversacionOrden, { type ConversacionProps } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, { type EvidenciaListada } from '@/components/subir-evidencia';
+import guias from '@/routes/guias';
 import recojos from '@/routes/tecnico-campo/recojos';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
@@ -110,6 +111,14 @@ export default function RecojoShow({
                 >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Volver a Lista de Recojos</span>
+                </Link>
+                <Link
+                    href={guias.create.url(teamSlug, {
+                        query: { origen: 'recojo', id: order.id },
+                    })}
+                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white"
+                >
+                    Emitir guía de remisión (antes de salir)
                 </Link>
 
                 {/* Client & Service Info Card */}

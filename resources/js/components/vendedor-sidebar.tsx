@@ -6,6 +6,7 @@ import {
     LayoutDashboard,
     ReceiptText,
     ShoppingCart,
+    Truck,
     UsersRound,
     Wallet,
     Wrench,
@@ -19,6 +20,7 @@ import caja from '@/routes/vendedor/caja';
 import certificados from '@/routes/vendedor/certificados';
 import clientes from '@/routes/vendedor/clientes';
 import cotizaciones from '@/routes/vendedor/cotizaciones';
+import guias from '@/routes/guias';
 import facturacion from '@/routes/vendedor/facturacion';
 import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
 import ventas from '@/routes/vendedor/ventas';
@@ -116,6 +118,11 @@ function buildNavGroups(
                     title: 'Comprobantes SUNAT',
                     href: facturacion.index.url(teamSlug),
                     icon: ReceiptText,
+                },
+                {
+                    title: 'Guías de remisión',
+                    href: guias.index.url(teamSlug),
+                    icon: Truck,
                 },
             ],
         },

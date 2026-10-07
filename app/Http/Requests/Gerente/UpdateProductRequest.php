@@ -37,6 +37,8 @@ class UpdateProductRequest extends FormRequest
             // C1: el agente y la capacidad pasan a la unidad y al equipo vendido.
             'agente' => ['nullable', Rule::enum(EquipmentType::class)],
             'capacidad' => ['nullable', 'string', 'max:20'],
+            // Fase H: el peso unitario alimenta el peso bruto de la guía de remisión.
+            'peso_kg' => ['nullable', 'numeric', 'min:0', 'max:99999'],
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
             'unidad_medida' => ['required', Rule::in(UnidadMedidaSunat::codigos())],

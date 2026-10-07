@@ -177,7 +177,7 @@ class GuiaRemisionService
 
     protected function direccion(string $ubigeo, string $direccion, ?string $codLocal, ?string $ruc): Direction
     {
-        $direction = (new Direction)->setUbigueo($ubigeo)->setDireccion($direccion);
+        $direction = new Direction($ubigeo, $direccion);
 
         // Un local propio lleva el RUC de la empresa y su código de establecimiento anexo.
         if ($ruc !== null && $codLocal !== null) {

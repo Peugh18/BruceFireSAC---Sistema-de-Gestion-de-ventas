@@ -154,9 +154,9 @@ class GuiaRemisionPrefill
     protected function partidaDeSede(?Sede $sede): array
     {
         return [
-            'partida_ubigeo' => $sede?->ubigeo ?? CompanySetting::current()->ubigeo,
-            'partida_direccion' => $sede?->direccion ?? CompanySetting::current()->direccion,
-            'partida_cod_establecimiento' => $sede?->cod_establecimiento_anexo ?? '0000',
+            'partida_ubigeo' => $sede->ubigeo ?? CompanySetting::current()->ubigeo,
+            'partida_direccion' => $sede->direccion ?? CompanySetting::current()->direccion,
+            'partida_cod_establecimiento' => $sede->cod_establecimiento_anexo ?? '0000',
         ];
     }
 
@@ -166,9 +166,9 @@ class GuiaRemisionPrefill
     protected function llegadaDeSede(?Sede $sede): array
     {
         return [
-            'llegada_ubigeo' => $sede?->ubigeo ?? CompanySetting::current()->ubigeo,
-            'llegada_direccion' => $sede?->direccion ?? CompanySetting::current()->direccion,
-            'llegada_cod_establecimiento' => $sede?->cod_establecimiento_anexo ?? '0000',
+            'llegada_ubigeo' => $sede->ubigeo ?? CompanySetting::current()->ubigeo,
+            'llegada_direccion' => $sede->direccion ?? CompanySetting::current()->direccion,
+            'llegada_cod_establecimiento' => $sede->cod_establecimiento_anexo ?? '0000',
         ];
     }
 

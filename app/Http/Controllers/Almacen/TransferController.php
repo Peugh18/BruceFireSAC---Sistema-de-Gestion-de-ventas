@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Almacen;
 use App\Actions\Almacen\TransferInventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Almacen\StoreTransferRequest;
+use App\Models\InventoryTransfer;
 use App\Models\Product;
 use App\Models\Sede;
 use App\Models\Team;
@@ -29,6 +30,21 @@ class TransferController extends Controller
             'destinations' => $sourceSede
                 ? Sede::query()->whereIn('tipo', ['almacen', 'mixta'])->where('activo', true)->whereKeyNot($sourceSede->id)->orderBy('nombre')->get(['id', 'nombre'])
                 : collect(),
+            'enTransito' => InventoryTransfer::query()
+                ->where('estado', InventoryTransfer::EN_TRANSITO)
+                ->when($request->user()->almacenRestringidoId(), fn ($query, int $almacen) => $query->where(fn ($q) => $q->where('origen_sede_id', $almacen)->orWhere('destino_sede_id', $almacen)))
+                ->with('origen:id,nombre', 'destino:id,nombre', 'guia:id,inventory_transfer_id,estado_sunat', 'items')
+                ->latest('id')
+                ->get()
+                ->map(fn (InventoryTransfer $t) => [
+                    'id' => $t->id,
+                    'origen' => $t->origen->nombre,
+                    'destino' => $t->destino->nombre,
+                    'bienes' => (int) $t->items->sum('cantidad'),
+                    'puede_confirmar' => ($request->user()->almacenRestringidoId() ?? $t->destino_sede_id) === $t->destino_sede_id,
+                    'guia_aceptada' => $t->guia?->estado_sunat === 'aceptada',
+                    'tiene_guia' => $t->guia !== null,
+                ]),
             'bulkProducts' => Product::query()->where('activo', true)->where('serializado', false)->orderBy('nombre')->get(['id', 'codigo', 'nombre']),
         ]);
     }
@@ -38,7 +54,7 @@ class TransferController extends Controller
         $sourceSedeId = $this->origen($request);
         abort_if(! $sourceSedeId, 422, 'No se ha seleccionado una sede de origen válida.');
 
-        $transfer->handle($sourceSedeId, array_filter([
+        $traslado = $transfer->handle($sourceSedeId, array_filter([
             'destination_sede_id' => $request->integer('destination_sede_id'),
             'serials' => $request->filled('serials') ? array_values(array_map('strval', (array) $request->input('serials'))) : null,
             'product_id' => $request->filled('product_id') ? $request->integer('product_id') : null,
@@ -46,7 +62,18 @@ class TransferController extends Controller
             'observation' => $request->filled('observation') ? $request->string('observation')->toString() : null,
         ], fn ($valor) => $valor !== null), $request->user());
 
-        return back()->with('success', 'Traslado registrado en ambas sedes.');
+        return back()->with('success', 'Traslado registrado: el stock salió del origen y queda en tránsito hasta que el almacén destino confirme la llegada.')
+            ->with('traslado_id', $traslado->id);
+    }
+
+    public function confirm(Team $current_team, Request $request, InventoryTransfer $traslado, TransferInventory $transfer): RedirectResponse
+    {
+        $almacen = $request->user()->almacenRestringidoId();
+        abort_if($almacen !== null && $almacen !== $traslado->destino_sede_id, 403, 'Solo el almacén destino confirma la llegada.');
+
+        $transfer->confirmar($traslado, $request->user());
+
+        return back()->with('success', 'Llegada confirmada: el stock ya está en tu almacén.');
     }
 
     /**

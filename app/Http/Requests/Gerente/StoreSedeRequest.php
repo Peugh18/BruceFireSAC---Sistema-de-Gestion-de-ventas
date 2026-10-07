@@ -25,6 +25,8 @@ class StoreSedeRequest extends FormRequest
             'nombre' => ['required', 'string', 'max:255', Rule::unique('sedes', 'nombre')->ignore($sedeId)],
             'tipo' => ['required', Rule::in(['tienda', 'almacen', 'mixta'])],
             'ubigeo' => ['nullable', 'string', 'size:6', 'exists:ubigeos,codigo'],
+            'direccion' => ['nullable', 'string', 'max:255'],
+            'cod_establecimiento_anexo' => ['sometimes', 'required', 'string', 'regex:/^\d{4}$/'],
             'almacen_id' => [
                 Rule::requiredIf(fn () => $this->input('tipo') === 'tienda'),
                 'nullable',
