@@ -47,8 +47,11 @@ test('el certificado de la inspeccion lleva solo los conformes y finalizar dos v
     $sinRevisar = Equipment::factory()->create(['client_id' => $this->orden->client_id, 'estado' => 'operativo']);
     $this->orden->equipments()->attach([$conforme->id, $observado->id, $sinRevisar->id]);
 
+    // El checklist debe terminar en redirect; assertSessionHasNoErrors() por sí
+    // solo pasaría también ante un 500 y ocultaría que el checklist no se guardó.
     $checklist = fn (Equipment $eq, string $estado) => $this->actingAs($this->tecnico)
-        ->post(($this->ruta)('inspecciones.checklist.store', ['equipment' => $eq]), ['items' => ['manometro' => ['estado' => $estado, 'condicion' => 'Revisado']]]);
+        ->post(($this->ruta)('inspecciones.checklist.store', ['equipment' => $eq]), ['items' => ['manometro' => ['estado' => $estado, 'condicion' => 'Revisado']]])
+        ->assertRedirect();
     $checklist($conforme, 'conforme')->assertSessionHasNoErrors();
     $checklist($observado, 'observado')->assertSessionHasNoErrors();
 

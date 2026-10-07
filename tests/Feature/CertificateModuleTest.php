@@ -24,14 +24,18 @@ test('issue certificate creates a certificate with technical units, correct pref
 
     $client = Client::factory()->create();
 
+    // El certificado de extintores exige el agente de cada unidad (C1):
+    // sin tipo_agente (ni equipo que lo aporte) no se puede emitir.
     $unidades = [
         [
             'numero_serie' => 'SN-12345',
+            'tipo_agente' => 'CO2',
             'fecha_ultima_ph' => null,
             'fecha_ultima_recarga' => '2026-03-10',
         ],
         [
             'numero_serie' => 'SN-67890',
+            'tipo_agente' => 'CO2',
             'fecha_ultima_ph' => null,
             'fecha_ultima_recarga' => '2026-03-10',
         ],
@@ -80,9 +84,11 @@ test('issue certificate for prueba hidrostatica calculates 5 years vigencia', fu
 
     $client = Client::factory()->create();
 
+    // Igual que en operatividad: la P.H. es de extintores y exige el agente (C1).
     $unidades = [
         [
             'numero_serie' => 'SN-PH-99',
+            'tipo_agente' => 'PQS ABC',
             'fecha_ultima_ph' => '2026-04-20',
             'fecha_ultima_recarga' => null,
         ],

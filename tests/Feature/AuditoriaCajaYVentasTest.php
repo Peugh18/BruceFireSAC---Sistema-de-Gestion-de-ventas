@@ -41,7 +41,24 @@ function facturaCobradaEnEfectivo(User $vendedor): ElectronicDocument
     ]);
     SalePayment::factory()->create(['sale_id' => $sale->id, 'installment_id' => null, 'forma_pago' => 'efectivo', 'monto' => 118]);
 
-    return ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'serie' => 'F001', 'sunat_estado' => 'aceptado']);
+    // La nota de crédito necesita el XML del comprobante original para conocer
+    // su afectación al IGV (DesgloseNota -> DatosEmision), igual que lo preparan
+    // ventaConFactura (Pest.php) y FaseAPendientesTest: una línea gravada y el
+    // XML de prueba firmado y guardado con su xml_path.
+    SaleItem::factory()->create([
+        'sale_id' => $sale->id,
+        'product_id' => Product::factory()->create(['tipo_afectacion_igv' => '10'])->id,
+        'service_id' => null,
+        'cantidad' => 1,
+        'precio_unitario' => 100,
+        'subtotal' => 100,
+        'descuento' => 0,
+    ]);
+
+    $factura = ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'serie' => 'F001', 'sunat_estado' => 'aceptado']);
+    guardarXmlOriginalDePrueba($factura);
+
+    return $factura;
 }
 
 test('una nota de credito que anula una venta cobrada en efectivo pide la caja abierta', function () {

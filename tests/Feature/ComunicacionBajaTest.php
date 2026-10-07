@@ -39,6 +39,11 @@ beforeEach(function () {
         {
             return $this->estado;
         }
+
+        public function consultCdr(string $ruc, string $tipoDoc, string $serie, int $numero): array
+        {
+            throw new LogicException('La baja no consulta el CDR de un comprobante.');
+        }
     };
     $this->app->instance(SunatClientInterface::class, $this->sunat);
 });

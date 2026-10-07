@@ -111,9 +111,19 @@ class MaintenanceController extends Controller
 
         EquipoDeLaOrden::asegurarAbierta($serviceOrder);
 
+        // Laravel excluye 'items' del array que devuelve validate() porque el
+        // campo tiene reglas anidadas (items.*.foto) y, con
+        // excludeUnvalidatedArrayKeys activado, las claves padre con hijos sin
+        // validar se descartan del resultado (mismo caso que
+        // InspectionController::storeChecklist). La validación de 'items'
+        // (required|array) y de las fotos sí se ejecutó, así que se toma del
+        // request —que incluye los archivos ya validados— con un valor por
+        // defecto para que un request malformado no rompa con un 500.
+        $items = $validated['items'] ?? data_get($request->all(), 'items', []);
+
         $processChecklist->execute($serviceOrder, $equipment, $request->user(), [
             'origen' => 'campo',
-            'items' => $validated['items'],
+            'items' => $items,
             'observaciones' => $validated['observaciones'] ?? null,
         ]);
 
