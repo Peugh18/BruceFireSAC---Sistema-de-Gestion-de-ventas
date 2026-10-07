@@ -100,7 +100,11 @@ class EmitElectronicDocument
             'sunat_estado' => $this->responseClassifier->classify((int) $response['codigo'], $notas),
             'sunat_codigo_respuesta' => (string) $response['codigo'],
             'sunat_mensaje' => $notas === [] ? $response['mensaje'] : $response['mensaje'].' | '.implode(' | ', $notas),
-            'enviado_at' => now(),
+            // Fecha de recepción del CDR. Si el CDR se recupera después (una
+            // consulta porque la respuesta se perdió), se usa el primer intento
+            // de envío: es la más conservadora para el plazo de 7 días de la
+            // comunicación de baja, que no debe parecer más largo de lo legal.
+            'enviado_at' => $document->enviado_at ?? $document->intento_envio_at ?? now(),
         ]);
 
         // Una nota de crédito de anulación aceptada anula la venta.
