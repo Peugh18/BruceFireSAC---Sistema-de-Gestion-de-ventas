@@ -2,6 +2,7 @@
 
 use App\Actions\Billing\VoidElectronicDocument;
 use App\Contracts\SunatClientInterface;
+use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -12,6 +13,10 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     Storage::fake('local');
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
+
+    // El nombre del comprobante de baja lleva el RUC de la empresa. Sin este
+    // registro la prueba depende del .env local y en el CI sale vacío.
+    CompanySetting::factory()->create();
 
     // SUNAT simulado: recibe la baja, da un ticket y luego responde lo que
     // diga $estado (en proceso, aceptada o rechazada).
@@ -38,6 +43,11 @@ beforeEach(function () {
         public function getStatus(string $ticket): array
         {
             return $this->estado;
+        }
+
+        public function consultCdr(string $ruc, string $tipoDoc, string $serie, int $numero): array
+        {
+            throw new LogicException('La baja no consulta el CDR de un comprobante.');
         }
     };
     $this->app->instance(SunatClientInterface::class, $this->sunat);

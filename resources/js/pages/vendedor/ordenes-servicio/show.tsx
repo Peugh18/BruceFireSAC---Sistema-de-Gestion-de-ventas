@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -261,7 +262,15 @@ export default function ServiceOrderShow({
         router.post(
             ordenes.asignarTecnico.url(ruta),
             { tecnico_id: tecnicoElegido },
-            { preserveScroll: true, onSuccess: () => setTecnicoElegido('') },
+            {
+                preserveScroll: true,
+                onSuccess: () => setTecnicoElegido(''),
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo asignar el técnico.',
+                    ),
+            },
         );
     }
 

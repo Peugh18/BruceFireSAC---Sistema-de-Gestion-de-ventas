@@ -40,6 +40,7 @@ class EnviarComprobantesProgramados extends Command
             ->get();
 
         $enviados = 0;
+        $yaEnSunat = 0;
 
         foreach ($documentos as $documento) {
             try {
@@ -49,7 +50,18 @@ class EnviarComprobantesProgramados extends Command
                 // mismo XML firmado (reenviarlo no es reemplazarlo).
                 if ($documento->resultadoDesconocidoDeSunat()
                     && $consultarCdrSunat->handle($documento)['estado'] === 'registrado') {
+                    $yaEnSunat++;
+
                     continue;
+                }
+
+                // S8: si el plazo legal ya pasó, SUNAT lo rechazará; se avisa
+                // para que no se descubra tarde.
+                if ($documento->diasRestantesParaEnvio() < 0) {
+                    Log::warning("{$documento->serie}-{$documento->correlativo} ya venció su plazo de envío a SUNAT y puede ser rechazado.", [
+                        'electronic_document_id' => $documento->id,
+                        'dias_vencido' => -$documento->diasRestantesParaEnvio(),
+                    ]);
                 }
 
                 $emitElectronicDocument->sendDocument($documento->fresh());
@@ -62,7 +74,10 @@ class EnviarComprobantesProgramados extends Command
             }
         }
 
-        $this->info("{$enviados} de {$documentos->count()} comprobante(s) enviados a SUNAT.");
+        $resumen = "{$enviados} de {$documentos->count()} comprobante(s) enviados a SUNAT.";
+        $this->info($yaEnSunat > 0
+            ? "{$resumen} {$yaEnSunat} ya estaban en SUNAT y se les recuperó el CDR."
+            : $resumen);
 
         // Comunicaciones de baja cuyo ticket SUNAT aún no resolvía.
         ElectronicDocument::query()

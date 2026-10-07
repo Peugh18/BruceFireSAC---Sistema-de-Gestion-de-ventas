@@ -31,6 +31,8 @@ test('vender una unidad nueva descuenta stock, crea kardex, equipo y calcula tot
         'estado' => 'disponible',
     ]);
 
+    // Una serie es una unidad física: la línea lleva cantidad 1 y para vender
+    // más se agrega cada serie como línea propia.
     $sale = app(CreateSale::class)->handle([
         'client_id' => $client->id,
         'sede_id' => $sede->id,
@@ -43,16 +45,16 @@ test('vender una unidad nueva descuenta stock, crea kardex, equipo y calcula tot
             'tipo_linea' => 'unidad_nueva',
             'numero_serie' => $unit->numero_serie,
             'product_id' => $product->id,
-            'cantidad' => 2,
+            'cantidad' => 1,
             'precio_unitario' => 100,
             'descuento' => 10,
         ],
     ], $user->id);
 
-    // Los precios incluyen IGV: 2 x 100 - 10 = S/ 190 que paga el cliente.
-    expect((float) $sale->subtotal)->toEqual(161.02)
-        ->and((float) $sale->igv)->toEqual(28.98)
-        ->and((float) $sale->total)->toEqual(190.0)
+    // Los precios incluyen IGV: 1 x 100 - 10 = S/ 90 que paga el cliente.
+    expect((float) $sale->subtotal)->toEqual(76.27)
+        ->and((float) $sale->igv)->toEqual(13.73)
+        ->and((float) $sale->total)->toEqual(90.0)
         ->and($unit->refresh()->estado)->toBe('vendido')
         ->and(InventoryMovement::where('referencia_type', $sale->getMorphClass())->where('referencia_id', $sale->id)->count())->toBe(1)
         ->and(Equipment::where('client_id', $client->id)->where('numero_serie', 'BF-SERIE-001')->exists())->toBeTrue();

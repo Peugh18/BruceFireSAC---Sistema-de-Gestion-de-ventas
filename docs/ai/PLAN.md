@@ -29,44 +29,44 @@ Los IDs (S#, C#, V#, T#, A#) remiten a `AUDITORIA.md` y `SUNAT.md`. ⚠️ **DRS
 - [x] S1: elegir el servidor beta o producción según `SUNAT_BETA` y verificar el certificado TLS (envío propio con `verify_peer`, sin `See`)
 - [x] S2: bloquear las NC con motivo 04, 05 u 08 sobre boletas
 - [x] S3: ND motivo 13 para penalidades, inafecto; el 03 pasa a "otros conceptos" (R.S. 000048-2026)
-- [x] S4: tipo de afectación IGV (catálogo 07) en productos, servicios y líneas de venta, con su select en el catálogo del Gerente (Codex). *Falta correr la suite completa.*
+- [x] S4: tipo de afectación IGV (catálogo 07) en productos, servicios y líneas de venta, con su select en el catálogo del Gerente (Codex). _Falta correr la suite completa._
 - [x] S5: guardar la hora de emisión y usar la misma en el XML y en el PDF
 - [x] S6: guardar la fecha de la NC y la ND al crearla y reutilizarla en los reintentos
 - [x] S9: catálogo 09 completo
-- [x] S10: las notas usan la afectación del comprobante original (`DesgloseNota`); los casos mixtos o los motivos 11, 12 y 13 sin datos se bloquean con un mensaje claro (Codex). *Falta correr la suite completa.*
+- [x] S10: las notas usan la afectación del comprobante original (`DesgloseNota`); los casos mixtos o los motivos 11, 12 y 13 sin datos se bloquean con un mensaje claro (Codex). _Falta correr la suite completa._
 - [x] S8: aviso en Facturación del vendedor y en el dashboard del Gerente (vence hoy o mañana, y vencidos), con lista filtrada
 - [x] S7: comunicación de baja real (RA para serie F, RC estado 3 para serie B, ticket y consulta), solo no entregados y dentro de 7 días desde el CDR
-- [x] S12: se guarda una copia de los datos de emisión (cliente y líneas) en `datos_emision`, y el PDF y la baja la leen (Codex). *Falta correr la suite completa.*
+- [x] S12: se guarda una copia de los datos de emisión (cliente y líneas) en `datos_emision`, y el PDF y la baja la leen (Codex). _Falta correr la suite completa._
 - [x] S13: no se acepta nada sin un CDR válido
 - [x] V2 y S17: permisos Spatie en rutas y FormRequest; la NC y la ND del vendedor esperan la aprobación del Gerente
 
 ### A2. Seguridad (antes de producción)
 
-- [x] X1: scope `visiblePara(User)` en `Sale`, `ServiceOrder`, `Certificate` y `Equipment` (lo usan `AcotaPorSede` y los controladores de ventas, órdenes, certificados y la ficha del cliente). *Pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] X2: firmas, sellos y fotos de capacitación en el disco privado; la firma se ve por una ruta solo del Gerente; migración que mueve los archivos. *Pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] X3: `must_change_password` y middleware `ExigirSeguridadDeLaCuenta` (contraseña inicial y 2FA del Gerente, interruptor `SEGURIDAD_EXIGIR_2FA_GERENTE`). *Pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] X4 y X5: bloque de producción en `.env.example`, `TRUSTED_PROXIES`, HSTS por https y CSP con nonce (en modo solo reporte). *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] X1: scope `visiblePara(User)` en `Sale`, `ServiceOrder`, `Certificate` y `Equipment` (lo usan `AcotaPorSede` y los controladores de ventas, órdenes, certificados y la ficha del cliente). _Pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] X2: firmas, sellos y fotos de capacitación en el disco privado; la firma se ve por una ruta solo del Gerente; migración que mueve los archivos. _Pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] X3: `must_change_password` y middleware `ExigirSeguridadDeLaCuenta` (contraseña inicial y 2FA del Gerente, interruptor `SEGURIDAD_EXIGIR_2FA_GERENTE`). _Pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] X4 y X5: bloque de producción en `.env.example`, `TRUSTED_PROXIES`, HSTS por https y CSP con nonce (en modo solo reporte). _Pruebas escritas; sin suite completa (MySQL apagado)._
 
 ### B. Certificados y tipo de extintor
 
-- [x] C1: agente (lista `EquipmentType`, con PQS BC) y capacidad en el producto, copiados a la unidad y al equipo; técnicos eligen de la lista; sin agente no se emite. *Pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] C2: al cobrar solo sale operatividad de extintores nuevos; P.H. y capacitación quedan pendientes y la P.H. exige fecha, presión, tiempo y resultado reales. *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] C1: agente (lista `EquipmentType`, con PQS BC) y capacidad en el producto, copiados a la unidad y al equipo; técnicos eligen de la lista; sin agente no se emite. _Pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] C2: al cobrar solo sale operatividad de extintores nuevos; P.H. y capacitación quedan pendientes y la P.H. exige fecha, presión, tiempo y resultado reales. _Pruebas escritas; sin suite completa (MySQL apagado)._
 - [x] Una sola regla de certificados: `EmitirCertificadosDeVenta::tiposPorDestino`; se borró `CertificateRuleEngine` (sin uso) y su prueba unitaria.
-- [x] A4: el servicio elige su tipo de certificado en el formulario del Gerente. *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] A4: el servicio elige su tipo de certificado en el formulario del Gerente. _Pruebas escritas; sin suite completa (MySQL apagado)._
 
 ### C. Ventas, caja y cobranzas
 
-- [x] V1: línea serializada siempre con cantidad 1 *Código y pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] V3: la cotización pasa completa a la venta (descuento, condición de pago, observaciones, vehículo) *Código y pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] V4 y S11: las notas aceptadas cambian el saldo por cobrar *Código y pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] V5: renovar el vencimiento del equipo solo al cerrar el trabajo técnico *Código y pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] V6: un adicional autorizado genera deuda real *Código y pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] V7: pago ligado al turno de caja; bloqueo contra doble apertura o confirmación *Código y pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] V8: la ficha del cliente muestra al vendedor solo sus ventas, cotizaciones y certificados (§90.1); hecho con X1. *Pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] V1: línea serializada siempre con cantidad 1 _Código y pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] V3: la cotización pasa completa a la venta (descuento, condición de pago, observaciones, vehículo) _Código y pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] V4 y S11: las notas aceptadas cambian el saldo por cobrar _Código y pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] V5: renovar el vencimiento del equipo solo al cerrar el trabajo técnico _Código y pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] V6: un adicional autorizado genera deuda real _Código y pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] V7: pago ligado al turno de caja; bloqueo contra doble apertura o confirmación _Código y pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] V8: la ficha del cliente muestra al vendedor solo sus ventas, cotizaciones y certificados (§90.1); hecho con X1. _Pruebas escritas; sin suite completa (MySQL apagado)._
 
-- [x] X6: la tarea diaria no debe vencer cotizaciones "aceptadas" *Código y pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] X7: medir los KPI del proyecto (tiempo de venta, tiempo de cotización, clientes recuperados por alertas: la cotización guarda la alerta de origen) *Código y pruebas escritas; sin suite completa (MySQL apagado).*
-- [x] X8 y X9: alertas filtradas por sede o vendedor, con registro de contacto; "ofrecer recarga" según la capacidad y el agente *Código y pruebas escritas; sin suite completa (MySQL apagado).*
+- [x] X6: la tarea diaria no debe vencer cotizaciones "aceptadas" _Código y pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] X7: medir los KPI del proyecto (tiempo de venta, tiempo de cotización, clientes recuperados por alertas: la cotización guarda la alerta de origen) _Código y pruebas escritas; sin suite completa (MySQL apagado)._
+- [x] X8 y X9: alertas filtradas por sede o vendedor, con registro de contacto; "ofrecer recarga" según la capacidad y el agente _Código y pruebas escritas; sin suite completa (MySQL apagado)._
 
 ### D. Técnicos ⚠️ DRS
 
@@ -153,7 +153,6 @@ Detalle y fuentes en Obsidian: `D:/TiomiguelonGgs/Documents/Recuerda/Cerebro/Doc
 
 **Siguiente paso documental:** preparar los instrumentos de medición conforme a las diez métricas corregidas; después continuar informe de estado, Scrum y demostración. Planes de pruebas Funcionales y Unitarias quedan como referencia pendiente de alcance; el pedido de guardar memoria no confirma incorporarlos. No confundir fechas planificadas con terminación real. Este bloque no cambia las prioridades ni el estado de las fases técnicas anteriores.
 
-
 ### Investigación oficial de Semana 8 completada 07/10/2026
 
 - [x] Contrastar PMBOK/PMI, ISO y Scrum con las plantillas y los documentos actuales, sin editar entregables.
@@ -167,7 +166,6 @@ Detalle y fuentes en Obsidian: `D:/TiomiguelonGgs/Documents/Recuerda/Cerebro/Doc
 
 Siguiente paso: aplicar los instrumentos tras revisión del equipo y expertos; continuar informe, Scrum y demo con datos sustentados. No dar por confirmados resultados del 8 y 9 antes de disponer de evidencia. Investigación detallada: C:/Users/migue/.codex/visualizations/2026/10/07/01a11448-9708-7930-933f-5d7d8b01b516/investigacion-semana8/Investigacion previa Semana 8.md
 
-
 ### Métricas e instrumentos terminados 07/10/2026
 
 - [x] Entregar los dos DOCX en Entregables/Semana 8: métricas 12 páginas e instrumentos 21 páginas.
@@ -176,7 +174,6 @@ Siguiente paso: aplicar los instrumentos tras revisión del equipo y expertos; c
 - [ ] Confirmar antes de aplicar los protocolos propuestos: 30 intentos medidos por escenario y ventana de seguimiento de 14 días.
 - SUS se conserva como sexta ficha VI complementaria; el mínimo cinco se cumple con medidas del producto. No modificar la matriz 3.7 sin revisión académica.
 - Informe de estado, Scrum y demostración quedan pendientes; no se ejecutaron pruebas del software en esta tarea.
-
 
 ### Aclaración instrumentos de tesis y cinco VI — 07/10/2026
 
@@ -189,7 +186,6 @@ Siguiente paso: aplicar los instrumentos tras revisión del equipo y expertos; c
 - La corrección autorizada posteriormente ya se ejecutó en tres DOCX; los instrumentos se prepararán en la siguiente fase, por pedido del usuario.
 - Investigación: C:\Users\migue\.codex\visualizations\2026\10\07\01a11448-9708-7930-933f-5d7d8b01b516\semana8-metricas-instrumentos-v2\Investigacion instrumentos tesis y etapa de medicion.md
 
-
 ### Corrección concordante de cinco VI y cinco VD — 07/10/2026
 
 - [x] Instalar métricas v1.2 (11 páginas), Informe Final (96 páginas) y matriz (2 páginas), con respaldo y SHA comprobados.
@@ -201,7 +197,6 @@ Siguiente paso: aplicar los instrumentos tras revisión del equipo y expertos; c
 - [ ] Aplicar revisión de expertos y piloto, después medir. No hay resultados ni aprobación acreditados.
 - Las fechas y el cierre siguen el cronograma. Semana 13 fue una consulta del usuario, no una instrucción de cambiar fechas.
 - Esta versión reemplaza las decisiones históricas de seis VI y los formatos anteriores aún sin actualizar. Siguiente paso: instrumentos; luego informe de estado, Scrum y demo.
-
 
 ### Plan de elaboración de instrumentos por bloques — 07/10/2026
 

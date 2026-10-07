@@ -42,16 +42,16 @@ Código/nombre y versión; indicador(es) y objetivo específico relacionado; pro
 
 ## Los ocho instrumentos y sus formatos
 
-| Código y relación | Formato que se elaborará | Comprobación propia |
-|---|---|---|
-| I01 · Requisitos → VI01 | Lista de los 122 REQ actuales con módulo, requisito, versión, implementado/parcial/no implementado, verificación pendiente y evidencia; consolidación RI/122. | Conjunto de códigos idéntico al DRS, sin duplicados ni RNF sumados; solo completo demostrado cuenta en RI. |
-| I02 · Pruebas funcionales → VI02 y VI03 | Plan/lista de casos trazado a REQ; registro por caso con precondiciones, pasos, datos de prueba, esperado, obtenido, fecha/versión, aprobado/fallido/pendiente, evidencia y defecto. Sección de diez intentos inválidos y controles válidos del borrador, con estado antes/después y mensaje. | PCF=CA/CE×100 y PEU=EP/EI×100 con consolidaciones separadas. CP, ejecutados, pendientes y cobertura visibles; error500/bloqueo silencioso no acredita prevención. |
-| I03 · SUS → VI04 | Cuestionario de diez ítems, escala1–5, participante codificado/rol/versión/tareas/fecha; hoja de puntuación individual y consolidación por versión. | Mantener alternancia y fuente Brooke; incompletos no se imputan. Recodificar impares x−1 y pares5−x, suma×2,5; puntos0–100, no porcentaje. |
-| I04 · Respuesta → VI05 | Registro por escenario y versión: entorno/red/carga/datos; cinco intentos preparatorios separados y treinta medidos como propuesta; inicio/fin, segundos, resultado, error/timeout y evidencia. | TRP por escenario sobre respuestas válidas; conservar todos los intentos y fallos aparte. Revisar cada lectura frente al RNF-05, además del promedio. |
-| I05 · Cronometraje comercial → VD01 y VD02 | Dos formatos diferenciados para ventas y cotizaciones: etapa, operación codificada, complejidad, operador/observador, inicio/fin, duración, interrupciones, validez/exclusión y evidencia; dos consolidaciones por etapa. | Minutos, límites de inicio/fin iguales a métricas; no mezclar tareas. No reconstruir tiempos históricos sin registros de inicio/fin verificables. |
-| I06 · Cobranzas → VD03 | Comprobante/venta codificados, fecha de emisión/corte, contado/crédito, monto facturado ajustado, pagos aplicados, saldo, notas/ajustes y evidencia; resumen C1/C2. | PCP=MP/MF×100; periodo/antigüedad comparables. Incluye saldo pendiente, no solo vencido ni cantidad de comprobantes; MF>0. |
-| I07 · Inventario → VD04 | Registro producto–almacén con corte, saldo registrado, conteo físico, diferencia, movimientos/conciliación y evidencia; resumen por producto distinto. | PDS=PD/PT×100: producto cuenta una vez aunque tenga diferencia en varios almacenes; no sumar unidades faltantes/sobrantes. Mismos productos/almacenes en C1/C2. |
-| I08 · Clientes → VD05 | Cliente codificado único, elegibilidad, vencimiento, aviso y evidencia, inicio/fin de ventana común, recompra/comprobante, estado de seguimiento y evidencia; consolidación por etapa. | PCR=CR/CA×100 solo con ventanas cerradas y datos verificables; sin baseC1 verificable no se inventa0. Comparación en puntos porcentuales. Aviso no equivale a recompra ni presupone mensajes automáticos. |
+| Código y relación                          | Formato que se elaborará                                                                                                                                                                                                                                                                      | Comprobación propia                                                                                                                                                                                       |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I01 · Requisitos → VI01                    | Lista de los 122 REQ actuales con módulo, requisito, versión, implementado/parcial/no implementado, verificación pendiente y evidencia; consolidación RI/122.                                                                                                                                 | Conjunto de códigos idéntico al DRS, sin duplicados ni RNF sumados; solo completo demostrado cuenta en RI.                                                                                                |
+| I02 · Pruebas funcionales → VI02 y VI03    | Plan/lista de casos trazado a REQ; registro por caso con precondiciones, pasos, datos de prueba, esperado, obtenido, fecha/versión, aprobado/fallido/pendiente, evidencia y defecto. Sección de diez intentos inválidos y controles válidos del borrador, con estado antes/después y mensaje. | PCF=CA/CE×100 y PEU=EP/EI×100 con consolidaciones separadas. CP, ejecutados, pendientes y cobertura visibles; error500/bloqueo silencioso no acredita prevención.                                         |
+| I03 · SUS → VI04                           | Cuestionario de diez ítems, escala1–5, participante codificado/rol/versión/tareas/fecha; hoja de puntuación individual y consolidación por versión.                                                                                                                                           | Mantener alternancia y fuente Brooke; incompletos no se imputan. Recodificar impares x−1 y pares5−x, suma×2,5; puntos0–100, no porcentaje.                                                                |
+| I04 · Respuesta → VI05                     | Registro por escenario y versión: entorno/red/carga/datos; cinco intentos preparatorios separados y treinta medidos como propuesta; inicio/fin, segundos, resultado, error/timeout y evidencia.                                                                                               | TRP por escenario sobre respuestas válidas; conservar todos los intentos y fallos aparte. Revisar cada lectura frente al RNF-05, además del promedio.                                                     |
+| I05 · Cronometraje comercial → VD01 y VD02 | Dos formatos diferenciados para ventas y cotizaciones: etapa, operación codificada, complejidad, operador/observador, inicio/fin, duración, interrupciones, validez/exclusión y evidencia; dos consolidaciones por etapa.                                                                     | Minutos, límites de inicio/fin iguales a métricas; no mezclar tareas. No reconstruir tiempos históricos sin registros de inicio/fin verificables.                                                         |
+| I06 · Cobranzas → VD03                     | Comprobante/venta codificados, fecha de emisión/corte, contado/crédito, monto facturado ajustado, pagos aplicados, saldo, notas/ajustes y evidencia; resumen C1/C2.                                                                                                                           | PCP=MP/MF×100; periodo/antigüedad comparables. Incluye saldo pendiente, no solo vencido ni cantidad de comprobantes; MF>0.                                                                                |
+| I07 · Inventario → VD04                    | Registro producto–almacén con corte, saldo registrado, conteo físico, diferencia, movimientos/conciliación y evidencia; resumen por producto distinto.                                                                                                                                        | PDS=PD/PT×100: producto cuenta una vez aunque tenga diferencia en varios almacenes; no sumar unidades faltantes/sobrantes. Mismos productos/almacenes en C1/C2.                                           |
+| I08 · Clientes → VD05                      | Cliente codificado único, elegibilidad, vencimiento, aviso y evidencia, inicio/fin de ventana común, recompra/comprobante, estado de seguimiento y evidencia; consolidación por etapa.                                                                                                        | PCR=CR/CA×100 solo con ventanas cerradas y datos verificables; sin baseC1 verificable no se inventa0. Comparación en puntos porcentuales. Aviso no equivale a recompra ni presupone mensajes automáticos. |
 
 ## Reutilización del borrador y apoyos
 
@@ -62,30 +62,35 @@ Conservar el diseño de 3.10: revisión prevista de tres expertos, valoración p
 ## Bloques de ejecución y puntos para retomar
 
 ### Bloque 1 · Base, relación y fichas técnicas
+
 - [ ] Leer fuentes vigentes, calcular SHA y copiar originales antes de editar. Confirmar dónde aparecen las referencias al antiguo A1–A13/VI06/PTR/catorce días.
 - [ ] Preparar contrato del DOCX y matriz diez indicadores→ocho instrumentos→datos→fórmula; preparar ocho fichas técnicas con instrucciones concretas.
 - [ ] Conservar el inventario de 122 REQ y las partes de plantilla utilizables. Guardar borrador y lista de pendientes en `instrumentos-semana8-v3/estado.md`.
 - [ ] Comprobar diez indicadores, ocho instrumentos, tres dimensiones VI y nombres/objetivos concordantes. Registrar bloque terminado en PLAN/BITACORA.
 
 ### Bloque 2 · Medición de software I01–I04
+
 - [ ] Elaborar listas, casos, SUS y registros de respuesta previstos en la tabla anterior, corrigiendo la numeración antigua.
 - [ ] Cubrir cada REQ mediante relación de casos; ampliar casos cuando un requisito necesite varios. No limitar la cobertura a los escenarios ilustrativos.
 - [ ] Comprobar requisitos únicos, estados, denominadores y ejemplos de cálculo fuera de resultados: SUS extremos0/100 y neutral50; pendiente no entra como aprobado; error/timeout no se convierte en0s.
 - [ ] Guardar y revisar visualmente las páginas de este bloque antes de seguir.
 
 ### Bloque 3 · Procesos operativos I05–I08
+
 - [ ] Elaborar los dos registros de cronometraje y los formatos de cobranzas, inventario y clientes; conservar criterios del documento de métricas.
 - [ ] Crear consolidaciones C1/C2 con muestra prevista/observada, casos válidos/exclusiones, evidencia y estado de aplicación.
 - [ ] Comprobar unidades minutos/segundos/soles/puntos/porcentajes, ceros, producto duplicado en almacenes, clientes duplicados, ventanas abiertas y datos faltantes.
 - [ ] Guardar borrador y actualizar `estado.md`; los resultados reales permanecen pendientes si no hay evidencia.
 
 ### Bloque 4 · Apoyos, fuentes y concordancia
+
 - [ ] Incorporar diagnóstico, revisión de expertos y piloto como apoyos; conservar la fuente del SUS y referencias verificadas ya investigadas.
 - [ ] Retirar referencias obsoletas a VI06, PTR y catorce días; revisar las referencias de instrumentos de métricas/informe/matrices y corregir exclusivamente nombres/códigos que lo requieran.
 - [ ] Aplicar el nuevo nombre VD04 aprobado en el chat en los documentos relacionados con cambio de redacción mínimo, sin reformular OE4 o medición.
 - [ ] Revisar redacción con `humanizer` manteniendo términos, fórmulas y criterios técnicos.
 
 ### Bloque 5 · Verificación y entrega
+
 - [ ] Comprobar relaciones diez→ocho, requisitos, fórmulas, campos llenables, códigos, fuentes, versiones y estados pendientes. Probar cálculos con ejemplos identificados, no con resultados fabricados.
 - [ ] Exportar el DOCX a PDF para QA y revisar todas las páginas: tablas, títulos, ecuaciones, cortes, tamaños y espacio para completar. Usar Word/Poppler si LibreOffice sigue no disponible; corregir y revisar páginas afectadas.
 - [ ] Verificar partes de plantilla conservadas, nombres de archivos, hash y ausencia de modificaciones ajenas. No fijar un número artificial de páginas.

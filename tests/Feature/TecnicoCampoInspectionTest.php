@@ -120,6 +120,31 @@ test('tecnico campo can register new equipment on site and submit digital checkl
     expect($order->fresh()->estado)->toBe('esperando_autorizacion');
 });
 
+test('el checklist de inspeccion valida items en vez de fallar con error 500 si no llegan', function () {
+    $client = Client::factory()->create();
+    $order = ServiceOrder::factory()->create([
+        'client_id' => $client->id,
+        'departamento_tecnico' => 'campo',
+        'estado' => 'en_revision',
+    ]);
+    $equipment = Equipment::factory()->create(['client_id' => $client->id]);
+    $order->equipments()->attach($equipment->id);
+
+    // Un request sin 'items' debe volver con errores de validación (required),
+    // nunca con un 500 por leer una clave inexistente.
+    $this->actingAs($this->user)
+        ->post(route('tecnico-campo.inspecciones.checklist.store', [
+            'current_team' => $this->team,
+            'service_order' => $order->id,
+            'equipment' => $equipment->id,
+        ]), [
+            'observaciones' => 'Request sin items',
+        ])
+        ->assertSessionHasErrors('items');
+
+    expect(TechnicalChecklist::where('equipment_id', $equipment->id)->exists())->toBeFalse();
+});
+
 test('tecnico campo can finalize inspection with conformity and log custody chain', function () {
     $client = Client::factory()->create();
     $order = ServiceOrder::factory()->create([

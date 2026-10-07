@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Billing\AnularVentaPorEnviar;
+use App\Actions\Billing\ConsultarCdrSunat;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\IssueCreditNote;
 use App\Actions\Sales\ConfirmSale;
@@ -442,6 +443,23 @@ test('el programador envia sin consultar al comprobante que nunca tuvo un intent
 
     expect($this->sunat->enviados)->toBe(1)
         ->and($documento->fresh()->sunat_estado)->toBe('aceptado');
+});
+
+test('el cdr recuperado deja como fecha de recepción la del primer intento de envío', function () {
+    $sale = ventaConfirmada(Client::factory()->create());
+    $documento = comprobanteDe($sale);
+    $documento->update(['sunat_estado' => 'excepcion', 'intento_envio_at' => now()->subDays(3)]);
+    $this->sunat->cdr = ['estado' => 'registrado', 'cdr_zip' => 'cdr-zip', 'codigo' => 0, 'mensaje' => 'Aceptado', 'notas' => []];
+
+    app(ConsultarCdrSunat::class)->handle($documento->fresh());
+
+    $recuperado = $documento->fresh();
+
+    // El plazo de 7 días para la baja corre desde el envío, no desde que
+    // alguien se dio cuenta: si no, se permitiría dar de baja fuera de plazo.
+    expect($recuperado->sunat_estado)->toBe('aceptado')
+        ->and($recuperado->enviado_at->toDateString())->toBe(now()->subDays(3)->toDateString())
+        ->and($recuperado->vencimientoBaja()->toDateString())->toBe(now()->subDays(3)->addDays(7)->toDateString());
 });
 
 test('un envio en curso bloquea el segundo envio del mismo comprobante', function () {

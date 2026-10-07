@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 import {
     CheckCircle2,
     FilePlus2,
@@ -448,6 +449,18 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
                                                                     item.equipment_id,
                                                                 ],
                                                             },
+                                                            {
+                                                                preserveScroll: true,
+                                                                onError: (
+                                                                    errors,
+                                                                ) =>
+                                                                    toast.error(
+                                                                        Object.values(
+                                                                            errors,
+                                                                        )[0] ??
+                                                                            'No se pudo ofrecer la recarga.',
+                                                                    ),
+                                                            },
                                                         )
                                                     }
                                                     className="bg-primary hover:bg-primary/90 inline-flex h-9 items-center gap-1.5 rounded-[9px] px-3.5 text-[12px] font-bold text-white shadow-none transition-colors"
@@ -482,6 +495,15 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
                                                                 },
                                                                 {
                                                                     preserveScroll: true,
+                                                                    onError: (
+                                                                        errors,
+                                                                    ) =>
+                                                                        toast.error(
+                                                                            Object.values(
+                                                                                errors,
+                                                                            )[0] ??
+                                                                                'No se pudo marcar el contacto.',
+                                                                        ),
                                                                 },
                                                             );
                                                         }}

@@ -118,8 +118,10 @@ it('emite un certificado falso y muestra una alerta de vencimiento al vendedor',
         'codigo' => 'operatividad_garantia',
         'vigencia_meses' => 12,
     ]);
+    // El certificado de extintores exige el agente de cada unidad (C1).
     $certificate = app(IssueCertificate::class)->handle($type, $client, [[
         'numero_serie' => 'QA-CERT-001',
+        'tipo_agente' => 'CO2',
         'fecha_ultima_recarga' => today()->toDateString(),
     ]]);
     $equipment = Equipment::factory()->create([
