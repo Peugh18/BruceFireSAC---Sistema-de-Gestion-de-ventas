@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
+use App\Support\UnidadMedidaSunat;
 use Greenter\Model\Client\Client as GreenterClient;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
@@ -32,39 +33,6 @@ use RuntimeException;
 
 class GreenterService
 {
-    /**
-     * Catálogo 03 (Unidad de Medida) simplificado a los casos que BRUCE FIRE
-     * usa hoy. Si aparece una unidad nueva, se agrega aquí; por defecto cae
-     * a NIU (unidad) para no romper la emisión.
-     */
-    protected const UNIDADES_SUNAT = [
-        'und' => 'NIU',
-        'unidad' => 'NIU',
-        // Los códigos SUNAT que ya vienen como unidad del producto.
-        'niu' => 'NIU',
-        'kgm' => 'KGM',
-        'mtr' => 'MTR',
-        'ltr' => 'LTR',
-        'gll' => 'GLL',
-        'gli' => 'GLL',
-        'set' => 'SET',
-        'servicio' => 'ZZ',
-        'metro' => 'MTR',
-        'kilogramo' => 'KGM',
-        'kg' => 'KGM',
-        'litro' => 'LTR',
-        'galon' => 'GLL',
-        // EPP: guantes y botas por par; cajas, paquetes y docenas.
-        'par' => 'PR',
-        'pr' => 'PR',
-        'caja' => 'BX',
-        'bx' => 'BX',
-        'paquete' => 'PK',
-        'pk' => 'PK',
-        'docena' => 'DZN',
-        'dzn' => 'DZN',
-    ];
-
     public function __construct(
         protected DetraccionCalculator $detraccionCalculator,
         protected NumeroEnLetrasService $numeroEnLetras,
@@ -523,12 +491,13 @@ class GreenterService
 
     protected function unidadCatalogo03(Product|Service $item): string
     {
-        if ($item->esServicio()) {
-            return 'ZZ';
+        $codigo = mb_strtoupper(trim((string) $item->unidad_medida));
+
+        // Una unidad desconocida se rechaza: no se cambia por NIU o ZZ sin avisar.
+        if (! UnidadMedidaSunat::esValida($codigo)) {
+            throw new RuntimeException("La unidad de medida «{$item->unidad_medida}» de «{$item->nombre}» no está en el catálogo 03 de SUNAT: corrígela en el catálogo antes de emitir.");
         }
 
-        $clave = mb_strtolower(trim($item->unidad_medida));
-
-        return self::UNIDADES_SUNAT[$clave] ?? 'NIU';
+        return $codigo;
     }
 }

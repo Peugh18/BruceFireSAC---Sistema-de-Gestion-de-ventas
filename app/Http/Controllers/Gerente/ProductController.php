@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreProductRequest;
 use App\Http\Requests\Gerente\UpdateProductRequest;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\Team;
 use App\Services\AuditLogger;
 use App\Services\Billing\AfectacionIgv;
+use App\Support\UnidadMedidaSunat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -72,7 +74,8 @@ class ProductController extends Controller
         $totalBajoMinimo = Product::query()->bajoMinimo()->count();
 
         return Inertia::render('gerente/productos/index', [
-            'categorias' => Product::CATEGORIAS,
+            'categorias' => ProductCategory::conUsos(),
+            'unidadesMedida' => UnidadMedidaSunat::opciones(),
             'agentes' => EquipmentType::opciones(),
             'productos' => $productos,
             'filters' => [

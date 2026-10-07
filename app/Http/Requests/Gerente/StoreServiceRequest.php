@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Gerente;
 
+use App\Models\ProductCategory;
+use App\Support\UnidadMedidaSunat;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,7 +23,8 @@ class StoreServiceRequest extends FormRequest
             'codigo' => ['required', 'string', 'max:50', 'unique:services,codigo'],
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
-            'unidad_medida' => ['required', 'string', 'max:10'],
+            'unidad_medida' => ['required', Rule::in(UnidadMedidaSunat::codigos())],
+            'categoria' => ['nullable', 'string', 'max:40', ProductCategory::regla()],
             'precio_venta' => ['required', 'numeric', 'min:0'],
             'aplica_igv' => ['boolean'],
             'tipo_afectacion_igv' => ['sometimes', 'required', Rule::in(['10', '20', '30'])],

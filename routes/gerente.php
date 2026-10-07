@@ -7,6 +7,7 @@ use App\Http\Controllers\Gerente\CompanyBankAccountController;
 use App\Http\Controllers\Gerente\CompanySettingController;
 use App\Http\Controllers\Gerente\DashboardController;
 use App\Http\Controllers\Gerente\NoteRequestController;
+use App\Http\Controllers\Gerente\ProductCategoryController;
 use App\Http\Controllers\Gerente\ProductController;
 use App\Http\Controllers\Gerente\ReportController;
 use App\Http\Controllers\Gerente\SedeController;
@@ -33,6 +34,11 @@ Route::prefix('gerente')
         // Catálogo de Productos y Servicios (§86.4.2)
         Route::resource('productos', ProductController::class)->except(['create', 'edit', 'show']);
         Route::patch('productos/{producto}/toggle-status', [ProductController::class, 'toggleStatus'])->name('productos.toggle-status');
+
+        // Categorías del catálogo: las usan productos y servicios (A2)
+        Route::post('categorias', [ProductCategoryController::class, 'store'])->name('categorias.store');
+        Route::put('categorias/{categoria}', [ProductCategoryController::class, 'update'])->name('categorias.update');
+        Route::delete('categorias/{categoria}', [ProductCategoryController::class, 'destroy'])->name('categorias.destroy');
 
         Route::resource('servicios', ServiceController::class)->except(['create', 'edit', 'show']);
         Route::patch('servicios/{servicio}/toggle-status', [ServiceController::class, 'toggleStatus'])->name('servicios.toggle-status');

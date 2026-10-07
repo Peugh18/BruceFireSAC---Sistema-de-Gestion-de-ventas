@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { router, usePage } from "@inertiajs/react";
 import {
     BadgeAlert,
     Calendar,
@@ -10,10 +10,11 @@ import {
     TrendingUp,
     Users,
     X,
-} from 'lucide-react';
-import { useState } from 'react';
+} from "lucide-react";
+import { useState } from "react";
 
-import GerenteLayout from '@/layouts/gerente-layout';
+import GerenteLayout from "@/layouts/gerente-layout";
+import pagosRutas from "@/routes/gerente/cobranzas/pagos";
 
 type PaymentItem = {
     id: number;
@@ -86,9 +87,9 @@ type PageProps = {
 };
 
 function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
+    return new Intl.NumberFormat("es-PE", {
+        style: "currency",
+        currency: "PEN",
         minimumFractionDigits: 2,
     }).format(amount);
 }
@@ -97,12 +98,32 @@ export default function CobranzasConsolidadasIndex() {
     const { currentTeam, cuotas, filters, kpis, vendedores } =
         usePage<PageProps>().props;
 
-    const [buscar, setBuscar] = useState(filters.buscar || '');
-    const [vendedorId, setVendedorId] = useState(filters.vendedor_id || '');
-    const [estado, setEstado] = useState(filters.estado || 'todos');
-    const [periodo, setPeriodo] = useState(filters.periodo || 'todos');
+    const [buscar, setBuscar] = useState(filters.buscar || "");
+    const [vendedorId, setVendedorId] = useState(filters.vendedor_id || "");
+    const [estado, setEstado] = useState(filters.estado || "todos");
+    const [periodo, setPeriodo] = useState(filters.periodo || "todos");
     const [viewingPayments, setViewingPayments] =
         useState<InstallmentItem | null>(null);
+
+    const [anulandoId, setAnulandoId] = useState<number | null>(null);
+    const [motivo, setMotivo] = useState("");
+
+    const anularPago = (pagoId: number) => {
+        router.delete(
+            pagosRutas.anular.url({
+                current_team: currentTeam.slug,
+                payment: pagoId,
+            }),
+            {
+                data: { motivo },
+                preserveScroll: true,
+                onSuccess: () => {
+                    setAnulandoId(null);
+                    setViewingPayments(null);
+                },
+            },
+        );
+    };
 
     const applyFilters = () => {
         router.get(
@@ -118,10 +139,10 @@ export default function CobranzasConsolidadasIndex() {
     };
 
     const resetFilters = () => {
-        setBuscar('');
-        setVendedorId('');
-        setEstado('todos');
-        setPeriodo('todos');
+        setBuscar("");
+        setVendedorId("");
+        setEstado("todos");
+        setPeriodo("todos");
         router.get(
             `/${currentTeam.slug}/gerente/cobranzas`,
             {},
@@ -370,7 +391,7 @@ export default function CobranzasConsolidadasIndex() {
                                 ) : (
                                     cuotas.data.map((c) => {
                                         const isVencido =
-                                            c.estado === 'vencido' ||
+                                            c.estado === "vencido" ||
                                             c.dias_vencido > 0;
 
                                         return (
@@ -394,7 +415,7 @@ export default function CobranzasConsolidadasIndex() {
                                                         {c.cliente
                                                             .numero_documento && (
                                                             <span>
-                                                                RUC/DNI:{' '}
+                                                                RUC/DNI:{" "}
                                                                 {
                                                                     c.cliente
                                                                         .numero_documento
@@ -421,9 +442,9 @@ export default function CobranzasConsolidadasIndex() {
                                                     </div>
                                                     {isVencido &&
                                                         c.estado !==
-                                                            'pagado' && (
+                                                            "pagado" && (
                                                             <div className="text-primary-strong text-[10px] font-bold">
-                                                                {c.dias_vencido}{' '}
+                                                                {c.dias_vencido}{" "}
                                                                 días de mora
                                                             </div>
                                                         )}
@@ -445,15 +466,15 @@ export default function CobranzasConsolidadasIndex() {
                                                     <span
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                             c.estado ===
-                                                            'pagado'
-                                                                ? 'bg-emerald-100 text-emerald-800'
+                                                            "pagado"
+                                                                ? "bg-emerald-100 text-emerald-800"
                                                                 : c.estado ===
-                                                                    'vencido'
-                                                                  ? 'text-primary-strong bg-red-100'
+                                                                    "vencido"
+                                                                  ? "text-primary-strong bg-red-100"
                                                                   : c.estado ===
-                                                                      'parcial'
-                                                                    ? 'bg-amber-100 text-amber-800'
-                                                                    : 'bg-blue-100 text-blue-800'
+                                                                      "parcial"
+                                                                    ? "bg-amber-100 text-amber-800"
+                                                                    : "bg-blue-100 text-blue-800"
                                                         }`}
                                                     >
                                                         {c.estado}
@@ -516,8 +537,8 @@ export default function CobranzasConsolidadasIndex() {
                                             }}
                                             className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                                                 link.active
-                                                    ? 'bg-foreground text-background font-bold shadow-xs'
-                                                    : 'text-foreground/80 hover:bg-muted/40'
+                                                    ? "bg-foreground text-background font-bold shadow-xs"
+                                                    : "text-foreground/80 hover:bg-muted/40"
                                             }`}
                                         />
                                     );
@@ -534,11 +555,11 @@ export default function CobranzasConsolidadasIndex() {
                             <div className="border-border flex items-center justify-between border-b pb-3">
                                 <div>
                                     <h3 className="text-foreground font-['Oswald',sans-serif] text-base font-bold uppercase">
-                                        Historial de Pagos —{' '}
+                                        Historial de Pagos —{" "}
                                         {viewingPayments.sale_numero}
                                     </h3>
                                     <p className="text-muted-foreground text-xs">
-                                        Cuota #{viewingPayments.numero_cuota} de{' '}
+                                        Cuota #{viewingPayments.numero_cuota} de{" "}
                                         {viewingPayments.cliente.razon_social}
                                     </p>
                                 </div>
@@ -604,13 +625,13 @@ export default function CobranzasConsolidadasIndex() {
                                                     <div>
                                                         <div className="text-foreground font-semibold uppercase">
                                                             {p.forma_pago.replace(
-                                                                '_',
-                                                                ' ',
+                                                                "_",
+                                                                " ",
                                                             )}
                                                         </div>
                                                         {p.numero_operacion && (
                                                             <div className="text-muted-foreground text-[10px]">
-                                                                Op:{' '}
+                                                                Op:{" "}
                                                                 {
                                                                     p.numero_operacion
                                                                 }
@@ -628,6 +649,62 @@ export default function CobranzasConsolidadasIndex() {
                                                     <div className="text-muted-foreground text-[10px]">
                                                         {p.fecha}
                                                     </div>
+                                                    {anulandoId === p.id ? (
+                                                        <div className="mt-1 flex items-center justify-end gap-1">
+                                                            <input
+                                                                aria-label="Motivo de la anulación"
+                                                                value={motivo}
+                                                                onChange={(e) =>
+                                                                    setMotivo(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                placeholder="Motivo"
+                                                                className="border-border w-32 rounded border px-2 py-0.5 text-[11px]"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                disabled={
+                                                                    motivo.trim()
+                                                                        .length <
+                                                                    3
+                                                                }
+                                                                onClick={() =>
+                                                                    anularPago(
+                                                                        p.id,
+                                                                    )
+                                                                }
+                                                                className="rounded bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white disabled:opacity-40"
+                                                            >
+                                                                Confirmar
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setAnulandoId(
+                                                                        null,
+                                                                    )
+                                                                }
+                                                                className="text-[11px] underline"
+                                                            >
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setMotivo("");
+                                                                setAnulandoId(
+                                                                    p.id,
+                                                                );
+                                                            }}
+                                                            className="mt-1 text-[11px] font-semibold text-red-600 underline"
+                                                        >
+                                                            Anular pago
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))

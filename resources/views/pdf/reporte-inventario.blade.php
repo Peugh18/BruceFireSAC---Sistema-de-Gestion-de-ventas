@@ -128,7 +128,7 @@
     <table class="kpi-grid">
         <tr>
             <td class="kpi-cell" width="25%">
-                <div class="kpi-title">Valorización Estimada</div>
+                <div class="kpi-title">Valorización al costo</div>
                 <div class="kpi-value">S/ {{ number_format($valorizacionTotal, 2) }}</div>
             </td>
             <td class="kpi-cell" width="25%">
@@ -146,6 +146,12 @@
         </tr>
     </table>
 
+    @if ($productosSinCosto > 0)
+        <p style="color: #991B1B; font-weight: bold;">
+            Atención: {{ $productosSinCosto }} producto(s) con stock no tienen costo de compra y figuran en S/ 0.00. La valorización está incompleta: registra el costo en la recepción.
+        </p>
+    @endif
+
     <!-- Tabla de Existencias -->
     <h3>Estado de Existencias por Producto</h3>
     <table class="data-table">
@@ -155,7 +161,7 @@
                 <th>Producto</th>
                 <th class="text-center">Tipo</th>
                 <th class="text-center">U.M.</th>
-                <th class="text-right">Precio Venta</th>
+                <th class="text-right">Costo promedio</th>
                 <th class="text-center">Stock Mínimo</th>
                 <th class="text-center">Stock Actual</th>
                 <th class="text-right">Subtotal Val. (S/)</th>
@@ -169,7 +175,7 @@
                 <td>{{ $p['nombre'] }}</td>
                 <td class="text-center">{{ $p['serializado'] ? 'Serializado' : 'A Granel' }}</td>
                 <td class="text-center">{{ $p['unidad_medida'] }}</td>
-                <td class="text-right">S/ {{ number_format($p['precio_venta'], 2) }}</td>
+                <td class="text-right">{{ $p['costo_promedio'] !== null ? 'S/ '.number_format($p['costo_promedio'], 2) : 'Sin costo' }}</td>
                 <td class="text-center">{{ $p['stock_minimo'] ?? '—' }}</td>
                 <td class="text-center"><strong>{{ $p['stock_disponible'] }}</strong></td>
                 <td class="text-right">S/ {{ number_format($p['valorizacion'], 2) }}</td>

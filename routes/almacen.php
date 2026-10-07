@@ -31,6 +31,7 @@ Route::prefix('almacen')
 
         // Stickers de código de barras (§84.9)
         Route::get('stickers', [ReceptionStickerController::class, 'index'])->name('stickers.index');
+        Route::get('stickers/unidad', [ReceptionStickerController::class, 'unidad'])->name('stickers.unidad');
         Route::get('recepciones/{reception}/stickers', [ReceptionStickerController::class, 'show'])->name('recepciones.stickers');
 
         // Ajustes de stock autorizados (§84.10)

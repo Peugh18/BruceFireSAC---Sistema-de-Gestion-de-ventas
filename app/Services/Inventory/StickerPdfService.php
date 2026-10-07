@@ -15,92 +15,65 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class StickerPdfService
 {
-    /**
-     * Genera el documento PDF con stickers en grilla 2x2 (4 por hoja A4)
-     * para todas las unidades serializadas recibidas en la recepción (§84.9).
-     */
-    public function generate(Reception $reception): DompdfWrapper
-    {
-        $reception->loadMissing([
-            'movements.inventoryUnit.product',
-            'sedeAlmacen',
-        ]);
+    /** Stickers por hoja A4: 4 columnas x 5 filas de 5 x 5 cm. */
+    public const POR_HOJA = 20;
 
-        /** @var Collection<int, InventoryUnit> $units */
-        $units = $reception->movements
+    /**
+     * Stickers de las unidades con serie recibidas en la recepción (§84.9).
+     * `$inicio` es la posición de la hoja (1 a 20) donde empieza, para
+     * aprovechar una hoja ya usada.
+     */
+    public function generate(Reception $reception, int $inicio = 1): DompdfWrapper
+    {
+        $reception->loadMissing('movements.inventoryUnit');
+
+        $series = $reception->movements
             ->pluck('inventoryUnit')
             ->filter()
             ->unique('id')
+            ->map(fn (InventoryUnit $unit) => $unit->numero_serie)
             ->values();
 
-        $barcodeGenerator = new BarcodeGeneratorPNG;
-        $stickers = $units->map(function (InventoryUnit $unit) use ($barcodeGenerator) {
-            $barcodeBytes = $barcodeGenerator->getBarcode(
-                $unit->numero_serie,
-                $barcodeGenerator::TYPE_CODE_128,
-                2,
-                48
-            );
-
-            return [
-                'id' => $unit->id,
-                'numero_serie' => $unit->numero_serie,
-                'producto' => $unit->product->nombre ?? 'Equipo contra incendio',
-                'codigo_producto' => $unit->product->codigo ?? '',
-                'marca' => $unit->marca,
-                'anio_fabricacion' => $unit->anio_fabricacion,
-                'barcode_base64' => base64_encode($barcodeBytes),
-            ];
-        });
-
-        $company = CompanySetting::current();
-        $logoBase64 = $this->logoBase64($company);
-
-        return Pdf::loadView('pdf.stickers', [
-            'reception' => $reception,
-            'stickers' => $stickers,
-            'company' => $company,
-            'logoBase64' => $logoBase64,
-        ])->setPaper('a4', 'portrait');
+        return $this->render($series, $inicio);
     }
 
     /**
-     * Genera el documento PDF con stickers en grilla 2x2 para equipos técnicos (§18).
+     * Reimpresión de un solo sticker.
+     */
+    public function generateForUnit(InventoryUnit $unit, int $inicio = 1): DompdfWrapper
+    {
+        return $this->render(collect([$unit->numero_serie]), $inicio);
+    }
+
+    /**
+     * Stickers de los equipos del taller (§18).
      *
      * @param  iterable<Equipment>  $equipments
      */
-    public function generateForEquipments(iterable $equipments, ?ServiceOrder $serviceOrder = null): DompdfWrapper
+    public function generateForEquipments(iterable $equipments, ?ServiceOrder $serviceOrder = null, int $inicio = 1): DompdfWrapper
     {
-        $barcodeGenerator = new BarcodeGeneratorPNG;
-        $stickers = collect($equipments)->map(function (Equipment $eq) use ($barcodeGenerator, $serviceOrder) {
-            $barcodeBytes = $barcodeGenerator->getBarcode(
-                $eq->numero_serie,
-                $barcodeGenerator::TYPE_CODE_128,
-                2,
-                48
-            );
+        $series = collect($equipments)->map(fn (Equipment $equipment) => $equipment->numero_serie)->values();
 
-            return [
-                'id' => $eq->id,
-                'numero_serie' => $eq->numero_serie,
-                'producto' => $eq->tipo_agente ? sprintf('%s - %s', $eq->tipo_agente, $eq->capacidad ?? '') : ($eq->product->nombre ?? 'Extintor / Equipo'),
-                'codigo_producto' => $eq->product->codigo ?? '',
-                'marca' => $eq->marca,
-                'anio_fabricacion' => $eq->anio_fabricacion,
-                'barcode_base64' => base64_encode($barcodeBytes),
-                'order_codigo' => $serviceOrder?->codigo,
-            ];
-        });
+        return $this->render($series, $inicio);
+    }
 
-        $company = CompanySetting::current();
-        $logoBase64 = $this->logoBase64($company);
+    /**
+     * Solo logo, código de barras Code 128 y la serie debajo.
+     *
+     * @param  Collection<int, string>  $series
+     */
+    protected function render(Collection $series, int $inicio): DompdfWrapper
+    {
+        $generator = new BarcodeGeneratorPNG;
+        $stickers = $series->map(fn (string $serie) => [
+            'numero_serie' => $serie,
+            'barcode_base64' => base64_encode($generator->getBarcode($serie, $generator::TYPE_CODE_128, 2, 48)),
+        ]);
 
         return Pdf::loadView('pdf.stickers', [
-            'reception' => null,
-            'serviceOrder' => $serviceOrder,
             'stickers' => $stickers,
-            'company' => $company,
-            'logoBase64' => $logoBase64,
+            'inicio' => max(1, min(self::POR_HOJA, $inicio)),
+            'logoBase64' => $this->logoBase64(CompanySetting::current()),
         ])->setPaper('a4', 'portrait');
     }
 

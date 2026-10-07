@@ -1,4 +1,4 @@
-import { router, useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from "@inertiajs/react";
 import {
     AlertTriangle,
     CheckCircle2,
@@ -9,14 +9,19 @@ import {
     Trash2,
     Wrench,
     X,
-} from 'lucide-react';
-import { useState } from 'react';
-import GerenteLayout from '@/layouts/gerente-layout';
+} from "lucide-react";
+import { useState } from "react";
+import {
+    CategoriaSelect,
+    type CategoriaItem,
+} from "@/components/categoria-select";
+import GerenteLayout from "@/layouts/gerente-layout";
 type ServiceItem = {
     id: number;
     codigo: string;
     nombre: string;
     descripcion: string | null;
+    categoria: string | null;
     unidad_medida: string;
     precio_venta: number;
     aplica_igv: boolean;
@@ -51,6 +56,8 @@ type PageProps = {
     filters: ServiceFilters;
     kpis: ServiceKpis;
     tiposCertificado: { id: number; nombre: string }[];
+    categorias: CategoriaItem[];
+    unidadesMedida: { codigo: string; nombre: string }[];
     flash?: {
         success?: string;
         error?: string;
@@ -58,43 +65,53 @@ type PageProps = {
     [key: string]: unknown;
 };
 function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
+    return new Intl.NumberFormat("es-PE", {
+        style: "currency",
+        currency: "PEN",
         minimumFractionDigits: 2,
     }).format(amount);
 }
 export default function ServiciosIndex() {
-    const { currentTeam, servicios, filters, kpis, tiposCertificado, flash } =
-        usePage<PageProps>().props;
-    const [buscar, setBuscar] = useState(filters.buscar || '');
+    const {
+        currentTeam,
+        servicios,
+        filters,
+        kpis,
+        tiposCertificado,
+        categorias,
+        unidadesMedida,
+        flash,
+    } = usePage<PageProps>().props;
+    const [buscar, setBuscar] = useState(filters.buscar || "");
     const [modalOpen, setModalOpen] = useState(false);
     const [editingService, setEditingService] = useState<ServiceItem | null>(
         null,
     );
     const form = useForm({
-        codigo: '',
-        nombre: '',
-        descripcion: '',
-        unidad_medida: 'ZZ',
-        precio_venta: '',
+        codigo: "",
+        nombre: "",
+        descripcion: "",
+        categoria: "",
+        unidad_medida: "ZZ",
+        precio_venta: "",
         aplica_igv: true,
-        tipo_afectacion_igv: '10',
-        certificate_type_id: '',
+        tipo_afectacion_igv: "10",
+        certificate_type_id: "",
         activo: true,
     });
     const openCreateModal = () => {
         setEditingService(null);
         form.reset();
         form.setData({
-            codigo: '',
-            nombre: '',
-            descripcion: '',
-            unidad_medida: 'ZZ',
-            precio_venta: '',
+            codigo: "",
+            nombre: "",
+            descripcion: "",
+            categoria: "",
+            unidad_medida: "ZZ",
+            precio_venta: "",
             aplica_igv: true,
-            tipo_afectacion_igv: '10',
-            certificate_type_id: '',
+            tipo_afectacion_igv: "10",
+            certificate_type_id: "",
             activo: true,
         });
         setModalOpen(true);
@@ -104,16 +121,17 @@ export default function ServiciosIndex() {
         form.setData({
             codigo: service.codigo,
             nombre: service.nombre,
-            descripcion: service.descripcion || '',
+            descripcion: service.descripcion || "",
+            categoria: service.categoria ?? "",
             unidad_medida: service.unidad_medida,
             precio_venta: String(service.precio_venta),
             aplica_igv: service.aplica_igv,
             tipo_afectacion_igv: service.igv_requiere_revision
-                ? ''
-                : (service.tipo_afectacion_igv ?? '10'),
+                ? ""
+                : (service.tipo_afectacion_igv ?? "10"),
             certificate_type_id: service.certificate_type_id
                 ? String(service.certificate_type_id)
-                : '',
+                : "",
             activo: service.activo,
         });
         setModalOpen(true);
@@ -267,33 +285,33 @@ export default function ServiciosIndex() {
                     <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
                         <button
                             type="button"
-                            onClick={() => handleFilterEstado('todos')}
+                            onClick={() => handleFilterEstado("todos")}
                             className={`rounded-md px-3 py-1.5 transition-colors ${
-                                filters.estado === 'todos'
-                                    ? 'bg-card text-foreground font-bold shadow-xs'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                filters.estado === "todos"
+                                    ? "bg-card text-foreground font-bold shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
                             Todos
                         </button>
                         <button
                             type="button"
-                            onClick={() => handleFilterEstado('activos')}
+                            onClick={() => handleFilterEstado("activos")}
                             className={`rounded-md px-3 py-1.5 transition-colors ${
-                                filters.estado === 'activos'
-                                    ? 'bg-card text-foreground font-bold shadow-xs'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                filters.estado === "activos"
+                                    ? "bg-card text-foreground font-bold shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
                             Activos
                         </button>
                         <button
                             type="button"
-                            onClick={() => handleFilterEstado('inactivos')}
+                            onClick={() => handleFilterEstado("inactivos")}
                             className={`rounded-md px-3 py-1.5 transition-colors ${
-                                filters.estado === 'inactivos'
-                                    ? 'bg-card text-foreground font-bold shadow-xs'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                filters.estado === "inactivos"
+                                    ? "bg-card text-foreground font-bold shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
                             Inactivos
@@ -364,27 +382,27 @@ export default function ServiciosIndex() {
                                             <td className="px-4 py-3 text-center">
                                                 <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
                                                     {s.igv_requiere_revision
-                                                        ? 'Elegir afectación'
+                                                        ? "Elegir afectación"
                                                         : s.tipo_afectacion_igv ===
-                                                            '20'
-                                                          ? 'Exonerado'
+                                                            "20"
+                                                          ? "Exonerado"
                                                           : s.tipo_afectacion_igv ===
-                                                              '30'
-                                                            ? 'Inafecto'
-                                                            : 'Gravado (18%)'}
+                                                              "30"
+                                                            ? "Inafecto"
+                                                            : "Gravado (18%)"}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                         s.activo
-                                                            ? 'bg-emerald-100 text-emerald-800'
-                                                            : 'bg-zinc-100 text-zinc-600'
+                                                            ? "bg-emerald-100 text-emerald-800"
+                                                            : "bg-zinc-100 text-zinc-600"
                                                     }`}
                                                 >
                                                     {s.activo
-                                                        ? 'Activo'
-                                                        : 'Inactivo'}
+                                                        ? "Activo"
+                                                        : "Inactivo"}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-right">
@@ -408,13 +426,13 @@ export default function ServiciosIndex() {
                                                         }
                                                         className={`rounded-md p-1.5 transition-colors ${
                                                             s.activo
-                                                                ? 'text-warning-strong hover:bg-amber-50'
-                                                                : 'text-success-strong hover:bg-emerald-50'
+                                                                ? "text-warning-strong hover:bg-amber-50"
+                                                                : "text-success-strong hover:bg-emerald-50"
                                                         }`}
                                                         title={
                                                             s.activo
-                                                                ? 'Desactivar servicio'
-                                                                : 'Activar servicio'
+                                                                ? "Desactivar servicio"
+                                                                : "Activar servicio"
                                                         }
                                                     >
                                                         <Power className="size-3.5" />
@@ -470,8 +488,8 @@ export default function ServiciosIndex() {
                                             }}
                                             className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                                                 link.active
-                                                    ? 'bg-foreground text-background font-bold shadow-xs'
-                                                    : 'text-foreground/80 hover:bg-muted/40'
+                                                    ? "bg-foreground text-background font-bold shadow-xs"
+                                                    : "text-foreground/80 hover:bg-muted/40"
                                             }`}
                                         />
                                     );
@@ -487,8 +505,8 @@ export default function ServiciosIndex() {
                             <div className="border-border flex items-center justify-between border-b pb-3">
                                 <h3 className="text-foreground font-['Oswald',sans-serif] text-lg font-bold uppercase">
                                     {editingService
-                                        ? 'Editar Servicio'
-                                        : 'Nuevo Servicio'}
+                                        ? "Editar Servicio"
+                                        : "Nuevo Servicio"}
                                 </h3>
                                 <button
                                     type="button"
@@ -513,7 +531,7 @@ export default function ServiciosIndex() {
                                             value={form.data.codigo}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    'codigo',
+                                                    "codigo",
                                                     e.target.value.toUpperCase(),
                                                 )
                                             }
@@ -530,21 +548,39 @@ export default function ServiciosIndex() {
                                         <label className="text-foreground/80 block font-semibold">
                                             U.M. *
                                         </label>
-                                        <input
-                                            type="text"
-                                            required
+                                        <select
                                             value={form.data.unidad_medida}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    'unidad_medida',
+                                                    "unidad_medida",
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="ZZ"
-                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
-                                        />
+                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                        >
+                                            {unidadesMedida.map((u) => (
+                                                <option
+                                                    key={u.codigo}
+                                                    value={u.codigo}
+                                                >
+                                                    {u.codigo} ({u.nombre})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {form.errors.unidad_medida && (
+                                            <p className="mt-1 text-red-600">
+                                                {form.errors.unidad_medida}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
+                                <CategoriaSelect
+                                    value={form.data.categoria}
+                                    onChange={(clave) =>
+                                        form.setData("categoria", clave)
+                                    }
+                                    categorias={categorias}
+                                />
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
                                         Nombre del Servicio *
@@ -555,7 +591,7 @@ export default function ServiciosIndex() {
                                         value={form.data.nombre}
                                         onChange={(e) =>
                                             form.setData(
-                                                'nombre',
+                                                "nombre",
                                                 e.target.value,
                                             )
                                         }
@@ -577,7 +613,7 @@ export default function ServiciosIndex() {
                                         value={form.data.descripcion}
                                         onChange={(e) =>
                                             form.setData(
-                                                'descripcion',
+                                                "descripcion",
                                                 e.target.value,
                                             )
                                         }
@@ -597,7 +633,7 @@ export default function ServiciosIndex() {
                                         value={form.data.precio_venta}
                                         onChange={(e) =>
                                             form.setData(
-                                                'precio_venta',
+                                                "precio_venta",
                                                 e.target.value,
                                             )
                                         }
@@ -616,7 +652,7 @@ export default function ServiciosIndex() {
                                         value={form.data.certificate_type_id}
                                         onChange={(e) =>
                                             form.setData(
-                                                'certificate_type_id',
+                                                "certificate_type_id",
                                                 e.target.value,
                                             )
                                         }
@@ -624,7 +660,10 @@ export default function ServiciosIndex() {
                                     >
                                         <option value="">Ninguno</option>
                                         {tiposCertificado.map((tipo) => (
-                                            <option key={tipo.id} value={tipo.id}>
+                                            <option
+                                                key={tipo.id}
+                                                value={tipo.id}
+                                            >
                                                 {tipo.nombre}
                                             </option>
                                         ))}
@@ -645,7 +684,7 @@ export default function ServiciosIndex() {
                                             required
                                             onChange={(e) =>
                                                 form.setData(
-                                                    'tipo_afectacion_igv',
+                                                    "tipo_afectacion_igv",
                                                     e.target.value,
                                                 )
                                             }
@@ -677,7 +716,7 @@ export default function ServiciosIndex() {
                                             checked={form.data.activo}
                                             onChange={(e) =>
                                                 form.setData(
-                                                    'activo',
+                                                    "activo",
                                                     e.target.checked,
                                                 )
                                             }
@@ -702,8 +741,8 @@ export default function ServiciosIndex() {
                                         className="bg-primary hover:bg-primary/90 rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
                                     >
                                         {editingService
-                                            ? 'Guardar Cambios'
-                                            : 'Crear Servicio'}
+                                            ? "Guardar Cambios"
+                                            : "Crear Servicio"}
                                     </button>
                                 </div>
                             </form>

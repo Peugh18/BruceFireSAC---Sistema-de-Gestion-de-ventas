@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property string $codigo
  * @property string $nombre
  * @property string|null $descripcion
+ * @property string|null $categoria
  * @property string $unidad_medida
  * @property float $precio_venta
  * @property Carbon|null $igv_revisado_at
@@ -32,6 +33,7 @@ use Illuminate\Support\Carbon;
     'codigo',
     'nombre',
     'descripcion',
+    'categoria',
     'unidad_medida',
     'precio_venta',
     'aplica_igv', 'igv_revisado_at', 'tipo_afectacion_igv',
