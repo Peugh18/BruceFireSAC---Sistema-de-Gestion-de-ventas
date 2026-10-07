@@ -256,7 +256,17 @@ export default function FacturacionIndex({
                 electronic_document: document.id,
             }),
             {},
-            { preserveScroll: true, onFinish: () => setProcessingId(null) },
+            {
+                preserveScroll: true,
+                // El backend puede negarse (ya está en SUNAT, en curso, sin XML)
+                // y sin esto el usuario no se entera de nada.
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo reenviar el comprobante.',
+                    ),
+                onFinish: () => setProcessingId(null),
+            },
         );
     };
 

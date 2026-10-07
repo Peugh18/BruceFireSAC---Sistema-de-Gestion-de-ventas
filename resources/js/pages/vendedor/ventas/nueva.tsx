@@ -253,6 +253,12 @@ export default function NuevaVenta({
     caja_abierta,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    // El backend rechaza operaciones enteras con la clave `estado` (p. ej.
+    // «este comprobante ya está en SUNAT»), que no es un campo del formulario y
+    // por eso no aparece con tipo en form.errors.
+    const errorDeOperacion = usePage<{
+        errors?: Record<string, string>;
+    }>().props.errors?.estado;
     const teamSlug =
         currentTeam?.slug ??
         (typeof window !== 'undefined'
@@ -1465,6 +1471,19 @@ export default function NuevaVenta({
                                 className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
                             />
                         </div>
+
+                        {/* Rechazos de toda la operación (no de un campo
+                            puntual): el backend los manda con la clave
+                            `estado`, p. ej. «este comprobante ya está en
+                            SUNAT». Sin esto el guardado falla en silencio. */}
+                        {errorDeOperacion ? (
+                            <p
+                                role="alert"
+                                className="border-destructive-strong/30 bg-destructive-strong/10 text-destructive-strong rounded-[9px] border px-3 py-2 text-[12px] font-semibold"
+                            >
+                                {errorDeOperacion}
+                            </p>
+                        ) : null}
 
                         <Button
                             type="submit"
