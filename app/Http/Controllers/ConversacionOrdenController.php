@@ -91,10 +91,17 @@ class ConversacionOrdenController extends Controller
         $this->autorizar($request, $evidencia->serviceOrder);
         abort_unless(Storage::disk('local')->exists($evidencia->path), 404);
 
+        // Solo imágenes, audio, video y PDF se muestran en el navegador; lo
+        // demás se descarga, para que un archivo subido no corra como página.
+        $seguros = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/webm', 'video/mp4', 'video/webm', 'application/pdf'];
+        $esSeguro = in_array($evidencia->mime, $seguros, true);
+
         return Storage::disk('local')->response($evidencia->path, $evidencia->nombre_original, [
-            'Content-Type' => $evidencia->mime,
+            'Content-Type' => $esSeguro ? $evidencia->mime : 'application/octet-stream',
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "sandbox; default-src 'none'",
             'Cache-Control' => 'private, max-age=3600',
-        ]);
+        ], $esSeguro ? 'inline' : 'attachment');
     }
 
     protected function autorizar(Request $request, ServiceOrder $orden): void
