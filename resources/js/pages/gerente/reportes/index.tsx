@@ -137,26 +137,32 @@ export default function ReportesIndex() {
     };
 
     const handleDownloadComercialPdf = () => {
-        const query = new URLSearchParams({
-            fecha_desde: fechaDesde,
-            fecha_hasta: fechaHasta,
-            ...(vendedorId ? { vendedor_id: vendedorId } : {}),
-        }).toString();
-
         window.open(
-            `/${currentTeam.slug}/gerente/reportes/comercial/pdf?${query}`,
+            ReportesRoutes.comercial.pdf.url(
+                { current_team: currentTeam.slug },
+                {
+                    query: {
+                        fecha_desde: fechaDesde,
+                        fecha_hasta: fechaHasta,
+                        ...(vendedorId ? { vendedor_id: vendedorId } : {}),
+                    },
+                },
+            ),
             '_blank',
         );
     };
 
     const handleDownloadInventarioPdf = () => {
-        const query = new URLSearchParams({
-            ...(sedeId ? { sede_id: sedeId } : {}),
-            ...(soloBajoMinimo ? { solo_bajo_minimo: '1' } : {}),
-        }).toString();
-
         window.open(
-            `/${currentTeam.slug}/gerente/reportes/inventario/pdf?${query}`,
+            ReportesRoutes.inventario.pdf.url(
+                { current_team: currentTeam.slug },
+                {
+                    query: {
+                        ...(sedeId ? { sede_id: sedeId } : {}),
+                        ...(soloBajoMinimo ? { solo_bajo_minimo: '1' } : {}),
+                    },
+                },
+            ),
             '_blank',
         );
     };

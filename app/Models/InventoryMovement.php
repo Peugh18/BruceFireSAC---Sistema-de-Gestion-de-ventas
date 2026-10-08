@@ -24,6 +24,7 @@ use Illuminate\Validation\ValidationException;
  * @property int|null $referencia_id
  * @property int|null $user_id
  * @property string|null $observacion
+ * @property string|null $idempotencia
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read InventoryUnit|null $inventoryUnit
@@ -35,6 +36,37 @@ use Illuminate\Validation\ValidationException;
 #[Fillable(['inventory_unit_id', 'product_lot_id', 'product_id', 'sede_id', 'tipo', 'cantidad', 'referencia_type', 'referencia_id', 'user_id', 'observacion'])]
 class InventoryMovement extends Model
 {
+    /**
+     * Huella del movimiento: la base la usa para rechazar el doble submit sin
+     * frenar operaciones legítimas (ver la migración del token de idempotencia).
+     *
+     * Se calcula aquí, en un solo sitio, para cubra todas las formas de crear un
+     * movimiento. Dos envíos del mismo formulario producen la misma huella y el
+     * segundo se rechaza; dos operaciones distintas sobre la misma unidad
+     * (p. ej. cambiar un extintor y volver al original) tienen observaciones
+     * distintas, así que ambas se registran.
+     *
+     * Los movimientos sin unidad serializada quedan sin huella y fuera del
+     * índice: un documento puede traer dos líneas idénticas del mismo producto
+     * y su devolución las registra como dos movimientos iguales.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (InventoryMovement $movement): void {
+            $movement->idempotencia = $movement->inventory_unit_id === null
+                ? null
+                : md5(implode('|', [
+                    $movement->inventory_unit_id,
+                    $movement->tipo,
+                    $movement->referencia_type,
+                    $movement->referencia_id,
+                    $movement->sede_id,
+                    $movement->cantidad,
+                    (string) $movement->observacion,
+                ]));
+        });
+    }
+
     /**
      * @return BelongsTo<InventoryUnit, $this>
      */

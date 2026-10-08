@@ -124,6 +124,50 @@ test('no se cambia por una unidad de otro producto, ya vendida o de otra sede', 
         ->and($vendidas[0]->fresh()->estado)->toBe('vendido');
 })->with(['otro producto', 'ya vendida', 'otra sede']);
 
+test('cambiar un extintor y volver al original no se pisa en el kardex', function () {
+    $vendedor = vendedorUser();
+    ['sale' => $sale, 'vendidas' => $vendidas, 'libre' => $libre] = ventaParaCambio($vendedor);
+    $item = $sale->items()->where('inventory_unit_id', $vendidas[0]->id)->firstOrFail();
+
+    // U -> U2 ...
+    app(CambiarUnidadVendida::class)->handle($sale, $item, $libre->numero_serie, $vendedor->id);
+    // ... y U2 -> U: se vuelve al extintor original.
+    app(CambiarUnidadVendida::class)->handle($sale, $item->fresh(), $vendidas[0]->numero_serie, $vendedor->id);
+
+    expect($item->fresh()->inventory_unit_id)->toBe($vendidas[0]->id)
+        ->and($vendidas[0]->fresh()->estado)->toBe('vendido');
+
+    // El kardex conserva los movimientos de los DOS cambios además de la
+    // salida de la venta original. Antes la clave única de idempotencia los
+    // confundía con un doble submit y el segundo cambio reventaba.
+    $movimientos = InventoryMovement::query()
+        ->where('referencia_id', $sale->id)
+        ->where('referencia_type', $sale->getMorphClass())
+        ->get();
+
+    expect($movimientos->where('inventory_unit_id', $vendidas[0]->id)->pluck('tipo')->sort()->values()->all())
+        ->toBe(['ingreso', 'salida_venta', 'salida_venta'])
+        // Cada operación deja su propia huella: por eso no se rechazan entre sí...
+        ->and($movimientos->where('inventory_unit_id', $vendidas[0]->id)->pluck('idempotencia')->unique()->count())->toBe(3);
+});
+
+test('el doble envio del mismo movimiento de kardex se rechaza por su huella', function () {
+    $vendedor = vendedorUser();
+    ['sale' => $sale, 'vendidas' => $vendidas] = ventaParaCambio($vendedor);
+
+    $original = InventoryMovement::query()
+        ->where('referencia_id', $sale->id)
+        ->where('inventory_unit_id', $vendidas[0]->id)
+        ->firstOrFail();
+
+    // Exactamente el mismo movimiento otra vez: misma huella, así que la base
+    // lo corta en vez de duplicar el kardex.
+    $clon = $original->replicate();
+    $clon->idempotencia = null;
+
+    expect(fn () => $clon->save())->toThrow(Exception::class);
+});
+
 test('el vendedor cambia el extintor desde el detalle de la venta', function () {
     $vendedor = vendedorUser();
     ['sale' => $sale, 'vendidas' => $vendidas] = ventaParaCambio($vendedor);
