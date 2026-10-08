@@ -18,7 +18,6 @@ import {
     ShoppingCart,
     Trash2,
     Wrench,
-    type LucideIcon,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
@@ -27,6 +26,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { TabsBf, propsPanel, type PestanaBf } from '@/components/ui/tabs-bf';
 import {
     Dialog,
     DialogContent,
@@ -686,40 +686,36 @@ export default function ClienteShow({
         );
     };
 
-    const tabs: {
-        key: TabKey;
-        label: string;
-        icon: LucideIcon;
-        count?: number;
-    }[] = [
-        { key: 'resumen', label: 'Resumen', icon: Building2 },
+    // Pestañas de la ficha del cliente (barra unificada TabsBf).
+    const tabs: PestanaBf<TabKey>[] = [
+        { id: 'resumen', titulo: 'Resumen', icono: Building2 },
         {
-            key: 'compras',
-            label: 'Compras',
-            icon: ShoppingCart,
-            count: (ventas.length || 0) + (cotizaciones.length || 0),
+            id: 'compras',
+            titulo: 'Compras',
+            icono: ShoppingCart,
+            contador: (ventas.length || 0) + (cotizaciones.length || 0),
         },
         {
-            key: 'extintores',
-            label: 'Extintores y Certificados',
-            icon: Award,
-            count: (extintores.length || 0) + (certificados.length || 0),
+            id: 'extintores',
+            titulo: 'Extintores y Certificados',
+            icono: Award,
+            contador: (extintores.length || 0) + (certificados.length || 0),
         },
         {
-            key: 'servicios',
-            label: 'Servicios',
-            icon: Wrench,
-            count: servicios.length || 0,
+            id: 'servicios',
+            titulo: 'Servicios',
+            icono: Wrench,
+            contador: servicios.length || 0,
         },
         {
-            key: 'cobranzas',
-            label: 'Cobranzas',
-            icon: CreditCard,
-            count:
+            id: 'cobranzas',
+            titulo: 'Cobranzas',
+            icono: CreditCard,
+            contador:
                 cobranzas.cuotas?.filter((c) => c.estado === 'vencido')
                     .length || 0,
         },
-        { key: 'datos', label: 'Datos y Sedes', icon: MapPin },
+        { id: 'datos', titulo: 'Datos y Sedes', icono: MapPin },
     ];
 
     return (
@@ -887,371 +883,139 @@ export default function ClienteShow({
                 )}
 
                 {/* ================= BARRA DE PESTAÑAS (6 PESTAÑAS) ================= */}
-                <div className="border-border flex gap-1.5 overflow-x-auto border-b pb-1">
-                    {tabs.map((tab) => {
-                        const Icon = tab.icon;
-                        const isActive = activeTab === tab.key;
-                        return (
-                            <button
-                                key={tab.key}
-                                type="button"
-                                onClick={() => setActiveTab(tab.key)}
-                                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
-                                    isActive
-                                        ? 'bg-primary text-primary-foreground shadow-sm'
-                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                                }`}
-                            >
-                                <Icon className="size-4" />
-                                <span>{tab.label}</span>
-                                {tab.count !== undefined && tab.count > 0 && (
-                                    <span
-                                        className={`py-0.2 rounded-full px-1.5 text-[10px] font-extrabold ${
-                                            isActive
-                                                ? 'bg-primary-foreground/20 text-primary-foreground'
-                                                : 'bg-muted text-muted-foreground'
-                                        }`}
-                                    >
-                                        {tab.count}
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
+                <TabsBf<TabKey>
+                    pestanas={tabs}
+                    activa={activeTab}
+                    onCambiar={setActiveTab}
+                    etiqueta="Secciones del cliente"
+                    idBase="cliente"
+                />
 
                 {/* ================= CONTENIDO DE CADA PESTAÑA ================= */}
-
-                {/* 1. RESUMEN */}
-                {activeTab === 'resumen' && (
-                    <div className="space-y-6">
-                        {/* KPI Cards */}
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                            <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                                <div className="text-muted-foreground text-[11px] font-bold uppercase">
-                                    Total comprado
-                                </div>
-                                <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
-                                    {soles(resumen?.total_comprado)}
-                                </div>
-                                <div className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Última compra:{' '}
-                                    {fechaCorta(resumen?.ultima_compra) ||
-                                        'Sin compras'}
-                                </div>
-                            </Card>
-
-                            <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                                <div className="text-muted-foreground text-[11px] font-bold uppercase">
-                                    Deuda pendiente
-                                </div>
-                                <div
-                                    className={`mt-1 font-['Oswald',sans-serif] text-xl font-bold ${
-                                        (resumen?.deuda_pendiente ?? 0) > 0
-                                            ? 'text-warning-strong'
-                                            : 'text-foreground'
-                                    }`}
-                                >
-                                    {soles(resumen?.deuda_pendiente)}
-                                </div>
-                                <div className="text-muted-foreground mt-0.5 text-[11px]">
-                                    {resumen?.cuotas_vencidas &&
-                                    resumen.cuotas_vencidas > 0 ? (
-                                        <span className="text-destructive-strong font-bold">
-                                            {resumen.cuotas_vencidas} cuota(s)
-                                            vencida(s)
-                                        </span>
-                                    ) : (resumen?.deuda_pendiente ?? 0) > 0 ? (
-                                        `Por cobrar${resumen?.proxima_cuota ? ` · próxima cuota ${fechaCorta(resumen.proxima_cuota)}` : ''}`
-                                    ) : (
-                                        'Sin deuda'
-                                    )}
-                                </div>
-                            </Card>
-
-                            <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                                <div className="text-muted-foreground text-[11px] font-bold uppercase">
-                                    Extintores activos
-                                </div>
-                                <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
-                                    {resumen?.extintores_activos ??
-                                        extintores.length}
-                                </div>
-                                <div className="text-muted-foreground mt-0.5 text-[11px]">
-                                    {(resumen?.por_vencer_30_dias ?? 0) > 0 ? (
-                                        <span className="text-warning-strong font-bold">
-                                            {resumen?.por_vencer_30_dias} por
-                                            vencer en 30d
-                                        </span>
-                                    ) : (
-                                        'Sin vencimientos urgentes'
-                                    )}
-                                </div>
-                            </Card>
-
-                            <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                                <div className="text-muted-foreground text-[11px] font-bold uppercase">
-                                    Cotizaciones abiertas
-                                </div>
-                                <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
-                                    {resumen?.cotizaciones_abiertas ??
-                                        cotizaciones.filter((c) =>
-                                            [
-                                                'emitida',
-                                                'enviada',
-                                                'borrador',
-                                            ].includes(c.estado),
-                                        ).length}
-                                </div>
-                                <div className="text-muted-foreground mt-0.5 text-[11px]">
-                                    En negociación
-                                </div>
-                            </Card>
-                        </div>
-
-                        {/* Overview: Últimas ventas y extintores próximos */}
-                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                            {/* Panel Últimas Ventas */}
-                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                                <div className="border-border flex items-center justify-between border-b pb-3">
-                                    <div className="text-foreground flex items-center gap-2 text-sm font-bold">
-                                        <ShoppingCart className="text-primary-strong size-4" />
-                                        <span>Últimas ventas</span>
+                <div {...propsPanel('cliente', activeTab)}>
+                    {/* 1. RESUMEN */}
+                    {activeTab === 'resumen' && (
+                        <div className="space-y-6">
+                            {/* KPI Cards */}
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
+                                    <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                                        Total comprado
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setActiveTab('compras');
-                                            setComprasSubtab('ventas');
-                                        }}
-                                        className="text-primary-strong text-xs font-bold hover:underline"
+                                    <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
+                                        {soles(resumen?.total_comprado)}
+                                    </div>
+                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
+                                        Última compra:{' '}
+                                        {fechaCorta(resumen?.ultima_compra) ||
+                                            'Sin compras'}
+                                    </div>
+                                </Card>
+
+                                <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
+                                    <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                                        Deuda pendiente
+                                    </div>
+                                    <div
+                                        className={`mt-1 font-['Oswald',sans-serif] text-xl font-bold ${
+                                            (resumen?.deuda_pendiente ?? 0) > 0
+                                                ? 'text-warning-strong'
+                                                : 'text-foreground'
+                                        }`}
                                     >
-                                        Ver todas &rarr;
-                                    </button>
-                                </div>
+                                        {soles(resumen?.deuda_pendiente)}
+                                    </div>
+                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
+                                        {resumen?.cuotas_vencidas &&
+                                        resumen.cuotas_vencidas > 0 ? (
+                                            <span className="text-destructive-strong font-bold">
+                                                {resumen.cuotas_vencidas}{' '}
+                                                cuota(s) vencida(s)
+                                            </span>
+                                        ) : (resumen?.deuda_pendiente ?? 0) >
+                                          0 ? (
+                                            `Por cobrar${resumen?.proxima_cuota ? ` · próxima cuota ${fechaCorta(resumen.proxima_cuota)}` : ''}`
+                                        ) : (
+                                            'Sin deuda'
+                                        )}
+                                    </div>
+                                </Card>
 
-                                {ventas.length === 0 ? (
-                                    <div className="text-muted-foreground py-8 text-center text-xs">
-                                        No hay ventas registradas para este
-                                        cliente aún.
+                                <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
+                                    <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                                        Extintores activos
                                     </div>
-                                ) : (
-                                    <div className="divide-border divide-y">
-                                        {ventas.slice(0, 4).map((v) => (
-                                            <div
-                                                key={v.id}
-                                                className="flex items-center justify-between py-3 text-xs"
-                                            >
-                                                <div>
-                                                    <Link
-                                                        href={VentasRoutes.show.url(
-                                                            {
-                                                                current_team:
-                                                                    teamSlug,
-                                                                sale: v.id,
-                                                            },
-                                                        )}
-                                                        className="text-foreground hover:text-primary-strong font-bold"
-                                                    >
-                                                        {v.numero_interno}
-                                                    </Link>
-                                                    <div className="text-muted-foreground text-[11px]">
-                                                        {v.fecha} ·{' '}
-                                                        {v.comprobante ||
-                                                            'Nota de venta'}
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-foreground font-bold">
-                                                        {soles(v.total)}
-                                                    </span>
-                                                    <div className="text-[10.5px]">
-                                                        {v.saldo_pendiente >
-                                                        0 ? (
-                                                            <span className="text-warning-strong font-semibold">
-                                                                Saldo:{' '}
-                                                                {soles(
-                                                                    v.saldo_pendiente,
-                                                                )}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-success-strong font-semibold">
-                                                                Cancelado
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
+                                        {resumen?.extintores_activos ??
+                                            extintores.length}
                                     </div>
-                                )}
-                            </Card>
+                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
+                                        {(resumen?.por_vencer_30_dias ?? 0) >
+                                        0 ? (
+                                            <span className="text-warning-strong font-bold">
+                                                {resumen?.por_vencer_30_dias}{' '}
+                                                por vencer en 30d
+                                            </span>
+                                        ) : (
+                                            'Sin vencimientos urgentes'
+                                        )}
+                                    </div>
+                                </Card>
 
-                            {/* Panel Extintores por Vencer */}
-                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                                <div className="border-border flex items-center justify-between border-b pb-3">
-                                    <div className="text-foreground flex items-center gap-2 text-sm font-bold">
-                                        <Award className="text-primary-strong size-4" />
-                                        <span>Extintores y Mantenimiento</span>
+                                <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
+                                    <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                                        Cotizaciones abiertas
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setActiveTab('extintores');
-                                            setExtintoresSubtab('extintores');
-                                        }}
-                                        className="text-primary-strong text-xs font-bold hover:underline"
-                                    >
-                                        Ver parque &rarr;
-                                    </button>
-                                </div>
-
-                                {extintores.length === 0 ? (
-                                    <div className="text-muted-foreground py-8 text-center text-xs">
-                                        No hay extintores vinculados a este
-                                        cliente.
+                                    <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
+                                        {resumen?.cotizaciones_abiertas ??
+                                            cotizaciones.filter((c) =>
+                                                [
+                                                    'emitida',
+                                                    'enviada',
+                                                    'borrador',
+                                                ].includes(c.estado),
+                                            ).length}
                                     </div>
-                                ) : (
-                                    <div className="divide-border divide-y">
-                                        {extintores.slice(0, 4).map((ext) => (
-                                            <div
-                                                key={ext.id}
-                                                className="flex items-center justify-between py-3 text-xs"
-                                            >
-                                                <div>
-                                                    <span className="text-foreground font-mono font-bold">
-                                                        {ext.numero_serie}
-                                                    </span>
-                                                    <div className="text-muted-foreground text-[11px]">
-                                                        {ext.producto} ·{' '}
-                                                        {ext.capacidad}
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    {ext.vencido ? (
-                                                        <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-[10px]">
-                                                            Vencido
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-[10px]">
-                                                            Al día
-                                                        </Badge>
-                                                    )}
-                                                    <div className="text-muted-foreground mt-0.5 text-[10.5px]">
-                                                        Próx:{' '}
-                                                        {ext.proxima_fecha_atencion ||
-                                                            'N/A'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
+                                        En negociación
                                     </div>
-                                )}
-                            </Card>
-                        </div>
-                    </div>
-                )}
-
-                {/* 2. COMPRAS (Ventas + Cotizaciones) */}
-                {activeTab === 'compras' && (
-                    <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
-                        <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-4">
-                            <div className="flex gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setComprasSubtab('ventas')}
-                                    className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                                        comprasSubtab === 'ventas'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-muted text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    Ventas ({ventas.length})
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setComprasSubtab('cotizaciones')
-                                    }
-                                    className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                                        comprasSubtab === 'cotizaciones'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-muted text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    Cotizaciones ({cotizaciones.length})
-                                </button>
+                                </Card>
                             </div>
 
-                            <Button
-                                asChild
-                                size="sm"
-                                className="bg-primary h-8 rounded-xl text-xs font-bold"
-                            >
-                                {comprasSubtab === 'ventas' ? (
-                                    <Link
-                                        href={VentasRoutes.create.url(
-                                            { current_team: teamSlug },
-                                            { query: { client_id: client.id } },
-                                        )}
-                                    >
-                                        <Plus className="mr-1 size-3.5" />
-                                        Nueva venta
-                                    </Link>
-                                ) : (
-                                    <Link
-                                        href={CotizacionesRoutes.create.url(
-                                            { current_team: teamSlug },
-                                            { query: { client_id: client.id } },
-                                        )}
-                                    >
-                                        <Plus className="mr-1 size-3.5" />
-                                        Nueva cotización
-                                    </Link>
-                                )}
-                            </Button>
-                        </div>
+                            {/* Overview: Últimas ventas y extintores próximos */}
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                {/* Panel Últimas Ventas */}
+                                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                                    <div className="border-border flex items-center justify-between border-b pb-3">
+                                        <div className="text-foreground flex items-center gap-2 text-sm font-bold">
+                                            <ShoppingCart className="text-primary-strong size-4" />
+                                            <span>Últimas ventas</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setActiveTab('compras');
+                                                setComprasSubtab('ventas');
+                                            }}
+                                            className="text-primary-strong text-xs font-bold hover:underline"
+                                        >
+                                            Ver todas &rarr;
+                                        </button>
+                                    </div>
 
-                        {comprasSubtab === 'ventas' ? (
-                            <div className="mt-4 overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead>
-                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                            <th className="py-2.5">
-                                                N.º Venta
-                                            </th>
-                                            <th className="py-2.5">Fecha</th>
-                                            <th className="py-2.5">
-                                                Comprobante
-                                            </th>
-                                            <th className="py-2.5">SUNAT</th>
-                                            <th className="py-2.5">
-                                                Condición
-                                            </th>
-                                            <th className="py-2.5">Total</th>
-                                            <th className="py-2.5">Saldo</th>
-                                            <th className="py-2.5 text-right">
-                                                Acción
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
-                                        {ventas.length === 0 ? (
-                                            <tr>
-                                                <td
-                                                    colSpan={8}
-                                                    className="text-muted-foreground py-8 text-center"
-                                                >
-                                                    No hay ventas registradas.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            ventas.map((v) => (
-                                                <tr
+                                    {ventas.length === 0 ? (
+                                        <div className="text-muted-foreground py-8 text-center text-xs">
+                                            No hay ventas registradas para este
+                                            cliente aún.
+                                        </div>
+                                    ) : (
+                                        <div className="divide-border divide-y">
+                                            {ventas.slice(0, 4).map((v) => (
+                                                <div
                                                     key={v.id}
-                                                    className="hover:bg-muted/30"
+                                                    className="flex items-center justify-between py-3 text-xs"
                                                 >
-                                                    <td className="text-foreground py-3 font-mono font-bold">
+                                                    <div>
                                                         <Link
                                                             href={VentasRoutes.show.url(
                                                                 {
@@ -1260,162 +1024,878 @@ export default function ClienteShow({
                                                                     sale: v.id,
                                                                 },
                                                             )}
-                                                            className="hover:text-primary-strong hover:underline"
+                                                            className="text-foreground hover:text-primary-strong font-bold"
                                                         >
                                                             {v.numero_interno}
                                                         </Link>
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3">
-                                                        {v.fecha}
-                                                    </td>
-                                                    <td className="py-3 font-medium">
-                                                        {v.comprobante ||
-                                                            'Nota de venta'}
-                                                    </td>
-                                                    <td className="py-3">
-                                                        {v.sunat_estado ? (
-                                                            <Badge
-                                                                className={`text-[10px] ${
-                                                                    v.sunat_estado ===
-                                                                    'aceptado'
-                                                                        ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
-                                                                        : 'text-warning-strong border-amber-500/20 bg-amber-500/10'
-                                                                }`}
-                                                            >
-                                                                {v.sunat_estado}
-                                                            </Badge>
-                                                        ) : (
-                                                            <span className="text-muted-foreground">
-                                                                -
+                                                        <div className="text-muted-foreground text-[11px]">
+                                                            {v.fecha} ·{' '}
+                                                            {v.comprobante ||
+                                                                'Nota de venta'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-foreground font-bold">
+                                                            {soles(v.total)}
+                                                        </span>
+                                                        <div className="text-[10.5px]">
+                                                            {v.saldo_pendiente >
+                                                            0 ? (
+                                                                <span className="text-warning-strong font-semibold">
+                                                                    Saldo:{' '}
+                                                                    {soles(
+                                                                        v.saldo_pendiente,
+                                                                    )}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-success-strong font-semibold">
+                                                                    Cancelado
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </Card>
+
+                                {/* Panel Extintores por Vencer */}
+                                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                                    <div className="border-border flex items-center justify-between border-b pb-3">
+                                        <div className="text-foreground flex items-center gap-2 text-sm font-bold">
+                                            <Award className="text-primary-strong size-4" />
+                                            <span>
+                                                Extintores y Mantenimiento
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setActiveTab('extintores');
+                                                setExtintoresSubtab(
+                                                    'extintores',
+                                                );
+                                            }}
+                                            className="text-primary-strong text-xs font-bold hover:underline"
+                                        >
+                                            Ver parque &rarr;
+                                        </button>
+                                    </div>
+
+                                    {extintores.length === 0 ? (
+                                        <div className="text-muted-foreground py-8 text-center text-xs">
+                                            No hay extintores vinculados a este
+                                            cliente.
+                                        </div>
+                                    ) : (
+                                        <div className="divide-border divide-y">
+                                            {extintores
+                                                .slice(0, 4)
+                                                .map((ext) => (
+                                                    <div
+                                                        key={ext.id}
+                                                        className="flex items-center justify-between py-3 text-xs"
+                                                    >
+                                                        <div>
+                                                            <span className="text-foreground font-mono font-bold">
+                                                                {
+                                                                    ext.numero_serie
+                                                                }
                                                             </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3 capitalize">
-                                                        {v.condicion_pago}
-                                                        {v.medio_pago
-                                                            ? ` (${v.medio_pago})`
-                                                            : ''}
-                                                    </td>
-                                                    <td className="py-3 font-bold">
-                                                        {soles(v.total)}
-                                                    </td>
-                                                    <td className="py-3">
-                                                        {v.saldo_pendiente >
-                                                        0 ? (
-                                                            <span className="text-warning-strong font-bold">
-                                                                {soles(
-                                                                    v.saldo_pendiente,
-                                                                )}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-success-strong font-semibold">
-                                                                Pagado
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 text-right">
-                                                        <Button
-                                                            asChild
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-7 text-xs"
-                                                        >
-                                                            <Link
-                                                                href={VentasRoutes.show.url(
-                                                                    {
-                                                                        current_team:
-                                                                            teamSlug,
-                                                                        sale: v.id,
-                                                                    },
-                                                                )}
-                                                            >
-                                                                Ver venta
-                                                            </Link>
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
+                                                            <div className="text-muted-foreground text-[11px]">
+                                                                {ext.producto} ·{' '}
+                                                                {ext.capacidad}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            {ext.vencido ? (
+                                                                <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-[10px]">
+                                                                    Vencido
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-[10px]">
+                                                                    Al día
+                                                                </Badge>
+                                                            )}
+                                                            <div className="text-muted-foreground mt-0.5 text-[10.5px]">
+                                                                Próx:{' '}
+                                                                {ext.proxima_fecha_atencion ||
+                                                                    'N/A'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    )}
+                                </Card>
                             </div>
-                        ) : (
+                        </div>
+                    )}
+
+                    {/* 2. COMPRAS (Ventas + Cotizaciones) */}
+                    {activeTab === 'compras' && (
+                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                            <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+                                <TabsBf<'ventas' | 'cotizaciones'>
+                                    pestanas={[
+                                        {
+                                            id: 'ventas',
+                                            titulo: 'Ventas',
+                                            contador: ventas.length,
+                                        },
+                                        {
+                                            id: 'cotizaciones',
+                                            titulo: 'Cotizaciones',
+                                            contador: cotizaciones.length,
+                                        },
+                                    ]}
+                                    activa={comprasSubtab}
+                                    onCambiar={setComprasSubtab}
+                                    etiqueta="Compras del cliente"
+                                    idBase="cliente-compras"
+                                />
+
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    className="bg-primary h-8 rounded-xl text-xs font-bold"
+                                >
+                                    {comprasSubtab === 'ventas' ? (
+                                        <Link
+                                            href={VentasRoutes.create.url(
+                                                { current_team: teamSlug },
+                                                {
+                                                    query: {
+                                                        client_id: client.id,
+                                                    },
+                                                },
+                                            )}
+                                        >
+                                            <Plus className="mr-1 size-3.5" />
+                                            Nueva venta
+                                        </Link>
+                                    ) : (
+                                        <Link
+                                            href={CotizacionesRoutes.create.url(
+                                                { current_team: teamSlug },
+                                                {
+                                                    query: {
+                                                        client_id: client.id,
+                                                    },
+                                                },
+                                            )}
+                                        >
+                                            <Plus className="mr-1 size-3.5" />
+                                            Nueva cotización
+                                        </Link>
+                                    )}
+                                </Button>
+                            </div>
+
+                            <div
+                                {...propsPanel(
+                                    'cliente-compras',
+                                    comprasSubtab,
+                                )}
+                            >
+                                {comprasSubtab === 'ventas' ? (
+                                    <div className="mt-4 overflow-x-auto">
+                                        <table className="w-full text-left text-xs">
+                                            <thead>
+                                                <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                    <th className="py-2.5">
+                                                        N.º Venta
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Fecha
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Comprobante
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        SUNAT
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Condición
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Total
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Saldo
+                                                    </th>
+                                                    <th className="py-2.5 text-right">
+                                                        Acción
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-border divide-y">
+                                                {ventas.length === 0 ? (
+                                                    <tr>
+                                                        <td
+                                                            colSpan={8}
+                                                            className="text-muted-foreground py-8 text-center"
+                                                        >
+                                                            No hay ventas
+                                                            registradas.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    ventas.map((v) => (
+                                                        <tr
+                                                            key={v.id}
+                                                            className="hover:bg-muted/30"
+                                                        >
+                                                            <td className="text-foreground py-3 font-mono font-bold">
+                                                                <Link
+                                                                    href={VentasRoutes.show.url(
+                                                                        {
+                                                                            current_team:
+                                                                                teamSlug,
+                                                                            sale: v.id,
+                                                                        },
+                                                                    )}
+                                                                    className="hover:text-primary-strong hover:underline"
+                                                                >
+                                                                    {
+                                                                        v.numero_interno
+                                                                    }
+                                                                </Link>
+                                                            </td>
+                                                            <td className="text-muted-foreground py-3">
+                                                                {v.fecha}
+                                                            </td>
+                                                            <td className="py-3 font-medium">
+                                                                {v.comprobante ||
+                                                                    'Nota de venta'}
+                                                            </td>
+                                                            <td className="py-3">
+                                                                {v.sunat_estado ? (
+                                                                    <Badge
+                                                                        className={`text-[10px] ${
+                                                                            v.sunat_estado ===
+                                                                            'aceptado'
+                                                                                ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
+                                                                                : 'text-warning-strong border-amber-500/20 bg-amber-500/10'
+                                                                        }`}
+                                                                    >
+                                                                        {
+                                                                            v.sunat_estado
+                                                                        }
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <span className="text-muted-foreground">
+                                                                        -
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="text-muted-foreground py-3 capitalize">
+                                                                {
+                                                                    v.condicion_pago
+                                                                }
+                                                                {v.medio_pago
+                                                                    ? ` (${v.medio_pago})`
+                                                                    : ''}
+                                                            </td>
+                                                            <td className="py-3 font-bold">
+                                                                {soles(v.total)}
+                                                            </td>
+                                                            <td className="py-3">
+                                                                {v.saldo_pendiente >
+                                                                0 ? (
+                                                                    <span className="text-warning-strong font-bold">
+                                                                        {soles(
+                                                                            v.saldo_pendiente,
+                                                                        )}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-success-strong font-semibold">
+                                                                        Pagado
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="py-3 text-right">
+                                                                <Button
+                                                                    asChild
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-7 text-xs"
+                                                                >
+                                                                    <Link
+                                                                        href={VentasRoutes.show.url(
+                                                                            {
+                                                                                current_team:
+                                                                                    teamSlug,
+                                                                                sale: v.id,
+                                                                            },
+                                                                        )}
+                                                                    >
+                                                                        Ver
+                                                                        venta
+                                                                    </Link>
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="mt-4 overflow-x-auto">
+                                        <table className="w-full text-left text-xs">
+                                            <thead>
+                                                <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                    <th className="py-2.5">
+                                                        N.º Cotización
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Fecha
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Vigencia
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Total
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Estado
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Venta Vinculada
+                                                    </th>
+                                                    <th className="py-2.5 text-right">
+                                                        Acción
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-border divide-y">
+                                                {cotizaciones.length === 0 ? (
+                                                    <tr>
+                                                        <td
+                                                            colSpan={7}
+                                                            className="text-muted-foreground py-8 text-center"
+                                                        >
+                                                            No hay cotizaciones
+                                                            registradas.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    cotizaciones.map((c) => (
+                                                        <tr
+                                                            key={c.id}
+                                                            className="hover:bg-muted/30"
+                                                        >
+                                                            <td className="text-foreground py-3 font-mono font-bold">
+                                                                {c.numero}
+                                                            </td>
+                                                            <td className="text-muted-foreground py-3">
+                                                                {c.fecha}
+                                                            </td>
+                                                            <td className="text-muted-foreground py-3">
+                                                                {c.vigencia_hasta ||
+                                                                    '-'}
+                                                            </td>
+                                                            <td className="py-3 font-bold">
+                                                                {soles(c.total)}
+                                                            </td>
+                                                            <td className="py-3">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-[10px] capitalize"
+                                                                >
+                                                                    {c.estado}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="py-3">
+                                                                {c.venta ? (
+                                                                    <Link
+                                                                        href={VentasRoutes.show.url(
+                                                                            {
+                                                                                current_team:
+                                                                                    teamSlug,
+                                                                                sale: c
+                                                                                    .venta
+                                                                                    .id,
+                                                                            },
+                                                                        )}
+                                                                        className="text-primary-strong font-mono font-bold hover:underline"
+                                                                    >
+                                                                        {
+                                                                            c
+                                                                                .venta
+                                                                                .numero
+                                                                        }
+                                                                    </Link>
+                                                                ) : (
+                                                                    <span className="text-muted-foreground">
+                                                                        -
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="py-3 text-right">
+                                                                <Button
+                                                                    asChild
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-7 text-xs"
+                                                                >
+                                                                    <a
+                                                                        href={CotizacionesRoutes.pdf.url(
+                                                                            {
+                                                                                current_team:
+                                                                                    teamSlug,
+                                                                                quote: c.id,
+                                                                            },
+                                                                        )}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                    >
+                                                                        PDF
+                                                                    </a>
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    )}
+
+                    {/* 3. EXTINTORES Y CERTIFICADOS */}
+                    {activeTab === 'extintores' && (
+                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                            <div className="border-border flex gap-2 border-b pb-4">
+                                <TabsBf<'extintores' | 'certificados'>
+                                    pestanas={[
+                                        {
+                                            id: 'extintores',
+                                            titulo: 'Parque de extintores',
+                                            contador: extintores.length,
+                                        },
+                                        {
+                                            id: 'certificados',
+                                            titulo: 'Certificados emitidos',
+                                            contador: certificados.length,
+                                        },
+                                    ]}
+                                    activa={extintoresSubtab}
+                                    onCambiar={setExtintoresSubtab}
+                                    etiqueta="Equipos y certificados del cliente"
+                                    idBase="cliente-extintores"
+                                />
+                            </div>
+
+                            <div
+                                {...propsPanel(
+                                    'cliente-extintores',
+                                    extintoresSubtab,
+                                )}
+                            >
+                                {extintoresSubtab === 'extintores' ? (
+                                    <div className="mt-4 overflow-x-auto">
+                                        <table className="w-full text-left text-xs">
+                                            <thead>
+                                                <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                    <th className="py-2.5">
+                                                        Serie BF-EQ
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Producto
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Capacidad / Marca
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        F. Venta
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Próx. Recarga (1 año)
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Próx. P.H. (5 años)
+                                                    </th>
+                                                    <th className="py-2.5 text-center">
+                                                        Semáforo
+                                                    </th>
+                                                    <th className="py-2.5 text-right">
+                                                        Acciones
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-border divide-y">
+                                                {extintores.length === 0 ? (
+                                                    <tr>
+                                                        <td
+                                                            colSpan={8}
+                                                            className="text-muted-foreground py-8 text-center"
+                                                        >
+                                                            No hay extintores
+                                                            registrados para
+                                                            este cliente.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    extintores.map((e) => (
+                                                        <tr
+                                                            key={e.id}
+                                                            className="hover:bg-muted/30"
+                                                        >
+                                                            <td className="text-foreground py-3 font-mono font-bold">
+                                                                {e.numero_serie}
+                                                            </td>
+                                                            <td className="py-3 font-medium">
+                                                                {e.producto}
+                                                            </td>
+                                                            <td className="text-muted-foreground py-3">
+                                                                {[
+                                                                    e.capacidad,
+                                                                    e.marca,
+                                                                ]
+                                                                    .filter(
+                                                                        Boolean,
+                                                                    )
+                                                                    .join(
+                                                                        ' · ',
+                                                                    ) || '-'}
+                                                            </td>
+                                                            <td className="text-muted-foreground py-3">
+                                                                {e.fecha_venta ||
+                                                                    '-'}
+                                                            </td>
+                                                            <td className="py-3 font-semibold">
+                                                                {e.proxima_fecha_atencion ||
+                                                                    '-'}
+                                                            </td>
+                                                            <td className="text-muted-foreground py-3">
+                                                                {e.proxima_prueba_hidrostatica ||
+                                                                    '-'}
+                                                            </td>
+                                                            <td className="py-3 text-center">
+                                                                {e.es_descargado ||
+                                                                e.estado ===
+                                                                    'descargado' ||
+                                                                e.estado ===
+                                                                    'usado' ? (
+                                                                    <div className="inline-flex flex-col items-center gap-0.5">
+                                                                        <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-[10.5px] font-bold">
+                                                                            Descargado
+                                                                            /
+                                                                            Usado
+                                                                        </Badge>
+                                                                        <span className="text-destructive text-[10px] font-medium">
+                                                                            Un
+                                                                            solo
+                                                                            uso
+                                                                            ·
+                                                                            Requiere
+                                                                            recarga
+                                                                        </span>
+                                                                    </div>
+                                                                ) : e.tipo_alerta ===
+                                                                  'recarga_y_ph' ? (
+                                                                    <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-[10.5px] font-bold">
+                                                                        Recarga
+                                                                        + P.H.
+                                                                        Vencidas
+                                                                    </Badge>
+                                                                ) : e.tipo_alerta ===
+                                                                  'prueba_hidrostatica' ? (
+                                                                    <Badge className="border-purple-500/30 bg-purple-500/15 text-[10.5px] font-bold text-purple-700 dark:text-purple-300">
+                                                                        P.H.
+                                                                        Vencida
+                                                                        (5 años)
+                                                                    </Badge>
+                                                                ) : e.vencido ? (
+                                                                    <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-[10.5px] font-bold">
+                                                                        Recarga
+                                                                        Vencida
+                                                                        (1 año)
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-[10.5px] font-semibold">
+                                                                        Al día
+                                                                        (Operativo)
+                                                                    </Badge>
+                                                                )}
+                                                            </td>
+                                                            <td className="py-3 text-right">
+                                                                <div className="flex items-center justify-end gap-1.5">
+                                                                    {e.vencido ||
+                                                                    e.es_descargado ||
+                                                                    e.estado ===
+                                                                        'descargado' ||
+                                                                    e.estado ===
+                                                                        'usado' ? (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                handleCotizarRecarga(
+                                                                                    e,
+                                                                                )
+                                                                            }
+                                                                            className="border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary rounded border px-2 py-1 text-[11px] font-bold transition-colors"
+                                                                            title="Generar cotización de recarga para este extintor"
+                                                                        >
+                                                                            +
+                                                                            Recarga
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                handleReportarUso(
+                                                                                    e,
+                                                                                )
+                                                                            }
+                                                                            className="border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded border px-2 py-1 text-[11px] font-semibold transition-colors"
+                                                                            title="Marcar como usado/descargado. Por ser equipo de un solo uso, requiere recarga inmediata."
+                                                                        >
+                                                                            Reportar
+                                                                            uso
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="mt-4 overflow-x-auto">
+                                        <table className="w-full text-left text-xs">
+                                            <thead>
+                                                <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                    <th className="py-2.5">
+                                                        N.º Certificado
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Tipo
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Emisión
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Vigencia hasta
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Estado
+                                                    </th>
+                                                    <th className="py-2.5">
+                                                        Venta
+                                                    </th>
+                                                    <th className="py-2.5 text-right">
+                                                        PDF
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-border divide-y">
+                                                {certificados.length === 0 ? (
+                                                    <tr>
+                                                        <td
+                                                            colSpan={7}
+                                                            className="text-muted-foreground py-8 text-center"
+                                                        >
+                                                            No hay certificados
+                                                            emitidos.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    certificados.map((c) => (
+                                                        <tr
+                                                            key={c.id}
+                                                            className="hover:bg-muted/30"
+                                                        >
+                                                            <td className="text-foreground py-3 font-mono font-bold">
+                                                                {c.numero}
+                                                            </td>
+                                                            <td className="py-3 font-medium">
+                                                                {c.tipo}
+                                                            </td>
+                                                            <td className="text-muted-foreground py-3">
+                                                                {
+                                                                    c.fecha_emision
+                                                                }
+                                                            </td>
+                                                            <td className="py-3 font-semibold">
+                                                                {c.fecha_vigencia_hasta ||
+                                                                    '-'}
+                                                            </td>
+                                                            <td className="py-3">
+                                                                <Badge
+                                                                    className={`text-[10px] ${
+                                                                        c.estado ===
+                                                                        'vigente'
+                                                                            ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
+                                                                            : 'border-destructive/20 bg-destructive/10 text-destructive-strong'
+                                                                    }`}
+                                                                >
+                                                                    {c.estado}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="py-3">
+                                                                {c.venta ? (
+                                                                    <Link
+                                                                        href={VentasRoutes.show.url(
+                                                                            {
+                                                                                current_team:
+                                                                                    teamSlug,
+                                                                                sale: c
+                                                                                    .venta
+                                                                                    .id,
+                                                                            },
+                                                                        )}
+                                                                        className="text-primary-strong font-mono hover:underline"
+                                                                    >
+                                                                        {
+                                                                            c
+                                                                                .venta
+                                                                                .numero
+                                                                        }
+                                                                    </Link>
+                                                                ) : (
+                                                                    '-'
+                                                                )}
+                                                            </td>
+                                                            <td className="py-3 text-right">
+                                                                <Button
+                                                                    asChild
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-7 text-xs"
+                                                                >
+                                                                    <a
+                                                                        href={CertificadosRoutes.pdf.url(
+                                                                            {
+                                                                                current_team:
+                                                                                    teamSlug,
+                                                                                certificate:
+                                                                                    c.id,
+                                                                            },
+                                                                        )}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                    >
+                                                                        Descargar
+                                                                        PDF
+                                                                    </a>
+                                                                </Button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    )}
+
+                    {/* 4. SERVICIOS (Órdenes de servicio) */}
+                    {activeTab === 'servicios' && (
+                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                            <div className="border-border flex items-center justify-between border-b pb-4">
+                                <div>
+                                    <h3 className="text-foreground text-base font-bold">
+                                        Órdenes de servicio
+                                    </h3>
+                                    <p className="text-muted-foreground text-xs">
+                                        Historial técnico de recargas,
+                                        mantenimientos e inspecciones
+                                    </p>
+                                </div>
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    className="bg-primary h-8 rounded-xl text-xs font-bold"
+                                >
+                                    <Link
+                                        href={OrdenesServicioRoutes.index.url({
+                                            current_team: teamSlug,
+                                        })}
+                                    >
+                                        Ver taller
+                                    </Link>
+                                </Button>
+                            </div>
+
                             <div className="mt-4 overflow-x-auto">
                                 <table className="w-full text-left text-xs">
                                     <thead>
                                         <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
                                             <th className="py-2.5">
-                                                N.º Cotización
+                                                Código OS
                                             </th>
                                             <th className="py-2.5">Fecha</th>
-                                            <th className="py-2.5">Vigencia</th>
-                                            <th className="py-2.5">Total</th>
+                                            <th className="py-2.5">Servicio</th>
+                                            <th className="py-2.5">Área</th>
                                             <th className="py-2.5">Estado</th>
-                                            <th className="py-2.5">
-                                                Venta Vinculada
-                                            </th>
+                                            <th className="py-2.5">Técnico</th>
                                             <th className="py-2.5 text-right">
                                                 Acción
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-border divide-y">
-                                        {cotizaciones.length === 0 ? (
+                                        {servicios.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={7}
                                                     className="text-muted-foreground py-8 text-center"
                                                 >
-                                                    No hay cotizaciones
-                                                    registradas.
+                                                    No hay órdenes de servicio
+                                                    registradas para este
+                                                    cliente.
                                                 </td>
                                             </tr>
                                         ) : (
-                                            cotizaciones.map((c) => (
+                                            servicios.map((s) => (
                                                 <tr
-                                                    key={c.id}
+                                                    key={s.id}
                                                     className="hover:bg-muted/30"
                                                 >
                                                     <td className="text-foreground py-3 font-mono font-bold">
-                                                        {c.numero}
+                                                        {s.numero}
                                                     </td>
                                                     <td className="text-muted-foreground py-3">
-                                                        {c.fecha}
+                                                        {s.fecha}
                                                     </td>
-                                                    <td className="text-muted-foreground py-3">
-                                                        {c.vigencia_hasta ||
-                                                            '-'}
+                                                    <td className="py-3 font-semibold">
+                                                        {s.servicio}
                                                     </td>
-                                                    <td className="py-3 font-bold">
-                                                        {soles(c.total)}
+                                                    <td className="py-3">
+                                                        <Badge
+                                                            className={`text-[10.5px] uppercase ${
+                                                                s.area ===
+                                                                'planta'
+                                                                    ? 'border-blue-500/20 bg-blue-500/10 text-blue-600'
+                                                                    : 'border-purple-500/20 bg-purple-500/10 text-purple-600'
+                                                            }`}
+                                                        >
+                                                            {s.area}
+                                                        </Badge>
                                                     </td>
                                                     <td className="py-3">
                                                         <Badge
                                                             variant="outline"
-                                                            className="text-[10px] capitalize"
+                                                            className="text-[11px]"
                                                         >
-                                                            {c.estado}
+                                                            {s.estado_texto ||
+                                                                s.estado}
                                                         </Badge>
                                                     </td>
-                                                    <td className="py-3">
-                                                        {c.venta ? (
-                                                            <Link
-                                                                href={VentasRoutes.show.url(
-                                                                    {
-                                                                        current_team:
-                                                                            teamSlug,
-                                                                        sale: c
-                                                                            .venta
-                                                                            .id,
-                                                                    },
-                                                                )}
-                                                                className="text-primary-strong font-mono font-bold hover:underline"
-                                                            >
-                                                                {c.venta.numero}
-                                                            </Link>
-                                                        ) : (
-                                                            <span className="text-muted-foreground">
-                                                                -
+                                                    <td className="text-muted-foreground py-3">
+                                                        {s.tecnico || (
+                                                            <span className="text-warning-strong font-semibold">
+                                                                Por asignar
                                                             </span>
                                                         )}
                                                     </td>
@@ -1426,315 +1906,21 @@ export default function ClienteShow({
                                                             size="sm"
                                                             className="h-7 text-xs"
                                                         >
-                                                            <a
-                                                                href={CotizacionesRoutes.pdf.url(
-                                                                    {
-                                                                        current_team:
-                                                                            teamSlug,
-                                                                        quote: c.id,
-                                                                    },
-                                                                )}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                            >
-                                                                PDF
-                                                            </a>
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </Card>
-                )}
-
-                {/* 3. EXTINTORES Y CERTIFICADOS */}
-                {activeTab === 'extintores' && (
-                    <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
-                        <div className="border-border flex gap-2 border-b pb-4">
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setExtintoresSubtab('extintores')
-                                }
-                                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                                    extintoresSubtab === 'extintores'
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-muted text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                Parque de extintores ({extintores.length})
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setExtintoresSubtab('certificados')
-                                }
-                                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                                    extintoresSubtab === 'certificados'
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-muted text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                Certificados emitidos ({certificados.length})
-                            </button>
-                        </div>
-
-                        {extintoresSubtab === 'extintores' ? (
-                            <div className="mt-4 overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead>
-                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                            <th className="py-2.5">
-                                                Serie BF-EQ
-                                            </th>
-                                            <th className="py-2.5">Producto</th>
-                                            <th className="py-2.5">
-                                                Capacidad / Marca
-                                            </th>
-                                            <th className="py-2.5">F. Venta</th>
-                                            <th className="py-2.5">
-                                                Próx. Recarga (1 año)
-                                            </th>
-                                            <th className="py-2.5">
-                                                Próx. P.H. (5 años)
-                                            </th>
-                                            <th className="py-2.5 text-center">
-                                                Semáforo
-                                            </th>
-                                            <th className="py-2.5 text-right">
-                                                Acciones
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
-                                        {extintores.length === 0 ? (
-                                            <tr>
-                                                <td
-                                                    colSpan={8}
-                                                    className="text-muted-foreground py-8 text-center"
-                                                >
-                                                    No hay extintores
-                                                    registrados para este
-                                                    cliente.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            extintores.map((e) => (
-                                                <tr
-                                                    key={e.id}
-                                                    className="hover:bg-muted/30"
-                                                >
-                                                    <td className="text-foreground py-3 font-mono font-bold">
-                                                        {e.numero_serie}
-                                                    </td>
-                                                    <td className="py-3 font-medium">
-                                                        {e.producto}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3">
-                                                        {[e.capacidad, e.marca]
-                                                            .filter(Boolean)
-                                                            .join(' · ') || '-'}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3">
-                                                        {e.fecha_venta || '-'}
-                                                    </td>
-                                                    <td className="py-3 font-semibold">
-                                                        {e.proxima_fecha_atencion ||
-                                                            '-'}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3">
-                                                        {e.proxima_prueba_hidrostatica ||
-                                                            '-'}
-                                                    </td>
-                                                    <td className="py-3 text-center">
-                                                        {e.es_descargado ||
-                                                        e.estado ===
-                                                            'descargado' ||
-                                                        e.estado === 'usado' ? (
-                                                            <div className="inline-flex flex-col items-center gap-0.5">
-                                                                <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-[10.5px] font-bold">
-                                                                    Descargado /
-                                                                    Usado
-                                                                </Badge>
-                                                                <span className="text-destructive text-[10px] font-medium">
-                                                                    Un solo uso
-                                                                    · Requiere
-                                                                    recarga
-                                                                </span>
-                                                            </div>
-                                                        ) : e.tipo_alerta ===
-                                                          'recarga_y_ph' ? (
-                                                            <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-[10.5px] font-bold">
-                                                                Recarga + P.H.
-                                                                Vencidas
-                                                            </Badge>
-                                                        ) : e.tipo_alerta ===
-                                                          'prueba_hidrostatica' ? (
-                                                            <Badge className="border-purple-500/30 bg-purple-500/15 text-[10.5px] font-bold text-purple-700 dark:text-purple-300">
-                                                                P.H. Vencida (5
-                                                                años)
-                                                            </Badge>
-                                                        ) : e.vencido ? (
-                                                            <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-[10.5px] font-bold">
-                                                                Recarga Vencida
-                                                                (1 año)
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-[10.5px] font-semibold">
-                                                                Al día
-                                                                (Operativo)
-                                                            </Badge>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 text-right">
-                                                        <div className="flex items-center justify-end gap-1.5">
-                                                            {e.vencido ||
-                                                            e.es_descargado ||
-                                                            e.estado ===
-                                                                'descargado' ||
-                                                            e.estado ===
-                                                                'usado' ? (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        handleCotizarRecarga(
-                                                                            e,
-                                                                        )
-                                                                    }
-                                                                    className="border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary rounded border px-2 py-1 text-[11px] font-bold transition-colors"
-                                                                    title="Generar cotización de recarga para este extintor"
-                                                                >
-                                                                    + Recarga
-                                                                </button>
-                                                            ) : (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        handleReportarUso(
-                                                                            e,
-                                                                        )
-                                                                    }
-                                                                    className="border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded border px-2 py-1 text-[11px] font-semibold transition-colors"
-                                                                    title="Marcar como usado/descargado. Por ser equipo de un solo uso, requiere recarga inmediata."
-                                                                >
-                                                                    Reportar uso
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            <div className="mt-4 overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead>
-                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                            <th className="py-2.5">
-                                                N.º Certificado
-                                            </th>
-                                            <th className="py-2.5">Tipo</th>
-                                            <th className="py-2.5">Emisión</th>
-                                            <th className="py-2.5">
-                                                Vigencia hasta
-                                            </th>
-                                            <th className="py-2.5">Estado</th>
-                                            <th className="py-2.5">Venta</th>
-                                            <th className="py-2.5 text-right">
-                                                PDF
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
-                                        {certificados.length === 0 ? (
-                                            <tr>
-                                                <td
-                                                    colSpan={7}
-                                                    className="text-muted-foreground py-8 text-center"
-                                                >
-                                                    No hay certificados
-                                                    emitidos.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            certificados.map((c) => (
-                                                <tr
-                                                    key={c.id}
-                                                    className="hover:bg-muted/30"
-                                                >
-                                                    <td className="text-foreground py-3 font-mono font-bold">
-                                                        {c.numero}
-                                                    </td>
-                                                    <td className="py-3 font-medium">
-                                                        {c.tipo}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3">
-                                                        {c.fecha_emision}
-                                                    </td>
-                                                    <td className="py-3 font-semibold">
-                                                        {c.fecha_vigencia_hasta ||
-                                                            '-'}
-                                                    </td>
-                                                    <td className="py-3">
-                                                        <Badge
-                                                            className={`text-[10px] ${
-                                                                c.estado ===
-                                                                'vigente'
-                                                                    ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
-                                                                    : 'border-destructive/20 bg-destructive/10 text-destructive-strong'
-                                                            }`}
-                                                        >
-                                                            {c.estado}
-                                                        </Badge>
-                                                    </td>
-                                                    <td className="py-3">
-                                                        {c.venta ? (
                                                             <Link
-                                                                href={VentasRoutes.show.url(
+                                                                href={ComunicacionRoutes.index.url(
                                                                     {
                                                                         current_team:
                                                                             teamSlug,
-                                                                        sale: c
-                                                                            .venta
-                                                                            .id,
+                                                                    },
+                                                                    {
+                                                                        query: {
+                                                                            orden: s.id,
+                                                                        },
                                                                     },
                                                                 )}
-                                                                className="text-primary-strong font-mono hover:underline"
                                                             >
-                                                                {c.venta.numero}
+                                                                Seguimiento
                                                             </Link>
-                                                        ) : (
-                                                            '-'
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 text-right">
-                                                        <Button
-                                                            asChild
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-7 text-xs"
-                                                        >
-                                                            <a
-                                                                href={CertificadosRoutes.pdf.url(
-                                                                    {
-                                                                        current_team:
-                                                                            teamSlug,
-                                                                        certificate:
-                                                                            c.id,
-                                                                    },
-                                                                )}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                            >
-                                                                Descargar PDF
-                                                            </a>
                                                         </Button>
                                                     </td>
                                                 </tr>
@@ -1743,243 +1929,263 @@ export default function ClienteShow({
                                     </tbody>
                                 </table>
                             </div>
-                        )}
-                    </Card>
-                )}
+                        </Card>
+                    )}
 
-                {/* 4. SERVICIOS (Órdenes de servicio) */}
-                {activeTab === 'servicios' && (
-                    <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
-                        <div className="border-border flex items-center justify-between border-b pb-4">
-                            <div>
-                                <h3 className="text-foreground text-base font-bold">
-                                    Órdenes de servicio
-                                </h3>
-                                <p className="text-muted-foreground text-xs">
-                                    Historial técnico de recargas,
-                                    mantenimientos e inspecciones
-                                </p>
-                            </div>
-                            <Button
-                                asChild
-                                size="sm"
-                                className="bg-primary h-8 rounded-xl text-xs font-bold"
-                            >
-                                <Link
-                                    href={OrdenesServicioRoutes.index.url({
-                                        current_team: teamSlug,
-                                    })}
-                                >
-                                    Ver taller
-                                </Link>
-                            </Button>
-                        </div>
+                    {/* 5. COBRANZAS (Cuotas + Pagos) */}
+                    {activeTab === 'cobranzas' && (
+                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                            <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setCobranzasSubtab('cuotas')
+                                        }
+                                        className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                                            cobranzasSubtab === 'cuotas'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-muted text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        Cuotas y saldos (
+                                        {cobranzas.cuotas?.length || 0})
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setCobranzasSubtab('pagos')
+                                        }
+                                        className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                                            cobranzasSubtab === 'pagos'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-muted text-muted-foreground hover:text-foreground'
+                                        }`}
+                                    >
+                                        Historial de pagos (
+                                        {cobranzas.pagos?.length || 0})
+                                    </button>
+                                </div>
 
-                        <div className="mt-4 overflow-x-auto">
-                            <table className="w-full text-left text-xs">
-                                <thead>
-                                    <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                        <th className="py-2.5">Código OS</th>
-                                        <th className="py-2.5">Fecha</th>
-                                        <th className="py-2.5">Servicio</th>
-                                        <th className="py-2.5">Área</th>
-                                        <th className="py-2.5">Estado</th>
-                                        <th className="py-2.5">Técnico</th>
-                                        <th className="py-2.5 text-right">
-                                            Acción
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-border divide-y">
-                                    {servicios.length === 0 ? (
-                                        <tr>
-                                            <td
-                                                colSpan={7}
-                                                className="text-muted-foreground py-8 text-center"
-                                            >
-                                                No hay órdenes de servicio
-                                                registradas para este cliente.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        servicios.map((s) => (
-                                            <tr
-                                                key={s.id}
-                                                className="hover:bg-muted/30"
-                                            >
-                                                <td className="text-foreground py-3 font-mono font-bold">
-                                                    {s.numero}
-                                                </td>
-                                                <td className="text-muted-foreground py-3">
-                                                    {s.fecha}
-                                                </td>
-                                                <td className="py-3 font-semibold">
-                                                    {s.servicio}
-                                                </td>
-                                                <td className="py-3">
-                                                    <Badge
-                                                        className={`text-[10.5px] uppercase ${
-                                                            s.area === 'planta'
-                                                                ? 'border-blue-500/20 bg-blue-500/10 text-blue-600'
-                                                                : 'border-purple-500/20 bg-purple-500/10 text-purple-600'
-                                                        }`}
-                                                    >
-                                                        {s.area}
-                                                    </Badge>
-                                                </td>
-                                                <td className="py-3">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="text-[11px]"
-                                                    >
-                                                        {s.estado_texto ||
-                                                            s.estado}
-                                                    </Badge>
-                                                </td>
-                                                <td className="text-muted-foreground py-3">
-                                                    {s.tecnico || (
-                                                        <span className="text-warning-strong font-semibold">
-                                                            Por asignar
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="py-3 text-right">
-                                                    <Button
-                                                        asChild
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="h-7 text-xs"
-                                                    >
-                                                        <Link
-                                                            href={ComunicacionRoutes.index.url(
-                                                                {
-                                                                    current_team:
-                                                                        teamSlug,
-                                                                },
-                                                                {
-                                                                    query: {
-                                                                        orden: s.id,
-                                                                    },
-                                                                },
-                                                            )}
-                                                        >
-                                                            Seguimiento
-                                                        </Link>
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
-                )}
-
-                {/* 5. COBRANZAS (Cuotas + Pagos) */}
-                {activeTab === 'cobranzas' && (
-                    <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
-                        <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-4">
-                            <div className="flex gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setCobranzasSubtab('cuotas')}
-                                    className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                                        cobranzasSubtab === 'cuotas'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-muted text-muted-foreground hover:text-foreground'
-                                    }`}
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 rounded-xl text-xs font-bold"
                                 >
-                                    Cuotas y saldos (
-                                    {cobranzas.cuotas?.length || 0})
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setCobranzasSubtab('pagos')}
-                                    className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                                        cobranzasSubtab === 'pagos'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-muted text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    Historial de pagos (
-                                    {cobranzas.pagos?.length || 0})
-                                </button>
+                                    <Link
+                                        href={CobranzasRoutes.index.url({
+                                            current_team: teamSlug,
+                                        })}
+                                    >
+                                        Ir a cobranzas generales
+                                    </Link>
+                                </Button>
                             </div>
 
-                            <Button
-                                asChild
-                                size="sm"
-                                variant="outline"
-                                className="h-8 rounded-xl text-xs font-bold"
-                            >
-                                <Link
-                                    href={CobranzasRoutes.index.url({
-                                        current_team: teamSlug,
-                                    })}
-                                >
-                                    Ir a cobranzas generales
-                                </Link>
-                            </Button>
-                        </div>
-
-                        {cobranzasSubtab === 'cuotas' ? (
-                            <div className="mt-4 overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead>
-                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                            <th className="py-2.5">Venta</th>
-                                            <th className="py-2.5">Cuota</th>
-                                            <th className="py-2.5">Monto</th>
-                                            <th className="py-2.5">Saldo</th>
-                                            <th className="py-2.5">
-                                                Vencimiento
-                                            </th>
-                                            <th className="py-2.5">Estado</th>
-                                            <th className="py-2.5 text-right">
-                                                Recordatorio
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
-                                        {!cobranzas.cuotas ||
-                                        cobranzas.cuotas.length === 0 ? (
-                                            <tr>
-                                                <td
-                                                    colSpan={7}
-                                                    className="text-muted-foreground py-8 text-center"
-                                                >
-                                                    No hay cuotas de crédito
-                                                    registradas para este
-                                                    cliente.
-                                                </td>
+                            {cobranzasSubtab === 'cuotas' ? (
+                                <div className="mt-4 overflow-x-auto">
+                                    <table className="w-full text-left text-xs">
+                                        <thead>
+                                            <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                <th className="py-2.5">
+                                                    Venta
+                                                </th>
+                                                <th className="py-2.5">
+                                                    Cuota
+                                                </th>
+                                                <th className="py-2.5">
+                                                    Monto
+                                                </th>
+                                                <th className="py-2.5">
+                                                    Saldo
+                                                </th>
+                                                <th className="py-2.5">
+                                                    Vencimiento
+                                                </th>
+                                                <th className="py-2.5">
+                                                    Estado
+                                                </th>
+                                                <th className="py-2.5 text-right">
+                                                    Recordatorio
+                                                </th>
                                             </tr>
-                                        ) : (
-                                            cobranzas.cuotas.map((cuota) => {
-                                                const isVencido =
-                                                    cuota.estado === 'vencido';
-                                                const phoneClean = (
-                                                    client.whatsapp ||
-                                                    client.telefono ||
-                                                    ''
-                                                ).replace(/\D/g, '');
-                                                const waText =
-                                                    encodeURIComponent(
-                                                        `Hola ${client.razon_social}, le recordamos su cuota ${cuota.numero_cuota} de ${soles(cuota.monto)} con saldo pendiente de ${soles(cuota.saldo)} que venció el ${fechaCorta(cuota.fecha_vencimiento)}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
-                                                    );
+                                        </thead>
+                                        <tbody className="divide-border divide-y">
+                                            {!cobranzas.cuotas ||
+                                            cobranzas.cuotas.length === 0 ? (
+                                                <tr>
+                                                    <td
+                                                        colSpan={7}
+                                                        className="text-muted-foreground py-8 text-center"
+                                                    >
+                                                        No hay cuotas de crédito
+                                                        registradas para este
+                                                        cliente.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                cobranzas.cuotas.map(
+                                                    (cuota) => {
+                                                        const isVencido =
+                                                            cuota.estado ===
+                                                            'vencido';
+                                                        const phoneClean = (
+                                                            client.whatsapp ||
+                                                            client.telefono ||
+                                                            ''
+                                                        ).replace(/\D/g, '');
+                                                        const waText =
+                                                            encodeURIComponent(
+                                                                `Hola ${client.razon_social}, le recordamos su cuota ${cuota.numero_cuota} de ${soles(cuota.monto)} con saldo pendiente de ${soles(cuota.saldo)} que venció el ${fechaCorta(cuota.fecha_vencimiento)}. ¿Podría confirmarnos su fecha estimada de pago? Muchas gracias.`,
+                                                            );
 
-                                                return (
+                                                        return (
+                                                            <tr
+                                                                key={cuota.id}
+                                                                className="hover:bg-muted/30"
+                                                            >
+                                                                <td className="text-foreground py-3 font-mono font-bold">
+                                                                    <Link
+                                                                        href={VentasRoutes.show.url(
+                                                                            {
+                                                                                current_team:
+                                                                                    teamSlug,
+                                                                                sale: cuota
+                                                                                    .venta
+                                                                                    .id,
+                                                                            },
+                                                                        )}
+                                                                        className="hover:text-primary-strong hover:underline"
+                                                                    >
+                                                                        {
+                                                                            cuota
+                                                                                .venta
+                                                                                .numero
+                                                                        }
+                                                                    </Link>
+                                                                </td>
+                                                                <td className="py-3 font-semibold">
+                                                                    Cuota{' '}
+                                                                    {
+                                                                        cuota.numero_cuota
+                                                                    }
+                                                                </td>
+                                                                <td className="text-muted-foreground py-3">
+                                                                    {soles(
+                                                                        cuota.monto,
+                                                                    )}
+                                                                </td>
+                                                                <td className="text-foreground py-3 font-bold">
+                                                                    {soles(
+                                                                        cuota.saldo,
+                                                                    )}
+                                                                </td>
+                                                                <td className="py-3 font-semibold">
+                                                                    {
+                                                                        cuota.fecha_vencimiento
+                                                                    }
+                                                                    {isVencido &&
+                                                                        cuota.dias_vencido >
+                                                                            0 && (
+                                                                            <span className="text-destructive-strong block text-[10px]">
+                                                                                Hace{' '}
+                                                                                {
+                                                                                    cuota.dias_vencido
+                                                                                }{' '}
+                                                                                día(s)
+                                                                            </span>
+                                                                        )}
+                                                                </td>
+                                                                <td className="py-3">
+                                                                    <Badge
+                                                                        className={`text-[10px] ${
+                                                                            isVencido
+                                                                                ? 'border-destructive/20 bg-destructive/10 text-destructive-strong'
+                                                                                : 'text-warning-strong border-amber-500/20 bg-amber-500/10'
+                                                                        }`}
+                                                                    >
+                                                                        {
+                                                                            cuota.estado
+                                                                        }
+                                                                    </Badge>
+                                                                </td>
+                                                                <td className="py-3 text-right">
+                                                                    {phoneClean ? (
+                                                                        <a
+                                                                            href={`https://wa.me/${phoneClean}?text=${waText}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="text-success-strong inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-bold hover:bg-emerald-500/20 dark:text-emerald-400"
+                                                                        >
+                                                                            <MessageSquare className="size-3" />
+                                                                            WhatsApp
+                                                                        </a>
+                                                                    ) : (
+                                                                        <span className="text-muted-foreground text-[11px]">
+                                                                            Sin
+                                                                            teléfono
+                                                                        </span>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    },
+                                                )
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="mt-4 overflow-x-auto">
+                                    <table className="w-full text-left text-xs">
+                                        <thead>
+                                            <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                <th className="py-2.5">
+                                                    Fecha
+                                                </th>
+                                                <th className="py-2.5">
+                                                    Venta
+                                                </th>
+                                                <th className="py-2.5">
+                                                    Monto Pagado
+                                                </th>
+                                                <th className="py-2.5">
+                                                    Forma de Pago
+                                                </th>
+                                                <th className="py-2.5">
+                                                    N.º Operación
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-border divide-y">
+                                            {!cobranzas.pagos ||
+                                            cobranzas.pagos.length === 0 ? (
+                                                <tr>
+                                                    <td
+                                                        colSpan={5}
+                                                        className="text-muted-foreground py-8 text-center"
+                                                    >
+                                                        No hay pagos
+                                                        registrados.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                cobranzas.pagos.map((pago) => (
                                                     <tr
-                                                        key={cuota.id}
+                                                        key={pago.id}
                                                         className="hover:bg-muted/30"
                                                     >
+                                                        <td className="text-muted-foreground py-3">
+                                                            {pago.fecha}
+                                                        </td>
                                                         <td className="text-foreground py-3 font-mono font-bold">
                                                             <Link
                                                                 href={VentasRoutes.show.url(
                                                                     {
                                                                         current_team:
                                                                             teamSlug,
-                                                                        sale: cuota
+                                                                        sale: pago
                                                                             .venta
                                                                             .id,
                                                                     },
@@ -1987,354 +2193,248 @@ export default function ClienteShow({
                                                                 className="hover:text-primary-strong hover:underline"
                                                             >
                                                                 {
-                                                                    cuota.venta
+                                                                    pago.venta
                                                                         .numero
                                                                 }
                                                             </Link>
                                                         </td>
-                                                        <td className="py-3 font-semibold">
-                                                            Cuota{' '}
-                                                            {cuota.numero_cuota}
+                                                        <td className="text-success-strong py-3 font-bold">
+                                                            {soles(pago.monto)}
                                                         </td>
-                                                        <td className="text-muted-foreground py-3">
-                                                            {soles(cuota.monto)}
+                                                        <td className="text-muted-foreground py-3 capitalize">
+                                                            {pago.forma_pago}
                                                         </td>
-                                                        <td className="text-foreground py-3 font-bold">
-                                                            {soles(cuota.saldo)}
-                                                        </td>
-                                                        <td className="py-3 font-semibold">
-                                                            {
-                                                                cuota.fecha_vencimiento
-                                                            }
-                                                            {isVencido &&
-                                                                cuota.dias_vencido >
-                                                                    0 && (
-                                                                    <span className="text-destructive-strong block text-[10px]">
-                                                                        Hace{' '}
-                                                                        {
-                                                                            cuota.dias_vencido
-                                                                        }{' '}
-                                                                        día(s)
-                                                                    </span>
-                                                                )}
-                                                        </td>
-                                                        <td className="py-3">
-                                                            <Badge
-                                                                className={`text-[10px] ${
-                                                                    isVencido
-                                                                        ? 'border-destructive/20 bg-destructive/10 text-destructive-strong'
-                                                                        : 'text-warning-strong border-amber-500/20 bg-amber-500/10'
-                                                                }`}
-                                                            >
-                                                                {cuota.estado}
-                                                            </Badge>
-                                                        </td>
-                                                        <td className="py-3 text-right">
-                                                            {phoneClean ? (
-                                                                <a
-                                                                    href={`https://wa.me/${phoneClean}?text=${waText}`}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="text-success-strong inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-bold hover:bg-emerald-500/20 dark:text-emerald-400"
-                                                                >
-                                                                    <MessageSquare className="size-3" />
-                                                                    WhatsApp
-                                                                </a>
-                                                            ) : (
-                                                                <span className="text-muted-foreground text-[11px]">
-                                                                    Sin teléfono
-                                                                </span>
-                                                            )}
+                                                        <td className="text-muted-foreground py-3 font-mono">
+                                                            {pago.numero_operacion ||
+                                                                '-'}
                                                         </td>
                                                     </tr>
-                                                );
-                                            })
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            <div className="mt-4 overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead>
-                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                            <th className="py-2.5">Fecha</th>
-                                            <th className="py-2.5">Venta</th>
-                                            <th className="py-2.5">
-                                                Monto Pagado
-                                            </th>
-                                            <th className="py-2.5">
-                                                Forma de Pago
-                                            </th>
-                                            <th className="py-2.5">
-                                                N.º Operación
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
-                                        {!cobranzas.pagos ||
-                                        cobranzas.pagos.length === 0 ? (
-                                            <tr>
-                                                <td
-                                                    colSpan={5}
-                                                    className="text-muted-foreground py-8 text-center"
-                                                >
-                                                    No hay pagos registrados.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            cobranzas.pagos.map((pago) => (
-                                                <tr
-                                                    key={pago.id}
-                                                    className="hover:bg-muted/30"
-                                                >
-                                                    <td className="text-muted-foreground py-3">
-                                                        {pago.fecha}
-                                                    </td>
-                                                    <td className="text-foreground py-3 font-mono font-bold">
-                                                        <Link
-                                                            href={VentasRoutes.show.url(
-                                                                {
-                                                                    current_team:
-                                                                        teamSlug,
-                                                                    sale: pago
-                                                                        .venta
-                                                                        .id,
-                                                                },
-                                                            )}
-                                                            className="hover:text-primary-strong hover:underline"
-                                                        >
-                                                            {pago.venta.numero}
-                                                        </Link>
-                                                    </td>
-                                                    <td className="text-success-strong py-3 font-bold">
-                                                        {soles(pago.monto)}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3 capitalize">
-                                                        {pago.forma_pago}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3 font-mono">
-                                                        {pago.numero_operacion ||
-                                                            '-'}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </Card>
-                )}
-
-                {/* 6. DATOS Y SEDES (Comerciales, Sedes, Vehículos, Historial) */}
-                {activeTab === 'datos' && (
-                    <div className="space-y-6">
-                        {/* Sedes del cliente */}
-                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
-                            <div className="border-border flex items-center justify-between border-b pb-4">
-                                <div>
-                                    <h3 className="text-foreground text-base font-bold">
-                                        Sedes y sucursales ({sites.length})
-                                    </h3>
-                                    <p className="text-muted-foreground text-xs">
-                                        Puntos de entrega, locales y almacenes
-                                        del cliente
-                                    </p>
-                                </div>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={openCreateSite}
-                                    className="bg-primary h-8 rounded-xl text-xs font-bold"
-                                >
-                                    <Plus className="mr-1 size-3.5" />
-                                    Agregar sede
-                                </Button>
-                            </div>
-
-                            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                {sites.length === 0 ? (
-                                    <p className="text-muted-foreground col-span-full py-6 text-center text-xs">
-                                        No hay sedes registradas para este
-                                        cliente.
-                                    </p>
-                                ) : (
-                                    sites.map((s) => (
-                                        <Card
-                                            key={s.id}
-                                            className="border-border rounded-xl border p-4 shadow-none"
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="text-[10px] uppercase"
-                                                    >
-                                                        {s.tipo}
-                                                    </Badge>
-                                                    <h4 className="text-foreground mt-1 text-sm font-bold">
-                                                        {s.nombre}
-                                                    </h4>
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            openEditSite(s)
-                                                        }
-                                                        className="text-muted-foreground hover:text-foreground p-1"
-                                                    >
-                                                        <Edit3 className="size-3.5" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            deleteSite(s.id)
-                                                        }
-                                                        className="text-muted-foreground hover:text-destructive-strong p-1"
-                                                    >
-                                                        <Trash2 className="size-3.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <p className="text-muted-foreground mt-2 text-xs">
-                                                {s.direccion}
-                                            </p>
-                                            {s.contacto && (
-                                                <p className="text-muted-foreground mt-1 text-[11px]">
-                                                    Contacto:{' '}
-                                                    <span className="text-foreground">
-                                                        {s.contacto}
-                                                    </span>
-                                                    {s.telefono
-                                                        ? ` (${s.telefono})`
-                                                        : ''}
-                                                </p>
+                                                ))
                                             )}
-                                        </Card>
-                                    ))
-                                )}
-                            </div>
-                        </Card>
-
-                        {/* Vehículos del cliente */}
-                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
-                            <div className="border-border flex items-center justify-between border-b pb-4">
-                                <div>
-                                    <h3 className="text-foreground text-base font-bold">
-                                        Vehículos registrados ({vehicles.length}
-                                        )
-                                    </h3>
-                                    <p className="text-muted-foreground text-xs">
-                                        Unidades móviles para extintores
-                                        rodantes o vehiculares
-                                    </p>
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={openCreateVehicle}
-                                    className="bg-primary h-8 rounded-xl text-xs font-bold"
-                                >
-                                    <Plus className="mr-1 size-3.5" />
-                                    Agregar vehículo
-                                </Button>
-                            </div>
-
-                            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                {vehicles.length === 0 ? (
-                                    <p className="text-muted-foreground col-span-full py-6 text-center text-xs">
-                                        No hay vehículos registrados para este
-                                        cliente.
-                                    </p>
-                                ) : (
-                                    vehicles.map((v) => (
-                                        <Card
-                                            key={v.id}
-                                            className="border-border rounded-xl border p-4 shadow-none"
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <Car className="text-primary-strong size-4" />
-                                                    <h4 className="text-foreground font-mono text-base font-bold">
-                                                        {v.placa}
-                                                    </h4>
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            openEditVehicle(v)
-                                                        }
-                                                        className="text-muted-foreground hover:text-foreground p-1"
-                                                    >
-                                                        <Edit3 className="size-3.5" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            deleteVehicle(v.id)
-                                                        }
-                                                        className="text-muted-foreground hover:text-destructive-strong p-1"
-                                                    >
-                                                        <Trash2 className="size-3.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <p className="text-muted-foreground mt-1 text-xs">
-                                                {[v.marca, v.modelo]
-                                                    .filter(Boolean)
-                                                    .join(' ') ||
-                                                    'Sin marca/modelo'}
-                                            </p>
-                                            {v.descripcion && (
-                                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                                    {v.descripcion}
-                                                </p>
-                                            )}
-                                        </Card>
-                                    ))
-                                )}
-                            </div>
+                            )}
                         </Card>
+                    )}
 
-                        {/* Historial en línea de tiempo */}
-                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
-                            <div className="border-border flex items-center gap-2 border-b pb-3">
-                                <History className="text-primary-strong size-4" />
-                                <h3 className="text-foreground text-base font-bold">
-                                    Historial de actividad
-                                </h3>
-                            </div>
-
-                            <div className="mt-4">
-                                {historial.length === 0 ? (
-                                    <p className="text-muted-foreground py-6 text-center text-xs">
-                                        Sin eventos de historial registrados.
-                                    </p>
-                                ) : (
-                                    <div className="border-border relative space-y-4 border-l pl-4">
-                                        {historial.map((h, idx) => (
-                                            <div key={idx} className="relative">
-                                                <span className="bg-primary absolute top-1.5 -left-[21px] size-2.5 rounded-full" />
-                                                <div className="text-foreground text-xs font-semibold">
-                                                    {h.texto}
-                                                </div>
-                                                <div className="text-muted-foreground text-[11px]">
-                                                    {h.fecha}{' '}
-                                                    {h.usuario
-                                                        ? `· Por ${h.usuario}`
-                                                        : ''}
-                                                </div>
-                                            </div>
-                                        ))}
+                    {/* 6. DATOS Y SEDES (Comerciales, Sedes, Vehículos, Historial) */}
+                    {activeTab === 'datos' && (
+                        <div className="space-y-6">
+                            {/* Sedes del cliente */}
+                            <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                                <div className="border-border flex items-center justify-between border-b pb-4">
+                                    <div>
+                                        <h3 className="text-foreground text-base font-bold">
+                                            Sedes y sucursales ({sites.length})
+                                        </h3>
+                                        <p className="text-muted-foreground text-xs">
+                                            Puntos de entrega, locales y
+                                            almacenes del cliente
+                                        </p>
                                     </div>
-                                )}
-                            </div>
-                        </Card>
-                    </div>
-                )}
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={openCreateSite}
+                                        className="bg-primary h-8 rounded-xl text-xs font-bold"
+                                    >
+                                        <Plus className="mr-1 size-3.5" />
+                                        Agregar sede
+                                    </Button>
+                                </div>
+
+                                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    {sites.length === 0 ? (
+                                        <p className="text-muted-foreground col-span-full py-6 text-center text-xs">
+                                            No hay sedes registradas para este
+                                            cliente.
+                                        </p>
+                                    ) : (
+                                        sites.map((s) => (
+                                            <Card
+                                                key={s.id}
+                                                className="border-border rounded-xl border p-4 shadow-none"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-[10px] uppercase"
+                                                        >
+                                                            {s.tipo}
+                                                        </Badge>
+                                                        <h4 className="text-foreground mt-1 text-sm font-bold">
+                                                            {s.nombre}
+                                                        </h4>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                openEditSite(s)
+                                                            }
+                                                            className="text-muted-foreground hover:text-foreground p-1"
+                                                        >
+                                                            <Edit3 className="size-3.5" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                deleteSite(s.id)
+                                                            }
+                                                            className="text-muted-foreground hover:text-destructive-strong p-1"
+                                                        >
+                                                            <Trash2 className="size-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p className="text-muted-foreground mt-2 text-xs">
+                                                    {s.direccion}
+                                                </p>
+                                                {s.contacto && (
+                                                    <p className="text-muted-foreground mt-1 text-[11px]">
+                                                        Contacto:{' '}
+                                                        <span className="text-foreground">
+                                                            {s.contacto}
+                                                        </span>
+                                                        {s.telefono
+                                                            ? ` (${s.telefono})`
+                                                            : ''}
+                                                    </p>
+                                                )}
+                                            </Card>
+                                        ))
+                                    )}
+                                </div>
+                            </Card>
+
+                            {/* Vehículos del cliente */}
+                            <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                                <div className="border-border flex items-center justify-between border-b pb-4">
+                                    <div>
+                                        <h3 className="text-foreground text-base font-bold">
+                                            Vehículos registrados (
+                                            {vehicles.length})
+                                        </h3>
+                                        <p className="text-muted-foreground text-xs">
+                                            Unidades móviles para extintores
+                                            rodantes o vehiculares
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={openCreateVehicle}
+                                        className="bg-primary h-8 rounded-xl text-xs font-bold"
+                                    >
+                                        <Plus className="mr-1 size-3.5" />
+                                        Agregar vehículo
+                                    </Button>
+                                </div>
+
+                                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    {vehicles.length === 0 ? (
+                                        <p className="text-muted-foreground col-span-full py-6 text-center text-xs">
+                                            No hay vehículos registrados para
+                                            este cliente.
+                                        </p>
+                                    ) : (
+                                        vehicles.map((v) => (
+                                            <Card
+                                                key={v.id}
+                                                className="border-border rounded-xl border p-4 shadow-none"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Car className="text-primary-strong size-4" />
+                                                        <h4 className="text-foreground font-mono text-base font-bold">
+                                                            {v.placa}
+                                                        </h4>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                openEditVehicle(
+                                                                    v,
+                                                                )
+                                                            }
+                                                            className="text-muted-foreground hover:text-foreground p-1"
+                                                        >
+                                                            <Edit3 className="size-3.5" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                deleteVehicle(
+                                                                    v.id,
+                                                                )
+                                                            }
+                                                            className="text-muted-foreground hover:text-destructive-strong p-1"
+                                                        >
+                                                            <Trash2 className="size-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p className="text-muted-foreground mt-1 text-xs">
+                                                    {[v.marca, v.modelo]
+                                                        .filter(Boolean)
+                                                        .join(' ') ||
+                                                        'Sin marca/modelo'}
+                                                </p>
+                                                {v.descripcion && (
+                                                    <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                                        {v.descripcion}
+                                                    </p>
+                                                )}
+                                            </Card>
+                                        ))
+                                    )}
+                                </div>
+                            </Card>
+
+                            {/* Historial en línea de tiempo */}
+                            <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                                <div className="border-border flex items-center gap-2 border-b pb-3">
+                                    <History className="text-primary-strong size-4" />
+                                    <h3 className="text-foreground text-base font-bold">
+                                        Historial de actividad
+                                    </h3>
+                                </div>
+
+                                <div className="mt-4">
+                                    {historial.length === 0 ? (
+                                        <p className="text-muted-foreground py-6 text-center text-xs">
+                                            Sin eventos de historial
+                                            registrados.
+                                        </p>
+                                    ) : (
+                                        <div className="border-border relative space-y-4 border-l pl-4">
+                                            {historial.map((h, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="relative"
+                                                >
+                                                    <span className="bg-primary absolute top-1.5 -left-[21px] size-2.5 rounded-full" />
+                                                    <div className="text-foreground text-xs font-semibold">
+                                                        {h.texto}
+                                                    </div>
+                                                    <div className="text-muted-foreground text-[11px]">
+                                                        {h.fecha}{' '}
+                                                        {h.usuario
+                                                            ? `· Por ${h.usuario}`
+                                                            : ''}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* ================= MODAL EDITAR CLIENTE ================= */}

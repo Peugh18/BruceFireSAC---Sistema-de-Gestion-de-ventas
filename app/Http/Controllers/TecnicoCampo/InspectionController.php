@@ -54,7 +54,7 @@ class InspectionController extends Controller
         if ($tab === 'pendientes') {
             $query->whereIn('estado', ['pendiente_recepcion', 'recibido_planta']);
         } elseif ($tab === 'en_proceso') {
-            $query->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion']);
+            $query->whereIn('estado', ['en_proceso', 'esperando_autorizacion']);
         } elseif ($tab === 'finalizadas') {
             $query->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado']);
         }
@@ -71,7 +71,7 @@ class InspectionController extends Controller
         $stats = [
             'total' => (clone $baseStatsQuery)->count(),
             'pendientes' => (clone $baseStatsQuery)->whereIn('estado', ['pendiente_recepcion', 'recibido_planta'])->count(),
-            'en_proceso' => (clone $baseStatsQuery)->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion'])->count(),
+            'en_proceso' => (clone $baseStatsQuery)->whereIn('estado', ['en_proceso', 'esperando_autorizacion'])->count(),
             'finalizadas' => (clone $baseStatsQuery)->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
         ];
 

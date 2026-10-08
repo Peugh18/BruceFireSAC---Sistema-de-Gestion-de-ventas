@@ -190,7 +190,7 @@ test('A2: dos finalizaciones simultaneas de la inspeccion no emiten dos certific
     $team->members()->attach($user, ['role' => TeamRole::Admin->value]);
     $user->assignRole('TecnicoCampo');
 
-    $order = ServiceOrder::factory()->create(['departamento_tecnico' => 'campo', 'estado' => 'en_revision']);
+    $order = ServiceOrder::factory()->create(['departamento_tecnico' => 'campo', 'estado' => 'recibido_planta']);
     $equipo = Equipment::factory()->create(['client_id' => $order->client_id]);
     $order->equipments()->attach($equipo->id);
     TechnicalChecklist::create([
@@ -446,11 +446,11 @@ test('M6: no se crea nota de debito sobre una venta que se anulo en la carrera',
 
 test('M7: un checklist conforme no rebobina una orden que ya quedo esperando autorizacion', function () {
     $user = User::factory()->create();
-    $order = ServiceOrder::factory()->create(['estado' => 'en_revision']);
+    $order = ServiceOrder::factory()->create(['estado' => 'recibido_planta']);
     $equipo = Equipment::factory()->create(['client_id' => $order->client_id]);
     $order->equipments()->attach($equipo->id);
 
-    // La orden se cargó en en_revision, pero otro checklist concurrente ya la
+    // La orden se cargó en recibido_planta, pero otro checklist concurrente ya la
     // dejó esperando autorización antes de que esta transacción escribiera.
     $obsoleto = ServiceOrder::query()->findOrFail($order->id);
     DB::table('service_orders')->where('id', $order->id)->update(['estado' => 'esperando_autorizacion']);
@@ -563,7 +563,7 @@ test('B3: una venta vieja se sigue editando con la fecha que ya tenia', function
 test('B4: "sin carga" marca el extintor como descargado y el control explicito tambien', function () {
     $user = User::factory()->create();
 
-    $ordenTexto = ServiceOrder::factory()->create(['estado' => 'en_revision']);
+    $ordenTexto = ServiceOrder::factory()->create(['estado' => 'recibido_planta']);
     $equipoTexto = Equipment::factory()->create(['client_id' => $ordenTexto->client_id, 'estado' => 'operativo']);
     $ordenTexto->equipments()->attach($equipoTexto->id);
 
@@ -572,7 +572,7 @@ test('B4: "sin carga" marca el extintor como descargado y el control explicito t
         'items' => ['agente_carga' => ['estado' => 'observado', 'condicion' => 'Extintor sin carga']],
     ]);
 
-    $ordenControl = ServiceOrder::factory()->create(['estado' => 'en_revision']);
+    $ordenControl = ServiceOrder::factory()->create(['estado' => 'recibido_planta']);
     $equipoControl = Equipment::factory()->create(['client_id' => $ordenControl->client_id, 'estado' => 'operativo']);
     $ordenControl->equipments()->attach($equipoControl->id);
 
@@ -598,7 +598,7 @@ test('B5: los equipos conformes del certificado se resuelven en una sola consult
     $team->members()->attach($user, ['role' => TeamRole::Admin->value]);
     $user->assignRole('TecnicoCampo');
 
-    $order = ServiceOrder::factory()->create(['departamento_tecnico' => 'campo', 'estado' => 'en_revision']);
+    $order = ServiceOrder::factory()->create(['departamento_tecnico' => 'campo', 'estado' => 'recibido_planta']);
 
     foreach (range(1, 3) as $i) {
         $equipo = Equipment::factory()->create(['client_id' => $order->client_id]);

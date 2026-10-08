@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 
 import { Cargando } from '@/components/cargando';
 import type { CatalogItem, CatalogUnit } from '@/components/catalog-picker';
+import {
+    UNIDADES_DIALOG_CLASES,
+    UNIDADES_TITULO_CLASES,
+    UnidadResumen,
+    useUnidadesDeProducto,
+} from '@/components/unidades-compartidas';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -11,7 +17,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import catalogo from '@/routes/vendedor/catalogo';
 
 /**
  * Al elegir por nombre un producto con serie, muestra sus unidades
@@ -32,32 +37,17 @@ export default function UnidadesDialog({
     onClose: () => void;
     onAgregar: (unidades: CatalogUnit[]) => void;
 }) {
-    const [unidades, setUnidades] = useState<CatalogUnit[] | null>(null);
+    const unidades = useUnidadesDeProducto({
+        teamSlug,
+        productId: producto?.id ?? null,
+        sedeId,
+        excluir,
+    });
     const [marcadas, setMarcadas] = useState<number[]>([]);
 
+    // Al cambiar de producto, la selección empieza de cero.
     useEffect(() => {
-        if (!producto) {
-            return;
-        }
-
-        setUnidades(null);
         setMarcadas([]);
-        void fetch(
-            catalogo.unidades.url(teamSlug, {
-                query: {
-                    product_id: producto.id,
-                    sede_id: sedeId || undefined,
-                },
-            }),
-        )
-            .then((r) => r.json())
-            .then((data: CatalogUnit[]) =>
-                setUnidades(
-                    data.filter((u) => !excluir.includes(u.numero_serie)),
-                ),
-            )
-            .catch(() => setUnidades([]));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [producto]);
 
     const alternar = (id: number) =>
@@ -72,9 +62,9 @@ export default function UnidadesDialog({
             open={producto !== null}
             onOpenChange={(open) => !open && onClose()}
         >
-            <DialogContent className="border-border bg-card max-h-[85vh] overflow-y-auto rounded-[16px] sm:max-w-lg">
+            <DialogContent className={UNIDADES_DIALOG_CLASES}>
                 <DialogHeader>
-                    <DialogTitle className="font-['Oswald',sans-serif] text-[19px] font-semibold uppercase">
+                    <DialogTitle className={UNIDADES_TITULO_CLASES}>
                         {producto?.nombre}
                     </DialogTitle>
                     <DialogDescription className="text-[12.5px]">
@@ -127,19 +117,7 @@ export default function UnidadesDialog({
                                     }
                                     className="accent-primary size-4"
                                 />
-                                <span className="font-['IBM_Plex_Mono',monospace] text-[12.5px] font-bold">
-                                    {unidad.numero_serie}
-                                </span>
-                                <span className="text-muted-foreground text-[12px]">
-                                    {[
-                                        unidad.capacidad,
-                                        unidad.marca,
-                                        unidad.serie_fabricante &&
-                                            `N° ${unidad.serie_fabricante}`,
-                                    ]
-                                        .filter(Boolean)
-                                        .join(' · ')}
-                                </span>
+                                <UnidadResumen unidad={unidad} />
                             </label>
                         ))}
                     </div>

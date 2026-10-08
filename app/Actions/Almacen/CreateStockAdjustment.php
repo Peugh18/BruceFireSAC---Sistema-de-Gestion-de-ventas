@@ -7,6 +7,7 @@ use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\Inventory\ReglasDeAjusteDeStock;
 use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -37,15 +38,12 @@ class CreateStockAdjustment
 
             if ($unitId) {
                 // Con la unidad bloqueada: dos ajustes a la vez no la dan de
-                // baja (ni la reingresan) dos veces.
+                // baja (ni la reingresan) dos veces. La regla vive en
+                // ReglasDeAjusteDeStock, la misma que valida la pantalla.
                 $estadoActual = InventoryUnit::query()->lockForUpdate()->findOrFail($unitId)->estado;
-                if (($tipoAjuste === 'decremento' && $estadoActual !== 'disponible')
-                    || ($tipoAjuste === 'incremento' && $estadoActual !== 'baja')) {
-                    throw ValidationException::withMessages([
-                        'inventory_unit_id' => $tipoAjuste === 'decremento'
-                            ? "Esa unidad ya no está disponible en el almacén (estado: {$estadoActual})."
-                            : "Solo se puede reingresar una unidad dada de baja (esta está: {$estadoActual}).",
-                    ]);
+                $error = ReglasDeAjusteDeStock::errorDeEstadoDeLaUnidad($tipoAjuste, (string) $estadoActual);
+                if ($error !== null) {
+                    throw ValidationException::withMessages(['inventory_unit_id' => $error]);
                 }
 
                 $movement = InventoryMovement::create([

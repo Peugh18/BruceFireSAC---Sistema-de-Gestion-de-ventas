@@ -8,17 +8,17 @@ import {
     Plus,
     Trash2,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { CargaLarga, Cargando } from '@/components/cargando';
-import type { ClientFicha } from '@/components/client-picker';
 import ReferenciaField from '@/components/referencia-field';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
+import { useClienteFicha } from '@/hooks/use-cliente-ficha';
 import VendedorLayout from '@/layouts/vendedor-layout';
-import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
@@ -230,20 +230,10 @@ export default function ArmarCertificados({
     const [grupos, setGrupos] = useState<Grupo[]>(inicial.grupos);
     const [filas, setFilas] = useState(inicial.filas);
     const [motivo, setMotivo] = useState('');
-    const [ficha, setFicha] = useState<ClientFicha | null>(null);
     const [enviando, setEnviando] = useState(false);
 
-    useEffect(() => {
-        void fetch(
-            clientes.ficha.url({
-                current_team: teamSlug,
-                client: sale.client.id,
-            }),
-        )
-            .then((r) => r.json())
-            .then(setFicha);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // Ficha del cliente (sedes y vehículos) para las referencias.
+    const [ficha] = useClienteFicha(teamSlug, sale.client.id);
 
     const actualizarGrupo = (id: number, cambio: Partial<Grupo>) =>
         setGrupos(grupos.map((g) => (g.id === id ? { ...g, ...cambio } : g)));
@@ -464,49 +454,56 @@ export default function ArmarCertificados({
                                     <div className="text-foreground/80 text-[11px] font-bold uppercase">
                                         Destino
                                     </div>
-                                    <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
-                                        {(
-                                            [
-                                                ['local_cliente', 'Local'],
-                                                ['vehiculo', 'Vehículo'],
-                                            ] as const
-                                        ).map(([valor, texto]) => (
-                                            <button
-                                                key={valor}
-                                                type="button"
-                                                onClick={() =>
-                                                    actualizarGrupo(grupo.id, {
-                                                        destino: valor,
-                                                        referencia: '',
-                                                        tipos: tiposPorDestino(
-                                                            valor,
-                                                        ),
-                                                    })
-                                                }
-                                                className={`flex-1 rounded-[7px] px-2 py-1.5 text-xs font-bold ${grupo.destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground'}`}
-                                            >
-                                                {texto}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    <TabsBf<'local_cliente' | 'vehiculo'>
+                                        pestanas={[
+                                            {
+                                                id: 'local_cliente',
+                                                titulo: 'Local',
+                                            },
+                                            {
+                                                id: 'vehiculo',
+                                                titulo: 'Vehículo',
+                                            },
+                                        ]}
+                                        activa={grupo.destino}
+                                        onCambiar={(valor) =>
+                                            actualizarGrupo(grupo.id, {
+                                                destino: valor,
+                                                referencia: '',
+                                                tipos: tiposPorDestino(valor),
+                                            })
+                                        }
+                                        etiqueta="Destino del certificado"
+                                        idBase={`cert-grupo-${grupo.id}-destino`}
+                                        anchoCompleto
+                                        className="mt-1"
+                                    />
                                 </div>
-                                <ReferenciaField
-                                    cliente={ficha}
-                                    destino={grupo.destino}
-                                    value={grupo.referencia}
-                                    onChange={(valor) => {
-                                        const sede = ficha?.sedes.find(
-                                            (s) =>
-                                                `SEDE: ${s.nombre}` === valor,
-                                        );
-                                        actualizarGrupo(grupo.id, {
-                                            referencia: valor,
-                                            direccion:
-                                                sede?.direccion ??
-                                                grupo.direccion,
-                                        });
-                                    }}
-                                />
+                                <div
+                                    {...propsPanel(
+                                        `cert-grupo-${grupo.id}-destino`,
+                                        grupo.destino,
+                                    )}
+                                >
+                                    <ReferenciaField
+                                        cliente={ficha}
+                                        destino={grupo.destino}
+                                        value={grupo.referencia}
+                                        onChange={(valor) => {
+                                            const sede = ficha?.sedes.find(
+                                                (s) =>
+                                                    `SEDE: ${s.nombre}` ===
+                                                    valor,
+                                            );
+                                            actualizarGrupo(grupo.id, {
+                                                referencia: valor,
+                                                direccion:
+                                                    sede?.direccion ??
+                                                    grupo.direccion,
+                                            });
+                                        }}
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -569,271 +566,298 @@ export default function ArmarCertificados({
 
                             {grupo.tipos.includes('capacitacion') ? (
                                 <div className="grid gap-3">
-                                    <div className="grid gap-2 sm:grid-cols-3">
-                                        {(
-                                            [
-                                                ['normal', 'Normal'],
-                                                ['con_fotos', 'Con fotos'],
-                                                [
-                                                    'por_trabajador',
-                                                    'Por trabajador',
-                                                ],
-                                            ] as const
-                                        ).map(([valor, texto]) => (
-                                            <button
-                                                key={valor}
-                                                type="button"
-                                                onClick={() =>
-                                                    actualizarGrupo(grupo.id, {
-                                                        modo: valor,
-                                                    })
-                                                }
-                                                className={`rounded-[9px] border px-3 py-2 text-[12px] font-semibold ${grupo.modo === valor ? 'border-primary bg-primary/10 text-primary-strong' : 'border-border'}`}
-                                            >
-                                                {texto}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <div className="grid gap-3 sm:grid-cols-[1fr_90px_1fr]">
-                                        <label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                            Curso
-                                            <Input
-                                                value={grupo.curso}
-                                                onChange={(e) =>
-                                                    actualizarGrupo(grupo.id, {
-                                                        curso: e.target.value,
-                                                    })
-                                                }
-                                                className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
-                                            />
-                                        </label>
-                                        <label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                            Horas
-                                            <Input
-                                                type="number"
-                                                min={1}
-                                                value={grupo.horas}
-                                                onChange={(e) =>
-                                                    actualizarGrupo(grupo.id, {
-                                                        horas: Number(
-                                                            e.target.value,
-                                                        ),
-                                                    })
-                                                }
-                                                className="mt-1 h-9 rounded-[9px] text-[13px]"
-                                            />
-                                        </label>
-                                        <label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                            Instructor
-                                            <Input
-                                                value={grupo.instructor}
-                                                onChange={(e) =>
-                                                    actualizarGrupo(grupo.id, {
-                                                        instructor:
-                                                            e.target.value,
-                                                    })
-                                                }
-                                                className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
-                                            />
-                                        </label>
-                                    </div>
-
-                                    {grupo.modo === 'con_fotos' ? (
-                                        <label className="border-border rounded-[10px] border border-dashed p-3 text-[12px]">
-                                            <span className="font-bold">
-                                                Fotos de la capacitación
-                                            </span>
-                                            <span className="text-muted-foreground ml-2">
-                                                1 a 3 JPG/PNG, máximo 5 MB cada
-                                                una
-                                            </span>
-                                            <Input
-                                                type="file"
-                                                accept="image/jpeg,image/png"
-                                                multiple
-                                                onChange={(event) =>
-                                                    actualizarGrupo(grupo.id, {
-                                                        fotos: Array.from(
-                                                            event.target
-                                                                .files ?? [],
-                                                        ).slice(0, 3),
-                                                    })
-                                                }
-                                                className="mt-2"
-                                            />
-                                            {grupo.fotosExistentes > 0 &&
-                                            grupo.fotos.length === 0 ? (
-                                                <span className="text-muted-foreground mt-1 block">
-                                                    Se conservarán{' '}
-                                                    {grupo.fotosExistentes}{' '}
-                                                    foto(s) actuales.
-                                                </span>
-                                            ) : null}
-                                        </label>
-                                    ) : null}
-
-                                    {grupo.modo === 'por_trabajador' ? (
-                                        <div className="border-border grid gap-2 rounded-[10px] border p-3">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <div>
-                                                    <div className="text-[12px] font-bold">
-                                                        Trabajadores
-                                                    </div>
-                                                    <div className="text-muted-foreground text-[11px]">
-                                                        Cada persona tendrá
-                                                        número y QR propios.
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() =>
+                                    <TabsBf<ModoCapacitacion>
+                                        pestanas={[
+                                            { id: 'normal', titulo: 'Normal' },
+                                            {
+                                                id: 'con_fotos',
+                                                titulo: 'Con fotos',
+                                            },
+                                            {
+                                                id: 'por_trabajador',
+                                                titulo: 'Por trabajador',
+                                            },
+                                        ]}
+                                        activa={grupo.modo ?? 'normal'}
+                                        onCambiar={(valor) =>
+                                            actualizarGrupo(grupo.id, {
+                                                modo: valor,
+                                            })
+                                        }
+                                        etiqueta="Modo de la capacitación"
+                                        idBase={`cert-grupo-${grupo.id}-modo`}
+                                        anchoCompleto
+                                    />
+                                    <div
+                                        {...propsPanel(
+                                            `cert-grupo-${grupo.id}-modo`,
+                                            grupo.modo ?? 'normal',
+                                        )}
+                                    >
+                                        <div className="grid gap-3 sm:grid-cols-[1fr_90px_1fr]">
+                                            <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                                Curso
+                                                <Input
+                                                    value={grupo.curso}
+                                                    onChange={(e) =>
                                                         actualizarGrupo(
                                                             grupo.id,
                                                             {
-                                                                participantes: [
-                                                                    ...grupo.participantes,
-                                                                    {
-                                                                        nombres:
-                                                                            '',
-                                                                        dni: '',
-                                                                        cargo: '',
-                                                                    },
-                                                                ],
+                                                                curso: e.target
+                                                                    .value,
                                                             },
                                                         )
                                                     }
-                                                >
-                                                    <Plus className="size-3.5" />{' '}
-                                                    Agregar
-                                                </Button>
-                                            </div>
-                                            {grupo.participantes.map(
-                                                (participante, indice) => (
-                                                    <div
-                                                        key={
-                                                            participante.id ??
-                                                            indice
+                                                    className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
+                                                />
+                                            </label>
+                                            <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                                Horas
+                                                <Input
+                                                    type="number"
+                                                    min={1}
+                                                    value={grupo.horas}
+                                                    onChange={(e) =>
+                                                        actualizarGrupo(
+                                                            grupo.id,
+                                                            {
+                                                                horas: Number(
+                                                                    e.target
+                                                                        .value,
+                                                                ),
+                                                            },
+                                                        )
+                                                    }
+                                                    className="mt-1 h-9 rounded-[9px] text-[13px]"
+                                                />
+                                            </label>
+                                            <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                                Instructor
+                                                <Input
+                                                    value={grupo.instructor}
+                                                    onChange={(e) =>
+                                                        actualizarGrupo(
+                                                            grupo.id,
+                                                            {
+                                                                instructor:
+                                                                    e.target
+                                                                        .value,
+                                                            },
+                                                        )
+                                                    }
+                                                    className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
+                                                />
+                                            </label>
+                                        </div>
+
+                                        {grupo.modo === 'con_fotos' ? (
+                                            <label className="border-border rounded-[10px] border border-dashed p-3 text-[12px]">
+                                                <span className="font-bold">
+                                                    Fotos de la capacitación
+                                                </span>
+                                                <span className="text-muted-foreground ml-2">
+                                                    1 a 3 JPG/PNG, máximo 5 MB
+                                                    cada una
+                                                </span>
+                                                <Input
+                                                    type="file"
+                                                    accept="image/jpeg,image/png"
+                                                    multiple
+                                                    onChange={(event) =>
+                                                        actualizarGrupo(
+                                                            grupo.id,
+                                                            {
+                                                                fotos: Array.from(
+                                                                    event.target
+                                                                        .files ??
+                                                                        [],
+                                                                ).slice(0, 3),
+                                                            },
+                                                        )
+                                                    }
+                                                    className="mt-2"
+                                                />
+                                                {grupo.fotosExistentes > 0 &&
+                                                grupo.fotos.length === 0 ? (
+                                                    <span className="text-muted-foreground mt-1 block">
+                                                        Se conservarán{' '}
+                                                        {grupo.fotosExistentes}{' '}
+                                                        foto(s) actuales.
+                                                    </span>
+                                                ) : null}
+                                            </label>
+                                        ) : null}
+
+                                        {grupo.modo === 'por_trabajador' ? (
+                                            <div className="border-border grid gap-2 rounded-[10px] border p-3">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <div>
+                                                        <div className="text-[12px] font-bold">
+                                                            Trabajadores
+                                                        </div>
+                                                        <div className="text-muted-foreground text-[11px]">
+                                                            Cada persona tendrá
+                                                            número y QR propios.
+                                                        </div>
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            actualizarGrupo(
+                                                                grupo.id,
+                                                                {
+                                                                    participantes:
+                                                                        [
+                                                                            ...grupo.participantes,
+                                                                            {
+                                                                                nombres:
+                                                                                    '',
+                                                                                dni: '',
+                                                                                cargo: '',
+                                                                            },
+                                                                        ],
+                                                                },
+                                                            )
                                                         }
-                                                        className="grid gap-2 sm:grid-cols-[1fr_150px_150px_36px]"
                                                     >
-                                                        <Input
-                                                            value={
-                                                                participante.nombres
+                                                        <Plus className="size-3.5" />{' '}
+                                                        Agregar
+                                                    </Button>
+                                                </div>
+                                                {grupo.participantes.map(
+                                                    (participante, indice) => (
+                                                        <div
+                                                            key={
+                                                                participante.id ??
+                                                                indice
                                                             }
-                                                            placeholder="Nombres y apellidos"
-                                                            onChange={(event) =>
-                                                                actualizarGrupo(
-                                                                    grupo.id,
-                                                                    {
-                                                                        participantes:
-                                                                            grupo.participantes.map(
-                                                                                (
-                                                                                    item,
-                                                                                    i,
-                                                                                ) =>
-                                                                                    i ===
-                                                                                    indice
-                                                                                        ? {
-                                                                                              ...item,
-                                                                                              nombres:
-                                                                                                  event
+                                                            className="grid gap-2 sm:grid-cols-[1fr_150px_150px_36px]"
+                                                        >
+                                                            <Input
+                                                                value={
+                                                                    participante.nombres
+                                                                }
+                                                                placeholder="Nombres y apellidos"
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
+                                                                    actualizarGrupo(
+                                                                        grupo.id,
+                                                                        {
+                                                                            participantes:
+                                                                                grupo.participantes.map(
+                                                                                    (
+                                                                                        item,
+                                                                                        i,
+                                                                                    ) =>
+                                                                                        i ===
+                                                                                        indice
+                                                                                            ? {
+                                                                                                  ...item,
+                                                                                                  nombres:
+                                                                                                      event
+                                                                                                          .target
+                                                                                                          .value,
+                                                                                              }
+                                                                                            : item,
+                                                                                ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                            <Input
+                                                                value={
+                                                                    participante.dni
+                                                                }
+                                                                placeholder="DNI opcional"
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
+                                                                    actualizarGrupo(
+                                                                        grupo.id,
+                                                                        {
+                                                                            participantes:
+                                                                                grupo.participantes.map(
+                                                                                    (
+                                                                                        item,
+                                                                                        i,
+                                                                                    ) =>
+                                                                                        i ===
+                                                                                        indice
+                                                                                            ? {
+                                                                                                  ...item,
+                                                                                                  dni: event
                                                                                                       .target
                                                                                                       .value,
-                                                                                          }
-                                                                                        : item,
-                                                                            ),
-                                                                    },
-                                                                )
-                                                            }
-                                                        />
-                                                        <Input
-                                                            value={
-                                                                participante.dni
-                                                            }
-                                                            placeholder="DNI opcional"
-                                                            onChange={(event) =>
-                                                                actualizarGrupo(
-                                                                    grupo.id,
-                                                                    {
-                                                                        participantes:
-                                                                            grupo.participantes.map(
-                                                                                (
-                                                                                    item,
-                                                                                    i,
-                                                                                ) =>
-                                                                                    i ===
-                                                                                    indice
-                                                                                        ? {
-                                                                                              ...item,
-                                                                                              dni: event
-                                                                                                  .target
-                                                                                                  .value,
-                                                                                          }
-                                                                                        : item,
-                                                                            ),
-                                                                    },
-                                                                )
-                                                            }
-                                                        />
-                                                        <Input
-                                                            value={
-                                                                participante.cargo
-                                                            }
-                                                            placeholder="Cargo opcional"
-                                                            onChange={(event) =>
-                                                                actualizarGrupo(
-                                                                    grupo.id,
-                                                                    {
-                                                                        participantes:
-                                                                            grupo.participantes.map(
-                                                                                (
-                                                                                    item,
-                                                                                    i,
-                                                                                ) =>
-                                                                                    i ===
-                                                                                    indice
-                                                                                        ? {
-                                                                                              ...item,
-                                                                                              cargo: event
-                                                                                                  .target
-                                                                                                  .value,
-                                                                                          }
-                                                                                        : item,
-                                                                            ),
-                                                                    },
-                                                                )
-                                                            }
-                                                        />
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="icon"
-                                                            onClick={() =>
-                                                                actualizarGrupo(
-                                                                    grupo.id,
-                                                                    {
-                                                                        participantes:
-                                                                            grupo.participantes.filter(
-                                                                                (
-                                                                                    _,
-                                                                                    i,
-                                                                                ) =>
-                                                                                    i !==
-                                                                                    indice,
-                                                                            ),
-                                                                    },
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="size-3.5" />
-                                                        </Button>
-                                                    </div>
-                                                ),
-                                            )}
-                                        </div>
-                                    ) : null}
+                                                                                              }
+                                                                                            : item,
+                                                                                ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                            <Input
+                                                                value={
+                                                                    participante.cargo
+                                                                }
+                                                                placeholder="Cargo opcional"
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
+                                                                    actualizarGrupo(
+                                                                        grupo.id,
+                                                                        {
+                                                                            participantes:
+                                                                                grupo.participantes.map(
+                                                                                    (
+                                                                                        item,
+                                                                                        i,
+                                                                                    ) =>
+                                                                                        i ===
+                                                                                        indice
+                                                                                            ? {
+                                                                                                  ...item,
+                                                                                                  cargo: event
+                                                                                                      .target
+                                                                                                      .value,
+                                                                                              }
+                                                                                            : item,
+                                                                                ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                    actualizarGrupo(
+                                                                        grupo.id,
+                                                                        {
+                                                                            participantes:
+                                                                                grupo.participantes.filter(
+                                                                                    (
+                                                                                        _,
+                                                                                        i,
+                                                                                    ) =>
+                                                                                        i !==
+                                                                                        indice,
+                                                                                ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Trash2 className="size-3.5" />
+                                                            </Button>
+                                                        </div>
+                                                    ),
+                                                )}
+                                            </div>
+                                        ) : null}
+                                    </div>
                                 </div>
                             ) : null}
 

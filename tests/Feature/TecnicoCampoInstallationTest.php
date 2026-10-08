@@ -28,7 +28,7 @@ test('tecnico campo can view installations index with KPIs', function () {
         'client_id' => $client->id,
         'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
 
     $this->actingAs($this->user)
@@ -48,7 +48,7 @@ test('tecnico campo can view installation detail', function () {
         'client_id' => $client->id,
         'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
 
     $this->actingAs($this->user)
@@ -71,7 +71,7 @@ test('tecnico campo can register installation, creating client equipments and ce
         'client_id' => $client->id,
         'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
 
     $this->actingAs($this->user)
@@ -134,7 +134,7 @@ test('installation requires customer conformity acceptance', function () {
         'client_id' => $client->id,
         'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
 
     $this->actingAs($this->user)

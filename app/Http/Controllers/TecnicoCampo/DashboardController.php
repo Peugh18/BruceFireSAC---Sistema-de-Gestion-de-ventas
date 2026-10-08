@@ -53,7 +53,7 @@ class DashboardController extends Controller
 
         // Filtro por Estado Operativo (§5.5)
         match ($statusTab) {
-            'pendientes' => $query->whereIn('estado', ['pendiente_recepcion', 'recibido_planta', 'en_revision', 'listo_entrega']),
+            'pendientes' => $query->whereIn('estado', ['pendiente_recepcion', 'recibido_planta', 'listo_entrega']),
             'en_proceso' => $query->whereIn('estado', ['en_proceso', 'esperando_autorizacion', 'autorizado']),
             'finalizados' => $query->whereIn('estado', ['trabajo_terminado', 'entregado', 'cerrado']),
             default => null,
@@ -108,7 +108,7 @@ class DashboardController extends Controller
                 ->where('estado', '!=', 'cerrado')
                 ->count(),
             'pendientes' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereNull('departamento_tecnico'))
-                ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta', 'en_revision', 'listo_entrega'])
+                ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta', 'listo_entrega'])
                 ->count(),
             'en_proceso' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereNull('departamento_tecnico'))
                 ->whereIn('estado', ['en_proceso', 'esperando_autorizacion', 'autorizado'])

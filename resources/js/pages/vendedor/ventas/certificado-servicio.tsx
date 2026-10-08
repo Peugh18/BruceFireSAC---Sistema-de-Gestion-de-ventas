@@ -1,15 +1,14 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Award, Copy, Loader2, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
-import type { ClientFicha } from '@/components/client-picker';
 import ReferenciaField from '@/components/referencia-field';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useClienteFicha } from '@/hooks/use-cliente-ficha';
 import VendedorLayout from '@/layouts/vendedor-layout';
-import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
@@ -142,21 +141,11 @@ export default function CertificadoServicio({
     const [observaciones, setObservaciones] = useState(
         existente?.observaciones ?? '',
     );
-    const [ficha, setFicha] = useState<ClientFicha | null>(null);
     const [enviando, setEnviando] = useState(false);
     const [errores, setErrores] = useState<Record<string, string>>({});
 
-    useEffect(() => {
-        void fetch(
-            clientes.ficha.url({
-                current_team: teamSlug,
-                client: sale.client.id,
-            }),
-        )
-            .then((r) => r.json())
-            .then(setFicha);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // Ficha del cliente (sedes y vehículos) para las referencias.
+    const [ficha] = useClienteFicha(teamSlug, sale.client.id);
 
     const cambiarCelda = (i: number, clave: string, valor: string) =>
         setFilas(filas.map((f, j) => (j === i ? { ...f, [clave]: valor } : f)));

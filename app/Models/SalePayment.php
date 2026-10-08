@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
  * @property string $forma_pago
  * @property float $monto
  * @property string|null $numero_operacion
- * @property Carbon $fecha
+ * @property Carbon $fecha día de negocio del cobro (date); la hora real del cobro está en created_at (y la de su anulación en updated_at)
  * @property int|null $user_id
  * @property int|null $cash_register_id
  * @property int|null $anulacion_cash_register_id

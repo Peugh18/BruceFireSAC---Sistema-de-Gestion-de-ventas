@@ -24,11 +24,11 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property int|null $sede_id
  * @property int|null $vehicle_id
  * @property int $vendedor_id
- * @property Carbon $fecha
+ * @property Carbon $fecha día de negocio de la venta (date); la hora real del registro está en created_at / registro_iniciado_at / confirmada_at
  * @property string $destino
  * @property string $condicion_pago
- * @property string|null $medio_pago
- * @property string|null $numero_operacion
+ * @property string|null $medio_pago SOLO respaldo histórico / campo de paso del formulario; la fuente de verdad es sale_payments
+ * @property string|null $numero_operacion SOLO respaldo histórico / campo de paso del formulario; la fuente de verdad es sale_payments
  * @property string $comprobante_tipo
  * @property float $subtotal
  * @property float $igv
@@ -86,6 +86,15 @@ class Sale extends Model
     /**
      * Con los cobros ya cargados no se vuelve a la base (era un N+1 en las
      * listas de ventas).
+     *
+     * DECISIÓN (deuda de datos): `sale_payments` es la fuente de verdad del
+     * medio de pago y del número de operación. `sales.medio_pago` y
+     * `sales.numero_operacion` solo son el campo de paso del formulario de la
+     * venta (ConfirmSale los convierte en cobros y los vacía) y el respaldo
+     * histórico de las ventas antiguas que se crearon sin cobros: por eso
+     * aquí se leen SIEMPRE los pagos primero y solo se cae a la cabecera
+     * cuando la venta no tiene ninguno. Las columnas NO se borran por
+     * compatibilidad con esas ventas.
      */
     public function medioPagoTexto(): ?string
     {

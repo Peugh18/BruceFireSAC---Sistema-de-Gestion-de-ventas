@@ -12,7 +12,7 @@ import {
     Trash2,
     Truck,
 } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Cargando } from '@/components/cargando';
@@ -34,6 +34,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import { useClienteFicha } from '@/hooks/use-cliente-ficha';
 import { leerCookie } from '@/lib/cookies';
 import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
@@ -320,38 +321,22 @@ export default function NuevaVenta({
                   })),
     });
 
-    const [cliente, setCliente] = useState<ClientFicha | null>(
-        clienteInicial ? { ...clienteInicial, vehiculos: [], sedes: [] } : null,
+    // Si viene de una cotización o de otra venta, se completa la ficha
+    // (placas y sedes) con el hook compartido de ficha del cliente.
+    const [cliente, setCliente] = useClienteFicha(
+        teamSlug,
+        clienteInicial?.id,
+        {
+            inicial: clienteInicial
+                ? { ...clienteInicial, vehiculos: [], sedes: [] }
+                : null,
+            avisoError: 'No se pudo cargar la ficha del cliente.',
+        },
     );
     const [productoConSerie, setProductoConSerie] =
         useState<CatalogItem | null>(null);
     const [creditoAbierto, setCreditoAbierto] = useState(false);
     const [aviso, setAviso] = useState<string | null>(null);
-
-    // Si viene de una cotización o de otra venta, completa la ficha (placas y sedes).
-    useEffect(() => {
-        if (!clienteInicial) {
-            return;
-        }
-
-        void fetch(
-            clientes.ficha.url({
-                current_team: teamSlug,
-                client: clienteInicial.id,
-            }),
-        )
-            .then((r) => (r.ok ? r.json() : null))
-            .then((ficha: ClientFicha | null) => {
-                if (ficha) {
-                    setCliente(ficha);
-                }
-            })
-            .catch(() => {
-                // Sin conexión o error del servidor: se conserva la ficha inicial.
-                toast.error('No se pudo cargar la ficha del cliente.');
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const { base, igv, total } = desglosar(form.data.items);
 

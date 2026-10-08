@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
  * @property string $codigo
  * @property string $nombre
  * @property string|null $descripcion
- * @property string|null $categoria
+ * @property string|null $categoria clave de product_categories (FK real sobre product_categories.clave); NULL = sin categoría
  * @property string $unidad_medida
  * @property string|null $agente
  * @property string|null $capacidad
@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, QuoteItem> $quoteItems
  * @property-read Collection<int, SaleItem> $saleItems
+ * @property-read ProductCategory|null $categoriaDelCatalogo
  */
 #[Fillable([
     'codigo',
@@ -83,6 +84,19 @@ class Service extends Model
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class);
+    }
+
+    /**
+     * Categoría del catálogo (product_categories). La columna `categoria`
+     * guarda su `clave`, que no cambia al renombrar la categoría: con la FK
+     * real de la migración 2026_10_08_040000 la base impide borrar o
+     * renombrar la clave de una categoría en uso.
+     *
+     * @return BelongsTo<ProductCategory, $this>
+     */
+    public function categoriaDelCatalogo(): BelongsTo
+    {
+        return $this->belongsTo(ProductCategory::class, 'categoria', 'clave');
     }
 
     public function esServicio(): bool

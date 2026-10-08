@@ -38,14 +38,7 @@ class CreateSale
         return DB::transaction(function () use ($data, $items, $vendedorId, $iniciadoAt) {
             // Los precios ya incluyen IGV: el subtotal de cada línea es lo que
             // paga el cliente y la base/IGV se separan de ahí.
-            $lineas = array_map(function (array $item) {
-                $descuento = $item['descuento'] ?? 0;
-
-                $catalogo = ! empty($item['service_id']) ? Service::findOrFail((int) $item['service_id']) : Product::findOrFail((int) $item['product_id']);
-                $afectacion = AfectacionIgv::codigo($catalogo);
-
-                return [...$item, 'tipo_afectacion_igv' => $afectacion, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
-            }, $items);
+            $lineas = $this->mapearLineas($items);
 
             ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totalesConAfectacion($lineas);
 
@@ -111,14 +104,7 @@ class CreateSale
             $antes = $sale->only(['client_id', 'comprobante_tipo', 'condicion_pago', 'total']);
             unset($data['iniciado_at']);
 
-            $lineas = array_map(function (array $item) {
-                $descuento = $item['descuento'] ?? 0;
-
-                $catalogo = ! empty($item['service_id']) ? Service::findOrFail((int) $item['service_id']) : Product::findOrFail((int) $item['product_id']);
-                $afectacion = AfectacionIgv::codigo($catalogo);
-
-                return [...$item, 'tipo_afectacion_igv' => $afectacion, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
-            }, $items);
+            $lineas = $this->mapearLineas($items);
 
             ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totalesConAfectacion($lineas);
 
@@ -157,6 +143,26 @@ class CreateSale
 
             return $sale->refresh();
         });
+    }
+
+    /**
+     * Mapeo común de las líneas del formulario a líneas de venta (se usa
+     * tanto al crear como al actualizar un borrador): descuento por defecto,
+     * afectación de IGV del catálogo y subtotal con descuento.
+     *
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function mapearLineas(array $items): array
+    {
+        return array_map(function (array $item) {
+            $descuento = $item['descuento'] ?? 0;
+
+            $catalogo = ! empty($item['service_id']) ? Service::findOrFail((int) $item['service_id']) : Product::findOrFail((int) $item['product_id']);
+            $afectacion = AfectacionIgv::codigo($catalogo);
+
+            return [...$item, 'tipo_afectacion_igv' => $afectacion, 'descuento' => $descuento, 'subtotal' => round(($item['cantidad'] * $item['precio_unitario']) - $descuento, 2)];
+        }, $items);
     }
 
     /**

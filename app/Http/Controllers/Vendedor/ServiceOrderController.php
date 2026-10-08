@@ -28,7 +28,7 @@ class ServiceOrderController extends Controller
     {
         $estado = $request->string('estado')->toString();
         $estadoMap = [
-            'en_camino' => ['pendiente_recepcion', 'recibido_planta', 'en_revision', 'esperando_autorizacion'],
+            'en_camino' => ['pendiente_recepcion', 'recibido_planta', 'esperando_autorizacion'],
             'en_proceso' => ['autorizado', 'en_proceso', 'trabajo_terminado', 'pendiente_datos', 'datos_completos'],
             'completadas' => ['listo_certificado', 'listo_entrega', 'entregado', 'cerrado'],
             'anuladas' => ['anulada'],

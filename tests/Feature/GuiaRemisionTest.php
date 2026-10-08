@@ -4,6 +4,7 @@ use App\Actions\Almacen\TransferInventory;
 use App\Actions\Billing\CreateDispatchGuide;
 use App\Contracts\GreClientInterface;
 use App\Enums\TeamRole;
+use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\DispatchGuide;
 use App\Models\Driver;
@@ -11,6 +12,7 @@ use App\Models\InventoryMovement;
 use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\Team;
 use App\Models\TransportVehicle;
@@ -18,6 +20,7 @@ use App\Models\User;
 use App\Services\Billing\GreApiClient;
 use App\Services\Billing\GuiaRemisionService;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -207,4 +210,28 @@ test('el traslado entre sedes queda en tránsito hasta que el destino confirma',
 
     expect(fn () => app(TransferInventory::class)->confirmar($transferencias->first(), $destinatario))
         ->toThrow(ValidationException::class);
+});
+
+test('la guía guarda el cliente de la venta u orden que la sustenta', function () {
+    // Un traslado entre sedes no tiene cliente: es interno.
+    $interna = app(CreateDispatchGuide::class)->handle(datosGuia(), $this->user);
+    expect($interna->client_id)->toBeNull();
+
+    // La guía de una venta nace con el cliente de esa venta, aunque el
+    // snapshot del destinatario siga siendo lo que va a SUNAT.
+    $cliente = Client::factory()->create();
+    $venta = Sale::factory()->create(['client_id' => $cliente->id]);
+    $guia = app(CreateDispatchGuide::class)->handle(datosGuia(['sale_id' => $venta->id]), $this->user);
+
+    expect($guia->client_id)->toBe($cliente->id)
+        ->and($guia->client->id)->toBe($cliente->id)
+        ->and($guia->destinatario_nombre)->toBe('CLIENTE SAC');
+
+    // La clave foránea protege al cliente de una guía (aunque la guía no
+    // tenga venta detrás).
+    $soloGuia = Client::factory()->create();
+    app(CreateDispatchGuide::class)->handle(datosGuia(['client_id' => $soloGuia->id]), $this->user);
+
+    expect(fn () => $soloGuia->delete())->toThrow(QueryException::class);
+    $this->assertDatabaseHas('clients', ['id' => $soloGuia->id]);
 });

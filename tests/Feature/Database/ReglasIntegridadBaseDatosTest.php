@@ -18,8 +18,13 @@ use App\Models\Installment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
+use App\Models\MlClienteHistorico;
+use App\Models\MlComprobanteHistorico;
+use App\Models\MlLineaHistorica;
+use App\Models\MlProductoHistorico;
 use App\Models\NoteRequest;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\ProductLot;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -124,6 +129,57 @@ it('toma el medio de pago desde sale payments para una venta emitida', function 
     SalePayment::factory()->create(['sale_id' => $sale->id, 'forma_pago' => 'yape']);
 
     expect($sale->medioPagoTexto())->toBe('Yape');
+});
+
+it('sin cobros la cabecera de la venta es el unico respaldo historico del medio de pago', function () {
+    $sale = Sale::factory()->create(['medio_pago' => 'yape', 'numero_operacion' => 'YAPE-001', 'estado' => 'confirmada']);
+
+    expect($sale->medioPagoTexto())->toBe('Yape');
+});
+
+it('el cobro conserva su hora de registro en created_at', function () {
+    $sale = Sale::factory()->create();
+    $antes = now()->subMinute();
+
+    $pago = SalePayment::create(['sale_id' => $sale->id, 'forma_pago' => 'efectivo', 'monto' => 10, 'fecha' => today()]);
+
+    // fecha guarda el día de negocio y created_at la hora real del cobro.
+    expect($pago->fecha->toDateString())->toBe(today()->toDateString())
+        ->and($pago->created_at->between($antes, now()))->toBeTrue();
+});
+
+it('la categoria de productos y servicios es una clave foranea real', function () {
+    $categoria = ProductCategory::factory()->create();
+    Product::factory()->create(['categoria' => $categoria->clave]);
+    Service::factory()->create(['categoria' => $categoria->clave]);
+
+    // Una categoría que no existe no cuela ni en productos ni en servicios...
+    expect(fn () => Product::factory()->create(['categoria' => 'inexistente']))->toThrow(QueryException::class)
+        ->and(fn () => Service::factory()->create(['categoria' => 'inexistente']))->toThrow(QueryException::class);
+
+    // ...la clave de una categoría en uso no se renombra ni se borra...
+    $categoria->clave = 'renombrada';
+    expect(fn () => $categoria->save())->toThrow(QueryException::class)
+        ->and(fn () => $categoria->delete())->toThrow(QueryException::class);
+
+    // ...pero el nombre visible sí se puede cambiar, y una categoría sin uso
+    // sí se puede borrar.
+    $categoria->refresh()->update(['nombre' => 'Categoría renombrada']);
+    $libre = ProductCategory::factory()->create();
+    expect($categoria->fresh()->nombre)->toBe('Categoría renombrada')
+        ->and(fn () => $libre->delete())->not->toThrow(QueryException::class);
+});
+
+it('el historial de ML es inmutable y sus claves no se borran en cascada', function () {
+    $cliente = MlClienteHistorico::create(['documento' => '20555555555', 'nombre' => 'Cliente viejo']);
+    $comprobante = MlComprobanteHistorico::create(['comprobante' => 'F001-1', 'tipo_doc' => 'F', 'fecha' => '2025-01-10', 'documento_cliente' => $cliente->documento, 'archivo_origen' => 'ENERO.xlsx']);
+    $producto = MlProductoHistorico::create(['nombre' => 'EXTINTOR PQS 6KG', 'categoria' => 'extintor']);
+    MlLineaHistorica::create(['comprobante' => $comprobante->comprobante, 'ml_producto_id' => $producto->id, 'cantidad' => 1, 'total' => 70]);
+
+    expect(fn () => $cliente->delete())->toThrow(QueryException::class)
+        ->and(fn () => $comprobante->delete())->toThrow(QueryException::class)
+        ->and(fn () => $producto->delete())->toThrow(QueryException::class)
+        ->and(MlLineaHistorica::count())->toBe(1);
 });
 
 it('acepta todos los tipos de eventos declarados por el codigo', function (string $type) {

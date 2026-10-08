@@ -89,7 +89,7 @@ class AvisosDelVendedor
         return $this->deSuSede(ServiceOrder::query(), $user)
             ->whereNull('tecnico_id')
             // Solo las que aún no empiezan: ya en trabajo o listas no se avisan de nuevo.
-            ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta', 'en_revision']);
+            ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta']);
     }
 
     protected function deSuSede(Builder $query, User $user): Builder

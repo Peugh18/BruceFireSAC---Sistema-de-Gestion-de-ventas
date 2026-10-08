@@ -58,7 +58,7 @@ class ServiceOrder extends Model
      * @var list<string>
      */
     public const ESTADOS = [
-        'pendiente_recepcion', 'recibido_planta', 'en_revision', 'esperando_autorizacion',
+        'pendiente_recepcion', 'recibido_planta', 'esperando_autorizacion',
         'autorizado', 'en_proceso', 'trabajo_terminado', 'pendiente_datos', 'datos_completos',
         'listo_certificado', 'listo_entrega', 'entregado', 'cerrado', 'anulada',
     ];
@@ -69,7 +69,7 @@ class ServiceOrder extends Model
      * @var list<string>
      */
     public const ESTADOS_ANULABLES = [
-        'pendiente_recepcion', 'recibido_planta', 'en_revision', 'esperando_autorizacion',
+        'pendiente_recepcion', 'recibido_planta', 'esperando_autorizacion',
         'autorizado', 'en_proceso', 'trabajo_terminado', 'pendiente_datos', 'datos_completos',
     ];
 
@@ -106,7 +106,6 @@ class ServiceOrder extends Model
     private const COARSE_LABELS = [
         'pendiente_recepcion' => 'asignada',
         'recibido_planta' => 'asignada',
-        'en_revision' => 'asignada',
         'esperando_autorizacion' => 'asignada',
         'autorizado' => 'en_proceso',
         'en_proceso' => 'en_proceso',

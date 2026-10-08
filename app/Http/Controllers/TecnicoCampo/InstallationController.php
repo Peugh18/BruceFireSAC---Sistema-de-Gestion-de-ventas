@@ -51,7 +51,7 @@ class InstallationController extends Controller
         if ($tab === 'pendientes') {
             $query->whereIn('estado', ['pendiente_recepcion', 'recibido_planta']);
         } elseif ($tab === 'en_proceso') {
-            $query->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion']);
+            $query->whereIn('estado', ['en_proceso', 'esperando_autorizacion']);
         } elseif ($tab === 'finalizadas') {
             $query->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado']);
         }
@@ -68,7 +68,7 @@ class InstallationController extends Controller
                 ->count(),
             'en_proceso' => ServiceOrder::query()
                 ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
-                ->whereIn('estado', ['en_revision', 'en_proceso', 'esperando_autorizacion'])
+                ->whereIn('estado', ['en_proceso', 'esperando_autorizacion'])
                 ->count(),
             'finalizadas' => ServiceOrder::query()
                 ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))

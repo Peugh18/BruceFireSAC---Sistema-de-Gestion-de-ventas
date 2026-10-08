@@ -18,6 +18,7 @@ use App\Models\SalePayment;
 use App\Models\SaleRefund;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Cobranzas\CarteraDeCobranzas;
 use App\Services\Ml\RetentionModel;
 use App\Services\SaludDelSistema;
 use Carbon\CarbonInterface;
@@ -68,10 +69,10 @@ class DashboardController extends Controller
 
         // Por el saldo que falta cobrar, igual que en Cobranzas.
         $deuda = fn () => Installment::query()
-            ->whereIn('installments.estado', CollectionConsolidatedController::DEBEN)
+            ->whereIn('installments.estado', CarteraDeCobranzas::DEBEN)
             ->whereHas('sale', fn ($q) => $q->where('estado', 'confirmada'));
-        $cuentasPorCobrar = CollectionConsolidatedController::saldo($deuda());
-        $vencidoPorCobrar = CollectionConsolidatedController::saldo($deuda()->whereDate('fecha_vencimiento', '<', $hoy));
+        $cuentasPorCobrar = CarteraDeCobranzas::saldo($deuda());
+        $vencidoPorCobrar = CarteraDeCobranzas::saldo($deuda()->whereDate('fecha_vencimiento', '<', $hoy));
 
         // Ofrecidas al cliente y esperando su respuesta.
         $cotizacionesPendientes = Quote::query()
@@ -153,7 +154,7 @@ class DashboardController extends Controller
             ->all();
 
         // Cartera por estado
-        $carteraAlDia = CollectionConsolidatedController::saldo($deuda()->whereDate('fecha_vencimiento', '>=', $hoy));
+        $carteraAlDia = CarteraDeCobranzas::saldo($deuda()->whereDate('fecha_vencimiento', '>=', $hoy));
 
         $carteraPorEstado = [
             ['estado' => 'Al Día', 'monto' => round($carteraAlDia, 2)],
@@ -299,17 +300,23 @@ class DashboardController extends Controller
      */
     public static function kpisDelProyecto(CarbonInterface $inicio, CarbonInterface $fin): array
     {
+        // Promedios calculados en la base (AVG de la duración en minutos):
+        // no se cargan todas las ventas y cotizaciones del rango en memoria.
         $ventas = Sale::query()
             ->where('estado', 'confirmada')
             ->whereNotNull('registro_iniciado_at')
             ->whereBetween('confirmada_at', [$inicio, $fin])
-            ->get(['registro_iniciado_at', 'confirmada_at'])
-            ->map(fn (Sale $sale) => $sale->registro_iniciado_at->diffInSeconds($sale->confirmada_at) / 60);
+            ->selectRaw('COUNT(*) as medidas')
+            ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, registro_iniciado_at, confirmada_at) / 60) as minutos')
+            ->toBase()
+            ->first();
 
         $cotizaciones = Quote::query()
             ->whereBetween('emitida_at', [$inicio, $fin])
-            ->get(['created_at', 'emitida_at'])
-            ->map(fn (Quote $quote) => $quote->created_at->diffInSeconds($quote->emitida_at) / 60);
+            ->selectRaw('COUNT(*) as medidas')
+            ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, created_at, emitida_at) / 60) as minutos')
+            ->toBase()
+            ->first();
 
         $recuperados = Quote::query()
             ->whereNotNull('origen_alerta_equipment_id')
@@ -318,10 +325,10 @@ class DashboardController extends Controller
             ->count('client_id');
 
         return [
-            'venta_minutos' => $ventas->isEmpty() ? null : round((float) $ventas->avg(), 1),
-            'ventas_medidas' => $ventas->count(),
-            'cotizacion_minutos' => $cotizaciones->isEmpty() ? null : round((float) $cotizaciones->avg(), 1),
-            'cotizaciones_medidas' => $cotizaciones->count(),
+            'venta_minutos' => (int) ($ventas->medidas ?? 0) > 0 ? round((float) $ventas->minutos, 1) : null,
+            'ventas_medidas' => (int) ($ventas->medidas ?? 0),
+            'cotizacion_minutos' => (int) ($cotizaciones->medidas ?? 0) > 0 ? round((float) $cotizaciones->minutos, 1) : null,
+            'cotizaciones_medidas' => (int) ($cotizaciones->medidas ?? 0),
             'clientes_recuperados' => $recuperados,
         ];
     }

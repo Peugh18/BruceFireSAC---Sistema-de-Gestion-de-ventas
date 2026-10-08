@@ -28,7 +28,7 @@ test('tecnico campo can view inspections index with KPIs and tabs', function () 
         'client_id' => $client->id,
         'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
 
     $this->actingAs($this->user)
@@ -48,7 +48,7 @@ test('tecnico campo can view inspection detail with touch equipment cards', func
         'client_id' => $client->id,
         'service_id' => $service->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
 
     $equipment = Equipment::factory()->create([
@@ -75,7 +75,7 @@ test('tecnico campo can register new equipment on site and submit digital checkl
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
 
     // 1. Agregar extintor en sitio
@@ -125,7 +125,7 @@ test('el checklist de inspeccion valida items en vez de fallar con error 500 si 
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
     $equipment = Equipment::factory()->create(['client_id' => $client->id]);
     $order->equipments()->attach($equipment->id);
@@ -150,7 +150,7 @@ test('tecnico campo can finalize inspection with conformity and log custody chai
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
         'departamento_tecnico' => 'campo',
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
     ]);
 
     $this->actingAs($this->user)

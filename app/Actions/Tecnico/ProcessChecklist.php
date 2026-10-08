@@ -42,7 +42,7 @@ class ProcessChecklist
      * estos se mueve la orden a `esperando_autorizacion` (M7). Una orden que
      * ya espera autorización (o que ya terminó) no se "rebobina".
      */
-    public const ESTADOS_DE_TRABAJO = ['pendiente_recepcion', 'recibido_planta', 'en_revision', 'autorizado', 'en_proceso'];
+    public const ESTADOS_DE_TRABAJO = ['pendiente_recepcion', 'recibido_planta', 'autorizado', 'en_proceso'];
 
     /**
      * Procesa y guarda un checklist técnico digital (§19), generando
@@ -205,8 +205,8 @@ class ProcessChecklist
                     ],
                 ]);
             } else {
-                // Si la orden estaba en recibido_planta o en_revision y todo está conforme o no requiere auth
-                if (in_array($serviceOrder->estado, ['recibido_planta', 'en_revision'], true)) {
+                // Si la orden estaba en recibido_planta y todo está conforme o no requiere auth
+                if (in_array($serviceOrder->estado, ['recibido_planta'], true)) {
                     $serviceOrder->update(['estado' => 'en_proceso']);
                 }
 

@@ -7,6 +7,7 @@ use App\Models\InventoryUnit;
 use App\Models\Reception;
 use App\Models\Team;
 use App\Services\Inventory\StickerPdfService;
+use App\Services\Recepcion\AccesoDeAlmacen;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
@@ -53,7 +54,7 @@ class ReceptionStickerController extends Controller
         StickerPdfService $stickerPdfService,
         Request $request,
     ): Response {
-        ReceptionController::asegurarAlmacen($request, $reception);
+        AccesoDeAlmacen::asegurarAlmacen($request, $reception);
 
         $pdf = $stickerPdfService->generate($reception, $this->posicionInicial($request));
 

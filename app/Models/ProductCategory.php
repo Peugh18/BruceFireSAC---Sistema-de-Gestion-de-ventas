@@ -11,7 +11,10 @@ use Illuminate\Support\Carbon;
 
 /**
  * Categoría del catálogo de productos y servicios. Productos y servicios
- * guardan su `clave`, que no cambia al renombrar la categoría.
+ * guardan su `clave`, que no cambia al renombrar la categoría, y desde la
+ * migración 2026_10_08_040000 esa clave es una clave foránea real: la base
+ * no deja borrar una categoría en uso ni renombrar su clave mientras la use
+ * alguien (renombrar el `nombre` visible sí sigue libre).
  *
  * @property int $id
  * @property string $clave

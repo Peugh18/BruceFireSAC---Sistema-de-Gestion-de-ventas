@@ -1,6 +1,6 @@
-import { Link } from '@inertiajs/react';
 import { ClipboardCheck, MessageCircle, Wrench } from 'lucide-react';
 
+import { TabsBf, type PestanaBf } from '@/components/ui/tabs-bf';
 import comunicacion from '@/routes/vendedor/comunicacion';
 import deficiencias from '@/routes/vendedor/deficiencias';
 import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
@@ -12,63 +12,43 @@ type Props = {
 };
 
 /**
- * Pestañas compartidas de Servicios: Órdenes de Servicio, Seguimiento de taller y Deficiencias.
+ * Pestañas compartidas de Servicios: Órdenes de Servicio, Seguimiento de
+ * taller y Deficiencias. Usa la barra de pestañas unificada de la aplicación.
  */
 export function ServiciosTabs({
     teamSlug,
     activa,
     deficienciasPendientes = 0,
 }: Props) {
-    const pestanas = [
+    const pestanas: PestanaBf<'ordenes' | 'taller' | 'deficiencias'>[] = [
         {
-            clave: 'ordenes' as const,
+            id: 'ordenes',
             titulo: 'Órdenes de servicio',
             icono: ClipboardCheck,
             href: ordenesServicio.index.url(teamSlug),
         },
         {
-            clave: 'taller' as const,
+            id: 'taller',
             titulo: 'Seguimiento de taller',
             icono: MessageCircle,
             href: comunicacion.index.url(teamSlug),
         },
         {
-            clave: 'deficiencias' as const,
+            id: 'deficiencias',
             titulo: 'Deficiencias y adicionales',
             icono: Wrench,
             href: deficiencias.index.url(teamSlug),
+            contador: deficienciasPendientes,
         },
     ];
 
     return (
-        <div className="border-border flex flex-wrap gap-0.5 border-b sm:gap-1">
-            {pestanas.map((pestana) => {
-                const Icono = pestana.icono;
-                const activo = pestana.clave === activa;
-
-                return (
-                    <Link
-                        key={pestana.clave}
-                        href={pestana.href}
-                        preserveScroll
-                        className={`-mb-px inline-flex items-center gap-2 border-b-2 px-2.5 py-2.5 text-[13px] font-bold whitespace-nowrap transition-colors sm:px-3 ${
-                            activo
-                                ? 'border-primary text-foreground'
-                                : 'text-muted-foreground hover:text-foreground border-transparent'
-                        }`}
-                    >
-                        <Icono className="size-4" />
-                        {pestana.titulo}
-                        {pestana.clave === 'deficiencias' &&
-                        deficienciasPendientes > 0 ? (
-                            <span className="rounded-full bg-amber-500/15 px-1.5 text-[10.5px] font-bold text-amber-700 dark:text-amber-400">
-                                {deficienciasPendientes}
-                            </span>
-                        ) : null}
-                    </Link>
-                );
-            })}
-        </div>
+        <TabsBf
+            pestanas={pestanas}
+            activa={activa}
+            etiqueta="Secciones de servicios"
+            idBase="servicios"
+        />
     );
 }
 
