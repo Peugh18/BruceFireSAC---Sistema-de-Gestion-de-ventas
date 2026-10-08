@@ -10,6 +10,7 @@ import {
     Clock,
     ArrowRight,
 } from 'lucide-react';
+import RecojosRoutes from '@/routes/tecnico-campo/recojos';
 
 interface RecojoItem {
     id: number;
@@ -41,14 +42,13 @@ interface Props {
 export default function RecojosIndex({ recojos, filters }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const teamPrefix = `/${teamSlug}/tecnico-campo`;
 
     const [search, setSearch] = useState(filters.search || '');
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
-            `${teamPrefix}/recojos`,
+            RecojosRoutes.index.url({ current_team: teamSlug }),
             { search: search.trim() },
             { preserveState: true },
         );
@@ -72,6 +72,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="relative">
                     <input
+                        aria-label="Buscar por cliente, orden o dirección"
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -100,7 +101,10 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                         recojos.data.map((r) => (
                             <Link
                                 key={r.id}
-                                href={`${teamPrefix}/recojos/${r.id}`}
+                                href={RecojosRoutes.show.url({
+                                    current_team: teamSlug,
+                                    service_order: r.id,
+                                })}
                                 className="bg-card block space-y-2.5 rounded-2xl border border-neutral-200 p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
                             >
                                 <div className="flex items-start justify-between gap-2">

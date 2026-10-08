@@ -7,6 +7,7 @@ use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\Cotizaciones\StoreQuoteRequest;
+use App\Models\Client;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Service;
@@ -83,6 +84,13 @@ class QuoteController extends Controller
         }
 
         return Inertia::render('vendedor/cotizaciones/nueva', [
+            // Precarga desde el enlace "Nueva cotización" de la ficha del cliente (?client_id=).
+            'cliente' => $request->filled('client_id')
+                ? Client::query()
+                    ->when($request->user()->sedeRestringidaId(), fn ($query, int $sede) => $query->where('sede_id', $sede))
+                    ->whereKey($request->integer('client_id'))
+                    ->first(['id', 'tipo_documento', 'razon_social', 'numero_documento'])
+                : null,
             'renovacion' => $quote ? [
                 'numero' => $quote->numero,
                 'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),

@@ -11,6 +11,9 @@ import {
     ClipboardCheck,
     ShieldCheck,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import ChecklistRoutes from '@/routes/tecnico-planta/checklist';
+import RecepcionesRoutes from '@/routes/tecnico-planta/recepciones';
 
 interface ElementConfig {
     clave: string;
@@ -48,16 +51,25 @@ interface Props {
         ubicacion_actual: string | null;
     };
     elementos: ElementConfig[];
+    // Checklists previos de este mismo equipo (hasta 3), para comparar evolución.
+    previousChecklists?: ChecklistPrevio[];
 }
+
+type ChecklistPrevio = {
+    id: number;
+    resultado_general: string;
+    observaciones?: string | null;
+    created_at?: string | null;
+};
 
 export default function ChecklistCreate({
     order,
     equipment,
     elementos,
+    previousChecklists = [],
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const teamPrefix = `/${teamSlug}/tecnico-planta`;
 
     // Initialize checklist items state
     const initialItems: Record<string, ItemState> = {};
@@ -97,7 +109,7 @@ export default function ChecklistCreate({
     const handleFieldChange = (
         clave: string,
         field: keyof ItemState,
-        value: any,
+        value: ItemState[keyof ItemState],
     ) => {
         setItems((prev) => ({
             ...prev,
@@ -126,8 +138,19 @@ export default function ChecklistCreate({
             observaciones: observacionesGenerales,
         });
         form.post(
-            `${teamPrefix}/ordenes/${order.id}/equipos/${equipment.id}/checklist`,
-            { forceFormData: true },
+            ChecklistRoutes.store.url({
+                current_team: teamSlug,
+                service_order: order.id,
+                equipment: equipment.id,
+            }),
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+                forceFormData: true,
+            },
         );
     };
 
@@ -142,7 +165,10 @@ export default function ChecklistCreate({
             <div className="space-y-4 pb-20">
                 {/* Back Link */}
                 <Link
-                    href={`${teamPrefix}/recepciones/${order.id}`}
+                    href={RecepcionesRoutes.show.url({
+                        current_team: teamSlug,
+                        service_order: order.id,
+                    })}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
                 >
                     <ArrowLeft className="h-4 w-4" />
@@ -191,6 +217,41 @@ export default function ChecklistCreate({
                         </div>
                     </div>
                 </div>
+
+                {/* Checklists anteriores del mismo equipo (§19) */}
+                {previousChecklists.length > 0 && (
+                    <div className="bg-card space-y-2 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+                        <h3 className="text-xs font-bold tracking-wider text-neutral-700 uppercase dark:text-neutral-300">
+                            Checklists anteriores de este equipo
+                        </h3>
+                        <ul className="space-y-1.5">
+                            {previousChecklists.map((previo) => (
+                                <li
+                                    key={previo.id}
+                                    className="flex items-start justify-between gap-2 rounded-lg bg-neutral-50 p-2 text-xs dark:bg-neutral-900/60"
+                                >
+                                    <div>
+                                        <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                            {previo.resultado_general}
+                                        </span>
+                                        {previo.observaciones ? (
+                                            <p className="mt-0.5 text-[11px] text-neutral-500">
+                                                {previo.observaciones}
+                                            </p>
+                                        ) : null}
+                                    </div>
+                                    <span className="shrink-0 text-[10px] text-neutral-400">
+                                        {previo.created_at
+                                            ? new Date(
+                                                  previo.created_at,
+                                              ).toLocaleDateString('es-PE')
+                                            : ''}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {/* Quick Action bar */}
                 <div className="flex items-center justify-between gap-2 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800/80">
@@ -312,6 +373,7 @@ export default function ChecklistCreate({
                                                         Condición / Falla *
                                                     </label>
                                                     <input
+                                                        aria-label="Condición / Falla *"
                                                         type="text"
                                                         value={item.condicion}
                                                         onChange={(e) =>
@@ -331,6 +393,7 @@ export default function ChecklistCreate({
                                                         Acción Recomendada
                                                     </label>
                                                     <input
+                                                        aria-label="Acción Recomendada"
                                                         type="text"
                                                         value={
                                                             item.accion_recomendada
@@ -354,6 +417,7 @@ export default function ChecklistCreate({
                                                         Repuesto Sugerido
                                                     </label>
                                                     <input
+                                                        aria-label="Repuesto Sugerido"
                                                         type="text"
                                                         value={
                                                             item.repuesto_sugerido
@@ -432,6 +496,7 @@ export default function ChecklistCreate({
                                                     Nota Técnica
                                                 </label>
                                                 <input
+                                                    aria-label="Nota Técnica"
                                                     type="text"
                                                     value={item.nota}
                                                     onChange={(e) =>
@@ -458,6 +523,7 @@ export default function ChecklistCreate({
                             Observaciones Generales de la Inspección
                         </label>
                         <textarea
+                            aria-label="Observaciones Generales de la Inspección"
                             value={observacionesGenerales}
                             onChange={(e) =>
                                 setObservacionesGenerales(e.target.value)

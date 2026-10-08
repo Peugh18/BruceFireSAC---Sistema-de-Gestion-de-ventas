@@ -8,6 +8,7 @@ import {
     Upload,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { ConfiguracionTabs } from '@/components/configuracion-tabs';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import cuentasBancarias from '@/routes/gerente/configuracion/cuentas-bancarias';
+import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
 import empresa from '@/routes/gerente/configuracion/empresa';
 import GerenteLayout from '@/layouts/gerente-layout';
 import type { Team } from '@/types';
@@ -71,7 +73,7 @@ const COLORES_SUGERIDOS = [
 
 function field(errors: Record<string, string>, name: string) {
     return errors[name] ? (
-        <p className="text-destructive-strong mt-1 text-[11.5px]">
+        <p role="alert" className="text-destructive-strong mt-1 text-[11.5px]">
             {errors[name]}
         </p>
     ) : null;
@@ -82,6 +84,7 @@ export default function EmpresaConfiguracion({
     bankAccounts,
     firmasPendientes,
 }: Props) {
+    const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ??
@@ -118,6 +121,11 @@ export default function EmpresaConfiguracion({
     function submit(event: React.FormEvent) {
         event.preventDefault();
         form.post(empresa.update.url({ current_team: teamSlug }), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => form.setDefaults(),
@@ -174,24 +182,45 @@ export default function EmpresaConfiguracion({
     function addBankAccount(event: React.FormEvent) {
         event.preventDefault();
         bankForm.post(cuentasBancarias.store.url({ current_team: teamSlug }), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => bankForm.reset('banco', 'numero_cuenta', 'cci'),
         });
     }
 
-    function deleteBankAccount(id: number) {
+    async function deleteBankAccount(id: number) {
+        if (
+            !(await pedirConfirmacion(
+                '¿Eliminar esta cuenta bancaria? Dejará de imprimirse en los comprobantes.',
+            ))
+        ) {
+            return;
+        }
+
         router.delete(
             cuentasBancarias.destroy.url({
                 current_team: teamSlug,
                 cuenta_bancaria: id,
             }),
-            { preserveScroll: true },
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo eliminar la cuenta bancaria.',
+                    ),
+                preserveScroll: true,
+            },
         );
     }
 
     return (
         <GerenteLayout title="Datos de la empresa">
             <div className="flex flex-col gap-5">
+                {dialogoConfirmacion}
                 <ConfiguracionTabs
                     teamSlug={teamSlug}
                     activa="empresa"
@@ -231,6 +260,7 @@ export default function EmpresaConfiguracion({
                             </div>
                             <div>
                                 <input
+                                    aria-label="Subir logo de la empresa"
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
@@ -445,6 +475,7 @@ export default function EmpresaConfiguracion({
                                 </Label>
                                 <div className="mt-1 flex flex-wrap items-center gap-2">
                                     <input
+                                        aria-label="Color marca"
                                         type="color"
                                         value={form.data.color_marca}
                                         onChange={(e) =>
@@ -454,7 +485,6 @@ export default function EmpresaConfiguracion({
                                             )
                                         }
                                         className="border-border h-9 w-12 cursor-pointer rounded-[8px] border bg-transparent p-1"
-                                        aria-label="Color de la marca"
                                     />
                                     {COLORES_SUGERIDOS.map((color) => (
                                         <button
@@ -609,6 +639,7 @@ export default function EmpresaConfiguracion({
                                         type="button"
                                         variant="outline"
                                         size="icon"
+                                        aria-label={`Eliminar cuenta de ${account.banco}`}
                                         onClick={() =>
                                             deleteBankAccount(account.id)
                                         }

@@ -1,4 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -123,7 +124,13 @@ export default function GuiaForm({
                 className="mx-auto max-w-3xl space-y-4 p-4"
                 onSubmit={(event) => {
                     event.preventDefault();
-                    form.post(guias.store.url(teamSlug));
+                    form.post(guias.store.url(teamSlug), {
+                        onError: (errors) =>
+                            toast.error(
+                                Object.values(errors)[0] ??
+                                    'No se pudo completar la acción.',
+                            ),
+                    });
                 }}
             >
                 <h1 className="text-xl font-bold">Nueva guía de remisión</h1>
@@ -317,7 +324,10 @@ export default function GuiaForm({
                         </div>
                     ))}
                     {form.errors.items ? (
-                        <p className="text-destructive-strong text-xs">
+                        <p
+                            className="text-destructive-strong text-xs"
+                            role="alert"
+                        >
                             {form.errors.items}
                         </p>
                     ) : null}
@@ -329,6 +339,7 @@ export default function GuiaForm({
                         <p
                             key={clave}
                             className="text-destructive-strong text-xs"
+                            role="alert"
                         >
                             {error}
                         </p>

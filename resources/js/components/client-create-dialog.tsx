@@ -1,6 +1,7 @@
 import { useHttp } from '@inertiajs/react';
 import { UserRoundPlus } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Cargando } from '@/components/cargando';
 import { Button } from '@/components/ui/button';
@@ -96,6 +97,7 @@ function ClientFormFields({
                     Tipo doc.
                 </Label>
                 <select
+                    aria-label="Tipo doc."
                     value={data.tipo_documento}
                     onChange={(event) =>
                         setData(
@@ -426,6 +428,11 @@ export default function ClientCreateDialog({
         }
 
         void form.post(clientes.store.url(teamSlug), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             onSuccess: (client) => {
                 onOpenChange(false);
                 onCreated(client);

@@ -14,8 +14,10 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use App\Services\Tecnico\ConversacionDeLaOrden;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -205,53 +207,55 @@ class InspectionController extends Controller
             'observaciones_generales' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        // Finalizar dos veces duplicaría el certificado.
-        EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+        $msg = DB::transaction(function () use ($request, $validated, $serviceOrder): string {
+            // Finalizar dos veces duplicaría el certificado: la orden se
+            // bloquea y se revalida DENTRO de la transacción (A2), junto con
+            // el evento, el estado y el certificado.
+            $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            EquipoDeLaOrden::asegurarAbierta($serviceOrder);
 
-        if (filled($validated['firma'] ?? null)) {
-            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'inspeccion', $request->user());
-        }
+            if (filled($validated['firma'] ?? null)) {
+                app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'inspeccion', $request->user());
+            }
 
-        $responsable = ($validated['responsable'] ?? null) ?: $request->user()->name;
-        $cargo = ($validated['cargo'] ?? null) ?: 'Técnico de Campo';
+            $responsable = ($validated['responsable'] ?? null) ?: $request->user()->name;
+            $cargo = ($validated['cargo'] ?? null) ?: 'Técnico de Campo';
 
-        // Evento de inspección completada con eslabón de custodia (§22.4, §24, §85.6.3)
-        ServiceOrderEvent::create([
-            'service_order_id' => $serviceOrder->id,
-            'tipo' => 'trabajo_completado',
-            'user_id' => $request->user()->id,
-            'payload' => [
-                'accion' => 'inspeccion_campo_finalizada',
-                'responsable' => $responsable,
-                'cargo' => $cargo,
-                'conformidad_nombre' => $validated['conformidad_nombre'],
-                'observaciones_generales' => $validated['observaciones_generales'] ?? null,
-                'fecha_finalizado' => now()->toIso8601String(),
-                'eslabon_custodia' => 'inspeccion_campo',
-                'equipos_inspeccionados_count' => $serviceOrder->equipments()->count(),
-            ],
-        ]);
+            // Evento de inspección completada con eslabón de custodia (§22.4, §24, §85.6.3)
+            ServiceOrderEvent::create([
+                'service_order_id' => $serviceOrder->id,
+                'tipo' => 'trabajo_completado',
+                'user_id' => $request->user()->id,
+                'payload' => [
+                    'accion' => 'inspeccion_campo_finalizada',
+                    'responsable' => $responsable,
+                    'cargo' => $cargo,
+                    'conformidad_nombre' => $validated['conformidad_nombre'],
+                    'observaciones_generales' => $validated['observaciones_generales'] ?? null,
+                    'fecha_finalizado' => now()->toIso8601String(),
+                    'eslabon_custodia' => 'inspeccion_campo',
+                    'equipos_inspeccionados_count' => $serviceOrder->equipments()->count(),
+                ],
+            ]);
 
-        // Si hay deficiencias que requieren autorización comercial, pasar a esperando_autorizacion
-        $deficienciasPendientes = $serviceOrder->deficiencies()
-            ->where('requiere_autorizacion', true)
-            ->where('estado', 'esperando_autorizacion')
-            ->count();
+            // Si hay deficiencias que requieren autorización comercial, pasar a esperando_autorizacion
+            $deficienciasPendientes = $serviceOrder->deficiencies()
+                ->where('requiere_autorizacion', true)
+                ->where('estado', 'esperando_autorizacion')
+                ->count();
 
-        if ($deficienciasPendientes > 0) {
-            $serviceOrder->update(['estado' => 'esperando_autorizacion']);
-            $msg = 'Inspección finalizada. Hay deficiencias reportadas que requieren autorización de Vendedor.';
-        } else {
+            if ($deficienciasPendientes > 0) {
+                $serviceOrder->update(['estado' => 'esperando_autorizacion']);
+
+                return 'Inspección finalizada. Hay deficiencias reportadas que requieren autorización de Vendedor.';
+            }
+
             $serviceOrder->update(['estado' => 'listo_entrega']);
 
             // El certificado solo lleva los extintores cuyo último checklist
             // de esta orden salió conforme: un observado, descargado o sin
-            // revisar no se certifica como operativo.
-            $conformes = $serviceOrder->equipments()
-                ->where('equipment.estado', '!=', 'descargado')
-                ->get()
-                ->filter(fn (Equipment $eq) => $serviceOrder->checklists()->where('equipment_id', $eq->id)->latest('id')->value('resultado_general') === 'conforme')
-                ->values();
+            // revisar no se certifica como operativo. Una sola consulta (B5).
+            $conformes = $this->equiposConformes($serviceOrder);
 
             $certType = CertificateType::where('codigo', 'operatividad_garantia')->first();
             if ($certType && $conformes->isNotEmpty()) {
@@ -270,10 +274,10 @@ class InspectionController extends Controller
                 );
             }
 
-            $msg = $conformes->isNotEmpty()
+            return $conformes->isNotEmpty()
                 ? "Inspección finalizada y certificado de operatividad emitido para {$conformes->count()} extintor(es) conforme(s)."
                 : 'Inspección finalizada. Ningún extintor salió conforme: no se emitió certificado.';
-        }
+        });
 
         return redirect()
             ->route('tecnico-campo.inspecciones.show', [
@@ -281,5 +285,23 @@ class InspectionController extends Controller
                 'service_order' => $serviceOrder->id,
             ])
             ->with('success', $msg);
+    }
+
+    /**
+     * Extintores aptos para certificar: los de la orden que no están
+     * descargados y cuyo último checklist de esta orden salió conforme. Una
+     * sola consulta con subconsulta correlacionada (B5), no una por equipo.
+     *
+     * @return EloquentCollection<int, Equipment>
+     */
+    protected function equiposConformes(ServiceOrder $serviceOrder): EloquentCollection
+    {
+        return $serviceOrder->equipments()
+            ->where('equipment.estado', '!=', 'descargado')
+            ->whereRaw(
+                "(select c.resultado_general from technical_checklists c where c.service_order_id = ? and c.equipment_id = equipment.id order by c.id desc limit 1) = 'conforme'",
+                [$serviceOrder->id],
+            )
+            ->get();
     }
 }

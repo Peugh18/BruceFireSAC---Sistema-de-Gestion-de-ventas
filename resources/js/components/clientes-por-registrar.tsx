@@ -155,6 +155,7 @@ export default function ClientesPorRegistrar({
                 >
                     <Search className="text-muted-foreground size-3.5 shrink-0" />
                     <input
+                        aria-label="Buscar clientes por registrar"
                         value={buscar}
                         onChange={(event) => setBuscar(event.target.value)}
                         placeholder="Buscar nombre o RUC"

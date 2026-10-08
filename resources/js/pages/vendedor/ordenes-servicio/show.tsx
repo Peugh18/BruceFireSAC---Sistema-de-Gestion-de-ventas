@@ -25,6 +25,9 @@ import ordenes from '@/routes/vendedor/ordenes-servicio';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
 import OpcionesAgente from '@/components/opciones-agente';
+import EntregaMostradorRoutes from '@/routes/vendedor/ordenes-servicio/entrega-mostrador';
+import EquiposRoutes from '@/routes/vendedor/ordenes-servicio/equipos';
+import VentasRoutes from '@/routes/vendedor/ventas';
 
 export type ServiceOrderEvent = {
     id: number;
@@ -277,6 +280,11 @@ export default function ServiceOrderShow({
     function guardarEdicion(event: React.FormEvent) {
         event.preventDefault();
         edicion.put(ordenes.update.url(ruta), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => setEditando(false),
         });
@@ -285,6 +293,11 @@ export default function ServiceOrderShow({
     function enviarNota(event: React.FormEvent) {
         event.preventDefault();
         nota.post(comunicacion.nota.url(ruta), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => nota.reset(),
         });
@@ -293,8 +306,19 @@ export default function ServiceOrderShow({
     function agregarEquipo(event: React.FormEvent) {
         event.preventDefault();
         equipo.post(
-            `/${teamSlug}/vendedor/ordenes-servicio/${serviceOrder.id}/equipos`,
-            { preserveScroll: true, onSuccess: () => equipo.reset() },
+            EquiposRoutes.store.url({
+                current_team: teamSlug,
+                service_order: serviceOrder.id,
+            }),
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+                preserveScroll: true,
+                onSuccess: () => equipo.reset(),
+            },
         );
     }
 
@@ -316,6 +340,7 @@ export default function ServiceOrderShow({
                                 href={ServiceOrderController.index.url(
                                     teamSlug,
                                 )}
+                                aria-label="Volver a órdenes de servicio"
                             >
                                 <ArrowLeft className="size-4" />
                             </Link>
@@ -372,7 +397,10 @@ export default function ServiceOrderShow({
                         ].includes(serviceOrder.estado) && (
                             <Button asChild size="sm">
                                 <Link
-                                    href={`/${teamSlug}/vendedor/ordenes-servicio/${serviceOrder.id}/entrega-mostrador`}
+                                    href={EntregaMostradorRoutes.show.url({
+                                        current_team: teamSlug,
+                                        service_order: serviceOrder.id,
+                                    })}
                                 >
                                     Entrega en mostrador
                                 </Link>
@@ -383,7 +411,11 @@ export default function ServiceOrderShow({
                             variant="outline"
                             className="border-border bg-card text-foreground/80 rounded-[9px] text-xs font-semibold"
                         >
-                            <Link href={`/${teamSlug}/vendedor/comunicacion`}>
+                            <Link
+                                href={comunicacion.index.url({
+                                    current_team: teamSlug,
+                                })}
+                            >
                                 <MessageCircle className="mr-1.5 size-3.5" />
                                 <span>Ver en Seguimiento de taller</span>
                             </Link>
@@ -402,7 +434,10 @@ export default function ServiceOrderShow({
                         <div className="flex gap-2">
                             <Button asChild variant="outline">
                                 <a
-                                    href={`/${teamSlug}/vendedor/ordenes-servicio/${serviceOrder.id}/constancia-recepcion`}
+                                    href={ordenes.constanciaRecepcion.url({
+                                        current_team: teamSlug,
+                                        service_order: serviceOrder.id,
+                                    })}
                                 >
                                     Constancia PDF
                                 </a>
@@ -410,7 +445,10 @@ export default function ServiceOrderShow({
                             {serviceOrder.sale_id ? (
                                 <Button asChild variant="outline">
                                     <Link
-                                        href={`/${teamSlug}/vendedor/ventas/${serviceOrder.sale_id}`}
+                                        href={VentasRoutes.show.url({
+                                            current_team: teamSlug,
+                                            sale: serviceOrder.sale_id,
+                                        })}
                                     >
                                         Ver venta
                                     </Link>
@@ -418,7 +456,15 @@ export default function ServiceOrderShow({
                             ) : (
                                 <Button asChild>
                                     <Link
-                                        href={`/${teamSlug}/vendedor/ventas/nueva?orden_servicio=${serviceOrder.id}`}
+                                        href={VentasRoutes.create.url(
+                                            { current_team: teamSlug },
+                                            {
+                                                query: {
+                                                    orden_servicio:
+                                                        serviceOrder.id,
+                                                },
+                                            },
+                                        )}
                                     >
                                         Cobrar
                                     </Link>
@@ -450,6 +496,7 @@ export default function ServiceOrderShow({
                             className="grid gap-2 sm:grid-cols-3"
                         >
                             <input
+                                aria-label="Sticker BF-EQ (si existe)"
                                 className="rounded-md border p-2 text-sm"
                                 placeholder="Sticker BF-EQ (si existe)"
                                 value={equipo.data.numero_serie}
@@ -461,6 +508,7 @@ export default function ServiceOrderShow({
                                 }
                             />
                             <input
+                                aria-label="Capacidad"
                                 className="rounded-md border p-2 text-sm"
                                 placeholder="Capacidad"
                                 value={equipo.data.capacidad}
@@ -482,6 +530,7 @@ export default function ServiceOrderShow({
                                 <OpcionesAgente vacia="Agente" />
                             </select>
                             <input
+                                aria-label="Marca"
                                 className="rounded-md border p-2 text-sm"
                                 placeholder="Marca"
                                 value={equipo.data.marca}
@@ -490,6 +539,7 @@ export default function ServiceOrderShow({
                                 }
                             />
                             <input
+                                aria-label="Serie fabricante"
                                 className="rounded-md border p-2 text-sm"
                                 placeholder="Serie fabricante"
                                 value={equipo.data.serie_fabricante}
@@ -604,6 +654,7 @@ export default function ServiceOrderShow({
                                     {editable && tecnicos.length > 0 ? (
                                         <div className="mt-2 flex gap-2">
                                             <select
+                                                aria-label="Técnico asignado"
                                                 value={tecnicoElegido}
                                                 onChange={(event) =>
                                                     setTecnicoElegido(
@@ -729,6 +780,7 @@ export default function ServiceOrderShow({
                                     className="mt-3 flex gap-2"
                                 >
                                     <input
+                                        aria-label="Mensaje"
                                         value={nota.data.mensaje}
                                         onChange={(event) =>
                                             nota.setData(
@@ -825,6 +877,7 @@ export default function ServiceOrderShow({
                                 Servicio del catálogo
                             </span>
                             <select
+                                aria-label="Servicio del catálogo"
                                 value={edicion.data.service_id}
                                 onChange={(event) =>
                                     edicion.setData(
@@ -848,6 +901,7 @@ export default function ServiceOrderShow({
                                 Fecha programada
                             </span>
                             <input
+                                aria-label="Fecha programada"
                                 type="date"
                                 value={edicion.data.fecha}
                                 onChange={(event) =>
@@ -862,6 +916,7 @@ export default function ServiceOrderShow({
                                     Prioridad
                                 </span>
                                 <select
+                                    aria-label="Prioridad"
                                     value={edicion.data.prioridad}
                                     onChange={(event) =>
                                         edicion.setData(
@@ -881,6 +936,7 @@ export default function ServiceOrderShow({
                                     Área
                                 </span>
                                 <select
+                                    aria-label="Área"
                                     value={edicion.data.departamento_tecnico}
                                     disabled={
                                         serviceOrder.estado !==
@@ -912,6 +968,7 @@ export default function ServiceOrderShow({
                                     Técnico
                                 </span>
                                 <select
+                                    aria-label="Técnico"
                                     value={edicion.data.tecnico_id}
                                     onChange={(event) =>
                                         edicion.setData(
@@ -945,6 +1002,7 @@ export default function ServiceOrderShow({
                                 Indicaciones para el técnico
                             </span>
                             <textarea
+                                aria-label="Indicaciones para el técnico"
                                 value={edicion.data.observaciones}
                                 onChange={(event) =>
                                     edicion.setData(
@@ -957,7 +1015,10 @@ export default function ServiceOrderShow({
                             />
                         </label>
                         {Object.values(edicion.errors)[0] ? (
-                            <p className="text-destructive-strong text-[11.5px]">
+                            <p
+                                className="text-destructive-strong text-[11.5px]"
+                                role="alert"
+                            >
                                 {Object.values(edicion.errors)[0]}
                             </p>
                         ) : null}
@@ -991,13 +1052,17 @@ export default function ServiceOrderShow({
                         la orden ya se cobró, primero anula la venta.
                     </p>
                     <textarea
+                        aria-label="Motivo de anulación"
                         value={motivoAnulacion}
                         onChange={(e) => setMotivoAnulacion(e.target.value)}
                         placeholder="Motivo de la anulación"
                         className="border-border bg-card min-h-[80px] w-full rounded-lg border p-2 text-sm"
                     />
                     {errorAnulacion ? (
-                        <p className="text-destructive-strong text-xs font-semibold">
+                        <p
+                            className="text-destructive-strong text-xs font-semibold"
+                            role="alert"
+                        >
                             {errorAnulacion}
                         </p>
                     ) : null}

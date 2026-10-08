@@ -18,6 +18,16 @@ import { AppNavSidebar } from '@/components/app-nav-sidebar';
 import guias from '@/routes/guias';
 import transporte from '@/routes/gerente/transporte';
 import type { Auth } from '@/types';
+import GerenteRoutes from '@/routes/gerente';
+import ProductosRoutes from '@/routes/gerente/productos';
+import ServiciosRoutes from '@/routes/gerente/servicios';
+import CajasRoutes from '@/routes/gerente/cajas';
+import CobranzasRoutes from '@/routes/gerente/cobranzas';
+import ReportesRoutes from '@/routes/gerente/reportes';
+import AuditoriaRoutes from '@/routes/gerente/auditoria';
+import SedesRoutes from '@/routes/gerente/sedes';
+import UsuariosRoutes from '@/routes/gerente/usuarios';
+import EmpresaRoutes from '@/routes/gerente/configuracion/empresa';
 
 type SidebarCounts = {
     productosBajoMinimo?: number;
@@ -55,7 +65,9 @@ function buildNavGroups(
             items: [
                 {
                     title: 'Dashboard',
-                    href: `/${teamSlug}/gerente/dashboard`,
+                    href: GerenteRoutes.dashboard.url({
+                        current_team: teamSlug,
+                    }),
                     icon: LayoutDashboard,
                 },
             ],
@@ -65,13 +77,13 @@ function buildNavGroups(
             items: [
                 {
                     title: 'Productos',
-                    href: `/${teamSlug}/gerente/productos`,
+                    href: ProductosRoutes.index.url({ current_team: teamSlug }),
                     icon: Boxes,
                     count: counts?.productosBajoMinimo,
                 },
                 {
                     title: 'Servicios',
-                    href: `/${teamSlug}/gerente/servicios`,
+                    href: ServiciosRoutes.index.url({ current_team: teamSlug }),
                     icon: Wrench,
                 },
             ],
@@ -81,12 +93,12 @@ function buildNavGroups(
             items: [
                 {
                     title: 'Caja Consolidada',
-                    href: `/${teamSlug}/gerente/cajas`,
+                    href: CajasRoutes.index.url({ current_team: teamSlug }),
                     icon: Wallet,
                 },
                 {
                     title: 'Cobranzas',
-                    href: `/${teamSlug}/gerente/cobranzas`,
+                    href: CobranzasRoutes.index.url({ current_team: teamSlug }),
                     icon: CircleDollarSign,
                     count: counts?.cobranzasVencidas,
                 },
@@ -97,7 +109,7 @@ function buildNavGroups(
             items: [
                 {
                     title: 'Reportes',
-                    href: `/${teamSlug}/gerente/reportes`,
+                    href: ReportesRoutes.index.url({ current_team: teamSlug }),
                     icon: BarChart3,
                 },
             ],
@@ -107,12 +119,12 @@ function buildNavGroups(
             items: [
                 {
                     title: 'Auditoría',
-                    href: `/${teamSlug}/gerente/auditoria`,
+                    href: AuditoriaRoutes.index.url({ current_team: teamSlug }),
                     icon: ShieldCheck,
                 },
                 {
                     title: 'Sedes',
-                    href: `/${teamSlug}/gerente/sedes`,
+                    href: SedesRoutes.index.url({ current_team: teamSlug }),
                     icon: MapPin,
                 },
                 {
@@ -127,12 +139,12 @@ function buildNavGroups(
                 },
                 {
                     title: 'Usuarios y Roles',
-                    href: `/${teamSlug}/gerente/usuarios`,
+                    href: UsuariosRoutes.index.url({ current_team: teamSlug }),
                     icon: Users,
                 },
                 {
                     title: 'Configuración',
-                    href: `/${teamSlug}/gerente/configuracion/empresa`,
+                    href: EmpresaRoutes.edit.url({ current_team: teamSlug }),
                     icon: Building2,
                 },
             ],

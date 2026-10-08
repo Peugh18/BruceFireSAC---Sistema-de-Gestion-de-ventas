@@ -16,6 +16,9 @@ import {
     type CategoriaItem,
 } from '@/components/categoria-select';
 import GerenteLayout from '@/layouts/gerente-layout';
+import { toast } from 'sonner';
+import ProductosRoutes from '@/routes/gerente/productos';
+import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
 type ProductItem = {
     id: number;
     codigo: string;
@@ -83,6 +86,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 export default function ProductosIndex() {
+    const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
     const {
         currentTeam,
         productos,
@@ -181,21 +185,37 @@ export default function ProductosIndex() {
         e.preventDefault();
         if (editingProduct) {
             form.put(
-                `/${currentTeam.slug}/gerente/productos/${editingProduct.id}`,
+                ProductosRoutes.update.url({
+                    current_team: currentTeam.slug,
+                    producto: editingProduct.id,
+                }),
                 {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
                     onSuccess: () => closeModal(),
                 },
             );
         } else {
-            form.post(`/${currentTeam.slug}/gerente/productos`, {
-                onSuccess: () => closeModal(),
-            });
+            form.post(
+                ProductosRoutes.store.url({ current_team: currentTeam.slug }),
+                {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
+                    onSuccess: () => closeModal(),
+                },
+            );
         }
     };
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
-            `/${currentTeam.slug}/gerente/productos`,
+            ProductosRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 buscar,
                 estado: filters.estado,
@@ -206,7 +226,7 @@ export default function ProductosIndex() {
     };
     const handleFilterEstado = (estado: string) => {
         router.get(
-            `/${currentTeam.slug}/gerente/productos`,
+            ProductosRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 buscar,
                 estado,
@@ -217,7 +237,7 @@ export default function ProductosIndex() {
     };
     const handleToggleBajoMinimo = () => {
         router.get(
-            `/${currentTeam.slug}/gerente/productos`,
+            ProductosRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 buscar,
                 estado: filters.estado,
@@ -228,20 +248,38 @@ export default function ProductosIndex() {
     };
     const handleToggleStatus = (product: ProductItem) => {
         router.patch(
-            `/${currentTeam.slug}/gerente/productos/${product.id}/toggle-status`,
+            ProductosRoutes.toggleStatus.url({
+                current_team: currentTeam.slug,
+                producto: product.id,
+            }),
             {},
-            { preserveScroll: true },
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+                preserveScroll: true,
+            },
         );
     };
-    const handleDelete = (product: ProductItem) => {
+    const handleDelete = async (product: ProductItem) => {
         if (
-            confirm(
+            await pedirConfirmacion(
                 `¿Desea eliminar el producto "${product.nombre}"? Si tiene historial registrado, la operación será rechazada conforme a las reglas del sistema.`,
             )
         ) {
             router.delete(
-                `/${currentTeam.slug}/gerente/productos/${product.id}`,
+                ProductosRoutes.destroy.url({
+                    current_team: currentTeam.slug,
+                    producto: product.id,
+                }),
                 {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
                     preserveScroll: true,
                 },
             );
@@ -250,6 +288,7 @@ export default function ProductosIndex() {
     return (
         <GerenteLayout title="Catálogo de Productos">
             <div className="space-y-6">
+                {dialogoConfirmacion}
                 {/* Alertas Flash */}
                 {flash?.success && (
                     <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -328,6 +367,7 @@ export default function ProductosIndex() {
                         <div className="relative flex-1">
                             <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                             <input
+                                aria-label="Buscar productos"
                                 type="text"
                                 value={buscar}
                                 onChange={(e) => setBuscar(e.target.value)}
@@ -618,6 +658,7 @@ export default function ProductosIndex() {
                                 <button
                                     type="button"
                                     onClick={closeModal}
+                                    aria-label="Cerrar"
                                     className="text-muted-foreground hover:bg-background rounded-md p-1"
                                 >
                                     <X className="size-4" />
@@ -633,6 +674,7 @@ export default function ProductosIndex() {
                                             Código de barras del fabricante
                                         </label>
                                         <input
+                                            aria-label="Código de barras del fabricante"
                                             type="text"
                                             value={form.data.codigo_barras}
                                             onChange={(e) =>
@@ -770,6 +812,7 @@ export default function ProductosIndex() {
                                             Código *
                                         </label>
                                         <input
+                                            aria-label="Código *"
                                             type="text"
                                             required
                                             value={form.data.codigo}
@@ -793,6 +836,7 @@ export default function ProductosIndex() {
                                             U.M. *
                                         </label>
                                         <select
+                                            aria-label="U.M. *"
                                             value={form.data.unidad_medida}
                                             onChange={(e) =>
                                                 form.setData(
@@ -818,6 +862,7 @@ export default function ProductosIndex() {
                                         Nombre del Producto *
                                     </label>
                                     <input
+                                        aria-label="Nombre del Producto *"
                                         type="text"
                                         required
                                         value={form.data.nombre}
@@ -841,6 +886,7 @@ export default function ProductosIndex() {
                                         Descripción
                                     </label>
                                     <textarea
+                                        aria-label="Descripción"
                                         rows={2}
                                         value={form.data.descripcion}
                                         onChange={(e) =>
@@ -859,6 +905,7 @@ export default function ProductosIndex() {
                                             Precio Venta (S/) *
                                         </label>
                                         <input
+                                            aria-label="Precio Venta (S/) *"
                                             type="number"
                                             step="0.01"
                                             min="0"
@@ -884,6 +931,7 @@ export default function ProductosIndex() {
                                             Stock Mínimo (Alerta Almacén)
                                         </label>
                                         <input
+                                            aria-label="Stock Mínimo (Alerta Almacén)"
                                             type="number"
                                             min="0"
                                             value={form.data.stock_minimo}
@@ -909,6 +957,7 @@ export default function ProductosIndex() {
                                                 Se compra por (opcional)
                                             </label>
                                             <input
+                                                aria-label="Se compra por (opcional)"
                                                 type="text"
                                                 maxLength={10}
                                                 value={form.data.unidad_compra}
@@ -927,6 +976,7 @@ export default function ProductosIndex() {
                                                 ¿Cuántas trae cada una?
                                             </label>
                                             <input
+                                                aria-label="¿Cuántas trae cada una?"
                                                 type="number"
                                                 min="1"
                                                 disabled={

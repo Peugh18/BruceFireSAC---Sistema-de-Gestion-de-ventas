@@ -9,9 +9,11 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import GerenteLayout from '@/layouts/gerente-layout';
+import SedesRoutes from '@/routes/gerente/sedes';
 
 type SedeTipo = 'tienda' | 'almacen' | 'mixta';
 
@@ -130,19 +132,49 @@ export default function SedesIndex() {
 
         if (editing) {
             form.put(
-                `/${currentTeam.slug}/gerente/sedes/${editing.id}`,
-                options,
+                SedesRoutes.update.url({
+                    current_team: currentTeam.slug,
+                    sede: editing.id,
+                }),
+                {
+                    ...options,
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
+                },
             );
         } else {
-            form.post(`/${currentTeam.slug}/gerente/sedes`, options);
+            form.post(
+                SedesRoutes.store.url({ current_team: currentTeam.slug }),
+                {
+                    ...options,
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
+                },
+            );
         }
     };
 
     const handleToggleStatus = (sede: SedeItem) => {
         router.patch(
-            `/${currentTeam.slug}/gerente/sedes/${sede.id}/toggle-status`,
+            SedesRoutes.toggleStatus.url({
+                current_team: currentTeam.slug,
+                sede: sede.id,
+            }),
             {},
-            { preserveScroll: true },
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+                preserveScroll: true,
+            },
         );
     };
 
@@ -365,6 +397,7 @@ export default function SedesIndex() {
                                 <button
                                     type="button"
                                     onClick={closeModal}
+                                    aria-label="Cerrar"
                                     className="text-muted-foreground hover:bg-background rounded-md p-1"
                                 >
                                     <X className="size-4" />
@@ -380,6 +413,7 @@ export default function SedesIndex() {
                                         Nombre *
                                     </label>
                                     <input
+                                        aria-label="Nombre *"
                                         type="text"
                                         required
                                         value={form.data.nombre}
@@ -403,6 +437,7 @@ export default function SedesIndex() {
                                         Tipo *
                                     </label>
                                     <select
+                                        aria-label="Tipo *"
                                         value={form.data.tipo}
                                         onChange={(e) =>
                                             form.setData(
@@ -438,6 +473,7 @@ export default function SedesIndex() {
                                             Almacén del que saca stock *
                                         </label>
                                         <select
+                                            aria-label="Almacén del que saca stock *"
                                             required
                                             value={form.data.almacen_id}
                                             onChange={(e) =>

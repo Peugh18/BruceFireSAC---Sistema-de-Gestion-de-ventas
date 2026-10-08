@@ -33,11 +33,16 @@ class RegisterCollection
             throw new InvalidArgumentException('Se requiere la conformidad del cliente para el recojo de equipos.');
         }
 
-        if ($serviceOrder->estado !== 'pendiente_recepcion' || $serviceOrder->events()->where('payload->eslabon_custodia', 'recojo_campo')->exists()) {
-            throw new InvalidArgumentException('Este recojo ya se registró.');
-        }
-
         return DB::transaction(function () use ($serviceOrder, $user, $data) {
+            // Bloqueada y releída (M6): el chequeo de estado y el guard de
+            // "recojo ya registrado" valen DENTRO de la transacción; un doble
+            // POST no puede duplicar el eslabón de custodia.
+            $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+
+            if ($serviceOrder->estado !== 'pendiente_recepcion' || $serviceOrder->events()->where('payload->eslabon_custodia', 'recojo_campo')->exists()) {
+                throw new InvalidArgumentException('Este recojo ya se registró.');
+            }
+
             $cantidad = $serviceOrder->equipments()->count();
             if ($cantidad === 0) {
                 throw new InvalidArgumentException('Registra al menos un extintor antes de confirmar el recojo.');

@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { BotonFoto } from '@/components/captura-evidencia';
+import { toast } from 'sonner';
 
 type Estado = 'conforme' | 'observado' | 'no_aplica';
 
@@ -70,6 +71,11 @@ export default function ChecklistExtintor({
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
         form.post(url, {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             forceFormData: true,
             preserveScroll: true,
             onSuccess: onCerrar,

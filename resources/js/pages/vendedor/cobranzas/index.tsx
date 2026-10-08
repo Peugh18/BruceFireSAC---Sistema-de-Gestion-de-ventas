@@ -8,7 +8,9 @@ import {
     XCircle,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { toast } from 'sonner';
 
+import AlertError from '@/components/alert-error';
 import CashRegisterController from '@/actions/App/Http/Controllers/Vendedor/CashRegisterController';
 import CollectionController from '@/actions/App/Http/Controllers/Vendedor/CollectionController';
 import { Badge } from '@/components/ui/badge';
@@ -139,6 +141,11 @@ export default function CobranzasIndex({
     const submitOpenTurno = (e: FormEvent) => {
         e.preventDefault();
         openForm.post(CashRegisterController.open.url(teamSlug), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => {
                 setOpenTurnoDialogOpen(false);
@@ -162,6 +169,11 @@ export default function CobranzasIndex({
                 cash_register: turno_actual.id,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
                 onSuccess: () => {
                     setCloseTurnoDialogOpen(false);
@@ -199,6 +211,11 @@ export default function CobranzasIndex({
                 payment: selectedPayment.id,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
                 onSuccess: () => {
                     setSelectedPayment(null);
@@ -217,6 +234,11 @@ export default function CobranzasIndex({
                 installment: selectedInstallment.id,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
                 onSuccess: () => {
                     setSelectedInstallment(null);
@@ -702,12 +724,20 @@ export default function CobranzasIndex({
                         onSubmit={submitOpenTurno}
                         className="mt-3 space-y-3.5"
                     >
+                        {/* Clave global de caja (p.ej. "cash_register") que no
+                            corresponde a un campo del formulario. */}
+                        <AlertError
+                            errors={Object.entries(openForm.errors)
+                                .filter(([clave]) => clave !== 'monto_apertura')
+                                .map(([, mensaje]) => mensaje)}
+                        />
                         {sedes.length > 0 && (
                             <div>
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Sede
                                 </Label>
                                 <select
+                                    aria-label="Sede"
                                     value={openForm.data.sede_id}
                                     onChange={(e) =>
                                         openForm.setData(
@@ -801,6 +831,16 @@ export default function CobranzasIndex({
                         onSubmit={submitCloseTurno}
                         className="mt-3 space-y-3.5"
                     >
+                        {/* Clave global de caja (p.ej. "cash_register") que no
+                            corresponde a un campo del formulario. */}
+                        <AlertError
+                            errors={Object.entries(closeForm.errors)
+                                .filter(
+                                    ([clave]) =>
+                                        clave !== 'monto_contado_cierre',
+                                )
+                                .map(([, mensaje]) => mensaje)}
+                        />
                         <div>
                             <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Monto contado en efectivo (S/) *
@@ -900,6 +940,7 @@ export default function CobranzasIndex({
                                 Forma de pago
                             </Label>
                             <select
+                                aria-label="Forma de pago"
                                 value={paymentForm.data.forma_pago}
                                 onChange={(e) =>
                                     paymentForm.setData(

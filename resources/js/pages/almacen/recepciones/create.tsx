@@ -490,11 +490,11 @@ export default function RecepcionesCreate({
 
                         <div className="flex flex-1 justify-end px-3">
                             <input
+                                aria-label="Escanear código de barras"
                                 value={escaneo}
                                 onChange={(e) => setEscaneo(e.target.value)}
                                 onKeyDown={alEscanear}
                                 placeholder="Escanear código de barras..."
-                                aria-label="Escanear código de barras"
                                 className="border-border bg-muted/40 h-8 w-full max-w-[260px] rounded-[8px] border px-3 font-mono text-[12px] outline-none"
                             />
                         </div>
@@ -583,6 +583,7 @@ export default function RecepcionesCreate({
                                                     </span>
                                                 </Label>
                                                 <select
+                                                    aria-label="Producto"
                                                     id={`recepcion-producto-${index}`}
                                                     value={item.product_id}
                                                     onChange={(e) =>

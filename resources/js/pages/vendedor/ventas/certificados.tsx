@@ -947,6 +947,7 @@ export default function ArmarCertificados({
                                                         </td>
                                                         <td className="px-2.5 py-1.5">
                                                             <select
+                                                                aria-label="Grupo del extintor"
                                                                 value={
                                                                     fila.grupo
                                                                 }

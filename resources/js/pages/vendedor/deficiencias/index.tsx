@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Check, CheckCircle2, RotateCcw, Wrench, X } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { toast } from 'sonner';
 
 import DeficiencyAuthorizationController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyAuthorizationController';
 import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
@@ -180,6 +181,11 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                 deficiency: actionModal.item.id,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
                 onSuccess: () => {
                     setActionModal(null);
@@ -523,6 +529,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                     Canal *
                                 </Label>
                                 <select
+                                    aria-label="Canal *"
                                     value={authForm.data.canal}
                                     onChange={(e) =>
                                         authForm.setData(

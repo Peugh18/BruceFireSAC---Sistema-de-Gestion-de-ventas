@@ -19,6 +19,10 @@ import {
     MessageSquare,
 } from 'lucide-react';
 import OpcionesAgente from '@/components/opciones-agente';
+import RecepcionesRoutes from '@/routes/tecnico-planta/recepciones';
+import EquiposRoutes from '@/routes/tecnico-planta/equipos';
+import Equipos2Routes from '@/routes/tecnico-planta/recepciones/equipos';
+import ChecklistRoutes from '@/routes/tecnico-planta/checklist';
 
 interface EquipmentItem {
     id: number;
@@ -52,7 +56,7 @@ interface OrderDetail {
     eventos: Array<{
         id: number;
         tipo: string;
-        payload: any;
+        payload: Record<string, string | number | boolean | null | undefined>;
         created_at: string;
     }>;
 }
@@ -62,15 +66,22 @@ interface Props {
     order: OrderDetail;
 }
 
+type EquipoEscaneado = {
+    numero_serie: string;
+    cliente?: string | null;
+    tipo_agente?: string | null;
+    capacidad?: string | null;
+    marca?: string | null;
+};
+
 export default function RecepcionShow({ asignacion, order }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const teamPrefix = `/${teamSlug}/tecnico-planta`;
 
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [registerTab, setRegisterTab] = useState<'scan' | 'new'>('new');
     const [barcodeScanInput, setBarcodeScanInput] = useState('');
-    const [scanResult, setScanResult] = useState<any>(null);
+    const [scanResult, setScanResult] = useState<EquipoEscaneado | null>(null);
     const [scanLoading, setScanLoading] = useState(false);
     const [scanError, setScanError] = useState<string | null>(null);
 
@@ -112,14 +123,20 @@ export default function RecepcionShow({ asignacion, order }: Props) {
 
     const handleConfirmReception = (e: React.FormEvent) => {
         e.preventDefault();
-        confirmForm.post(`${teamPrefix}/recepciones/${order.id}/confirmar`, {
-            preserveScroll: true,
-            onError: (errors) =>
-                toast.error(
-                    Object.values(errors)[0] ??
-                        'No se pudo confirmar la recepción.',
-                ),
-        });
+        confirmForm.post(
+            RecepcionesRoutes.confirm.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo confirmar la recepción.',
+                    ),
+            },
+        );
     };
 
     const handleSearchExisting = async () => {
@@ -128,7 +145,14 @@ export default function RecepcionShow({ asignacion, order }: Props) {
         setScanError(null);
         try {
             const res = await fetch(
-                `${teamPrefix}/equipos/buscar?code=${encodeURIComponent(barcodeScanInput.trim())}`,
+                EquiposRoutes.search.url(
+                    { current_team: teamSlug },
+                    {
+                        query: {
+                            code: encodeURIComponent(barcodeScanInput.trim()),
+                        },
+                    },
+                ),
             );
             const data = await res.json();
             if (data.found) {
@@ -149,33 +173,45 @@ export default function RecepcionShow({ asignacion, order }: Props) {
     const handleLinkExisting = () => {
         if (!scanResult) return;
         equipmentForm.setData('numero_serie', scanResult.numero_serie);
-        equipmentForm.post(`${teamPrefix}/recepciones/${order.id}/equipos`, {
-            onSuccess: () => {
-                setShowRegisterModal(false);
-                setScanResult(null);
-                setBarcodeScanInput('');
+        equipmentForm.post(
+            Equipos2Routes.store.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+            {
+                onSuccess: () => {
+                    setShowRegisterModal(false);
+                    setScanResult(null);
+                    setBarcodeScanInput('');
+                },
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo registrar el equipo.',
+                    ),
             },
-            onError: (errors) =>
-                toast.error(
-                    Object.values(errors)[0] ??
-                        'No se pudo registrar el equipo.',
-                ),
-        });
+        );
     };
 
     const handleCreateNew = (e: React.FormEvent) => {
         e.preventDefault();
-        equipmentForm.post(`${teamPrefix}/recepciones/${order.id}/equipos`, {
-            onSuccess: () => {
-                setShowRegisterModal(false);
-                equipmentForm.reset();
+        equipmentForm.post(
+            Equipos2Routes.store.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+            {
+                onSuccess: () => {
+                    setShowRegisterModal(false);
+                    equipmentForm.reset();
+                },
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo registrar el equipo.',
+                    ),
             },
-            onError: (errors) =>
-                toast.error(
-                    Object.values(errors)[0] ??
-                        'No se pudo registrar el equipo.',
-                ),
-        });
+        );
     };
 
     const setUnreadable = (
@@ -191,7 +227,9 @@ export default function RecepcionShow({ asignacion, order }: Props) {
             <div className="space-y-4 pb-12">
                 {/* Back Button */}
                 <Link
-                    href={`${teamPrefix}/recepciones`}
+                    href={RecepcionesRoutes.index.url({
+                        current_team: teamSlug,
+                    })}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
                 >
                     <ArrowLeft className="h-4 w-4" />
@@ -229,7 +267,10 @@ export default function RecepcionShow({ asignacion, order }: Props) {
 
                         {order.equipments.length > 0 && (
                             <a
-                                href={`${teamPrefix}/recepciones/${order.id}/stickers`}
+                                href={RecepcionesRoutes.stickers.url({
+                                    current_team: teamSlug,
+                                    service_order: order.id,
+                                })}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex flex-shrink-0 items-center justify-center rounded-xl bg-neutral-100 p-2.5 text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200"
@@ -317,6 +358,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     física
                                 </label>
                                 <input
+                                    aria-label="Diferencias"
                                     type="text"
                                     value={confirmForm.data.diferencias}
                                     onChange={(e) =>
@@ -475,7 +517,11 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                         </div>
 
                                         <Link
-                                            href={`${teamPrefix}/ordenes/${order.id}/equipos/${eq.id}/checklist`}
+                                            href={ChecklistRoutes.create.url({
+                                                current_team: teamSlug,
+                                                service_order: order.id,
+                                                equipment: eq.id,
+                                            })}
                                             className="flex items-center gap-1 rounded-xl bg-amber-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-xs hover:bg-amber-700"
                                         >
                                             <Wrench className="h-3.5 w-3.5" />
@@ -578,6 +624,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     </p>
                                     <div className="flex gap-2">
                                         <input
+                                            aria-label="Código de barras del equipo existente"
                                             type="text"
                                             value={barcodeScanInput}
                                             onChange={(e) =>
@@ -592,6 +639,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             type="button"
                                             onClick={handleSearchExisting}
                                             disabled={scanLoading}
+                                            aria-label="Buscar equipo por código"
                                             className="rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white dark:bg-neutral-700"
                                         >
                                             <Search className="h-4 w-4" />
@@ -652,6 +700,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 Agente / Tipo *
                                             </label>
                                             <select
+                                                aria-label="Agente / Tipo *"
                                                 value={
                                                     equipmentForm.data
                                                         .tipo_agente
@@ -673,6 +722,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 Capacidad *
                                             </label>
                                             <input
+                                                aria-label="Capacidad *"
                                                 type="text"
                                                 value={
                                                     equipmentForm.data.capacidad
@@ -705,6 +755,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             </button>
                                         </div>
                                         <input
+                                            aria-label="Marca"
                                             type="text"
                                             value={equipmentForm.data.marca}
                                             onChange={(e) =>
@@ -737,6 +788,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 </button>
                                             </div>
                                             <input
+                                                aria-label="Serie fabricante"
                                                 type="text"
                                                 value={
                                                     equipmentForm.data
@@ -771,6 +823,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 </button>
                                             </div>
                                             <input
+                                                aria-label="Anio fabricacion"
                                                 type="text"
                                                 value={
                                                     equipmentForm.data
@@ -793,6 +846,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             Notas de Recepción / Ubicación
                                         </label>
                                         <input
+                                            aria-label="Notas de Recepción / Ubicación"
                                             type="text"
                                             value={equipmentForm.data.notas}
                                             onChange={(e) =>

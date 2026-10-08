@@ -1,7 +1,8 @@
 import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
+import { toast } from 'sonner';
 
-import categoriasRoutes from '@/routes/gerente/categorias';
 import {
     Dialog,
     DialogContent,
@@ -9,6 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import categoriasRoutes from '@/routes/gerente/categorias';
 
 export type CategoriaItem = {
     id: number;
@@ -30,6 +32,7 @@ type Props = {
  * y borrar (solo si nadie la usa).
  */
 export function CategoriaSelect({ value, onChange, categorias }: Props) {
+    const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
     const { currentTeam, errors } = usePage<{
         currentTeam: { slug: string };
         errors: Record<string, string>;
@@ -50,6 +53,11 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                 genera_alertas_vencimiento: alertasNueva,
             },
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 ...opciones,
                 onSuccess: () => {
                     setNombreNueva('');
@@ -76,22 +84,37 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                 activo: c.activo,
                 ...cambios,
             },
-            opciones,
+            {
+                ...opciones,
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+            },
         );
     };
 
-    const borrar = (c: CategoriaItem) => {
-        if (!window.confirm(`¿Borrar la categoría "${c.nombre}"?`)) {
+    const borrar = async (c: CategoriaItem) => {
+        if (!(await pedirConfirmacion(`¿Borrar la categoría "${c.nombre}"?`))) {
             return;
         }
         router.delete(
             categoriasRoutes.destroy.url({ ...params, categoria: c.id }),
-            opciones,
+            {
+                ...opciones,
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+            },
         );
     };
 
     return (
         <div>
+            {dialogoConfirmacion}
             <div className="flex items-center justify-between">
                 <label
                     htmlFor="categoria-select"
@@ -135,12 +158,14 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                     </DialogHeader>
 
                     {errors.categoria && (
-                        <p className="text-sm text-red-600">
+                        <p className="text-sm text-red-600" role="alert">
                             {errors.categoria}
                         </p>
                     )}
                     {errors.nombre && (
-                        <p className="text-sm text-red-600">{errors.nombre}</p>
+                        <p className="text-sm text-red-600" role="alert">
+                            {errors.nombre}
+                        </p>
                     )}
 
                     <ul className="divide-border divide-y text-sm">

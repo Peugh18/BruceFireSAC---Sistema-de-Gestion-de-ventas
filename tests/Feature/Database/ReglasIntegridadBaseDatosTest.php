@@ -2,13 +2,25 @@
 
 use App\Actions\Certificates\IssueCertificate;
 use App\Actions\Sales\ProcessSaleItem;
+use App\Models\AuditLog;
+use App\Models\CashRegister;
 use App\Models\Certificate;
 use App\Models\CertificateType;
 use App\Models\CertificateUnit;
 use App\Models\Client;
+use App\Models\Deficiency;
+use App\Models\DeficiencyAuthorization;
+use App\Models\DocumentSeries;
+use App\Models\ElectronicDocument;
 use App\Models\Equipment;
+use App\Models\Evidencia;
 use App\Models\Installment;
+use App\Models\InventoryMovement;
+use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
+use App\Models\NoteRequest;
+use App\Models\Product;
+use App\Models\ProductLot;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalePayment;
@@ -136,4 +148,236 @@ it('no emite un certificado para un cliente distinto al de su venta', function (
 
     expect(fn () => app(IssueCertificate::class)->handle($tipo, $otroCliente, [], saleId: $sale->id))
         ->toThrow(ValidationException::class, 'mismo cliente');
+});
+
+it('las sedes no se borran: se desactivan', function () {
+    $sede = Sede::factory()->almacen()->create();
+    Sale::factory()->create(['sede_id' => $sede->id]);
+
+    expect(fn () => $sede->delete())->toThrow(QueryException::class);
+    $this->assertDatabaseHas('sedes', ['id' => $sede->id]);
+});
+
+it('las lineas historicas conservan su producto y su servicio', function () {
+    $product = Product::factory()->create();
+    $service = Service::factory()->create();
+    SaleItem::factory()->create(['product_id' => $product->id, 'service_id' => null]);
+    SaleItem::factory()->forService($service)->create();
+
+    expect(fn () => $product->delete())->toThrow(QueryException::class)
+        ->and(fn () => $service->delete())->toThrow(QueryException::class);
+});
+
+it('un usuario con auditoria o kardex no se borra y el log conserva al actor', function () {
+    $user = User::factory()->create();
+    AuditLog::factory()->create(['user_id' => $user->id]);
+
+    expect(fn () => $user->delete())->toThrow(QueryException::class);
+    $this->assertDatabaseHas('audit_logs', ['user_id' => $user->id]);
+});
+
+it('las ventas no se borran: certificados y ordenes de servicio las protegen', function () {
+    $conCertificado = Sale::factory()->create();
+    Certificate::factory()->create(['sale_id' => $conCertificado->id]);
+
+    $conOrden = Sale::factory()->create();
+    ServiceOrder::factory()->create(['sale_id' => $conOrden->id]);
+
+    expect(fn () => $conCertificado->delete())->toThrow(QueryException::class)
+        ->and(fn () => $conOrden->delete())->toThrow(QueryException::class);
+});
+
+it('las evidencias protegen la orden de servicio como sus hermanas', function () {
+    $order = ServiceOrder::factory()->create();
+    Evidencia::factory()->create(['service_order_id' => $order->id]);
+
+    expect(fn () => $order->delete())->toThrow(QueryException::class);
+});
+
+it('el kardex no pierde su lote ni su producto', function () {
+    $product = Product::factory()->create();
+    $sede = Sede::factory()->almacen()->create();
+    $lot = ProductLot::create([
+        'product_id' => $product->id,
+        'sede_id' => $sede->id,
+        'lote' => 'L-'.fake()->unique()->numerify('####'),
+        'fecha_vencimiento' => now()->addYear()->toDateString(),
+    ]);
+    InventoryMovement::create([
+        'product_id' => $product->id,
+        'sede_id' => $sede->id,
+        'product_lot_id' => $lot->id,
+        'tipo' => 'ingreso',
+        'cantidad' => 5,
+    ]);
+
+    expect(fn () => $lot->delete())->toThrow(QueryException::class)
+        ->and(fn () => $product->delete())->toThrow(QueryException::class)
+        ->and(fn () => $sede->delete())->toThrow(QueryException::class);
+});
+
+it('un doble submit no duplica el movimiento de kardex de una unidad', function () {
+    $sede = Sede::factory()->almacen()->create();
+    $unit = InventoryUnit::factory()->create(['sede_almacen_id' => $sede->id, 'estado' => 'vendido']);
+    $sale = Sale::factory()->create(['sede_id' => $sede->id]);
+    $datos = [
+        'inventory_unit_id' => $unit->id,
+        'product_id' => $unit->product_id,
+        'sede_id' => $sede->id,
+        'tipo' => 'salida_venta',
+        'cantidad' => -1,
+        'referencia_type' => $sale->getMorphClass(),
+        'referencia_id' => $sale->id,
+    ];
+
+    InventoryMovement::create($datos);
+
+    expect(fn () => InventoryMovement::create($datos))->toThrow(QueryException::class);
+
+    // La reversión del movimiento usa otro tipo y sí entra.
+    InventoryMovement::create([...$datos, 'tipo' => 'ingreso', 'cantidad' => 1]);
+    expect(InventoryMovement::where('inventory_unit_id', $unit->id)->count())->toBe(2);
+});
+
+it('un doble submit no duplica un cobro con el mismo numero de operacion', function () {
+    $sale = Sale::factory()->create();
+    $datos = ['sale_id' => $sale->id, 'forma_pago' => 'transferencia', 'monto' => 100, 'numero_operacion' => 'OP-987654', 'fecha' => today()];
+
+    SalePayment::create($datos);
+
+    expect(fn () => SalePayment::create($datos))->toThrow(QueryException::class);
+
+    // El mismo número de operación en otra cuota es otra imputación válida...
+    $otraVenta = Sale::factory()->create();
+    SalePayment::create(['sale_id' => $otraVenta->id, 'forma_pago' => 'transferencia', 'monto' => 100, 'numero_operacion' => 'OP-987654', 'fecha' => today()]);
+
+    // ... y el efectivo sin número de operación se puede pagar por partes.
+    SalePayment::create(['sale_id' => $sale->id, 'forma_pago' => 'efectivo', 'monto' => 50, 'fecha' => today()]);
+    SalePayment::create(['sale_id' => $sale->id, 'forma_pago' => 'efectivo', 'monto' => 50, 'fecha' => today()]);
+
+    expect(SalePayment::count())->toBe(4);
+});
+
+it('un cobro anulado libera su numero de operacion', function () {
+    $sale = Sale::factory()->create();
+    $datos = ['sale_id' => $sale->id, 'forma_pago' => 'yape', 'monto' => 80, 'numero_operacion' => 'YAPE-1', 'fecha' => today()];
+
+    $pago = SalePayment::create($datos);
+    $pago->anular('Se registró dos veces', null);
+
+    SalePayment::create($datos);
+    expect(SalePayment::withTrashed()->count())->toBe(2);
+});
+
+it('una deficiencia tiene una sola autorizacion', function () {
+    $deficiency = Deficiency::factory()->create();
+    DeficiencyAuthorization::factory()->create(['deficiency_id' => $deficiency->id]);
+
+    expect(fn () => DeficiencyAuthorization::factory()->create(['deficiency_id' => $deficiency->id]))
+        ->toThrow(QueryException::class);
+});
+
+it('un extintor no se repite en el mismo certificado aunque no tenga equipo', function () {
+    $certificate = Certificate::factory()->create();
+
+    CertificateUnit::factory()->create(['certificate_id' => $certificate->id, 'equipment_id' => null, 'numero_serie_snapshot' => 'SN-REPETIDA']);
+
+    expect(fn () => CertificateUnit::factory()->create(['certificate_id' => $certificate->id, 'equipment_id' => null, 'numero_serie_snapshot' => 'SN-REPETIDA']))
+        ->toThrow(QueryException::class);
+
+    // Las filas sin serie no chocan entre sí.
+    CertificateUnit::factory()->create(['certificate_id' => $certificate->id, 'equipment_id' => null, 'numero_serie_snapshot' => '']);
+    CertificateUnit::factory()->create(['certificate_id' => $certificate->id, 'equipment_id' => null, 'numero_serie_snapshot' => '']);
+    expect(CertificateUnit::where('certificate_id', $certificate->id)->count())->toBe(3);
+});
+
+it('un vendedor tiene un solo turno de caja abierto', function () {
+    $vendedor = User::factory()->create();
+    CashRegister::factory()->create(['vendedor_id' => $vendedor->id, 'estado' => 'abierto']);
+
+    expect(fn () => CashRegister::factory()->create(['vendedor_id' => $vendedor->id, 'estado' => 'abierto']))
+        ->toThrow(QueryException::class);
+
+    // Cerrado no cuenta: puede volver a abrir.
+    CashRegister::factory()->create(['vendedor_id' => $vendedor->id, 'estado' => 'cerrado']);
+    expect(CashRegister::where('vendedor_id', $vendedor->id)->count())->toBe(2);
+});
+
+it('una solicitud de nota pendiente no se duplica', function () {
+    $documento = ElectronicDocument::factory()->state(['sunat_estado' => 'aceptado'])->create();
+    NoteRequest::factory()->create(['electronic_document_id' => $documento->id, 'tipo' => 'nota_credito']);
+
+    expect(fn () => NoteRequest::factory()->create(['electronic_document_id' => $documento->id, 'tipo' => 'nota_credito']))
+        ->toThrow(QueryException::class);
+
+    // Una nota de débito sobre el mismo documento es otra solicitud.
+    NoteRequest::factory()->create(['electronic_document_id' => $documento->id, 'tipo' => 'nota_debito']);
+
+    // Y si la de crédito se aprueba o se rechaza, se puede pedir otra.
+    NoteRequest::query()->where('tipo', 'nota_credito')->update(['estado' => 'rechazada']);
+    NoteRequest::factory()->create(['electronic_document_id' => $documento->id, 'tipo' => 'nota_credito']);
+    expect(NoteRequest::where('electronic_document_id', $documento->id)->count())->toBe(3);
+});
+
+it('los estados de lista cerrada se validan en la base', function () {
+    if (DB::getDriverName() !== 'mysql') {
+        $this->markTestSkipped('SQLite omite CHECK agregados a tablas existentes porque no existe un ALTER portable.');
+    }
+
+    $sede = Sede::factory()->almacen()->create();
+    $user = User::factory()->create();
+
+    expect(fn () => InventoryTransfer::create([
+        'origen_sede_id' => $sede->id,
+        'destino_sede_id' => Sede::factory()->almacen()->create()->id,
+        'user_id' => $user->id,
+        'estado' => 'inventado',
+    ]))->toThrow(QueryException::class);
+
+    expect(fn () => SaleItem::factory()->create(['tipo_afectacion_igv' => '99']))->toThrow(QueryException::class);
+
+    expect(fn () => DocumentSeries::create(['tipo_comprobante' => 'loquesea', 'serie' => 'ZZ99', 'correlativo_actual' => 1]))
+        ->toThrow(QueryException::class);
+
+    // Las familias dinámicas de la numeración interna siguen entrando.
+    DocumentSeries::create(['tipo_comprobante' => 'baja_20261007', 'serie' => 'RA', 'correlativo_actual' => 1]);
+    expect(DocumentSeries::where('tipo_comprobante', 'baja_20261007')->exists())->toBeTrue();
+});
+
+it('una cuota parcial vencida pasa a vencido', function () {
+    $sale = Sale::factory()->create();
+    $cuota = Installment::factory()->create([
+        'sale_id' => $sale->id,
+        'monto' => 300,
+        'estado' => 'parcial',
+        'fecha_vencimiento' => now()->subDays(3)->toDateString(),
+    ]);
+    SalePayment::factory()->create(['sale_id' => $sale->id, 'installment_id' => $cuota->id, 'monto' => 100]);
+
+    Installment::marcarVencidas();
+    expect($cuota->refresh()->estado)->toBe('vencido');
+
+    $cuota->recalcularEstado();
+    expect($cuota->refresh()->estado)->toBe('vencido');
+});
+
+it('quedaron los indices que faltaban y sin el redundante de auditoria', function () {
+    $indices = fn (string $tabla): array => collect(DB::select("SHOW INDEX FROM {$tabla}"))
+        ->map(fn (object $fila) => $fila->Key_name)
+        ->unique()
+        ->values()
+        ->all();
+
+    expect($indices('electronic_documents'))->toContain('electronic_documents_sunat_estado_index')
+        ->and($indices('installments'))->toContain('installments_estado_index')
+        ->and($indices('installments'))->toContain('installments_fecha_vencimiento_index')
+        ->and($indices('inventory_units'))->toContain('inventory_units_estado_index')
+        ->and($indices('sales'))->toContain('sales_fecha_index')
+        ->and($indices('certificates'))->toContain('certificates_estado_vigencia_index')
+        ->and($indices('equipment'))->toContain('equipment_alertas_index')
+        ->and($indices('cash_registers'))->toContain('cash_registers_turno_index')
+        ->and($indices('inventory_movements'))->toContain('inventory_movements_producto_sede_index')
+        ->and($indices('audit_logs'))->toContain('audit_logs_auditable_index')
+        ->and($indices('audit_logs'))->not->toContain('audit_logs_auditable_type_index')
+        ->and($indices('audit_logs'))->not->toContain('audit_logs_auditable_id_index');
 });

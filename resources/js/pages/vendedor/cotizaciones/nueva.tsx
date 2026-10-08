@@ -11,6 +11,7 @@ import {
     Wrench,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Cargando } from '@/components/cargando';
 import CatalogPicker, { type CatalogItem } from '@/components/catalog-picker';
@@ -73,7 +74,10 @@ function money(value: number) {
 
 function fieldError(errors: Partial<Record<string, string>>, key: string) {
     return errors[key] ? (
-        <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+        <p
+            className="text-destructive-strong mt-1 text-[11px] font-semibold"
+            role="alert"
+        >
             {errors[key]}
         </p>
     ) : null;
@@ -85,8 +89,11 @@ const VIGENCIAS = [7, 15, 30];
 
 export default function NuevaCotizacion({
     renovacion = null,
+    cliente: clientePrecargado = null,
 }: {
     renovacion?: Renovacion | null;
+    // Precarga cuando se llega con ?client_id= desde la ficha del cliente.
+    cliente?: ClientFicha | null;
 }) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -96,7 +103,7 @@ export default function NuevaCotizacion({
             : '');
 
     const form = useForm<QuoteFormData>({
-        client_id: renovacion?.client.id ?? '',
+        client_id: renovacion?.client.id ?? clientePrecargado?.id ?? '',
         fecha: sumarDias(0),
         vigencia_hasta: sumarDias(15),
         referencia: renovacion?.referencia ?? '',
@@ -111,7 +118,7 @@ export default function NuevaCotizacion({
     });
 
     const [cliente, setCliente] = useState<ClientFicha | null>(
-        renovacion?.client ?? null,
+        renovacion?.client ?? clientePrecargado ?? null,
     );
     const [vigenciaDias, setVigenciaDias] = useState(15);
     const [destino, setDestino] = useState<'local_cliente' | 'vehiculo'>(
@@ -175,7 +182,14 @@ export default function NuevaCotizacion({
 
     const submitQuote = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        form.post(cotizaciones.store.url(teamSlug), { preserveScroll: true });
+        form.post(cotizaciones.store.url(teamSlug), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
+            preserveScroll: true,
+        });
     };
 
     return (

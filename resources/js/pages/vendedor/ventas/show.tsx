@@ -14,6 +14,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
 import { toast } from 'sonner';
 
 import { CargaLarga } from '@/components/cargando';
@@ -32,6 +33,7 @@ import guias from '@/routes/guias';
 import facturacion from '@/routes/vendedor/facturacion';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
+import CertificadosRoutes from '@/routes/vendedor/certificados';
 
 type ComprobanteClient = {
     id: number;
@@ -161,6 +163,7 @@ export default function VentasShow({
     solicitudesNota,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
     const teamSlug =
         currentTeam?.slug ??
         (typeof window !== 'undefined'
@@ -209,14 +212,14 @@ export default function VentasShow({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    function accion(tipo: 'enviar' | 'anular') {
+    async function accion(tipo: 'enviar' | 'anular') {
         const avisos = {
             anular: 'Se anula la venta, las unidades vuelven al stock y el número del comprobante se libera. ¿Continuar?',
             enviar: null,
         };
         const aviso = avisos[tipo];
 
-        if (aviso && !window.confirm(aviso)) {
+        if (aviso && !(await pedirConfirmacion(aviso))) {
             return;
         }
 
@@ -244,13 +247,13 @@ export default function VentasShow({
 
     const [descartando, setDescartando] = useState(false);
 
-    function descartarVenta() {
+    async function descartarVenta() {
         const texto =
             sale.estado === 'borrador'
                 ? 'Se descarta el borrador y sus unidades vuelven al stock. ¿Continuar?'
                 : 'Se anula la nota de venta, sus unidades vuelven al stock y sus certificados se anulan. ¿Continuar?';
 
-        if (!window.confirm(texto)) {
+        if (!(await pedirConfirmacion(texto))) {
             return;
         }
 
@@ -289,6 +292,7 @@ export default function VentasShow({
     return (
         <VendedorLayout title="Detalle venta">
             <div className="flex flex-col gap-4">
+                {dialogoConfirmacion}
                 <div className="flex flex-wrap items-center gap-3">
                     <Button
                         asChild
@@ -392,7 +396,10 @@ export default function VentasShow({
                             className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
                         >
                             <a
-                                href={`/${teamSlug}/vendedor/ventas/${sale.id}/nota-venta-pdf`}
+                                href={ventas.notaVentaPdf.url({
+                                    current_team: teamSlug,
+                                    sale: sale.id,
+                                })}
                                 target="_blank"
                                 rel="noreferrer"
                             >
@@ -777,7 +784,18 @@ export default function VentasShow({
                                                 className="border-border bg-card h-8 rounded-[8px] shadow-none"
                                             >
                                                 <a
-                                                    href={`/${teamSlug}/vendedor/certificados/${c.id}/pdf?inline=1`}
+                                                    href={CertificadosRoutes.pdf.url(
+                                                        {
+                                                            current_team:
+                                                                teamSlug,
+                                                            certificate: c.id,
+                                                        },
+                                                        {
+                                                            query: {
+                                                                inline: 1,
+                                                            },
+                                                        },
+                                                    )}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                 >
@@ -793,7 +811,13 @@ export default function VentasShow({
                                                 title="Descargar Word editable"
                                             >
                                                 <a
-                                                    href={`/${teamSlug}/vendedor/certificados/${c.id}/word`}
+                                                    href={CertificadosRoutes.word.url(
+                                                        {
+                                                            current_team:
+                                                                teamSlug,
+                                                            certificate: c.id,
+                                                        },
+                                                    )}
                                                 >
                                                     <FileText className="size-3.5 text-[#2b579a]" />
                                                     Word

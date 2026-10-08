@@ -23,10 +23,15 @@ import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
+import { toast } from 'sonner';
 
+import AlertError from '@/components/alert-error';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import OpcionesAgente from '@/components/opciones-agente';
+import EquiposRoutes from '@/routes/tecnico-campo/inspecciones/equipos';
+import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
+import ChecklistRoutes from '@/routes/tecnico-campo/inspecciones/checklist';
 
 type TechnicalChecklistItem = {
     clave?: string;
@@ -76,7 +81,7 @@ type ServiceOrder = {
     events?: Array<{
         id: number;
         tipo: string;
-        payload: any;
+        payload: Record<string, string | number | boolean | null | undefined>;
         created_at: string;
     }>;
     client_id: number;
@@ -145,8 +150,16 @@ export default function InspeccionShow({
     const handleAddEquipment = (e: React.FormEvent) => {
         e.preventDefault();
         addEquipmentForm.post(
-            `/${teamSlug}/tecnico-campo/inspecciones/${order.id}/equipos`,
+            EquiposRoutes.store.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 onSuccess: () => {
                     setShowAddEquipmentModal(false);
                     addEquipmentForm.reset();
@@ -168,7 +181,17 @@ export default function InspeccionShow({
     const handleComplete = (e: React.FormEvent) => {
         e.preventDefault();
         completeForm.post(
-            `/${teamSlug}/tecnico-campo/inspecciones/${order.id}/finalizar`,
+            InspeccionesRoutes.complete.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+            },
         );
     };
 
@@ -186,7 +209,9 @@ export default function InspeccionShow({
             {/* Back bar */}
             <div className="mb-4 flex items-center justify-between">
                 <Link
-                    href={`/${teamSlug}/tecnico-campo/inspecciones`}
+                    href={InspeccionesRoutes.index.url({
+                        current_team: teamSlug,
+                    })}
                     className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                 >
                     <ArrowLeft className="size-4" />
@@ -364,12 +389,16 @@ export default function InspeccionShow({
                             onSubmit={handleAddEquipment}
                             className="space-y-3"
                         >
+                            <AlertError
+                                errors={Object.values(addEquipmentForm.errors)}
+                            />
                             {customerEquipments.length > 0 && (
                                 <div>
                                     <label className="text-foreground mb-1 block text-[11px] font-bold">
                                         Seleccionar existente del cliente:
                                     </label>
                                     <select
+                                        aria-label="Seleccionar existente del cliente:"
                                         value={
                                             addEquipmentForm.data.equipment_id
                                         }
@@ -405,6 +434,7 @@ export default function InspeccionShow({
                                             Agente
                                         </label>
                                         <select
+                                            aria-label="Agente"
                                             value={
                                                 addEquipmentForm.data
                                                     .tipo_agente
@@ -425,6 +455,7 @@ export default function InspeccionShow({
                                             Capacidad
                                         </label>
                                         <input
+                                            aria-label="Capacidad"
                                             type="text"
                                             value={
                                                 addEquipmentForm.data.capacidad
@@ -445,6 +476,7 @@ export default function InspeccionShow({
                                             etc.)
                                         </label>
                                         <input
+                                            aria-label="Ubicacion actual"
                                             type="text"
                                             value={
                                                 addEquipmentForm.data
@@ -674,6 +706,7 @@ export default function InspeccionShow({
                                     Responsable Técnico
                                 </label>
                                 <input
+                                    aria-label="Responsable Técnico"
                                     type="text"
                                     value={completeForm.data.responsable}
                                     onChange={(e) =>
@@ -690,6 +723,7 @@ export default function InspeccionShow({
                                     Cargo
                                 </label>
                                 <input
+                                    aria-label="Cargo"
                                     type="text"
                                     value={completeForm.data.cargo}
                                     onChange={(e) =>
@@ -709,6 +743,7 @@ export default function InspeccionShow({
                                 <span className="text-red-500">*</span>
                             </label>
                             <input
+                                aria-label="Conformidad nombre"
                                 type="text"
                                 required
                                 value={completeForm.data.conformidad_nombre}
@@ -733,6 +768,7 @@ export default function InspeccionShow({
                                 Observaciones Generales de la Visita
                             </label>
                             <textarea
+                                aria-label="Observaciones Generales de la Visita"
                                 rows={2}
                                 value={
                                     completeForm.data.observaciones_generales
@@ -893,8 +929,17 @@ function InlineChecklistForm({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         checklistForm.post(
-            `/${teamSlug}/tecnico-campo/inspecciones/${orderId}/equipos/${equipment.id}/checklist`,
+            ChecklistRoutes.store.url({
+                current_team: teamSlug,
+                service_order: orderId,
+                equipment: equipment.id,
+            }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 onSuccess: () => onClose(),
             },
         );
@@ -905,6 +950,7 @@ function InlineChecklistForm({
             onSubmit={handleSubmit}
             className="mt-3 space-y-3 rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3"
         >
+            <AlertError errors={Object.values(checklistForm.errors)} />
             <div className="flex items-center justify-between border-b border-sky-500/20 pb-2">
                 <span className="text-xs font-black text-sky-700 dark:text-sky-400">
                     Evaluación Checklist: {equipment.numero_serie}
@@ -981,6 +1027,7 @@ function InlineChecklistForm({
                             {isObservado && (
                                 <div className="border-destructive/20 mt-2 space-y-1.5 border-t pt-2">
                                     <input
+                                        aria-label="Descripción de la condición observada..."
                                         type="text"
                                         placeholder="Descripción de la condición observada..."
                                         value={item.condicion || ''}

@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import type { Team } from '@/types';
+import AjustesRoutes from '@/routes/almacen/ajustes';
 
 export type SedeOption = {
     id: number;
@@ -169,7 +170,7 @@ export default function AjustesIndex({
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        post(`/${teamSlug}/almacen/ajustes`, {
+        post(AjustesRoutes.store.url({ current_team: teamSlug }), {
             onSuccess: () => {
                 reset(
                     'motivo',
@@ -308,6 +309,7 @@ export default function AjustesIndex({
                                         <span className="text-red-500">*</span>
                                     </Label>
                                     <select
+                                        aria-label="Producto / Componente"
                                         value={data.product_id}
                                         onChange={(e) => {
                                             setData((d) => ({
@@ -337,6 +339,7 @@ export default function AjustesIndex({
                                         <span className="text-red-500">*</span>
                                     </Label>
                                     <select
+                                        aria-label="Sede Almacén"
                                         value={data.sede_id}
                                         onChange={(e) => {
                                             setData((d) => ({
@@ -418,6 +421,7 @@ export default function AjustesIndex({
                                             )}
                                         </Label>
                                         <select
+                                            aria-label="Unidad de inventario"
                                             value={data.inventory_unit_id}
                                             onChange={(e) => {
                                                 setData((d) => ({
@@ -462,6 +466,7 @@ export default function AjustesIndex({
                                             Lote
                                         </Label>
                                         <select
+                                            aria-label="Lote"
                                             value={data.product_lot_id}
                                             onChange={(e) =>
                                                 setData(

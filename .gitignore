@@ -49,3 +49,9 @@ yarn-error.log
 /.codex
 /skills-lock.json
 /cootiz.html
+
+# Apuntes personales de tesis: no pertenecen al proyecto
+/docs/ai/DECISIONES.md
+/docs/ai/PLAN.md
+/docs/ai/PLAN_INSTRUMENTOS_SEMANA8.md
+/docs/ai/PROMPT_AUDITOR.md

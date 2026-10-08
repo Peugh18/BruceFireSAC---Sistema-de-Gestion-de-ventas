@@ -14,6 +14,12 @@ import {
     ArrowRight,
     Car,
 } from 'lucide-react';
+import TecnicoCampoRoutes from '@/routes/tecnico-campo';
+import RecojosRoutes from '@/routes/tecnico-campo/recojos';
+import EntregasRoutes from '@/routes/tecnico-campo/entregas';
+import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
+import InstalacionesRoutes from '@/routes/tecnico-campo/instalaciones';
+import MantenimientosRoutes from '@/routes/tecnico-campo/mantenimientos';
 
 interface OrderItem {
     id: number;
@@ -68,14 +74,13 @@ export default function TecnicoCampoDashboard({
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const teamPrefix = `/${teamSlug}/tecnico-campo`;
 
     const [search, setSearch] = useState(filters.search || '');
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
-            `${teamPrefix}/dashboard`,
+            TecnicoCampoRoutes.dashboard.url({ current_team: teamSlug }),
             { ...filters, search: search.trim() },
             { preserveState: true },
         );
@@ -83,7 +88,7 @@ export default function TecnicoCampoDashboard({
 
     const handleStatusTab = (tab: string) => {
         router.get(
-            `${teamPrefix}/dashboard`,
+            TecnicoCampoRoutes.dashboard.url({ current_team: teamSlug }),
             { ...filters, tab },
             { preserveState: true },
         );
@@ -91,7 +96,7 @@ export default function TecnicoCampoDashboard({
 
     const handleTipoFiltro = (tipo: string) => {
         router.get(
-            `${teamPrefix}/dashboard`,
+            TecnicoCampoRoutes.dashboard.url({ current_team: teamSlug }),
             { ...filters, tipo },
             { preserveState: true },
         );
@@ -100,17 +105,35 @@ export default function TecnicoCampoDashboard({
     const getActionRoute = (order: OrderItem) => {
         switch (order.accion_sugerida) {
             case 'recojo':
-                return `${teamPrefix}/recojos/${order.id}`;
+                return RecojosRoutes.show.url({
+                    current_team: teamSlug,
+                    service_order: order.id,
+                });
             case 'entrega':
-                return `${teamPrefix}/entregas/${order.id}`;
+                return EntregasRoutes.show.url({
+                    current_team: teamSlug,
+                    service_order: order.id,
+                });
             case 'inspeccion':
-                return `${teamPrefix}/inspecciones/${order.id}`;
+                return InspeccionesRoutes.show.url({
+                    current_team: teamSlug,
+                    service_order: order.id,
+                });
             case 'instalacion':
-                return `${teamPrefix}/instalaciones/${order.id}`;
+                return InstalacionesRoutes.show.url({
+                    current_team: teamSlug,
+                    service_order: order.id,
+                });
             case 'mantenimiento':
-                return `${teamPrefix}/mantenimientos/${order.id}`;
+                return MantenimientosRoutes.show.url({
+                    current_team: teamSlug,
+                    service_order: order.id,
+                });
             default:
-                return `${teamPrefix}/recojos/${order.id}`;
+                return RecojosRoutes.show.url({
+                    current_team: teamSlug,
+                    service_order: order.id,
+                });
         }
     };
 
@@ -289,6 +312,7 @@ export default function TecnicoCampoDashboard({
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="relative">
                     <input
+                        aria-label="Buscar cliente, dirección o código de orden"
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}

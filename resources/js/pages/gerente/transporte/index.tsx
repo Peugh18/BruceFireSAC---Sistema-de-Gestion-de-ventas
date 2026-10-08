@@ -1,4 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -75,6 +76,16 @@ export default function Transporte({
                                                 current_team: teamSlug,
                                                 vehiculo: v.id,
                                             }),
+                                            {},
+                                            {
+                                                onError: (errors) =>
+                                                    toast.error(
+                                                        Object.values(
+                                                            errors,
+                                                        )[0] ??
+                                                            'No se pudo completar la acción.',
+                                                    ),
+                                            },
                                         )
                                     }
                                 >
@@ -89,7 +100,14 @@ export default function Transporte({
                             event.preventDefault();
                             vehiculo.post(
                                 transporte.vehiculos.store.url(teamSlug),
-                                { onSuccess: () => vehiculo.reset() },
+                                {
+                                    onError: (errors) =>
+                                        toast.error(
+                                            Object.values(errors)[0] ??
+                                                'No se pudo completar la acción.',
+                                        ),
+                                    onSuccess: () => vehiculo.reset(),
+                                },
                             );
                         }}
                     >
@@ -162,6 +180,16 @@ export default function Transporte({
                                                 current_team: teamSlug,
                                                 conductor: c.id,
                                             }),
+                                            {},
+                                            {
+                                                onError: (errors) =>
+                                                    toast.error(
+                                                        Object.values(
+                                                            errors,
+                                                        )[0] ??
+                                                            'No se pudo completar la acción.',
+                                                    ),
+                                            },
                                         )
                                     }
                                 >
@@ -176,7 +204,14 @@ export default function Transporte({
                             event.preventDefault();
                             conductor.post(
                                 transporte.conductores.store.url(teamSlug),
-                                { onSuccess: () => conductor.reset() },
+                                {
+                                    onError: (errors) =>
+                                        toast.error(
+                                            Object.values(errors)[0] ??
+                                                'No se pudo completar la acción.',
+                                        ),
+                                    onSuccess: () => conductor.reset(),
+                                },
                             );
                         }}
                     >

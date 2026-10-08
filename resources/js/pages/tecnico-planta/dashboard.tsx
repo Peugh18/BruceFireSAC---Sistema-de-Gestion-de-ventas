@@ -19,6 +19,7 @@ import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import ejecucion from '@/routes/tecnico-planta/ejecucion';
 import recepciones from '@/routes/tecnico-planta/recepciones';
 import type { Team } from '@/types';
+import TecnicoPlantaRoutes from '@/routes/tecnico-planta';
 
 export type OrderItem = {
     id: number;
@@ -156,7 +157,7 @@ export default function TecnicoPlantaDashboard({
     const handleSearch = (e: FormEvent) => {
         e.preventDefault();
         router.get(
-            `/${teamSlug}/tecnico-planta/dashboard`,
+            TecnicoPlantaRoutes.dashboard.url({ current_team: teamSlug }),
             { tab: currentTab, search: search.trim() },
             { preserveState: true },
         );
@@ -164,7 +165,7 @@ export default function TecnicoPlantaDashboard({
 
     const changeTab = (newTab: string) => {
         router.get(
-            `/${teamSlug}/tecnico-planta/dashboard`,
+            TecnicoPlantaRoutes.dashboard.url({ current_team: teamSlug }),
             { tab: newTab, search },
             { preserveState: true },
         );
@@ -307,7 +308,9 @@ export default function TecnicoPlantaDashboard({
                             onClick={() => {
                                 setSearch('');
                                 router.get(
-                                    `/${teamSlug}/tecnico-planta/dashboard`,
+                                    TecnicoPlantaRoutes.dashboard.url({
+                                        current_team: teamSlug,
+                                    }),
                                     { tab: currentTab },
                                 );
                             }}

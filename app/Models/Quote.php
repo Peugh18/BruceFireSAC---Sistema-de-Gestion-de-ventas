@@ -133,6 +133,16 @@ class Quote extends Model
         return $this->hasOne(Sale::class)->latestOfMany();
     }
 
+    /**
+     * Órdenes de servicio que nacieron de esta cotización.
+     *
+     * @return HasMany<ServiceOrder, $this>
+     */
+    public function serviceOrders(): HasMany
+    {
+        return $this->hasMany(ServiceOrder::class);
+    }
+
     public function canTransitionTo(string $estado): bool
     {
         return in_array($estado, self::TRANSITIONS[$this->estado] ?? [], true);

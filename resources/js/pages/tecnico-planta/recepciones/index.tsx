@@ -12,6 +12,7 @@ import {
     AlertCircle,
     RotateCcw,
 } from 'lucide-react';
+import RecepcionesRoutes from '@/routes/tecnico-planta/recepciones';
 
 interface OrderItem {
     id: number;
@@ -52,7 +53,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
-            `/${teamSlug}/tecnico-planta/recepciones`,
+            RecepcionesRoutes.index.url({ current_team: teamSlug }),
             { search, filter: filters.filter },
             { preserveState: true },
         );
@@ -60,7 +61,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
 
     const handleFilterChange = (newFilter: string) => {
         router.get(
-            `/${teamSlug}/tecnico-planta/recepciones`,
+            RecepcionesRoutes.index.url({ current_team: teamSlug }),
             { search, filter: newFilter },
             { preserveState: true },
         );
@@ -125,6 +126,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="relative">
                     <input
+                        aria-label="Buscar por orden, cliente o serie BF-EQ"
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -159,7 +161,9 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                                     onClick={() => {
                                         setSearch('');
                                         router.get(
-                                            `/${teamSlug}/tecnico-planta/recepciones`,
+                                            RecepcionesRoutes.index.url({
+                                                current_team: teamSlug,
+                                            }),
                                             { filter: 'pendientes' },
                                         );
                                     }}
@@ -174,7 +178,12 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                         orders.data.map((order) => {
                             const isPendiente =
                                 order.estado === 'pendiente_recepcion';
-                            const url = `/${currentTeam?.slug || currentTeam?.id}/tecnico-planta/recepciones/${order.id}`;
+                            const url = RecepcionesRoutes.show.url({
+                                current_team: String(
+                                    currentTeam?.slug ?? currentTeam?.id ?? '',
+                                ),
+                                service_order: order.id,
+                            });
 
                             return (
                                 <Link

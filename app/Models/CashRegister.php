@@ -110,6 +110,23 @@ class CashRegister extends Model
     }
 
     /**
+     * El turno abierto del vendedor, bloqueado con FOR UPDATE: es el que usan
+     * los cobros y las devoluciones al ligarse a un turno. Con el mismo
+     * bloqueo que usa `CloseCashRegister`, un cobro y un cierre de caja a la
+     * vez se ordenan: o el cobro entra en el arqueo del turno, o ve el turno
+     * ya cerrado y no se cuelga de él (M3).
+     */
+    public static function abiertaDeBloqueada(int $vendedorId): ?self
+    {
+        return self::query()
+            ->where('vendedor_id', $vendedorId)
+            ->where('estado', 'abierto')
+            ->lockForUpdate()
+            ->latest('fecha_apertura')
+            ->first();
+    }
+
+    /**
      * El efectivo que entra tiene que caer en un turno: sin caja abierta no
      * se cobra en efectivo (la pantalla ya lo avisa; esto lo asegura).
      */

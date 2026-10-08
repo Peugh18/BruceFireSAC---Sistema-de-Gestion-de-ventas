@@ -346,6 +346,7 @@ export default function ClientesIndex({
                                         strokeWidth={2}
                                     />
                                     <input
+                                        aria-label="Buscar por nombre, razón social, RUC o DNI"
                                         value={search}
                                         onChange={(event) =>
                                             setSearch(event.target.value)

@@ -17,6 +17,8 @@ import { Card } from '@/components/ui/card';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import recepcionesRutas from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
+import StockRoutes from '@/routes/almacen/stock';
+import AjustesRoutes from '@/routes/almacen/ajustes';
 
 export type SedeStock = {
     sede_id: number;
@@ -167,7 +169,9 @@ export default function AlmacenDashboard({
                             Se requiere compra / reabastecimiento.
                         </span>
                         <Link
-                            href={`/${teamSlug}/almacen/stock`}
+                            href={StockRoutes.index.url({
+                                current_team: teamSlug,
+                            })}
                             className="inline-flex items-center gap-1.5 rounded-[8px] bg-white/20 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/30"
                         >
                             <span>Ver stock</span>
@@ -184,7 +188,9 @@ export default function AlmacenDashboard({
                                 Lotes vencidos o por vencer
                             </span>
                             <Link
-                                href={`/${teamSlug}/almacen/ajustes`}
+                                href={AjustesRoutes.index.url({
+                                    current_team: teamSlug,
+                                })}
                                 className="text-primary-strong text-xs font-bold"
                             >
                                 Dar de baja un vencido
@@ -334,7 +340,9 @@ export default function AlmacenDashboard({
 
                         <div className="border-border mt-5 border-t pt-4">
                             <Link
-                                href={`/${teamSlug}/almacen/stock`}
+                                href={StockRoutes.index.url({
+                                    current_team: teamSlug,
+                                })}
                                 className="text-foreground inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
                             >
                                 <span>Ver reporte de inventario</span>

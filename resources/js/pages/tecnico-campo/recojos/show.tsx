@@ -21,7 +21,10 @@ import {
     ShieldCheck,
     MessageSquare,
 } from 'lucide-react';
+import AlertError from '@/components/alert-error';
 import OpcionesAgente from '@/components/opciones-agente';
+import { toast } from 'sonner';
+import EquiposRoutes from '@/routes/tecnico-campo/recojos/equipos';
 
 interface CustodyEventItem {
     id: number;
@@ -29,7 +32,7 @@ interface CustodyEventItem {
     etapa: string;
     responsable: string;
     fecha: string;
-    payload: any;
+    payload: Record<string, string | number | boolean | null | undefined>;
 }
 
 interface Props {
@@ -76,7 +79,6 @@ export default function RecojoShow({
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const teamPrefix = `/${teamSlug}/tecnico-campo`;
 
     const form = useForm({
         contacto_nombre: '',
@@ -102,6 +104,11 @@ export default function RecojoShow({
                 service_order: order.id,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
             },
         );
@@ -116,7 +123,7 @@ export default function RecojoShow({
             <div className="space-y-4 pb-16">
                 {/* Back Link */}
                 <Link
-                    href={`${teamPrefix}/recojos`}
+                    href={recojos.index.url({ current_team: teamSlug })}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
                 >
                     <ArrowLeft className="h-4 w-4" />
@@ -302,18 +309,30 @@ export default function RecojoShow({
                             onSubmit={(event) => {
                                 event.preventDefault();
                                 equipmentForm.post(
-                                    `${teamPrefix}/recojos/${order.id}/equipos`,
+                                    EquiposRoutes.store.url({
+                                        current_team: teamSlug,
+                                        service_order: order.id,
+                                    }),
                                     {
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)[0] ??
+                                                    'No se pudo completar la acción.',
+                                            ),
                                         preserveScroll: true,
                                         onSuccess: () => equipmentForm.reset(),
                                     },
                                 );
                             }}
                         >
+                            <AlertError
+                                errors={Object.values(equipmentForm.errors)}
+                            />
                             <p className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
                                 Extintores recogidos ({order.equipments.length})
                             </p>
                             <input
+                                aria-label="Numero serie"
                                 value={equipmentForm.data.numero_serie}
                                 onChange={(event) =>
                                     equipmentForm.setData(
@@ -339,6 +358,7 @@ export default function RecojoShow({
                                     <OpcionesAgente vacia="Agente (alta nueva)" />
                                 </select>
                                 <input
+                                    aria-label="Capacidad"
                                     value={equipmentForm.data.capacidad}
                                     onChange={(event) =>
                                         equipmentForm.setData(
@@ -358,7 +378,10 @@ export default function RecojoShow({
                                 Agregar extintor
                             </button>
                             {equipmentForm.errors.numero_serie && (
-                                <p className="text-xs text-red-600">
+                                <p
+                                    className="text-xs text-red-600"
+                                    role="alert"
+                                >
                                     {equipmentForm.errors.numero_serie}
                                 </p>
                             )}
@@ -368,12 +391,14 @@ export default function RecojoShow({
                             onSubmit={handleSubmit}
                             className="space-y-3 pt-1"
                         >
+                            <AlertError errors={Object.values(form.errors)} />
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                         Teléfono Contacto
                                     </label>
                                     <input
+                                        aria-label="Teléfono Contacto"
                                         type="text"
                                         value={form.data.contacto_telefono}
                                         onChange={(e) =>
@@ -389,7 +414,10 @@ export default function RecojoShow({
                             </div>
 
                             <a
-                                href={`${teamPrefix}/recojos/${order.id}/constancia-recepcion`}
+                                href={recojos.constanciaRecepcion.url({
+                                    current_team: teamSlug,
+                                    service_order: order.id,
+                                })}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex text-xs font-bold text-blue-700 hover:underline dark:text-blue-300"
@@ -403,6 +431,7 @@ export default function RecojoShow({
                                     *
                                 </label>
                                 <input
+                                    aria-label="Contacto nombre"
                                     type="text"
                                     value={form.data.contacto_nombre}
                                     onChange={(e) =>
@@ -422,6 +451,7 @@ export default function RecojoShow({
                                     Observaciones de Estado en Recojo
                                 </label>
                                 <textarea
+                                    aria-label="Observaciones de Estado en Recojo"
                                     value={form.data.observaciones}
                                     onChange={(e) =>
                                         form.setData(

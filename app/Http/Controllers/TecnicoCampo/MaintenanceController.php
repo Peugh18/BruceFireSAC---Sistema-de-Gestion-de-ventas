@@ -16,10 +16,13 @@ use App\Models\Team;
 use App\Services\Reports\ActaConformidadPdfService;
 use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -143,50 +146,58 @@ class MaintenanceController extends Controller
             'observaciones_generales' => ['nullable', 'string', 'max:1000'],
         ], ['firma.required' => 'El cliente debe firmar en la pantalla.']);
 
-        EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+        $mensaje = DB::transaction(function () use ($request, $validated, $serviceOrder, $guardarEvidencia): string {
+            // Finalizar dos veces duplicaría el certificado: la orden se
+            // bloquea y se revalida DENTRO de la transacción (A2), junto con
+            // el evento, el estado y el certificado.
+            $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            EquipoDeLaOrden::asegurarAbierta($serviceOrder);
 
-        if (! $serviceOrder->checklists()->exists()) {
-            return back()->withErrors(['checklist' => 'Completa el checklist de al menos un extintor.']);
-        }
-
-        foreach (['antes' => 'antes', 'despues' => 'después'] as $etapa => $texto) {
-            if (! $serviceOrder->evidencias()->where('etapa', $etapa)->where('tipo', 'foto')->exists()) {
-                return back()->withErrors(['fotos' => "Falta al menos una foto de {$texto} del mantenimiento."]);
+            if (! $serviceOrder->checklists()->exists()) {
+                throw ValidationException::withMessages(['checklist' => 'Completa el checklist de al menos un extintor.']);
             }
-        }
 
-        $guardarEvidencia->firma($serviceOrder, $validated['firma'], 'mantenimiento', $request->user());
+            foreach (['antes' => 'antes', 'despues' => 'después'] as $etapa => $texto) {
+                if (! $serviceOrder->evidencias()->where('etapa', $etapa)->where('tipo', 'foto')->exists()) {
+                    throw ValidationException::withMessages(['fotos' => "Falta al menos una foto de {$texto} del mantenimiento."]);
+                }
+            }
 
-        ServiceOrderEvent::create([
-            'service_order_id' => $serviceOrder->id,
-            'tipo' => 'trabajo_completado',
-            'user_id' => $request->user()->id,
-            'payload' => [
-                'accion' => 'mantenimiento_campo_finalizado',
-                'responsable_nombre' => $request->user()->name,
-                'conformidad_nombre' => $validated['conformidad_nombre'],
-                'receptor_nombre' => $validated['conformidad_nombre'],
-                'observaciones_entrega' => $validated['observaciones_generales'] ?? null,
-                'eslabon_custodia' => 'mantenimiento_campo',
-                'fecha_finalizado' => now()->toIso8601String(),
-                'equipos_atendidos_count' => $serviceOrder->equipments()->count(),
-            ],
-        ]);
+            $guardarEvidencia->firma($serviceOrder, $validated['firma'], 'mantenimiento', $request->user());
 
-        $pendientes = $serviceOrder->deficiencies()
-            ->where('requiere_autorizacion', true)
-            ->where('estado', 'esperando_autorizacion')
-            ->exists();
+            ServiceOrderEvent::create([
+                'service_order_id' => $serviceOrder->id,
+                'tipo' => 'trabajo_completado',
+                'user_id' => $request->user()->id,
+                'payload' => [
+                    'accion' => 'mantenimiento_campo_finalizado',
+                    'responsable_nombre' => $request->user()->name,
+                    'conformidad_nombre' => $validated['conformidad_nombre'],
+                    'receptor_nombre' => $validated['conformidad_nombre'],
+                    'observaciones_entrega' => $validated['observaciones_generales'] ?? null,
+                    'eslabon_custodia' => 'mantenimiento_campo',
+                    'fecha_finalizado' => now()->toIso8601String(),
+                    'equipos_atendidos_count' => $serviceOrder->equipments()->count(),
+                ],
+            ]);
 
-        if ($pendientes) {
-            $serviceOrder->update(['estado' => 'esperando_autorizacion']);
-            $mensaje = 'Mantenimiento finalizado. Hay deficiencias que requieren autorización de ventas.';
-        } else {
+            $pendientes = $serviceOrder->deficiencies()
+                ->where('requiere_autorizacion', true)
+                ->where('estado', 'esperando_autorizacion')
+                ->exists();
+
+            if ($pendientes) {
+                $serviceOrder->update(['estado' => 'esperando_autorizacion']);
+
+                return 'Mantenimiento finalizado. Hay deficiencias que requieren autorización de ventas.';
+            }
+
             $serviceOrder->update(['estado' => 'listo_entrega']);
-            $mensaje = $this->emitirCertificado($serviceOrder)
+
+            return $this->emitirCertificado($serviceOrder)
                 ? 'Mantenimiento finalizado y certificado emitido para los extintores conformes.'
                 : 'Mantenimiento finalizado. Ningún extintor salió conforme: no se emitió certificado.';
-        }
+        });
 
         return back()->with('success', $mensaje);
     }
@@ -200,15 +211,12 @@ class MaintenanceController extends Controller
 
     /**
      * El certificado solo lleva los extintores cuyo último checklist salió
-     * conforme.
+     * conforme. Una sola consulta con subconsulta correlacionada (B5), no una
+     * por equipo.
      */
     protected function emitirCertificado(ServiceOrder $serviceOrder): bool
     {
-        $conformes = $serviceOrder->equipments()
-            ->where('equipment.estado', '!=', 'descargado')
-            ->get()
-            ->filter(fn (Equipment $eq) => $serviceOrder->checklists()->where('equipment_id', $eq->id)->latest('id')->value('resultado_general') === 'conforme')
-            ->values();
+        $conformes = $this->equiposConformes($serviceOrder);
 
         $tipo = CertificateType::where('codigo', 'operatividad_garantia')->first();
 
@@ -233,6 +241,23 @@ class MaintenanceController extends Controller
     protected function finalizado(ServiceOrder $serviceOrder): bool
     {
         return $serviceOrder->events()->where('payload->accion', 'mantenimiento_campo_finalizado')->exists();
+    }
+
+    /**
+     * Extintores aptos para certificar: los de la orden que no están
+     * descargados y cuyo último checklist de esta orden salió conforme (B5).
+     *
+     * @return EloquentCollection<int, Equipment>
+     */
+    protected function equiposConformes(ServiceOrder $serviceOrder): EloquentCollection
+    {
+        return $serviceOrder->equipments()
+            ->where('equipment.estado', '!=', 'descargado')
+            ->whereRaw(
+                "(select c.resultado_general from technical_checklists c where c.service_order_id = ? and c.equipment_id = equipment.id order by c.id desc limit 1) = 'conforme'",
+                [$serviceOrder->id],
+            )
+            ->get();
     }
 
     /**

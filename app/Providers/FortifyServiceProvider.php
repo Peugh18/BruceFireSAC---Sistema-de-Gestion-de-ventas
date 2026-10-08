@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
@@ -71,6 +72,9 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),
+            // La vista usa el atributo "passwordrules" (misma fuente que
+            // SecurityController): sin esta prop la página recibía undefined.
+            'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]));
 
         Fortify::requestPasswordResetLinkView(fn (Request $request) => Inertia::render('auth/forgot-password', [
@@ -81,9 +85,15 @@ class FortifyServiceProvider extends ServiceProvider
             'status' => $request->session()->get('status'),
         ]));
 
-        Fortify::registerView(fn (Request $request) => Inertia::render('auth/register', [
-            'teamInvitation' => $this->teamInvitation($request),
-        ]));
+        // El AUTO-REGISTRO de Fortify está deshabilitado a propósito
+        // (config/fortify.php no habilita Features::registration()): en Bruce
+        // Fire el alta de usuarios solo la hace el Gerente
+        // (routes/gerente.php → gerente/usuarios). La página 'auth/register'
+        // no existe y no debe crearse; si la ruta llegara a estar activa, se
+        // responde 404 en lugar de fallar con una vista Inertia inexistente.
+        if (Features::enabled(Features::registration())) {
+            Fortify::registerView(fn () => abort(404));
+        }
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/two-factor-challenge'));
 

@@ -13,6 +13,7 @@ import {
 import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
+import ReportesRoutes from '@/routes/gerente/reportes';
 
 type ComercialData = {
     fechaDesde: string;
@@ -104,7 +105,7 @@ export default function ReportesIndex() {
 
     const switchTipo = (newTipo: 'comercial' | 'inventario') => {
         router.get(
-            `/${currentTeam.slug}/gerente/reportes`,
+            ReportesRoutes.index.url({ current_team: currentTeam.slug }),
             { tipo: newTipo },
             { preserveState: true },
         );
@@ -112,7 +113,7 @@ export default function ReportesIndex() {
 
     const applyComercialFilters = () => {
         router.get(
-            `/${currentTeam.slug}/gerente/reportes`,
+            ReportesRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 tipo: 'comercial',
                 fecha_desde: fechaDesde || undefined,
@@ -125,7 +126,7 @@ export default function ReportesIndex() {
 
     const applyInventarioFilters = () => {
         router.get(
-            `/${currentTeam.slug}/gerente/reportes`,
+            ReportesRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 tipo: 'inventario',
                 sede_id: sedeId || undefined,

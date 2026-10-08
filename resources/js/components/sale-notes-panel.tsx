@@ -1,6 +1,7 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { AlertTriangle, Ban, CheckCircle2, FilePlus2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -195,6 +196,11 @@ export function SaleNotesPanel({
                 : notasDebito.store.url(teamSlug);
 
         form.post(ruta, {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => setOpen(false),
         });
@@ -208,6 +214,11 @@ export function SaleNotesPanel({
                 electronic_document: original.id,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
                 onSuccess: () => setBajaOpen(false),
             },
@@ -521,7 +532,7 @@ export function SaleNotesPanel({
                             </div>
 
                             {form.errors.electronic_document_id && (
-                                <p className="text-red-600">
+                                <p className="text-red-600" role="alert">
                                     {form.errors.electronic_document_id}
                                 </p>
                             )}
@@ -628,12 +639,14 @@ export function SaleNotesPanel({
                                 </span>
                             </label>
                             {baja.errors.no_entregado && (
-                                <p className="text-red-600">
+                                <p className="text-red-600" role="alert">
                                     {baja.errors.no_entregado}
                                 </p>
                             )}
                             {errorBaja && (
-                                <p className="text-red-600">{errorBaja}</p>
+                                <p className="text-red-600" role="alert">
+                                    {errorBaja}
+                                </p>
                             )}
 
                             <div className="border-border flex justify-end gap-2 border-t pt-4">

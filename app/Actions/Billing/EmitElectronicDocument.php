@@ -166,18 +166,39 @@ class EmitElectronicDocument
     /**
      * Descarta un comprobante que nunca llegó a SUNAT: borra su XML y PDF y
      * devuelve el número a la serie para que lo use el siguiente.
+     *
+     * Toma el MISMO bloqueo que el envío (`sunat-envio-{id}`) y revalida
+     * `intento_envio_at` bajo él (M4): si el programador de envío o un «Enviar
+     * ya» empezaron mientras se anulaba la venta, no se borra el XML firmado
+     * ni se libera el correlativo de un comprobante que ya salió a SUNAT.
      */
     public function descartarPorEnviar(ElectronicDocument $document): void
     {
-        if (! $document->estaPorEnviar() || $document->intento_envio_at !== null) {
-            throw new InvalidArgumentException('Solo se descarta un comprobante que aún no tuvo ningún intento de envío a SUNAT.');
+        $lock = Cache::lock("sunat-envio-{$document->id}", 300);
+
+        if (! $lock->get()) {
+            throw ValidationException::withMessages([
+                'comprobante' => 'Este comprobante se está enviando a SUNAT: espera su respuesta antes de descartarlo.',
+            ]);
         }
 
-        Storage::disk('local')->delete(array_filter([$document->xml_path, $document->pdf_path]));
+        try {
+            // Releído bajo el bloqueo: el envío pudo empezar desde que se
+            // cargó la pantalla.
+            $document->refresh();
 
-        $this->reserveNextCorrelativo->liberar($document->tipo, $document->serie, $document->correlativo);
+            if (! $document->estaPorEnviar() || $document->intento_envio_at !== null) {
+                throw new InvalidArgumentException('Solo se descarta un comprobante que aún no tuvo ningún intento de envío a SUNAT.');
+            }
 
-        $document->delete();
+            Storage::disk('local')->delete(array_filter([$document->xml_path, $document->pdf_path]));
+
+            $this->reserveNextCorrelativo->liberar($document->tipo, $document->serie, $document->correlativo);
+
+            $document->delete();
+        } finally {
+            $lock->release();
+        }
     }
 
     protected function crearDocumento(Sale $sale, string $estado, ?CarbonInterface $fechaEmision = null): ElectronicDocument

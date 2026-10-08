@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { BotonFoto } from '@/components/captura-evidencia';
 import { store as registrarDeficiencia } from '@/routes/tecnico-planta/deficiencias';
 import type { Team } from '@/types';
+import { toast } from 'sonner';
 
 interface Props {
     ordenId: number;
@@ -42,6 +43,11 @@ export default function DeficienciaSuelta({ ordenId, equipos }: Props) {
                 service_order: ordenId,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 forceFormData: true,
                 preserveScroll: true,
                 onSuccess: () => {

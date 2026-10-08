@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
+import CajasRoutes from '@/routes/gerente/cajas';
 
 type CashRegisterItem = {
     id: number;
@@ -97,7 +98,7 @@ export default function CajasConsolidadasIndex() {
 
     const applyFilters = () => {
         router.get(
-            `/${currentTeam.slug}/gerente/cajas`,
+            CajasRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 vendedor_id: vendedorId || undefined,
                 sede_id: sedeId || undefined,
@@ -118,7 +119,7 @@ export default function CajasConsolidadasIndex() {
         setFechaDesde('');
         setFechaHasta('');
         router.get(
-            `/${currentTeam.slug}/gerente/cajas`,
+            CajasRoutes.index.url({ current_team: currentTeam.slug }),
             {},
             { preserveState: true },
         );

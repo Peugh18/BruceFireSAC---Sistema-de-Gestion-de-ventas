@@ -2,6 +2,7 @@
 
 namespace App\Actions\Sales;
 
+use App\Models\Certificate;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
@@ -159,8 +160,20 @@ class ProcessSaleItem
 
         $unit->update(['estado' => 'vendido']);
 
-        // Si la unidad ya se vendió antes y esa venta se anuló, su equipo
-        // quedó de baja con la misma serie: se reutiliza para el nuevo cliente.
+        // La ficha del equipo es de UN cliente y no se transfiere: las otras
+        // acciones del sistema (QuickRegisterEquipment, EquipoDeLaOrden) se niegan
+        // a tocar un equipo de otro cliente. Reasignarla en silencio arrastraba
+        // los certificados, checklists y órdenes del cliente anterior al nuevo.
+        // Solo se reutiliza cuando la propiedad anterior está totalmente cerrada
+        // (venta anulada y sus certificados anulados, que es lo que deja
+        // RevertSale). Si quedó historial vivo, no se roba: se explica y no se
+        // vende la serie.
+        $equipment = Equipment::query()->where('numero_serie', $unit->numero_serie)->first();
+
+        if ($equipment && (int) $equipment->client_id !== (int) $sale->client_id) {
+            $this->exigirPropiedadAnteriorCerrada($equipment);
+        }
+
         $equipment = Equipment::updateOrCreate(['numero_serie' => $unit->numero_serie], [
             'client_id' => $sale->client_id,
             'product_id' => $unit->product_id,
@@ -186,6 +199,29 @@ class ProcessSaleItem
             'precio_unitario' => $itemData['precio_unitario'],
             'descuento' => $itemData['descuento'] ?? 0,
             'subtotal' => $itemData['subtotal'],
+        ]);
+    }
+
+    /**
+     * La ficha del equipo pertenece a un cliente y su historial técnico no se
+     * transfiere al siguiente comprador: moverla en silencio dejaba certificados
+     * de un cliente colgando del equipo de otro. Si la propiedad anterior dejó
+     * certificados vivos, checklists u órdenes de servicio, no se reutiliza la
+     * ficha.
+     */
+    private function exigirPropiedadAnteriorCerrada(Equipment $equipment): void
+    {
+        $certificadosVivos = Certificate::query()
+            ->whereHas('certificateUnits', fn ($query) => $query->where('equipment_id', $equipment->id))
+            ->where('estado', '!=', 'anulado')
+            ->exists();
+
+        if (! $certificadosVivos && ! $equipment->checklists()->exists() && ! $equipment->serviceOrders()->exists()) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'items' => "La serie {$equipment->numero_serie} tiene certificados u órdenes de servicio de otro cliente: no se puede vender a un cliente distinto mientras ese historial esté vivo.",
         ]);
     }
 

@@ -4,6 +4,7 @@ import { BotonFoto, GrabadoraAudio } from '@/components/captura-evidencia';
 import { show as verEvidencia } from '@/routes/evidencias';
 import { store as enviarMensaje } from '@/routes/ordenes/mensajes';
 import type { Team } from '@/types';
+import { toast } from 'sonner';
 
 export interface EventoConversacion {
     id: number;
@@ -64,6 +65,11 @@ export default function ConversacionOrden({
         form.post(
             enviarMensaje.url({ current_team: equipo, service_order: ordenId }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 forceFormData: true,
                 preserveScroll: true,
                 onSuccess: () => form.reset(),
@@ -173,6 +179,7 @@ export default function ConversacionOrden({
                     Mensaje
                 </label>
                 <textarea
+                    aria-label="Mensaje"
                     id={`mensaje-${ordenId}`}
                     value={form.data.mensaje}
                     onChange={(e) => form.setData('mensaje', e.target.value)}
@@ -191,6 +198,7 @@ export default function ConversacionOrden({
                                 Extintor del que hablas
                             </label>
                             <select
+                                aria-label="Extintor del que hablas"
                                 id={`equipo-${ordenId}`}
                                 value={form.data.equipment_id}
                                 onChange={(e) =>
@@ -219,6 +227,7 @@ export default function ConversacionOrden({
                         <Paperclip className="h-4 w-4" />
                         Adjuntar archivo
                         <input
+                            aria-label="Archivo"
                             type="file"
                             className="sr-only"
                             onChange={(e) =>

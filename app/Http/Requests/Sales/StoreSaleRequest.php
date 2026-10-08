@@ -25,11 +25,12 @@ class StoreSaleRequest extends FormRequest
             'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'quote_id' => ['nullable', 'integer', 'exists:quotes,id'],
             'service_order_id' => ['nullable', 'integer', 'exists:service_orders,id'],
-            // Una venta nueva es de hoy o de hasta dos días atrás (SUNAT recibe
-            // el comprobante dentro de los 3 días): nunca de mañana.
-            'fecha' => $this->route('sale') === null
-                ? ['required', 'date', 'before_or_equal:today', 'after_or_equal:'.today()->subDays(2)->toDateString()]
-                : ['required', 'date'],
+            // La fecha de la venta es de hoy o de hasta dos días atrás (SUNAT
+            // recibe el comprobante dentro de los 3 días): nunca de mañana.
+            // La regla vale al crear y al actualizar (B3); al actualizar solo
+            // se respeta la fecha que la venta ya tenía, para poder seguir
+            // editando una venta vieja sin mover su fecha.
+            'fecha' => ['required', 'date', 'before_or_equal:today', 'after_or_equal:'.$this->fechaMinima()],
             'destino' => ['required', Rule::in(['local_cliente', 'vehiculo'])],
             'condicion_pago' => ['required', Rule::in(['contado', 'credito'])],
             'medio_pago' => ['required_if:condicion_pago,contado', 'nullable', Rule::in(array_keys(Sale::MEDIOS_PAGO))],
@@ -52,6 +53,23 @@ class StoreSaleRequest extends FormRequest
             'items.*.precio_unitario' => ['required', 'numeric', 'gt:0'],
             'items.*.descuento' => ['nullable', 'numeric', 'min:0'],
         ];
+    }
+
+    /**
+     * Fecha más antigua aceptada: la ventana de los 2 días de SUNAT, o la
+     * fecha que la venta ya tenía si es más vieja (una venta antigua se puede
+     * seguir editando sin que el formulario la rechace).
+     */
+    protected function fechaMinima(): string
+    {
+        $limite = today()->subDays(2);
+        $venta = $this->route('sale');
+
+        if ($venta instanceof Sale && $venta->fecha->lt($limite)) {
+            return $venta->fecha->toDateString();
+        }
+
+        return $limite->toDateString();
     }
 
     /**

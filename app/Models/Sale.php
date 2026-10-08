@@ -83,9 +83,16 @@ class Sale extends Model
         'otro' => 'Otro',
     ];
 
+    /**
+     * Con los cobros ya cargados no se vuelve a la base (era un N+1 en las
+     * listas de ventas).
+     */
     public function medioPagoTexto(): ?string
     {
-        $method = $this->payments()->oldest('id')->value('forma_pago') ?? $this->medio_pago;
+        $method = $this->relationLoaded('payments')
+            ? $this->payments->sortBy('id')->first()?->forma_pago
+            : $this->payments()->oldest('id')->value('forma_pago');
+        $method ??= $this->medio_pago;
 
         return $method ? (self::MEDIOS_PAGO[$method] ?? $method) : null;
     }
@@ -251,6 +258,16 @@ class Sale extends Model
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
+    }
+
+    /**
+     * Órdenes de servicio que nacieron de esta venta.
+     *
+     * @return HasMany<ServiceOrder, $this>
+     */
+    public function serviceOrders(): HasMany
+    {
+        return $this->hasMany(ServiceOrder::class);
     }
 
     /**

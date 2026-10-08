@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import { UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { toast } from 'sonner';
 
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import UsuariosRoutes from '@/routes/gerente/usuarios';
 
 type SedeOption = { id: number; nombre: string; tipo: string };
 
@@ -44,7 +46,12 @@ export default function NuevoUsuarioDialog({
 
     const guardar = (evento: FormEvent) => {
         evento.preventDefault();
-        form.post(`/${teamSlug}/gerente/usuarios`, {
+        form.post(UsuariosRoutes.store.url({ current_team: teamSlug }), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();

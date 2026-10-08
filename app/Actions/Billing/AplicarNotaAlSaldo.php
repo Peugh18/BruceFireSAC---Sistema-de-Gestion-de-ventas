@@ -5,6 +5,7 @@ namespace App\Actions\Billing;
 use App\Models\ElectronicDocument;
 use App\Models\Installment;
 use App\Models\Sale;
+use App\Models\SaleRefund;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
@@ -95,12 +96,56 @@ class AplicarNotaAlSaldo
             }
         }
 
-        // ponytail: lo que excede el saldo (venta ya pagada) es un saldo a
-        // favor del cliente; solo queda en la auditoría, se devuelve a mano.
+        // V4/S11: lo que excede el saldo de las cuotas (venta al contado o ya
+        // cobrada) es dinero cobrado de más que se devuelve al cliente: además
+        // de la auditoría se registra la devolución, para que entre en Caja y
+        // en el arqueo del turno (M2, como en la anulación total).
         if ($porRebajar > 0) {
+            $this->registrarDevolucion($sale, $nota, $porRebajar);
             $cambios[] = ['cuota' => 0, 'monto' => -$porRebajar];
         }
 
         return $cambios;
+    }
+
+    /**
+     * Devuelve al cliente el excedente de una nota de crédito sobre una venta
+     * sin saldo suficiente que rebajar: se reparte entre las formas de pago en
+     * que se cobró (neto de lo ya devuelto), igual que en la anulación total.
+     * Si lo cobrado no cubre el excedente, lo que falte queda solo en la
+     * auditoría (no hay dinero registrado que devolver).
+     */
+    protected function registrarDevolucion(Sale $sale, ElectronicDocument $nota, float $monto): void
+    {
+        $cobrado = $sale->payments()->get()
+            ->groupBy('forma_pago')
+            ->map(fn ($pagos) => (float) $pagos->sum('monto'));
+        $yaDevuelto = $sale->refunds()->get()
+            ->groupBy('forma_pago')
+            ->map(fn ($devoluciones) => (float) $devoluciones->sum('monto'));
+
+        foreach ($cobrado as $forma => $totalCobrado) {
+            $disponible = round($totalCobrado - (float) $yaDevuelto->get($forma, 0), 2);
+            $devuelto = min($disponible, $monto);
+
+            if ($devuelto <= 0) {
+                continue;
+            }
+
+            SaleRefund::create([
+                'sale_id' => $sale->id,
+                'forma_pago' => $forma,
+                'monto' => $devuelto,
+                'motivo' => "Devolución por nota de crédito {$nota->serie}-{$nota->correlativo} sobre la venta {$sale->numero_interno}",
+                'user_id' => is_int($usuario = auth()->id()) ? $usuario : null,
+                'fecha' => today(),
+            ]);
+
+            $monto = round($monto - $devuelto, 2);
+
+            if ($monto <= 0) {
+                break;
+            }
+        }
     }
 }

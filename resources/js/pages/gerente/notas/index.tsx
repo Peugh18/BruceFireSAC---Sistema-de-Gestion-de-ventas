@@ -1,6 +1,7 @@
 import { router, useForm, usePage } from '@inertiajs/react';
 import { AlertTriangle, Check, CheckCircle2, X } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import GerenteLayout from '@/layouts/gerente-layout';
@@ -57,6 +58,11 @@ function FilaSolicitud({
             notas.aprobar.url(args),
             {},
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
                 onFinish: () => setAprobando(false),
             },
@@ -65,7 +71,14 @@ function FilaSolicitud({
 
     const rechazar = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post(notas.rechazar.url(args), { preserveScroll: true });
+        form.post(notas.rechazar.url(args), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -124,6 +137,7 @@ function FilaSolicitud({
                         ¿Por qué la rechazas? El vendedor lo verá.
                     </label>
                     <textarea
+                        aria-label="¿Por qué la rechazas? El vendedor lo verá."
                         id={`motivo-rechazo-${solicitud.id}`}
                         required
                         rows={2}
@@ -135,7 +149,7 @@ function FilaSolicitud({
                         className="border-border bg-background w-full rounded-lg border px-3 py-2 text-sm"
                     />
                     {form.errors.motivo_rechazo && (
-                        <p className="text-destructive text-xs">
+                        <p className="text-destructive text-xs" role="alert">
                             {form.errors.motivo_rechazo}
                         </p>
                     )}

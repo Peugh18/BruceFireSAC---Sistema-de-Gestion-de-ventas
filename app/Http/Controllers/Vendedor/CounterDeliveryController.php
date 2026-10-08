@@ -10,6 +10,7 @@ use App\Services\Reports\ActaConformidadPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,9 +31,6 @@ class CounterDeliveryController extends Controller
     public function store(Team $current_team, ServiceOrder $service_order, Request $request, RenewEquipmentAttentionDate $renew): RedirectResponse
     {
         $this->assertAccess($service_order, $request);
-        // Con el certificado emitido la orden ya se puede entregar.
-        abort_unless(in_array($service_order->estado, ServiceOrder::ESTADOS_PARA_ENTREGAR, true), 422, 'La orden todavía no está lista para entregar.');
-        abort_if($this->deliveryEvent($service_order) !== null, 422, 'Esta orden ya se entregó.');
 
         $validated = $request->validate([
             'receptor_nombre' => ['required', 'string', 'max:150'],
@@ -40,24 +38,34 @@ class CounterDeliveryController extends Controller
             'conformidad_aceptada' => ['required', 'accepted'],
         ]);
 
-        $service_order->events()->create([
-            'tipo' => 'entrega_registrada',
-            'user_id' => $request->user()->id,
-            'payload' => [
-                'accion' => 'entrega_final_realizada',
-                'eslabon_custodia' => 'entrega_mostrador',
-                'responsable_nombre' => $request->user()->name,
-                ...$validated,
-            ],
-        ]);
-        $service_order->update(['estado' => 'cerrado']);
+        DB::transaction(function () use ($service_order, $request, $validated, $renew): void {
+            // Bloqueada y releída (M6): un doble POST no puede crear dos
+            // eventos de entrega ni cerrar dos veces la orden.
+            $service_order = ServiceOrder::query()->lockForUpdate()->findOrFail($service_order->id);
 
-        // Las fechas de los extintores se renuevan una sola vez: si el taller
-        // ya las renovó al emitir el certificado, la entrega no las mueve.
-        if (! $service_order->events()->where('tipo', 'trabajo_completado')->exists()) {
-            $phRealizada = $service_order->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
-            $renew->execute($service_order->equipments()->get(), $phRealizada);
-        }
+            // Con el certificado emitido la orden ya se puede entregar.
+            abort_unless(in_array($service_order->estado, ServiceOrder::ESTADOS_PARA_ENTREGAR, true), 422, 'La orden todavía no está lista para entregar.');
+            abort_if($this->deliveryEvent($service_order) !== null, 422, 'Esta orden ya se entregó.');
+
+            $service_order->events()->create([
+                'tipo' => 'entrega_registrada',
+                'user_id' => $request->user()->id,
+                'payload' => [
+                    'accion' => 'entrega_final_realizada',
+                    'eslabon_custodia' => 'entrega_mostrador',
+                    'responsable_nombre' => $request->user()->name,
+                    ...$validated,
+                ],
+            ]);
+            $service_order->update(['estado' => 'cerrado']);
+
+            // Las fechas de los extintores se renuevan una sola vez: si el taller
+            // ya las renovó al emitir el certificado, la entrega no las mueve.
+            if (! $service_order->events()->where('tipo', 'trabajo_completado')->exists()) {
+                $phRealizada = $service_order->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
+                $renew->execute($service_order->equipments()->get(), $phRealizada);
+            }
+        });
 
         return back()->with('success', 'Entrega conforme registrada. Ya puedes descargar el acta.');
     }

@@ -12,6 +12,7 @@ import React, { useState } from 'react';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
+import EntregasRoutes from '@/routes/tecnico-campo/entregas';
 
 type Client = {
     id: number;
@@ -110,7 +111,7 @@ export default function EntregasIndex({
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
-            `/${teamSlug}/tecnico-campo/entregas`,
+            EntregasRoutes.index.url({ current_team: teamSlug }),
             { tab: currentTab, q: searchTerm },
             { preserveState: true },
         );
@@ -118,7 +119,7 @@ export default function EntregasIndex({
 
     const handleTabChange = (tab: string) => {
         router.get(
-            `/${teamSlug}/tecnico-campo/entregas`,
+            EntregasRoutes.index.url({ current_team: teamSlug }),
             { tab, q: searchTerm },
             { preserveState: true },
         );
@@ -207,6 +208,7 @@ export default function EntregasIndex({
                 <div className="relative">
                     <Search className="text-muted-foreground absolute top-1/2 left-3.5 size-4 -translate-y-1/2" />
                     <input
+                        aria-label="Buscar por orden, RUC o cliente..."
                         type="text"
                         placeholder="Buscar por orden, RUC o cliente..."
                         value={searchTerm}
@@ -235,7 +237,9 @@ export default function EntregasIndex({
                                 onClick={() => {
                                     setSearchTerm('');
                                     router.get(
-                                        `/${teamSlug}/tecnico-campo/entregas`,
+                                        EntregasRoutes.index.url({
+                                            current_team: teamSlug,
+                                        }),
                                         { tab: 'todos' },
                                     );
                                 }}
@@ -258,7 +262,10 @@ export default function EntregasIndex({
                         return (
                             <Link
                                 key={order.id}
-                                href={`/${teamSlug}/tecnico-campo/entregas/${order.id}`}
+                                href={EntregasRoutes.show.url({
+                                    current_team: teamSlug,
+                                    service_order: order.id,
+                                })}
                                 className="border-border bg-card block rounded-[14px] border p-4 shadow-xs transition-all hover:border-sky-500/20 active:scale-[0.99]"
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">

@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -108,6 +109,11 @@ export default function Transfers({
                                 .filter(Boolean),
                         }));
                         form.post(store.url(teamSlug), {
+                            onError: (errors) =>
+                                toast.error(
+                                    Object.values(errors)[0] ??
+                                        'No se pudo completar la acción.',
+                                ),
                             onSuccess: () => form.reset(),
                         });
                     }}
@@ -198,6 +204,7 @@ export default function Transfers({
                         <p
                             key={error}
                             className="text-destructive-strong text-xs"
+                            role="alert"
                         >
                             {error}
                         </p>
@@ -253,6 +260,16 @@ export default function Transfers({
                                                     current_team: teamSlug,
                                                     traslado: traslado.id,
                                                 }),
+                                                {},
+                                                {
+                                                    onError: (errors) =>
+                                                        toast.error(
+                                                            Object.values(
+                                                                errors,
+                                                            )[0] ??
+                                                                'No se pudo completar la acción.',
+                                                        ),
+                                                },
                                             )
                                         }
                                     >

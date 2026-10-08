@@ -21,6 +21,7 @@ import {
     Wrench,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import instalaciones from '@/routes/tecnico-campo/instalaciones';
@@ -238,6 +239,13 @@ export default function InstalacionShow({
                 current_team: teamSlug,
                 service_order: order.id,
             }),
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+            },
         );
     };
 
@@ -248,7 +256,7 @@ export default function InstalacionShow({
             {/* Back link */}
             <div className="mb-4 flex items-center justify-between">
                 <Link
-                    href={`/${teamSlug}/tecnico-campo/instalaciones`}
+                    href={instalaciones.index.url({ current_team: teamSlug })}
                     className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                 >
                     <ArrowLeft className="size-4" />
@@ -365,6 +373,7 @@ export default function InstalacionShow({
                                 <span className="text-red-500">*</span>
                             </label>
                             <input
+                                aria-label="Area"
                                 type="text"
                                 required
                                 disabled={isFinalizada}
@@ -383,6 +392,7 @@ export default function InstalacionShow({
                                 <span className="text-red-500">*</span>
                             </label>
                             <input
+                                aria-label="Ubicacion instalada"
                                 type="text"
                                 required
                                 disabled={isFinalizada}
@@ -404,6 +414,7 @@ export default function InstalacionShow({
                             Pruebas y Verificación de Montaje
                         </label>
                         <textarea
+                            aria-label="Pruebas y Verificación de Montaje"
                             rows={2}
                             disabled={isFinalizada}
                             value={form.data.pruebas}
@@ -545,6 +556,7 @@ export default function InstalacionShow({
                                             Agente Extintor
                                         </label>
                                         <select
+                                            aria-label="Agente Extintor"
                                             disabled={isFinalizada}
                                             value={item.tipo_agente}
                                             onChange={(e) =>
@@ -564,6 +576,7 @@ export default function InstalacionShow({
                                             Capacidad
                                         </label>
                                         <input
+                                            aria-label="Capacidad"
                                             type="text"
                                             disabled={isFinalizada}
                                             value={item.capacidad}
@@ -583,6 +596,7 @@ export default function InstalacionShow({
                                             Serie Interna / Código
                                         </label>
                                         <input
+                                            aria-label="Serie Interna / Código"
                                             type="text"
                                             disabled={isFinalizada}
                                             value={item.numero_serie}
@@ -602,6 +616,7 @@ export default function InstalacionShow({
                                             Marca
                                         </label>
                                         <input
+                                            aria-label="Marca"
                                             type="text"
                                             disabled={isFinalizada}
                                             value={item.marca}
@@ -621,6 +636,7 @@ export default function InstalacionShow({
                                             Ubicación Exacta
                                         </label>
                                         <input
+                                            aria-label="Ubicación Exacta"
                                             type="text"
                                             disabled={isFinalizada}
                                             value={item.ubicacion_actual}
@@ -673,6 +689,7 @@ export default function InstalacionShow({
                                 Tipo de Certificado
                             </label>
                             <select
+                                aria-label="Tipo de Certificado"
                                 disabled={isFinalizada}
                                 value={form.data.tipo_certificado_codigo}
                                 onChange={(e) =>
@@ -707,6 +724,7 @@ export default function InstalacionShow({
                                 <span className="text-red-500">*</span>
                             </label>
                             <input
+                                aria-label="Conformidad nombre"
                                 type="text"
                                 required
                                 value={form.data.conformidad_nombre}
@@ -745,7 +763,10 @@ export default function InstalacionShow({
                             onChange={(f) => form.setData('firma', f)}
                         />
                         {form.errors.firma && (
-                            <p className="text-[10px] text-red-500">
+                            <p
+                                className="text-[10px] text-red-500"
+                                role="alert"
+                            >
                                 {form.errors.firma}
                             </p>
                         )}
@@ -755,6 +776,7 @@ export default function InstalacionShow({
                                 Observaciones Adicionales
                             </label>
                             <textarea
+                                aria-label="Observaciones Adicionales"
                                 rows={2}
                                 value={form.data.observaciones}
                                 onChange={(e) =>

@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property float $precio_unitario
  * @property float $descuento
  * @property float $subtotal
+ * @property string $tipo_afectacion_igv
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Quote $quote
@@ -25,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property-read Service|null $service
  * @property-read Product|Service|null $item
  */
-#[Fillable(['quote_id', 'product_id', 'service_id', 'cantidad', 'precio_unitario', 'descuento', 'subtotal'])]
+#[Fillable(['quote_id', 'product_id', 'service_id', 'cantidad', 'precio_unitario', 'descuento', 'subtotal', 'tipo_afectacion_igv'])]
 class QuoteItem extends Model
 {
     /** @use HasFactory<QuoteItemFactory> */

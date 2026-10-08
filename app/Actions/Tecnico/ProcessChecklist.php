@@ -38,12 +38,20 @@ class ProcessChecklist
     ];
 
     /**
+     * Estados de la orden en los que el taller todavía trabaja: solo desde
+     * estos se mueve la orden a `esperando_autorizacion` (M7). Una orden que
+     * ya espera autorización (o que ya terminó) no se "rebobina".
+     */
+    public const ESTADOS_DE_TRABAJO = ['pendiente_recepcion', 'recibido_planta', 'en_revision', 'autorizado', 'en_proceso'];
+
+    /**
      * Procesa y guarda un checklist técnico digital (§19), generando
      * automáticamente las deficiencias observadas (§20) y ajustando el flujo
      * de la orden de servicio.
      *
      * @param  array{
      *     origen?: string,
+     *     equipo_descargado?: bool|null,
      *     items: array<string, array{
      *         estado: 'conforme'|'observado'|'no_aplica',
      *         condicion?: string|null,
@@ -51,6 +59,7 @@ class ProcessChecklist
      *         accion_recomendada?: string|null,
      *         repuesto_sugerido?: string|null,
      *         requiere_autorizacion?: bool|null,
+     *         descargado?: bool|null,
      *         foto?: UploadedFile|null
      *     }>,
      *     observaciones?: string|null
@@ -63,12 +72,7 @@ class ProcessChecklist
         array $data
     ): TechnicalChecklist {
         // En planta se revisa lo recibido y antes de cerrar el trabajo.
-        if (in_array($serviceOrder->estado, ServiceOrder::ESTADOS_CERRADOS_AL_TALLER, true)
-            || (($data['origen'] ?? null) === 'planta' && $serviceOrder->estado === 'pendiente_recepcion')) {
-            throw ValidationException::withMessages(['equipment' => $serviceOrder->estado === 'pendiente_recepcion'
-                ? 'Primero confirma la recepción de la orden en planta.'
-                : 'Esta orden ya terminó en el taller: no se hacen más checklists.']);
-        }
+        $this->asegurarAbiertaAlTaller($serviceOrder, $data);
 
         // Solo se revisan los extintores de esta orden (no los de otro cliente).
         if (! $serviceOrder->equipments()->whereKey($equipment->id)->exists()) {
@@ -85,11 +89,19 @@ class ProcessChecklist
         }
 
         return DB::transaction(function () use ($serviceOrder, $equipment, $user, $data) {
+            // Bloqueada y releída: dos checklists a la vez no se pisan en el
+            // estado de la orden (uno la manda a esperar autorización y el
+            // otro la rebobina a en_proceso con un estado viejo).
+            $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            $this->asegurarAbiertaAlTaller($serviceOrder, $data);
+
             $origen = $data['origen'] ?? ($serviceOrder->departamento_tecnico ?: 'planta');
             $checklistItems = [];
             $deficienciesCreated = [];
             $requiereAutorizacionGlobal = false;
-            $esDescargadoOUsado = false;
+            // B4: el técnico también puede marcarlo a mano con
+            // `equipo_descargado` en el checklist o `descargado` en el ítem.
+            $esDescargadoOUsado = (bool) ($data['equipo_descargado'] ?? false);
 
             foreach ($data['items'] as $clave => $itemData) {
                 $nombreElemento = self::ELEMENTOS[$clave] ?? ucfirst(str_replace('_', ' ', $clave));
@@ -104,16 +116,7 @@ class ProcessChecklist
 
                 // Si está observado, se genera la deficiencia (§19.2, §20)
                 if ($estado === 'observado') {
-                    $condicionLower = mb_strtolower(($itemData['condicion'] ?? '').' '.($itemData['nota'] ?? ''));
-                    if (str_contains($condicionLower, 'descargad')
-                        || str_contains($condicionLower, 'usad')
-                        || str_contains($condicionLower, 'sin presion')
-                        || str_contains($condicionLower, 'sin presión')
-                        || str_contains($condicionLower, 'despresurizad')
-                        || str_contains($condicionLower, 'percutad')
-                        || str_contains($condicionLower, 'vacio')
-                        || str_contains($condicionLower, 'vacío')
-                    ) {
+                    if ($this->esDescargadoOUsado($itemData)) {
                         $esDescargadoOUsado = true;
                     }
 
@@ -161,9 +164,13 @@ class ProcessChecklist
                 'observaciones' => $data['observaciones'] ?? null,
             ]);
 
-            // Transición de la Orden de Servicio según el resultado
+            // Transición de la Orden de Servicio según el resultado (M7): se
+            // decide sobre el estado RELEÍDO bajo la orden bloqueada y solo
+            // desde un estado de trabajo; dos checklists a la vez no se pisan.
             if ($requiereAutorizacionGlobal) {
-                $serviceOrder->update(['estado' => 'esperando_autorizacion']);
+                if (in_array($serviceOrder->estado, self::ESTADOS_DE_TRABAJO, true)) {
+                    $serviceOrder->update(['estado' => 'esperando_autorizacion']);
+                }
 
                 ServiceOrderEvent::create([
                     'service_order_id' => $serviceOrder->id,
@@ -199,7 +206,7 @@ class ProcessChecklist
                 ]);
             } else {
                 // Si la orden estaba en recibido_planta o en_revision y todo está conforme o no requiere auth
-                if (in_array($serviceOrder->estado, ['recibido_planta', 'en_revision'])) {
+                if (in_array($serviceOrder->estado, ['recibido_planta', 'en_revision'], true)) {
                     $serviceOrder->update(['estado' => 'en_proceso']);
                 }
 
@@ -219,5 +226,49 @@ class ProcessChecklist
 
             return $checklist;
         });
+    }
+
+    /**
+     * Las acciones del taller sobre una orden ya terminada no se repiten. Se
+     * revalida también dentro de la transacción, con la orden bloqueada (M7).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function asegurarAbiertaAlTaller(ServiceOrder $serviceOrder, array $data): void
+    {
+        if (in_array($serviceOrder->estado, ServiceOrder::ESTADOS_CERRADOS_AL_TALLER, true)
+            || (($data['origen'] ?? null) === 'planta' && $serviceOrder->estado === 'pendiente_recepcion')) {
+            throw ValidationException::withMessages(['equipment' => $serviceOrder->estado === 'pendiente_recepcion'
+                ? 'Primero confirma la recepción de la orden en planta.'
+                : 'Esta orden ya terminó en el taller: no se hacen más checklists.']);
+        }
+    }
+
+    /**
+     * ¿El extintor quedó descargado o usado? (B4) Además del control
+     * explícito `descargado` del ítem, se buscan señales en el texto libre de
+     * la condición y la nota: «sin carga», «agotado», «vaciado», etc., no solo
+     * «descargado».
+     *
+     * @param  array<string, mixed>  $itemData
+     */
+    protected function esDescargadoOUsado(array $itemData): bool
+    {
+        if (($itemData['descargado'] ?? false) === true) {
+            return true;
+        }
+
+        $condicionLower = mb_strtolower(($itemData['condicion'] ?? '').' '.($itemData['nota'] ?? ''));
+
+        foreach ([
+            'descargad', 'usad', 'sin presion', 'sin presión', 'despresurizad',
+            'percutad', 'vacio', 'vacío', 'sin carga', 'agotad', 'vaciad', 'descarga total',
+        ] as $senal) {
+            if (str_contains($condicionLower, $senal)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
