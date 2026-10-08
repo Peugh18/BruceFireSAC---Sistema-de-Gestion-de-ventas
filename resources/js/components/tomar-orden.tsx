@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { Hand, UserCheck } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import tecnicoCampo from '@/routes/tecnico-campo/ordenes';
@@ -55,7 +56,15 @@ export default function TomarOrden({
                 service_order: asignacion.orden_id,
             }),
             {},
-            { preserveScroll: true, onFinish: () => setTomando(false) },
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+                preserveScroll: true,
+                onFinish: () => setTomando(false),
+            },
         );
     }
 

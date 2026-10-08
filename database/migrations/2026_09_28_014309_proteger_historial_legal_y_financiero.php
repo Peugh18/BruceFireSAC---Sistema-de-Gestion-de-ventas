@@ -42,6 +42,13 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
+     *
+     * El estado previo a esta migración lo dictan las migraciones de creación:
+     * TODAS estas claves nacieron con cascadeOnDelete (se comprobó una por una
+     * contra su create_... original), así que el rollback las devuelve a
+     * cascade. Es la inversa fiel de up(), aunque anula la protección de
+     * PROYECTO.md §4: la que impide borrar historial es la migración
+     * 2026_10_07_210000, que se revierte antes que esta.
      */
     public function down(): void
     {
@@ -72,6 +79,12 @@ return new class extends Migration
             ['technical_checklists', 'equipment_id', 'equipment', 'cascade'],
             ['technical_checklists', 'service_order_id', 'service_orders', 'cascade'],
         ]);
+
+        // up() puso nullable deficiency_authorizations.vendedor_id (antes era
+        // NOT NULL): el rollback también devuelve esa nullidad.
+        Schema::table('deficiency_authorizations', function (Blueprint $table): void {
+            $table->unsignedBigInteger('vendedor_id')->nullable(false)->change();
+        });
     }
 
     /**

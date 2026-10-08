@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ConversacionOrdenController extends Controller
 {
-    private const TIPOS_DE_ARCHIVO = 'jpg,jpeg,png,webp,heic,heif,gif,mp3,m4a,mp4,ogg,oga,wav,webm,aac,pdf,doc,docx,xls,xlsx,txt';
+    private const TIPOS_DE_ARCHIVO = 'jpg,jpeg,png,webp,heic,heif,gif,mp3,m4a,mp4,ogg,oga,wav,webm,weba,aac,pdf,doc,docx,xls,xlsx,txt';
 
     public function mensaje(Request $request, Team $current_team, ServiceOrder $service_order, GuardarEvidencia $guardar): RedirectResponse
     {

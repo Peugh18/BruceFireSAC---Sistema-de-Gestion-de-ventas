@@ -130,6 +130,26 @@ class DispatchGuide extends Model
         return $this->hasMany(DispatchGuideItem::class);
     }
 
+    /**
+     * Venta que sustenta la guía (motivo 01).
+     *
+     * @return BelongsTo<Sale, $this>
+     */
+    public function sale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class);
+    }
+
+    /**
+     * Orden de servicio que sustenta la guía.
+     *
+     * @return BelongsTo<ServiceOrder, $this>
+     */
+    public function serviceOrder(): BelongsTo
+    {
+        return $this->belongsTo(ServiceOrder::class);
+    }
+
     public function numero(): string
     {
         return $this->serie.'-'.$this->correlativo;

@@ -49,8 +49,10 @@ class SalePayment extends Model
             $pago->user_id ??= is_int($usuario) ? $usuario : null;
 
             // V7: el cobro queda en el turno abierto del vendedor de la venta.
+            // Se liga con la fila de caja BLOQUEADA: si justo se está cerrando
+            // el turno, espera el cierre y decide con el turno real (M3).
             if (! array_key_exists('cash_register_id', $pago->getAttributes())) {
-                $pago->cash_register_id = CashRegister::abiertaDe((int) Sale::query()->whereKey($pago->sale_id)->value('vendedor_id'))?->id;
+                $pago->cash_register_id = CashRegister::abiertaDeBloqueada((int) Sale::query()->whereKey($pago->sale_id)->value('vendedor_id'))?->id;
             }
         });
     }

@@ -10,6 +10,7 @@ import {
     UserPlus,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { ConfiguracionTabs } from '@/components/configuracion-tabs';
 import { Button } from '@/components/ui/button';
@@ -255,6 +256,7 @@ function TarjetaFirmante({
                     </div>
                     <div className="flex gap-1.5">
                         <input
+                            aria-label="Subir firma"
                             ref={inputFirma}
                             type="file"
                             accept="image/*"
@@ -311,6 +313,7 @@ function TarjetaFirmante({
                         )}
                     </div>
                     <input
+                        aria-label="Subir sello"
                         ref={inputSello}
                         type="file"
                         accept="image/*"
@@ -347,7 +350,10 @@ function TarjetaFirmante({
             </div>
 
             {errores.firma || errores.sello || errores.imagen ? (
-                <p className="text-destructive-strong text-[11.5px]">
+                <p
+                    className="text-destructive-strong text-[11.5px]"
+                    role="alert"
+                >
                     {errores.firma ?? errores.sello ?? errores.imagen}
                 </p>
             ) : null}
@@ -401,7 +407,10 @@ function TarjetaFirmante({
                 </div>
             </div>
             {errores.nombre || errores.cargo ? (
-                <p className="text-destructive-strong text-[11.5px]">
+                <p
+                    className="text-destructive-strong text-[11.5px]"
+                    role="alert"
+                >
                     {errores.nombre ?? errores.cargo}
                 </p>
             ) : null}
@@ -466,6 +475,11 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
     function agregar(event: React.FormEvent) {
         event.preventDefault();
         form.post(firmas.store.url({ current_team: teamSlug }), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => form.reset(),
         });

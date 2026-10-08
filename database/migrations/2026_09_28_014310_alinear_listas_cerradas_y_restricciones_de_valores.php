@@ -31,6 +31,8 @@ return new class extends Migration
         });
 
         Schema::table('service_order_events', function (Blueprint $table): void {
+            // 'entrega_registrada' se agrega al enum: la entrega en mostrador
+            // ya la escribe y la base no la aceptaba.
             $table->enum('tipo', ['creada', 'recibida', 'deficiencia_detectada', 'notificacion_vendedor', 'autorizacion_registrada', 'trabajo_completado', 'entrega_registrada', 'otro'])->change();
         });
         Schema::table('equipment', function (Blueprint $table): void {
@@ -99,7 +101,10 @@ return new class extends Migration
         Schema::table('service_orders', fn (Blueprint $table) => $table->string('prioridad')->default('normal')->change());
         Schema::table('equipment', fn (Blueprint $table) => $table->string('estado')->default('activo')->change());
         Schema::table('service_order_events', function (Blueprint $table): void {
-            $table->enum('tipo', ['creada', 'recibida', 'deficiencia_detectada', 'notificacion_vendedor', 'autorizacion_registrada', 'trabajo_completado', 'otro'])->change();
+            // El enum anterior a esta migración no traía 'entrega_registrada',
+            // pero la entrega en mostrador ya la escribe y quitarla aquí
+            // perdería esas filas en un rollback: se conserva.
+            $table->enum('tipo', ['creada', 'recibida', 'deficiencia_detectada', 'notificacion_vendedor', 'autorizacion_registrada', 'trabajo_completado', 'entrega_registrada', 'otro'])->change();
         });
     }
 

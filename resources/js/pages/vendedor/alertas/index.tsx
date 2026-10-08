@@ -22,6 +22,7 @@ import { Card } from '@/components/ui/card';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import rutasAlertas from '@/routes/vendedor/alertas';
 import type { Team } from '@/types';
+import ClientesRoutes from '@/routes/vendedor/clientes';
 
 export type AlertItem = {
     client_id: number;
@@ -58,6 +59,8 @@ export type Props = {
         este_mes: AlertItem[];
     };
     empresas: Empresa[];
+    // Fecha de corte de las alertas (hoy), para que el vendedor sepa la referencia.
+    hoy?: string;
 };
 
 function initials(value: string | undefined): string {
@@ -70,7 +73,7 @@ function initials(value: string | undefined): string {
         .join('');
 }
 
-export default function AlertasIndex({ alerts, empresas }: Props) {
+export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
@@ -157,6 +160,7 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
                         <div className="border-border bg-card focus-within:border-ring focus-within:ring-ring/50 flex h-9 w-[220px] items-center gap-2 rounded-[9px] border px-3 text-[12.5px] focus-within:ring-[3px]">
                             <Search className="text-muted-foreground size-3.5" />
                             <input
+                                aria-label="Buscar por empresa, RUC o serie"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Empresa, RUC o serie..."
@@ -165,6 +169,15 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
                         </div>
                     }
                 />
+
+                {hoy ? (
+                    <p className="text-muted-foreground text-[11px] font-semibold">
+                        Fecha de corte de las alertas:{' '}
+                        {new Date(`${hoy}T00:00:00`).toLocaleDateString(
+                            'es-PE',
+                        )}
+                    </p>
+                ) : null}
 
                 <div className="flex flex-wrap items-center gap-2.5">
                     <div className="border-border flex rounded-[10px] border p-[3px]">
@@ -424,7 +437,12 @@ export default function AlertasIndex({ alerts, empresas }: Props) {
                                                     </a>
                                                 ) : (
                                                     <Link
-                                                        href={`/${teamSlug}/vendedor/clientes`}
+                                                        href={ClientesRoutes.index.url(
+                                                            {
+                                                                current_team:
+                                                                    teamSlug,
+                                                            },
+                                                        )}
                                                         className="border-border bg-card text-foreground/80 hover:bg-background inline-flex h-9 items-center gap-1 rounded-[9px] border px-3 text-[12px] font-semibold"
                                                     >
                                                         <span>Ver cliente</span>

@@ -83,12 +83,11 @@ test('un audio y un archivo se guardan con su tipo y no se aceptan ejecutables',
     $campo = usuarioDeVisita('TecnicoCampo', $this->team, ['sede_id' => $this->sede->id]);
 
     // La regla `mimes` compara la extensión que se deduce del MIME real del
-    // archivo, no el nombre: `audio/webm` deduce `.weba`, que no figura en la
-    // lista de adjuntos permitidos (solo `.webm`, que deduce `video/webm`),
-    // por eso el audio de prueba usa `audio/mpeg` -> `.mp3`, que sí acepta la
-    // regla tal como está. La posible falta de `.weba` en la lista se reporta
-    // aparte; la validación de producción no se toca.
-    $this->actingAs($campo)->post(($this->url)('ordenes.mensajes.store'), ['archivo' => UploadedFile::fake()->create('nota.mp3', 40, 'audio/mpeg')])->assertSessionHasNoErrors();
+    // archivo, no el nombre: `audio/webm` deduce `.weba`, que es lo que produce
+    // el navegador al grabar un audio. Antes no figuraba en la lista de adjuntos
+    // permitidos y el audio del técnico se rechazaba; ahora sí se acepta y se
+    // clasifica como audio.
+    $this->actingAs($campo)->post(($this->url)('ordenes.mensajes.store'), ['archivo' => UploadedFile::fake()->create('nota.webm', 40, 'audio/webm')])->assertSessionHasNoErrors();
     $this->actingAs($campo)->post(($this->url)('ordenes.mensajes.store'), ['archivo' => UploadedFile::fake()->create('parte.pdf', 40, 'application/pdf')])->assertSessionHasNoErrors();
     $this->actingAs($campo)->post(($this->url)('ordenes.mensajes.store'), ['archivo' => UploadedFile::fake()->create('virus.php', 4, 'text/x-php')])->assertSessionHasErrors('archivo');
 

@@ -78,7 +78,10 @@ export default function ReferenciaField({
                 className="border-border bg-card mt-1.5 h-10 rounded-[9px] text-[13px]"
             />
             {error ? (
-                <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+                <p
+                    className="text-destructive-strong mt-1 text-[11px] font-semibold"
+                    role="alert"
+                >
                     {error}
                 </p>
             ) : null}

@@ -171,6 +171,7 @@ export default function CatalogPicker({
             <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                 <ScanLine className="text-muted-foreground size-4 shrink-0" />
                 <input
+                    aria-label="Buscar en el catálogo"
                     ref={inputRef}
                     disabled={disabled}
                     value={busqueda}

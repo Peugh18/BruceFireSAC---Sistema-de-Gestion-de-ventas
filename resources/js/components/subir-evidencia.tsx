@@ -4,6 +4,7 @@ import { BotonFoto } from '@/components/captura-evidencia';
 import { store as guardarEvidencia } from '@/routes/ordenes/evidencias';
 import { show as verEvidencia } from '@/routes/evidencias';
 import type { Team } from '@/types';
+import { toast } from 'sonner';
 
 export interface EvidenciaListada {
     id: number;
@@ -46,6 +47,11 @@ export default function SubirEvidencia({
             }),
             { archivo, etapa, equipment_id: equipoId || null },
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 forceFormData: true,
                 preserveScroll: true,
                 onStart: () => setSubiendo(true),

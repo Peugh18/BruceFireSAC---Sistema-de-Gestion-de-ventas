@@ -319,10 +319,10 @@ export default function ChispaWidget({
                         className="border-border flex gap-2 border-t p-2.5"
                     >
                         <input
+                            aria-label="Tu pregunta para Chispa"
                             value={texto}
                             onChange={(e) => setTexto(e.target.value)}
                             maxLength={500}
-                            aria-label="Tu pregunta para Chispa"
                             placeholder="Escribe tu duda…"
                             className="border-border bg-muted/40 focus-visible:border-ring focus-visible:ring-ring/50 h-10 min-w-0 flex-1 rounded-[9px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                         />

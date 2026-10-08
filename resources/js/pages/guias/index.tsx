@@ -1,4 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,14 @@ export default function GuiasIndex({
         router.post(
             guias[tipo].url({ current_team: teamSlug, guide: guia.id }),
             {},
-            { preserveScroll: true },
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+                preserveScroll: true,
+            },
         );
 
     return (

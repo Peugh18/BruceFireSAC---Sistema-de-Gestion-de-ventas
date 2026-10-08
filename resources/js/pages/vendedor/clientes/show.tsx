@@ -18,8 +18,11 @@ import {
     ShoppingCart,
     Trash2,
     Wrench,
+    type LucideIcon,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,10 +40,18 @@ import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import clientes from '@/routes/vendedor/clientes';
-import sitesRoutes from '@/routes/vendedor/clientes/sites';
-import vehiclesRoutes from '@/routes/vendedor/clientes/vehiculos';
 import type { Team } from '@/types';
 import { fechaCorta, soles } from '@/lib/utils';
+import OrdenesServicioRoutes from '@/routes/vendedor/ordenes-servicio';
+import ExtintoresRoutes from '@/routes/vendedor/clientes/extintores';
+import AlertasRoutes from '@/routes/vendedor/alertas';
+import CotizacionesRoutes from '@/routes/vendedor/cotizaciones';
+import VentasRoutes from '@/routes/vendedor/ventas';
+import CertificadosRoutes from '@/routes/vendedor/certificados';
+import ComunicacionRoutes from '@/routes/vendedor/comunicacion';
+import CobranzasRoutes from '@/routes/vendedor/cobranzas';
+import sitesRoutes from '@/routes/vendedor/clientes/sites';
+import vehiclesRoutes from '@/routes/vendedor/clientes/vehiculos';
 
 // ==================== TIPOS CONTRATO BRIEF ====================
 
@@ -321,6 +332,7 @@ export default function ClienteShow({
     recompra = null,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
     const teamSlug = currentTeam?.slug ?? '';
 
     const [activeTab, setActiveTab] = useState<TabKey>('resumen');
@@ -373,9 +385,17 @@ export default function ClienteShow({
     const handleConsultarSunat = () => {
         setVerificandoSunat(true);
         router.post(
-            `/${teamSlug}/vendedor/clientes/${client.id}/verificar-sunat`,
+            clientes.verificarSunat.url({
+                current_team: teamSlug,
+                client: client.id,
+            }),
             {},
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
                 onFinish: () => setVerificandoSunat(false),
             },
@@ -388,6 +408,11 @@ export default function ClienteShow({
         editForm.put(
             clientes.update.url({ current_team: teamSlug, client: client.id }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
                 onSuccess: () => setIsEditDialogOpen(false),
             },
@@ -430,6 +455,11 @@ export default function ClienteShow({
                     site: editingSiteId,
                 }),
                 {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
                     preserveScroll: true,
                     onSuccess: () => setSiteDialogOpen(false),
                 },
@@ -441,6 +471,11 @@ export default function ClienteShow({
                     client: client.id,
                 }),
                 {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
                     preserveScroll: true,
                     onSuccess: () => setSiteDialogOpen(false),
                 },
@@ -448,8 +483,8 @@ export default function ClienteShow({
         }
     };
 
-    const deleteSite = (siteId: number) => {
-        if (!confirm('¿Eliminar esta sede?')) return;
+    const deleteSite = async (siteId: number) => {
+        if (!(await pedirConfirmacion('¿Eliminar esta sede?'))) return;
         router.delete(
             sitesRoutes.destroy.url({
                 current_team: teamSlug,
@@ -457,6 +492,11 @@ export default function ClienteShow({
                 site: siteId,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
             },
         );
@@ -492,6 +532,11 @@ export default function ClienteShow({
                     vehicle: editingVehicleId,
                 }),
                 {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
                     preserveScroll: true,
                     onSuccess: () => setVehicleDialogOpen(false),
                 },
@@ -503,6 +548,11 @@ export default function ClienteShow({
                     client: client.id,
                 }),
                 {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
                     preserveScroll: true,
                     onSuccess: () => setVehicleDialogOpen(false),
                 },
@@ -510,8 +560,8 @@ export default function ClienteShow({
         }
     };
 
-    const deleteVehicle = (vehicleId: number) => {
-        if (!confirm('¿Eliminar este vehículo?')) return;
+    const deleteVehicle = async (vehicleId: number) => {
+        if (!(await pedirConfirmacion('¿Eliminar este vehículo?'))) return;
         router.delete(
             vehiclesRoutes.destroy.url({
                 current_team: teamSlug,
@@ -519,30 +569,56 @@ export default function ClienteShow({
                 vehicle: vehicleId,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 preserveScroll: true,
             },
         );
     };
 
-    const handleReportarUso = (extintor: ExtintorItem) => {
+    const handleReportarUso = async (extintor: ExtintorItem) => {
         if (
-            window.confirm(
-                `¿Confirmas que el extintor ${extintor.numero_serie} fue percutado o usado?\n\nAl ser un equipo de un solo uso (norma NTP 350.043), pierde presión inmediatamente y pasará a estado DESCARGADO, requiriendo recarga obligatoria.`,
+            await pedirConfirmacion(
+                `¿Confirmas que el extintor ${extintor.numero_serie} fue percutado o usado? Al ser un equipo de un solo uso (norma NTP 350.043), pierde presión inmediatamente y pasará a estado DESCARGADO, requiriendo recarga obligatoria.`,
             )
         ) {
             router.post(
-                `/${teamSlug}/vendedor/clientes/${client.id}/extintores/${extintor.id}/reportar-uso`,
+                ExtintoresRoutes.reportarUso.url({
+                    current_team: teamSlug,
+                    client: client.id,
+                    equipment: extintor.id,
+                }),
                 {},
-                { preserveScroll: true },
+                {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
+                    preserveScroll: true,
+                },
             );
         }
     };
 
     const handleCotizarRecarga = (extintor: ExtintorItem) => {
-        router.post(`/${teamSlug}/vendedor/alertas/ofrecer-recarga`, {
-            client_id: client.id,
-            equipment_ids: [extintor.id],
-        });
+        router.post(
+            AlertasRoutes.ofrecerRecarga.url({ current_team: teamSlug }),
+            {
+                client_id: client.id,
+                equipment_ids: [extintor.id],
+            },
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+            },
+        );
     };
 
     // Estado SUNAT render
@@ -610,7 +686,12 @@ export default function ClienteShow({
         );
     };
 
-    const tabs: { key: TabKey; label: string; icon: any; count?: number }[] = [
+    const tabs: {
+        key: TabKey;
+        label: string;
+        icon: LucideIcon;
+        count?: number;
+    }[] = [
         { key: 'resumen', label: 'Resumen', icon: Building2 },
         {
             key: 'compras',
@@ -646,6 +727,7 @@ export default function ClienteShow({
             <Head title={`Cliente: ${client.razon_social}`} />
 
             <div className="flex flex-col gap-6">
+                {dialogoConfirmacion}
                 {/* ================= CABECERA DEL CLIENTE ================= */}
                 <Card className="border-border bg-card rounded-[18px] p-6 shadow-xs">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -726,7 +808,10 @@ export default function ClienteShow({
                                 className="border-border bg-card h-9 rounded-xl text-xs font-semibold"
                             >
                                 <Link
-                                    href={`/${teamSlug}/vendedor/cotizaciones/nueva?client_id=${client.id}`}
+                                    href={CotizacionesRoutes.create.url(
+                                        { current_team: teamSlug },
+                                        { query: { client_id: client.id } },
+                                    )}
                                 >
                                     <Plus className="mr-1 size-3.5" />
                                     Cotizar
@@ -737,7 +822,10 @@ export default function ClienteShow({
                                 className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 rounded-xl text-xs font-bold"
                             >
                                 <Link
-                                    href={`/${teamSlug}/vendedor/ventas/nueva?client_id=${client.id}`}
+                                    href={VentasRoutes.create.url(
+                                        { current_team: teamSlug },
+                                        { query: { client_id: client.id } },
+                                    )}
                                 >
                                     <ShoppingCart className="mr-1 size-3.5" />
                                     Nueva venta
@@ -956,7 +1044,13 @@ export default function ClienteShow({
                                             >
                                                 <div>
                                                     <Link
-                                                        href={`/${teamSlug}/vendedor/ventas/${v.id}`}
+                                                        href={VentasRoutes.show.url(
+                                                            {
+                                                                current_team:
+                                                                    teamSlug,
+                                                                sale: v.id,
+                                                            },
+                                                        )}
                                                         className="text-foreground hover:text-primary-strong font-bold"
                                                     >
                                                         {v.numero_interno}
@@ -1096,14 +1190,20 @@ export default function ClienteShow({
                             >
                                 {comprasSubtab === 'ventas' ? (
                                     <Link
-                                        href={`/${teamSlug}/vendedor/ventas/nueva?client_id=${client.id}`}
+                                        href={VentasRoutes.create.url(
+                                            { current_team: teamSlug },
+                                            { query: { client_id: client.id } },
+                                        )}
                                     >
                                         <Plus className="mr-1 size-3.5" />
                                         Nueva venta
                                     </Link>
                                 ) : (
                                     <Link
-                                        href={`/${teamSlug}/vendedor/cotizaciones/nueva?client_id=${client.id}`}
+                                        href={CotizacionesRoutes.create.url(
+                                            { current_team: teamSlug },
+                                            { query: { client_id: client.id } },
+                                        )}
                                     >
                                         <Plus className="mr-1 size-3.5" />
                                         Nueva cotización
@@ -1153,7 +1253,13 @@ export default function ClienteShow({
                                                 >
                                                     <td className="text-foreground py-3 font-mono font-bold">
                                                         <Link
-                                                            href={`/${teamSlug}/vendedor/ventas/${v.id}`}
+                                                            href={VentasRoutes.show.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                    sale: v.id,
+                                                                },
+                                                            )}
                                                             className="hover:text-primary-strong hover:underline"
                                                         >
                                                             {v.numero_interno}
@@ -1215,7 +1321,13 @@ export default function ClienteShow({
                                                             className="h-7 text-xs"
                                                         >
                                                             <Link
-                                                                href={`/${teamSlug}/vendedor/ventas/${v.id}`}
+                                                                href={VentasRoutes.show.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        sale: v.id,
+                                                                    },
+                                                                )}
                                                             >
                                                                 Ver venta
                                                             </Link>
@@ -1288,7 +1400,15 @@ export default function ClienteShow({
                                                     <td className="py-3">
                                                         {c.venta ? (
                                                             <Link
-                                                                href={`/${teamSlug}/vendedor/ventas/${c.venta.id}`}
+                                                                href={VentasRoutes.show.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        sale: c
+                                                                            .venta
+                                                                            .id,
+                                                                    },
+                                                                )}
                                                                 className="text-primary-strong font-mono font-bold hover:underline"
                                                             >
                                                                 {c.venta.numero}
@@ -1307,7 +1427,13 @@ export default function ClienteShow({
                                                             className="h-7 text-xs"
                                                         >
                                                             <a
-                                                                href={`/${teamSlug}/vendedor/cotizaciones/${c.id}/pdf`}
+                                                                href={CotizacionesRoutes.pdf.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        quote: c.id,
+                                                                    },
+                                                                )}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                             >
@@ -1571,7 +1697,15 @@ export default function ClienteShow({
                                                     <td className="py-3">
                                                         {c.venta ? (
                                                             <Link
-                                                                href={`/${teamSlug}/vendedor/ventas/${c.venta.id}`}
+                                                                href={VentasRoutes.show.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        sale: c
+                                                                            .venta
+                                                                            .id,
+                                                                    },
+                                                                )}
                                                                 className="text-primary-strong font-mono hover:underline"
                                                             >
                                                                 {c.venta.numero}
@@ -1588,7 +1722,14 @@ export default function ClienteShow({
                                                             className="h-7 text-xs"
                                                         >
                                                             <a
-                                                                href={`/${teamSlug}/vendedor/certificados/${c.id}/pdf`}
+                                                                href={CertificadosRoutes.pdf.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        certificate:
+                                                                            c.id,
+                                                                    },
+                                                                )}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                             >
@@ -1625,7 +1766,9 @@ export default function ClienteShow({
                                 className="bg-primary h-8 rounded-xl text-xs font-bold"
                             >
                                 <Link
-                                    href={`/${teamSlug}/vendedor/ordenes-servicio`}
+                                    href={OrdenesServicioRoutes.index.url({
+                                        current_team: teamSlug,
+                                    })}
                                 >
                                     Ver taller
                                 </Link>
@@ -1708,7 +1851,17 @@ export default function ClienteShow({
                                                         className="h-7 text-xs"
                                                     >
                                                         <Link
-                                                            href={`/${teamSlug}/vendedor/comunicacion?orden=${s.id}`}
+                                                            href={ComunicacionRoutes.index.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                },
+                                                                {
+                                                                    query: {
+                                                                        orden: s.id,
+                                                                    },
+                                                                },
+                                                            )}
                                                         >
                                                             Seguimiento
                                                         </Link>
@@ -1760,7 +1913,11 @@ export default function ClienteShow({
                                 variant="outline"
                                 className="h-8 rounded-xl text-xs font-bold"
                             >
-                                <Link href={`/${teamSlug}/vendedor/cobranzas`}>
+                                <Link
+                                    href={CobranzasRoutes.index.url({
+                                        current_team: teamSlug,
+                                    })}
+                                >
                                     Ir a cobranzas generales
                                 </Link>
                             </Button>
@@ -1818,7 +1975,15 @@ export default function ClienteShow({
                                                     >
                                                         <td className="text-foreground py-3 font-mono font-bold">
                                                             <Link
-                                                                href={`/${teamSlug}/vendedor/ventas/${cuota.venta.id}`}
+                                                                href={VentasRoutes.show.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        sale: cuota
+                                                                            .venta
+                                                                            .id,
+                                                                    },
+                                                                )}
                                                                 className="hover:text-primary-strong hover:underline"
                                                             >
                                                                 {
@@ -1928,7 +2093,15 @@ export default function ClienteShow({
                                                     </td>
                                                     <td className="text-foreground py-3 font-mono font-bold">
                                                         <Link
-                                                            href={`/${teamSlug}/vendedor/ventas/${pago.venta.id}`}
+                                                            href={VentasRoutes.show.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                    sale: pago
+                                                                        .venta
+                                                                        .id,
+                                                                },
+                                                            )}
                                                             className="hover:text-primary-strong hover:underline"
                                                         >
                                                             {pago.venta.numero}
@@ -2178,11 +2351,13 @@ export default function ClienteShow({
                             <div>
                                 <Label>Tipo doc</Label>
                                 <select
+                                    aria-label="Tipo doc"
                                     value={editForm.data.tipo_documento}
                                     onChange={(e) =>
                                         editForm.setData(
                                             'tipo_documento',
-                                            e.target.value as any,
+                                            e.target
+                                                .value as ClientFormData['tipo_documento'],
                                         )
                                     }
                                     className="border-border bg-card mt-1 h-9 w-full rounded-xl border px-2.5 text-xs"
@@ -2372,11 +2547,13 @@ export default function ClienteShow({
                             <div>
                                 <Label>Tipo de sede</Label>
                                 <select
+                                    aria-label="Tipo de sede"
                                     value={siteForm.data.tipo}
                                     onChange={(e) =>
                                         siteForm.setData(
                                             'tipo',
-                                            e.target.value as any,
+                                            e.target
+                                                .value as SiteFormData['tipo'],
                                         )
                                     }
                                     className="border-border bg-card mt-1 h-9 w-full rounded-xl border px-2.5 text-xs capitalize"

@@ -24,6 +24,7 @@ import SubirEvidencia, {
 } from '@/components/subir-evidencia';
 import guias from '@/routes/guias';
 import entregas from '@/routes/tecnico-campo/entregas';
+import { toast } from 'sonner';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
@@ -70,7 +71,7 @@ type ServiceOrder = {
     events?: Array<{
         id: number;
         tipo: string;
-        payload: any;
+        payload: Record<string, string | number | boolean | null | undefined>;
         created_at: string;
     }>;
     client: Client;
@@ -160,6 +161,13 @@ export default function EntregaShow({
                 current_team: teamSlug,
                 service_order: order.id,
             }),
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+            },
         );
     };
 
@@ -170,7 +178,7 @@ export default function EntregaShow({
             {/* Back Bar */}
             <div className="mb-4 flex items-center justify-between">
                 <Link
-                    href={`/${teamSlug}/tecnico-campo/entregas`}
+                    href={entregas.index.url({ current_team: teamSlug })}
                     className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                 >
                     <ArrowLeft className="size-4" />
@@ -259,7 +267,10 @@ export default function EntregaShow({
                 {/* Acta de Conformidad PDF Action */}
                 <div className="border-border mt-4 border-t pt-3">
                     <a
-                        href={`/${teamSlug}/tecnico-campo/entregas/${order.id}/acta-pdf`}
+                        href={entregas.pdf.url({
+                            current_team: teamSlug,
+                            service_order: order.id,
+                        })}
                         target="_blank"
                         rel="noreferrer"
                         className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-sky-500/20 bg-sky-500/10 text-xs font-black text-sky-600 shadow-2xs transition-all hover:bg-sky-500/10 dark:text-sky-400"
@@ -446,6 +457,7 @@ export default function EntregaShow({
                                     <span className="text-red-500">*</span>
                                 </label>
                                 <input
+                                    aria-label="Receptor nombre"
                                     type="text"
                                     required
                                     value={form.data.receptor_nombre}
@@ -470,6 +482,7 @@ export default function EntregaShow({
                                     DNI / Cargo del Receptor
                                 </label>
                                 <input
+                                    aria-label="DNI / Cargo del Receptor"
                                     type="text"
                                     value={form.data.receptor_dni}
                                     onChange={(e) =>
@@ -489,6 +502,7 @@ export default function EntregaShow({
                                 Observaciones de Entrega
                             </label>
                             <textarea
+                                aria-label="Observaciones de Entrega"
                                 rows={2}
                                 value={form.data.observaciones_entrega}
                                 onChange={(e) =>

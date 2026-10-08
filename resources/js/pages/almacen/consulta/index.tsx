@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import type { Team } from '@/types';
+import ConsultaRoutes from '@/routes/almacen/consulta';
 
 export type SedeOption = {
     id: number;
@@ -148,7 +149,7 @@ export default function ConsultaIndex({
     const handleSearch = (e: FormEvent) => {
         e.preventDefault();
         router.get(
-            `/${teamSlug}/almacen/consulta`,
+            ConsultaRoutes.index.url({ current_team: teamSlug }),
             {
                 search: search.trim(),
                 sede_id: sedeId || undefined,
@@ -164,7 +165,7 @@ export default function ConsultaIndex({
         setSearch('');
         setSedeId('');
         router.get(
-            `/${teamSlug}/almacen/consulta`,
+            ConsultaRoutes.index.url({ current_team: teamSlug }),
             {},
             { preserveState: true },
         );

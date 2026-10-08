@@ -28,9 +28,10 @@ class SaleRefund extends Model
     protected static function booted(): void
     {
         // V7: la devolución sale del turno abierto del vendedor de la venta.
+        // Se liga con la fila de caja BLOQUEADA, como el cobro (M3).
         static::creating(function (SaleRefund $devolucion): void {
             if (! array_key_exists('cash_register_id', $devolucion->getAttributes())) {
-                $devolucion->cash_register_id = CashRegister::abiertaDe((int) Sale::query()->whereKey($devolucion->sale_id)->value('vendedor_id'))?->id;
+                $devolucion->cash_register_id = CashRegister::abiertaDeBloqueada((int) Sale::query()->whereKey($devolucion->sale_id)->value('vendedor_id'))?->id;
             }
         });
     }
@@ -49,5 +50,25 @@ class SaleRefund extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    /**
+     * Quien registró la devolución.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Caja de la que salió el dinero devuelto.
+     *
+     * @return BelongsTo<CashRegister, $this>
+     */
+    public function cashRegister(): BelongsTo
+    {
+        return $this->belongsTo(CashRegister::class);
     }
 }

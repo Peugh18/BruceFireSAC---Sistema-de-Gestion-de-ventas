@@ -5,6 +5,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import ConversacionOrden, {
     type ConversacionProps,
 } from '@/components/conversacion-orden';
+import AlertError from '@/components/alert-error';
 import DeficienciaSuelta from '@/components/deficiencia-suelta';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -19,6 +20,8 @@ import {
     ChevronRight,
     MessageSquare,
 } from 'lucide-react';
+import TecnicoPlantaRoutes from '@/routes/tecnico-planta';
+import EjecucionRoutes from '@/routes/tecnico-planta/ejecucion';
 
 interface EquipmentItem {
     id: number;
@@ -77,7 +80,7 @@ interface OrderDetail {
     events: Array<{
         id: number;
         tipo: string;
-        payload: any;
+        payload: Record<string, string | number | boolean | null | undefined>;
         created_at: string;
     }>;
 }
@@ -102,7 +105,6 @@ export default function EjecucionShow({
         errors: Record<string, string>;
     }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const teamPrefix = `/${teamSlug}/tecnico-planta`;
 
     const [selectedDeficiency, setSelectedDeficiency] =
         useState<DeficiencyItem | null>(null);
@@ -122,8 +124,17 @@ export default function EjecucionShow({
         if (!selectedDeficiency) return;
 
         spareForm.post(
-            `${teamPrefix}/ordenes/${order.id}/deficiencias/${selectedDeficiency.id}/consumir-repuesto`,
+            EjecucionRoutes.consumeSpare.url({
+                current_team: teamSlug,
+                service_order: order.id,
+                deficiency: selectedDeficiency.id,
+            }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 onSuccess: () => {
                     setSelectedDeficiency(null);
                     spareForm.reset();
@@ -136,7 +147,10 @@ export default function EjecucionShow({
     const handleAdvance = (targetState: string) => {
         if (avanzando) return;
         router.post(
-            `${teamPrefix}/ordenes/${order.id}/avanzar-estado`,
+            EjecucionRoutes.advance.url({
+                current_team: teamSlug,
+                service_order: order.id,
+            }),
             { target_state: targetState, ph_equipos: conPh },
             {
                 preserveScroll: true,
@@ -158,7 +172,9 @@ export default function EjecucionShow({
             <div className="space-y-4 pb-16">
                 {/* Back Link */}
                 <Link
-                    href={`${teamPrefix}/dashboard`}
+                    href={TecnicoPlantaRoutes.dashboard.url({
+                        current_team: teamSlug,
+                    })}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
                 >
                     <ArrowLeft className="h-4 w-4" />
@@ -592,11 +608,15 @@ export default function EjecucionShow({
                                 onSubmit={handleConsumeSpare}
                                 className="space-y-3"
                             >
+                                <AlertError
+                                    errors={Object.values(spareForm.errors)}
+                                />
                                 <div>
                                     <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Producto / Repuesto de Almacén *
                                     </label>
                                     <select
+                                        aria-label="Producto / Repuesto de Almacén *"
                                         value={spareForm.data.product_id}
                                         onChange={(e) =>
                                             spareForm.setData(
@@ -623,6 +643,7 @@ export default function EjecucionShow({
                                         Cantidad a Descontar del Kardex *
                                     </label>
                                     <input
+                                        aria-label="Cantidad a Descontar del Kardex *"
                                         type="number"
                                         min={1}
                                         value={spareForm.data.cantidad}
@@ -642,6 +663,7 @@ export default function EjecucionShow({
                                         Observación Técnica
                                     </label>
                                     <input
+                                        aria-label="Observación Técnica"
                                         type="text"
                                         value={spareForm.data.observacion}
                                         onChange={(e) =>

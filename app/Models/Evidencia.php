@@ -58,6 +58,18 @@ class Evidencia extends Model
         return $this->belongsTo(ServiceOrder::class);
     }
 
+    /** @return BelongsTo<Equipment, $this> */
+    public function equipment(): BelongsTo
+    {
+        return $this->belongsTo(Equipment::class);
+    }
+
+    /** @return BelongsTo<Deficiency, $this> */
+    public function deficiency(): BelongsTo
+    {
+        return $this->belongsTo(Deficiency::class);
+    }
+
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {

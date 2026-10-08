@@ -23,14 +23,13 @@ class DeficiencyAuthorizationController extends Controller
     {
         $this->asegurarSede($deficiency->serviceOrder?->sede_id);
 
-        if ($deficiency->estado !== 'esperando_autorizacion') {
-            throw ValidationException::withMessages([
-                'deficiency' => 'Esta deficiencia no está esperando autorización.',
-            ]);
-        }
-
         if (! $request->boolean('autorizado')) {
-            $deficiency->update(['estado' => 'rechazada']);
+            DB::transaction(function () use ($deficiency): void {
+                // Bloqueada y releída (A1): dos requests a la vez no pueden
+                // rechazar (ni aprobar) dos veces la misma deficiencia.
+                $this->bloquearYValidar($deficiency)->update(['estado' => 'rechazada']);
+            });
+
             $this->recordEvent($deficiency, $request->user()->id, false);
             $action->releaseFromAuthorizationHold($deficiency->serviceOrder, $request->user());
 
@@ -73,6 +72,10 @@ class DeficiencyAuthorizationController extends Controller
         }
 
         DB::transaction(function () use ($deficiency, $request, $cotizacion, $importe, $venta, $orden): void {
+            // Bloqueada y releída (A1): dos requests a la vez no crean dos
+            // autorizaciones ni dos cuotas por cobrar por la misma deficiencia.
+            $this->bloquearYValidar($deficiency);
+
             $autorizacion = $deficiency->authorization()->create([
                 'autorizado_por' => $request->string('autorizado_por')->toString(),
                 'canal' => $request->string('canal')->toString(),
@@ -113,6 +116,24 @@ class DeficiencyAuthorizationController extends Controller
         );
 
         return back();
+    }
+
+    /**
+     * Relee la deficiencia bloqueada (FOR UPDATE) y revalida su estado DENTRO
+     * de la transacción (A1): lo que se decide sobre ella —autorizarla y
+     * crear la cuota por cobrar, o rechazarla— pasa una sola vez.
+     */
+    protected function bloquearYValidar(Deficiency $deficiency): Deficiency
+    {
+        $bloqueada = Deficiency::query()->lockForUpdate()->findOrFail($deficiency->id);
+
+        if ($bloqueada->estado !== 'esperando_autorizacion') {
+            throw ValidationException::withMessages([
+                'deficiency' => 'Esta deficiencia no está esperando autorización.',
+            ]);
+        }
+
+        return $bloqueada;
     }
 
     protected function recordEvent(Deficiency $deficiency, int $userId, bool $autorizado): void

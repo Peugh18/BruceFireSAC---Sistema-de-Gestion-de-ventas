@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import AlertError from '@/components/alert-error';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
 import {
@@ -14,6 +15,9 @@ import {
     PackageCheck,
     RotateCcw,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import DeficienciasRoutes from '@/routes/tecnico-planta/deficiencias';
+import EjecucionRoutes from '@/routes/tecnico-planta/ejecucion';
 
 interface DeficiencyItem {
     id: number;
@@ -68,7 +72,6 @@ export default function DeficienciasIndex({
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const teamPrefix = `/${teamSlug}/tecnico-planta`;
 
     const [search, setSearch] = useState(filters.search || '');
     const [resolveModalItem, setResolveModalItem] =
@@ -81,7 +84,7 @@ export default function DeficienciasIndex({
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
-            `${teamPrefix}/deficiencias`,
+            DeficienciasRoutes.index.url({ current_team: teamSlug }),
             { estado: filters.estado, search: search.trim() },
             { preserveState: true },
         );
@@ -89,7 +92,7 @@ export default function DeficienciasIndex({
 
     const handleFilterChange = (nuevoEstado: string) => {
         router.get(
-            `${teamPrefix}/deficiencias`,
+            DeficienciasRoutes.index.url({ current_team: teamSlug }),
             { estado: nuevoEstado, search },
             { preserveState: true },
         );
@@ -100,8 +103,16 @@ export default function DeficienciasIndex({
         if (!resolveModalItem) return;
 
         resolveForm.post(
-            `${teamPrefix}/deficiencias/${resolveModalItem.id}/resolver`,
+            DeficienciasRoutes.resolve.url({
+                current_team: teamSlug,
+                deficiency: resolveModalItem.id,
+            }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
                 onSuccess: () => {
                     setResolveModalItem(null);
                     resolveForm.reset();
@@ -218,6 +229,7 @@ export default function DeficienciasIndex({
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="relative">
                     <input
+                        aria-label="Buscar por componente, falla, orden o serie"
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -252,7 +264,9 @@ export default function DeficienciasIndex({
                                     onClick={() => {
                                         setSearch('');
                                         router.get(
-                                            `/${teamSlug}/tecnico-planta/deficiencias`,
+                                            DeficienciasRoutes.index.url({
+                                                current_team: teamSlug,
+                                            }),
                                             { estado: 'todos' },
                                         );
                                     }}
@@ -290,7 +304,10 @@ export default function DeficienciasIndex({
                                     {d.estado !== 'resuelta' &&
                                         d.repuesto_sugerido && (
                                             <Link
-                                                href={`${teamPrefix}/ordenes/${d.orden_id}/ejecucion`}
+                                                href={EjecucionRoutes.show.url({
+                                                    current_team: teamSlug,
+                                                    service_order: d.orden_id,
+                                                })}
                                                 className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
                                                 title="Requiere repuesto: resuélvela desde Ejecución para descontar el Kardex de Almacén"
                                             >
@@ -413,11 +430,15 @@ export default function DeficienciasIndex({
                                 onSubmit={handleResolve}
                                 className="space-y-3"
                             >
+                                <AlertError
+                                    errors={Object.values(resolveForm.errors)}
+                                />
                                 <div>
                                     <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Descripción del trabajo ejecutado *
                                     </label>
                                     <textarea
+                                        aria-label="Descripción del trabajo ejecutado *"
                                         value={resolveForm.data.resolucion}
                                         onChange={(e) =>
                                             resolveForm.setData(

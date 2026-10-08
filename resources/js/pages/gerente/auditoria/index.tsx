@@ -3,6 +3,7 @@ import { Activity, Filter, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
+import AuditoriaRoutes from '@/routes/gerente/auditoria';
 
 type AuditLogItem = {
     id: number;
@@ -68,7 +69,7 @@ export default function AuditoriaIndex() {
 
     const applyFilters = () => {
         router.get(
-            `/${currentTeam.slug}/gerente/auditoria`,
+            AuditoriaRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 accion,
                 user_id: userId || undefined,
@@ -85,7 +86,7 @@ export default function AuditoriaIndex() {
         setFechaDesde('');
         setFechaHasta('');
         router.get(
-            `/${currentTeam.slug}/gerente/auditoria`,
+            AuditoriaRoutes.index.url({ current_team: currentTeam.slug }),
             {},
             { preserveState: true },
         );

@@ -16,6 +16,9 @@ import stickers from '@/routes/almacen/stickers';
 import stock from '@/routes/almacen/stock';
 import guias from '@/routes/guias';
 import type { Auth } from '@/types';
+import AjustesRoutes from '@/routes/almacen/ajustes';
+import TrasladosRoutes from '@/routes/almacen/traslados';
+import ConsultaRoutes from '@/routes/almacen/consulta';
 
 type SidebarCounts = {
     bajoMinimo?: number;
@@ -80,7 +83,7 @@ function buildNavGroups(
                 },
                 {
                     title: 'Ajustes de Stock',
-                    href: `/${teamSlug}/almacen/ajustes`,
+                    href: AjustesRoutes.index.url({ current_team: teamSlug }),
                     icon: ArrowLeftRight,
                 },
                 {
@@ -90,7 +93,7 @@ function buildNavGroups(
                 },
                 {
                     title: 'Traslados',
-                    href: `/${teamSlug}/almacen/traslados`,
+                    href: TrasladosRoutes.index.url({ current_team: teamSlug }),
                     icon: ArrowLeftRight,
                 },
             ],
@@ -100,7 +103,7 @@ function buildNavGroups(
             items: [
                 {
                     title: 'Consulta Rápida',
-                    href: `/${teamSlug}/almacen/consulta`,
+                    href: ConsultaRoutes.index.url({ current_team: teamSlug }),
                     icon: Search,
                 },
             ],

@@ -83,6 +83,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
+                                    aria-label="Abrir menú"
                                     className="mr-2 h-[34px] w-[34px]"
                                 >
                                     <Menu className="h-5 w-5" />
@@ -184,6 +185,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                             <Button
                                 variant="ghost"
                                 size="icon"
+                                aria-label="Buscar"
                                 className="group h-9 w-9 cursor-pointer"
                             >
                                 <Search className="size-5! opacity-80 group-hover:opacity-100" />
@@ -222,6 +224,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
+                                    aria-label="Menú de usuario"
                                     className="size-10 rounded-full p-1"
                                 >
                                     <Avatar className="size-8 overflow-hidden rounded-full">

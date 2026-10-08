@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
+import OrdenesServicioRoutes from '@/routes/vendedor/ordenes-servicio';
 
 type Order = {
     id: number;
@@ -29,7 +30,10 @@ export default function CounterDelivery({
     currentTeam,
     isPaid,
 }: Props) {
-    const showUrl = `/${currentTeam.slug}/vendedor/ordenes-servicio/${order.id}`;
+    const showUrl = OrdenesServicioRoutes.show.url({
+        current_team: currentTeam.slug,
+        service_order: order.id,
+    });
 
     return (
         <VendedorLayout title="Entrega en mostrador">
@@ -132,7 +136,10 @@ export default function CounterDelivery({
                                         </span>
                                     </label>
                                     {errors.conformidad_aceptada && (
-                                        <p className="text-destructive-strong text-sm">
+                                        <p
+                                            className="text-destructive-strong text-sm"
+                                            role="alert"
+                                        >
                                             {errors.conformidad_aceptada}
                                         </p>
                                     )}

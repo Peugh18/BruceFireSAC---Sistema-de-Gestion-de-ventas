@@ -292,6 +292,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                             <div className="border-border bg-muted/40 focus-within:border-ring flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
                                 <Search className="text-muted-foreground size-3.5 shrink-0" />
                                 <input
+                                    aria-label="Buscar ventas"
                                     value={buscar}
                                     onChange={(event) =>
                                         setBuscar(event.target.value)

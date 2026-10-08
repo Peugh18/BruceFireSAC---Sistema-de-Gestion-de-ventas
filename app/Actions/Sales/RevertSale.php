@@ -77,7 +77,10 @@ class RevertSale
                 'anulado_por' => auth()->id(),
             ]);
 
-        $sale->installments()->whereIn('estado', ['pendiente', 'vencido'])->delete();
+        // Una cuota parcialmente cobrada tambien se cierra: si quedara viva
+        // sobre la venta anulada seria una deuda fantasma en Cobranzas. Sus
+        // pagos no se tocan (la FK es nullOnDelete) y se devuelven abajo.
+        $sale->installments()->whereIn('estado', ['pendiente', 'vencido', 'parcial'])->delete();
 
         // Lo cobrado (al contado o de sus cuotas), menos lo ya devuelto, se
         // devuelve con la venta: se registra hoy como una devolución, así sale

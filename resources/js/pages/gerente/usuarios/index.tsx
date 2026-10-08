@@ -6,6 +6,7 @@ import { useState } from 'react';
 import GerenteLayout from '@/layouts/gerente-layout';
 
 import NuevoUsuarioDialog from './nuevo-usuario-dialog';
+import UsuariosRoutes from '@/routes/gerente/usuarios';
 
 type UsuarioItem = {
     id: number;
@@ -135,7 +136,10 @@ export default function UsuariosIndex() {
 
         setPendingUserId(user.id);
         router.patch(
-            `/${currentTeam.slug}/gerente/usuarios/${user.id}/rol`,
+            UsuariosRoutes.updateRole.url({
+                current_team: currentTeam.slug,
+                user: user.id,
+            }),
             { role: newRole },
             {
                 preserveScroll: true,
@@ -148,7 +152,10 @@ export default function UsuariosIndex() {
     const handleSedeChange = (user: UsuarioItem, value: string) => {
         setPendingUserId(user.id);
         router.patch(
-            `/${currentTeam.slug}/gerente/usuarios/${user.id}/sede`,
+            UsuariosRoutes.updateSede.url({
+                current_team: currentTeam.slug,
+                user: user.id,
+            }),
             { sede_id: value === '' ? null : Number(value) },
             {
                 preserveScroll: true,

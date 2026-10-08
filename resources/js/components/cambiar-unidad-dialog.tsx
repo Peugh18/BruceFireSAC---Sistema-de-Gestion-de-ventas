@@ -119,6 +119,7 @@ export default function CambiarUnidadDialog({
                     <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                         <ScanLine className="text-muted-foreground size-4 shrink-0" />
                         <input
+                            aria-label="Serie de reemplazo"
                             autoFocus
                             value={serie}
                             onChange={(e) => setSerie(e.target.value)}
@@ -139,7 +140,10 @@ export default function CambiarUnidadDialog({
                 </form>
 
                 {error ? (
-                    <p className="bg-destructive/10 text-destructive-strong rounded-[9px] px-3 py-2 text-[12px] font-semibold">
+                    <p
+                        className="bg-destructive/10 text-destructive-strong rounded-[9px] px-3 py-2 text-[12px] font-semibold"
+                        role="alert"
+                    >
                         {error}
                     </p>
                 ) : null}

@@ -88,8 +88,13 @@ class EditarVentaEmitida
             $fechaCobro = $pagosAntes->sortBy('id')->first()?->fecha;
 
             if ($rehacerCobro) {
-                // Se rehace el mismo cobro del turno abierto: no es una anulación.
-                $sale->payments()->whereNull('installment_id')->forceDelete();
+                // Se rehace el mismo cobro del turno abierto: el cobro anterior
+                // se tacha (soft delete, M5) y queda como evidencia financiera
+                // con quién y por qué. Al quedar anulado en ESTE turno, el
+                // arqueo lo descuenta junto al cobro nuevo y no se duplica.
+                foreach ($pagosAntes as $pago) {
+                    $pago->anular('Reemplazado por la edición de la venta', $userId);
+                }
             }
 
             // La venta vuelve a llenarse como un borrador; la fecha no cambia.

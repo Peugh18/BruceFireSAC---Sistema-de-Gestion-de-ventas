@@ -3,7 +3,9 @@
 namespace App\Actions\Billing;
 
 use App\Models\ElectronicDocument;
+use App\Models\Sale;
 use App\Services\Billing\DesgloseNota;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class IssueDebitNote
@@ -30,21 +32,35 @@ class IssueDebitNote
         app(DesgloseNota::class)->calcular($original, 'nota_debito', $motivoCatalogo10, $importe);
 
         $serie = $original->tipo === 'factura' ? 'FD01' : 'BD01';
-        $correlativo = $this->reserveNextCorrelativo->handle('nota_debito', $serie);
 
-        return ElectronicDocument::create([
-            'sale_id' => $original->sale_id,
-            'tipo' => 'nota_debito',
-            'serie' => $serie,
-            'correlativo' => $correlativo,
-            'cpe_afectado_id' => $original->id,
-            'motivo_catalogo' => $motivoCatalogo10,
-            'importe' => $importe,
-            'sunat_estado' => 'pendiente',
-            'sunat_mensaje' => $detalle,
-            // S6: la fecha se guarda al crear y se reutiliza en cada reintento.
-            'fecha_emision' => now(),
-        ]);
+        return DB::transaction(function () use ($original, $motivoCatalogo10, $detalle, $importe, $serie) {
+            // Leída de nuevo y bloqueada (M6), como en IssueCreditNote: la
+            // venta pudo anularse desde que se cargó el comprobante y dos notas
+            // a la vez no deben crearse juntas.
+            $sale = Sale::query()->lockForUpdate()->findOrFail($original->sale_id);
+
+            if ($sale->estado === 'anulada') {
+                throw ValidationException::withMessages([
+                    'electronic_document_id' => 'La venta esta anulada: no admite notas de debito.',
+                ]);
+            }
+
+            $correlativo = $this->reserveNextCorrelativo->handle('nota_debito', $serie);
+
+            return ElectronicDocument::create([
+                'sale_id' => $original->sale_id,
+                'tipo' => 'nota_debito',
+                'serie' => $serie,
+                'correlativo' => $correlativo,
+                'cpe_afectado_id' => $original->id,
+                'motivo_catalogo' => $motivoCatalogo10,
+                'importe' => $importe,
+                'sunat_estado' => 'pendiente',
+                'sunat_mensaje' => $detalle,
+                // S6: la fecha se guarda al crear y se reutiliza en cada reintento.
+                'fecha_emision' => now(),
+            ]);
+        });
     }
 
     /**

@@ -144,6 +144,13 @@ class SaleController extends Controller
             'quote' => $request->filled('cotizacion')
                 ? $this->cotizacionParaVenta($request->integer('cotizacion'), $sedeId)
                 : null,
+            // Precarga desde el enlace "Nueva venta" de la ficha del cliente (?client_id=).
+            'cliente' => $request->filled('client_id')
+                ? Client::query()
+                    ->when($request->user()->sedeRestringidaId(), fn ($query, int $sede) => $query->where('sede_id', $sede))
+                    ->whereKey($request->integer('client_id'))
+                    ->first(['id', 'tipo_documento', 'razon_social', 'numero_documento'])
+                : null,
             'venta' => $request->filled('orden_servicio')
                 ? $this->ordenParaCobro($request->integer('orden_servicio'), $sedeId)
                 : ($request->filled('rehacer')

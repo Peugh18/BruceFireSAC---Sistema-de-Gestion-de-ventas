@@ -165,6 +165,7 @@ export default function CertificadosIndex({
                         >
                             <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
+                                aria-label="Buscar certificados"
                                 value={search}
                                 onChange={(event) =>
                                     setSearch(event.target.value)

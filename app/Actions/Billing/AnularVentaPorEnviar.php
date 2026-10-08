@@ -21,18 +21,23 @@ class AnularVentaPorEnviar
      */
     public function handle(Sale $sale): Sale
     {
-        $documento = $sale->electronicDocuments()
-            ->whereIn('tipo', ['factura', 'boleta'])
-            ->latest('id')
-            ->first();
+        return DB::transaction(function () use ($sale) {
+            // Bloqueada y releída: la venta pudo anularse y el comprobante
+            // pudo empezar a enviarse a SUNAT desde que se cargó la pantalla
+            // (M4). `descartarPorEnviar` toma además el bloqueo del envío.
+            $sale = Sale::query()->lockForUpdate()->findOrFail($sale->id);
 
-        if ($sale->estado !== 'confirmada' || ! $documento?->estaPorEnviar() || $documento->intento_envio_at !== null) {
-            throw ValidationException::withMessages([
-                'comprobante' => 'Solo se anula sin nota de crédito una venta cuyo comprobante aún no se envió a SUNAT.',
-            ]);
-        }
+            $documento = $sale->electronicDocuments()
+                ->whereIn('tipo', ['factura', 'boleta'])
+                ->latest('id')
+                ->first();
 
-        return DB::transaction(function () use ($sale, $documento) {
+            if ($sale->estado !== 'confirmada' || ! $documento?->estaPorEnviar() || $documento->intento_envio_at !== null) {
+                throw ValidationException::withMessages([
+                    'comprobante' => 'Solo se anula sin nota de crédito una venta cuyo comprobante aún no se envió a SUNAT.',
+                ]);
+            }
+
             $this->emitElectronicDocument->descartarPorEnviar($documento);
 
             return $this->revertSale->handle($sale, 'antes de enviar el comprobante a SUNAT');

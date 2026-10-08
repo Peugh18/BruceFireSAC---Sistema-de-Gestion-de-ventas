@@ -339,6 +339,7 @@ export default function CertificadoServicio({
                                                 >
                                                     {c.tipo === 'resultado' ? (
                                                         <select
+                                                            aria-label={`Resultado de ${c.clave}`}
                                                             value={
                                                                 valor ||
                                                                 'operativo'
@@ -413,7 +414,10 @@ export default function CertificadoServicio({
                                                         </div>
                                                     ) : null}
                                                     {error ? (
-                                                        <div className="text-destructive-strong mt-0.5 text-[10.5px]">
+                                                        <div
+                                                            className="text-destructive-strong mt-0.5 text-[10.5px]"
+                                                            role="alert"
+                                                        >
                                                             {error}
                                                         </div>
                                                     ) : null}

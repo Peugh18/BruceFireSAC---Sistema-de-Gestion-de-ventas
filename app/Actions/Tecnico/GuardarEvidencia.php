@@ -25,7 +25,7 @@ class GuardarEvidencia
     private const CALIDAD_JPEG = 78;
 
     /** Extensiones que el navegador usa al grabar o subir audio. */
-    private const EXTENSIONES_AUDIO = ['webm', 'ogg', 'oga', 'm4a', 'mp3', 'wav', 'aac'];
+    private const EXTENSIONES_AUDIO = ['webm', 'weba', 'ogg', 'oga', 'm4a', 'mp3', 'wav', 'aac'];
 
     public function archivo(
         ServiceOrder $orden,

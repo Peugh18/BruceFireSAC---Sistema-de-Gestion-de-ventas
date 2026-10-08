@@ -13,6 +13,7 @@ import {
     Truck,
 } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Cargando } from '@/components/cargando';
 import CatalogPicker, {
@@ -38,6 +39,7 @@ import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 import { fechaLocal } from '@/lib/utils';
+import CajaRoutes from '@/routes/vendedor/caja';
 
 type SedeOption = { id: number; nombre: string };
 
@@ -159,6 +161,8 @@ type Props = {
     quote: QuoteOption | null;
     venta: VentaPrefill | null;
     caja_abierta?: boolean;
+    // Precarga cuando se llega con ?client_id= desde la ficha del cliente.
+    cliente?: ClientOption | null;
 };
 
 const NOMBRE_COMPROBANTE: Record<DocumentType, string> = {
@@ -180,7 +184,10 @@ function money(value: number) {
 
 function fieldError(errors: Partial<Record<string, string>>, key: string) {
     return errors[key] ? (
-        <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+        <p
+            className="text-destructive-strong mt-1 text-[11px] font-semibold"
+            role="alert"
+        >
             {errors[key]}
         </p>
     ) : null;
@@ -251,6 +258,7 @@ export default function NuevaVenta({
     quote,
     venta,
     caja_abierta,
+    cliente: clientePrecargado = null,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     // El backend rechaza operaciones enteras con la clave `estado` (p. ej.
@@ -270,7 +278,8 @@ export default function NuevaVenta({
 
     const editando = venta?.id != null;
     const editandoEmitida = editando && venta?.emitida === true;
-    const clienteInicial = venta?.client ?? quote?.client ?? null;
+    const clienteInicial =
+        venta?.client ?? quote?.client ?? clientePrecargado ?? null;
 
     const form = useForm<SaleFormData>({
         service_order_id: venta?.service_order_id ?? '',
@@ -331,8 +340,16 @@ export default function NuevaVenta({
                 client: clienteInicial.id,
             }),
         )
-            .then((r) => r.json())
-            .then((ficha: ClientFicha) => setCliente(ficha));
+            .then((r) => (r.ok ? r.json() : null))
+            .then((ficha: ClientFicha | null) => {
+                if (ficha) {
+                    setCliente(ficha);
+                }
+            })
+            .catch(() => {
+                // Sin conexión o error del servidor: se conserva la ficha inicial.
+                toast.error('No se pudo cargar la ficha del cliente.');
+            });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -653,13 +670,27 @@ export default function NuevaVenta({
         if (editando && venta?.id) {
             form.put(
                 ventas.update.url({ current_team: teamSlug, sale: venta.id }),
-                { preserveScroll: true },
+                {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
+                    preserveScroll: true,
+                },
             );
 
             return;
         }
 
-        form.post(ventas.store.url(teamSlug), { preserveScroll: true });
+        form.post(ventas.store.url(teamSlug), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
+            preserveScroll: true,
+        });
     };
 
     const creditoIncompleto =
@@ -925,7 +956,10 @@ export default function NuevaVenta({
                                     </Button>
                                 </div>
                                 {errorDireccion ? (
-                                    <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+                                    <p
+                                        className="text-destructive-strong mt-1 text-[11px] font-semibold"
+                                        role="alert"
+                                    >
                                         {errorDireccion}
                                     </p>
                                 ) : null}
@@ -1083,7 +1117,12 @@ export default function NuevaVenta({
                                                     efectivo necesitas abrir tu
                                                     turno de caja primero.{' '}
                                                     <a
-                                                        href={`/${teamSlug}/vendedor/caja`}
+                                                        href={CajaRoutes.index.url(
+                                                            {
+                                                                current_team:
+                                                                    teamSlug,
+                                                            },
+                                                        )}
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         className="font-bold underline underline-offset-2 hover:opacity-80"
@@ -1134,6 +1173,7 @@ export default function NuevaVenta({
                                     Sede de la venta
                                 </Label>
                                 <select
+                                    aria-label="Sede de la venta"
                                     value={form.data.sede_id}
                                     onChange={(event) =>
                                         form.setData(
@@ -1460,6 +1500,7 @@ export default function NuevaVenta({
                                 Observaciones
                             </Label>
                             <textarea
+                                aria-label="Observaciones"
                                 value={form.data.observaciones}
                                 onChange={(event) =>
                                     form.setData(

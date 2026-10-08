@@ -12,9 +12,11 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import GerenteLayout from '@/layouts/gerente-layout';
 import pagosRutas from '@/routes/gerente/cobranzas/pagos';
+import CobranzasRoutes from '@/routes/gerente/cobranzas';
 
 type PaymentItem = {
     id: number;
@@ -115,6 +117,11 @@ export default function CobranzasConsolidadasIndex() {
                 payment: pagoId,
             }),
             {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo anular el cobro.',
+                    ),
                 data: { motivo },
                 preserveScroll: true,
                 onSuccess: () => {
@@ -127,7 +134,7 @@ export default function CobranzasConsolidadasIndex() {
 
     const applyFilters = () => {
         router.get(
-            `/${currentTeam.slug}/gerente/cobranzas`,
+            CobranzasRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 buscar: buscar || undefined,
                 vendedor_id: vendedorId || undefined,
@@ -144,7 +151,7 @@ export default function CobranzasConsolidadasIndex() {
         setEstado('todos');
         setPeriodo('todos');
         router.get(
-            `/${currentTeam.slug}/gerente/cobranzas`,
+            CobranzasRoutes.index.url({ current_team: currentTeam.slug }),
             {},
             { preserveState: true },
         );
@@ -252,6 +259,7 @@ export default function CobranzasConsolidadasIndex() {
                             <div className="relative mt-1">
                                 <Search className="text-muted-foreground absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                                 <input
+                                    aria-label="Buscar cobros"
                                     type="text"
                                     value={buscar}
                                     onChange={(e) => setBuscar(e.target.value)}

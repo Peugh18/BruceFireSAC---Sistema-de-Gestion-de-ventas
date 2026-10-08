@@ -56,6 +56,12 @@ class IssueCertificate
         $this->exigirAgente($tipo, $unidades);
 
         return DB::transaction(function () use ($tipo, $client, $unidades, $saleId, $serviceOrderId, $extra) {
+            // Guardia anti-duplicado (A2): un doble POST o dos finalizaciones
+            // a la vez no emiten dos certificados para la misma orden. Es por
+            // TIPO porque una orden sí puede llevar dos certificados (por
+            // ejemplo operatividad y prueba hidrostática).
+            $this->asegurarSinCertificadoPrevio($tipo, $serviceOrderId);
+
             $numero = $this->numeros->siguiente($tipo);
 
             $fechaEmision = now()->toDateString();
@@ -146,6 +152,33 @@ class IssueCertificate
 
             return $certificate->refresh()->load('certificateUnits');
         });
+    }
+
+    /**
+     * Un doble POST (o dos finalizaciones a la vez) no emite dos certificados
+     * para la misma orden de servicio: si ya hay uno vigente de este tipo, no
+     * se emite otro. Es la guardia de
+     * `ExecuteAndCloseServiceOrder::triggerAutomaticCertificates`, ahora
+     * también en la emisión misma. Solo aplica a certificados ligados a una
+     * orden (los de venta no llevan `service_order_id`).
+     */
+    protected function asegurarSinCertificadoPrevio(CertificateType $tipo, ?int $serviceOrderId): void
+    {
+        if ($serviceOrderId === null) {
+            return;
+        }
+
+        $existe = Certificate::query()
+            ->where('service_order_id', $serviceOrderId)
+            ->where('certificate_type_id', $tipo->id)
+            ->where('estado', '!=', 'anulado')
+            ->exists();
+
+        if ($existe) {
+            throw ValidationException::withMessages([
+                'service_order_id' => 'Esta orden de servicio ya tiene un certificado de este tipo emitido.',
+            ]);
+        }
     }
 
     /**

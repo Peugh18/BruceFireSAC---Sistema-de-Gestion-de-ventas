@@ -190,7 +190,10 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                     <div className="flex items-center gap-2">
                         {reception.unidades_serializadas.length > 0 && (
                             <a
-                                href={`/${teamSlug}/almacen/recepciones/${reception.id}/stickers`}
+                                href={recepciones.stickers.url({
+                                    current_team: teamSlug,
+                                    reception: reception.id,
+                                })}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="border-border bg-card text-foreground hover:bg-background inline-flex items-center gap-1.5 rounded-[9px] border px-3.5 py-2 text-xs font-bold"

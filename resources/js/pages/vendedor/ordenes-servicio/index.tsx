@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Eye, Plus, RotateCcw, Wrench } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { toast } from 'sonner';
 
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
 import CatalogPicker from '@/components/catalog-picker';
@@ -24,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
 import { fechaCorta, fechaLocal } from '@/lib/utils';
+import OrdenesServicioRoutes from '@/routes/vendedor/ordenes-servicio';
 
 export type ServiceOrderItem = {
     id: number;
@@ -62,6 +64,14 @@ export type Props = {
         estado?: string;
     };
     tecnicos: TecnicoOption[];
+    // Catálogo de servicios activos: atajos para elegir el tipo de servicio.
+    services?: ServicioOption[];
+};
+
+type ServicioOption = {
+    id: number;
+    nombre: string;
+    precio_venta?: number | string | null;
 };
 
 const TABS = [
@@ -135,6 +145,7 @@ export default function ServiceOrdersIndex({
     orders,
     filters,
     tecnicos,
+    services = [],
 }: Props) {
     const { currentTeam, sidebarCounts } = usePage<{
         currentTeam?: Team | null;
@@ -174,6 +185,11 @@ export default function ServiceOrdersIndex({
     const submitCreate = (e: FormEvent) => {
         e.preventDefault();
         createForm.post(ServiceOrderController.store.url(teamSlug), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => {
                 setDialogOpen(false);
@@ -300,7 +316,12 @@ export default function ServiceOrdersIndex({
                                                         type="button"
                                                         onClick={() =>
                                                             router.get(
-                                                                `/${teamSlug}/vendedor/ordenes-servicio`,
+                                                                OrdenesServicioRoutes.index.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                    },
+                                                                ),
                                                             )
                                                         }
                                                         className="border-border bg-card text-foreground hover:bg-muted mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
@@ -575,11 +596,42 @@ export default function ServiceOrdersIndex({
                                         }
                                         placeholder="Busca el servicio: recarga, prueba hidrostática, instalación..."
                                     />
+                                    {services.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-1.5">
+                                            {services.map((servicio) => (
+                                                <button
+                                                    key={servicio.id}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        createForm.setData(
+                                                            (data) => ({
+                                                                ...data,
+                                                                service_id:
+                                                                    String(
+                                                                        servicio.id,
+                                                                    ),
+                                                                tipo_servicio:
+                                                                    servicio.nombre,
+                                                            }),
+                                                        )
+                                                    }
+                                                    className="border-border bg-card text-foreground/80 hover:border-primary/40 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                                                >
+                                                    {servicio.nombre}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                            {createForm.errors.tipo_servicio && (
-                                <p className="text-destructive-strong mt-1 text-[11px]">
-                                    {createForm.errors.tipo_servicio}
+                            {/* El backend valida la clave "service_id"
+                                (StoreServiceOrderRequest), no "tipo_servicio". */}
+                            {createForm.errors.service_id && (
+                                <p
+                                    role="alert"
+                                    className="text-destructive-strong mt-1 text-[11px]"
+                                >
+                                    {createForm.errors.service_id}
                                 </p>
                             )}
                         </div>
@@ -618,6 +670,7 @@ export default function ServiceOrdersIndex({
                                     Responsable
                                 </Label>
                                 <select
+                                    aria-label="Responsable"
                                     value={createForm.data.tecnico_id}
                                     onChange={(e) =>
                                         createForm.setData(
@@ -709,6 +762,7 @@ export default function ServiceOrdersIndex({
                                     Prioridad
                                 </Label>
                                 <select
+                                    aria-label="Prioridad"
                                     value={createForm.data.prioridad}
                                     onChange={(e) =>
                                         createForm.setData(
@@ -730,6 +784,7 @@ export default function ServiceOrdersIndex({
                                 Instrucciones para el técnico
                             </Label>
                             <textarea
+                                aria-label="Instrucciones para el técnico"
                                 value={createForm.data.observaciones}
                                 onChange={(e) =>
                                     createForm.setData(

@@ -16,6 +16,9 @@ import {
     type CategoriaItem,
 } from '@/components/categoria-select';
 import GerenteLayout from '@/layouts/gerente-layout';
+import { toast } from 'sonner';
+import ServiciosRoutes from '@/routes/gerente/servicios';
+import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
 type ServiceItem = {
     id: number;
     codigo: string;
@@ -75,6 +78,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 export default function ServiciosIndex() {
+    const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
     const {
         currentTeam,
         servicios,
@@ -155,21 +159,37 @@ export default function ServiciosIndex() {
         e.preventDefault();
         if (editingService) {
             form.put(
-                `/${currentTeam.slug}/gerente/servicios/${editingService.id}`,
+                ServiciosRoutes.update.url({
+                    current_team: currentTeam.slug,
+                    servicio: editingService.id,
+                }),
                 {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
                     onSuccess: () => closeModal(),
                 },
             );
         } else {
-            form.post(`/${currentTeam.slug}/gerente/servicios`, {
-                onSuccess: () => closeModal(),
-            });
+            form.post(
+                ServiciosRoutes.store.url({ current_team: currentTeam.slug }),
+                {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
+                    onSuccess: () => closeModal(),
+                },
+            );
         }
     };
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
-            `/${currentTeam.slug}/gerente/servicios`,
+            ServiciosRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 buscar,
                 estado: filters.estado,
@@ -179,7 +199,7 @@ export default function ServiciosIndex() {
     };
     const handleFilterEstado = (estado: string) => {
         router.get(
-            `/${currentTeam.slug}/gerente/servicios`,
+            ServiciosRoutes.index.url({ current_team: currentTeam.slug }),
             {
                 buscar,
                 estado,
@@ -189,20 +209,38 @@ export default function ServiciosIndex() {
     };
     const handleToggleStatus = (service: ServiceItem) => {
         router.patch(
-            `/${currentTeam.slug}/gerente/servicios/${service.id}/toggle-status`,
+            ServiciosRoutes.toggleStatus.url({
+                current_team: currentTeam.slug,
+                servicio: service.id,
+            }),
             {},
-            { preserveScroll: true },
+            {
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo completar la acción.',
+                    ),
+                preserveScroll: true,
+            },
         );
     };
-    const handleDelete = (service: ServiceItem) => {
+    const handleDelete = async (service: ServiceItem) => {
         if (
-            confirm(
+            await pedirConfirmacion(
                 `¿Desea eliminar el servicio "${service.nombre}"? Si tiene historial registrado, la operación será rechazada conforme a las reglas del sistema.`,
             )
         ) {
             router.delete(
-                `/${currentTeam.slug}/gerente/servicios/${service.id}`,
+                ServiciosRoutes.destroy.url({
+                    current_team: currentTeam.slug,
+                    servicio: service.id,
+                }),
                 {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ??
+                                'No se pudo completar la acción.',
+                        ),
                     preserveScroll: true,
                 },
             );
@@ -211,6 +249,7 @@ export default function ServiciosIndex() {
     return (
         <GerenteLayout title="Catálogo de Servicios">
             <div className="space-y-6">
+                {dialogoConfirmacion}
                 {/* Alertas Flash */}
                 {flash?.success && (
                     <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -278,6 +317,7 @@ export default function ServiciosIndex() {
                         <div className="relative flex-1">
                             <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                             <input
+                                aria-label="Buscar servicios"
                                 type="text"
                                 value={buscar}
                                 onChange={(e) => setBuscar(e.target.value)}
@@ -521,6 +561,7 @@ export default function ServiciosIndex() {
                                 <button
                                     type="button"
                                     onClick={closeModal}
+                                    aria-label="Cerrar"
                                     className="text-muted-foreground hover:bg-background rounded-md p-1"
                                 >
                                     <X className="size-4" />
@@ -536,6 +577,7 @@ export default function ServiciosIndex() {
                                             Código *
                                         </label>
                                         <input
+                                            aria-label="Código *"
                                             type="text"
                                             required
                                             value={form.data.codigo}
@@ -559,6 +601,7 @@ export default function ServiciosIndex() {
                                             U.M. *
                                         </label>
                                         <select
+                                            aria-label="U.M. *"
                                             value={form.data.unidad_medida}
                                             onChange={(e) =>
                                                 form.setData(
@@ -596,6 +639,7 @@ export default function ServiciosIndex() {
                                         Nombre del Servicio *
                                     </label>
                                     <input
+                                        aria-label="Nombre del Servicio *"
                                         type="text"
                                         required
                                         value={form.data.nombre}
@@ -619,6 +663,7 @@ export default function ServiciosIndex() {
                                         Descripción
                                     </label>
                                     <textarea
+                                        aria-label="Descripción"
                                         rows={2}
                                         value={form.data.descripcion}
                                         onChange={(e) =>
@@ -636,6 +681,7 @@ export default function ServiciosIndex() {
                                         Precio Venta (S/) *
                                     </label>
                                     <input
+                                        aria-label="Precio Venta (S/) *"
                                         type="number"
                                         step="0.01"
                                         min="0"
@@ -726,7 +772,10 @@ export default function ServiciosIndex() {
                                         ))}
                                     </select>
                                     {form.errors.certificate_type_id && (
-                                        <span className="text-red-600">
+                                        <span
+                                            className="text-red-600"
+                                            role="alert"
+                                        >
                                             {form.errors.certificate_type_id}
                                         </span>
                                     )}

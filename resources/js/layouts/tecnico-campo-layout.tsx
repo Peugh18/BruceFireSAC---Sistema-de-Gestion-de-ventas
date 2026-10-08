@@ -15,6 +15,11 @@ import { MobileNavDock } from '@/components/mobile-nav-dock';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useInitials } from '@/hooks/use-initials';
 import type { Auth, Team } from '@/types';
+import TecnicoCampoRoutes from '@/routes/tecnico-campo';
+import RecojosRoutes from '@/routes/tecnico-campo/recojos';
+import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
+import InstalacionesRoutes from '@/routes/tecnico-campo/instalaciones';
+import EntregasRoutes from '@/routes/tecnico-campo/entregas';
 
 type PageProps = {
     auth: Auth & {
@@ -49,31 +54,31 @@ export default function TecnicoCampoLayout({
     const navItems: NavItem[] = [
         {
             title: 'Inicio',
-            href: `/${teamSlug}/tecnico-campo/dashboard`,
+            href: TecnicoCampoRoutes.dashboard.url({ current_team: teamSlug }),
             icon: LayoutDashboard,
             activeMatch: '/tecnico-campo/dashboard',
         },
         {
             title: 'Recojos',
-            href: `/${teamSlug}/tecnico-campo/recojos`,
+            href: RecojosRoutes.index.url({ current_team: teamSlug }),
             icon: Truck,
             activeMatch: '/tecnico-campo/recojos',
         },
         {
             title: 'Inspección',
-            href: `/${teamSlug}/tecnico-campo/inspecciones`,
+            href: InspeccionesRoutes.index.url({ current_team: teamSlug }),
             icon: ClipboardCheck,
             activeMatch: '/tecnico-campo/inspecciones',
         },
         {
             title: 'Instalación',
-            href: `/${teamSlug}/tecnico-campo/instalaciones`,
+            href: InstalacionesRoutes.index.url({ current_team: teamSlug }),
             icon: MapPin,
             activeMatch: '/tecnico-campo/instalaciones',
         },
         {
             title: 'Entregas',
-            href: `/${teamSlug}/tecnico-campo/entregas`,
+            href: EntregasRoutes.index.url({ current_team: teamSlug }),
             icon: CalendarCheck,
             activeMatch: '/tecnico-campo/entregas',
         },

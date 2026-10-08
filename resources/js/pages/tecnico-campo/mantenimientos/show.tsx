@@ -1,6 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle2, FileText, Plus } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import ChecklistExtintor from '@/components/checklist-extintor';
 import ConversacionOrden, {
@@ -43,6 +44,15 @@ type Props = {
     evidencias: EvidenciaListada[];
     conversacion: ConversacionProps;
     finalizado: boolean;
+    // Equipos que ya tiene el cliente (referencia al revisar en sitio).
+    customerEquipments?: EquipoCliente[];
+};
+
+type EquipoCliente = {
+    id: number;
+    numero_serie: string;
+    tipo_agente?: string | null;
+    capacidad?: string | null;
 };
 
 export default function MantenimientoShow({
@@ -52,6 +62,7 @@ export default function MantenimientoShow({
     evidencias,
     conversacion,
     finalizado,
+    customerEquipments = [],
 }: Props) {
     const { currentTeam, flash } = usePage<{
         currentTeam?: Team | null;
@@ -79,6 +90,11 @@ export default function MantenimientoShow({
         e.preventDefault();
         agregar.transform(() => ({ numero_serie: codigo.trim() }));
         agregar.post(equipos.store.url(args), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
             onSuccess: () => setCodigo(''),
         });
@@ -87,6 +103,11 @@ export default function MantenimientoShow({
     const cerrar = (e: React.FormEvent) => {
         e.preventDefault();
         cierre.post(mantenimientos.complete.url(args), {
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors)[0] ??
+                        'No se pudo completar la acción.',
+                ),
             preserveScroll: true,
         });
     };
@@ -130,6 +151,32 @@ export default function MantenimientoShow({
                         </p>
                     )}
                 </section>
+
+                {customerEquipments.length > 0 && (
+                    <section className="border-border bg-card space-y-2 rounded-[14px] border p-4 shadow-xs">
+                        <h2 className="text-xs font-black tracking-wider uppercase">
+                            Equipos registrados del cliente (
+                            {customerEquipments.length})
+                        </h2>
+                        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {customerEquipments.map((eq) => (
+                                <li
+                                    key={eq.id}
+                                    className="border-border rounded-[8px] border p-2 text-[11px]"
+                                >
+                                    <span className="block font-mono font-bold">
+                                        {eq.numero_serie}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        {[eq.tipo_agente, eq.capacidad]
+                                            .filter(Boolean)
+                                            .join(' · ') || 'Sin detalle'}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
 
                 <section className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
                     <h2 className="text-xs font-black tracking-wider uppercase">

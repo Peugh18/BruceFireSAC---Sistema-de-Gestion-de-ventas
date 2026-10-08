@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { MapPin } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { logout } from '@/routes';
@@ -30,7 +31,19 @@ export default function SinSede({ nombre }: Props) {
                     type="button"
                     variant="outline"
                     className="mt-6"
-                    onClick={() => router.post(logout.url())}
+                    onClick={() =>
+                        router.post(
+                            logout.url(),
+                            {},
+                            {
+                                onError: (errors) =>
+                                    toast.error(
+                                        Object.values(errors)[0] ??
+                                            'No se pudo completar la acción.',
+                                    ),
+                            },
+                        )
+                    }
                 >
                     Cerrar sesión
                 </Button>

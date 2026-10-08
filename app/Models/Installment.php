@@ -52,7 +52,11 @@ class Installment extends Model
     }
 
     /**
-     * Estado según su saldo conciliado (pagos y notas de crédito).
+     * Estado según su saldo conciliado (pagos y notas de crédito). Una cuota
+     * vencida que no se terminó de pagar es "vencido", aunque tenga un pago
+     * parcial: el pago parcial se ve en su saldo y en sus cobros, y el estado
+     * dice si la fecha ya pasó. Si no, "parcial" tapaba el vencimiento y una
+     * cuota atrasada con un pago nunca aparecía como vencida.
      */
     public function recalcularEstado(): void
     {
@@ -61,8 +65,8 @@ class Installment extends Model
 
         $this->update(['estado' => match (true) {
             $cubierto >= (float) $this->monto - 0.001 => 'pagado',
-            $cubierto > 0 => 'parcial',
             $this->fecha_vencimiento->isBefore(today()) => 'vencido',
+            $cubierto > 0 => 'parcial',
             default => 'pendiente',
         }]);
     }
@@ -77,14 +81,14 @@ class Installment extends Model
     }
 
     /**
-     * Pasa a "vencido" las cuotas pendientes cuya fecha ya pasó. Lo corre la
-     * tarea de cada noche (alerts:recompute); abrir una pantalla no cambia
-     * datos.
+     * Pasa a "vencido" las cuotas pendientes o parciales cuya fecha ya pasó
+     * (una cuota con un pago parcial también vence). Lo corre la tarea de cada
+     * noche (alerts:recompute); abrir una pantalla no cambia datos.
      */
     public static function marcarVencidas(): int
     {
         return self::query()
-            ->where('estado', 'pendiente')
+            ->whereIn('estado', ['pendiente', 'parcial'])
             ->whereDate('fecha_vencimiento', '<', today())
             ->update(['estado' => 'vencido']);
     }

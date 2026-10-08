@@ -225,6 +225,7 @@ export default function ClientPicker({
                         <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                             <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
+                                aria-label="Buscar cliente"
                                 ref={inputRef}
                                 autoFocus={autoFocus}
                                 value={busqueda}
@@ -284,7 +285,10 @@ export default function ClientPicker({
             )}
 
             {error ? (
-                <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+                <p
+                    className="text-destructive-strong mt-1 text-[11px] font-semibold"
+                    role="alert"
+                >
                     {error}
                 </p>
             ) : null}
