@@ -12,6 +12,7 @@ use App\Models\CompanySetting;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Team;
+use App\Services\Certificates\CertificadosDeVenta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -62,7 +63,7 @@ class SaleCertificateController extends Controller
                 ->values(),
             'tiposSugeridos' => EmitirCertificadosDeVenta::tiposPorDestino($sale->destino),
             'instructor' => CompanySetting::current()->instructor_capacitacion,
-            'emitidos' => $this->certificados($sale),
+            'emitidos' => CertificadosDeVenta::deLaVenta($sale),
             'gruposActuales' => $this->gruposActuales($sale),
         ]);
     }
@@ -145,30 +146,6 @@ class SaleCertificateController extends Controller
             'current_team' => $current_team,
             'sale' => $sale,
         ]);
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    public static function certificados(Sale $sale): array
-    {
-        return Certificate::query()
-            ->with('certificateType')
-            ->withCount('certificateUnits')
-            ->where('sale_id', $sale->id)
-            ->orderBy('id')
-            ->get()
-            ->map(fn (Certificate $certificate) => [
-                'id' => $certificate->id,
-                'numero' => $certificate->numero,
-                'tipo' => $certificate->certificateType->nombre,
-                'tipo_codigo' => $certificate->certificateType->codigo,
-                'revision' => $certificate->revision,
-                'estado' => $certificate->estado,
-                'referencia' => $certificate->referencia,
-                'unidades' => $certificate->certificate_units_count,
-            ])
-            ->all();
     }
 
     protected function assertSedeAccess(Request $request, Sale $sale): void

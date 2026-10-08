@@ -32,7 +32,7 @@ beforeEach(function () {
     $this->seed([RolesAndPermissionsSeeder::class, CertificateTypeSeeder::class]);
     $this->team = Team::factory()->create();
     $this->sede = Sede::factory()->create();
-    $this->orden = ServiceOrder::factory()->create(['sede_id' => $this->sede->id, 'departamento_tecnico' => 'campo', 'estado' => 'en_revision']);
+    $this->orden = ServiceOrder::factory()->create(['sede_id' => $this->sede->id, 'departamento_tecnico' => 'campo', 'estado' => 'recibido_planta']);
     $this->equipo = Equipment::factory()->create(['client_id' => $this->orden->client_id, 'estado' => 'operativo']);
     $this->orden->equipments()->attach($this->equipo->id, ['recibido' => true]);
     $this->url = fn (string $nombre, array $extra = []) => route($nombre, ['current_team' => $this->team, 'service_order' => $this->orden, ...$extra]);
@@ -207,7 +207,7 @@ test('T4 la instalacion exige escanear cada unidad vendida', function () {
 
     $this->actingAs($campo)->post(($this->url)('tecnico-campo.instalaciones.store'), $datos([$vendida->id]))
         ->assertSessionHasErrors('equipos');
-    expect($this->orden->fresh()->estado)->toBe('en_revision');
+    expect($this->orden->fresh()->estado)->toBe('recibido_planta');
 
     $this->actingAs($campo)->post(($this->url)('tecnico-campo.instalaciones.store'), $datos([$vendida->id, $otra->id]))
         ->assertSessionHasNoErrors();

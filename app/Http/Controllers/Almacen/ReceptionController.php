@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Reception;
 use App\Models\Sede;
 use App\Models\Team;
+use App\Services\Recepcion\AccesoDeAlmacen;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -140,7 +141,7 @@ class ReceptionController extends Controller
      */
     public function show(Team $current_team, Reception $reception, Request $request): Response
     {
-        $this->asegurarAlmacen($request, $reception);
+        AccesoDeAlmacen::asegurarAlmacen($request, $reception);
 
         $reception->load([
             'sedeAlmacen:id,nombre,tipo,ubigeo', 'sedeAlmacen.ubicacion',
@@ -204,7 +205,7 @@ class ReceptionController extends Controller
         UpdateReceptionRequest $request,
         UpdateReception $updateReception
     ): RedirectResponse {
-        $this->asegurarAlmacen($request, $reception);
+        AccesoDeAlmacen::asegurarAlmacen($request, $reception);
 
         $updateReception->handle(
             $reception,
@@ -217,16 +218,5 @@ class ReceptionController extends Controller
             'current_team' => $current_team,
             'reception' => $reception,
         ]);
-    }
-
-    /**
-     * El personal de almacén solo opera las recepciones de su almacén (el
-     * Gerente ve todas). Lo ajeno responde 404, como si no existiera.
-     */
-    public static function asegurarAlmacen(Request $request, Reception $reception): void
-    {
-        $almacenId = $request->user()->almacenRestringidoId();
-
-        abort_if($almacenId !== null && (int) $reception->sede_almacen_id !== $almacenId, 404);
     }
 }

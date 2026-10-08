@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests\Almacen;
 
-use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
-use App\Models\ProductLot;
+use App\Services\Inventory\ReglasDeAjusteDeStock;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -45,9 +44,9 @@ class StoreStockAdjustmentRequest extends FormRequest
     }
 
     /**
-     * Reglas de validación contextuales (§84.10):
-     * - Si se especifica una unidad serializada, la cantidad debe ser exactamente 1.
-     * - La unidad serializada debe pertenecer al producto y a la sede especificada.
+     * Reglas de validación contextuales (§84.10), definidas en
+     * ReglasDeAjusteDeStock para compartirlas con la Action que aplica el
+     * ajuste. Todas siguen activas aquí: no se debilita ninguna.
      *
      * @return array<int, callable(Validator): void>
      */
@@ -55,11 +54,11 @@ class StoreStockAdjustmentRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                $unitId = $this->input('inventory_unit_id');
+                $unitId = $this->input('inventory_unit_id') ? (int) $this->input('inventory_unit_id') : null;
                 $productId = (int) $this->input('product_id');
                 $sedeId = (int) $this->input('sede_id');
                 $cantidad = (int) $this->input('cantidad');
-                $tipoAjuste = $this->input('tipo_ajuste');
+                $tipoAjuste = (string) $this->input('tipo_ajuste');
 
                 // Cada almacenero ajusta solo el stock de su almacén.
                 $almacenPropio = $this->user()?->almacenRestringidoId();
@@ -70,65 +69,56 @@ class StoreStockAdjustmentRequest extends FormRequest
                 }
 
                 if ($unitId) {
-                    if ($cantidad !== 1) {
-                        $validator->errors()->add(
-                            'cantidad',
-                            'Cuando el ajuste es sobre una unidad serializada específica, la cantidad debe ser 1.'
-                        );
+                    $unit = InventoryUnit::query()->find($unitId);
+
+                    $error = ReglasDeAjusteDeStock::errorDeCantidadParaUnidad($unitId, $cantidad);
+                    if ($error !== null) {
+                        $validator->errors()->add('cantidad', $error);
                     }
 
-                    $unit = InventoryUnit::query()->find((int) $unitId);
+                    $error = ReglasDeAjusteDeStock::errorDeUnidadDeOtroProducto($unit, $productId);
+                    if ($error !== null) {
+                        $validator->errors()->add('inventory_unit_id', $error);
+                    }
+
                     if ($unit) {
-                        if ($unit->product_id !== $productId) {
-                            $validator->errors()->add(
-                                'inventory_unit_id',
-                                'La unidad seleccionada no corresponde al producto elegido.'
-                            );
+                        $error = ReglasDeAjusteDeStock::errorDeUnidadDeOtraSede($unit, $sedeId);
+                        if ($error !== null) {
+                            $validator->errors()->add('inventory_unit_id', $error);
                         }
-                        if ($unit->sede_almacen_id !== $sedeId) {
-                            $validator->errors()->add(
-                                'inventory_unit_id',
-                                'La unidad seleccionada no se encuentra ubicada en la sede indicada.'
-                            );
-                        }
+
                         // Solo se da de baja lo que está en el almacén y solo
                         // vuelve lo que se dio de baja: un extintor vendido
                         // no se "revive" con un ajuste.
-                        if ($tipoAjuste === 'decremento' && $unit->estado !== 'disponible') {
-                            $validator->errors()->add('inventory_unit_id', "Esa unidad no está disponible en el almacén (estado: {$unit->estado}).");
-                        }
-                        if ($tipoAjuste === 'incremento' && $unit->estado !== 'baja') {
-                            $validator->errors()->add('inventory_unit_id', "Solo se puede reingresar una unidad dada de baja (esta está: {$unit->estado}).");
+                        $error = ReglasDeAjusteDeStock::errorDeEstadoDeLaUnidad($tipoAjuste, (string) $unit->estado);
+                        if ($error !== null) {
+                            $validator->errors()->add('inventory_unit_id', $error);
                         }
                     }
                 } else {
                     $product = Product::find($productId);
-                    if ($product && $product->serializado && $tipoAjuste === 'decremento') {
-                        $validator->errors()->add(
-                            'inventory_unit_id',
-                            'Para dar de baja stock de un producto serializado, debe seleccionar la unidad física específica.'
-                        );
+
+                    $error = ReglasDeAjusteDeStock::errorDeProductoSerializadoSinUnidad($product, $tipoAjuste);
+                    if ($error !== null) {
+                        $validator->errors()->add('inventory_unit_id', $error);
                     }
+
                     // Un extintor nuevo entra con su serie por Recepciones:
                     // sumar sin unidad descuadra el Kardex con el stock.
-                    if ($product && $product->serializado && $tipoAjuste === 'incremento') {
-                        $validator->errors()->add(
-                            'inventory_unit_id',
-                            'Los productos con serie entran por Recepciones (cada unidad con su serie), no por ajuste.'
-                        );
+                    $error = ReglasDeAjusteDeStock::errorDeLoteFaltante($product, $tipoAjuste, (string) $this->input('lote'));
+                    if ($error !== null) {
+                        $validator->errors()->add('lote', $error);
                     }
-                    if ($product && $product->controla_lote && $tipoAjuste === 'incremento' && trim((string) $this->input('lote')) === '') {
-                        $validator->errors()->add('lote', "{$product->nombre} lleva lote: escribe el número de lote y su vencimiento.");
-                    }
+
                     $loteId = $this->input('product_lot_id');
-                    if ($loteId && ! ProductLot::query()->whereKey((int) $loteId)->where('product_id', $productId)->where('sede_id', $sedeId)->exists()) {
-                        $validator->errors()->add('product_lot_id', 'Ese lote no es de este producto en este almacén.');
+                    $error = ReglasDeAjusteDeStock::errorDeLoteAjeno($loteId ? (int) $loteId : null, $productId, $sedeId);
+                    if ($error !== null) {
+                        $validator->errors()->add('product_lot_id', $error);
                     }
-                    if ($product && ! $product->serializado && $tipoAjuste === 'decremento') {
-                        $saldo = InventoryMovement::saldo($product->id, $sedeId);
-                        if ($saldo < $cantidad) {
-                            $validator->errors()->add('cantidad', "Solo hay {$saldo} en este almacén: no se pueden dar de baja {$cantidad}.");
-                        }
+
+                    $error = ReglasDeAjusteDeStock::errorDeSaldoInsuficiente($product, $tipoAjuste, $cantidad, $sedeId);
+                    if ($error !== null) {
+                        $validator->errors()->add('cantidad', $error);
                     }
                 }
             },

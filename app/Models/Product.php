@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  * @property string $codigo
  * @property string|null $codigo_barras
  * @property string $nombre
- * @property string|null $categoria
+ * @property string|null $categoria clave de product_categories (FK real sobre product_categories.clave); NULL = sin categoría
  * @property string|null $agente
  * @property string|null $capacidad
  * @property string|null $peso_kg
@@ -44,6 +45,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read Collection<int, QuoteItem> $quoteItems
  * @property-read Collection<int, SaleItem> $saleItems
  * @property-read Collection<int, ProductLot> $lots
+ * @property-read ProductCategory|null $categoriaDelCatalogo
  */
 #[Fillable([
     'codigo',
@@ -220,6 +222,19 @@ class Product extends Model
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class);
+    }
+
+    /**
+     * Categoría del catálogo (product_categories). La columna `categoria`
+     * guarda su `clave`, que no cambia al renombrar la categoría: con la FK
+     * real de la migración 2026_10_08_040000 la base impide borrar o
+     * renombrar la clave de una categoría en uso.
+     *
+     * @return BelongsTo<ProductCategory, $this>
+     */
+    public function categoriaDelCatalogo(): BelongsTo
+    {
+        return $this->belongsTo(ProductCategory::class, 'categoria', 'clave');
     }
 
     public function esServicio(): bool

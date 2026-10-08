@@ -58,7 +58,7 @@ class ReceptionController extends Controller
 
         match ($filter) {
             'pendientes' => $query->where('estado', 'pendiente_recepcion'),
-            'recibidas' => $query->whereIn('estado', ['recibido_planta', 'en_revision', 'en_proceso']),
+            'recibidas' => $query->whereIn('estado', ['recibido_planta', 'en_proceso']),
             default => null,
         };
 
@@ -82,7 +82,7 @@ class ReceptionController extends Controller
             'pendientes' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
                 ->where('estado', 'pendiente_recepcion')->count(),
             'recibidas' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
-                ->whereIn('estado', ['recibido_planta', 'en_revision', 'en_proceso'])->count(),
+                ->whereIn('estado', ['recibido_planta', 'en_proceso'])->count(),
         ];
 
         return Inertia::render('tecnico-planta/recepciones/index', [

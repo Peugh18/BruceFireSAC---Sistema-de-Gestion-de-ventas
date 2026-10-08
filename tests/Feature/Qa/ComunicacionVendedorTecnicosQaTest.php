@@ -96,7 +96,7 @@ it('lleva la nota del vendedor a la pantalla de inspección de campo', function 
     $vendedor = qaUserWithRole('Vendedor');
     $tecnico = qaUserWithRole('TecnicoCampo');
     $order = ServiceOrder::factory()->create([
-        'estado' => 'en_revision',
+        'estado' => 'recibido_planta',
         'departamento_tecnico' => 'campo',
     ]);
 

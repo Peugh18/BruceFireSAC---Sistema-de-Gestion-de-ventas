@@ -3,6 +3,12 @@ import { Loader2, ScanLine } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 
 import type { CatalogUnit } from '@/components/catalog-picker';
+import {
+    UNIDADES_DIALOG_CLASES,
+    UNIDADES_TITULO_CLASES,
+    UnidadResumen,
+    useUnidadesDeProducto,
+} from '@/components/unidades-compartidas';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,7 +18,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import catalogo from '@/routes/vendedor/catalogo';
 import ventas from '@/routes/vendedor/ventas';
 
 export type LineaConSerie = {
@@ -41,30 +46,20 @@ export default function CambiarUnidadDialog({
     onClose: () => void;
 }) {
     const [serie, setSerie] = useState('');
-    const [disponibles, setDisponibles] = useState<CatalogUnit[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [guardando, setGuardando] = useState(false);
 
-    useEffect(() => {
-        if (!linea) {
-            return;
-        }
+    const disponibles: CatalogUnit[] | null = useUnidadesDeProducto({
+        teamSlug,
+        productId: linea?.product_id ?? null,
+        sedeId,
+    });
 
+    // Al cambiar de línea, se limpian la serie escaneada y el error previo.
+    useEffect(() => {
         setSerie('');
         setError(null);
-        setDisponibles(null);
-        void fetch(
-            catalogo.unidades.url(teamSlug, {
-                query: {
-                    product_id: linea.product_id,
-                    sede_id: sedeId ?? undefined,
-                },
-            }),
-        )
-            .then((r) => r.json())
-            .then((data: CatalogUnit[]) => setDisponibles(data))
-            .catch(() => setDisponibles([]));
-    }, [linea, teamSlug, sedeId]);
+    }, [linea]);
 
     const cambiar = (numeroSerie: string, event?: FormEvent) => {
         event?.preventDefault();
@@ -97,9 +92,9 @@ export default function CambiarUnidadDialog({
             open={linea !== null}
             onOpenChange={(abierto) => !abierto && onClose()}
         >
-            <DialogContent className="border-border bg-card max-h-[85vh] overflow-y-auto rounded-[16px] sm:max-w-lg">
+            <DialogContent className={UNIDADES_DIALOG_CLASES}>
                 <DialogHeader>
-                    <DialogTitle className="font-['Oswald',sans-serif] text-[19px] font-semibold uppercase">
+                    <DialogTitle className={UNIDADES_TITULO_CLASES}>
                         Cambiar extintor
                     </DialogTitle>
                     <DialogDescription className="text-[12.5px]">
@@ -170,19 +165,7 @@ export default function CambiarUnidadDialog({
                                 onClick={() => cambiar(unidad.numero_serie)}
                                 className="border-border hover:bg-muted/40 flex w-full items-center gap-3 border-b px-3 py-2 text-left last:border-b-0"
                             >
-                                <span className="font-['IBM_Plex_Mono',monospace] text-[12.5px] font-bold">
-                                    {unidad.numero_serie}
-                                </span>
-                                <span className="text-muted-foreground text-[12px]">
-                                    {[
-                                        unidad.capacidad,
-                                        unidad.marca,
-                                        unidad.serie_fabricante &&
-                                            `N° ${unidad.serie_fabricante}`,
-                                    ]
-                                        .filter(Boolean)
-                                        .join(' · ')}
-                                </span>
+                                <UnidadResumen unidad={unidad} />
                             </button>
                         ))}
                     </div>

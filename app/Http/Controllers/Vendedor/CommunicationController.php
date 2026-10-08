@@ -22,7 +22,7 @@ class CommunicationController extends Controller
      */
     public const ETAPAS = [
         'por_recibir' => ['titulo' => 'Por recibir', 'estados' => ['pendiente_recepcion']],
-        'revision' => ['titulo' => 'En revisión', 'estados' => ['recibido_planta', 'en_revision']],
+        'revision' => ['titulo' => 'En revisión', 'estados' => ['recibido_planta']],
         'autorizacion' => ['titulo' => 'Por autorizar', 'estados' => ['esperando_autorizacion']],
         'proceso' => ['titulo' => 'En proceso', 'estados' => ['autorizado', 'en_proceso', 'trabajo_terminado', 'pendiente_datos', 'datos_completos']],
         'listo' => ['titulo' => 'Listo', 'estados' => ['listo_certificado', 'listo_entrega']],

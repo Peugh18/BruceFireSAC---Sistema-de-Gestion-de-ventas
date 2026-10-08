@@ -12,6 +12,18 @@ use Throwable;
 class AuditLogger
 {
     /**
+     * Cantidad de fallos de auditoría acumulados en el proceso actual. La
+     * auditoría nunca tumba una operación (§37), pero su fallo debe poder
+     * verse: `fallosRecientes()` los expone y el log lleva la entidad.
+     */
+    private static int $fallos = 0;
+
+    /**
+     * @var list<array{action: string, entity: string|null}>
+     */
+    private static array $detalleDeFallos = [];
+
+    /**
      * Registra un evento de auditoría de manera explícita (§37).
      *
      * @param  array<string, mixed>|null  $oldValues
@@ -43,12 +55,55 @@ class AuditLogger
                 'created_at' => now(),
             ]);
         } catch (Throwable $e) {
-            Log::error('Error registrando auditoría: '.$e->getMessage(), [
+            // La auditoría nunca debe tumbar la operación que se audita, pero
+            // el fallo queda a la vista: contador + log con la entidad afectada.
+            $entidad = $entity ? get_class($entity).'#'.$entity->getKey() : null;
+
+            self::$fallos++;
+            self::$detalleDeFallos[] = ['action' => $action, 'entity' => $entidad];
+
+            Log::error('Error registrando auditoría de '.($entidad ?? 'sin entidad').' ('.$action.'): '.$e->getMessage(), [
                 'action' => $action,
+                'entity' => $entidad,
                 'exception' => $e,
             ]);
 
             return null;
         }
+    }
+
+    /**
+     * ¿Hubo fallos de auditoría recientes (en este proceso)?
+     */
+    public static function huboFallos(): bool
+    {
+        return self::$fallos > 0;
+    }
+
+    /**
+     * Cantidad de fallos de auditoría recientes (en este proceso).
+     */
+    public static function fallosRecientes(): int
+    {
+        return self::$fallos;
+    }
+
+    /**
+     * Detalle de los fallos de auditoría recientes: acción y entidad afectada.
+     *
+     * @return list<array{action: string, entity: string|null}>
+     */
+    public static function detalleDeFallos(): array
+    {
+        return self::$detalleDeFallos;
+    }
+
+    /**
+     * Reinicia el registro de fallos recientes (para pruebas y tareas).
+     */
+    public static function reiniciarFallos(): void
+    {
+        self::$fallos = 0;
+        self::$detalleDeFallos = [];
     }
 }

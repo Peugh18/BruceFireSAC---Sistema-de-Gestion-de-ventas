@@ -40,6 +40,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $sale_id
  * @property int|null $service_order_id
  * @property int|null $inventory_transfer_id
+ * @property int|null $client_id cliente de la venta u orden que sustenta la guía (null en traslados internos entre sedes)
  * @property string|null $doc_relacionado_tipo
  * @property string|null $doc_relacionado_numero
  * @property string $estado_sunat
@@ -51,6 +52,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $cdr_path
  * @property Carbon|null $enviado_at
  * @property-read Sede $sede
+ * @property-read Client|null $client
  * @property-read TransportVehicle|null $vehiculo
  * @property-read Driver|null $conductor
  * @property-read InventoryTransfer|null $traslado
@@ -62,7 +64,7 @@ use Illuminate\Support\Carbon;
     'partida_ubigeo', 'partida_direccion', 'partida_cod_establecimiento',
     'llegada_ubigeo', 'llegada_direccion', 'llegada_cod_establecimiento',
     'peso_bruto', 'transport_vehicle_id', 'driver_id', 'transportista_ruc', 'transportista_razon',
-    'sale_id', 'service_order_id', 'inventory_transfer_id', 'doc_relacionado_tipo', 'doc_relacionado_numero',
+    'sale_id', 'service_order_id', 'inventory_transfer_id', 'client_id', 'doc_relacionado_tipo', 'doc_relacionado_numero',
     'estado_sunat', 'sunat_ticket', 'sunat_codigo', 'sunat_mensaje', 'hash_zip', 'xml_path', 'cdr_path', 'enviado_at',
 ])]
 class DispatchGuide extends Model
@@ -74,6 +76,25 @@ class DispatchGuide extends Model
     public const ACEPTADA = 'aceptada';
 
     public const RECHAZADA = 'rechazada';
+
+    protected static function booted(): void
+    {
+        // La guía nace sabiendo de qué cliente es: el cliente de la venta u
+        // orden que la sustenta. Tras crearla se sigue guardando el snapshot
+        // de nombre y RUC del destinatario (es lo que va a SUNAT), pero el
+        // cliente queda enlazado con su clave foránea.
+        static::creating(function (DispatchGuide $guia): void {
+            if ($guia->client_id !== null) {
+                return;
+            }
+
+            $guia->client_id = match (true) {
+                $guia->sale_id !== null => Sale::query()->whereKey($guia->sale_id)->value('client_id'),
+                $guia->service_order_id !== null => ServiceOrder::query()->whereKey($guia->service_order_id)->value('client_id'),
+                default => null,
+            };
+        });
+    }
 
     /** Catálogo 20 que usa Bruce Fire: 01 venta, 04 entre establecimientos, 13 otros. */
     public const MOTIVOS = ['01' => 'Venta', '04' => 'Traslado entre establecimientos de la misma empresa', '13' => 'Otros'];
@@ -96,6 +117,17 @@ class DispatchGuide extends Model
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
+    }
+
+    /**
+     * Cliente de la venta u orden que sustenta la guía (null en los traslados
+     * internos entre sedes).
+     *
+     * @return BelongsTo<Client, $this>
+     */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 
     /**

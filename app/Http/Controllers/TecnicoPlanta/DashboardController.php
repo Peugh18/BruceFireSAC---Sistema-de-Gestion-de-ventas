@@ -50,7 +50,7 @@ class DashboardController extends Controller
         // Filtro de colas (§5.4)
         match ($tab) {
             'pendientes' => $query->where('estado', 'pendiente_recepcion'),
-            'en_taller' => $query->whereIn('estado', ['recibido_planta', 'en_revision', 'en_proceso', 'autorizado']),
+            'en_taller' => $query->whereIn('estado', ['recibido_planta', 'en_proceso', 'autorizado']),
             'esperando_autorizacion' => $query->where('estado', 'esperando_autorizacion'),
             'por_entregar' => $query->whereIn('estado', ['trabajo_terminado', 'pendiente_datos', 'datos_completos', 'listo_certificado', 'listo_entrega', 'entregado']),
             default => null,
@@ -85,7 +85,7 @@ class DashboardController extends Controller
                 ->where('estado', 'pendiente_recepcion')
                 ->count(),
             'en_taller' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
-                ->whereIn('estado', ['recibido_planta', 'en_revision', 'en_proceso', 'autorizado'])
+                ->whereIn('estado', ['recibido_planta', 'en_proceso', 'autorizado'])
                 ->count(),
             'esperando_autorizacion' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
                 ->where('estado', 'esperando_autorizacion')

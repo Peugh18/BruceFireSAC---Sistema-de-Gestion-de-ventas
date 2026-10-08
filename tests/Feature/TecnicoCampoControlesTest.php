@@ -16,7 +16,7 @@ beforeEach(function () {
     $this->tecnico = User::factory()->create(['current_team_id' => $this->team->id]);
     $this->team->members()->attach($this->tecnico, ['role' => TeamRole::Admin->value]);
     $this->tecnico->assignRole('TecnicoCampo');
-    $this->orden = ServiceOrder::factory()->create(['departamento_tecnico' => 'campo', 'estado' => 'en_revision']);
+    $this->orden = ServiceOrder::factory()->create(['departamento_tecnico' => 'campo', 'estado' => 'recibido_planta']);
     $this->ruta = fn (string $nombre, array $extra = []) => route("tecnico-campo.{$nombre}", ['current_team' => $this->team, 'service_order' => $this->orden, ...$extra]);
 });
 

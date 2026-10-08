@@ -4,6 +4,7 @@ import { CheckCircle2, ShieldQuestion, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
+import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
 
 import NuevoUsuarioDialog from './nuevo-usuario-dialog';
 import UsuariosRoutes from '@/routes/gerente/usuarios';
@@ -192,154 +193,156 @@ export default function UsuariosIndex() {
                     </div>
                 )}
 
-                <div className="border-border flex gap-2 border-b">
-                    <button
-                        type="button"
-                        onClick={() => setTab('usuarios')}
-                        className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${
-                            tab === 'usuarios'
-                                ? 'border-primary text-foreground'
-                                : 'text-muted-foreground hover:text-foreground border-transparent'
-                        }`}
-                    >
-                        <Users className="size-3.5" />
-                        Usuarios del Team
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setTab('matriz')}
-                        className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${
-                            tab === 'matriz'
-                                ? 'border-primary text-foreground'
-                                : 'text-muted-foreground hover:text-foreground border-transparent'
-                        }`}
-                    >
-                        <ShieldQuestion className="size-3.5" />
-                        Matriz de Permisos (solo lectura)
-                    </button>
-                </div>
+                <TabsBf<'usuarios' | 'matriz'>
+                    pestanas={[
+                        {
+                            id: 'usuarios',
+                            titulo: 'Usuarios del Team',
+                            icono: Users,
+                        },
+                        {
+                            id: 'matriz',
+                            titulo: 'Matriz de Permisos (solo lectura)',
+                            icono: ShieldQuestion,
+                        },
+                    ]}
+                    activa={tab}
+                    onCambiar={setTab}
+                    etiqueta="Vistas de usuarios y permisos"
+                    idBase="usuarios"
+                />
 
-                {tab === 'usuarios' && (
-                    <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs">
-                                <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                    <tr>
-                                        <th className="px-4 py-3">Nombre</th>
-                                        <th className="px-4 py-3">Email</th>
-                                        <th className="px-4 py-3">
-                                            Rol Actual
-                                        </th>
-                                        <th className="px-4 py-3">
-                                            Cambiar Rol
-                                        </th>
-                                        <th className="px-4 py-3">Sede</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-border divide-y">
-                                    {usuarios.length === 0 ? (
+                <div {...propsPanel('usuarios', tab)}>
+                    {tab === 'usuarios' && (
+                        <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs">
+                                    <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
                                         <tr>
-                                            <td
-                                                colSpan={5}
-                                                className="text-muted-foreground py-12 text-center"
-                                            >
-                                                <div className="flex flex-col items-center justify-center gap-2">
-                                                    <div className="bg-muted/50 flex size-10 items-center justify-center rounded-full">
-                                                        <Users className="text-muted-foreground size-5" />
-                                                    </div>
-                                                    <p className="text-foreground text-sm font-semibold">
-                                                        No hay usuarios
-                                                        registrados
-                                                    </p>
-                                                    <p className="text-muted-foreground max-w-sm text-xs">
-                                                        Los colaboradores
-                                                        vinculados al equipo
-                                                        aparecerán aquí para
-                                                        asignarles rol y sede de
-                                                        operaciones.
-                                                    </p>
-                                                </div>
-                                            </td>
+                                            <th className="px-4 py-3">
+                                                Nombre
+                                            </th>
+                                            <th className="px-4 py-3">Email</th>
+                                            <th className="px-4 py-3">
+                                                Rol Actual
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                Cambiar Rol
+                                            </th>
+                                            <th className="px-4 py-3">Sede</th>
                                         </tr>
-                                    ) : (
-                                        usuarios.map((u) => (
-                                            <tr
-                                                key={u.id}
-                                                className="hover:bg-muted/40 transition-colors"
-                                            >
-                                                <td className="text-foreground px-4 py-3 font-semibold">
-                                                    {u.name}
+                                    </thead>
+                                    <tbody className="divide-border divide-y">
+                                        {usuarios.length === 0 ? (
+                                            <tr>
+                                                <td
+                                                    colSpan={5}
+                                                    className="text-muted-foreground py-12 text-center"
+                                                >
+                                                    <div className="flex flex-col items-center justify-center gap-2">
+                                                        <div className="bg-muted/50 flex size-10 items-center justify-center rounded-full">
+                                                            <Users className="text-muted-foreground size-5" />
+                                                        </div>
+                                                        <p className="text-foreground text-sm font-semibold">
+                                                            No hay usuarios
+                                                            registrados
+                                                        </p>
+                                                        <p className="text-muted-foreground max-w-sm text-xs">
+                                                            Los colaboradores
+                                                            vinculados al equipo
+                                                            aparecerán aquí para
+                                                            asignarles rol y
+                                                            sede de operaciones.
+                                                        </p>
+                                                    </div>
                                                 </td>
-                                                <td className="text-muted-foreground px-4 py-3">
-                                                    {u.email}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                                                            u.role
-                                                                ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
-                                                                : 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
-                                                        }`}
-                                                    >
-                                                        {roleLabel(u.role)}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <select
-                                                        aria-label={`Rol de ${u.name}`}
-                                                        value={u.role ?? ''}
-                                                        disabled={
-                                                            pendingUserId ===
-                                                            u.id
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleRoleChange(
-                                                                u,
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        className="border-border bg-muted/40 focus:border-primary w-full max-w-[180px] rounded-lg border px-3 py-1.5 text-xs focus:outline-none disabled:opacity-50"
-                                                    >
-                                                        <option
-                                                            value=""
-                                                            disabled
+                                            </tr>
+                                        ) : (
+                                            usuarios.map((u) => (
+                                                <tr
+                                                    key={u.id}
+                                                    className="hover:bg-muted/40 transition-colors"
+                                                >
+                                                    <td className="text-foreground px-4 py-3 font-semibold">
+                                                        {u.name}
+                                                    </td>
+                                                    <td className="text-muted-foreground px-4 py-3">
+                                                        {u.email}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                                u.role
+                                                                    ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
+                                                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+                                                            }`}
                                                         >
-                                                            Seleccionar rol
-                                                        </option>
-                                                        {roles.map((r) => (
+                                                            {roleLabel(u.role)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <select
+                                                            aria-label={`Rol de ${u.name}`}
+                                                            value={u.role ?? ''}
+                                                            disabled={
+                                                                pendingUserId ===
+                                                                u.id
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleRoleChange(
+                                                                    u,
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            className="border-border bg-muted/40 focus:border-primary w-full max-w-[180px] rounded-lg border px-3 py-1.5 text-xs focus:outline-none disabled:opacity-50"
+                                                        >
                                                             <option
-                                                                key={r}
-                                                                value={r}
+                                                                value=""
+                                                                disabled
                                                             >
-                                                                {roleLabel(r)}
+                                                                Seleccionar rol
                                                             </option>
-                                                        ))}
-                                                    </select>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <select
-                                                        aria-label={`Sede de ${u.name}`}
-                                                        value={u.sede_id ?? ''}
-                                                        disabled={
-                                                            pendingUserId ===
-                                                            u.id
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleSedeChange(
-                                                                u,
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        className="border-border bg-muted/40 focus:border-primary w-full max-w-[200px] rounded-lg border px-3 py-1.5 text-xs focus:outline-none disabled:opacity-50"
-                                                    >
-                                                        <option value="">
-                                                            {u.role ===
-                                                            'Gerente'
-                                                                ? 'Todas las sedes'
-                                                                : 'Sin sede (no puede entrar)'}
-                                                        </option>
-                                                        {sedesPara(u.role).map(
-                                                            (sede) => (
+                                                            {roles.map((r) => (
+                                                                <option
+                                                                    key={r}
+                                                                    value={r}
+                                                                >
+                                                                    {roleLabel(
+                                                                        r,
+                                                                    )}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <select
+                                                            aria-label={`Sede de ${u.name}`}
+                                                            value={
+                                                                u.sede_id ?? ''
+                                                            }
+                                                            disabled={
+                                                                pendingUserId ===
+                                                                u.id
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleSedeChange(
+                                                                    u,
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            className="border-border bg-muted/40 focus:border-primary w-full max-w-[200px] rounded-lg border px-3 py-1.5 text-xs focus:outline-none disabled:opacity-50"
+                                                        >
+                                                            <option value="">
+                                                                {u.role ===
+                                                                'Gerente'
+                                                                    ? 'Todas las sedes'
+                                                                    : 'Sin sede (no puede entrar)'}
+                                                            </option>
+                                                            {sedesPara(
+                                                                u.role,
+                                                            ).map((sede) => (
                                                                 <option
                                                                     key={
                                                                         sede.id
@@ -352,54 +355,57 @@ export default function UsuariosIndex() {
                                                                         sede.nombre
                                                                     }
                                                                 </option>
-                                                            ),
-                                                        )}
-                                                    </select>
-                                                    {u.role !== 'Gerente' &&
-                                                    !u.sede_id ? (
-                                                        <p className="text-destructive-strong mt-1 text-[11px] font-bold">
-                                                            Sin sede: no puede
-                                                            entrar hasta que le
-                                                            asignes una.
-                                                        </p>
-                                                    ) : null}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                                            ))}
+                                                        </select>
+                                                        {u.role !== 'Gerente' &&
+                                                        !u.sede_id ? (
+                                                            <p className="text-destructive-strong mt-1 text-[11px] font-bold">
+                                                                Sin sede: no
+                                                                puede entrar
+                                                                hasta que le
+                                                                asignes una.
+                                                            </p>
+                                                        ) : null}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {tab === 'matriz' && (
-                    <div className="space-y-4">
-                        {Object.entries(matrizPermisos).map(
-                            ([role, permisos]) => (
-                                <div
-                                    key={role}
-                                    className="border-border bg-card rounded-xl border p-4 shadow-xs"
-                                >
-                                    <h3 className="text-foreground font-['Oswald',sans-serif] text-sm font-bold tracking-wide uppercase">
-                                        {roleLabel(role)}
-                                    </h3>
-                                    <div className="mt-2.5 flex flex-wrap gap-1.5">
-                                        {permisos.map((permiso) => (
-                                            <span
-                                                key={permiso}
-                                                title={permiso}
-                                                className="bg-background text-foreground/80 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
-                                            >
-                                                {humanizePermission(permiso)}
-                                            </span>
-                                        ))}
+                    {tab === 'matriz' && (
+                        <div className="space-y-4">
+                            {Object.entries(matrizPermisos).map(
+                                ([role, permisos]) => (
+                                    <div
+                                        key={role}
+                                        className="border-border bg-card rounded-xl border p-4 shadow-xs"
+                                    >
+                                        <h3 className="text-foreground font-['Oswald',sans-serif] text-sm font-bold tracking-wide uppercase">
+                                            {roleLabel(role)}
+                                        </h3>
+                                        <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                            {permisos.map((permiso) => (
+                                                <span
+                                                    key={permiso}
+                                                    title={permiso}
+                                                    className="bg-background text-foreground/80 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
+                                                >
+                                                    {humanizePermission(
+                                                        permiso,
+                                                    )}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ),
-                        )}
-                    </div>
-                )}
+                                ),
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </GerenteLayout>
     );

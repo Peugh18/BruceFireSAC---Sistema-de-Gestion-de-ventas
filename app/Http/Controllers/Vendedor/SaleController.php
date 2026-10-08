@@ -26,6 +26,7 @@ use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Billing\ComprobantePdfService;
+use App\Services\Certificates\CertificadosDeVenta;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,11 +90,17 @@ class SaleController extends Controller
 
         // KPIs con el mismo alcance que la tabla: el Vendedor ve solo lo suyo y
         // el acumulado de la empresa queda para el Gerente (Documento Maestro §77.3).
+        // Sumados en SQL: no se cargan todas las ventas del rango en memoria.
         $emitidas = Sale::query()
             ->visiblePara($request->user())
             ->where('estado', 'confirmada')
             ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
-            ->get(['total', 'condicion_pago']);
+            ->selectRaw('COUNT(*) as ventas')
+            ->selectRaw('COALESCE(SUM(total), 0) as total_vendido')
+            ->selectRaw("COALESCE(SUM(CASE WHEN condicion_pago IN ('credito', 'credito_30') THEN total ELSE 0 END), 0) as total_credito")
+            ->selectRaw("COALESCE(SUM(CASE WHEN condicion_pago IN ('credito', 'credito_30') THEN 0 ELSE total END), 0) as total_contado")
+            ->toBase()
+            ->first();
 
         return Inertia::render('vendedor/ventas/index', [
             'sales' => $sales,
@@ -106,10 +113,10 @@ class SaleController extends Controller
             ],
             'hoy' => today()->toDateString(),
             'kpis' => [
-                'total_vendido' => round((float) $emitidas->sum('total'), 2),
-                'ventas' => $emitidas->count(),
-                'contado' => round((float) $emitidas->reject(fn (Sale $sale) => $sale->esCredito())->sum('total'), 2),
-                'credito' => round((float) $emitidas->filter(fn (Sale $sale) => $sale->esCredito())->sum('total'), 2),
+                'total_vendido' => round((float) ($emitidas->total_vendido ?? 0), 2),
+                'ventas' => (int) ($emitidas->ventas ?? 0),
+                'contado' => round((float) ($emitidas->total_contado ?? 0), 2),
+                'credito' => round((float) ($emitidas->total_credito ?? 0), 2),
                 // Lo que falta enviar a SUNAT no depende del rango: tiene plazo.
                 'por_enviar' => ElectronicDocument::query()
                     ->where('sunat_estado', 'por_enviar')
@@ -456,7 +463,7 @@ class SaleController extends Controller
                 'client' => $sale->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             ],
             'editable' => $sale->sePuedeEditar(),
-            'certificados' => SaleCertificateController::certificados($sale),
+            'certificados' => CertificadosDeVenta::deLaVenta($sale),
             'tieneEquipos' => $sale->items->contains(fn ($item) => $item->equipment_id !== null),
             // Notas pedidas al Gerente que aún no se emiten (por aprobar o rechazadas).
             'solicitudesNota' => NoteRequest::query()
