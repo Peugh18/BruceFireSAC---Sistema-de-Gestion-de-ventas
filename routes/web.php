@@ -6,7 +6,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublicCertificateVerificationController;
 use App\Http\Controllers\PublicQuotePdfController;
-use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\UbigeoController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -45,8 +44,6 @@ Route::prefix('{current_team}')
 Route::middleware(['auth'])->group(function () {
     Route::get('ubigeos', UbigeoController::class)->name('ubigeos.buscar');
     Route::post('asistente', ChispaController::class)->middleware('throttle:20,1')->name('asistente');
-    Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
-    Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');
 });
 
 require __DIR__.'/settings.php';
