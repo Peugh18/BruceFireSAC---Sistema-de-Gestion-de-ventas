@@ -377,6 +377,7 @@ export default function StockIndex({
                                     <div className="relative mt-1">
                                         <Search className="text-muted-foreground absolute top-2.5 left-3 size-4" />
                                         <Input
+                                            aria-label="Buscar ítem"
                                             value={stockSearch}
                                             onChange={(e) =>
                                                 setStockSearch(e.target.value)

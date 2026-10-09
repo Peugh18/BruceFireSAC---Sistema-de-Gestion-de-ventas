@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Deficiency;
+use App\Models\Evidencia;
 use App\Models\Quote;
 use App\Models\Team;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class DeficiencyController extends Controller
         $estado = $request->string('estado')->toString();
 
         $deficiencies = Deficiency::query()
-            ->with(['serviceOrder.client', 'authorization'])
+            ->with(['serviceOrder.client', 'authorization', 'equipment'])
             ->whereHas('serviceOrder', fn ($query) => $query->when(
                 $request->user()->sedeRestringidaId(),
                 fn ($query, $sedeId) => $query->where('sede_id', $sedeId)
@@ -33,6 +34,14 @@ class DeficiencyController extends Controller
                 'cliente' => $deficiency->serviceOrder->client->razon_social,
                 'componente' => $deficiency->componente,
                 'condicion' => $deficiency->condicion,
+                'nota' => $deficiency->nota,
+                'accion_recomendada' => $deficiency->accion_recomendada,
+                'repuesto_sugerido' => $deficiency->repuesto_sugerido,
+                'equipo' => $deficiency->equipment?->numero_serie,
+                // ponytail: una consulta por fila; la página trae 15 como máximo.
+                'foto_url' => ($evidenciaId = $deficiency->foto_path ? Evidencia::query()->where('path', $deficiency->foto_path)->value('id') : null)
+                    ? route('evidencias.show', [$current_team, $evidenciaId])
+                    : null,
                 'estado' => $deficiency->estado,
                 'requiere_autorizacion' => $deficiency->requiere_autorizacion,
                 'authorization' => $deficiency->authorization ? [

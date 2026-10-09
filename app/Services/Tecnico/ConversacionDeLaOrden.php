@@ -16,6 +16,8 @@ class ConversacionDeLaOrden
 {
     /** @var array<string, string> */
     private const TITULOS = [
+        'alta_tecnica_rapida' => 'Alta técnica rápida',
+        'recepcion_planta' => 'Recepción en planta',
         'creada' => 'Orden creada',
         'recibida' => 'Recibida en el taller',
         'deficiencia_detectada' => 'Deficiencia detectada',
@@ -101,7 +103,7 @@ class ConversacionDeLaOrden
 
         return [
             'id' => $evento->id,
-            'titulo' => $esMensaje ? 'Mensaje' : (is_string($accion) ? ucfirst(str_replace('_', ' ', $accion)) : (self::TITULOS[$evento->tipo] ?? 'Evento')),
+            'titulo' => $esMensaje ? 'Mensaje' : (is_string($accion) ? (self::TITULOS[$accion] ?? ucfirst(str_replace('_', ' ', $accion))) : (self::TITULOS[$evento->tipo] ?? 'Evento')),
             'mensaje' => isset($payload['mensaje']) ? (string) $payload['mensaje'] : (isset($payload['descripcion']) ? (string) $payload['descripcion'] : null),
             'autor' => $evento->user->name ?? 'Sistema',
             'origen' => (string) ($payload['origen'] ?? 'sistema'),

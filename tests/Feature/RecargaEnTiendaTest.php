@@ -3,6 +3,8 @@
 use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Enums\TeamRole;
 use App\Models\Client;
+use App\Models\Deficiency;
+use App\Models\DeficiencyAuthorization;
 use App\Models\Equipment;
 use App\Models\Product;
 use App\Models\Service;
@@ -34,6 +36,22 @@ test('vendedor registra un extintor existente y uno nuevo sin duplicarlos en pla
     $seller->currentTeam->members()->attach($technician, ['role' => TeamRole::Admin->value]);
     $this->actingAs($technician)->post(route('tecnico-planta.recepciones.confirm', ['current_team' => $seller->currentTeam, 'service_order' => $order]), ['equipos_recibidos_count' => 2])->assertRedirect();
     expect($order->equipments()->count())->toBe(2)->and($order->equipments()->wherePivot('recibido', true)->count())->toBe(2);
+});
+
+test('un extintor no entra a una segunda orden abierta', function () {
+    $seller = vendedorUser();
+    $client = Client::factory()->create();
+    $equipment = Equipment::factory()->create(['client_id' => $client->id, 'numero_serie' => 'BF-EQ-004300']);
+    $abierta = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id, 'estado' => 'en_proceso']);
+    $abierta->equipments()->attach($equipment, ['recibido' => true]);
+    $nueva = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id]);
+
+    $this->actingAs($seller)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $seller->currentTeam, 'service_order' => $nueva]), ['numero_serie' => 'BF-EQ-004300'])->assertSessionHasErrors('numero_serie');
+    expect($nueva->equipments()->count())->toBe(0);
+
+    $abierta->update(['estado' => 'entregado']);
+    $this->actingAs($seller)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $seller->currentTeam, 'service_order' => $nueva]), ['numero_serie' => 'BF-EQ-004300'])->assertSessionHasNoErrors();
+    expect($nueva->equipments()->count())->toBe(1);
 });
 
 test('constancia pdf usa la lista de extintores de la orden', function () {
@@ -68,6 +86,26 @@ test('cobrar vincula la venta y rechaza un segundo cobro', function () {
     $this->actingAs($seller)->post(route('vendedor.ventas.store', ['current_team' => $seller->currentTeam]), $payload)->assertRedirect();
     expect($order->refresh()->sale_id)->not->toBeNull();
     $this->actingAs($seller)->from(route('vendedor.ventas.create', ['current_team' => $seller->currentTeam]))->post(route('vendedor.ventas.store', ['current_team' => $seller->currentTeam]), $payload)->assertSessionHasErrors('service_order_id');
+});
+
+test('cobrar avisa el adicional ya resuelto que se aprobo sin cotizacion', function () {
+    $seller = vendedorUser();
+    $order = ServiceOrder::factory()->create(['sede_id' => $seller->sede_id, 'estado' => 'listo_entrega']);
+    $deficiency = Deficiency::factory()->create(['service_order_id' => $order->id, 'componente' => 'Cilindro', 'estado' => 'resuelta']);
+    DeficiencyAuthorization::factory()->create(['deficiency_id' => $deficiency->id, 'importe' => 35]);
+
+    $this->actingAs($seller)->get(route('vendedor.ventas.create', ['current_team' => $seller->currentTeam, 'orden_servicio' => $order->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('venta.adicionales_sin_cotizacion', [['componente' => 'Cilindro', 'importe' => 35]]));
+});
+
+test('no se cobra una orden anulada', function () {
+    $seller = vendedorUser();
+    $order = ServiceOrder::factory()->create(['sede_id' => $seller->sede_id, 'estado' => 'anulada']);
+    $service = Service::factory()->create(['precio_venta' => 50]);
+    $payload = ['service_order_id' => $order->id, 'client_id' => $order->client_id, 'sede_id' => $seller->sede_id, 'fecha' => now()->toDateString(), 'destino' => 'local_cliente', 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'comprobante_tipo' => 'factura', 'items' => [['tipo_linea' => 'servicio', 'service_id' => $service->id, 'cantidad' => 1, 'precio_unitario' => 50]]];
+
+    $this->actingAs($seller)->post(route('vendedor.ventas.store', ['current_team' => $seller->currentTeam]), $payload)->assertSessionHasErrors('service_order_id');
+    expect($order->refresh()->sale_id)->toBeNull();
 });
 
 test('entrega avisa cuando la orden no esta cobrada', function () {

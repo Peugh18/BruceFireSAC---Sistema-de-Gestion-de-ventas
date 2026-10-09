@@ -137,6 +137,7 @@ type QuoteOption = {
 type VentaPrefill = {
     id: number | null;
     service_order_id?: number;
+    adicionales_sin_cotizacion?: { componente: string; importe: number }[];
     numero_interno: string;
     emitida?: boolean;
     comprobante?: string | null;
@@ -718,7 +719,9 @@ export default function NuevaVenta({
                                         ? `Editando ${venta.comprobante ?? venta.numero_interno}`
                                         : editando
                                           ? `Editando el borrador ${venta.numero_interno}`
-                                          : `Copia de ${venta.numero_interno}`}
+                                          : venta.service_order_id
+                                            ? `Cobro de la orden ${venta.numero_interno}`
+                                            : `Copia de ${venta.numero_interno}`}
                                 </p>
                                 <p className="text-muted-foreground">
                                     {editandoEmitida
@@ -727,8 +730,23 @@ export default function NuevaVenta({
                                             : 'Cambia cliente, comprobante, productos, precios o pago. Al guardar se vuelve a generar con el mismo número (si pasas de factura a boleta o al revés, toma el número de la otra serie).'
                                         : editando
                                           ? 'Cambia lo que haga falta y emite. La venta conserva su número.'
-                                          : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
+                                          : venta.service_order_id
+                                            ? 'Ya están el cliente y los servicios de la orden: revisa y emite.'
+                                            : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
                                 </p>
+                                {venta.adicionales_sin_cotizacion?.length ? (
+                                    <p className="text-warning-strong mt-1 font-semibold">
+                                        Agrega a mano los adicionales que el
+                                        cliente aprobó sin cotización:{' '}
+                                        {venta.adicionales_sin_cotizacion
+                                            .map(
+                                                (adicional) =>
+                                                    `${adicional.componente} (S/ ${adicional.importe.toFixed(2)})`,
+                                            )
+                                            .join(', ')}
+                                        .
+                                    </p>
+                                ) : null}
                             </div>
                         </Card>
                     ) : null}
@@ -917,6 +935,7 @@ export default function NuevaVenta({
                                 </p>
                                 <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                                     <Input
+                                        aria-label="Dirección del cliente"
                                         value={direccionNueva}
                                         onChange={(event) =>
                                             setDireccionNueva(
@@ -1077,6 +1096,7 @@ export default function NuevaVenta({
                                 </div>
                                 {form.data.medio_pago !== 'efectivo' ? (
                                     <Input
+                                        aria-label="Número de operación"
                                         value={form.data.numero_operacion}
                                         onChange={(event) =>
                                             form.setData(
@@ -1277,6 +1297,7 @@ export default function NuevaVenta({
                                                     ) : (
                                                         <div className="flex items-center gap-1">
                                                             <button
+                                                                aria-label="Disminuir cantidad"
                                                                 type="button"
                                                                 onClick={() =>
                                                                     actualizarLinea(
@@ -1296,6 +1317,7 @@ export default function NuevaVenta({
                                                                 <Minus className="size-3" />
                                                             </button>
                                                             <Input
+                                                                aria-label="Cantidad"
                                                                 type="number"
                                                                 min={1}
                                                                 value={
@@ -1323,6 +1345,7 @@ export default function NuevaVenta({
                                                                 className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
                                                             />
                                                             <button
+                                                                aria-label="Aumentar cantidad"
                                                                 type="button"
                                                                 onClick={() =>
                                                                     actualizarLinea(
@@ -1343,6 +1366,7 @@ export default function NuevaVenta({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Input
+                                                        aria-label="Precio unitario"
                                                         type="number"
                                                         min={0}
                                                         step="0.01"
@@ -1367,6 +1391,7 @@ export default function NuevaVenta({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Input
+                                                        aria-label="Descuento"
                                                         type="number"
                                                         min={0}
                                                         max={
@@ -1408,6 +1433,7 @@ export default function NuevaVenta({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Button
+                                                        aria-label="Eliminar línea"
                                                         type="button"
                                                         variant="outline"
                                                         size="icon"

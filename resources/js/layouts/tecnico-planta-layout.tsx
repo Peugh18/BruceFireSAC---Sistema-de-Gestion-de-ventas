@@ -114,6 +114,7 @@ export default function TecnicoPlantaLayout({
                         title="Cerrar sesión"
                     >
                         <LogOut className="size-3.5" />
+                        <span className="sr-only">Cerrar sesión</span>
                     </Link>
                 </div>
             </header>
@@ -125,6 +126,8 @@ export default function TecnicoPlantaLayout({
                     const isActive = currentPath.includes(item.activeMatch);
                     return (
                         <Link
+                            aria-current={isActive ? 'page' : undefined}
+                            aria-label={item.title}
                             key={item.href}
                             href={item.href}
                             className={`flex items-center gap-2 rounded-[8px] px-3.5 py-1.5 text-xs font-bold transition-all ${

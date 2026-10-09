@@ -175,6 +175,7 @@ export function AppNavSidebar({
                                 return (
                                     <Link
                                         key={item.title}
+                                        aria-label={item.title}
                                         href={item.href}
                                         prefetch
                                         onClick={onClose}

@@ -27,7 +27,7 @@ class DashboardController extends Controller
                 $q->where('departamento_tecnico', 'planta')
                     ->orWhereNull('departamento_tecnico');
             })
-            ->where('estado', '!=', 'cerrado')
+            ->whereNotIn('estado', ['cerrado', 'anulada'])
             ->with([
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento',
                 'sede:id,nombre,ubigeo', 'sede.ubicacion',
@@ -81,16 +81,16 @@ class DashboardController extends Controller
 
         // KPIs operativos de Planta (§5.4)
         $kpis = [
-            'pendientes_recepcion' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
+            'pendientes_recepcion' => ServiceOrder::accessibleToTechnician($request->user())->where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
                 ->where('estado', 'pendiente_recepcion')
                 ->count(),
-            'en_taller' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
+            'en_taller' => ServiceOrder::accessibleToTechnician($request->user())->where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
                 ->whereIn('estado', ['recibido_planta', 'en_proceso', 'autorizado'])
                 ->count(),
-            'esperando_autorizacion' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
+            'esperando_autorizacion' => ServiceOrder::accessibleToTechnician($request->user())->where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
                 ->where('estado', 'esperando_autorizacion')
                 ->count(),
-            'listas' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
+            'listas' => ServiceOrder::accessibleToTechnician($request->user())->where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
                 ->whereIn('estado', ['listo_certificado', 'listo_entrega', 'trabajo_terminado'])
                 ->count(),
         ];

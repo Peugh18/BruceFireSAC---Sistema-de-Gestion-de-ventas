@@ -65,6 +65,7 @@ export default function TwoFactorChallenge() {
                             {showRecoveryInput ? (
                                 <>
                                     <Input
+                                        aria-label="Código de recuperación"
                                         name="recovery_code"
                                         type="text"
                                         placeholder="Ingresa el código de recuperación"

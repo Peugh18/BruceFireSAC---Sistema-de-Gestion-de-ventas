@@ -511,6 +511,7 @@ export default function ArmarCertificados({
                                     Dirección que sale en el certificado
                                 </div>
                                 <Input
+                                    aria-label="Dirección"
                                     value={grupo.direccion}
                                     onChange={(e) =>
                                         actualizarGrupo(grupo.id, {
@@ -736,6 +737,7 @@ export default function ArmarCertificados({
                                                             className="grid gap-2 sm:grid-cols-[1fr_150px_150px_36px]"
                                                         >
                                                             <Input
+                                                                aria-label="Nombres y apellidos"
                                                                 value={
                                                                     participante.nombres
                                                                 }
@@ -768,6 +770,7 @@ export default function ArmarCertificados({
                                                                 }
                                                             />
                                                             <Input
+                                                                aria-label="DNI"
                                                                 value={
                                                                     participante.dni
                                                                 }
@@ -799,6 +802,7 @@ export default function ArmarCertificados({
                                                                 }
                                                             />
                                                             <Input
+                                                                aria-label="Cargo"
                                                                 value={
                                                                     participante.cargo
                                                                 }
@@ -830,6 +834,7 @@ export default function ArmarCertificados({
                                                                 }
                                                             />
                                                             <Button
+                                                                aria-label="Quitar participante"
                                                                 type="button"
                                                                 variant="outline"
                                                                 size="icon"
@@ -894,6 +899,7 @@ export default function ArmarCertificados({
                                                         <td className="px-2.5 py-1.5">
                                                             <div className="flex gap-1">
                                                                 <button
+                                                                    aria-label="Mover extintor arriba"
                                                                     type="button"
                                                                     onClick={() =>
                                                                         mover(
@@ -906,6 +912,7 @@ export default function ArmarCertificados({
                                                                     <ArrowUp className="size-3" />
                                                                 </button>
                                                                 <button
+                                                                    aria-label="Mover extintor abajo"
                                                                     type="button"
                                                                     onClick={() =>
                                                                         mover(
@@ -921,6 +928,7 @@ export default function ArmarCertificados({
                                                         </td>
                                                         <td className="px-2.5 py-1.5">
                                                             <Input
+                                                                aria-label="Número de extintor del cliente"
                                                                 value={
                                                                     fila.numero_cliente
                                                                 }

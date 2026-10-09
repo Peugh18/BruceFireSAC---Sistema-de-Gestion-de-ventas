@@ -29,6 +29,7 @@ use Greenter\Model\Summary\SummaryDetail;
 use Greenter\Model\Voided\Voided;
 use Greenter\Model\Voided\VoidedDetail;
 use Greenter\See;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 class GreenterService
@@ -145,12 +146,17 @@ class GreenterService
     {
         $certPath = config('billing.sunat.cert_path');
 
-        if (! is_string($certPath) || ! file_exists($certPath)) {
-            throw new RuntimeException('Certificado SUNAT no configurado (billing.sunat.cert_path).');
+        if (! is_string($certPath) || ! is_file($certPath) || ! is_readable($certPath)) {
+            throw ValidationException::withMessages(['sunat' => 'No se puede emitir: el certificado SUNAT no está configurado o no se puede leer. Solicita al Gerente revisar SUNAT_CERT_PATH.']);
+        }
+
+        $certificate = file_get_contents($certPath);
+        if (! is_string($certificate) || @openssl_x509_read($certificate) === false || @openssl_pkey_get_private($certificate) === false) {
+            throw ValidationException::withMessages(['sunat' => 'No se puede emitir: el certificado SUNAT debe contener un certificado válido y su clave privada en formato PEM. Solicita al Gerente revisar su configuración.']);
         }
 
         $see = new See;
-        $see->setCertificate(file_get_contents($certPath));
+        $see->setCertificate($certificate);
 
         $xmlSigned = $see->getXmlSigned($document);
 

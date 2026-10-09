@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Ml\CargaHistorico;
 use App\Services\SaludDelSistema;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Process;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -67,4 +68,11 @@ test('si Python falla, ml:reentrenar avisa y no toca el historial', function () 
         ->assertFailed();
 
     expect(MlEntrenamiento::query()->count())->toBe(0);
+});
+
+test('el arranque de desarrollo incluye el programador de tareas', function () {
+    $commands = collect(DevCommands::commands());
+
+    expect($commands->firstWhere('name', 'scheduler')['command'] ?? null)
+        ->toBe('php artisan schedule:work');
 });

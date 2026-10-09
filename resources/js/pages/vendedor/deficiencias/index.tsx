@@ -32,6 +32,11 @@ export type DeficiencyItem = {
     cliente: string;
     componente: string;
     condicion: string;
+    nota?: string | null;
+    accion_recomendada?: string | null;
+    repuesto_sugerido?: string | null;
+    equipo?: string | null;
+    foto_url?: string | null;
     estado: string;
     requiere_autorizacion: boolean;
     authorization?: {
@@ -232,6 +237,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                         const active = currentEstado === tab.id;
                         return (
                             <button
+                                aria-pressed={currentEstado === tab.id}
+                                aria-label={tab.label}
                                 key={tab.id}
                                 type="button"
                                 onClick={() => handleFilterChange(tab.id)}
@@ -303,9 +310,39 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                             </Badge>
                                         </div>
 
-                                        <div className="text-muted-foreground mt-1 text-[12.5px]">
-                                            {item.condicion}
+                                        <div className="text-foreground/80 mt-1 text-[12.5px]">
+                                            {item.nota ?? item.condicion}
+                                            {item.equipo
+                                                ? ` · ${item.equipo}`
+                                                : ''}
                                         </div>
+                                        {(item.accion_recomendada ||
+                                            item.repuesto_sugerido) && (
+                                            <div className="text-muted-foreground mt-1 text-[12px]">
+                                                {[
+                                                    item.accion_recomendada &&
+                                                        `Acción: ${item.accion_recomendada}`,
+                                                    item.repuesto_sugerido &&
+                                                        `Repuesto: ${item.repuesto_sugerido}`,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </div>
+                                        )}
+                                        {item.foto_url && (
+                                            <a
+                                                href={item.foto_url}
+                                                target="_blank"
+                                                rel="noopener"
+                                                className="mt-2 inline-block"
+                                            >
+                                                <img
+                                                    src={item.foto_url}
+                                                    alt={`Foto de la falla en ${item.componente}`}
+                                                    className="border-border size-20 rounded-md border object-cover"
+                                                />
+                                            </a>
+                                        )}
 
                                         <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-3 text-[11.5px]">
                                             <span>
@@ -350,6 +387,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                         {isPending ? (
                                             <>
                                                 <Button
+                                                    aria-label="Rechazar deficiencia"
                                                     type="button"
                                                     size="sm"
                                                     variant="outline"
@@ -366,6 +404,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                 </Button>
 
                                                 <Button
+                                                    aria-label="Aprobar deficiencia"
                                                     type="button"
                                                     size="sm"
                                                     onClick={() =>
@@ -505,6 +544,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                     : 'Persona que comunica el rechazo *'}
                             </Label>
                             <Input
+                                aria-label="Autorizado por"
                                 required
                                 value={authForm.data.autorizado_por}
                                 onChange={(e) =>
@@ -555,6 +595,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                     Fecha *
                                 </Label>
                                 <Input
+                                    aria-label="Fecha"
                                     type="date"
                                     required
                                     value={authForm.data.fecha}
@@ -652,6 +693,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 Observaciones / Sustento
                             </Label>
                             <Input
+                                aria-label="Observación"
                                 value={authForm.data.observacion}
                                 onChange={(e) =>
                                     authForm.setData(

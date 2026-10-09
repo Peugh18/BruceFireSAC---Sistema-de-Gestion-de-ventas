@@ -378,6 +378,7 @@ export default function NuevaCotizacion({
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <div className="flex items-center gap-1">
                                                         <button
+                                                            aria-label="Disminuir cantidad"
                                                             type="button"
                                                             onClick={() =>
                                                                 actualizar(
@@ -397,6 +398,7 @@ export default function NuevaCotizacion({
                                                             <Minus className="size-3" />
                                                         </button>
                                                         <Input
+                                                            aria-label="Cantidad"
                                                             type="number"
                                                             min={1}
                                                             value={
@@ -422,6 +424,7 @@ export default function NuevaCotizacion({
                                                             className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
                                                         />
                                                         <button
+                                                            aria-label="Aumentar cantidad"
                                                             type="button"
                                                             onClick={() =>
                                                                 actualizar(
@@ -441,6 +444,7 @@ export default function NuevaCotizacion({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Input
+                                                        aria-label="Precio unitario"
                                                         type="number"
                                                         min={0}
                                                         step="0.01"
@@ -465,6 +469,7 @@ export default function NuevaCotizacion({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Input
+                                                        aria-label="Descuento"
                                                         type="number"
                                                         min={0}
                                                         step="0.01"
@@ -494,6 +499,7 @@ export default function NuevaCotizacion({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Button
+                                                        aria-label="Eliminar línea"
                                                         type="button"
                                                         variant="outline"
                                                         size="icon"

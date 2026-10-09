@@ -196,6 +196,7 @@ export default function ConsultaIndex({
                         <div className="relative flex-1">
                             <ScanBarcode className="text-destructive-strong absolute top-1/2 left-3.5 size-5 -translate-y-1/2" />
                             <Input
+                                aria-label="Buscar"
                                 autoFocus
                                 type="text"
                                 placeholder="Escanee el sticker de código de barras o digite BF-EQ-XXXXXX / código..."
@@ -205,6 +206,7 @@ export default function ConsultaIndex({
                             />
                             {search && (
                                 <button
+                                    aria-label="Limpiar búsqueda"
                                     type="button"
                                     onClick={() => setSearch('')}
                                     className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"

@@ -80,7 +80,11 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
                     </header>
 
                     {/* Único contenedor de scroll vertical: sidebar y header quedan estáticos */}
-                    <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 pb-32 outline-none lg:px-8">
+                    <main
+                        tabIndex={0}
+                        aria-label="Contenido principal"
+                        className="focus-visible:outline-ring flex-1 overflow-y-auto overscroll-contain px-4 py-6 pb-32 outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] lg:px-8"
+                    >
                         <div className="w-full">{children}</div>
                     </main>
                 </div>

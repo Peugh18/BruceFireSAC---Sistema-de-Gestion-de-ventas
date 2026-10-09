@@ -321,6 +321,7 @@ export default function RecepcionesCreate({
                     </Link>
 
                     <Button
+                        aria-label="Confirmar Recepción"
                         type="submit"
                         disabled={processing || data.items.length === 0}
                         className="bg-primary hover:bg-primary/90 h-10 gap-2 px-6 text-xs font-bold text-white"
@@ -499,6 +500,7 @@ export default function RecepcionesCreate({
                             />
                         </div>
                         <Button
+                            aria-label="Agregar Ítem"
                             type="button"
                             onClick={addLine}
                             size="sm"
@@ -560,6 +562,7 @@ export default function RecepcionesCreate({
                                             </div>
 
                                             <button
+                                                aria-label="Eliminar línea"
                                                 type="button"
                                                 onClick={() =>
                                                     removeLine(index)
@@ -716,6 +719,7 @@ export default function RecepcionesCreate({
                                                                     )
                                                                 </Label>
                                                                 <Input
+                                                                    aria-label="Cantidad de cajas"
                                                                     type="number"
                                                                     min="1"
                                                                     placeholder="0"
@@ -979,6 +983,7 @@ export default function RecepcionesCreate({
                                                                             </td>
                                                                             <td className="px-2 py-1.5">
                                                                                 <Input
+                                                                                    aria-label="Capacidad"
                                                                                     placeholder="Ej. 6 kg"
                                                                                     value={
                                                                                         unit.capacidad
@@ -1001,6 +1006,7 @@ export default function RecepcionesCreate({
                                                                             </td>
                                                                             <td className="px-2 py-1.5">
                                                                                 <Input
+                                                                                    aria-label="Serie del fabricante"
                                                                                     placeholder="Serie del fabricante"
                                                                                     value={
                                                                                         unit.serie_fabricante
@@ -1022,6 +1028,7 @@ export default function RecepcionesCreate({
                                                                             </td>
                                                                             <td className="px-2 py-1.5">
                                                                                 <Input
+                                                                                    aria-label="Marca"
                                                                                     placeholder="Ej. BADGER"
                                                                                     value={
                                                                                         unit.marca
@@ -1044,6 +1051,7 @@ export default function RecepcionesCreate({
                                                                             </td>
                                                                             <td className="px-2 py-1.5">
                                                                                 <Input
+                                                                                    aria-label="Año de fabricación"
                                                                                     type="number"
                                                                                     min="1990"
                                                                                     max={

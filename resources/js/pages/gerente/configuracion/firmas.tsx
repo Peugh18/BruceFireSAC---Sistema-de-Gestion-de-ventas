@@ -499,6 +499,7 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
             >
                 <div>
                     <Input
+                        aria-label="Nombre"
                         placeholder="Nombre (ej. Ing. Juan Pérez)"
                         value={form.data.nombre}
                         onChange={(e) => form.setData('nombre', e.target.value)}
@@ -511,6 +512,7 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
                 </div>
                 <div>
                     <Input
+                        aria-label="Cargo"
                         placeholder="Cargo (ej. Ingeniero)"
                         value={form.data.cargo}
                         onChange={(e) => form.setData('cargo', e.target.value)}
@@ -522,6 +524,7 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
                     ) : null}
                 </div>
                 <Input
+                    aria-label="CIP"
                     placeholder="CIP (opcional)"
                     value={form.data.cip}
                     onChange={(e) => form.setData('cip', e.target.value)}

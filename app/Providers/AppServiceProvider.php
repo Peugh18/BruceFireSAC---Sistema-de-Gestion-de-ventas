@@ -9,6 +9,7 @@ use App\Observers\SedeObserver;
 use App\Services\Billing\GreApiClient;
 use App\Services\Billing\GreenterSunatClient;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        DevCommands::artisan('schedule:work', 'scheduler');
 
         // Proxies del hosting desde el .env (X4); se lee de config para que
         // funcione también con `config:cache`.

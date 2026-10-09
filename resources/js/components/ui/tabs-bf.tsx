@@ -149,6 +149,10 @@ export function TabsBf<T extends string = string>({
                     role: 'tab' as const,
                     id: `${idBase}-tab-${pestana.id}`,
                     'aria-selected': esActiva,
+                    'aria-label':
+                        typeof pestana.titulo === 'string'
+                            ? pestana.titulo
+                            : undefined,
                     tabIndex: esActiva ? 0 : -1,
                     className: clases,
                     ref: (nodo: HTMLElement | null) => {

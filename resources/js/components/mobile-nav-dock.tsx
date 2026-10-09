@@ -52,6 +52,7 @@ export function MobileNavDock({
 
                         return (
                             <Link
+                                aria-label={item.title}
                                 key={item.href}
                                 href={item.href}
                                 prefetch

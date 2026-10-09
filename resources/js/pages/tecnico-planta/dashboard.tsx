@@ -296,6 +296,7 @@ export default function TecnicoPlantaDashboard({
                 <form onSubmit={handleSearch} className="relative">
                     <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
                     <Input
+                        aria-label="Buscar"
                         type="text"
                         placeholder="Buscar por código OS o nombre de cliente..."
                         value={search}
@@ -317,6 +318,7 @@ export default function TecnicoPlantaDashboard({
                             className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
                             <X className="size-4" />
+                            <span className="sr-only">Limpiar búsqueda</span>
                         </button>
                     )}
                 </form>
@@ -336,6 +338,7 @@ export default function TecnicoPlantaDashboard({
                         <button
                             key={t.id}
                             type="button"
+                            aria-pressed={currentTab === t.id}
                             onClick={() => changeTab(t.id)}
                             className={`rounded-full px-3 py-1 text-[11px] font-bold whitespace-nowrap transition-all ${
                                 currentTab === t.id

@@ -512,6 +512,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                             <td className="border-border border-b px-2.5 py-[13px]">
                                                 <div className="flex gap-1.5">
                                                     <Button
+                                                        aria-label="Ver venta"
                                                         asChild
                                                         variant="outline"
                                                         size="icon"
@@ -530,6 +531,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                     </Button>
                                                     {sale.editable ? (
                                                         <Button
+                                                            aria-label="Editar venta"
                                                             asChild
                                                             variant="outline"
                                                             size="icon"
@@ -552,6 +554,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                           'confirmada' &&
                                                       sale.sunat_estado ? (
                                                         <Button
+                                                            aria-label="Corregir con nota de crédito"
                                                             asChild
                                                             variant="outline"
                                                             size="icon"
