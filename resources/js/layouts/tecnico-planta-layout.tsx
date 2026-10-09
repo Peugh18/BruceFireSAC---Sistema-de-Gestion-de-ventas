@@ -114,6 +114,7 @@ export default function TecnicoPlantaLayout({
                         title="Cerrar sesión"
                     >
                         <LogOut className="size-3.5" />
+                        <span className="sr-only">Cerrar sesión</span>
                     </Link>
                 </div>
             </header>

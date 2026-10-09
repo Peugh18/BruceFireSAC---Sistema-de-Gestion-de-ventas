@@ -22,6 +22,7 @@ use App\Services\Cobranzas\CarteraDeCobranzas;
 use App\Services\Ml\RetentionModel;
 use App\Services\SaludDelSistema;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -40,24 +41,12 @@ class DashboardController extends Controller
 
         // Abrir el Inicio no cambia datos: la tarea nocturna marca las cuotas
         // vencidas; aquí se calcula por fecha. Solo cuentan las ventas
-        // emitidas (ni borradores ni anuladas), igual que en el Vendedor.
+        // confirmadas. Los importes fiscales se ajustan por las NC aceptadas.
 
         // 1. Tarjetas KPI
-        $ventasDia = (float) Sale::query()
-            ->whereDate('fecha', $hoy)
-            ->where('estado', 'confirmada')
-            ->sum('total');
-
-        $ventasMes = (float) Sale::query()
-            ->whereBetween('fecha', [$inicioMes, $finMes])
-            ->where('estado', 'confirmada')
-            ->sum('total');
-
-        $facturacionMes = (float) Sale::query()
-            ->whereIn('comprobante_tipo', ['factura', 'boleta'])
-            ->whereBetween('fecha', [$inicioMes, $finMes])
-            ->where('estado', 'confirmada')
-            ->sum('total');
+        $ventasDia = $this->ventasNetas($hoy, $hoy->copy()->endOfDay());
+        $ventasMes = $this->ventasNetas($inicioMes, $finMes);
+        $facturacionMes = $this->ventasNetas($inicioMes, $finMes, soloFacturadas: true);
 
         // Cobrado en el mes menos lo devuelto a clientes.
         $montoCobrado = (float) SalePayment::query()
@@ -110,10 +99,7 @@ class DashboardController extends Controller
             $inicioTarget = $mesTarget->copy()->startOfMonth();
             $finTarget = $mesTarget->copy()->endOfMonth();
 
-            $montoMes = (float) Sale::query()
-                ->whereBetween('fecha', [$inicioTarget, $finTarget])
-                ->where('estado', 'confirmada')
-                ->sum('total');
+            $montoMes = $this->ventasNetas($inicioTarget, $finTarget);
 
             $ventasMensuales[] = [
                 'mes' => $mesTarget->translatedFormat('M Y'),
@@ -331,5 +317,27 @@ class DashboardController extends Controller
             'cotizaciones_medidas' => (int) ($cotizaciones->medidas ?? 0),
             'clientes_recuperados' => $recuperados,
         ];
+    }
+
+    private function ventasNetas(CarbonInterface $desde, CarbonInterface $hasta, bool $soloFacturadas = false): float
+    {
+        // Una anulación con NC conserva la venta fiscal original: se resta
+        // la nota en su mes de emisión, sin descontarla dos veces.
+        $ventas = Sale::query()
+            ->where(fn ($query) => $query->where('estado', 'confirmada')
+                ->orWhere(fn (Builder $anuladas) => $anuladas->where('estado', 'anulada')
+                    ->whereHas('electronicDocuments', fn ($notas) => $notas
+                        ->where('tipo', 'nota_credito')->whereIn('sunat_estado', ['aceptado', 'observado']))))
+            ->when($soloFacturadas, fn ($query) => $query->whereIn('comprobante_tipo', ['factura', 'boleta']));
+
+        $bruto = (float) (clone $ventas)->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])->sum('total');
+        $credito = (float) ElectronicDocument::query()
+            ->whereIn('sale_id', (clone $ventas)->select('id'))
+            ->where('tipo', 'nota_credito')
+            ->whereIn('sunat_estado', ['aceptado', 'observado'])
+            ->whereBetween('fecha_emision', [$desde->copy()->startOfDay(), $hasta->copy()->endOfDay()])
+            ->sum('importe');
+
+        return round($bruto - $credito, 2);
     }
 }

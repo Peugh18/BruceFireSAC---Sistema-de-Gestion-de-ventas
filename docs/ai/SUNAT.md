@@ -135,8 +135,8 @@ No se envía nada a producción hasta cumplir **todo** esto:
 | Respuesta    | Un **ticket**. Se consulta en `GET .../comprobantes/envios/{ticket}`: **98** en proceso (reintentar), **0** aceptada (trae el CDR), **99** rechazada.                             |
 | Constancia   | Representación impresa o **QR**, que acompaña el traslado                                                                                                                         |
 
-- **Greenter:** usamos `greenter/lite` **v4.3.1 (2021)**, que **no trae la GRE por API REST**. La versión actual es la **v5.3.0 (2026)** y la GRE se envía con el paquete **`greenter/gre-api`**. Hay que actualizar Greenter (de v4 a v5) y agregar ese paquete: **requiere aprobación**, porque cambia dependencias, y obliga a correr toda la suite de facturación otra vez.
-- **Pruebas:** SUNAT no publica un ambiente beta claro para la GRE por API. Hay que confirmar si Greenter trae credenciales de prueba o si se prueba con guías reales de bajo riesgo. **Verificar antes de construir.**
+- **Greenter (comprobado 09/10/2026):** instalados `greenter/lite` v5.3.0 y `greenter/gre-api` v1.0.2. `GreApiClient` usa OAuth2; no hace falta agregar dependencias. En la configuración local faltan `SUNAT_GRE_CLIENT_ID` y `SUNAT_GRE_CLIENT_SECRET`. Se comprobó su presencia sin imprimir valores.
+- **Pruebas (09/10/2026):** el proyecto configura GRE con `gre-test.nubefact.com` y facturación con `SUNAT_BETA=true`. Mantener solo pruebas; no emitir guías de producción en esta etapa. La falta de credenciales impide validar un envío GRE real.
 
 ### 5.4 Diseño propuesto dentro del sistema
 
@@ -171,3 +171,10 @@ No se envía nada a producción hasta cumplir **todo** esto:
 - [Catálogo 20, motivos de traslado (anexo 1 de la R.S. 000240-2024)](https://www.sunat.gob.pe/legislacion/superin/2024/anexo1-000240-2024.pdf) · [Preguntas frecuentes GRE (SUNAT)](https://orientacion.sunat.gob.pe/sites/default/files/inline-files/PreguntasFrecuentesGREAspectosGenerales1012.pdf) · [GRE remitente (SUNAT)](https://orientacion.sunat.gob.pe/02-guia-de-remision-remitente)
 - [GRE por API REST: token, envío y ticket](https://verifac.pe/blog/gre-api-rest-ticket-cdr-antes-del-traslado/) · [Greenter gre-api](https://github.com/thegreenter/gre-api) · [Ejemplo de Greenter: traslado entre establecimientos](https://github.com/thegreenter/demo/blob/master/examples/guia-misma-empresa.php)
 - [Taller que recoge bienes: emite la guía (informe SUNAT)](https://www.sunat.gob.pe/legislacion/oficios/2004/oficios/i0612004.htm) · [Excepción M1 y L (La Cámara)](https://lacamara.pe/nuevos-requisitos-para-la-guia-de-remision-electronica/)
+
+## Verificación del 09/10/2026
+
+- La [R.S.N.A.T.I. 000031-2026](https://cpe.sunat.gob.pe/node/119) prorrogó la discrecionalidad GRE remitente hasta el 31/08/2026 y GRE transportista hasta el 28/02/2027. Corregir el traspaso que indicaba sanciones generales desde el 01/07/2026; no confundir discrecionalidad con eliminación de la obligación.
+- `GuiaRemisionService` registra aceptación cuando la respuesta incluye CDR; `DispatchGuide::estaListaParaTrasladar()` solo consulta el estado. `TransferInventory::handle()` mueve stock a tránsito sin exigir GRE y `confirmar()` tampoco la exige. El bloqueo de despacho por CDR está pendiente; los estados visuales no lo prueban. No se localizó una ruta de impresión GRE que habilite ese despacho.
+- Etiquetas: el PDF existente es un sticker de identificación de 50 × 50 mm, no acredita rotulado de mantenimiento. La [NTP 833.030:2012, copia consultada](https://servilex.pe/documents/seguridad/833.030.pdf), §4.1–4.7, contempla A7/A8, información en negro, collar y tarjeta de inspección. Falta cotejar la edición vigente autorizada y los rótulos físicos del dueño; no se modifica el sticker ni se agregan códigos.
+- Prueba hidrostática: se mantiene el intervalo actual de cinco años. Decisión pendiente del dueño: confirmar norma, edición, agente y tipo de cilindro aplicables antes de cambiarlo. La comparación con NFPA del traspaso no se toma como regla verificada.

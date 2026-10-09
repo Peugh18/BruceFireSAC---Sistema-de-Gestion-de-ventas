@@ -368,6 +368,10 @@ export default function AjustesIndex({
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             type="button"
+                                            aria-pressed={
+                                                data.tipo_ajuste ===
+                                                'decremento'
+                                            }
                                             onClick={() =>
                                                 setData(
                                                     'tipo_ajuste',
@@ -387,6 +391,10 @@ export default function AjustesIndex({
 
                                         <button
                                             type="button"
+                                            aria-pressed={
+                                                data.tipo_ajuste ===
+                                                'incremento'
+                                            }
                                             onClick={() =>
                                                 setData(
                                                     'tipo_ajuste',

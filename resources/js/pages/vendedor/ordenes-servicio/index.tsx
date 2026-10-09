@@ -249,6 +249,7 @@ export default function ServiceOrdersIndex({
                             <button
                                 key={tab.id}
                                 type="button"
+                                aria-pressed={active}
                                 onClick={() => handleFilterChange(tab.id)}
                                 className={`cursor-pointer rounded-[7px] px-3.5 py-1.5 text-xs font-bold transition-all ${
                                     active

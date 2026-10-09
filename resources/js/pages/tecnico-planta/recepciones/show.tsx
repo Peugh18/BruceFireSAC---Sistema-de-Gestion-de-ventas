@@ -275,6 +275,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                 rel="noreferrer"
                                 className="flex flex-shrink-0 items-center justify-center rounded-xl bg-neutral-100 p-2.5 text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200"
                                 title="Imprimir stickers 2x2"
+                                aria-label="Imprimir stickers 2x2"
                             >
                                 <Printer className="h-4 w-4" />
                             </a>

@@ -840,8 +840,9 @@ export default function ServiceOrderShow({
                                                 </div>
                                                 <div className="text-foreground/80 mt-1">
                                                     {evt.payload?.mensaje ||
-                                                        (evt.payload
-                                                            ?.numero_serie
+                                                        (typeof evt.payload
+                                                            ?.numero_serie ===
+                                                        'string'
                                                             ? `Extintor ${evt.payload.numero_serie}`
                                                             : null) ||
                                                         (evt.payload?.resultado

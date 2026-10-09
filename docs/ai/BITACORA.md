@@ -685,6 +685,18 @@
 - Sustituye v1.1 (41 páginas) y su historial restrictivo. Pendiente: confirmar cumplimiento semanal al09/10, registrar horas/costos/EV/AC, presentación, validación y firmas; actualizar informe y Scrum con resultados reales. Demo pendiente de registro.
 
 ## 2026-10-09 — Auditoría E2E por roles (navegador, servidor :8010)
+
 - Recorrido real con los 5 usuarios: producto/servicio, recepción y stickers, venta boleta aceptada en SUNAT beta, NC pedida por vendedor → aprobada por Gerente (BC01-1 aceptada), orden de planta completa (recepción, checklist con foto obligatoria, deficiencia, autorización, resolución, terminado), recojo de campo con firma, ajuste/baja (doble baja bloqueada), aislamiento por rol (403 correctos).
 - Corregido (commit b79f7de): cobro de orden anulada, adicional resuelto no cobrado, aviso de adicionales sin cotización, extintor en dos órdenes abiertas, anuladas y KPIs ajenos en paneles de técnicos, detalle/foto de deficiencia al vendedor, tipo de servicio vacío, rótulos de bitácora, fecha cruda en custodia, botón "Tomar orden" de otra área.
 - Pendiente: KPIs del Gerente no restan notas de crédito; botones/tabs sin nombre accesible; traslado sin mensaje cuando no hay otro almacén; certificado mal configurado da 500; títulos de eventos sin tildes; scheduler sin correr.
+
+## 2026-10-09 — Continuación GPT: scheduler, KPI y configuración SUNAT
+
+- Repo real en Documents; carpeta Desktop configurada en el chat inexistente. Rama `fix/correcciones-auditoria-completa`; `CONTEXTO_GPT.md` preexistía sin seguimiento. Sin commit ni push.
+- MySQL local apagado: iniciado con configuración de Laragon. `composer run dev` omitía scheduler: agregado `DevCommands::artisan('schedule:work', 'scheduler')`; servidor 8000/cola/Vite iniciados. Latido activo y ejecución automática de envío diferido observados; envío manual 0/0 pendientes y respaldo real nuevo.
+- KPI del Gerente y gráfico mensual restan NC aceptadas/observadas por fecha de emisión, conservando bruto fiscal de anulaciones con NC para no descontar dos veces. Regresión incluye nota sobre venta de mes anterior y anulación total.
+- `GreenterService::sign()` devuelve validación clara ante ruta ausente/ilegible o PEM inválido, sin exponer claves. Tildes de eventos corregidas. Nombres accesibles en técnicos, estado de filtros/ajustes y aviso de destinos vacíos; inspección de código, sin acreditar auditoría WCAG integral.
+- Verificado `greenter/lite` 5.3.0 y `greenter/gre-api` 1.0.2/OAuth2; ambas credenciales GRE locales ausentes, comprobadas sin mostrar secretos. Solo beta. `SUNAT.md` actualizado con prórroga remitente 31/08/2026/transportista 28/02/2027, fuente SUNAT oficial.
+- Brechas pendientes: traslado registra tránsito/recepción sin exigir GRE aceptada; rotulado de servicio/collar/tarjeta no acreditados (sticker de identificación 50×50 mm). NTP 833.030 consultada en edición 2012; confirmar vigente/muestras del dueño. Mantener cinco años de PH hasta decisión del dueño; QR/barras intactos.
+- Pruebas: 8 iniciales pasaron; ampliación 34/35 detectó aviso OpenSSL con archivo inválido, corregido y sus 2 pruebas pasaron. Primera ejecución falló al preparar base testing; corrida posterior migró correctamente. Pint y formato TS focalizados aplicados.
+- CI final aprobado: 877/877 pruebas, 4,670 aserciones (433.9 s en Pest); formato/lint/TypeScript/Pint/PHPStan aprobados. Se corrigieron formato Markdown, comprobación de tipo de serie y tipado Eloquent; sin supresiones ni línea base nueva. Primera corrida de 12 trabajadores interrumpida por preparación lenta; repetida con 2 mediante ajuste temporal, `composer.json` restaurado byte por byte. Diff revisado en seguridad/complejidad; sin cambio de permisos ni secretos expuestos.

@@ -97,6 +97,13 @@ export default function Transfers({
                         </select>
                     </div>
                 ) : null}
+                {destinations.length === 0 && (
+                    <p role="status" className="text-muted-foreground text-sm">
+                        No hay otro almacén activo de destino. Solicita al
+                        Gerente activar una sede de tipo almacén o mixta para
+                        trasladar.
+                    </p>
+                )}
                 <form
                     className="space-y-4"
                     onSubmit={(event) => {
@@ -209,7 +216,10 @@ export default function Transfers({
                             {error}
                         </p>
                     ))}
-                    <Button type="submit" disabled={form.processing}>
+                    <Button
+                        type="submit"
+                        disabled={form.processing || destinations.length === 0}
+                    >
                         Confirmar traslado
                     </Button>
                 </form>

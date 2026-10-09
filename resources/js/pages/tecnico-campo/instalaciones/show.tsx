@@ -546,6 +546,9 @@ export default function InstalacionShow({
                                                 className="rounded p-1 text-red-500 hover:bg-red-50"
                                             >
                                                 <Trash2 className="size-3.5" />
+                                                <span className="sr-only">
+                                                    Quitar extintor
+                                                </span>
                                             </button>
                                         )}
                                 </div>

@@ -1,7 +1,10 @@
 <?php
 
+use App\Services\Billing\GreenterService;
 use App\Services\Billing\GreenterSunatClient;
+use Greenter\Model\Sale\Invoice;
 use Greenter\Ws\Services\SunatEndpoints;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Lee lo que el SoapClient tiene configurado, sin conectarse a SUNAT.
@@ -36,4 +39,26 @@ test('fuera de beta el cliente SOAP apunta al servidor de producción de SUNAT',
     config(['billing.sunat.beta' => false]);
 
     expect(configuracionSoap((new GreenterSunatClient)->soapClient())['location'])->toBe(SunatEndpoints::FE_PRODUCCION);
+});
+
+test('un certificado SUNAT ausente muestra una validacion comprensible', function () {
+    config(['billing.sunat.cert_path' => storage_path('certificado-inexistente.pem')]);
+
+    try {
+        app(GreenterService::class)->sign(new Invoice);
+        $this->fail('Debia informar el problema de configuracion.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['sunat'][0])->toContain('certificado SUNAT');
+    }
+});
+
+test('un archivo que no es certificado SUNAT muestra una validacion comprensible', function () {
+    config(['billing.sunat.cert_path' => __FILE__]);
+
+    try {
+        app(GreenterService::class)->sign(new Invoice);
+        $this->fail('Debia informar el problema de configuracion.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['sunat'][0])->toContain('certificado SUNAT');
+    }
 });

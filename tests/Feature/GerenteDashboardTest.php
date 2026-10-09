@@ -1,10 +1,12 @@
 <?php
 
 use App\Models\Client;
+use App\Models\ElectronicDocument;
 use App\Models\Installment;
 use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Models\User;
+use Carbon\Carbon;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -101,4 +103,22 @@ test('dashboard de gerente calcula metricas con datos reales', function () {
             ->where('metrics.montoCobrado', 1000)
             ->where('metrics.vencidoPorCobrar', 500)
         );
+});
+
+test('gerente descuenta solo las notas aceptadas del periodo en ventas y facturacion', function () {
+    $this->travelTo(Carbon::parse('2026-10-09 12:00:00'));
+    $user = createGerenteUserForDashboardTest();
+    $sale = Sale::factory()->create(['fecha' => today(), 'total' => 1500, 'comprobante_tipo' => 'factura', 'estado' => 'confirmada']);
+    $previousSale = Sale::factory()->create(['fecha' => '2026-09-10', 'total' => 1000, 'comprobante_tipo' => 'boleta', 'estado' => 'confirmada']);
+    $cancelled = Sale::factory()->create(['fecha' => today(), 'total' => 100, 'comprobante_tipo' => 'boleta', 'estado' => 'anulada']);
+    ElectronicDocument::factory()->create(['sale_id' => $cancelled->id, 'tipo' => 'nota_credito', 'sunat_estado' => 'aceptado', 'importe' => 100, 'fecha_emision' => today()]);
+    foreach ([[$sale, 'aceptado', 200, '2026-10-09'], [$sale, 'observado', 100, '2026-10-09'], [$sale, 'rechazado', 500, '2026-10-09'], [$sale, 'pendiente', 500, '2026-10-09'], [$previousSale, 'aceptado', 50, '2026-10-08']] as [$venta, $estado, $importe, $fecha]) {
+        ElectronicDocument::factory()->create(['sale_id' => $venta->id, 'tipo' => 'nota_credito', 'sunat_estado' => $estado, 'importe' => $importe, 'fecha_emision' => $fecha]);
+    }
+    $this->actingAs($user)->get(route('gerente.dashboard', ['current_team' => $user->currentTeam]))
+        ->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('metrics.ventasDia', 1200)
+        ->where('metrics.ventasMes', 1150)
+        ->where('metrics.facturacionMes', 1150)
+        ->where('charts.ventasMensuales.5.monto', 1150));
 });
