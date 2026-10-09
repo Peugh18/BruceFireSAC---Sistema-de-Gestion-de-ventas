@@ -1,21 +1,27 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+@php
+    // El tema elegido por el usuario viaja en la cookie 'appearance'. Hay que
+    // leerla aquí: si no, la plantilla siempre piensa que estás en 'system' y
+    // al recargar la página el tema oscuro se pierde.
+    $appearance = request()->cookie('appearance') ?: 'system';
+@endphp
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => $appearance === 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        {{-- Se aplica el tema ANTES del primer pintado para que no parpadee.
+             Se lee la cookie (lo que eligió el usuario) y, si es 'system', la
+             preferencia del sistema operativo. --}}
         <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
             (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
+                const appearance = '{{ $appearance }}';
 
-                if (appearance === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const esOscuro = appearance === 'dark'
+                    || (appearance === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-                    if (prefersDark) {
-                        document.documentElement.classList.add('dark');
-                    }
-                }
+                document.documentElement.classList.toggle('dark', esOscuro);
+                document.documentElement.style.colorScheme = esOscuro ? 'dark' : 'light';
             })();
         </script>
 
