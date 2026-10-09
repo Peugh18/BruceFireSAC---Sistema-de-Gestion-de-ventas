@@ -50,6 +50,7 @@ type PaymentCondition = 'contado' | 'credito';
 type DocumentType = 'factura' | 'boleta' | 'nota_venta';
 
 type SaleLine = {
+    deficiency_id?: number | null;
     key: string;
     tipo_linea: LineType;
     numero_serie?: string;
@@ -106,6 +107,7 @@ type SaleFormData = {
 };
 
 type QuoteLine = {
+    deficiency_id?: number | null;
     tipo: 'product' | 'service';
     product_id: number | null;
     service_id: number | null;
@@ -137,6 +139,7 @@ type QuoteOption = {
 type VentaPrefill = {
     id: number | null;
     service_order_id?: number;
+    quote_id?: number | null;
     adicionales_sin_cotizacion?: { componente: string; importe: number }[];
     numero_interno: string;
     emitida?: boolean;
@@ -287,7 +290,7 @@ export default function NuevaVenta({
         service_order_id: venta?.service_order_id ?? '',
         client_id: clienteInicial?.id ?? '',
         sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
-        quote_id: quote?.id ?? '',
+        quote_id: quote?.id ?? venta?.quote_id ?? '',
         vehicle_id: quote?.vehicle_id ?? '',
         iniciado_at: new Date().toISOString(),
         fecha: venta?.fecha ?? today(),
@@ -311,6 +314,7 @@ export default function NuevaVenta({
                   .filter((line) => !line.serializado)
                   .map((line) => ({
                       key: nuevaClave(),
+                      deficiency_id: line.deficiency_id,
                       tipo_linea:
                           line.tipo === 'service' ? 'servicio' : 'producto',
                       product_id: line.product_id ?? undefined,
@@ -644,6 +648,7 @@ export default function NuevaVenta({
                     ? data.numero_operacion
                     : '',
             items: data.items.map((l) => ({
+                deficiency_id: l.deficiency_id ?? null,
                 tipo_linea: l.tipo_linea,
                 numero_serie: l.numero_serie ?? null,
                 product_id: l.product_id ?? null,
@@ -1014,8 +1019,8 @@ export default function NuevaVenta({
                                 </div>
                                 <p className="text-muted-foreground mt-1 text-[11px]">
                                     {form.data.destino === 'vehiculo'
-                                        ? 'Certificados: Operatividad y Garantía + Prueba Hidrostática.'
-                                        : 'Certificados: Operatividad y Garantía + Capacitación.'}
+                                        ? 'Operatividad y Garantía. Prueba Hidrostática al registrar sus datos técnicos.'
+                                        : 'Operatividad y Garantía. Capacitación al registrar sus datos.'}
                                 </p>
                             </div>
                             <div>

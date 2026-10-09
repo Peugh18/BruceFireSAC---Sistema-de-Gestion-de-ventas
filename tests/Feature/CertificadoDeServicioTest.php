@@ -4,6 +4,8 @@ use App\Actions\Certificates\EmitirCertificadoDeServicio;
 use App\Models\CertificateType;
 use App\Models\Client;
 use App\Models\Sale;
+use App\Models\SaleItem;
+use App\Models\Service;
 use App\Models\User;
 use App\Services\Certificates\CertificateDocumentData;
 use App\Services\Certificates\CertificatePdfService;
@@ -29,11 +31,15 @@ if (! function_exists('vendedorUser')) {
 
 function ventaDeServicio(?User $vendedor = null): Sale
 {
-    return Sale::factory()->create([
+    $sale = Sale::factory()->create([
         'client_id' => Client::factory()->create()->id,
         'estado' => 'confirmada',
         'vendedor_id' => $vendedor?->id ?? User::factory()->create()->id,
     ]);
+    $service = Service::factory()->create(['certificate_type_id' => CertificateType::where('codigo', 'luces_emergencia')->firstOrFail()->id]);
+    SaleItem::factory()->forService($service)->create(['sale_id' => $sale->id]);
+
+    return $sale;
 }
 
 function filaDeLuz(array $cambios = []): array

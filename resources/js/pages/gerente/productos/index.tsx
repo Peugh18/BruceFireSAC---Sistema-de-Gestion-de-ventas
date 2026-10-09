@@ -505,7 +505,9 @@ export default function ProductosIndex() {
                                                     )}
                                                 </td>
                                                 <td className="text-foreground/80 px-4 py-3 font-mono">
-                                                    {p.unidad_medida}
+                                                    {p.unidad_medida === 'NIU'
+                                                        ? 'Unidad'
+                                                        : p.unidad_medida}
                                                 </td>
                                                 <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                     {formatCurrency(

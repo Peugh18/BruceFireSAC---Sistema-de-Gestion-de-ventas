@@ -35,8 +35,10 @@ class DeficiencyController extends Controller
                 $q->where('departamento_tecnico', 'planta')
                     ->orWhereNull('departamento_tecnico');
             })
-            ->whereHas('serviceOrder', fn ($query) => $query->accessibleToTechnician($request->user()))
+            ->whereHas('serviceOrder', fn ($query) => $query->accessibleToTechnician($request->user())->where('estado', '!=', 'anulada'))
             ->latest('id');
+
+        $baseCountsQuery = clone $query;
 
         if ($estado !== 'todas' && $estado !== '') {
             $query->where('estado', $estado);
@@ -82,11 +84,11 @@ class DeficiencyController extends Controller
 
         // Contadores por estado
         $counts = [
-            'todas' => Deficiency::whereHas('serviceOrder', fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))->count(),
-            'esperando_autorizacion' => Deficiency::whereHas('serviceOrder', fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))->where('estado', 'esperando_autorizacion')->count(),
-            'autorizada' => Deficiency::whereHas('serviceOrder', fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))->where('estado', 'autorizada')->count(),
-            'rechazada' => Deficiency::whereHas('serviceOrder', fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))->where('estado', 'rechazada')->count(),
-            'resuelta' => Deficiency::whereHas('serviceOrder', fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))->where('estado', 'resuelta')->count(),
+            'todas' => (clone $baseCountsQuery)->count(),
+            'esperando_autorizacion' => (clone $baseCountsQuery)->where('estado', 'esperando_autorizacion')->count(),
+            'autorizada' => (clone $baseCountsQuery)->where('estado', 'autorizada')->count(),
+            'rechazada' => (clone $baseCountsQuery)->where('estado', 'rechazada')->count(),
+            'resuelta' => (clone $baseCountsQuery)->where('estado', 'resuelta')->count(),
         ];
 
         return Inertia::render('tecnico-planta/deficiencias/index', [

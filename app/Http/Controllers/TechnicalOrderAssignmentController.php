@@ -7,6 +7,7 @@ use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TechnicalOrderAssignmentController extends Controller
 {
@@ -18,7 +19,10 @@ class TechnicalOrderAssignmentController extends Controller
             // primero.
             $orden = ServiceOrder::query()->lockForUpdate()->findOrFail($service_order->id);
 
-            abort_if($orden->tecnico_id !== null && $orden->tecnico_id !== $request->user()->id, 404);
+            abort_unless($orden->atendiblePor($request->user()), 404);
+            if (in_array($orden->estado, ServiceOrder::ESTADOS_CERRADOS_AL_TALLER, true)) {
+                throw ValidationException::withMessages(['orden' => 'No puedes tomar una orden cerrada al taller o anulada.']);
+            }
 
             // Una orden sin área asignada la puede tomar cualquier técnico (las
             // dos pantallas la muestran).

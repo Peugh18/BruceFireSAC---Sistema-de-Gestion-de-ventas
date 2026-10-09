@@ -3,10 +3,12 @@
 namespace App\Actions\Sales;
 
 use App\Models\Certificate;
+use App\Models\Deficiency;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\QuoteItem;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Sede;
@@ -37,6 +39,8 @@ class ProcessSaleItem
         }
 
         return DB::transaction(function () use ($sale, $itemData) {
+            $this->validarAdicional($sale, $itemData);
+
             return match ($itemData['tipo_linea']) {
                 'recarga_servicio' => $this->processServiceRecharge($sale, $itemData),
                 'producto' => $this->processProducto($sale, $itemData),
@@ -73,18 +77,21 @@ class ProcessSaleItem
 
         // Sin dejar el almacén en negativo; si lleva lote, sale lo que vence
         // primero y nunca un lote vencido.
-        app(StockPorLote::class)->sacar($product, $almacenId, $cantidad, [
-            'tipo' => 'salida_venta',
-            'referencia_type' => $sale->getMorphClass(),
-            'referencia_id' => $sale->id,
-            'user_id' => $sale->vendedor_id,
-            'observacion' => "Venta {$sale->numero_interno}",
-        ], campo: 'items', verbo: 'vender');
+        if (empty($itemData['deficiency_id'])) {
+            app(StockPorLote::class)->sacar($product, $almacenId, $cantidad, [
+                'tipo' => 'salida_venta',
+                'referencia_type' => $sale->getMorphClass(),
+                'referencia_id' => $sale->id,
+                'user_id' => $sale->vendedor_id,
+                'observacion' => "Venta {$sale->numero_interno}",
+            ], campo: 'items', verbo: 'vender');
+        }
 
         return $sale->items()->create([
             'product_id' => $product->id,
             'tipo_afectacion_igv' => AfectacionIgv::codigo($product),
             'tipo_linea' => 'producto',
+            'deficiency_id' => $itemData['deficiency_id'] ?? null,
             'cantidad' => $cantidad,
             'precio_unitario' => $itemData['precio_unitario'],
             'descuento' => $itemData['descuento'] ?? 0,
@@ -106,6 +113,7 @@ class ProcessSaleItem
             'service_id' => $service->id,
             'tipo_afectacion_igv' => AfectacionIgv::codigo($service),
             'tipo_linea' => 'servicio',
+            'deficiency_id' => $itemData['deficiency_id'] ?? null,
             'cantidad' => (int) $itemData['cantidad'],
             'precio_unitario' => $itemData['precio_unitario'],
             'descuento' => $itemData['descuento'] ?? 0,
@@ -245,6 +253,10 @@ class ProcessSaleItem
             ? Service::query()->whereKey($itemData['service_id'])->first()
             : null;
 
+        if ($service && ($incompatibilidad = $service->incompatibilidadConEquipo($equipment)) !== null) {
+            throw ValidationException::withMessages(['items' => $incompatibilidad]);
+        }
+
         // V5: la fecha de la próxima atención se renueva al cerrar el trabajo
         // técnico de la orden (certificado o entrega), nunca al guardar la
         // venta: un borrador o una venta descartada no acreditan la recarga.
@@ -261,6 +273,32 @@ class ProcessSaleItem
             'descuento' => $itemData['descuento'] ?? 0,
             'subtotal' => $itemData['subtotal'],
         ]);
+    }
+
+    /** @param array<string, mixed> $itemData */
+    protected function validarAdicional(Sale $sale, array $itemData): void
+    {
+        if (empty($itemData['deficiency_id'])) {
+            return;
+        }
+
+        $deficiency = Deficiency::query()->with(['serviceOrder', 'authorization'])->lockForUpdate()->whereKey($itemData['deficiency_id'])->first();
+        $linea = QuoteItem::query()->with('quote')->where('deficiency_id', $itemData['deficiency_id'])->first();
+        $catalogoCoincide = $linea && match ($itemData['tipo_linea']) {
+            'producto' => $linea->product_id !== null && (int) $linea->product_id === (int) ($itemData['product_id'] ?? 0),
+            'servicio' => $linea->service_id !== null && (int) $linea->service_id === (int) ($itemData['service_id'] ?? 0),
+            default => false,
+        };
+
+        if (! $deficiency || ! $linea || ! $catalogoCoincide
+            || ! in_array($deficiency->estado, ['autorizada', 'resuelta'], true)
+            || (int) $deficiency->serviceOrder->client_id !== (int) $sale->client_id
+            || (int) $deficiency->serviceOrder->sede_id !== (int) $sale->sede_id
+            || (int) $linea->quote->client_id !== (int) $sale->client_id
+            || (int) $linea->quote->sede_id !== (int) $sale->sede_id
+            || (int) $deficiency->authorization?->cotizacion_adicional_id !== (int) $linea->quote_id) {
+            throw ValidationException::withMessages(['items' => 'El adicional debe corresponder a una línea cotizada y autorizada de este cliente y sede.']);
+        }
     }
 
     protected function recordInventoryMovement(Sale $sale, InventoryUnit $unit): void

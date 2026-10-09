@@ -49,6 +49,7 @@ class ServiceController extends Controller
                 'agente' => $s->agente,
                 'capacidad' => $s->capacidad,
                 'precio_venta' => (float) $s->precio_venta,
+                'codigo_detraccion' => $s->codigo_detraccion,
                 'aplica_igv' => (bool) $s->aplica_igv,
                 'tipo_afectacion_igv' => $s->tipo_afectacion_igv,
                 'igv_requiere_revision' => AfectacionIgv::requiereRevision($s),

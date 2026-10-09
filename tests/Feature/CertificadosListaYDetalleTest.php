@@ -5,6 +5,8 @@ use App\Models\CertificateType;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
 use App\Models\Sale;
+use App\Models\SaleItem;
+use App\Models\Service;
 use App\Models\User;
 use Database\Seeders\CertificateTypeSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -30,6 +32,9 @@ function certificadoDeLuces(string $razonSocial): array
         'numero_interno' => 'VTA-'.fake()->unique()->numerify('####'),
     ]);
     ElectronicDocument::create(['sale_id' => $sale->id, 'tipo' => 'boleta', 'serie' => 'B001', 'correlativo' => ElectronicDocument::count() + 7, 'sunat_estado' => 'aceptado']);
+
+    $service = Service::factory()->create(['certificate_type_id' => CertificateType::where('codigo', 'luces_emergencia')->firstOrFail()->id]);
+    SaleItem::factory()->forService($service)->create(['sale_id' => $sale->id]);
 
     $certificado = app(EmitirCertificadoDeServicio::class)->handle(
         $sale,

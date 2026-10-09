@@ -31,12 +31,15 @@ class InstallationController extends Controller
 
         $query = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
+            ->where('estado', '!=', 'anulada')
             ->with(['client', 'sede', 'equipments'])
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
                     ->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%'));
             })
             ->latest('id');
+
+        $baseStatsQuery = clone $query;
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -59,21 +62,10 @@ class InstallationController extends Controller
         $instalaciones = $query->paginate(15)->withQueryString();
 
         $stats = [
-            'total' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
-                ->count(),
-            'pendientes' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
-                ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta'])
-                ->count(),
-            'en_proceso' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
-                ->whereIn('estado', ['en_proceso', 'esperando_autorizacion'])
-                ->count(),
-            'finalizadas' => ServiceOrder::query()
-                ->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')))
-                ->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])
-                ->count(),
+            'total' => (clone $baseStatsQuery)->count(),
+            'pendientes' => (clone $baseStatsQuery)->whereIn('estado', ['pendiente_recepcion', 'recibido_planta'])->count(),
+            'en_proceso' => (clone $baseStatsQuery)->whereIn('estado', ['en_proceso', 'esperando_autorizacion'])->count(),
+            'finalizadas' => (clone $baseStatsQuery)->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
         ];
 
         return Inertia::render('tecnico-campo/instalaciones/index', [

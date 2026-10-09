@@ -1,3 +1,5 @@
+import DeficienciaSuelta from '@/components/deficiencia-suelta';
+import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import {
@@ -328,6 +330,25 @@ export default function ServiceOrderShow({
             <Head title={`Orden ${serviceOrder.codigo}`} />
 
             <div className="flex flex-col gap-4">
+                {![
+                    'anulada',
+                    'cerrado',
+                    'entregado',
+                    'listo_certificado',
+                    'listo_entrega',
+                ].includes(serviceOrder.estado) && (
+                    <DeficienciaSuelta
+                        ordenId={serviceOrder.id}
+                        equipos={serviceOrder.equipments.map((item) => ({
+                            id: item.id,
+                            serie: item.numero_serie,
+                        }))}
+                        destino={DeficiencyController.store.url({
+                            current_team: teamSlug,
+                            service_order: serviceOrder.id,
+                        })}
+                    />
+                )}
                 {/* Header Back & Info */}
                 <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-3">

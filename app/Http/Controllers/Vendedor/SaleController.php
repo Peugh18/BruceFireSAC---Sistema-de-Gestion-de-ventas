@@ -26,6 +26,7 @@ use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Billing\ComprobantePdfService;
+use App\Services\Billing\DetraccionCalculator;
 use App\Services\Certificates\CertificadosDeVenta;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Illuminate\Http\RedirectResponse;
@@ -295,6 +296,7 @@ class SaleController extends Controller
                         'descuento' => (float) $item->descuento,
                     ],
                     'producto' => [
+                        'deficiency_id' => $item->deficiency_id,
                         'tipo_linea' => 'producto',
                         'product_id' => $item->product_id,
                         'nombre' => $item->product?->nombre,
@@ -303,6 +305,7 @@ class SaleController extends Controller
                         'descuento' => (float) $item->descuento,
                     ],
                     default => [
+                        'deficiency_id' => $item->deficiency_id,
                         'tipo_linea' => 'servicio',
                         'service_id' => $item->service_id,
                         'nombre' => $item->service?->nombre,
@@ -343,6 +346,7 @@ class SaleController extends Controller
             'numero' => $quote->numero,
             'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             'items' => array_values($quote->items->map(fn (QuoteItem $item) => [
+                'deficiency_id' => $item->deficiency_id,
                 'tipo' => $item->esServicio() ? 'service' : 'product',
                 'product_id' => $item->product_id,
                 'service_id' => $item->service_id,
@@ -376,10 +380,10 @@ class SaleController extends Controller
         // a medias y el error sale en el formulario.
         $emitir = $request->boolean('emitir');
 
-        $serviceOrderId = $request->integer('service_order_id') ?: null;
+        $serviceOrderId = $request->integer('service_order_id') ?: (! empty($data['quote_id']) ? ServiceOrder::query()->where('quote_id', $data['quote_id'])->whereNull('sale_id')->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->value('id') : null);
         $sale = DB::transaction(function () use ($data, $items, $request, $createSale, $emitir, $serviceOrderId, $numberGenerator, $sedeId) {
             // Solo órdenes y cotizaciones de la sede del vendedor.
-            $serviceOrder = $serviceOrderId ? ServiceOrder::lockForUpdate()->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($serviceOrderId) : null;
+            $serviceOrder = $serviceOrderId ? ServiceOrder::lockForUpdate()->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->whereKey($serviceOrderId)->first() : null;
             if ($serviceOrderId && ! $serviceOrder) {
                 throw ValidationException::withMessages(['service_order_id' => 'La orden de servicio no es de tu sede.']);
             }
@@ -391,6 +395,9 @@ class SaleController extends Controller
             }
             if ($serviceOrder && $serviceOrder->client_id !== (int) $data['client_id']) {
                 throw ValidationException::withMessages(['client_id' => 'La venta debe pertenecer al cliente de la orden.']);
+            }
+            if ($serviceOrder?->quote_id) {
+                $data['quote_id'] = $serviceOrder->quote_id;
             }
             $sale = $createSale->handle($data, $items, $request->user()->id);
             $serviceOrder?->update(['sale_id' => $sale->id]);
@@ -423,7 +430,7 @@ class SaleController extends Controller
     /** @return array<string, mixed>|null */
     protected function ordenParaCobro(int $orderId, ?int $sedeId): ?array
     {
-        $order = ServiceOrder::with(['client', 'equipments', 'service', 'deficiencies.authorization.cotizacionAdicional.items.product', 'deficiencies.authorization.cotizacionAdicional.items.service'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($orderId);
+        $order = ServiceOrder::with(['client', 'equipments', 'service', 'deficiencies.authorization.cotizacionAdicional.items.product', 'deficiencies.authorization.cotizacionAdicional.items.service', 'quote.items.product', 'quote.items.service'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($orderId);
         if (! $order || $order->sale_id || $order->estado === 'anulada') {
             return null;
         }
@@ -436,20 +443,24 @@ class SaleController extends Controller
 
             return ['tipo_linea' => $equipment ? 'recarga_servicio' : 'servicio', 'numero_serie' => $equipment?->numero_serie, 'service_id' => $service->id, 'nombre' => $service->nombre, 'cantidad' => 1, 'precio_unitario' => (float) $service->precio_venta, 'descuento' => 0];
         });
+        if ($order->quote && in_array($order->quote->estado, ['borrador', 'emitida', 'enviada', 'aceptada'], true)) {
+            $items = $order->quote->items->map(fn (QuoteItem $item): array => ['deficiency_id' => $item->deficiency_id, 'tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service->nombre ?? $item->product?->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
+        }
         // V6: una misma cotización usada en varias autorizaciones se cobra una vez.
         $additionalItems = $order->deficiencies->whereIn('estado', ['autorizada', 'resuelta'])
             ->map(fn ($deficiency) => $deficiency->authorization?->cotizacionAdicional)
             ->filter()
             ->unique('id')
+            ->reject(fn (Quote $cotizacion): bool => $cotizacion->id === $order->quote_id || $cotizacion->sale()->exists())
             ->flatMap(fn (Quote $cotizacion) => $cotizacion->items)
-            ->map(fn (QuoteItem $item): array => ['tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service_id ? $item->service->nombre : $item->product->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
+            ->map(fn (QuoteItem $item): array => ['deficiency_id' => $item->deficiency_id, 'tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service_id ? $item->service->nombre : $item->product->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
         $items = $items->concat($additionalItems)->values()->all();
         $adicionalesSinCotizacion = $order->deficiencies->whereIn('estado', ['autorizada', 'resuelta'])
             ->filter(fn ($deficiency) => $deficiency->authorization && ! $deficiency->authorization->cotizacionAdicional && $deficiency->authorization->importe > 0)
             ->map(fn ($deficiency): array => ['componente' => $deficiency->componente, 'importe' => (float) $deficiency->authorization->importe])
             ->values()->all();
 
-        return ['id' => null, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => 'local_cliente', 'referencia' => $order->codigo, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items, 'adicionales_sin_cotizacion' => $adicionalesSinCotizacion];
+        return ['id' => null, 'quote_id' => $order->quote_id, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => 'local_cliente', 'referencia' => $order->codigo, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items, 'adicionales_sin_cotizacion' => $adicionalesSinCotizacion];
     }
 
     public function show(Team $current_team, Sale $sale, Request $request): Response
@@ -463,6 +474,14 @@ class SaleController extends Controller
             $item->inventoryUnit?->numero_serie ?? $item->equipment?->numero_serie,
         ));
 
+        try {
+            $detraccion = app(DetraccionCalculator::class)->paraVenta($sale);
+            $errorDetraccion = null;
+        } catch (ValidationException $error) {
+            $detraccion = ['aplica' => false, 'monto' => 0.0, 'codigo_bien' => ''];
+            $errorDetraccion = collect($error->errors())->flatten()->first();
+        }
+
         return Inertia::render('vendedor/ventas/show', [
             'sale' => [
                 ...$sale->toArray(),
@@ -470,6 +489,8 @@ class SaleController extends Controller
                 'client' => $sale->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             ],
             'editable' => $sale->sePuedeEditar(),
+            'detraccion' => [...$detraccion, 'acreditado' => (float) $sale->payments->where('es_detraccion', true)->sum('monto'), 'pendiente' => max(0, round($detraccion['monto'] - (float) $sale->payments->where('es_detraccion', true)->sum('monto'), 2))],
+            'errorDetraccion' => $errorDetraccion,
             'certificados' => CertificadosDeVenta::deLaVenta($sale),
             'tieneEquipos' => $sale->items->contains(fn ($item) => $item->equipment_id !== null),
             // Notas pedidas al Gerente que aún no se emiten (por aprobar o rechazadas).
@@ -478,7 +499,7 @@ class SaleController extends Controller
                 ->where('estado', '!=', 'aprobada')
                 ->latest('id')
                 ->get(['id', 'tipo', 'motivo_catalogo', 'importe', 'estado', 'motivo_rechazo']),
-            'tiposServicio' => EmitirCertificadoDeServicio::tiposDeServicio()
+            'tiposServicio' => EmitirCertificadoDeServicio::tiposDeServicio($sale)
                 ->map(fn ($tipo) => ['codigo' => $tipo->codigo, 'nombre' => $tipo->nombre])
                 ->values(),
         ]);

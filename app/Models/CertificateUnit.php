@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $certificate_id
  * @property int|null $equipment_id
+ * @property string|null $codigo_interno
  * @property string $numero_serie_snapshot
  * @property Carbon|null $fecha_ultima_ph
  * @property Carbon|null $fecha_ultima_recarga
@@ -26,6 +27,7 @@ use Illuminate\Support\Carbon;
     'orden',
     'numero_cliente',
     'numero_serie_snapshot',
+    'codigo_interno',
     'capacidad',
     'marca',
     'tipo_agente',

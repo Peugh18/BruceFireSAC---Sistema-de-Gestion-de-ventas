@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Guía de remisión electrónica del remitente (tipo 09, serie T001).
@@ -190,6 +191,8 @@ class DispatchGuide extends Model
     /** Con CDR aceptado la mercadería puede salir. */
     public function estaListaParaTrasladar(): bool
     {
-        return $this->estado_sunat === self::ACEPTADA;
+        return $this->estado_sunat === self::ACEPTADA
+            && filled($this->cdr_path)
+            && Storage::disk('local')->exists($this->cdr_path);
     }
 }

@@ -871,18 +871,6 @@ parameters:
 			path: app/Http/Controllers/Vendedor/InventoryLookupController.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>codigo" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Vendedor/QuoteController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>nombre" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Vendedor/QuoteController.php
-
-		-
 			message: '#^Method App\\Http\\Controllers\\Vendedor\\SaleCertificateController\:\:certificados\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: int, numero\: string, tipo\: string, tipo_codigo\: string, revision\: int, estado\: string, referencia\: string\|null, unidades\: int\<0, max\>\}\>\.$#'
 			identifier: return.type
 			count: 1

@@ -77,7 +77,7 @@ test('el gerente guarda el agente y la capacidad del producto; un agente fuera d
 test('en el alta de un extintor el agente se elige de la lista, no se escribe a mano', function () {
     $vendedor = User::factory()->create(['sede_id' => $this->sede->id]);
     $vendedor->assignRole('Vendedor');
-    $order = ServiceOrder::factory()->create(['sede_id' => $this->sede->id]);
+    $order = ServiceOrder::factory()->create(['sede_id' => $this->sede->id, 'service_id' => Service::factory()->create(['nombre' => 'Mantenimiento general', 'agente' => null, 'capacidad' => null])->id]);
     $ruta = route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $vendedor->currentTeam, 'service_order' => $order]);
 
     $this->actingAs($vendedor)->post($ruta, ['tipo_agente' => 'Polvo químico', 'capacidad' => '6 kg'])->assertSessionHasErrors('tipo_agente');

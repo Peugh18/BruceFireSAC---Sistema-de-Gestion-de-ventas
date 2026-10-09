@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Cobranzas\StoreCollectionPaymentRequest;
 use App\Models\CashRegister;
 use App\Models\Installment;
+use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Models\Team;
 use App\Services\AuditLogger;
@@ -55,6 +56,7 @@ class CollectionController extends Controller
         }
 
         DB::transaction(function () use ($installment, $request): void {
+            $sale = Sale::query()->lockForUpdate()->findOrFail($installment->sale_id);
             $installment = Installment::query()->lockForUpdate()->findOrFail($installment->id);
             $saldo = $installment->saldo();
             $monto = (float) $request->validated('monto');
@@ -65,11 +67,19 @@ class CollectionController extends Controller
                 ]);
             }
 
+            if ($request->boolean('es_detraccion')) {
+                if (! $installment->esDelComprobante()) {
+                    throw ValidationException::withMessages(['monto' => 'Registra esta constancia en una cuota del comprobante original.']);
+                }
+                SalePayment::validarDetraccion($sale, $monto, (string) $request->validated('forma_pago'), $request->validated('numero_operacion'), $installment->id);
+            }
+
             SalePayment::create([
                 'sale_id' => $installment->sale_id,
                 'installment_id' => $installment->id,
                 'forma_pago' => $request->validated('forma_pago'),
                 'monto' => $monto,
+                'es_detraccion' => $request->boolean('es_detraccion'),
                 'numero_operacion' => $request->validated('numero_operacion'),
                 'fecha' => today(),
             ]);

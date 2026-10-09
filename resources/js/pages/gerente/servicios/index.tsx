@@ -29,6 +29,7 @@ type ServiceItem = {
     agente: string | null;
     capacidad: string | null;
     precio_venta: number;
+    codigo_detraccion: string | null;
     aplica_igv: boolean;
     tipo_afectacion_igv: string | null;
     igv_requiere_revision: boolean;
@@ -104,6 +105,7 @@ export default function ServiciosIndex() {
         agente: '',
         capacidad: '',
         precio_venta: '',
+        codigo_detraccion: '',
         aplica_igv: true,
         tipo_afectacion_igv: '10',
         certificate_type_id: '',
@@ -121,6 +123,7 @@ export default function ServiciosIndex() {
             agente: '',
             capacidad: '',
             precio_venta: '',
+            codigo_detraccion: '',
             aplica_igv: true,
             tipo_afectacion_igv: '10',
             certificate_type_id: '',
@@ -139,6 +142,7 @@ export default function ServiciosIndex() {
             agente: service.agente ?? '',
             capacidad: service.capacidad ?? '',
             precio_venta: String(service.precio_venta),
+            codigo_detraccion: service.codigo_detraccion ?? '',
             aplica_igv: service.aplica_igv,
             tipo_afectacion_igv: service.igv_requiere_revision
                 ? ''
@@ -784,6 +788,49 @@ export default function ServiciosIndex() {
                                             role="alert"
                                         >
                                             {form.errors.certificate_type_id}
+                                        </span>
+                                    )}
+                                </label>
+                                <label className="flex flex-col gap-1 text-[13px]">
+                                    Clasificación de detracción
+                                    <select
+                                        value={form.data.codigo_detraccion}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'codigo_detraccion',
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="border-border rounded border p-2"
+                                    >
+                                        <option value="">
+                                            Por categoría / pendiente de
+                                            revisión
+                                        </option>
+                                        <option value="022">
+                                            022 · Recarga / otros servicios
+                                            empresariales
+                                        </option>
+                                        <option value="020">
+                                            020 · Mantenimiento y reparación
+                                        </option>
+                                        <option value="037">
+                                            037 · Demás servicios gravados
+                                            (residual)
+                                        </option>
+                                    </select>
+                                    <span className="text-muted-foreground text-xs">
+                                        12% en facturas gravadas mayores a S/
+                                        700. Los paquetes combinados requieren
+                                        revisión fiscal antes de elegir el
+                                        código.
+                                    </span>
+                                    {form.errors.codigo_detraccion && (
+                                        <span
+                                            role="alert"
+                                            className="text-destructive-strong"
+                                        >
+                                            {form.errors.codigo_detraccion}
                                         </span>
                                     )}
                                 </label>

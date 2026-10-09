@@ -121,7 +121,9 @@ class GreenterService
                     ->setCtaBanco($this->cuentaDetraccion())
                     ->setCodBienDetraccion($detraccionCalc['codigo_bien'])
                     ->setCodMedioPago((string) config('billing.detraccion.cod_medio_pago'))
-                    ->setPercent((float) config('billing.detraccion.tasa') * 100)
+                    ->setPercent($sale->estado !== 'borrador' && $sale->monto_detraccion_snapshot !== null
+                        ? round($detraccionCalc['monto'] / (float) $sale->total * 100, 2)
+                        : (float) config('billing.detraccion.tasa') * 100)
                     ->setMount($detraccionCalc['monto'])
             );
 

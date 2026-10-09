@@ -172,7 +172,8 @@ class DispatchGuideController extends Controller
     protected function traslado(User $user, int $id): InventoryTransfer
     {
         $traslado = InventoryTransfer::query()->findOrFail($id);
-        // Solo quien pertenece al almacén de origen o de destino (el Gerente ve todo).
+        abort_if($user->almacenRestringidoId() !== null && $user->almacenRestringidoId() !== $traslado->origen_sede_id, 404);
+        // El almacén origen emite la guía; el Gerente puede operar entre sedes.
         $propias = array_filter([$user->sedeRestringidaId(), $user->almacenRestringidoId()]);
 
         abort_if($propias !== [] && array_intersect($propias, [$traslado->origen_sede_id, $traslado->destino_sede_id]) === [], 404);

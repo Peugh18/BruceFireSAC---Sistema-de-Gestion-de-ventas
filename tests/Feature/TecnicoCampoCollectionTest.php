@@ -100,6 +100,7 @@ test('tecnico registra cada extintor y descarga la misma constancia de recepcion
     $client = Client::factory()->create();
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
+        'service_id' => Service::factory()->create(['nombre' => 'Recarga y mantenimiento PQS 6 kg'])->id,
         'estado' => 'pendiente_recepcion',
         'departamento_tecnico' => 'campo',
     ]);

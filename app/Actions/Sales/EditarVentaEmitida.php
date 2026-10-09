@@ -61,7 +61,7 @@ class EditarVentaEmitida
                 ]);
             }
 
-            if ($sale->payments()->whereNotNull('installment_id')->exists()) {
+            if ($sale->payments()->whereNotNull('installment_id')->exists() || $sale->payments()->where('es_detraccion', true)->exists()) {
                 throw ValidationException::withMessages([
                     'estado' => 'Esta venta ya tiene cuotas cobradas: no se puede editar.',
                 ]);
@@ -111,6 +111,7 @@ class EditarVentaEmitida
                 $this->confirmSale->validarAntesDeEmitir($sale);
             }
 
+            $this->confirmSale->guardarDetraccion($sale);
             $sale->update(['estado' => 'confirmada']);
 
             $this->emitirDeNuevo($sale, $documento, $antes['comprobante_tipo']);

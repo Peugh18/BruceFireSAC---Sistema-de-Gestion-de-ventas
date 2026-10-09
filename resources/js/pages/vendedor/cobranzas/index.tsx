@@ -45,6 +45,7 @@ export type TurnoActual = {
     fecha_apertura?: string;
     monto_apertura: number | string;
     estado: string;
+    abierto_mas_de_24_horas?: boolean;
     ventas_por_forma_pago?: Record<string, number>;
 } | null;
 
@@ -76,6 +77,7 @@ export type InstallmentItem = {
         id: number;
         monto: number | string;
         forma_pago: string;
+        es_detraccion?: boolean;
         fecha: string;
         puede_anular: boolean;
     }[];
@@ -83,6 +85,7 @@ export type InstallmentItem = {
         id: number;
         monto: number | string;
         forma_pago: string;
+        es_detraccion?: boolean;
         motivo: string | null;
         por: string | null;
     }[];
@@ -188,6 +191,7 @@ export default function CobranzasIndex({
         forma_pago: 'efectivo',
         monto: '',
         numero_operacion: '',
+        es_detraccion: false,
     });
 
     const handleOpenPaymentDialog = (inst: InstallmentItem) => {
@@ -196,6 +200,7 @@ export default function CobranzasIndex({
             forma_pago: 'efectivo',
             monto: String(inst.saldo),
             numero_operacion: '',
+            es_detraccion: false,
         });
     };
 
@@ -317,6 +322,16 @@ export default function CobranzasIndex({
                                                 : 'Hoy'}
                                         </span>
                                     </div>
+                                    {turno_actual.abierto_mas_de_24_horas && (
+                                        <p
+                                            role="status"
+                                            className="text-warning-strong mt-3 text-xs"
+                                        >
+                                            Tu caja lleva más de 24 horas
+                                            abierta. Revisa el turno y realiza
+                                            el cierre cuando corresponda.
+                                        </p>
+                                    )}
 
                                     {/* Desglose Monetario */}
                                     <div className="divide-border mt-4 divide-y text-[12.5px]">
@@ -940,12 +955,38 @@ export default function CobranzasIndex({
                         onSubmit={submitRegisterPayment}
                         className="mt-3 space-y-3.5"
                     >
+                        <label className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={paymentForm.data.es_detraccion}
+                                onChange={(e) =>
+                                    paymentForm.setData({
+                                        ...paymentForm.data,
+                                        es_detraccion: e.target.checked,
+                                        forma_pago: e.target.checked
+                                            ? 'deposito'
+                                            : 'efectivo',
+                                    })
+                                }
+                            />
+                            Acreditar constancia de detracción (Banco de la
+                            Nación)
+                        </label>
+                        {paymentForm.data.es_detraccion && (
+                            <p className="text-muted-foreground text-xs">
+                                Registra únicamente el depósito verificado.
+                                Reduce la deuda y se conserva fuera de los
+                                ingresos de caja. Comparte la captura al gerente
+                                por WhatsApp de forma manual.
+                            </p>
+                        )}
                         <div>
                             <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Forma de pago
                             </Label>
                             <select
                                 aria-label="Forma de pago"
+                                disabled={paymentForm.data.es_detraccion}
                                 value={paymentForm.data.forma_pago}
                                 onChange={(e) =>
                                     paymentForm.setData(

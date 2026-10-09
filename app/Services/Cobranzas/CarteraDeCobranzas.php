@@ -95,7 +95,8 @@ class CarteraDeCobranzas
                     'pagos' => $inst->payments->map(fn (SalePayment $payment) => [
                         'id' => $payment->id,
                         'monto' => $payment->monto,
-                        'forma_pago' => $payment->forma_pago,
+                        'forma_pago' => $payment->es_detraccion ? 'Detracción BN' : $payment->forma_pago,
+                        'es_detraccion' => $payment->es_detraccion,
                         'fecha' => $payment->fecha->toDateString(),
                         'puede_anular' => $user->hasRole('Gerente') || $payment->fecha->isToday(),
                     ])->values(),
@@ -103,7 +104,8 @@ class CarteraDeCobranzas
                     'anulados' => $inst->paymentsAnulados->map(fn (SalePayment $payment) => [
                         'id' => $payment->id,
                         'monto' => $payment->monto,
-                        'forma_pago' => $payment->forma_pago,
+                        'forma_pago' => $payment->es_detraccion ? 'Detracción BN' : $payment->forma_pago,
+                        'es_detraccion' => $payment->es_detraccion,
                         'motivo' => $payment->anulado_motivo,
                         'por' => $payment->anuladoPor?->name,
                     ])->values(),

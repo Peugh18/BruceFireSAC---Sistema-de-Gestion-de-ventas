@@ -23,6 +23,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Tests\Support\TransferGuide;
 
 /**
  * Fase H. SUNAT se simula siempre: nunca se llama a la red real.
@@ -193,6 +194,11 @@ test('el traslado entre sedes queda en tránsito hasta que el destino confirma',
     $traslado = app(TransferInventory::class)->handle($origen->id, ['destination_sede_id' => $destino->id, 'serials' => [$unidad->numero_serie]], $almacenero);
     app(TransferInventory::class)->handle($origen->id, ['destination_sede_id' => $destino->id, 'product_id' => $producto->id, 'quantity' => 4], $almacenero);
 
+    foreach (InventoryTransfer::query()->get() as $preparado) {
+        TransferGuide::accepted($preparado, $almacenero);
+        app(TransferInventory::class)->despachar($preparado, $almacenero);
+    }
+    $traslado->refresh();
     expect($traslado->estado)->toBe(InventoryTransfer::EN_TRANSITO)
         ->and($unidad->refresh()->estado)->toBe('en_transito')
         ->and((int) InventoryMovement::where('product_id', $producto->id)->where('sede_id', $destino->id)->sum('cantidad'))->toBe(0);

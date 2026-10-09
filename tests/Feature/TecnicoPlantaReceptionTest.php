@@ -3,6 +3,7 @@
 use App\Enums\TeamRole;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
@@ -73,6 +74,7 @@ test('alta tecnica rapida caso A links existing equipment by barcode', function 
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
         'codigo' => 'OS-REC-0003',
+        'service_id' => Service::factory()->create(['nombre' => 'Recarga PQS 6 kg', 'agente' => 'pqs', 'capacidad' => '6 kg'])->id,
         'estado' => 'recibido_planta',
     ]);
 
@@ -99,6 +101,7 @@ test('alta tecnica rapida caso B creates new equipment with sequence generator a
     $order = ServiceOrder::factory()->create([
         'client_id' => $client->id,
         'codigo' => 'OS-REC-0004',
+        'service_id' => Service::factory()->create(['nombre' => 'Recarga PQS 6 kg', 'agente' => 'pqs', 'capacidad' => '6 kg'])->id,
         'estado' => 'recibido_planta',
     ]);
 

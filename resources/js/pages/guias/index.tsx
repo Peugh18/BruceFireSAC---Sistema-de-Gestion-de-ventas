@@ -23,7 +23,7 @@ type Guia = {
 const ESTADOS: Record<Guia['estado_sunat'], string> = {
     borrador: 'Sin enviar',
     enviada: 'En proceso en SUNAT',
-    aceptada: 'Lista para trasladar',
+    aceptada: 'Aceptada por SUNAT',
     rechazada: 'Rechazada',
 };
 
@@ -105,8 +105,19 @@ export default function GuiasIndex({
                                             : 'outline'
                                     }
                                 >
-                                    {ESTADOS[guia.estado_sunat]}
+                                    {guia.lista_para_trasladar
+                                        ? 'Lista para trasladar'
+                                        : ESTADOS[guia.estado_sunat]}
                                 </Badge>
+                                {guia.estado_sunat === 'aceptada' &&
+                                !guia.lista_para_trasladar ? (
+                                    <span
+                                        role="status"
+                                        className="text-destructive-strong"
+                                    >
+                                        CDR no disponible: despacho bloqueado.
+                                    </span>
+                                ) : null}
                                 {guia.estado_sunat === 'borrador' ||
                                 guia.estado_sunat === 'rechazada' ? (
                                     <Button

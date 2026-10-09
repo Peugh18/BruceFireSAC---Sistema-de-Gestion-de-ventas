@@ -44,7 +44,7 @@ test('un extintor no entra a una segunda orden abierta', function () {
     $equipment = Equipment::factory()->create(['client_id' => $client->id, 'numero_serie' => 'BF-EQ-004300']);
     $abierta = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id, 'estado' => 'en_proceso']);
     $abierta->equipments()->attach($equipment, ['recibido' => true]);
-    $nueva = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id]);
+    $nueva = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id, 'service_id' => Service::factory()->create(['nombre' => 'Mantenimiento general', 'agente' => null, 'capacidad' => null])->id]);
 
     $this->actingAs($seller)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $seller->currentTeam, 'service_order' => $nueva]), ['numero_serie' => 'BF-EQ-004300'])->assertSessionHasErrors('numero_serie');
     expect($nueva->equipments()->count())->toBe(0);

@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalePayment;
 use App\Models\Service;
+use App\Services\Billing\DetraccionCalculator;
 use App\Services\Billing\GreenterService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Validation\ValidationException;
@@ -100,9 +101,30 @@ test('al contado con detraccion el cobro en caja es el total menos la detraccion
 
     $pagos = SalePayment::where('sale_id', $sale->id)->orderBy('id')->get();
 
-    expect($pagos)->toHaveCount(2)
+    expect($pagos)->toHaveCount(1)
         ->and($pagos[0]->forma_pago)->toBe('transferencia')
         ->and((float) $pagos[0]->monto)->toBe(1038.4)
-        ->and($pagos[1]->forma_pago)->toBe('deposito')
-        ->and((float) $pagos[1]->monto)->toBe(141.6);
+        ->and($pagos[0]->es_detraccion)->toBeFalse();
+});
+
+test('clasificacion y monto emitidos se conservan aunque cambie el catalogo fiscal', function () {
+    CompanySetting::current()->update(['cuenta_detraccion' => '00-123-456789']);
+    $sale = ventaDeServicioConDetraccion('factura', 'contado', ['estado' => 'borrador', 'medio_pago' => 'transferencia']);
+    $sale->items()->firstOrFail()->service->update(['codigo_detraccion' => '022']);
+
+    app(ConfirmSale::class)->handle($sale);
+
+    expect($sale->fresh()->codigo_detraccion_snapshot)->toBe('022');
+    expect((float) $sale->fresh()->monto_detraccion_snapshot)->toBe(141.6);
+    $sale->items()->firstOrFail()->service->update(['codigo_detraccion' => '037']);
+    config(['billing.detraccion.tasa' => 0.15, 'billing.detraccion.monto_minimo' => 2000]);
+    $sale = $sale->fresh();
+    $resultado = app(DetraccionCalculator::class)->paraVenta($sale);
+    $invoice = app(GreenterService::class)->buildInvoice($sale, documentoDe($sale));
+
+    expect($resultado)->toBe(['aplica' => true, 'monto' => 141.6, 'codigo_bien' => '022']);
+    expect($invoice->getDetraccion()->getCodBienDetraccion())->toBe('022');
+    expect($invoice->getDetraccion()->getMount())->toBe(141.6);
+    expect($invoice->getDetraccion()->getPercent())->toBe(12.0);
+    expect((float) $sale->payments()->sum('monto'))->toBe(1038.4);
 });

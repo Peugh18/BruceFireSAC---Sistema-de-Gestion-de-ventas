@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import DeficiencyAuthorizationController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyAuthorizationController';
 import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
+import CatalogPicker, { type CatalogItem } from '@/components/catalog-picker';
 import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,7 @@ export type DeficiencyItem = {
     equipo?: string | null;
     foto_url?: string | null;
     estado: string;
+    pendiente_autorizacion?: boolean;
     requiere_autorizacion: boolean;
     authorization?: {
         autorizado_por: string;
@@ -45,6 +47,13 @@ export type DeficiencyItem = {
         fecha: string;
         observacion?: string | null;
         importe?: number | null;
+    } | null;
+    cotizacion_linea?: {
+        id: number;
+        numero: string;
+        nombre: string;
+        cantidad: number;
+        importe: number;
     } | null;
     orden_cobrada?: boolean;
     cotizaciones?: { id: number; numero: string; total: number }[];
@@ -153,6 +162,20 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
         isApproving: boolean;
     } | null>(null);
 
+    const [cotizarItem, setCotizarItem] = useState<DeficiencyItem | null>(null);
+    const [seleccion, setSeleccion] = useState<CatalogItem | null>(null);
+    const cotizarForm = useForm({
+        product_id: '' as number | '',
+        service_id: '' as number | '',
+        cantidad: 1,
+        precio_unitario: '' as number | '',
+    });
+    const abrirCotizacion = (item: DeficiencyItem) => {
+        setCotizarItem(item);
+        setSeleccion(null);
+        cotizarForm.reset();
+    };
+
     const authForm = useForm({
         autorizado: true,
         autorizado_por: '',
@@ -171,8 +194,10 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
             canal: 'whatsapp',
             fecha: fechaLocal(),
             observacion: '',
-            cotizacion_adicional_id: '',
-            importe: '',
+            cotizacion_adicional_id: item.cotizacion_linea?.id ?? '',
+            importe: item.cotizacion_linea
+                ? String(item.cotizacion_linea.importe)
+                : '',
         });
     };
 
@@ -282,7 +307,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                         deficiencies.data.map((item) => {
                             const statusStyle = getStatusStyle(item.estado);
                             const isPending =
-                                item.estado === 'esperando_autorizacion';
+                                item.estado === 'esperando_autorizacion' ||
+                                item.pendiente_autorizacion === true;
 
                             return (
                                 <div
@@ -384,6 +410,36 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
 
                                     {/* Actions */}
                                     <div className="flex flex-wrap items-center gap-2 sm:self-center">
+                                        {[
+                                            'detectada',
+                                            'esperando_autorizacion',
+                                            'autorizada',
+                                        ].includes(item.estado) && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    abrirCotizacion(item)
+                                                }
+                                            >
+                                                {item.cotizacion_linea
+                                                    ? 'Corregir adicional'
+                                                    : 'Cotizar adicional'}
+                                            </Button>
+                                        )}
+                                        {item.cotizacion_linea && (
+                                            <Link
+                                                href={`/${teamSlug}/vendedor/cotizaciones/${item.cotizacion_linea.id}/editar`}
+                                                className="text-primary-strong focus-visible:ring-ring text-xs underline focus-visible:ring-2"
+                                            >
+                                                {item.cotizacion_linea.numero} ·
+                                                S/{' '}
+                                                {item.cotizacion_linea.importe.toFixed(
+                                                    2,
+                                                )}
+                                            </Link>
+                                        )}
                                         {isPending ? (
                                             <>
                                                 <Button
@@ -680,9 +736,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 </div>
                                 {actionModal.item.orden_cobrada && (
                                     <p className="text-muted-foreground text-[11px] sm:col-span-2">
-                                        La orden ya se cobró: el adicional
-                                        quedará como saldo por cobrar en
-                                        Cobranzas.
+                                        El adicional se cotiza y se convierte a
+                                        una venta aparte, vinculada a la orden.
                                     </p>
                                 )}
                             </div>
@@ -727,6 +782,105 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 {actionModal?.isApproving
                                     ? 'Confirmar aprobación'
                                     : 'Confirmar rechazo'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+            <Dialog
+                open={cotizarItem !== null}
+                onOpenChange={(open) => {
+                    if (!open) setCotizarItem(null);
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Cotizar adicional</DialogTitle>
+                        <DialogDescription>
+                            {cotizarItem?.componente}: el precio incluye IGV y
+                            puede corregirse antes de confirmar con el cliente.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            if (!cotizarItem || !seleccion) return;
+                            cotizarForm.post(
+                                DeficiencyController.cotizar.url({
+                                    current_team: teamSlug,
+                                    deficiency: cotizarItem.id,
+                                }),
+                                {
+                                    preserveScroll: true,
+                                    onSuccess: () => setCotizarItem(null),
+                                    onError: (errors) =>
+                                        toast.error(
+                                            Object.values(errors)[0] ??
+                                                'Revisa los datos.',
+                                        ),
+                                },
+                            );
+                        }}
+                        className="space-y-4"
+                    >
+                        <CatalogPicker
+                            teamSlug={teamSlug}
+                            onPick={(item) => {
+                                setSeleccion(item);
+                                cotizarForm.setData({
+                                    product_id:
+                                        item.tipo === 'product' ? item.id : '',
+                                    service_id:
+                                        item.tipo === 'service' ? item.id : '',
+                                    cantidad: 1,
+                                    precio_unitario: item.precio_venta,
+                                });
+                            }}
+                        />
+                        {seleccion && (
+                            <p className="text-sm">{seleccion.nombre}</p>
+                        )}
+                        <div>
+                            <Label htmlFor="adicional-cantidad">Cantidad</Label>
+                            <Input
+                                id="adicional-cantidad"
+                                type="number"
+                                min="1"
+                                required
+                                value={cotizarForm.data.cantidad}
+                                onChange={(event) =>
+                                    cotizarForm.setData(
+                                        'cantidad',
+                                        Number(event.target.value),
+                                    )
+                                }
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="adicional-precio">
+                                Precio unitario con IGV (S/)
+                            </Label>
+                            <Input
+                                id="adicional-precio"
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                required
+                                value={cotizarForm.data.precio_unitario}
+                                onChange={(event) =>
+                                    cotizarForm.setData(
+                                        'precio_unitario',
+                                        Number(event.target.value),
+                                    )
+                                }
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="submit"
+                                disabled={cotizarForm.processing || !seleccion}
+                            >
+                                Guardar en cotización
                             </Button>
                         </DialogFooter>
                     </form>

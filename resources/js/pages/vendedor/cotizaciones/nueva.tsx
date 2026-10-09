@@ -1,3 +1,4 @@
+import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
 import { router, useForm, usePage } from '@inertiajs/react';
 import {
     Building2,
@@ -29,6 +30,7 @@ import { fechaLocal } from '@/lib/utils';
 
 type QuoteItemForm = {
     key: string;
+    deficiency_id?: number | null;
     tipo: 'product' | 'service';
     product_id?: number;
     service_id?: number;
@@ -88,13 +90,18 @@ let secuencia = 0;
 const VIGENCIAS = [7, 15, 30];
 
 export default function NuevaCotizacion({
-    renovacion = null,
+    renovacion: renovacionOriginal = null,
+    edicion = null,
     cliente: clientePrecargado = null,
 }: {
     renovacion?: Renovacion | null;
+    edicion?:
+        | (Renovacion & { id: number; fecha: string; vigencia_hasta: string })
+        | null;
     // Precarga cuando se llega con ?client_id= desde la ficha del cliente.
     cliente?: ClientFicha | null;
 }) {
+    const renovacion = edicion ?? renovacionOriginal;
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ??
@@ -104,8 +111,8 @@ export default function NuevaCotizacion({
 
     const form = useForm<QuoteFormData>({
         client_id: renovacion?.client.id ?? clientePrecargado?.id ?? '',
-        fecha: sumarDias(0),
-        vigencia_hasta: sumarDias(15),
+        fecha: edicion?.fecha ?? sumarDias(0),
+        vigencia_hasta: edicion?.vigencia_hasta ?? sumarDias(15),
         referencia: renovacion?.referencia ?? '',
         condicion_pago_propuesta:
             renovacion?.condicion_pago_propuesta ?? 'Contado',
@@ -182,6 +189,21 @@ export default function NuevaCotizacion({
 
     const submitQuote = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (edicion) {
+            form.put(
+                QuoteController.update.url({
+                    current_team: teamSlug,
+                    quote: edicion.id,
+                }),
+                {
+                    onError: (errors) =>
+                        toast.error(
+                            Object.values(errors)[0] ?? 'Revisa los datos.',
+                        ),
+                },
+            );
+            return;
+        }
         form.post(cotizaciones.store.url(teamSlug), {
             onError: (errors) =>
                 toast.error(
@@ -193,10 +215,16 @@ export default function NuevaCotizacion({
     };
 
     return (
-        <VendedorLayout title="Nueva cotización">
+        <VendedorLayout
+            title={edicion ? `Editar ${edicion.numero}` : 'Nueva cotización'}
+        >
             <div className="mb-4">
                 <PageHeader
-                    title="Nueva cotización"
+                    title={
+                        edicion
+                            ? `Editar ${edicion.numero}`
+                            : 'Nueva cotización'
+                    }
                     description="Elige el cliente y los productos. Al guardarla, queda lista para descargar en PDF o enviar por WhatsApp."
                 />
             </div>

@@ -34,6 +34,7 @@ class InspectionController extends Controller
 
         $query = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
+            ->where('estado', '!=', 'anulada')
             ->with(['client', 'sede', 'equipments'])
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
@@ -63,6 +64,7 @@ class InspectionController extends Controller
 
         $baseStatsQuery = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
+            ->where('estado', '!=', 'anulada')
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
                     ->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%'));

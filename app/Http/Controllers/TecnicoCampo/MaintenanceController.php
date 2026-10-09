@@ -269,6 +269,7 @@ class MaintenanceController extends Controller
     {
         return ServiceOrder::query()
             ->accessibleToTechnician($request->user())
+            ->where('estado', '!=', 'anulada')
             ->where('departamento_tecnico', 'campo')
             ->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%mantenim%'));
     }

@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\Inventory\StockPorLote;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Validation\ValidationException;
+use Tests\Support\TransferGuide;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -125,7 +126,10 @@ test('el traslado lleva el lote con su vencimiento al otro almacen', function ()
     $gerente->assignRole('Gerente');
 
     app(TransferInventory::class)->handle($this->almacen->id, ['destination_sede_id' => $destino->id, 'product_id' => $this->guantes->id, 'quantity' => 4], $gerente);
-    app(TransferInventory::class)->confirmar(InventoryTransfer::query()->sole(), $gerente);
+    $traslado = InventoryTransfer::query()->sole();
+    TransferGuide::accepted($traslado, $gerente);
+    app(TransferInventory::class)->despachar($traslado, $gerente);
+    app(TransferInventory::class)->confirmar($traslado, $gerente);
 
     $llegado = ProductLot::where('sede_id', $destino->id)->sole();
 

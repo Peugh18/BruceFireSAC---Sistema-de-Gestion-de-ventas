@@ -251,7 +251,8 @@ test('advancing order to listo_certificado automatically triggers certificates g
     $certOperatividad = $certificates->firstWhere('certificateType.codigo', 'operatividad_garantia');
     expect($certOperatividad)->not->toBeNull()
         ->and($certOperatividad->certificateUnits)->toHaveCount(1)
-        ->and($certOperatividad->certificateUnits->first()->numero_serie_snapshot)->toBe('BF-EQ-000333');
+        ->and($certOperatividad->certificateUnits->first()->numero_serie_snapshot)->toBe('')
+        ->and($certOperatividad->certificateUnits->first()->codigo_interno)->toBe('BF-EQ-000333');
 
     $certPH = $certificates->firstWhere('certificateType.codigo', 'prueba_hidrostatica');
     expect($certPH)->not->toBeNull();

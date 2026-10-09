@@ -197,7 +197,7 @@ export default function UsuariosIndex() {
                     pestanas={[
                         {
                             id: 'usuarios',
-                            titulo: 'Usuarios del Team',
+                            titulo: 'Usuarios',
                             icono: Users,
                         },
                         {

@@ -715,3 +715,14 @@
 - El usuario pidió guardar, subir y fusionar los cambios en `main` como respaldo, sin repetir CI local. Se conserva la verificación previa de accesibilidad y la suite completa anterior.
 - El hook local de pre-push se omite únicamente en estas subidas mediante configuración temporal de Git; no se modifica el hook ni se desactivan los flujos remotos de GitHub.
 - Se incluyen el código y el informe de accesibilidad; los archivos ignorados del entorno, secretos y respaldos de base de datos permanecen locales.
+
+## 2026-10-09 — Decisiones del dueño e investigación de detracciones
+
+- Usuario confirma cotizar recargas y adicionales antes de convertir a venta; precios con IGV desde catálogo, editables por el vendedor; contado/crédito por el flujo existente.
+- Correcciones por el vendedor con historial, sin nuevas aprobaciones; autorización de cliente con persona/canal/fecha/importe ya disponible en controlador y formulario.
+- Datos actuales son pruebas. Cinco años de hidrostática conservados; vendedor registra hallazgos, técnico determina aptitud, aviso de caja abierta y costos/márgenes diferidos.
+- Cuenta de detracciones existente; vendedor revisa constancia y comparte captura al gerente por WhatsApp manual. Sin integración de mensajería autorizada.
+- Revisados config/billing.php y DetraccionCalculator: 020 global por defecto, tasa 12%, mínimo S/700; no hay clasificación por servicio en ese cálculo.
+- SUNAT mantiene recarga de extintores en numeral 5 (otros servicios empresariales): https://orientacion.sunat.gob.pe/3350-consultas-sunat-empresas e Informe 017-2006 https://www.sunat.gob.pe/legislacion/oficios/2006/oficios/i0172006.htm . Inferencia de código: 022 para recarga, 020 para mantenimiento/reparación; no extender la antigua exclusión de mantenimiento del informe de 2006 a la normativa actual.
+- Tabla actual y códigos: https://orientacion.sunat.gob.pe/apendices-del-sistema-de-detracciones (020/022/037, 12%, clasificación distinta). Operaciones combinadas y otros servicios pendientes; configuración fiscal conservada.
+- Solo actualizados PLAN y BITACORA. Sin pruebas ejecutadas ni cambios de código/configuración, commit o push en esta aclaración.

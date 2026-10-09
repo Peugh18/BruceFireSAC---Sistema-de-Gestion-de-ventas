@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Billing\DetraccionCalculator;
 use Database\Factories\SalePaymentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ use Illuminate\Validation\ValidationException;
  * @property int $sale_id
  * @property int|null $installment_id
  * @property string $forma_pago
+ * @property bool $es_detraccion
  * @property float $monto
  * @property string|null $numero_operacion
  * @property Carbon $fecha día de negocio del cobro (date); la hora real del cobro está en created_at (y la de su anulación en updated_at)
@@ -32,7 +34,7 @@ use Illuminate\Validation\ValidationException;
  * @property-read User|null $user
  * @property-read User|null $anuladoPor
  */
-#[Fillable(['sale_id', 'installment_id', 'forma_pago', 'monto', 'numero_operacion', 'fecha', 'user_id', 'cash_register_id'])]
+#[Fillable(['sale_id', 'installment_id', 'forma_pago', 'monto', 'numero_operacion', 'fecha', 'user_id', 'cash_register_id', 'es_detraccion'])]
 class SalePayment extends Model
 {
     /** @use HasFactory<SalePaymentFactory> */
@@ -47,6 +49,10 @@ class SalePayment extends Model
         static::creating(function (SalePayment $pago): void {
             $usuario = auth()->id();
             $pago->user_id ??= is_int($usuario) ? $usuario : null;
+
+            if ($pago->es_detraccion) {
+                $pago->cash_register_id = null;
+            }
 
             // V7: el cobro queda en el turno abierto del vendedor de la venta.
             // Se liga con la fila de caja BLOQUEADA: si justo se está cerrando
@@ -82,9 +88,28 @@ class SalePayment extends Model
         $this->delete();
     }
 
+    public static function validarDetraccion(Sale $sale, float $monto, string $forma, ?string $operacion, ?int $installmentId = null): void
+    {
+        if ($forma !== 'deposito' || trim((string) $operacion) === '') {
+            throw ValidationException::withMessages(['numero_operacion' => 'Registra el número de constancia del depósito de detracción en el Banco de la Nación.']);
+        }
+
+        if ($sale->payments()->where('installment_id', $installmentId)->where('forma_pago', 'deposito')->where('numero_operacion', trim((string) $operacion))->exists()) {
+            throw ValidationException::withMessages(['numero_operacion' => 'Esta constancia ya está registrada para este cobro.']);
+        }
+
+        $calculada = app(DetraccionCalculator::class)->paraVenta($sale);
+        $acreditado = (float) $sale->payments()->where('es_detraccion', true)->sum('monto');
+        $pendiente = round($calculada['monto'] - $acreditado, 2);
+        if (! $calculada['aplica'] || $monto > $pendiente || $pendiente <= 0) {
+            throw ValidationException::withMessages(['monto' => 'El depósito no puede superar la detracción pendiente de S/ '.number_format(max(0, $pendiente), 2).'.']);
+        }
+    }
+
     protected function casts(): array
     {
         return [
+            'es_detraccion' => 'boolean',
             'monto' => 'decimal:2',
             'fecha' => 'date',
         ];

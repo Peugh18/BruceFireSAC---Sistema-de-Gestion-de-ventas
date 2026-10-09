@@ -65,6 +65,7 @@ class DatosDeCaja
                 'sede' => $turnoActual->sede?->nombre,
                 'sede_id' => $turnoActual->sede_id,
                 'fecha_apertura' => $turnoActual->fecha_apertura->toDateTimeString(),
+                'abierto_mas_de_24_horas' => $turnoActual->fecha_apertura->lt(now()->subHours(24)),
                 'monto_apertura' => $turnoActual->monto_apertura,
                 'estado' => $turnoActual->estado,
                 'ventas_por_forma_pago' => $ventasPorFormaPago,

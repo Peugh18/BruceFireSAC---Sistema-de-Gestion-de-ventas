@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EquipmentType;
 use Database\Factories\ServiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string $unidad_medida
  * @property string|null $agente
  * @property string|null $capacidad
+ * @property string|null $codigo_detraccion
  * @property float $precio_venta
  * @property Carbon|null $igv_revisado_at
  * @property string|null $tipo_afectacion_igv
@@ -40,7 +42,7 @@ use Illuminate\Support\Carbon;
     'unidad_medida',
     'agente',
     'capacidad',
-    'precio_venta',
+    'precio_venta', 'codigo_detraccion',
     'aplica_igv', 'igv_revisado_at', 'tipo_afectacion_igv',
     'certificate_type_id',
     'activo',
@@ -99,6 +101,19 @@ class Service extends Model
         return $this->belongsTo(ProductCategory::class, 'categoria', 'clave');
     }
 
+    public function codigoDetraccion(): ?string
+    {
+        if ($this->codigo_detraccion !== null) {
+            return $this->codigo_detraccion;
+        }
+
+        if (preg_match('/recarga.*(?:mantenimiento|reparaci)|(?:mantenimiento|reparaci).*recarga/iu', $this->nombre) === 1) {
+            return null;
+        }
+
+        return config('billing.detraccion.por_categoria.'.($this->categoria ?? ''));
+    }
+
     public function esServicio(): bool
     {
         return true;
@@ -136,5 +151,25 @@ class Service extends Model
         };
 
         return ((float) $numero).$unidad;
+    }
+
+    public function incompatibilidadConEquipo(Equipment $equipment): ?string
+    {
+        $agenteServicio = EquipmentType::tryFrom((string) $this->agente)
+            ?? EquipmentType::fromDescription($this->nombre);
+        $agenteEquipo = EquipmentType::fromDescription($equipment->tipo_agente);
+
+        if ($agenteServicio !== EquipmentType::Otro && $agenteEquipo !== EquipmentType::Otro && $agenteServicio !== $agenteEquipo) {
+            return 'El agente del extintor no corresponde al servicio seleccionado.';
+        }
+
+        $capacidadServicio = self::normalizarCapacidad($this->capacidad ?: $this->nombre);
+        $capacidadEquipo = self::normalizarCapacidad($equipment->capacidad);
+
+        if ($capacidadServicio !== null && $capacidadEquipo !== null && $capacidadServicio !== $capacidadEquipo) {
+            return 'La capacidad del extintor no corresponde al servicio seleccionado.';
+        }
+
+        return null;
     }
 }

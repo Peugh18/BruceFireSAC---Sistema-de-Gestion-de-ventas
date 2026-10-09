@@ -41,7 +41,7 @@ class RevertSale
 
         foreach ($sale->items as $item) {
             /** @var SaleItem $item */
-            if ($item->tipo_linea === 'producto') {
+            if ($item->tipo_linea === 'producto' && $item->deficiency_id === null) {
                 $this->devolverProducto($sale, $item, $motivo);
 
                 continue;
@@ -90,7 +90,7 @@ class RevertSale
             ->groupBy('forma_pago')
             ->map(fn ($devoluciones) => (float) $devoluciones->sum('monto'));
 
-        $devoluciones = $sale->payments()->get()
+        $devoluciones = $sale->payments()->where('es_detraccion', false)->get()
             ->groupBy('forma_pago')
             ->map(fn ($pagos, $forma) => round((float) $pagos->sum('monto') - (float) $yaDevuelto->get($forma, 0), 2))
             ->filter(fn (float $monto) => $monto > 0);
