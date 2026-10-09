@@ -108,12 +108,16 @@ test('users can logout', function () {
 test('users are rate limited', function () {
     $user = User::factory()->create();
 
-    RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
+    // El límite es de 10 intentos por minuto. Al superarlo ya no se devuelve la
+    // página genérica 429: se vuelve al formulario con un mensaje que explica
+    // al usuario cuánto falta, que era lo que no se entendía antes.
+    RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 10);
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'wrong-password',
     ]);
 
-    $response->assertTooManyRequests();
+    $response->assertRedirect();
+    $response->assertSessionHasErrors('email');
 });
