@@ -458,6 +458,7 @@ export default function ServiciosIndex() {
                                             <td className="px-4 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
                                                     <button
+                                                        aria-label="Editar servicio"
                                                         type="button"
                                                         onClick={() =>
                                                             openEditModal(s)
@@ -468,6 +469,11 @@ export default function ServiciosIndex() {
                                                         <Edit2 className="size-3.5" />
                                                     </button>
                                                     <button
+                                                        aria-label={
+                                                            s.activo
+                                                                ? 'Desactivar servicio'
+                                                                : 'Activar servicio'
+                                                        }
                                                         type="button"
                                                         onClick={() =>
                                                             handleToggleStatus(
@@ -488,6 +494,7 @@ export default function ServiciosIndex() {
                                                         <Power className="size-3.5" />
                                                     </button>
                                                     <button
+                                                        aria-label="Eliminar servicio"
                                                         type="button"
                                                         onClick={() =>
                                                             handleDelete(s)

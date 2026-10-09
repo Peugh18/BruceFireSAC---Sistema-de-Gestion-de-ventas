@@ -207,6 +207,7 @@ export default function RecepcionesIndex({
                             <div className="relative mt-1">
                                 <Search className="text-muted-foreground absolute top-2.5 left-3 size-4" />
                                 <Input
+                                    aria-label="Proveedor / Doc. Ref."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Buscar por proveedor o documento..."

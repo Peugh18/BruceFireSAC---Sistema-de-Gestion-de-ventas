@@ -237,6 +237,8 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                         const active = currentEstado === tab.id;
                         return (
                             <button
+                                aria-pressed={currentEstado === tab.id}
+                                aria-label={tab.label}
                                 key={tab.id}
                                 type="button"
                                 onClick={() => handleFilterChange(tab.id)}
@@ -385,6 +387,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                         {isPending ? (
                                             <>
                                                 <Button
+                                                    aria-label="Rechazar deficiencia"
                                                     type="button"
                                                     size="sm"
                                                     variant="outline"
@@ -401,6 +404,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                                 </Button>
 
                                                 <Button
+                                                    aria-label="Aprobar deficiencia"
                                                     type="button"
                                                     size="sm"
                                                     onClick={() =>
@@ -540,6 +544,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                     : 'Persona que comunica el rechazo *'}
                             </Label>
                             <Input
+                                aria-label="Autorizado por"
                                 required
                                 value={authForm.data.autorizado_por}
                                 onChange={(e) =>
@@ -590,6 +595,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                     Fecha *
                                 </Label>
                                 <Input
+                                    aria-label="Fecha"
                                     type="date"
                                     required
                                     value={authForm.data.fecha}
@@ -687,6 +693,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 Observaciones / Sustento
                             </Label>
                             <Input
+                                aria-label="Observación"
                                 value={authForm.data.observacion}
                                 onChange={(e) =>
                                     authForm.setData(

@@ -93,7 +93,7 @@ export default function VendedorLayout({
                             onClick={() => setSidebarOpen(true)}
                             aria-label="Abrir menú"
                             aria-expanded={sidebarOpen}
-                            aria-controls="vendedor-navigation"
+                            aria-controls="app-navigation-sidebar"
                             className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 lg:hidden"
                         >
                             <Menu className="size-4" strokeWidth={2} />
@@ -110,7 +110,7 @@ export default function VendedorLayout({
                                     : 'Contraer menú'
                             }
                             aria-expanded={!sidebarCollapsed}
-                            aria-controls="vendedor-navigation"
+                            aria-controls="app-navigation-sidebar"
                             className="border-border bg-card text-muted-foreground hidden size-9 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 lg:flex"
                         >
                             {sidebarCollapsed ? (
@@ -165,8 +165,10 @@ export default function VendedorLayout({
 
                             {notifsOpen && (
                                 <>
-                                    <div
-                                        className="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"
+                                    <button
+                                        type="button"
+                                        aria-label="Cerrar notificaciones"
+                                        className="focus-visible:outline-ring fixed inset-0 z-40 border-0 bg-black/10 p-0 backdrop-blur-[1px] focus-visible:outline-2 focus-visible:outline-offset-2"
                                         onClick={() => setNotifsOpen(false)}
                                     />
                                     <div className="border-border bg-card animate-in fade-in-50 zoom-in-95 absolute top-full right-0 z-50 mt-2 w-80 origin-top-right rounded-2xl border p-4 shadow-xl duration-150 ease-out sm:w-96">

@@ -310,6 +310,10 @@ export default function ChecklistCreate({
                                     {/* 3 State Touch Buttons (Mobile-first min 44px) */}
                                     <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-900">
                                         <button
+                                            aria-pressed={
+                                                item.estado === 'conforme'
+                                            }
+                                            aria-label={`Conforme: ${el.nombre}`}
                                             type="button"
                                             onClick={() =>
                                                 handleEstadoChange(
@@ -328,6 +332,10 @@ export default function ChecklistCreate({
                                         </button>
 
                                         <button
+                                            aria-pressed={
+                                                item.estado === 'observado'
+                                            }
+                                            aria-label={`Observado: ${el.nombre}`}
                                             type="button"
                                             onClick={() =>
                                                 handleEstadoChange(
@@ -346,6 +354,10 @@ export default function ChecklistCreate({
                                         </button>
 
                                         <button
+                                            aria-pressed={
+                                                item.estado === 'no_aplica'
+                                            }
+                                            aria-label={`N / A (no aplica): ${el.nombre}`}
                                             type="button"
                                             onClick={() =>
                                                 handleEstadoChange(
@@ -436,6 +448,7 @@ export default function ChecklistCreate({
                                                 <div className="flex items-center pt-5">
                                                     <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-300">
                                                         <input
+                                                            aria-label="Requiere Autorización"
                                                             type="checkbox"
                                                             checked={
                                                                 item.requiere_autorizacion

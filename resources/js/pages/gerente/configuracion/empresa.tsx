@@ -657,6 +657,7 @@ export default function EmpresaConfiguracion({
                         className="border-border grid gap-2 border-t pt-3 md:grid-cols-5"
                     >
                         <Input
+                            aria-label="Banco"
                             placeholder="Banco (ej. BCP)"
                             value={bankForm.data.banco}
                             onChange={(e) =>
@@ -664,6 +665,7 @@ export default function EmpresaConfiguracion({
                             }
                         />
                         <Input
+                            aria-label="Titular"
                             placeholder="Titular"
                             value={bankForm.data.titular}
                             onChange={(e) =>
@@ -671,6 +673,7 @@ export default function EmpresaConfiguracion({
                             }
                         />
                         <Input
+                            aria-label="Número de cuenta"
                             placeholder="N° de cuenta"
                             value={bankForm.data.numero_cuenta}
                             onChange={(e) =>
@@ -681,6 +684,7 @@ export default function EmpresaConfiguracion({
                             }
                         />
                         <Input
+                            aria-label="CCI"
                             placeholder="CCI (opcional)"
                             value={bankForm.data.cci}
                             onChange={(e) =>

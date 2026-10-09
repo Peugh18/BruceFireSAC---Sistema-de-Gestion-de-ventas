@@ -352,6 +352,7 @@ export default function SedesIndex() {
                                             <td className="px-4 py-3">
                                                 <div className="flex justify-end gap-1.5">
                                                     <button
+                                                        aria-label="Editar sede"
                                                         type="button"
                                                         onClick={() =>
                                                             openEdit(sede)
@@ -362,6 +363,11 @@ export default function SedesIndex() {
                                                         <Edit2 className="size-3.5" />
                                                     </button>
                                                     <button
+                                                        aria-label={
+                                                            sede.activo
+                                                                ? 'Desactivar sede'
+                                                                : 'Activar sede'
+                                                        }
                                                         type="button"
                                                         onClick={() =>
                                                             handleToggleStatus(

@@ -296,6 +296,7 @@ export default function TecnicoPlantaDashboard({
                 <form onSubmit={handleSearch} className="relative">
                     <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
                     <Input
+                        aria-label="Buscar"
                         type="text"
                         placeholder="Buscar por código OS o nombre de cliente..."
                         value={search}

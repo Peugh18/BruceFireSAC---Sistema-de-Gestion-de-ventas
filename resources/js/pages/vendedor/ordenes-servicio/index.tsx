@@ -231,6 +231,7 @@ export default function ServiceOrdersIndex({
                     description="Recargas, mantenimientos e inspecciones de tus clientes, en planta o en campo."
                     actions={
                         <Button
+                            aria-label="Nueva orden"
                             type="button"
                             onClick={() => setDialogOpen(true)}
                             className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] px-3.5 text-[12.5px] font-bold text-white shadow-none"
@@ -247,6 +248,7 @@ export default function ServiceOrdersIndex({
                         const active = currentEstado === tab.id;
                         return (
                             <button
+                                aria-label={tab.label}
                                 key={tab.id}
                                 type="button"
                                 aria-pressed={active}
@@ -746,6 +748,7 @@ export default function ServiceOrdersIndex({
                                     Fecha programada *
                                 </Label>
                                 <Input
+                                    aria-label="Fecha"
                                     type="date"
                                     required
                                     value={createForm.data.fecha}

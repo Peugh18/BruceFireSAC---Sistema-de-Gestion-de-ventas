@@ -2270,6 +2270,7 @@ export default function ClienteShow({
                                                     </div>
                                                     <div className="flex gap-1">
                                                         <button
+                                                            aria-label="Editar local del cliente"
                                                             type="button"
                                                             onClick={() =>
                                                                 openEditSite(s)
@@ -2279,6 +2280,7 @@ export default function ClienteShow({
                                                             <Edit3 className="size-3.5" />
                                                         </button>
                                                         <button
+                                                            aria-label="Eliminar local del cliente"
                                                             type="button"
                                                             onClick={() =>
                                                                 deleteSite(s.id)
@@ -2354,6 +2356,7 @@ export default function ClienteShow({
                                                     </div>
                                                     <div className="flex gap-1">
                                                         <button
+                                                            aria-label="Editar vehículo del cliente"
                                                             type="button"
                                                             onClick={() =>
                                                                 openEditVehicle(
@@ -2365,6 +2368,7 @@ export default function ClienteShow({
                                                             <Edit3 className="size-3.5" />
                                                         </button>
                                                         <button
+                                                            aria-label="Eliminar vehículo del cliente"
                                                             type="button"
                                                             onClick={() =>
                                                                 deleteVehicle(
@@ -2469,6 +2473,7 @@ export default function ClienteShow({
                             <div>
                                 <Label>Número doc</Label>
                                 <Input
+                                    aria-label="Número de documento"
                                     value={editForm.data.numero_documento}
                                     onChange={(e) =>
                                         editForm.setData(
@@ -2484,6 +2489,7 @@ export default function ClienteShow({
                         <div>
                             <Label>Razón Social / Nombre Completo</Label>
                             <Input
+                                aria-label="Razón social"
                                 value={editForm.data.razon_social}
                                 onChange={(e) =>
                                     editForm.setData(
@@ -2498,6 +2504,7 @@ export default function ClienteShow({
                         <div>
                             <Label>Nombre comercial (opcional)</Label>
                             <Input
+                                aria-label="Nombre comercial"
                                 value={editForm.data.nombre_comercial}
                                 onChange={(e) =>
                                     editForm.setData(
@@ -2513,6 +2520,7 @@ export default function ClienteShow({
                             <div>
                                 <Label>Teléfono</Label>
                                 <Input
+                                    aria-label="Teléfono"
                                     value={editForm.data.telefono}
                                     onChange={(e) => {
                                         const val = e.target.value;
@@ -2547,6 +2555,7 @@ export default function ClienteShow({
                                         )}
                                 </div>
                                 <Input
+                                    aria-label="WhatsApp"
                                     value={editForm.data.whatsapp}
                                     onChange={(e) =>
                                         editForm.setData(
@@ -2562,6 +2571,7 @@ export default function ClienteShow({
                         <div>
                             <Label>Correo electrónico</Label>
                             <Input
+                                aria-label="Correo electrónico"
                                 type="email"
                                 value={editForm.data.email}
                                 onChange={(e) =>
@@ -2574,6 +2584,7 @@ export default function ClienteShow({
                         <div>
                             <Label>Dirección fiscal</Label>
                             <Input
+                                aria-label="Dirección fiscal"
                                 value={editForm.data.direccion_fiscal}
                                 onChange={(e) =>
                                     editForm.setData(
@@ -2603,6 +2614,7 @@ export default function ClienteShow({
                         <div>
                             <Label>Observaciones internas</Label>
                             <Input
+                                aria-label="Observaciones"
                                 value={editForm.data.observaciones}
                                 onChange={(e) =>
                                     editForm.setData(
@@ -2668,6 +2680,7 @@ export default function ClienteShow({
                             <div>
                                 <Label>Nombre de la sede</Label>
                                 <Input
+                                    aria-label="Nombre"
                                     value={siteForm.data.nombre}
                                     onChange={(e) =>
                                         siteForm.setData(
@@ -2685,6 +2698,7 @@ export default function ClienteShow({
                         <div>
                             <Label>Dirección exacta</Label>
                             <Input
+                                aria-label="Dirección"
                                 value={siteForm.data.direccion}
                                 onChange={(e) =>
                                     siteForm.setData(
@@ -2717,6 +2731,7 @@ export default function ClienteShow({
                             <div>
                                 <Label>Contacto en sitio</Label>
                                 <Input
+                                    aria-label="Contacto"
                                     value={siteForm.data.contacto}
                                     onChange={(e) =>
                                         siteForm.setData(
@@ -2730,6 +2745,7 @@ export default function ClienteShow({
                             <div>
                                 <Label>Teléfono contacto</Label>
                                 <Input
+                                    aria-label="Teléfono"
                                     value={siteForm.data.telefono}
                                     onChange={(e) =>
                                         siteForm.setData(
@@ -2782,6 +2798,7 @@ export default function ClienteShow({
                         <div>
                             <Label>Placa del vehículo</Label>
                             <Input
+                                aria-label="Placa"
                                 value={vehicleForm.data.placa}
                                 onChange={(e) =>
                                     vehicleForm.setData(
@@ -2799,6 +2816,7 @@ export default function ClienteShow({
                             <div>
                                 <Label>Marca</Label>
                                 <Input
+                                    aria-label="Marca"
                                     value={vehicleForm.data.marca}
                                     onChange={(e) =>
                                         vehicleForm.setData(
@@ -2813,6 +2831,7 @@ export default function ClienteShow({
                             <div>
                                 <Label>Modelo</Label>
                                 <Input
+                                    aria-label="Modelo"
                                     value={vehicleForm.data.modelo}
                                     onChange={(e) =>
                                         vehicleForm.setData(
@@ -2829,6 +2848,7 @@ export default function ClienteShow({
                         <div>
                             <Label>Descripción / Observación</Label>
                             <Input
+                                aria-label="Descripción"
                                 value={vehicleForm.data.descripcion}
                                 onChange={(e) =>
                                     vehicleForm.setData(

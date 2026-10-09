@@ -412,6 +412,7 @@ export default function CertificadosIndex({
                                             >
                                                 <div className="flex gap-1.5">
                                                     <Button
+                                                        aria-label="Ver certificado"
                                                         asChild
                                                         variant="outline"
                                                         size="icon"
@@ -427,6 +428,7 @@ export default function CertificadosIndex({
                                                         </Link>
                                                     </Button>
                                                     <Button
+                                                        aria-label="Descargar PDF"
                                                         asChild
                                                         variant="outline"
                                                         size="icon"
@@ -447,6 +449,7 @@ export default function CertificadosIndex({
                                                         </a>
                                                     </Button>
                                                     <Button
+                                                        aria-label="Imprimir certificado"
                                                         asChild
                                                         variant="outline"
                                                         size="icon"
@@ -474,6 +477,7 @@ export default function CertificadosIndex({
                                                         </a>
                                                     </Button>
                                                     <Button
+                                                        aria-label="Descargar Word editable"
                                                         asChild
                                                         variant="outline"
                                                         size="icon"

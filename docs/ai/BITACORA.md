@@ -700,3 +700,19 @@
 - Brechas pendientes: traslado registra tránsito/recepción sin exigir GRE aceptada; rotulado de servicio/collar/tarjeta no acreditados (sticker de identificación 50×50 mm). NTP 833.030 consultada en edición 2012; confirmar vigente/muestras del dueño. Mantener cinco años de PH hasta decisión del dueño; QR/barras intactos.
 - Pruebas: 8 iniciales pasaron; ampliación 34/35 detectó aviso OpenSSL con archivo inválido, corregido y sus 2 pruebas pasaron. Primera ejecución falló al preparar base testing; corrida posterior migró correctamente. Pint y formato TS focalizados aplicados.
 - CI final aprobado: 877/877 pruebas, 4,670 aserciones (433.9 s en Pest); formato/lint/TypeScript/Pint/PHPStan aprobados. Se corrigieron formato Markdown, comprobación de tipo de serie y tipado Eloquent; sin supresiones ni línea base nueva. Primera corrida de 12 trabajadores interrumpida por preparación lenta; repetida con 2 mediante ajuste temporal, `composer.json` restaurado byte por byte. Diff revisado en seguridad/complejidad; sin cambio de permisos ni secretos expuestos.
+
+## 2026-10-09 — Nombres accesibles, controles y etiquetas (WCAG 2.2 AA)
+
+- Tarea acotada a accesibilidad; 38 archivos de interfaz. Listado de cada archivo/nombre en `ACCESIBILIDAD_CONTROLES.md`. Se preservan los cambios anteriores; sin commit, push ni dependencias nuevas.
+- Nombres españoles en iconos, menús técnicos/contraídos, pestañas, deficiencias, recepción, ejecución, almacén/caja y acciones de catálogo/ventas/certificados. Checklist: nombre del componente y `aria-pressed`; casillas técnicas con equipo identificado.
+- Etiquetas de campos y formulario compartido de cliente con `htmlFor`/ID único por instancia; controles y textos visibles conservados. Fondo de notificaciones convertido de `div` a botón, con foco; ID ARIA del menú corregido y área desplazable del Gerente enfocable.
+- Barrido final páginas/layouts: cero iconos interactivos sin nombre detectados y cero `div`/`span` con `onClick`. TypeScript, formato y lint aprobados. No se repite suite PHP porque no cambió backend.
+- Axe desde cdnjs/Edge instalado: cinco dashboards sin hallazgos. Modal de cliente sin hallazgos; campos activos con una etiqueta asociada. Flecha derecha de Servicios enfoca Seguimiento; menús técnicos móviles anuncian todas sus opciones. No se guardaron datos del negocio.
+- Revisión adicional encontró contraste en Nueva orden, Deficiencias y globo Chispa de Ajustes/Planta móvil. Colores conservados por instrucción explícita; no se acredita conformidad WCAG integral. Evidencias JSON en `storage/app/a11y-*`.
+
+
+## 2026-10-09 — Publicación autorizada para relevo de agente
+
+- El usuario pidió guardar, subir y fusionar los cambios en `main` como respaldo, sin repetir CI local. Se conserva la verificación previa de accesibilidad y la suite completa anterior.
+- El hook local de pre-push se omite únicamente en estas subidas mediante configuración temporal de Git; no se modifica el hook ni se desactivan los flujos remotos de GitHub.
+- Se incluyen el código y el informe de accesibilidad; los archivos ignorados del entorno, secretos y respaldos de base de datos permanecen locales.

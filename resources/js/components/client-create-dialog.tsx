@@ -1,6 +1,6 @@
 import { useHttp } from '@inertiajs/react';
 import { UserRoundPlus } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useId, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Cargando } from '@/components/cargando';
@@ -84,6 +84,8 @@ function ClientFormFields({
     lookupLoading: boolean;
     lookupMessage: string | null;
 }) {
+    const formId = useId();
+
     const [whatsappDiferente, setWhatsappDiferente] = useState(
         Boolean(
             data.whatsapp && data.telefono && data.whatsapp !== data.telefono,
@@ -93,10 +95,14 @@ function ClientFormFields({
     return (
         <div className="grid gap-3 sm:grid-cols-2">
             <div>
-                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                <Label
+                    htmlFor={`${formId}-tipo_documento`}
+                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                >
                     Tipo doc.
                 </Label>
                 <select
+                    id={`${formId}-tipo_documento`}
                     aria-label="Tipo doc."
                     value={data.tipo_documento}
                     onChange={(event) =>
@@ -114,11 +120,15 @@ function ClientFormFields({
             </div>
 
             <div>
-                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                <Label
+                    htmlFor={`${formId}-numero_documento`}
+                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                >
                     Numero
                 </Label>
                 <div className="relative">
                     <Input
+                        id={`${formId}-numero_documento`}
                         value={data.numero_documento}
                         onChange={(event) =>
                             setData(
@@ -147,12 +157,16 @@ function ClientFormFields({
             </div>
 
             <div className="sm:col-span-2">
-                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                <Label
+                    htmlFor={`${formId}-razon_social`}
+                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                >
                     {data.tipo_documento === 'dni'
                         ? 'Nombres y apellidos'
                         : 'Razon social'}
                 </Label>
                 <Input
+                    id={`${formId}-razon_social`}
                     value={data.razon_social}
                     onChange={(event) =>
                         setData('razon_social', event.target.value)
@@ -164,7 +178,10 @@ function ClientFormFields({
 
             {data.tipo_documento === 'ruc' && (
                 <div>
-                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                    <Label
+                        htmlFor={`${formId}-nombre_comercial`}
+                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                    >
                         Nombre comercial{' '}
                         <span className="text-muted-foreground font-normal normal-case">
                             (opcional, no viene de SUNAT — se escribe a mano si
@@ -172,6 +189,7 @@ function ClientFormFields({
                         </span>
                     </Label>
                     <Input
+                        id={`${formId}-nombre_comercial`}
                         value={data.nombre_comercial}
                         onChange={(event) =>
                             setData('nombre_comercial', event.target.value)
@@ -183,10 +201,14 @@ function ClientFormFields({
             )}
 
             <div>
-                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                <Label
+                    htmlFor={`${formId}-email`}
+                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                >
                     Email
                 </Label>
                 <Input
+                    id={`${formId}-email`}
                     type="email"
                     value={data.email}
                     onChange={(event) => setData('email', event.target.value)}
@@ -197,7 +219,10 @@ function ClientFormFields({
 
             <div>
                 <div className="flex items-center justify-between">
-                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                    <Label
+                        htmlFor={`${formId}-telefono`}
+                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                    >
                         Teléfono / WhatsApp
                     </Label>
                     <button
@@ -217,6 +242,7 @@ function ClientFormFields({
                     </button>
                 </div>
                 <Input
+                    id={`${formId}-telefono`}
                     type="tel"
                     value={data.telefono}
                     placeholder="999 999 999"
@@ -234,10 +260,14 @@ function ClientFormFields({
 
             {whatsappDiferente ? (
                 <div>
-                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                    <Label
+                        htmlFor={`${formId}-whatsapp`}
+                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                    >
                         Número de WhatsApp
                     </Label>
                     <Input
+                        id={`${formId}-whatsapp`}
                         type="tel"
                         value={data.whatsapp}
                         placeholder="Ej. 988 888 888"
@@ -251,12 +281,16 @@ function ClientFormFields({
             ) : null}
 
             <div className="sm:col-span-2">
-                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                <Label
+                    htmlFor={`${formId}-direccion_fiscal`}
+                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                >
                     {data.tipo_documento === 'ruc'
                         ? 'Dirección fiscal (obligatoria para facturar)'
                         : 'Dirección (opcional, sale en la boleta)'}
                 </Label>
                 <Input
+                    id={`${formId}-direccion_fiscal`}
                     value={data.direccion_fiscal}
                     onChange={(event) =>
                         setData('direccion_fiscal', event.target.value)
@@ -269,13 +303,17 @@ function ClientFormFields({
             {data.tipo_documento === 'ruc' && (
                 <>
                     <div>
-                        <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                        <Label
+                            htmlFor={`${formId}-estado_contribuyente`}
+                            className="text-foreground/80 text-[11px] font-bold uppercase"
+                        >
                             Estado SUNAT{' '}
                             <span className="text-muted-foreground font-normal normal-case">
                                 (según consulta)
                             </span>
                         </Label>
                         <Input
+                            id={`${formId}-estado_contribuyente`}
                             value={data.estado_contribuyente}
                             readOnly
                             disabled
@@ -285,13 +323,17 @@ function ClientFormFields({
                     </div>
 
                     <div>
-                        <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                        <Label
+                            htmlFor={`${formId}-condicion_domicilio`}
+                            className="text-foreground/80 text-[11px] font-bold uppercase"
+                        >
                             Condicion{' '}
                             <span className="text-muted-foreground font-normal normal-case">
                                 (según consulta)
                             </span>
                         </Label>
                         <Input
+                            id={`${formId}-condicion_domicilio`}
                             value={data.condicion_domicilio}
                             readOnly
                             disabled

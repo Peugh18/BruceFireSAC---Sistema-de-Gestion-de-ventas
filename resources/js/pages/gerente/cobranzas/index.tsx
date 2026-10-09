@@ -572,6 +572,7 @@ export default function CobranzasConsolidadasIndex() {
                                     </p>
                                 </div>
                                 <button
+                                    aria-label="Cerrar detalle de pagos"
                                     type="button"
                                     onClick={() => setViewingPayments(null)}
                                     className="text-muted-foreground hover:bg-background rounded-md p-1"

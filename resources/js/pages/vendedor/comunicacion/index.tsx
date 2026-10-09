@@ -196,6 +196,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                     </Link>
                                 </Button>
                                 <Button
+                                    aria-label="Cerrar conversación"
                                     type="button"
                                     variant="outline"
                                     onClick={() => abrir(null)}

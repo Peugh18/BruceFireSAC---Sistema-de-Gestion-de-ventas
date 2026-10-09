@@ -381,6 +381,7 @@ export default function CobranzasIndex({
                                         </p>
                                     </div>
                                     <Button
+                                        aria-label="Abrir turno de caja"
                                         type="button"
                                         onClick={() =>
                                             setOpenTurnoDialogOpen(true)
@@ -762,6 +763,7 @@ export default function CobranzasIndex({
                                 Fondo inicial (S/)
                             </Label>
                             <Input
+                                aria-label="Fondo inicial (S/)"
                                 type="number"
                                 step="0.01"
                                 min="0"
@@ -793,6 +795,7 @@ export default function CobranzasIndex({
                                 Cancelar
                             </Button>
                             <Button
+                                aria-label="Confirmar apertura"
                                 type="submit"
                                 disabled={openForm.processing}
                                 className="rounded-[8px] bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
@@ -846,6 +849,7 @@ export default function CobranzasIndex({
                                 Monto contado en efectivo (S/) *
                             </Label>
                             <Input
+                                aria-label="Monto contado al cierre (S/)"
                                 type="number"
                                 step="0.01"
                                 min="0"
@@ -872,6 +876,7 @@ export default function CobranzasIndex({
                                 Observaciones (opcional)
                             </Label>
                             <Input
+                                aria-label="Observación"
                                 type="text"
                                 value={closeForm.data.observacion}
                                 onChange={(e) =>
@@ -969,6 +974,7 @@ export default function CobranzasIndex({
                                 Monto a pagar (S/) *
                             </Label>
                             <Input
+                                aria-label="Monto"
                                 type="number"
                                 step="0.01"
                                 min="0.01"
@@ -993,6 +999,7 @@ export default function CobranzasIndex({
                                     N° Operación / Referencia
                                 </Label>
                                 <Input
+                                    aria-label="Número de operación"
                                     type="text"
                                     value={paymentForm.data.numero_operacion}
                                     onChange={(e) =>

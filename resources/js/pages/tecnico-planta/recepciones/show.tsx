@@ -334,6 +334,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             className="bg-card flex items-center gap-2 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-[11.5px] dark:border-neutral-700"
                                         >
                                             <input
+                                                aria-label={`Confirmar recepción del extintor ${eq.numero_serie}`}
                                                 type="checkbox"
                                                 checked={confirmForm.data.equipos_recibidos.includes(
                                                     eq.id,
@@ -374,6 +375,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                             </div>
 
                             <button
+                                aria-label="Confirmar Recepción Física en Planta"
                                 type="submit"
                                 disabled={confirmForm.processing}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-amber-700 active:bg-amber-800"
@@ -518,6 +520,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                         </div>
 
                                         <Link
+                                            aria-label="Completar checklist del extintor"
                                             href={ChecklistRoutes.create.url({
                                                 current_team: teamSlug,
                                                 service_order: order.id,
@@ -582,6 +585,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     </p>
                                 </div>
                                 <button
+                                    aria-label="Cerrar alta rápida"
                                     type="button"
                                     onClick={() => setShowRegisterModal(false)}
                                     className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
@@ -862,6 +866,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     </div>
 
                                     <button
+                                        aria-label="Generar Código BF-EQ y Registrar"
                                         type="submit"
                                         disabled={equipmentForm.processing}
                                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-700 active:bg-amber-800"

@@ -362,6 +362,7 @@ export default function CertificadoServicio({
                                                         </select>
                                                     ) : (
                                                         <Input
+                                                            aria-label={`${c.titulo}: fila ${i + 1}`}
                                                             value={valor}
                                                             inputMode={
                                                                 c.tipo ===
@@ -416,6 +417,7 @@ export default function CertificadoServicio({
                                         <td className="px-2 py-1.5">
                                             <div className="flex gap-1">
                                                 <button
+                                                    aria-label="Duplicar fila"
                                                     type="button"
                                                     title="Duplicar fila"
                                                     onClick={() =>
@@ -438,6 +440,7 @@ export default function CertificadoServicio({
                                                     <Copy className="size-3" />
                                                 </button>
                                                 <button
+                                                    aria-label="Quitar fila"
                                                     type="button"
                                                     title="Quitar fila"
                                                     disabled={
@@ -504,6 +507,7 @@ export default function CertificadoServicio({
                                         {punto.unidad ? (
                                             <div className="flex items-center gap-1">
                                                 <Input
+                                                    aria-label={punto.texto}
                                                     value={pruebas[i].valor}
                                                     inputMode="decimal"
                                                     onChange={(e) =>

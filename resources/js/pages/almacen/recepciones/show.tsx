@@ -257,6 +257,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                         Proveedor
                                     </Label>
                                     <Input
+                                        aria-label="Proveedor"
                                         value={data.proveedor}
                                         onChange={(e) =>
                                             setData('proveedor', e.target.value)
@@ -271,6 +272,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                         Doc. Referencia
                                     </Label>
                                     <Input
+                                        aria-label="Documento de referencia"
                                         value={data.documento_referencia}
                                         onChange={(e) =>
                                             setData(
@@ -287,6 +289,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                         Fecha
                                     </Label>
                                     <Input
+                                        aria-label="Fecha"
                                         type="date"
                                         value={data.fecha}
                                         onChange={(e) =>
@@ -302,6 +305,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                         Observación General
                                     </Label>
                                     <Input
+                                        aria-label="Observación"
                                         value={data.observacion}
                                         onChange={(e) =>
                                             setData(
@@ -356,6 +360,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                         Cant. Total
                                                     </Label>
                                                     <Input
+                                                        aria-label="Cantidad"
                                                         type="number"
                                                         min="1"
                                                         value={it.cantidad}
@@ -379,6 +384,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                         Cant. Conforme
                                                     </Label>
                                                     <Input
+                                                        aria-label="Cantidad conforme"
                                                         type="number"
                                                         min="0"
                                                         max={it.cantidad}
@@ -412,6 +418,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                             )
                                                         </Label>
                                                         <Input
+                                                            aria-label="Fecha de vencimiento"
                                                             type="date"
                                                             value={
                                                                 it.fecha_vencimiento
@@ -444,6 +451,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                         aplica)
                                                     </Label>
                                                     <Input
+                                                        aria-label="Motivo de no conformidad"
                                                         value={
                                                             it.observacion_item
                                                         }
@@ -481,6 +489,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                         className="flex items-center gap-2"
                                                                     >
                                                                         <Input
+                                                                            aria-label="Capacidad"
                                                                             placeholder="Capacidad"
                                                                             value={
                                                                                 u.capacidad
@@ -501,6 +510,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                             required
                                                                         />
                                                                         <Input
+                                                                            aria-label="Serie del fabricante"
                                                                             placeholder="N° de serie"
                                                                             value={
                                                                                 u.serie_fabricante
@@ -520,6 +530,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                             className="h-7 text-xs"
                                                                         />
                                                                         <Input
+                                                                            aria-label="Marca"
                                                                             placeholder="Marca"
                                                                             value={
                                                                                 u.marca
@@ -540,6 +551,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                             required
                                                                         />
                                                                         <Input
+                                                                            aria-label="Año de fabricación"
                                                                             type="number"
                                                                             min="1990"
                                                                             max={

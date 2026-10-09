@@ -554,6 +554,7 @@ export default function ProductosIndex() {
                                                 <td className="px-4 py-3 text-right">
                                                     <div className="flex items-center justify-end gap-1.5">
                                                         <button
+                                                            aria-label="Editar producto y stock mínimo"
                                                             type="button"
                                                             onClick={() =>
                                                                 openEditModal(p)
@@ -564,6 +565,11 @@ export default function ProductosIndex() {
                                                             <Edit2 className="size-3.5" />
                                                         </button>
                                                         <button
+                                                            aria-label={
+                                                                p.activo
+                                                                    ? 'Desactivar producto'
+                                                                    : 'Activar producto'
+                                                            }
                                                             type="button"
                                                             onClick={() =>
                                                                 handleToggleStatus(
@@ -584,6 +590,7 @@ export default function ProductosIndex() {
                                                             <Power className="size-3.5" />
                                                         </button>
                                                         <button
+                                                            aria-label="Eliminar producto"
                                                             type="button"
                                                             onClick={() =>
                                                                 handleDelete(p)

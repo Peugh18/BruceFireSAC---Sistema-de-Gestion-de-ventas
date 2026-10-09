@@ -935,6 +935,7 @@ export default function NuevaVenta({
                                 </p>
                                 <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                                     <Input
+                                        aria-label="Dirección del cliente"
                                         value={direccionNueva}
                                         onChange={(event) =>
                                             setDireccionNueva(
@@ -1095,6 +1096,7 @@ export default function NuevaVenta({
                                 </div>
                                 {form.data.medio_pago !== 'efectivo' ? (
                                     <Input
+                                        aria-label="Número de operación"
                                         value={form.data.numero_operacion}
                                         onChange={(event) =>
                                             form.setData(
@@ -1295,6 +1297,7 @@ export default function NuevaVenta({
                                                     ) : (
                                                         <div className="flex items-center gap-1">
                                                             <button
+                                                                aria-label="Disminuir cantidad"
                                                                 type="button"
                                                                 onClick={() =>
                                                                     actualizarLinea(
@@ -1314,6 +1317,7 @@ export default function NuevaVenta({
                                                                 <Minus className="size-3" />
                                                             </button>
                                                             <Input
+                                                                aria-label="Cantidad"
                                                                 type="number"
                                                                 min={1}
                                                                 value={
@@ -1341,6 +1345,7 @@ export default function NuevaVenta({
                                                                 className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
                                                             />
                                                             <button
+                                                                aria-label="Aumentar cantidad"
                                                                 type="button"
                                                                 onClick={() =>
                                                                     actualizarLinea(
@@ -1361,6 +1366,7 @@ export default function NuevaVenta({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Input
+                                                        aria-label="Precio unitario"
                                                         type="number"
                                                         min={0}
                                                         step="0.01"
@@ -1385,6 +1391,7 @@ export default function NuevaVenta({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Input
+                                                        aria-label="Descuento"
                                                         type="number"
                                                         min={0}
                                                         max={
@@ -1426,6 +1433,7 @@ export default function NuevaVenta({
                                                 </td>
                                                 <td className="border-border border-b px-2.5 py-2.5">
                                                     <Button
+                                                        aria-label="Eliminar línea"
                                                         type="button"
                                                         variant="outline"
                                                         size="icon"

@@ -344,6 +344,7 @@ export default function EjecucionShow({
                     {order.estado === 'recibido_planta' ||
                     order.estado === 'autorizado' ? (
                         <button
+                            aria-label="Iniciar Trabajo en Taller (En Proceso)"
                             type="button"
                             onClick={() => handleAdvance('en_proceso')}
                             disabled={avanzando}
@@ -354,6 +355,7 @@ export default function EjecucionShow({
                         </button>
                     ) : order.estado === 'en_proceso' ? (
                         <button
+                            aria-label="Marcar Trabajo como Terminado en Taller"
                             type="button"
                             onClick={() => handleAdvance('trabajo_terminado')}
                             disabled={avanzando}
@@ -378,6 +380,7 @@ export default function EjecucionShow({
                                             className="flex cursor-pointer items-center gap-2"
                                         >
                                             <input
+                                                aria-label={`Solicitar datos de placa del extintor ${eq.numero_serie}`}
                                                 type="checkbox"
                                                 checked={conPh.includes(eq.id)}
                                                 onChange={(e) =>
@@ -562,6 +565,7 @@ export default function EjecucionShow({
                                         </div>
                                     ) : (
                                         <button
+                                            aria-label="Consumir Repuesto de Almacén (Kardex)"
                                             type="button"
                                             onClick={() =>
                                                 setSelectedDeficiency(d)
@@ -596,6 +600,7 @@ export default function EjecucionShow({
                                     </p>
                                 </div>
                                 <button
+                                    aria-label="Cerrar consumo de repuesto"
                                     type="button"
                                     onClick={() => setSelectedDeficiency(null)}
                                     className="p-1 text-neutral-400"

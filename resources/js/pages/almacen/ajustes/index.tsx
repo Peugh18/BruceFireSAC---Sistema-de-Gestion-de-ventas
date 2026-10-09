@@ -204,6 +204,10 @@ export default function AjustesIndex({
                     </div>
 
                     <Button
+                        aria-label={
+                            showForm ? 'Ocultar Formulario' : 'Nuevo Ajuste'
+                        }
+                        aria-expanded={showForm}
                         type="button"
                         onClick={() => setShowForm(!showForm)}
                         className="bg-primary hover:bg-primary/90 h-9 gap-1.5 rounded-[9px] px-4 text-xs font-bold text-white"
@@ -514,6 +518,7 @@ export default function AjustesIndex({
                                                 </span>
                                             </Label>
                                             <Input
+                                                aria-label="Lote"
                                                 value={data.lote}
                                                 onChange={(e) =>
                                                     setData(
@@ -530,6 +535,7 @@ export default function AjustesIndex({
                                                 Vence
                                             </Label>
                                             <Input
+                                                aria-label="Fecha de vencimiento"
                                                 type="date"
                                                 value={data.fecha_vencimiento}
                                                 onChange={(e) =>
@@ -561,6 +567,7 @@ export default function AjustesIndex({
                                         <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
+                                        aria-label="Cantidad"
                                         type="number"
                                         min={1}
                                         value={data.cantidad}
@@ -591,6 +598,7 @@ export default function AjustesIndex({
                                         <span className="text-red-500">*</span>
                                     </Label>
                                     <Input
+                                        aria-label="Motivo"
                                         type="text"
                                         placeholder="Ej: Conteo físico semestral, daño en traslado"
                                         value={data.motivo}
@@ -610,6 +618,7 @@ export default function AjustesIndex({
                                     (opcional)
                                 </Label>
                                 <Input
+                                    aria-label="Observación"
                                     type="text"
                                     placeholder="Detalles sobre acta o reclamo a transporte..."
                                     value={data.observacion}
@@ -630,6 +639,7 @@ export default function AjustesIndex({
                                     Cancelar
                                 </Button>
                                 <Button
+                                    aria-label="Confirmar Ajuste en Kardex"
                                     type="submit"
                                     disabled={processing}
                                     className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs font-bold text-white"
