@@ -112,7 +112,18 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
-            return Limit::perMinute(5)->by($throttleKey);
+            // 10 intentos por minuto. Además, si se supera, se vuelve al
+            // formulario con un mensaje claro en español en lugar de la página
+            // genérica 429, que no le decía al usuario qué hacer.
+            return Limit::perMinute(10)->by($throttleKey)->response(function () use ($throttleKey) {
+                $segundos = max(1, RateLimiter::availableIn($throttleKey));
+
+                return redirect()
+                    ->back()
+                    ->withErrors([
+                        'email' => "Demasiados intentos de inicio de sesión. Espera {$segundos} segundos e inténtalo de nuevo.",
+                    ]);
+            });
         });
 
         RateLimiter::for('passkeys', function (Request $request) {

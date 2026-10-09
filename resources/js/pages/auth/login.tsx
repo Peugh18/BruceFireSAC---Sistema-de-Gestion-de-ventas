@@ -4,7 +4,6 @@ import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -100,7 +99,17 @@ export default function Login({ status, canResetPassword }: Props) {
                             </div>
 
                             <div className="flex items-center space-x-3">
-                                <Checkbox id="remember" name="remember" />
+                                {/* Input nativo a propósito: el Checkbox de Radix
+                                    renderiza un <button> y su valor NO se envía
+                                    con el formulario, así que "recordarme" no
+                                    hacía nada. */}
+                                <input
+                                    id="remember"
+                                    type="checkbox"
+                                    name="remember"
+                                    value="1"
+                                    className="border-input accent-primary size-4 shrink-0 cursor-pointer rounded-[4px] border"
+                                />
                                 <Label
                                     htmlFor="remember"
                                     className="text-muted-foreground text-sm font-normal"
