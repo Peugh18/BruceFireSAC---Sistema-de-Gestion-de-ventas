@@ -710,7 +710,6 @@
 - Axe desde cdnjs/Edge instalado: cinco dashboards sin hallazgos. Modal de cliente sin hallazgos; campos activos con una etiqueta asociada. Flecha derecha de Servicios enfoca Seguimiento; menús técnicos móviles anuncian todas sus opciones. No se guardaron datos del negocio.
 - Revisión adicional encontró contraste en Nueva orden, Deficiencias y globo Chispa de Ajustes/Planta móvil. Colores conservados por instrucción explícita; no se acredita conformidad WCAG integral. Evidencias JSON en `storage/app/a11y-*`.
 
-
 ## 2026-10-09 — Publicación autorizada para relevo de agente
 
 - El usuario pidió guardar, subir y fusionar los cambios en `main` como respaldo, sin repetir CI local. Se conserva la verificación previa de accesibilidad y la suite completa anterior.
