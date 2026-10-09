@@ -277,7 +277,14 @@ export default function RecojoShow({
                                         {ev.etapa || ev.eslabon}
                                     </div>
                                     <div className="text-[11px] text-neutral-500">
-                                        Por: {ev.responsable} • {ev.fecha}
+                                        Por: {ev.responsable} •{' '}
+                                        {new Date(ev.fecha).toLocaleString(
+                                            'es-PE',
+                                            {
+                                                dateStyle: 'short',
+                                                timeStyle: 'short',
+                                            },
+                                        )}
                                     </div>
                                     {ev.payload?.contacto_cliente && (
                                         <div className="text-[11px] text-neutral-600 dark:text-neutral-400">

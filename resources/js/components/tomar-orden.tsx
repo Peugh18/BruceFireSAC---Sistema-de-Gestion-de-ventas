@@ -45,6 +45,23 @@ export default function TomarOrden({
         );
     }
 
+    // La orden ya pasó a la otra área (p. ej. recogida en campo y rumbo a
+    // planta): este técnico no la puede tomar.
+    const seccion =
+        typeof window !== 'undefined' &&
+        window.location.pathname.includes('/tecnico-campo/')
+            ? 'campo'
+            : 'planta';
+
+    if (asignacion.area !== seccion) {
+        return (
+            <div className="border-border bg-muted/40 text-muted-foreground rounded-[12px] border px-4 py-2.5 text-[12.5px]">
+                Esta orden ya pasó a{' '}
+                {asignacion.area === 'planta' ? 'Planta' : 'Campo'}.
+            </div>
+        );
+    }
+
     function tomar() {
         const rutas =
             asignacion.area === 'campo' ? tecnicoCampo : tecnicoPlanta;

@@ -46,7 +46,7 @@ export type ServiceOrderEvent = {
 export type ServiceOrderDetails = {
     id: number;
     codigo: string;
-    tipo_servicio: string;
+    service?: { nombre: string } | null;
     service_id?: number | null;
     fecha: string;
     prioridad: string;
@@ -130,6 +130,7 @@ function tituloDeEvento(evt: ServiceOrderEvent): string {
         orden_editada: 'Orden editada por ventas',
         entrega_final_realizada: 'Entregado al cliente',
         consumo_repuesto_kardex: 'Repuesto instalado',
+        alta_tecnica_rapida: 'Extintor registrado',
     };
     const porTipo: Record<string, string> = {
         creada: 'Orden creada',
@@ -453,7 +454,7 @@ export default function ServiceOrderShow({
                                         Ver venta
                                     </Link>
                                 </Button>
-                            ) : (
+                            ) : serviceOrder.estado === 'anulada' ? null : (
                                 <Button asChild>
                                     <Link
                                         href={VentasRoutes.create.url(
@@ -620,7 +621,7 @@ export default function ServiceOrderShow({
                                         Tipo de servicio
                                     </div>
                                     <div className="text-foreground font-semibold">
-                                        {serviceOrder.tipo_servicio}
+                                        {serviceOrder.service?.nombre ?? '—'}
                                     </div>
                                 </div>
                                 <div className="py-2">
@@ -839,6 +840,10 @@ export default function ServiceOrderShow({
                                                 </div>
                                                 <div className="text-foreground/80 mt-1">
                                                     {evt.payload?.mensaje ||
+                                                        (evt.payload
+                                                            ?.numero_serie
+                                                            ? `Extintor ${evt.payload.numero_serie}`
+                                                            : null) ||
                                                         (evt.payload?.resultado
                                                             ? `Resultado: ${evt.payload.resultado}`
                                                             : 'Evento registrado en orden de servicio')}

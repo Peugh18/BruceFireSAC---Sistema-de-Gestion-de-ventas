@@ -32,6 +32,11 @@ export type DeficiencyItem = {
     cliente: string;
     componente: string;
     condicion: string;
+    nota?: string | null;
+    accion_recomendada?: string | null;
+    repuesto_sugerido?: string | null;
+    equipo?: string | null;
+    foto_url?: string | null;
     estado: string;
     requiere_autorizacion: boolean;
     authorization?: {
@@ -303,9 +308,39 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                             </Badge>
                                         </div>
 
-                                        <div className="text-muted-foreground mt-1 text-[12.5px]">
-                                            {item.condicion}
+                                        <div className="text-foreground/80 mt-1 text-[12.5px]">
+                                            {item.nota ?? item.condicion}
+                                            {item.equipo
+                                                ? ` · ${item.equipo}`
+                                                : ''}
                                         </div>
+                                        {(item.accion_recomendada ||
+                                            item.repuesto_sugerido) && (
+                                            <div className="text-muted-foreground mt-1 text-[12px]">
+                                                {[
+                                                    item.accion_recomendada &&
+                                                        `Acción: ${item.accion_recomendada}`,
+                                                    item.repuesto_sugerido &&
+                                                        `Repuesto: ${item.repuesto_sugerido}`,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </div>
+                                        )}
+                                        {item.foto_url && (
+                                            <a
+                                                href={item.foto_url}
+                                                target="_blank"
+                                                rel="noopener"
+                                                className="mt-2 inline-block"
+                                            >
+                                                <img
+                                                    src={item.foto_url}
+                                                    alt={`Foto de la falla en ${item.componente}`}
+                                                    className="border-border size-20 rounded-md border object-cover"
+                                                />
+                                            </a>
+                                        )}
 
                                         <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-3 text-[11.5px]">
                                             <span>

@@ -98,3 +98,17 @@ test('tecnico campo dashboard filters by status tab and service type', function 
             ->where('orders.data.0.codigo', 'OS-CMP-1002')
         );
 });
+
+test('tecnico campo no ve ordenes anuladas ni de otro tecnico en lista ni kpis', function () {
+    $otro = User::factory()->create();
+    ServiceOrder::factory()->create(['estado' => 'anulada', 'departamento_tecnico' => 'campo']);
+    ServiceOrder::factory()->create(['estado' => 'pendiente_recepcion', 'departamento_tecnico' => 'campo', 'tecnico_id' => $otro->id]);
+    ServiceOrder::factory()->create(['estado' => 'pendiente_recepcion', 'departamento_tecnico' => 'campo', 'tecnico_id' => $this->tecnicoCampo->id]);
+
+    $this->actingAs($this->tecnicoCampo)
+        ->get(route('tecnico-campo.dashboard', ['current_team' => $this->team]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('kpis.total_servicios', 1)
+            ->where('kpis.pendientes', 1)
+            ->has('orders.data', 1));
+});

@@ -137,6 +137,7 @@ type QuoteOption = {
 type VentaPrefill = {
     id: number | null;
     service_order_id?: number;
+    adicionales_sin_cotizacion?: { componente: string; importe: number }[];
     numero_interno: string;
     emitida?: boolean;
     comprobante?: string | null;
@@ -718,7 +719,9 @@ export default function NuevaVenta({
                                         ? `Editando ${venta.comprobante ?? venta.numero_interno}`
                                         : editando
                                           ? `Editando el borrador ${venta.numero_interno}`
-                                          : `Copia de ${venta.numero_interno}`}
+                                          : venta.service_order_id
+                                            ? `Cobro de la orden ${venta.numero_interno}`
+                                            : `Copia de ${venta.numero_interno}`}
                                 </p>
                                 <p className="text-muted-foreground">
                                     {editandoEmitida
@@ -727,8 +730,23 @@ export default function NuevaVenta({
                                             : 'Cambia cliente, comprobante, productos, precios o pago. Al guardar se vuelve a generar con el mismo número (si pasas de factura a boleta o al revés, toma el número de la otra serie).'
                                         : editando
                                           ? 'Cambia lo que haga falta y emite. La venta conserva su número.'
-                                          : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
+                                          : venta.service_order_id
+                                            ? 'Ya están el cliente y los servicios de la orden: revisa y emite.'
+                                            : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
                                 </p>
+                                {venta.adicionales_sin_cotizacion?.length ? (
+                                    <p className="text-warning-strong mt-1 font-semibold">
+                                        Agrega a mano los adicionales que el
+                                        cliente aprobó sin cotización:{' '}
+                                        {venta.adicionales_sin_cotizacion
+                                            .map(
+                                                (adicional) =>
+                                                    `${adicional.componente} (S/ ${adicional.importe.toFixed(2)})`,
+                                            )
+                                            .join(', ')}
+                                        .
+                                    </p>
+                                ) : null}
                             </div>
                         </Card>
                     ) : null}

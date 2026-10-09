@@ -383,6 +383,9 @@ class SaleController extends Controller
             if ($serviceOrderId && ! $serviceOrder) {
                 throw ValidationException::withMessages(['service_order_id' => 'La orden de servicio no es de tu sede.']);
             }
+            if ($serviceOrder?->estado === 'anulada') {
+                throw ValidationException::withMessages(['service_order_id' => 'Esta orden está anulada: no se cobra.']);
+            }
             if ($serviceOrder?->sale_id) {
                 throw ValidationException::withMessages(['service_order_id' => 'Esta orden ya fue cobrada.']);
             }
@@ -421,7 +424,7 @@ class SaleController extends Controller
     protected function ordenParaCobro(int $orderId, ?int $sedeId): ?array
     {
         $order = ServiceOrder::with(['client', 'equipments', 'service', 'deficiencies.authorization.cotizacionAdicional.items.product', 'deficiencies.authorization.cotizacionAdicional.items.service'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($orderId);
-        if (! $order || $order->sale_id) {
+        if (! $order || $order->sale_id || $order->estado === 'anulada') {
             return null;
         }
 
@@ -434,15 +437,19 @@ class SaleController extends Controller
             return ['tipo_linea' => $equipment ? 'recarga_servicio' : 'servicio', 'numero_serie' => $equipment?->numero_serie, 'service_id' => $service->id, 'nombre' => $service->nombre, 'cantidad' => 1, 'precio_unitario' => (float) $service->precio_venta, 'descuento' => 0];
         });
         // V6: una misma cotización usada en varias autorizaciones se cobra una vez.
-        $additionalItems = $order->deficiencies->where('estado', 'autorizada')
+        $additionalItems = $order->deficiencies->whereIn('estado', ['autorizada', 'resuelta'])
             ->map(fn ($deficiency) => $deficiency->authorization?->cotizacionAdicional)
             ->filter()
             ->unique('id')
             ->flatMap(fn (Quote $cotizacion) => $cotizacion->items)
             ->map(fn (QuoteItem $item): array => ['tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service_id ? $item->service->nombre : $item->product->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
         $items = $items->concat($additionalItems)->values()->all();
+        $adicionalesSinCotizacion = $order->deficiencies->whereIn('estado', ['autorizada', 'resuelta'])
+            ->filter(fn ($deficiency) => $deficiency->authorization && ! $deficiency->authorization->cotizacionAdicional && $deficiency->authorization->importe > 0)
+            ->map(fn ($deficiency): array => ['componente' => $deficiency->componente, 'importe' => (float) $deficiency->authorization->importe])
+            ->values()->all();
 
-        return ['id' => null, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => 'local_cliente', 'referencia' => $order->codigo, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items];
+        return ['id' => null, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => 'local_cliente', 'referencia' => $order->codigo, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items, 'adicionales_sin_cotizacion' => $adicionalesSinCotizacion];
     }
 
     public function show(Team $current_team, Sale $sale, Request $request): Response

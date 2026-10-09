@@ -25,6 +25,13 @@ class QuickRegisterEquipment
             if ($equipment && $equipment->client_id !== $serviceOrder->client_id) {
                 throw ValidationException::withMessages(['numero_serie' => 'El extintor pertenece a otro cliente.']);
             }
+            $otraOrden = $equipment?->serviceOrders()
+                ->whereKeyNot($serviceOrder->id)
+                ->whereNotIn('estado', ['entregado', 'cerrado', 'anulada'])
+                ->value('codigo');
+            if ($otraOrden) {
+                throw ValidationException::withMessages(['numero_serie' => "Este extintor sigue en la orden {$otraOrden}: entrégalo o anula esa orden primero."]);
+            }
             $case = 'A_existente';
             if ($equipment) {
                 $equipment->update(array_filter(['tipo_agente' => $data['tipo_agente'] ?? null, 'capacidad' => $data['capacidad'] ?? null, 'marca' => $data['marca'] ?? null, 'serie_fabricante' => $data['serie_fabricante'] ?? null, 'notas' => $data['notas'] ?? null], fn (mixed $value): bool => $value !== null && $value !== ''));
