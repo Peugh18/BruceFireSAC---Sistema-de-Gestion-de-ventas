@@ -362,6 +362,27 @@ export default function NuevaVenta({
         cliente !== null &&
         cliente.tipo_documento === 'ruc' &&
         (cliente.direccion_fiscal ?? '').replace(/[-.\s]/g, '') === '';
+
+    /**
+     * Regla de detracción (confirmada por el dueño con su contador): el repuesto
+     * o producto que se instala DENTRO del servicio va en la misma factura y la
+     * detracción se calcula sobre el total. El producto SUELTO que no se instala
+     * no puede acompañar a un servicio sujeto a detracción: va en factura aparte.
+     * El servidor es quien valida de verdad (DetraccionCalculator): aquí solo se
+     * avisa ANTES de emitir para no dejar una factura a medias.
+     */
+    const esServicioDeLinea = (line: SaleLine) =>
+        line.service_id != null || line.tipo_linea === 'recarga_servicio';
+    const productoSueltoConDetraccion =
+        form.data.comprobante_tipo === 'factura' &&
+        total > 700 &&
+        form.data.items.some(esServicioDeLinea) &&
+        form.data.items.some(
+            (line) =>
+                !esServicioDeLinea(line) &&
+                (line.deficiency_id ?? null) === null,
+        );
+
     const [direccionNueva, setDireccionNueva] = useState('');
     const [guardandoDireccion, setGuardandoDireccion] = useState(false);
     const [errorDireccion, setErrorDireccion] = useState<string | null>(null);
@@ -605,6 +626,13 @@ export default function NuevaVenta({
         if (emitir && unidadFaltante) {
             setAviso(
                 `Faltan ${unidadFaltante.faltantes} ${unidadFaltante.faltantes === 1 ? 'unidad' : 'unidades'} por escanear de ${unidadFaltante.nombre}.`,
+            );
+            return;
+        }
+
+        if (emitir && productoSueltoConDetraccion) {
+            setAviso(
+                'Este producto no es parte del servicio: emítelo en una factura aparte.',
             );
             return;
         }
@@ -1159,6 +1187,14 @@ export default function NuevaVenta({
                                 )}
                                 {fieldError(form.errors, 'medio_pago')}
                             </div>
+                        ) : null}
+                        {productoSueltoConDetraccion ? (
+                            <p className="rounded-[7px] border border-amber-300 bg-amber-50 px-3 py-2 text-[11.5px] font-semibold text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-300">
+                                Este producto no es parte del servicio: emítelo
+                                en una factura aparte. La detracción del
+                                servicio se calcula sobre el total del servicio
+                                con su repuesto instalado.
+                            </p>
                         ) : null}
                         <ReferenciaField
                             cliente={cliente}

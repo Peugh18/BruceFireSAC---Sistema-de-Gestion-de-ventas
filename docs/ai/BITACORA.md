@@ -726,3 +726,33 @@
 - SUNAT mantiene recarga de extintores en numeral 5 (otros servicios empresariales): https://orientacion.sunat.gob.pe/3350-consultas-sunat-empresas e Informe 017-2006 https://www.sunat.gob.pe/legislacion/oficios/2006/oficios/i0172006.htm . Inferencia de código: 022 para recarga, 020 para mantenimiento/reparación; no extender la antigua exclusión de mantenimiento del informe de 2006 a la normativa actual.
 - Tabla actual y códigos: https://orientacion.sunat.gob.pe/apendices-del-sistema-de-detracciones (020/022/037, 12%, clasificación distinta). Operaciones combinadas y otros servicios pendientes; configuración fiscal conservada.
 - Solo actualizados PLAN y BITACORA. Sin pruebas ejecutadas ni cambios de código/configuración, commit o push en esta aclaración.
+
+## 2026-10-09 — Detracción: el repuesto instalado va con el servicio
+
+- Regla confirmada por el dueño con su contador. El repuesto o producto que se
+  usa o instala **dentro del servicio** es parte del servicio: va en la **misma
+  factura** y la detracción se calcula sobre el **TOTAL** con el código del
+  servicio (`services.codigo_detraccion`). El producto **suelto** que no se
+  instala (extintor nuevo, accesorio vendido aparte) **no puede** acompañar a un
+  servicio sujeto a detracción: se emite en **factura aparte**.
+- Se considera "parte del servicio" en `DetraccionCalculator`:
+  1. la línea de servicio (`SaleItem::esServicio()`);
+  2. la línea con `sale_items.deficiency_id` (adicional detectado en una orden);
+  3. el repuesto consumido en una orden de servicio de esa misma venta
+     (`InventoryMovement` `tipo=salida_servicio` referenciando una `Deficiency`
+     cuyo `ServiceOrder.sale_id` es esta venta).
+- Sin cambios: boleta y nota de venta nunca llevan detracción; hasta S/700 no
+  hay detracción; la factura emitida conserva su snapshot
+  (`codigo_detraccion_snapshot`, `monto_detraccion_snapshot`); servicios con
+  códigos distintos o sin clasificar siguen bloqueados como antes.
+- Archivos: `app/Services/Billing/DetraccionCalculator.php` (nueva regla +
+  `esParteDelServicio` / `esRepuestoConsumidoEnLaVenta`),
+  `resources/js/pages/vendedor/ventas/nueva.tsx` (aviso antes de emitir),
+  `tests/Feature/DetraccionParteDelServicioTest.php` (9 pruebas nuevas).
+  `GreenterService` ya usaba `codigo_bien` y el monto sobre el total: sin cambios.
+- TDD: las pruebas se escribieron primero y fallaron con el mensaje antiguo
+  ("combina servicios con códigos distintos o conceptos no sujetos"); después de
+  la implementación pasan.
+- Verificación: 44/44 pruebas (154 aserciones) en detracción + `SaleModuleTest`;
+  Pint ✅ · PHPStan 0 errores ✅ · `tsc --noEmit` ✅ · `vp check` 212 archivos ✅.
+  Sunat solo beta; sin push.
