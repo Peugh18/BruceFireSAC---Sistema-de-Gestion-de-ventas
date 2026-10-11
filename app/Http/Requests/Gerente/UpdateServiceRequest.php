@@ -39,6 +39,7 @@ class UpdateServiceRequest extends FormRequest
             'capacidad' => ['nullable', 'string', 'max:20'],
             'precio_venta' => ['required', 'numeric', 'min:0'],
             'aplica_igv' => ['boolean'],
+            'codigo_detraccion' => ['nullable', Rule::in(['020', '022', '037'])],
             'tipo_afectacion_igv' => ['sometimes', 'required', Rule::in(['10', '20', '30'])],
             // A4: el certificado que sale al terminar el servicio.
             'certificate_type_id' => ['nullable', 'integer', 'exists:certificate_types,id'],

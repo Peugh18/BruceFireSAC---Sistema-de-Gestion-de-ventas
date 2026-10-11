@@ -34,6 +34,7 @@ class CreditNoteController extends Controller
                 $request->string('detalle')->toString(),
                 (float) $request->input('importe'),
                 $request->user()->id,
+                $request->validated('nota_datos', []),
             );
 
             return back()->with('success', 'Nota de crédito enviada al Gerente. Se emitirá cuando la apruebe.');
@@ -44,6 +45,7 @@ class CreditNoteController extends Controller
             $request->string('motivo_catalogo')->toString(),
             $request->string('detalle')->toString(),
             (float) $request->input('importe'),
+            $request->validated('nota_datos', []),
         );
 
         try {

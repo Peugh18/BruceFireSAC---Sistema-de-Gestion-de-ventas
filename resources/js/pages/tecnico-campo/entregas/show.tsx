@@ -22,6 +22,7 @@ import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
+import equiposRoutes from '@/routes/equipos';
 import guias from '@/routes/guias';
 import entregas from '@/routes/tecnico-campo/entregas';
 import { toast } from 'sonner';
@@ -51,6 +52,7 @@ type Equipment = {
     capacidad?: string | null;
     marca?: string | null;
     ubicacion_actual?: string | null;
+    checklists?: { resultado_general: string }[];
 };
 
 type CustodyEvent = {
@@ -71,7 +73,10 @@ type ServiceOrder = {
     events?: Array<{
         id: number;
         tipo: string;
-        payload: Record<string, string | number | boolean | null | undefined>;
+        payload: Record<
+            string,
+            string | number | boolean | null | undefined
+        > | null;
         created_at: string;
     }>;
     client: Client;
@@ -144,6 +149,12 @@ export default function EntregaShow({
     }>().props;
 
     const isCerrada = order.estado === 'cerrado';
+    const entregaRealizada =
+        order.events?.some(
+            (event) => event.payload?.accion === 'entrega_final_realizada',
+        ) ?? false;
+
+    const cierre = useForm({});
 
     const form = useForm({
         receptor_nombre: '',
@@ -266,20 +277,27 @@ export default function EntregaShow({
 
                 {/* Acta de Conformidad PDF Action */}
                 <div className="border-border mt-4 border-t pt-3">
-                    <a
-                        href={entregas.pdf.url({
-                            current_team: teamSlug,
-                            service_order: order.id,
-                        })}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-sky-500/20 bg-sky-500/10 text-xs font-black text-sky-600 shadow-2xs transition-all hover:bg-sky-500/10 dark:text-sky-400"
-                    >
-                        <FileText className="size-4" />
-                        <span>
-                            Descargar / Imprimir Acta de Conformidad (PDF)
-                        </span>
-                    </a>
+                    {entregaRealizada ? (
+                        <a
+                            href={entregas.pdf.url({
+                                current_team: teamSlug,
+                                service_order: order.id,
+                            })}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-sky-500/20 bg-sky-500/10 text-xs font-black text-sky-600 shadow-2xs transition-all hover:bg-sky-500/10 dark:text-sky-400"
+                        >
+                            <FileText className="size-4" />
+                            <span>
+                                Descargar / Imprimir Acta de Conformidad (PDF)
+                            </span>
+                        </a>
+                    ) : (
+                        <p className="text-muted-foreground text-xs">
+                            El acta estará disponible después de confirmar la
+                            entrega.
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -406,7 +424,10 @@ export default function EntregaShow({
             <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
                 <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                     <Flame className="text-warning-strong size-4" />
-                    Equipos Entregados ({order.equipments.length})
+                    {entregaRealizada
+                        ? 'Equipos entregados'
+                        : 'Equipos para entregar'}{' '}
+                    ({order.equipments.length})
                 </h2>
 
                 <div className="space-y-2">
@@ -417,9 +438,15 @@ export default function EntregaShow({
                         >
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-mono font-black text-sky-600 dark:text-sky-400">
+                                    <Link
+                                        href={equiposRoutes.show.url({
+                                            current_team: teamSlug,
+                                            equipment: eq.id,
+                                        })}
+                                        className="font-mono font-black text-sky-600 underline dark:text-sky-400"
+                                    >
                                         {eq.numero_serie}
-                                    </span>
+                                    </Link>
                                     <span className="py-0.2 border-border bg-card rounded border px-1.5 text-[9.5px] font-bold">
                                         {eq.tipo_agente} {eq.capacidad}
                                     </span>
@@ -429,16 +456,76 @@ export default function EntregaShow({
                                     {eq.ubicacion_actual || 'Sede cliente'}
                                 </p>
                             </div>
-                            <span className="text-success-strong rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9.5px] font-bold">
-                                Conforme
+                            <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                    eq.checklists?.[0]?.resultado_general ===
+                                    'conforme'
+                                        ? 'text-success-strong bg-emerald-500/10'
+                                        : eq.checklists?.[0]
+                                                ?.resultado_general ===
+                                            'observado'
+                                          ? 'text-warning-strong bg-amber-500/10'
+                                          : 'bg-muted text-muted-foreground'
+                                }`}
+                            >
+                                {eq.checklists?.[0]?.resultado_general ===
+                                'conforme'
+                                    ? 'Última revisión: Conforme'
+                                    : eq.checklists?.[0]?.resultado_general ===
+                                        'observado'
+                                      ? 'Última revisión: Con observaciones'
+                                      : 'Sin revisión registrada'}
                             </span>
                         </div>
                     ))}
                 </div>
             </div>
 
+            {order.estado === 'entregado' && entregaRealizada && (
+                <section
+                    className="bg-card border-border mb-4 space-y-3 rounded-xl border p-4"
+                    aria-labelledby="cierre-pendiente"
+                >
+                    <h2 id="cierre-pendiente" className="text-sm font-semibold">
+                        Entrega registrada · cierre pendiente
+                    </h2>
+                    <p className="text-muted-foreground text-xs">
+                        El cliente ya recibió los equipos. Cierra la orden para
+                        terminar este recorrido; el acta, los certificados y los
+                        pagos se conservan.
+                    </p>
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            cierre.post(
+                                entregas.cerrar.url({
+                                    current_team: teamSlug,
+                                    service_order: order.id,
+                                }),
+                                {
+                                    preserveScroll: true,
+                                    onError: (errors) =>
+                                        toast.error(
+                                            Object.values(errors)[0] ??
+                                                'No se pudo cerrar la orden.',
+                                        ),
+                                },
+                            );
+                        }}
+                    >
+                        <button
+                            type="submit"
+                            disabled={cierre.processing}
+                            className="bg-primary min-h-11 rounded-lg px-4 text-sm font-semibold text-white disabled:opacity-50"
+                        >
+                            Cerrar orden
+                        </button>
+                    </form>
+                </section>
+            )}
+
             {/* Delivery Confirmation Form (§22.3, §85.6.2) */}
-            {!isCerrada && (
+            {!isCerrada && !entregaRealizada && (
                 <div className="bg-card rounded-[14px] border border-sky-500/20 p-4 shadow-sm">
                     <h2 className="mb-1 flex items-center gap-2 text-sm font-black text-sky-700 dark:text-sky-400">
                         <UserCheck className="size-4 text-sky-600 dark:text-sky-400" />
@@ -583,7 +670,9 @@ export default function EntregaShow({
                         >
                             <Send className="size-4" />
                             <span>
-                                Confirmar Entrega y Cerrar Orden de Servicio
+                                {form.data.cerrar_orden
+                                    ? 'Confirmar Entrega y Cerrar Orden de Servicio'
+                                    : 'Confirmar entrega'}
                             </span>
                         </button>
                         {!form.data.conformidad_aceptada ? (

@@ -338,6 +338,35 @@ export default function RecojoShow({
                             <p className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
                                 Extintores recogidos ({order.equipments.length})
                             </p>
+                            {order.equipments.length > 0 && (
+                                <ul
+                                    aria-label="Extintores agregados al recojo"
+                                    className="space-y-2"
+                                >
+                                    {order.equipments.map((equipment) => (
+                                        <li
+                                            key={equipment.id}
+                                            className="border-border bg-card rounded-xl border p-3 text-xs"
+                                        >
+                                            <p className="font-mono font-semibold">
+                                                {equipment.numero_serie}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {equipment.tipo_agente} ·{' '}
+                                                {equipment.capacidad}
+                                                {equipment.marca
+                                                    ? ` · ${equipment.marca}`
+                                                    : ''}
+                                            </p>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            <p className="text-muted-foreground text-xs">
+                                Si el equipo ya está registrado, escribe su
+                                código BF-EQ. Para uno nuevo, elige agente y
+                                capacidad; se generará su código interno.
+                            </p>
                             <input
                                 aria-label="Numero serie"
                                 value={equipmentForm.data.numero_serie}

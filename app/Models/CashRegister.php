@@ -88,8 +88,8 @@ class CashRegister extends Model
     {
         $porForma = fn ($query) => $query->selectRaw('forma_pago, SUM(monto) as total')->groupBy('forma_pago')->pluck('total', 'forma_pago');
 
-        $cobros = $porForma(SalePayment::withTrashed()->where('cash_register_id', $this->id));
-        $anulados = $porForma(SalePayment::onlyTrashed()->where('anulacion_cash_register_id', $this->id));
+        $cobros = $porForma(SalePayment::withTrashed()->where('es_detraccion', false)->where('cash_register_id', $this->id));
+        $anulados = $porForma(SalePayment::onlyTrashed()->where('es_detraccion', false)->where('anulacion_cash_register_id', $this->id));
         $devoluciones = $porForma(SaleRefund::query()->where('cash_register_id', $this->id));
 
         return $cobros->keys()->merge($anulados->keys())->merge($devoluciones->keys())->unique()

@@ -146,6 +146,21 @@ class CertificateDocumentData
         $configuracion = $certificate->typeVersion?->configuracion
             ?? $certificate->certificateType->configuracionActual();
 
+        if ($certificate->certificateUnits->contains(fn (CertificateUnit $unit) => filled($unit->codigo_interno))
+            && ! in_array('codigo_interno', array_column($configuracion['columnas'] ?? [], 'clave'), true)) {
+            $columnas = [];
+            foreach ($configuracion['columnas'] ?? [] as $columna) {
+                if ($columna['clave'] === 'serie') {
+                    $columna['titulo'] = 'Serie fabricante';
+                }
+                $columnas[] = $columna;
+                if ($columna['clave'] === 'serie') {
+                    $columnas[] = ['clave' => 'codigo_interno', 'titulo' => 'Código BF-EQ', 'tipo' => 'texto', 'ancho' => 14];
+                }
+            }
+            $configuracion['columnas'] = $columnas;
+        }
+
         return ['codigo' => $certificate->certificateType->codigo, ...$configuracion];
     }
 
@@ -177,13 +192,14 @@ class CertificateDocumentData
      */
     protected function filasDeEquipos(Certificate $certificate): array
     {
-        return $certificate->certificateUnits
+        return array_values($certificate->certificateUnits
             ->sortBy(fn (CertificateUnit $unit) => [$unit->orden ?? PHP_INT_MAX, $unit->id])
             ->values()
             ->map(fn (CertificateUnit $unit, int $indice) => [
                 'item' => $unit->numero_cliente ?: str_pad((string) ($indice + 1), 2, '0', STR_PAD_LEFT),
                 'capacidad' => $unit->capacidad ?: $unit->equipment?->capacidad,
                 'serie' => $unit->numero_serie_snapshot,
+                'codigo_interno' => $unit->codigo_interno,
                 'marca' => $unit->marca ?: $unit->equipment?->marca,
                 'tipo' => $unit->tipo_agente ?: '—',
                 'anio' => (string) ($unit->anio_fabricacion ?: $unit->equipment?->anio_fabricacion),
@@ -193,7 +209,7 @@ class CertificateDocumentData
                 'tiempo_ph' => $unit->tiempo_ph ?: '—',
                 'resultado' => 'operativo',
             ])
-            ->all();
+            ->all());
     }
 
     /**

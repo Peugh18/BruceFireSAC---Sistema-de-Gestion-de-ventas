@@ -86,6 +86,7 @@ class ConfirmSale
         $this->validarAntesDeEmitir($sale);
 
         return DB::transaction(function () use ($sale) {
+            $this->guardarDetraccion($sale);
             $sale->update(['estado' => 'confirmada', 'confirmada_at' => now()]);
 
             $this->emitElectronicDocument->programar($sale);
@@ -110,6 +111,15 @@ class ConfirmSale
                 'estado' => 'Esta factura lleva detracción y falta la cuenta del Banco de la Nación. Pídele al Gerente que la registre en Configuración > Datos de la empresa.',
             ]);
         }
+    }
+
+    public function guardarDetraccion(Sale $sale): void
+    {
+        $calculada = $this->detraccion->paraVenta($sale);
+        $sale->forceFill([
+            'codigo_detraccion_snapshot' => $calculada['codigo_bien'],
+            'monto_detraccion_snapshot' => $calculada['monto'],
+        ])->save();
     }
 
     protected function confirmarNotaVenta(Sale $sale): Sale
@@ -165,13 +175,8 @@ class ConfirmSale
         }
 
         $detraccion = $this->detraccion->paraVenta($sale)['monto'];
-        $cobros = [$sale->medio_pago => round((float) $sale->total - $detraccion, 2)];
 
-        if ($detraccion > 0) {
-            $cobros[self::FORMA_DETRACCION] = round(($cobros[self::FORMA_DETRACCION] ?? 0) + $detraccion, 2);
-        }
-
-        return $cobros;
+        return [$sale->medio_pago => round((float) $sale->total - $detraccion, 2)];
     }
 
     /**
@@ -226,36 +231,9 @@ class ConfirmSale
         $sale->update(['medio_pago' => null, 'numero_operacion' => null]);
     }
 
-    /**
-     * Un cobro puede ser dos registros: si el cliente también paga por
-     * depósito, lo suyo (con su número de operación) y la detracción que va
-     * al Banco de la Nación quedan separados, como cuando paga por otro medio.
-     *
-     * @return list<array{0: float, 1: string|null}>
-     */
+    /** @return list<array{0: float, 1: string|null}> */
     protected function partesDelCobro(Sale $sale, string $forma, float $monto, string $nota): array
     {
-        if ($nota !== '') {
-            return [[$monto, $nota]];
-        }
-
-        if ($forma !== self::FORMA_DETRACCION) {
-            return [[$monto, $sale->numero_operacion]];
-        }
-
-        if ($sale->medio_pago !== self::FORMA_DETRACCION) {
-            return [[$monto, 'Detracción (Banco de la Nación)']];
-        }
-
-        $detraccion = round((float) $this->detraccion->paraVenta($sale)['monto'], 2);
-
-        if ($detraccion <= 0 || $detraccion >= $monto) {
-            return [[$monto, $sale->numero_operacion]];
-        }
-
-        return [
-            [round($monto - $detraccion, 2), $sale->numero_operacion],
-            [$detraccion, 'Detracción (Banco de la Nación)'],
-        ];
+        return [[$monto, $nota !== '' ? $nota : $sale->numero_operacion]];
     }
 }

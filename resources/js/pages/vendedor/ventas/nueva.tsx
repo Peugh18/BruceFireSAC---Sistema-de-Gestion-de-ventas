@@ -50,6 +50,7 @@ type PaymentCondition = 'contado' | 'credito';
 type DocumentType = 'factura' | 'boleta' | 'nota_venta';
 
 type SaleLine = {
+    deficiency_id?: number | null;
     key: string;
     tipo_linea: LineType;
     numero_serie?: string;
@@ -106,6 +107,7 @@ type SaleFormData = {
 };
 
 type QuoteLine = {
+    deficiency_id?: number | null;
     tipo: 'product' | 'service';
     product_id: number | null;
     service_id: number | null;
@@ -137,6 +139,7 @@ type QuoteOption = {
 type VentaPrefill = {
     id: number | null;
     service_order_id?: number;
+    quote_id?: number | null;
     adicionales_sin_cotizacion?: { componente: string; importe: number }[];
     numero_interno: string;
     emitida?: boolean;
@@ -287,7 +290,7 @@ export default function NuevaVenta({
         service_order_id: venta?.service_order_id ?? '',
         client_id: clienteInicial?.id ?? '',
         sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
-        quote_id: quote?.id ?? '',
+        quote_id: quote?.id ?? venta?.quote_id ?? '',
         vehicle_id: quote?.vehicle_id ?? '',
         iniciado_at: new Date().toISOString(),
         fecha: venta?.fecha ?? today(),
@@ -311,6 +314,7 @@ export default function NuevaVenta({
                   .filter((line) => !line.serializado)
                   .map((line) => ({
                       key: nuevaClave(),
+                      deficiency_id: line.deficiency_id,
                       tipo_linea:
                           line.tipo === 'service' ? 'servicio' : 'producto',
                       product_id: line.product_id ?? undefined,
@@ -358,6 +362,27 @@ export default function NuevaVenta({
         cliente !== null &&
         cliente.tipo_documento === 'ruc' &&
         (cliente.direccion_fiscal ?? '').replace(/[-.\s]/g, '') === '';
+
+    /**
+     * Regla de detracción (confirmada por el dueño con su contador): el repuesto
+     * o producto que se instala DENTRO del servicio va en la misma factura y la
+     * detracción se calcula sobre el total. El producto SUELTO que no se instala
+     * no puede acompañar a un servicio sujeto a detracción: va en factura aparte.
+     * El servidor es quien valida de verdad (DetraccionCalculator): aquí solo se
+     * avisa ANTES de emitir para no dejar una factura a medias.
+     */
+    const esServicioDeLinea = (line: SaleLine) =>
+        line.service_id != null || line.tipo_linea === 'recarga_servicio';
+    const productoSueltoConDetraccion =
+        form.data.comprobante_tipo === 'factura' &&
+        total > 700 &&
+        form.data.items.some(esServicioDeLinea) &&
+        form.data.items.some(
+            (line) =>
+                !esServicioDeLinea(line) &&
+                (line.deficiency_id ?? null) === null,
+        );
+
     const [direccionNueva, setDireccionNueva] = useState('');
     const [guardandoDireccion, setGuardandoDireccion] = useState(false);
     const [errorDireccion, setErrorDireccion] = useState<string | null>(null);
@@ -605,6 +630,13 @@ export default function NuevaVenta({
             return;
         }
 
+        // La regla de producto suelto se muestra como aviso permanente junto a los
+        // ítems (H-5: una sola ubicación). El envío NO se detiene aquí: la
+        // validación definitiva vive en el servidor (DetraccionCalculator), que
+        // es el único que conoce las cantidades realmente respaldadas por los
+        // consumos de taller de la venta. El formulario no duplica esa lógica
+        // fiscal para que no pueda divergir (H-2).
+
         if (
             form.data.condicion_pago === 'credito' &&
             (creditoIncompleto || cuotasDesactualizadas)
@@ -644,6 +676,7 @@ export default function NuevaVenta({
                     ? data.numero_operacion
                     : '',
             items: data.items.map((l) => ({
+                deficiency_id: l.deficiency_id ?? null,
                 tipo_linea: l.tipo_linea,
                 numero_serie: l.numero_serie ?? null,
                 product_id: l.product_id ?? null,
@@ -1014,8 +1047,8 @@ export default function NuevaVenta({
                                 </div>
                                 <p className="text-muted-foreground mt-1 text-[11px]">
                                     {form.data.destino === 'vehiculo'
-                                        ? 'Certificados: Operatividad y Garantía + Prueba Hidrostática.'
-                                        : 'Certificados: Operatividad y Garantía + Capacitación.'}
+                                        ? 'Operatividad y Garantía. Prueba Hidrostática al registrar sus datos técnicos.'
+                                        : 'Operatividad y Garantía. Capacitación al registrar sus datos.'}
                                 </p>
                             </div>
                             <div>
@@ -1155,6 +1188,18 @@ export default function NuevaVenta({
                                 {fieldError(form.errors, 'medio_pago')}
                             </div>
                         ) : null}
+                        {productoSueltoConDetraccion ? (
+                            <p
+                                role="alert"
+                                className="rounded-[7px] border border-amber-300 bg-amber-50 px-3 py-2 text-[11.5px] font-semibold text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200"
+                            >
+                                Este producto no es parte del servicio: emítelo
+                                en una factura aparte. La detracción del
+                                servicio se calcula sobre el total del servicio
+                                con su repuesto instalado. Al emitir, el sistema
+                                lo valida.
+                            </p>
+                        ) : null}
                         <ReferenciaField
                             cliente={cliente}
                             destino={form.data.destino}
@@ -1282,8 +1327,9 @@ export default function NuevaVenta({
                                                         {item.tipo_linea ===
                                                         'unidad_nueva'
                                                             ? `Serie ${item.numero_serie}${item.detalle ? ` · ${item.detalle}` : ''}`
-                                                            : item.tipo_linea ===
-                                                                'servicio'
+                                                            : esServicioDeLinea(
+                                                                    item,
+                                                                )
                                                               ? 'Servicio'
                                                               : `Producto${item.stock !== undefined && item.stock !== null ? ` · stock ${item.stock}` : ''}`}
                                                     </span>

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int|null $deficiency_id
  * @property int $id
  * @property int $sale_id
  * @property int|null $product_id
@@ -33,7 +34,7 @@ use Illuminate\Support\Carbon;
  * @property-read Equipment|null $equipment
  */
 #[Fillable([
-    'sale_id', 'product_id', 'service_id', 'tipo_linea', 'inventory_unit_id', 'equipment_id',
+    'deficiency_id', 'sale_id', 'product_id', 'service_id', 'tipo_linea', 'inventory_unit_id', 'equipment_id',
     'cantidad', 'precio_unitario', 'descuento', 'subtotal', 'tipo_afectacion_igv',
 ])]
 class SaleItem extends Model

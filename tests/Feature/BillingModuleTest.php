@@ -168,7 +168,7 @@ test('issue credit note rejects unsupported originals and creates valid note', f
     SaleItem::factory()->create(['sale_id' => $sale->id, 'cantidad' => 1, 'precio_unitario' => $sale->total, 'subtotal' => $sale->total, 'descuento' => 0]);
     guardarXmlOriginalDePrueba($validOriginal);
 
-    $creditNote = app(IssueCreditNote::class)->handle($validOriginal, '01', 'Anulación', 10);
+    $creditNote = app(IssueCreditNote::class)->handle($validOriginal, '01', 'Anulación', (float) $sale->total);
 
     expect($creditNote->tipo)->toBe('nota_credito')
         ->and($creditNote->cpe_afectado_id)->toBe($validOriginal->id)
@@ -337,7 +337,7 @@ test('una nota de credito por devolucion total anula la venta cuando sunat la ac
         SaleItem::factory()->create(['sale_id' => $sale->id, 'cantidad' => 1, 'precio_unitario' => 100, 'subtotal' => 100, 'descuento' => 0]);
         guardarXmlOriginalDePrueba($original);
 
-        $nota = app(IssueCreditNote::class)->handle($original, $motivo, 'Devolución del cliente', 100);
+        $nota = app(IssueCreditNote::class)->handle($original, $motivo, 'Devolución del cliente', 100, $motivo === '07' ? ['lineas' => [['indice' => 0, 'cantidad' => 1]]] : []);
         // Emitida pero aún sin respuesta de SUNAT: la venta sigue vigente.
         expect($sale->fresh()->estado)->toBe('confirmada');
 
@@ -373,3 +373,25 @@ test('en comprobantes sunat una nota de credito muestra su importe y no el de la
     $this->actingAs($user)->get(route('vendedor.facturacion.index', ['current_team' => $user->currentTeam, 'tipo' => 'nota']))
         ->assertInertia(fn ($page) => $page->where('documents.data.0.total', '120.00'));
 });
+
+test('comprobantes incluye toda la hora del dia final y conserva el respaldo de fecha', function (string $tipo) {
+    $this->travelTo(now()->setDate(2026, 10, 9)->setTime(12, 0));
+    $user = vendedorUser();
+    $sale = Sale::factory()->create(['vendedor_id' => $user->id]);
+    $base = ['sale_id' => $sale->id, 'tipo' => $tipo];
+    $primero = ElectronicDocument::factory()->create([...$base, 'fecha_emision' => today()->startOfDay()]);
+    $ultimo = ElectronicDocument::factory()->create([...$base, 'fecha_emision' => today()->setTime(23, 59, 59)]);
+    $sinFecha = ElectronicDocument::factory()->create([...$base, 'fecha_emision' => null, 'created_at' => today()->setTime(21, 12, 4)]);
+    ElectronicDocument::factory()->create([...$base, 'fecha_emision' => today()->subSecond()]);
+    ElectronicDocument::factory()->create([...$base, 'fecha_emision' => today()->addDay()]);
+    ElectronicDocument::factory()->create(['sale_id' => Sale::factory()->create(['vendedor_id' => vendedorUser()->id])->id, 'tipo' => $tipo, 'fecha_emision' => today()->setTime(21, 12, 4)]);
+
+    $this->actingAs($user)->get(route('vendedor.facturacion.index', [
+        'current_team' => $user->currentTeam,
+        'desde' => '2026-10-09',
+        'hasta' => '2026-10-09',
+        'tipo' => $tipo,
+    ]))->assertOk()->assertInertia(fn ($page) => $page
+        ->where('totalFiltrados', 3)
+        ->where('documents.data', fn ($documents) => collect($documents)->pluck('id')->sort()->values()->all() === collect([$primero->id, $ultimo->id, $sinFecha->id])->sort()->values()->all()));
+})->with(['factura', 'boleta', 'nota_credito', 'nota_debito']);

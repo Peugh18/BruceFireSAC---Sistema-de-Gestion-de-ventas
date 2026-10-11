@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
- * Traslado de stock entre sedes. Sale del origen al crearse y entra al
+ * Traslado de stock entre sedes. Sale del origen al despacharse con GRE aceptada y entra al
  * destino solo cuando el almacén destino confirma la llegada: mientras
  * tanto está "en tránsito" (la guía motivo 04 sustenta el viaje).
  *
@@ -33,6 +33,8 @@ use Illuminate\Support\Carbon;
 #[Fillable(['origen_sede_id', 'destino_sede_id', 'user_id', 'estado', 'observacion', 'recibido_por', 'recibido_at'])]
 class InventoryTransfer extends Model
 {
+    public const PENDIENTE_GUIA = 'pendiente_guia';
+
     public const EN_TRANSITO = 'en_transito';
 
     public const RECIBIDO = 'recibido';
@@ -71,7 +73,7 @@ class InventoryTransfer extends Model
      */
     public function guia(): HasOne
     {
-        return $this->hasOne(DispatchGuide::class);
+        return $this->hasOne(DispatchGuide::class)->latestOfMany();
     }
 
     public function estaEnTransito(): bool

@@ -34,11 +34,10 @@ class InspectionController extends Controller
 
         $query = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
+            ->where('estado', '!=', 'anulada')
             ->with(['client', 'sede', 'equipments'])
-            ->where(function ($q) {
-                $q->where('departamento_tecnico', 'campo')
-                    ->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%'));
-            })
+            ->where('departamento_tecnico', 'campo')
+            ->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%'))
             ->latest('id');
 
         if ($search) {
@@ -63,10 +62,9 @@ class InspectionController extends Controller
 
         $baseStatsQuery = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
-            ->where(function ($q) {
-                $q->where('departamento_tecnico', 'campo')
-                    ->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%'));
-            });
+            ->where('estado', '!=', 'anulada')
+            ->where('departamento_tecnico', 'campo')
+            ->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%'));
 
         $stats = [
             'total' => (clone $baseStatsQuery)->count(),
@@ -169,24 +167,23 @@ class InspectionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'items' => ['required', 'array'],
+            'items.*' => ['required', 'array'],
+            'items.*.estado' => ['required', 'in:conforme,observado,no_aplica'],
+            'items.*.condicion' => ['nullable', 'string', 'max:255'],
+            'items.*.nota' => ['nullable', 'string', 'max:500'],
+            'items.*.accion_recomendada' => ['nullable', 'string', 'max:255'],
+            'items.*.repuesto_sugerido' => ['nullable', 'string', 'max:255'],
+            'items.*.requiere_autorizacion' => ['nullable', 'boolean'],
+            'items.*.descargado' => ['nullable', 'boolean'],
             'items.*.foto' => ['nullable', 'image', 'max:15360'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
 
         EquipoDeLaOrden::asegurarAbierta($serviceOrder);
 
-        // Laravel excluye 'items' del array que devuelve validate() porque el
-        // campo tiene reglas anidadas (items.*.foto) y, con
-        // excludeUnvalidatedArrayKeys activado por defecto, las claves padre
-        // con hijos sin validar se descartan del resultado. La validación de
-        // 'items' (required|array) y de las fotos sí se ejecutó, así que se
-        // toma del request —que incluye los archivos ya validados— con un
-        // valor por defecto para que un request malformado no rompa con un 500.
-        $items = $validated['items'] ?? data_get($request->all(), 'items', []);
-
         $processChecklist->execute($serviceOrder, $equipment, $request->user(), [
             'origen' => 'campo',
-            'items' => $items,
+            'items' => $validated['items'],
             'observaciones' => $validated['observaciones'] ?? null,
         ]);
 
@@ -213,6 +210,7 @@ class InspectionController extends Controller
             // el evento, el estado y el certificado.
             $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
             EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+            $serviceOrder->tomarSiLibre($request->user());
 
             if (filled($validated['firma'] ?? null)) {
                 app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'inspeccion', $request->user());

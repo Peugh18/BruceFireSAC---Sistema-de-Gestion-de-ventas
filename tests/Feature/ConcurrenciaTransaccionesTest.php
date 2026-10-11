@@ -118,6 +118,9 @@ test('A1: dos autorizaciones simultaneas de una deficiencia no crean dos autoriz
     $order = ServiceOrder::factory()->create(['client_id' => $sale->client_id, 'sale_id' => $sale->id]);
     $deficiency = Deficiency::factory()->create(['service_order_id' => $order->id, 'estado' => 'esperando_autorizacion']);
 
+    $repuesto = Product::factory()->create(['serializado' => false, 'precio_venta' => 45.5]);
+    $this->actingAs($user)->post(route('vendedor.deficiencias.cotizar', [$user->currentTeam, $deficiency]), ['product_id' => $repuesto->id, 'cantidad' => 1])->assertSessionHasNoErrors();
+
     // La otra petición gana la carrera y ya autorizó la deficiencia mientras
     // esta se decidía: la transacción propia debe rechazarla.
     alComenzarLaTransaccion(fn () => DB::table('deficiencies')->where('id', $deficiency->id)->update(['estado' => 'autorizada']));
@@ -136,11 +139,14 @@ test('A1: dos autorizaciones simultaneas de una deficiencia no crean dos autoriz
         ->and($sale->installments()->count())->toBe(0);
 });
 
-test('A1: un doble clic en autorizar crea una sola autorizacion y una sola cuota por cobrar', function () {
+test('A1: un doble clic en autorizar crea una sola autorizacion y no duplica el adicional cotizado', function () {
     $user = vendedorUser();
     $sale = Sale::factory()->create(['vendedor_id' => $user->id, 'estado' => 'confirmada', 'condicion_pago' => 'contado']);
     $order = ServiceOrder::factory()->create(['client_id' => $sale->client_id, 'sale_id' => $sale->id]);
     $deficiency = Deficiency::factory()->create(['service_order_id' => $order->id, 'estado' => 'esperando_autorizacion']);
+
+    $repuesto = Product::factory()->create(['serializado' => false, 'precio_venta' => 45.5]);
+    $this->actingAs($user)->post(route('vendedor.deficiencias.cotizar', [$user->currentTeam, $deficiency]), ['product_id' => $repuesto->id, 'cantidad' => 1])->assertSessionHasNoErrors();
 
     $datos = [
         'autorizado' => true,
@@ -159,8 +165,8 @@ test('A1: un doble clic en autorizar crea una sola autorizacion y una sola cuota
         ->assertSessionHasErrors('deficiency');
 
     expect(DeficiencyAuthorization::where('deficiency_id', $deficiency->id)->count())->toBe(1)
-        ->and($sale->installments()->count())->toBe(1)
-        ->and((float) $sale->installments()->first()->monto)->toBe(45.5);
+        ->and($sale->installments()->count())->toBe(0)
+        ->and((float) $deficiency->fresh()->authorization->cotizacionAdicional->total)->toBe(45.5);
 });
 
 /*

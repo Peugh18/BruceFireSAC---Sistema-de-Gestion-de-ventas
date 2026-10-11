@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AlmacenLayout from '@/layouts/almacen-layout';
-import { confirmar, index, store } from '@/routes/almacen/traslados';
+import { confirmar, despachar, index, store } from '@/routes/almacen/traslados';
 import guias from '@/routes/guias';
 import type { Team } from '@/types';
 
@@ -17,6 +17,9 @@ type EnTransito = {
     origen: string;
     destino: string;
     bienes: number;
+    estado: string;
+    puede_despachar: boolean;
+    puede_emitir_guia: boolean;
     puede_confirmar: boolean;
     guia_aceptada: boolean;
     tiene_guia: boolean;
@@ -220,17 +223,21 @@ export default function Transfers({
                         type="submit"
                         disabled={form.processing || destinations.length === 0}
                     >
-                        Confirmar traslado
+                        Preparar traslado
                     </Button>
                 </form>
             </Card>
             {enTransito.length > 0 ? (
                 <Card className="mx-auto mt-4 max-w-2xl space-y-3 p-6">
-                    <h2 className="text-lg font-bold">Traslados en tránsito</h2>
+                    <h2 className="text-lg font-bold">
+                        Traslados pendientes y en tránsito
+                    </h2>
                     <p className="text-muted-foreground text-sm">
-                        El stock entra al almacén destino cuando confirma la
-                        llegada. La guía de remisión (motivo 04) debe tener el
-                        CDR aceptado antes de que salga el vehículo.
+                        Primero prepara y emite la GRE. Despacha con CDR
+                        aceptado. El stock entra al almacén destino cuando
+                        confirma la llegada. La guía de remisión (motivo 04)
+                        debe tener el CDR aceptado antes de que salga el
+                        vehículo.
                     </p>
                     <ul className="divide-border divide-y">
                         {enTransito.map((traslado) => (
@@ -240,14 +247,17 @@ export default function Transfers({
                             >
                                 <span className="flex-1">
                                     {traslado.origen} → {traslado.destino} ·{' '}
-                                    {traslado.bienes} bienes
+                                    {traslado.bienes} bienes ·{' '}
+                                    {traslado.estado === 'pendiente_guia'
+                                        ? 'por despachar'
+                                        : 'en tránsito'}
                                     {traslado.guia_aceptada
                                         ? ' · guía lista para trasladar'
                                         : traslado.tiene_guia
                                           ? ' · guía pendiente de SUNAT'
                                           : ' · sin guía'}
                                 </span>
-                                {!traslado.tiene_guia ? (
+                                {traslado.puede_emitir_guia ? (
                                     <Button asChild variant="outline" size="sm">
                                         <Link
                                             href={guias.create.url(teamSlug, {
@@ -259,6 +269,40 @@ export default function Transfers({
                                         >
                                             Emitir guía
                                         </Link>
+                                    </Button>
+                                ) : null}
+                                {traslado.tiene_guia &&
+                                !traslado.guia_aceptada ? (
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={guias.index.url(teamSlug)}>
+                                            Enviar / consultar GRE
+                                        </Link>
+                                    </Button>
+                                ) : null}
+                                {traslado.puede_despachar ? (
+                                    <Button
+                                        size="sm"
+                                        disabled={!traslado.guia_aceptada}
+                                        onClick={() =>
+                                            router.post(
+                                                despachar.url({
+                                                    current_team: teamSlug,
+                                                    traslado: traslado.id,
+                                                }),
+                                                {},
+                                                {
+                                                    onError: (errors) =>
+                                                        toast.error(
+                                                            Object.values(
+                                                                errors,
+                                                            )[0] ??
+                                                                'No se pudo despachar.',
+                                                        ),
+                                                },
+                                            )
+                                        }
+                                    >
+                                        Despachar
                                     </Button>
                                 ) : null}
                                 {traslado.puede_confirmar ? (

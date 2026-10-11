@@ -29,11 +29,11 @@ class IssueDebitNote
     public function handle(ElectronicDocument $original, string $motivoCatalogo10, string $detalle, float $importe): ElectronicDocument
     {
         $this->validar($original);
-        app(DesgloseNota::class)->calcular($original, 'nota_debito', $motivoCatalogo10, $importe);
+        $desglose = app(DesgloseNota::class)->calcular($original, 'nota_debito', $motivoCatalogo10, $importe);
 
         $serie = $original->tipo === 'factura' ? 'FD01' : 'BD01';
 
-        return DB::transaction(function () use ($original, $motivoCatalogo10, $detalle, $importe, $serie) {
+        return DB::transaction(function () use ($original, $motivoCatalogo10, $detalle, $importe, $serie, $desglose) {
             // Leída de nuevo y bloqueada (M6), como en IssueCreditNote: la
             // venta pudo anularse desde que se cargó el comprobante y dos notas
             // a la vez no deben crearse juntas.
@@ -55,6 +55,7 @@ class IssueDebitNote
                 'cpe_afectado_id' => $original->id,
                 'motivo_catalogo' => $motivoCatalogo10,
                 'importe' => $importe,
+                'nota_datos' => ['desglose' => $desglose, 'detalle' => $detalle],
                 'sunat_estado' => 'pendiente',
                 'sunat_mensaje' => $detalle,
                 // S6: la fecha se guarda al crear y se reutiliza en cada reintento.

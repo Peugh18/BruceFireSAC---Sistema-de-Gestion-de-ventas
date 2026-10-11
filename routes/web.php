@@ -3,6 +3,7 @@
 use App\Http\Controllers\ChispaController;
 use App\Http\Controllers\ConversacionOrdenController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EquipmentSheetController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublicCertificateVerificationController;
 use App\Http\Controllers\PublicQuotePdfController;
@@ -31,6 +32,7 @@ Route::prefix('{current_team}')
             Route::post('ordenes/{service_order}/mensajes', [ConversacionOrdenController::class, 'mensaje'])->name('ordenes.mensajes.store');
             Route::post('ordenes/{service_order}/evidencias', [ConversacionOrdenController::class, 'guardarEvidencia'])->name('ordenes.evidencias.store');
             Route::get('evidencias/{evidencia}', [ConversacionOrdenController::class, 'evidencia'])->name('evidencias.show');
+            Route::get('equipos/{equipment}', [EquipmentSheetController::class, 'show'])->name('equipos.show');
         });
 
         require __DIR__.'/vendedor.php';

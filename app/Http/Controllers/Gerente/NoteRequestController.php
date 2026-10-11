@@ -7,6 +7,7 @@ use App\Actions\Billing\NotaPorAprobar;
 use App\Http\Controllers\Controller;
 use App\Models\NoteRequest;
 use App\Models\Team;
+use App\Services\Billing\DatosEmision;
 use App\Services\Billing\GreenterService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class NoteRequestController extends Controller
                     ? GreenterService::descripcionMotivoCredito($solicitud->motivo_catalogo)
                     : GreenterService::descripcionMotivoDebito($solicitud->motivo_catalogo),
                 'detalle' => $solicitud->detalle,
+                'lineas' => $this->describirLineas($solicitud),
                 'importe' => (float) $solicitud->importe,
                 'comprobante' => "{$solicitud->original->serie}-{$solicitud->original->correlativo}",
                 'total_comprobante' => (float) $solicitud->original->sale->total,
@@ -44,6 +46,37 @@ class NoteRequestController extends Controller
         return Inertia::render('gerente/notas/index', [
             'solicitudes' => $solicitudes,
         ]);
+    }
+
+    /**
+     * Qué líneas del comprobante pidió ajustar el vendedor, para que el
+     * Gerente apruebe sabiendo exactamente a qué se aplica la nota.
+     *
+     * @return list<string>
+     */
+    protected function describirLineas(NoteRequest $solicitud): array
+    {
+        $pedidas = $solicitud->nota_datos['lineas'] ?? [];
+        if ($pedidas === []) {
+            return [];
+        }
+
+        try {
+            $originales = app(DatosEmision::class)->recuperar($solicitud->original)['lineas'] ?? [];
+        } catch (Throwable) {
+            $originales = [];
+        }
+
+        return array_values(array_map(function (array $pedida) use ($originales): string {
+            $nombre = $originales[$pedida['indice']]['nombre'] ?? 'Línea '.($pedida['indice'] + 1);
+
+            return match (true) {
+                isset($pedida['descripcion']) => $nombre.' → «'.$pedida['descripcion'].'»',
+                isset($pedida['importe']) => $nombre.': descuento de S/ '.number_format((float) $pedida['importe'], 2),
+                isset($pedida['cantidad']) => $nombre.': devuelve '.(float) $pedida['cantidad'].' u.',
+                default => $nombre,
+            };
+        }, $pedidas));
     }
 
     public function aprobar(Team $current_team, NoteRequest $note_request, Request $request, NotaPorAprobar $notaPorAprobar, EmitElectronicDocument $emit): RedirectResponse

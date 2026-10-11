@@ -32,6 +32,8 @@ return [
     'gre' => [
         'auth_host' => env('SUNAT_GRE_AUTH_HOST', 'https://gre-test.nubefact.com/v1'),
         'api_host' => env('SUNAT_GRE_API_HOST', 'https://gre-test.nubefact.com/v1'),
+        // Solo desarrollo: acepta las guías sin enviarlas a SUNAT (SUNAT_GRE_SIMULADO=true).
+        'simulado' => (bool) env('SUNAT_GRE_SIMULADO', false),
         'motivo_ordenes' => env('GRE_MOTIVO_ORDENES', '13'),
         'descripcion_recojo' => env('GRE_DESCRIPCION_RECOJO', 'Recojo para recarga/mantenimiento'),
         'descripcion_entrega' => env('GRE_DESCRIPCION_ENTREGA', 'Entrega de equipos recargados/mantenidos'),
@@ -49,16 +51,16 @@ return [
     |--------------------------------------------------------------------------
     | Detracción (SPOT)
     |--------------------------------------------------------------------------
-    | Servicios de mantenimiento/recarga/reparación de extintores están sujetos
-    | a detracción (12%) cuando el comprobante supera S/700 (R.S. 183-2004/SUNAT,
-    | Catálogo 54). El código de bien/servicio exacto (020 vs 022 vs 037) está
-    | PENDIENTE de confirmar con el contable de BRUCE FIRE antes de producción.
-    | Se deja aquí como constante única para no dispersarlo por los builders.
+    | Recarga: 022 (Informe SUNAT 017-2006). Mantenimiento/reparación: 020.
+    | Otros servicios: clasificación explícita en el catálogo; 037 es residual.
+    | 12% sobre el importe incluido IGV, solo facturas gravadas mayores a S/700.
+    | Los paquetes combinados requieren clasificación manual del catálogo.
     */
     'detraccion' => [
         'tasa' => 0.12,
         'monto_minimo' => 700.00,
         'codigo_bien' => env('BILLING_DETRACCION_CODIGO_BIEN', '020'),
+        'por_categoria' => ['recarga' => '022', 'mantenimiento' => '020', 'reparacion' => '020'],
         'cod_medio_pago' => '001', // Depósito en cuenta - Banco de la Nación (Catálogo 59)
     ],
 

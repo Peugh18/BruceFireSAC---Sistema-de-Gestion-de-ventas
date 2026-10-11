@@ -7,12 +7,17 @@ import type { Team } from '@/types';
 import { toast } from 'sonner';
 
 interface Props {
+    destino?: string;
     ordenId: number;
     equipos: { id: number; serie: string }[];
 }
 
 /** T5: registra una deficiencia que no salió del checklist, con foto obligatoria. */
-export default function DeficienciaSuelta({ ordenId, equipos }: Props) {
+export default function DeficienciaSuelta({
+    ordenId,
+    equipos,
+    destino,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const [abierto, setAbierto] = useState(false);
     const form = useForm<{
@@ -38,10 +43,11 @@ export default function DeficienciaSuelta({ ordenId, equipos }: Props) {
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
         form.post(
-            registrarDeficiencia.url({
-                current_team: currentTeam?.slug ?? '',
-                service_order: ordenId,
-            }),
+            destino ??
+                registrarDeficiencia.url({
+                    current_team: currentTeam?.slug ?? '',
+                    service_order: ordenId,
+                }),
             {
                 onError: (errors) =>
                     toast.error(

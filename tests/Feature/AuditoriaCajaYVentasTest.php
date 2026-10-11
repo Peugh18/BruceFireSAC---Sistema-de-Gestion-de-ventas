@@ -130,7 +130,7 @@ test('un borrador a credito emitido otro dia corre sus cuotas con la fecha de la
         ->and($cuota->fresh()->fecha_vencimiento->toDateString())->toBe(today()->addDays(15)->toDateString());
 });
 
-test('con detraccion pagada por deposito el cobro del cliente y la detraccion quedan separados', function () {
+test('deposito del cliente no se confunde con una constancia de detraccion pendiente', function () {
     config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
     CompanySetting::current()->update(['cuenta_detraccion' => '00-123-456789']);
     $sale = Sale::factory()->create([
@@ -152,9 +152,8 @@ test('con detraccion pagada por deposito el cobro del cliente y la detraccion qu
 
     $pagos = SalePayment::where('sale_id', $sale->id)->orderBy('id')->get();
 
-    expect($pagos)->toHaveCount(2)
+    expect($pagos)->toHaveCount(1)
         ->and((float) $pagos[0]->monto)->toBe(1038.4)
         ->and($pagos[0]->numero_operacion)->toBe('OP-555')
-        ->and((float) $pagos[1]->monto)->toBe(141.6)
-        ->and($pagos[1]->numero_operacion)->toBe('Detracción (Banco de la Nación)');
+        ->and($pagos[0]->es_detraccion)->toBeFalse();
 });

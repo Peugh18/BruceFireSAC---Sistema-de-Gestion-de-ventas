@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property string|null $referencia
  * @property int $id
  * @property string $numero
  * @property int $vendedor_id

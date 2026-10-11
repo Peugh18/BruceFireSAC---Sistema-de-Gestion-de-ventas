@@ -32,6 +32,7 @@ class ServiceFactory extends Factory
             'precio_venta' => fake()->randomFloat(2, 30, 150),
             'aplica_igv' => true,
             'tipo_afectacion_igv' => '10',
+            'codigo_detraccion' => '020',
             'activo' => true,
         ];
     }

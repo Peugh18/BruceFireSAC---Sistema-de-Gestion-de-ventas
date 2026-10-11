@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int|null $deficiency_id
  * @property int $id
  * @property int $quote_id
  * @property int|null $product_id
@@ -26,7 +27,7 @@ use Illuminate\Support\Carbon;
  * @property-read Service|null $service
  * @property-read Product|Service|null $item
  */
-#[Fillable(['quote_id', 'product_id', 'service_id', 'cantidad', 'precio_unitario', 'descuento', 'subtotal', 'tipo_afectacion_igv'])]
+#[Fillable(['deficiency_id', 'quote_id', 'product_id', 'service_id', 'cantidad', 'precio_unitario', 'descuento', 'subtotal', 'tipo_afectacion_igv'])]
 class QuoteItem extends Model
 {
     /** @use HasFactory<QuoteItemFactory> */

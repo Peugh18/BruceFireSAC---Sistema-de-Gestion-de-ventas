@@ -169,3 +169,15 @@ test('al eliminar un producto sin historial tambien se desactiva', function () {
 
     $this->assertDatabaseHas('products', ['id' => $product->id, 'activo' => false]);
 });
+
+test('el formulario sugiere el siguiente código de producto libre', function () {
+    $user = createGerenteUserForProductTest();
+    $siguiente = 'PRD-'.str_pad((string) (Product::max('id') + 1), 4, '0', STR_PAD_LEFT);
+    Product::factory()->create(['codigo' => $siguiente]);
+
+    $this->actingAs($user)
+        ->get(route('gerente.productos.index', ['current_team' => $user->currentTeam]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('siguienteCodigo', fn (string $codigo) => preg_match('/^PRD-\d{4}$/', $codigo) === 1 && $codigo !== $siguiente)
+        );
+});

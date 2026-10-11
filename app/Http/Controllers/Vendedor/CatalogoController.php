@@ -44,7 +44,16 @@ class CatalogoController extends Controller
         $products = $soloServicios ? collect() : Product::query()
             ->where('activo', true)
             // El código de barras del fabricante (EPP, repuestos) va exacto.
-            ->where(fn (Builder $query) => $query->where('codigo_barras', $search)->orWhere(fn (Builder $query) => $this->coincide($query, $search)))
+            ->where(function (Builder $query) use ($search, $almacenId) {
+                $query->where('codigo_barras', $search)->orWhere(fn (Builder $query) => $this->coincide($query, $search));
+                if ($almacenId && str_starts_with(mb_strtoupper($search), 'BF-EQ-')) {
+                    $prefijo = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
+                    $query->orWhereHas('units', fn (Builder $units) => $units
+                        ->where('sede_almacen_id', $almacenId)
+                        ->where('estado', 'disponible')
+                        ->where('numero_serie', 'like', $prefijo.'%'));
+                }
+            })
             ->orderByRaw('(codigo = ? or codigo_barras = ?) desc', [$search, $search])
             ->orderBy('nombre')
             ->limit(12)

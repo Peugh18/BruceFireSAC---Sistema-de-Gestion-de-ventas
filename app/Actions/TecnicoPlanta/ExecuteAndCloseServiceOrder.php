@@ -10,12 +10,14 @@ use App\Models\Deficiency;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\Product;
+use App\Models\QuoteItem;
 use App\Models\Sede;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Inventory\StockPorLote;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -51,6 +53,21 @@ class ExecuteAndCloseServiceOrder
         self::asegurarQueSePuedeReparar($deficiency);
 
         return DB::transaction(function () use ($serviceOrder, $deficiency, $product, $cantidad, $user, $observacion) {
+            $deficiency = Deficiency::query()->whereKey($deficiency->id)->lockForUpdate()->firstOrFail();
+            self::asegurarQueSePuedeReparar($deficiency);
+            if (InventoryMovement::query()->where('referencia_type', $deficiency->getMorphClass())->where('referencia_id', $deficiency->id)->where('tipo', 'salida_servicio')->exists()) {
+                throw ValidationException::withMessages(['deficiency' => 'El repuesto de esta deficiencia ya fue consumido: una corrección comercial no genera otra salida.']);
+            }
+            $linea = QuoteItem::query()->where('deficiency_id', $deficiency->id)->first();
+
+            if ($linea && $linea->product_id !== null && (
+                (int) $linea->product_id !== (int) $product->id
+                || (int) $linea->cantidad !== $cantidad
+                || (int) $deficiency->authorization?->cotizacion_adicional_id !== (int) $linea->quote_id
+            )) {
+                throw ValidationException::withMessages(['product_id' => 'El repuesto y su cantidad deben corresponder a la línea cotizada y autorizada del cliente.']);
+            }
+
             // Del almacén que abastece a la sede de la orden, y sin dejarlo
             // en negativo.
             $sedeId = $serviceOrder->sede?->almacenEfectivoId() ?? Sede::where('activo', true)->whereIn('tipo', ['almacen', 'mixta'])->value('id');
@@ -286,7 +303,7 @@ class ExecuteAndCloseServiceOrder
         }
 
         $pendientes = $serviceOrder->deficiencies()
-            ->whereIn('estado', ['detectada', 'esperando_autorizacion', 'autorizada', 'en_correccion'])
+            ->where(fn (Builder $query) => $query->whereIn('estado', ['detectada', 'esperando_autorizacion', 'autorizada', 'en_correccion'])->orWhere(fn (Builder $query) => $query->where('estado', 'resuelta')->where('requiere_autorizacion', true)->whereDoesntHave('authorization')))
             ->count();
 
         if ($pendientes > 0) {
@@ -313,7 +330,6 @@ class ExecuteAndCloseServiceOrder
         $unidades = $aptos->map(function (Equipment $eq) use ($conPh) {
             return [
                 'equipment_id' => $eq->id,
-                'numero_serie' => $eq->numero_serie,
                 'fecha_ultima_recarga' => now()->toDateString(),
                 'fecha_ultima_ph' => in_array($eq->id, $conPh, true) ? now()->toDateString() : null,
             ];

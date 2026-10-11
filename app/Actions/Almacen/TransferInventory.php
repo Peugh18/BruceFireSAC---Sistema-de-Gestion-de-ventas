@@ -2,6 +2,7 @@
 
 namespace App\Actions\Almacen;
 
+use App\Models\DispatchGuide;
 use App\Models\InventoryMovement;
 use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
@@ -15,13 +16,14 @@ use Illuminate\Validation\ValidationException;
 class TransferInventory
 {
     /**
-     * Registra el traslado: el stock sale del origen y queda "en tránsito"
-     * hasta que el almacén destino confirme la llegada (confirmar()).
+     * Prepara el traslado sin afectar stock. La GRE se emite antes del despacho.
      *
      * @param  array{destination_sede_id:int, serials?:list<string>, product_id?:int, quantity?:int, observation?:string|null}  $data
      */
     public function handle(int $sourceSedeId, array $data, User $user): InventoryTransfer
     {
+        abort_if($user->almacenRestringidoId() !== null && $user->almacenRestringidoId() !== $sourceSedeId, 403);
+
         if ($sourceSedeId === $data['destination_sede_id']) {
             throw ValidationException::withMessages(['destination_sede_id' => 'La sede destino debe ser diferente al origen.']);
         }
@@ -31,10 +33,9 @@ class TransferInventory
                 'origen_sede_id' => $sourceSedeId,
                 'destino_sede_id' => $data['destination_sede_id'],
                 'user_id' => $user->id,
-                'estado' => InventoryTransfer::EN_TRANSITO,
+                'estado' => InventoryTransfer::PENDIENTE_GUIA,
                 'observacion' => $data['observation'] ?? null,
             ]);
-            $datos = $this->datos($traslado, $user, trim('Traslado entre sedes (en tránsito). '.($data['observation'] ?? '')));
 
             $serials = collect($data['serials'] ?? [])->filter()->values();
             if ($serials->isNotEmpty()) {
@@ -43,9 +44,7 @@ class TransferInventory
                     throw ValidationException::withMessages(['serials' => 'Todas las unidades deben estar disponibles en la sede origen.']);
                 }
                 foreach ($units as $unit) {
-                    $salida = $this->movimiento($unit->product_id, $sourceSedeId, -1, $datos, $unit);
-                    $unit->update(['estado' => 'en_transito']);
-                    $traslado->items()->create(['product_id' => $unit->product_id, 'inventory_movement_id' => $salida->id, 'inventory_unit_id' => $unit->id, 'cantidad' => 1]);
+                    $traslado->items()->create(['product_id' => $unit->product_id, 'inventory_unit_id' => $unit->id, 'cantidad' => 1]);
                 }
             } else {
                 $productId = $data['product_id'] ?? null;
@@ -54,9 +53,10 @@ class TransferInventory
                     throw ValidationException::withMessages(['product_id' => 'Selecciona un producto y una cantidad.']);
                 }
                 $product = Product::query()->where('serializado', false)->findOrFail($productId);
-                foreach (app(StockPorLote::class)->sacar($product, $sourceSedeId, (int) $quantity, $datos, 'quantity', verbo: 'trasladar') as $salida) {
-                    $traslado->items()->create(['product_id' => $product->id, 'inventory_movement_id' => $salida->id, 'cantidad' => abs($salida->cantidad)]);
+                if ((int) $quantity < 1 || InventoryMovement::saldo($product->id, $sourceSedeId) < (int) $quantity) {
+                    throw ValidationException::withMessages(['quantity' => 'Stock insuficiente para preparar el traslado.']);
                 }
+                $traslado->items()->create(['product_id' => $product->id, 'cantidad' => (int) $quantity]);
             }
 
             AuditLogger::log('inventario.traslado', $traslado, ['sede_id' => $sourceSedeId], [
@@ -64,8 +64,51 @@ class TransferInventory
                 'serials' => $serials->all(),
                 'product_id' => $data['product_id'] ?? null,
                 'quantity' => $data['quantity'] ?? $serials->count(),
-                'estado' => InventoryTransfer::EN_TRANSITO,
+                'estado' => InventoryTransfer::PENDIENTE_GUIA,
             ], userId: $user->id);
+
+            return $traslado;
+        });
+    }
+
+    public function despachar(InventoryTransfer $traslado, User $user): InventoryTransfer
+    {
+        return DB::transaction(function () use ($traslado, $user): InventoryTransfer {
+            $traslado = InventoryTransfer::query()->lockForUpdate()->findOrFail($traslado->id);
+            abort_if($user->almacenRestringidoId() !== null && $user->almacenRestringidoId() !== $traslado->origen_sede_id, 403);
+            if ($traslado->estado !== InventoryTransfer::PENDIENTE_GUIA) {
+                throw ValidationException::withMessages(['traslado' => 'Este traslado ya fue despachado.']);
+            }
+            $guia = DispatchGuide::query()->where('inventory_transfer_id', $traslado->id)->latest('id')->lockForUpdate()->first();
+            if ($guia === null || ! $guia->estaListaParaTrasladar() || $guia->motivo !== '04' || $guia->sede_id !== $traslado->origen_sede_id) {
+                throw ValidationException::withMessages(['guia' => 'El despacho requiere la GRE del traslado aceptada por SUNAT y su CDR disponible.']);
+            }
+            $datos = $this->datos($traslado, $user, 'Despacho entre sedes con GRE aceptada y CDR.');
+            foreach ($traslado->items()->orderBy('product_id')->get() as $item) {
+                if ($item->inventory_unit_id !== null) {
+                    $unit = InventoryUnit::query()->lockForUpdate()->findOrFail($item->inventory_unit_id);
+                    if ($unit->sede_almacen_id !== $traslado->origen_sede_id || ! $unit->estaDisponible()) {
+                        throw ValidationException::withMessages(['serials' => 'La unidad ya no está disponible en el origen.']);
+                    }
+                    $salida = $this->movimiento($unit->product_id, $traslado->origen_sede_id, -1, $datos, $unit);
+                    $unit->update(['estado' => 'en_transito']);
+                    $item->update(['inventory_movement_id' => $salida->id]);
+
+                    continue;
+                }
+                $product = Product::query()->lockForUpdate()->findOrFail($item->product_id);
+                $salidas = app(StockPorLote::class)->sacar($product, $traslado->origen_sede_id, $item->cantidad, $datos, 'quantity', verbo: 'trasladar');
+                foreach ($salidas as $index => $salida) {
+                    $fila = ['product_id' => $item->product_id, 'inventory_movement_id' => $salida->id, 'cantidad' => abs($salida->cantidad)];
+                    if ($index === 0) {
+                        $item->update($fila);
+                    } else {
+                        $traslado->items()->create($fila);
+                    }
+                }
+            }
+            $traslado->update(['estado' => InventoryTransfer::EN_TRANSITO]);
+            AuditLogger::log('inventario.traslado_despachado', $traslado, ['estado' => InventoryTransfer::PENDIENTE_GUIA], ['estado' => InventoryTransfer::EN_TRANSITO, 'guia_id' => $guia->id], userId: $user->id);
 
             return $traslado;
         });
@@ -80,6 +123,8 @@ class TransferInventory
     {
         return DB::transaction(function () use ($traslado, $user): InventoryTransfer {
             $traslado = InventoryTransfer::query()->lockForUpdate()->findOrFail($traslado->id);
+
+            abort_if($user->almacenRestringidoId() !== null && $user->almacenRestringidoId() !== $traslado->destino_sede_id, 403);
 
             if (! $traslado->estaEnTransito()) {
                 throw ValidationException::withMessages(['traslado' => 'Este traslado ya fue confirmado.']);

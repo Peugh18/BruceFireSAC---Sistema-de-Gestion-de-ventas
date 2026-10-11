@@ -666,6 +666,57 @@ export default function CotizacionesIndex({
                                                 {/* Acciones */}
                                                 <td className="px-2.5 py-3.5">
                                                     <div className="flex items-center gap-1.5">
+                                                        {!quote.venta &&
+                                                            [
+                                                                'borrador',
+                                                                'emitida',
+                                                                'enviada',
+                                                                'aceptada',
+                                                            ].includes(
+                                                                quote.estado,
+                                                            ) && (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        router.post(
+                                                                            QuoteController.iniciarOrden.url(
+                                                                                {
+                                                                                    current_team:
+                                                                                        teamSlug,
+                                                                                    quote: quote.id,
+                                                                                },
+                                                                            ),
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    Orden de
+                                                                    taller
+                                                                </Button>
+                                                            )}
+                                                        {!quote.venta &&
+                                                            [
+                                                                'borrador',
+                                                                'emitida',
+                                                                'enviada',
+                                                                'aceptada',
+                                                            ].includes(
+                                                                quote.estado,
+                                                            ) && (
+                                                                <Link
+                                                                    href={QuoteController.edit.url(
+                                                                        {
+                                                                            current_team:
+                                                                                teamSlug,
+                                                                            quote: quote.id,
+                                                                        },
+                                                                    )}
+                                                                    className="border-border focus-visible:ring-ring rounded-[7px] border px-2 py-1 text-xs font-bold focus-visible:ring-2"
+                                                                >
+                                                                    Editar
+                                                                </Link>
+                                                            )}
                                                         <a
                                                             href={QuoteController.pdf.url(
                                                                 {

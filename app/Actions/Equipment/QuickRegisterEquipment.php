@@ -39,6 +39,10 @@ class QuickRegisterEquipment
                 $case = 'B_nuevo';
                 $equipment = Equipment::create(['client_id' => $serviceOrder->client_id, 'numero_serie' => $this->sequenceGenerator->nextEquipmentSerial(), 'tipo_agente' => $this->valueOrUnreadable($data['tipo_agente'] ?? null), 'capacidad' => $this->valueOrUnreadable($data['capacidad'] ?? null), 'marca' => $this->valueOrUnreadable($data['marca'] ?? null), 'serie_fabricante' => $this->valueOrUnreadable($data['serie_fabricante'] ?? null), 'anio_fabricacion' => $this->valueOrUnreadable($data['anio_fabricacion'] ?? null), 'ubicacion_actual' => 'Planta - Taller', 'estado' => 'en_servicio', 'fecha_venta' => now(), 'proxima_fecha_atencion' => now()->addYear(), 'proxima_prueba_hidrostatica' => now()->addYears(5), 'notas' => $data['notas'] ?? null]);
             }
+            if (($incompatibilidad = $serviceOrder->service?->incompatibilidadConEquipo($equipment)) !== null) {
+                throw ValidationException::withMessages(['tipo_agente' => $incompatibilidad]);
+            }
+
             $alreadyAttached = $serviceOrder->equipments()->whereKey($equipment->id)->exists();
             $serviceOrder->equipments()->syncWithoutDetaching([$equipment->id => ['recibido' => (bool) ($data['recibido'] ?? false), 'observaciones' => $data['observaciones_recepcion'] ?? null]]);
             if (! $alreadyAttached) {

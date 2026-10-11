@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
+import React, { useRef, useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import AlertError from '@/components/alert-error';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
@@ -70,6 +76,7 @@ export default function DeficienciasIndex({
     counts,
     filters,
 }: Props) {
+    const modalTrigger = useRef<HTMLElement | null>(null);
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
 
@@ -405,25 +412,34 @@ export default function DeficienciasIndex({
 
                 {/* MODAL: Resolver Deficiencia */}
                 {resolveModalItem && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="bg-card w-full space-y-4 rounded-t-3xl border border-neutral-200 p-5 shadow-xl sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
+                    <Dialog
+                        open
+                        onOpenChange={(open) => {
+                            if (!open && !resolveForm.processing)
+                                setResolveModalItem(null);
+                        }}
+                    >
+                        <DialogContent
+                            onOpenAutoFocus={() => {
+                                modalTrigger.current =
+                                    document.activeElement as HTMLElement;
+                            }}
+                            onCloseAutoFocus={(event) => {
+                                event.preventDefault();
+                                modalTrigger.current?.focus();
+                            }}
+                            className="border-border bg-card max-h-[90dvh] space-y-4 overflow-y-auto overscroll-contain sm:max-w-lg"
+                        >
                             <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
                                 <div>
-                                    <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                                    <DialogTitle className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                                         Resolver Deficiencia
-                                    </h3>
-                                    <p className="text-xs text-neutral-500">
+                                    </DialogTitle>
+                                    <DialogDescription className="text-xs text-neutral-500">
                                         {resolveModalItem.componente} -{' '}
                                         {resolveModalItem.orden_codigo}
-                                    </p>
+                                    </DialogDescription>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setResolveModalItem(null)}
-                                    className="p-1 text-neutral-400"
-                                >
-                                    ✕
-                                </button>
                             </div>
 
                             <form
@@ -462,8 +478,8 @@ export default function DeficienciasIndex({
                                     <span>Marcar como Resuelta en Taller</span>
                                 </button>
                             </form>
-                        </div>
-                    </div>
+                        </DialogContent>
+                    </Dialog>
                 )}
             </div>
         </TecnicoPlantaLayout>

@@ -337,7 +337,13 @@ class DashboardController extends Controller
             ->whereIn('sunat_estado', ['aceptado', 'observado'])
             ->whereBetween('fecha_emision', [$desde->copy()->startOfDay(), $hasta->copy()->endOfDay()])
             ->sum('importe');
+        $debito = (float) ElectronicDocument::query()
+            ->whereIn('sale_id', (clone $ventas)->select('id'))
+            ->where('tipo', 'nota_debito')
+            ->whereIn('sunat_estado', ['aceptado', 'observado'])
+            ->whereBetween('fecha_emision', [$desde->copy()->startOfDay(), $hasta->copy()->endOfDay()])
+            ->sum('importe');
 
-        return round($bruto - $credito, 2);
+        return round($bruto - $credito + $debito, 2);
     }
 }

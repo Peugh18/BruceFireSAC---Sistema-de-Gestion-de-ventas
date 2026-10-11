@@ -47,11 +47,15 @@ class DebitNoteController extends Controller
         );
 
         try {
-            $emit->sendDocument($nota);
+            $nota = $emit->sendDocument($nota);
         } catch (Throwable $e) {
             report($e);
 
             return back()->with('error', "Nota de débito {$nota->serie}-{$nota->correlativo} registrada pero pendiente de envío a SUNAT.");
+        }
+
+        if ($nota->sunat_estado === 'rechazado') {
+            return back()->with('error', "SUNAT rechazó la nota de débito {$nota->serie}-{$nota->correlativo}: {$nota->sunat_mensaje}. La venta sigue vigente.");
         }
 
         return back()->with('success', "Nota de débito {$nota->serie}-{$nota->correlativo} emitida.");

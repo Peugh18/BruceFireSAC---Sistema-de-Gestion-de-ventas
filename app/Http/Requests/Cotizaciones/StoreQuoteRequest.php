@@ -33,6 +33,7 @@ class StoreQuoteRequest extends FormRequest
             'observaciones' => ['nullable', 'string'],
 
             'items' => ['required', 'array', 'min:1'],
+            'items.*.deficiency_id' => ['nullable', 'integer', 'exists:deficiencies,id'],
             'items.*.product_id' => ['nullable', 'required_without:items.*.service_id', 'integer', 'exists:products,id'],
             'items.*.service_id' => ['nullable', 'required_without:items.*.product_id', 'integer', 'exists:services,id'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],

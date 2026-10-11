@@ -20,28 +20,28 @@ class RevertSale
      * (el QR ya no los muestra como válidos). Los pagos ya registrados no se
      * tocan: el dinero se devuelve al cliente de forma manual.
      */
-    public function handle(Sale $sale, string $motivo = 'por nota de crédito'): Sale
+    public function handle(Sale $sale, string $motivo = 'por nota de crédito', bool $devolverStock = true): Sale
     {
         // Bloqueada y releída: dos anulaciones a la vez no deben devolver dos
         // veces el stock ni duplicar la devolución del cobro.
-        return DB::transaction(function () use ($sale, $motivo): Sale {
+        return DB::transaction(function () use ($sale, $motivo, $devolverStock): Sale {
             $bloqueada = Sale::query()->lockForUpdate()->findOrFail($sale->id);
 
             if ($bloqueada->estado === 'anulada') {
                 return $bloqueada;
             }
 
-            return $this->revertir($bloqueada, $motivo);
+            return $this->revertir($bloqueada, $motivo, $devolverStock);
         });
     }
 
-    protected function revertir(Sale $sale, string $motivo): Sale
+    protected function revertir(Sale $sale, string $motivo, bool $devolverStock): Sale
     {
         $sale->loadMissing('items.inventoryUnit', 'items.equipment');
 
-        foreach ($sale->items as $item) {
+        foreach ($devolverStock ? $sale->items : [] as $item) {
             /** @var SaleItem $item */
-            if ($item->tipo_linea === 'producto') {
+            if ($item->tipo_linea === 'producto' && $item->deficiency_id === null) {
                 $this->devolverProducto($sale, $item, $motivo);
 
                 continue;
@@ -90,7 +90,7 @@ class RevertSale
             ->groupBy('forma_pago')
             ->map(fn ($devoluciones) => (float) $devoluciones->sum('monto'));
 
-        $devoluciones = $sale->payments()->get()
+        $devoluciones = $sale->payments()->where('es_detraccion', false)->get()
             ->groupBy('forma_pago')
             ->map(fn ($pagos, $forma) => round((float) $pagos->sum('monto') - (float) $yaDevuelto->get($forma, 0), 2))
             ->filter(fn (float $monto) => $monto > 0);

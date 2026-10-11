@@ -3,6 +3,7 @@
 use App\Enums\TeamRole;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Sede;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
@@ -179,3 +180,30 @@ test('tecnico campo can finalize inspection with conformity and log custody chai
     expect($event->payload['conformidad_nombre'])->toBe('Juan Perez (Administrador Sede)');
     expect($event->payload['eslabon_custodia'])->toBe('inspeccion_campo');
 });
+
+test('una inspeccion anulada no permite agregar equipos ni finalizar', function () {
+    $client = Client::factory()->create();
+    $order = ServiceOrder::factory()->create(['client_id' => $client->id, 'departamento_tecnico' => 'campo', 'estado' => 'anulada']);
+    $equipment = Equipment::factory()->create(['client_id' => $client->id]);
+    $this->actingAs($this->user)->post(route('tecnico-campo.inspecciones.equipos.store', ['current_team' => $this->team, 'service_order' => $order]), ['equipment_id' => $equipment->id])->assertSessionHasErrors('estado');
+    $this->actingAs($this->user)->post(route('tecnico-campo.inspecciones.complete', ['current_team' => $this->team, 'service_order' => $order]), ['conformidad_nombre' => 'Cliente', 'conformidad_aceptada' => true])->assertSessionHasErrors('estado');
+    expect($order->refresh()->estado)->toBe('anulada')->and($order->equipments()->count())->toBe(0)->and($order->events()->count())->toBe(0)->and($order->certificates()->count())->toBe(0);
+});
+
+test('los listados de campo excluyen anuladas y ordenes ajenas de lista y kpis', function (string $modulo, string $prop) {
+    $sede = Sede::factory()->mixta()->create();
+    $otra = Sede::factory()->mixta()->create();
+    $this->user->update(['sede_id' => $sede->id]);
+    $service = Service::factory()->create(['nombre' => 'Mantenimiento e inspección e instalación']);
+    $base = ['sede_id' => $sede->id, 'service_id' => $service->id, 'departamento_tecnico' => 'campo', 'estado' => 'recibido_planta'];
+    $mia = ServiceOrder::factory()->create([...$base, 'tecnico_id' => $this->user->id]);
+    ServiceOrder::factory()->create([...$base, 'estado' => 'anulada']);
+    ServiceOrder::factory()->create([...$base, 'tecnico_id' => User::factory()->create()->id]);
+    ServiceOrder::factory()->create([...$base, 'sede_id' => $otra->id]);
+    $this->actingAs($this->user)->get(route("tecnico-campo.{$modulo}.index", ['current_team' => $this->team]))->assertOk()->assertInertia(function (Assert $page) use ($mia, $prop, $modulo) {
+        $page->has("{$prop}.data", 1)->where("{$prop}.data.0.id", $mia->id);
+        if ($modulo !== 'mantenimientos') {
+            $page->where('stats.total', 1)->where('stats.pendientes', 1)->where('stats.en_proceso', 0)->where('stats.finalizadas', 0);
+        }
+    });
+})->with([['inspecciones', 'inspecciones'], ['instalaciones', 'instalaciones'], ['mantenimientos', 'mantenimientos']]);

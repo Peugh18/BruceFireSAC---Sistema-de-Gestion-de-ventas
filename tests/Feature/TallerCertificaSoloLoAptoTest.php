@@ -127,3 +127,18 @@ test('un repuesto que sale de dos lotes deja los dos movimientos en la bitacora 
     expect($evento->payload['inventory_movement_ids'] ?? [])->toHaveCount(2)
         ->and((int) InventoryMovement::whereIn('id', $evento->payload['inventory_movement_ids'] ?? [0])->sum('cantidad'))->toBe(-7);
 });
+
+test('terminar y emitir certificados es un solo paso y no deja la orden a medias si falta el checklist', function () {
+    [$llego] = $this->equipos;
+    $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id]])->assertSessionHasNoErrors();
+    $this->orden->update(['estado' => 'en_proceso']);
+    $avanzar = fn (array $extra = []) => $this->actingAs($this->tecnico)->post(($this->ruta)('ejecucion.advance'), ['target_state' => 'listo_certificado', ...$extra]);
+
+    $avanzar()->assertSessionHasErrors('target_state');
+    expect($this->orden->fresh()->estado)->toBe('en_proceso')->and(Certificate::where('service_order_id', $this->orden->id)->exists())->toBeFalse();
+
+    checklistConforme($llego);
+    $avanzar(['ph_equipos' => [$llego->id]])->assertSessionHasNoErrors();
+
+    expect($this->orden->fresh()->estado)->toBe('listo_certificado')->and(Certificate::where('service_order_id', $this->orden->id)->exists())->toBeTrue();
+});

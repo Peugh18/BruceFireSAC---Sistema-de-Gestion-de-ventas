@@ -45,6 +45,7 @@ class StoreSaleRequest extends FormRequest
             'iniciado_at' => ['nullable', 'date'],
 
             'items' => ['required', 'array', 'min:1'],
+            'items.*.deficiency_id' => ['nullable', 'integer', 'exists:deficiencies,id'],
             'items.*.tipo_linea' => ['required', Rule::in(['unidad_nueva', 'recarga_servicio', 'producto', 'servicio'])],
             'items.*.numero_serie' => ['required_if:items.*.tipo_linea,unidad_nueva,recarga_servicio', 'nullable', 'string'],
             'items.*.product_id' => ['required_if:items.*.tipo_linea,unidad_nueva,producto', 'nullable', 'integer', 'exists:products,id'],

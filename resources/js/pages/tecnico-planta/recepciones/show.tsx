@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
+import React, { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
@@ -75,6 +81,7 @@ type EquipoEscaneado = {
 };
 
 export default function RecepcionShow({ asignacion, order }: Props) {
+    const modalTrigger = useRef<HTMLElement | null>(null);
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
 
@@ -170,6 +177,28 @@ export default function RecepcionShow({ asignacion, order }: Props) {
         }
     };
 
+    const seleccionarEquiposRecienRecibidos = (actualizada: OrderDetail) => {
+        const nuevos = actualizada.equipments
+            .filter(
+                (equipo) =>
+                    equipo.recibido &&
+                    !order.equipments.some(
+                        (anterior) => anterior.id === equipo.id,
+                    ),
+            )
+            .map((equipo) => equipo.id);
+        confirmForm.setData((data) => {
+            const recibidos = [
+                ...new Set([...data.equipos_recibidos, ...nuevos]),
+            ];
+            return {
+                ...data,
+                equipos_recibidos: recibidos,
+                equipos_recibidos_count: recibidos.length,
+            };
+        });
+    };
+
     const handleLinkExisting = () => {
         if (!scanResult) return;
         equipmentForm.setData('numero_serie', scanResult.numero_serie);
@@ -179,7 +208,10 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                 service_order: order.id,
             }),
             {
-                onSuccess: () => {
+                onSuccess: (page) => {
+                    seleccionarEquiposRecienRecibidos(
+                        page.props.order as OrderDetail,
+                    );
                     setShowRegisterModal(false);
                     setScanResult(null);
                     setBarcodeScanInput('');
@@ -201,7 +233,10 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                 service_order: order.id,
             }),
             {
-                onSuccess: () => {
+                onSuccess: (page) => {
+                    seleccionarEquiposRecienRecibidos(
+                        page.props.order as OrderDetail,
+                    );
                     setShowRegisterModal(false);
                     equipmentForm.reset();
                 },
@@ -573,25 +608,33 @@ export default function RecepcionShow({ asignacion, order }: Props) {
 
                 {/* MODAL: Alta Técnica Rápida (§18) */}
                 {showRegisterModal && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="animate-in slide-in-from-bottom bg-card max-h-[90vh] w-full space-y-4 overflow-y-auto rounded-t-3xl border border-neutral-200 p-5 shadow-xl duration-200 sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
+                    <Dialog
+                        open
+                        onOpenChange={(open) => {
+                            if (!open && !equipmentForm.processing)
+                                setShowRegisterModal(false);
+                        }}
+                    >
+                        <DialogContent
+                            onOpenAutoFocus={() => {
+                                modalTrigger.current =
+                                    document.activeElement as HTMLElement;
+                            }}
+                            onCloseAutoFocus={(event) => {
+                                event.preventDefault();
+                                modalTrigger.current?.focus();
+                            }}
+                            className="border-border bg-card max-h-[90dvh] space-y-4 overflow-y-auto overscroll-contain sm:max-w-lg"
+                        >
                             <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
                                 <div>
-                                    <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                                    <DialogTitle className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                                         Alta Técnica Rápida
-                                    </h3>
-                                    <p className="text-xs text-neutral-500">
+                                    </DialogTitle>
+                                    <DialogDescription className="text-xs text-neutral-500">
                                         Recepción de extintores en Planta
-                                    </p>
+                                    </DialogDescription>
                                 </div>
-                                <button
-                                    aria-label="Cerrar alta rápida"
-                                    type="button"
-                                    onClick={() => setShowRegisterModal(false)}
-                                    className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
-                                >
-                                    ✕
-                                </button>
                             </div>
 
                             {/* Tabs: Caso A vs Caso B */}
@@ -878,8 +921,8 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     </button>
                                 </form>
                             )}
-                        </div>
-                    </div>
+                        </DialogContent>
+                    </Dialog>
                 )}
             </div>
         </TecnicoPlantaLayout>

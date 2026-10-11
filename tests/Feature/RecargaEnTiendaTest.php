@@ -23,7 +23,7 @@ beforeEach(function () {
 test('vendedor registra un extintor existente y uno nuevo sin duplicarlos en planta', function () {
     $seller = vendedorUser();
     $client = Client::factory()->create();
-    $order = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id]);
+    $order = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id, 'service_id' => Service::factory()->create(['nombre' => 'Servicio general', 'agente' => null, 'capacidad' => null])->id]);
     $existing = Equipment::factory()->create(['client_id' => $client->id, 'numero_serie' => 'BF-EQ-004200']);
 
     foreach ([['numero_serie' => $existing->numero_serie], ['tipo_agente' => 'PQS ABC', 'capacidad' => '6 kg']] as $payload) {
@@ -44,7 +44,7 @@ test('un extintor no entra a una segunda orden abierta', function () {
     $equipment = Equipment::factory()->create(['client_id' => $client->id, 'numero_serie' => 'BF-EQ-004300']);
     $abierta = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id, 'estado' => 'en_proceso']);
     $abierta->equipments()->attach($equipment, ['recibido' => true]);
-    $nueva = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id]);
+    $nueva = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id, 'service_id' => Service::factory()->create(['nombre' => 'Mantenimiento general', 'agente' => null, 'capacidad' => null])->id]);
 
     $this->actingAs($seller)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $seller->currentTeam, 'service_order' => $nueva]), ['numero_serie' => 'BF-EQ-004300'])->assertSessionHasErrors('numero_serie');
     expect($nueva->equipments()->count())->toBe(0);
@@ -80,7 +80,7 @@ test('cobrar vincula la venta y rechaza un segundo cobro', function () {
     $order = ServiceOrder::factory()->create(['sede_id' => $seller->sede_id]);
     $equipment = Equipment::factory()->create(['client_id' => $order->client_id]);
     $order->equipments()->attach($equipment, ['recibido' => false]);
-    $service = Service::factory()->create(['precio_venta' => 50]);
+    $service = Service::factory()->create(['precio_venta' => 50, 'nombre' => 'Servicio general', 'agente' => null, 'capacidad' => null]);
     $payload = ['service_order_id' => $order->id, 'client_id' => $order->client_id, 'sede_id' => $seller->sede_id, 'fecha' => now()->toDateString(), 'destino' => 'local_cliente', 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'comprobante_tipo' => 'factura', 'items' => [['tipo_linea' => 'recarga_servicio', 'numero_serie' => $equipment->numero_serie, 'service_id' => $service->id, 'cantidad' => 1, 'precio_unitario' => 50]]];
 
     $this->actingAs($seller)->post(route('vendedor.ventas.store', ['current_team' => $seller->currentTeam]), $payload)->assertRedirect();
@@ -101,7 +101,7 @@ test('cobrar avisa el adicional ya resuelto que se aprobo sin cotizacion', funct
 test('no se cobra una orden anulada', function () {
     $seller = vendedorUser();
     $order = ServiceOrder::factory()->create(['sede_id' => $seller->sede_id, 'estado' => 'anulada']);
-    $service = Service::factory()->create(['precio_venta' => 50]);
+    $service = Service::factory()->create(['precio_venta' => 50, 'nombre' => 'Servicio general', 'agente' => null, 'capacidad' => null]);
     $payload = ['service_order_id' => $order->id, 'client_id' => $order->client_id, 'sede_id' => $seller->sede_id, 'fecha' => now()->toDateString(), 'destino' => 'local_cliente', 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'comprobante_tipo' => 'factura', 'items' => [['tipo_linea' => 'servicio', 'service_id' => $service->id, 'cantidad' => 1, 'precio_unitario' => 50]]];
 
     $this->actingAs($seller)->post(route('vendedor.ventas.store', ['current_team' => $seller->currentTeam]), $payload)->assertSessionHasErrors('service_order_id');

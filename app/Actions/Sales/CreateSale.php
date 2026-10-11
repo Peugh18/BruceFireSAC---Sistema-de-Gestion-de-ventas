@@ -4,9 +4,12 @@ namespace App\Actions\Sales;
 
 use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Models\Client;
+use App\Models\Deficiency;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Models\QuoteItem;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Service;
 use App\Models\Vehicle;
 use App\Services\AuditLogger;
@@ -38,6 +41,7 @@ class CreateSale
         return DB::transaction(function () use ($data, $items, $vendedorId, $iniciadoAt) {
             // Los precios ya incluyen IGV: el subtotal de cada línea es lo que
             // paga el cliente y la base/IGV se separan de ahí.
+            $this->validarAdicionales($data, $items);
             $lineas = $this->mapearLineas($items);
 
             ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totalesConAfectacion($lineas);
@@ -103,7 +107,9 @@ class CreateSale
             $sale = Sale::query()->lockForUpdate()->findOrFail($sale->id);
             $antes = $sale->only(['client_id', 'comprobante_tipo', 'condicion_pago', 'total']);
             unset($data['iniciado_at']);
+            $data['quote_id'] = $sale->quote_id;
 
+            $this->validarAdicionales($data, $items, $sale->id);
             $lineas = $this->mapearLineas($items);
 
             ['subtotal' => $subtotal, 'igv' => $igv, 'total' => $total] = PrecioConIgv::totalesConAfectacion($lineas);
@@ -143,6 +149,44 @@ class CreateSale
 
             return $sale->refresh();
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  list<array<string, mixed>>  $items
+     */
+    protected function validarAdicionales(array $data, array $items, ?int $saleId = null): void
+    {
+        $ids = array_values(array_filter(array_column($items, 'deficiency_id')));
+        if (count($ids) !== count(array_unique($ids))) {
+            throw ValidationException::withMessages(['items' => 'Un adicional no se cobra dos veces.']);
+        }
+        if (! empty($data['quote_id'])) {
+            $quote = Quote::query()->lockForUpdate()->whereKey($data['quote_id'])->firstOrFail();
+            foreach ($quote->items()->whereNotNull('deficiency_id')->get() as $linea) {
+                if (! in_array($linea->deficiency_id, $ids, true)) {
+                    throw ValidationException::withMessages(['items' => 'Incluye los adicionales de la cotización; para retirarlos, corrige primero la cotización.']);
+                }
+            }
+        }
+        foreach ($items as $item) {
+            if (empty($item['deficiency_id'])) {
+                continue;
+            }
+            $deficiency = Deficiency::query()->lockForUpdate()->whereKey($item['deficiency_id'])->firstOrFail();
+            $linea = QuoteItem::query()->where('deficiency_id', $deficiency->id)->first();
+            if (! $linea || $deficiency->serviceOrder->estado === 'anulada' || ! $deficiency->authorization || ! in_array($deficiency->estado, ['autorizada', 'resuelta'], true)
+                || (int) $deficiency->serviceOrder->client_id !== (int) $data['client_id'] || (int) $deficiency->serviceOrder->sede_id !== (int) $data['sede_id']
+                || (int) ($item['product_id'] ?? 0) !== (int) $linea->product_id || (int) ($item['service_id'] ?? 0) !== (int) $linea->service_id
+                || (int) $item['cantidad'] !== (int) $linea->cantidad || abs((float) $item['precio_unitario'] - (float) $linea->precio_unitario) > 0.001
+                || abs((float) ($item['descuento'] ?? 0) - (float) $linea->descuento) > 0.001
+                || abs((float) $deficiency->authorization->importe - (float) $linea->subtotal) > 0.001) {
+                throw ValidationException::withMessages(['items' => 'El adicional debe estar autorizado por el cliente y coincidir con lo cotizado.']);
+            }
+            if (SaleItem::query()->where('deficiency_id', $deficiency->id)->when($saleId, fn ($query) => $query->where('sale_id', '!=', $saleId))->whereHas('sale', fn ($query) => $query->where('estado', '!=', 'anulada'))->exists()) {
+                throw ValidationException::withMessages(['items' => 'Este adicional ya está incluido en otra venta.']);
+            }
+        }
     }
 
     /**

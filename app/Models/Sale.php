@@ -32,6 +32,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property string $comprobante_tipo
  * @property float $subtotal
  * @property float $igv
+ * @property string|null $codigo_detraccion_snapshot
+ * @property float|null $monto_detraccion_snapshot
  * @property float $total
  * @property string $estado
  * @property string|null $observaciones
@@ -158,6 +160,10 @@ class Sale extends Model
             return false;
         }
 
+        if ($this->payments()->where('es_detraccion', true)->exists()) {
+            return false;
+        }
+
         if ($this->esNotaVenta()) {
             return true;
         }
@@ -176,6 +182,7 @@ class Sale extends Model
             'subtotal' => 'decimal:2',
             'igv' => 'decimal:2',
             'total' => 'decimal:2',
+            'monto_detraccion_snapshot' => 'decimal:2',
         ];
     }
 

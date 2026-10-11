@@ -7,6 +7,7 @@ import {
     LogOut,
     MapPin,
     Truck,
+    Wrench,
     type LucideIcon,
 } from 'lucide-react';
 import { ReactNode } from 'react';
@@ -20,6 +21,7 @@ import RecojosRoutes from '@/routes/tecnico-campo/recojos';
 import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
 import InstalacionesRoutes from '@/routes/tecnico-campo/instalaciones';
 import EntregasRoutes from '@/routes/tecnico-campo/entregas';
+import MantenimientosRoutes from '@/routes/tecnico-campo/mantenimientos';
 
 type PageProps = {
     auth: Auth & {
@@ -75,6 +77,12 @@ export default function TecnicoCampoLayout({
             href: InstalacionesRoutes.index.url({ current_team: teamSlug }),
             icon: MapPin,
             activeMatch: '/tecnico-campo/instalaciones',
+        },
+        {
+            title: 'Mantenimiento',
+            href: MantenimientosRoutes.index.url({ current_team: teamSlug }),
+            icon: Wrench,
+            activeMatch: '/tecnico-campo/mantenimientos',
         },
         {
             title: 'Entregas',
@@ -149,7 +157,7 @@ export default function TecnicoCampoLayout({
                             href={item.href}
                             className={`flex items-center gap-2 rounded-[8px] px-3.5 py-1.5 text-xs font-bold transition-all ${
                                 isActive
-                                    ? 'bg-info text-info-foreground shadow-xs'
+                                    ? 'bg-info dark:text-info-foreground text-black shadow-xs'
                                     : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                             }`}
                         >

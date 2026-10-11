@@ -98,7 +98,7 @@ test('recarga de servicio no descuenta stock y requiere equipo del cliente corre
     $client = Client::factory()->create();
     $otherClient = Client::factory()->create();
     $sede = Sede::factory()->almacen()->create();
-    $service = Service::factory()->create(['precio_venta' => 80]);
+    $service = Service::factory()->create(['nombre' => 'Recarga', 'precio_venta' => 80]);
     $product = Product::factory()->create();
     $unit = InventoryUnit::factory()->create([
         'product_id' => $product->id,

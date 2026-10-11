@@ -13,6 +13,7 @@ export type AsignacionOrden = {
     area: 'planta' | 'campo';
     tecnico: string | null;
     es_mia: boolean;
+    finalizada: boolean;
 };
 
 /**
@@ -43,6 +44,11 @@ export default function TomarOrden({
                 </span>
             </div>
         );
+    }
+
+    // Una orden entregada, cerrada o anulada ya no se toma.
+    if (asignacion.finalizada) {
+        return null;
     }
 
     // La orden ya pasó a la otra área (p. ej. recogida en campo y rumbo a

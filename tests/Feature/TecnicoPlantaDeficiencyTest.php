@@ -3,6 +3,7 @@
 use App\Enums\TeamRole;
 use App\Models\Client;
 use App\Models\Deficiency;
+use App\Models\Sede;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
@@ -111,4 +112,18 @@ test('tecnico planta can resolve a deficiency in workshop', function () {
         ->and($deficiency->resolucion)->toContain('Se colocó pasador nuevo');
 
     expect(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'otro')->exists())->toBeTrue();
+});
+
+test('los contadores de deficiencias de planta usan las mismas ordenes atendibles de la lista', function () {
+    $sede = Sede::factory()->mixta()->create();
+    $this->tecnicoPlanta->update(['sede_id' => $sede->id]);
+    $base = ['sede_id' => $sede->id, 'departamento_tecnico' => 'planta', 'estado' => 'recibido_planta'];
+    $mia = ServiceOrder::factory()->create([...$base, 'tecnico_id' => $this->tecnicoPlanta->id]);
+    $anulada = ServiceOrder::factory()->create([...$base, 'estado' => 'anulada']);
+    $deOtroTecnico = ServiceOrder::factory()->create([...$base, 'tecnico_id' => User::factory()->create()->id]);
+    $ajena = ServiceOrder::factory()->create([...$base, 'sede_id' => Sede::factory()->mixta()->create()->id]);
+    foreach ([$mia, $anulada, $deOtroTecnico, $ajena] as $orden) {
+        Deficiency::factory()->create(['service_order_id' => $orden->id, 'equipment_id' => null, 'estado' => 'esperando_autorizacion']);
+    }
+    $this->actingAs($this->tecnicoPlanta)->get(route('tecnico-planta.deficiencias.index', ['current_team' => $this->team]))->assertOk()->assertInertia(fn (Assert $page) => $page->has('deficiencies.data', 1)->where('deficiencies.data.0.orden_id', $mia->id)->where('counts.todas', 1)->where('counts.esperando_autorizacion', 1)->where('counts.autorizada', 0));
 });

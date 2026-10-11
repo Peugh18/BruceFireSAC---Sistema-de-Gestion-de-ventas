@@ -21,6 +21,14 @@ import UsuariosRoutes from '@/routes/gerente/usuarios';
 
 type SedeOption = { id: number; nombre: string; tipo: string };
 
+/** Clave inicial legible y aleatoria; el trabajador la cambia en su perfil. */
+function generarClave(): string {
+    const letras = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    const azar = crypto.getRandomValues(new Uint32Array(12));
+
+    return Array.from(azar, (n) => letras[n % letras.length]).join('');
+}
+
 type Props = {
     teamSlug: string;
     roles: string[];
@@ -154,16 +162,27 @@ export default function NuevoUsuarioDialog({
 
                     <div className="space-y-1.5">
                         <Label htmlFor="nuevo-clave">Contraseña inicial</Label>
-                        <Input
-                            id="nuevo-clave"
-                            type="text"
-                            autoComplete="off"
-                            value={form.data.password}
-                            onChange={(e) =>
-                                form.setData('password', e.target.value)
-                            }
-                            placeholder="Mínimo 8 caracteres"
-                        />
+                        <div className="flex gap-2">
+                            <Input
+                                id="nuevo-clave"
+                                type="text"
+                                autoComplete="off"
+                                value={form.data.password}
+                                onChange={(e) =>
+                                    form.setData('password', e.target.value)
+                                }
+                                placeholder="Mínimo 8 caracteres"
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() =>
+                                    form.setData('password', generarClave())
+                                }
+                            >
+                                Generar
+                            </Button>
+                        </div>
                         <InputError message={form.errors.password} />
                     </div>
 

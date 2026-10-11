@@ -121,7 +121,9 @@ class GreenterService
                     ->setCtaBanco($this->cuentaDetraccion())
                     ->setCodBienDetraccion($detraccionCalc['codigo_bien'])
                     ->setCodMedioPago((string) config('billing.detraccion.cod_medio_pago'))
-                    ->setPercent((float) config('billing.detraccion.tasa') * 100)
+                    ->setPercent($sale->estado !== 'borrador' && $sale->monto_detraccion_snapshot !== null
+                        ? round($detraccionCalc['monto'] / (float) $sale->total * 100, 2)
+                        : (float) config('billing.detraccion.tasa') * 100)
                     ->setMount($detraccionCalc['monto'])
             );
 
@@ -220,7 +222,8 @@ class GreenterService
         $importe = (float) $note->importe;
         $descripcion = $esCredito ? $this->descripcionMotivoCredito($note->motivo_catalogo) : $this->descripcionMotivoDebito($note->motivo_catalogo);
 
-        $desglose = app(DesgloseNota::class)->calcular($original, $note->tipo, (string) $note->motivo_catalogo, $importe);
+        $desglose = $note->nota_datos['desglose'] ?? app(DesgloseNota::class)->calcular($original, $note->tipo, (string) $note->motivo_catalogo, $importe);
+        $descripcion = $note->nota_datos['detalle'] ?? $descripcion;
         $bases = ['10' => 0.0, '20' => 0.0, '30' => 0.0];
         $igv = 0.0;
         $details = [];

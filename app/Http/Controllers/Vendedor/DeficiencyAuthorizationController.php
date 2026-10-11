@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\Deficiencies\StoreDeficiencyAuthorizationRequest;
 use App\Models\Deficiency;
+use App\Models\InventoryMovement;
 use App\Models\Quote;
+use App\Models\QuoteItem;
 use App\Models\Sale;
 use App\Models\Team;
 use App\Services\AuditLogger;
@@ -43,6 +45,10 @@ class DeficiencyAuthorizationController extends Controller
             return back();
         }
 
+        if (! in_array($deficiency->estado, ['esperando_autorizacion', 'resuelta'], true)) {
+            throw ValidationException::withMessages(['deficiency' => 'Esta deficiencia no está esperando autorización.']);
+        }
+
         // La cotización del adicional debe ser del mismo cliente y sede de la orden.
         $orden = $deficiency->serviceOrder;
         $cotizacion = null;
@@ -60,7 +66,17 @@ class DeficiencyAuthorizationController extends Controller
             }
         }
 
-        $importe = $request->filled('importe') ? round((float) $request->input('importe'), 2) : ($cotizacion ? (float) $cotizacion->total : null);
+        $linea = QuoteItem::query()->where('deficiency_id', $deficiency->id)->first();
+        if ($linea) {
+            $cotizacion = $linea->quote;
+            if (! in_array($cotizacion->estado, ['borrador', 'emitida', 'enviada', 'aceptada'], true)) {
+                throw ValidationException::withMessages(['cotizacion_adicional_id' => 'La cotización del adicional ya no está disponible.']);
+            }
+        }
+        if (! $linea && $request->filled('importe') && ! $cotizacion) {
+            throw ValidationException::withMessages(['cotizacion_adicional_id' => 'Cotiza el adicional antes de autorizar su importe.']);
+        }
+        $importe = $linea ? (float) $linea->subtotal : ($request->filled('importe') ? round((float) $request->input('importe'), 2) : ($cotizacion ? (float) $cotizacion->total : null));
         $venta = $orden->sale_id ? Sale::query()->find($orden->sale_id) : null;
 
         // V6: con la orden ya cobrada, el adicional se cobra aparte: sin
@@ -71,10 +87,18 @@ class DeficiencyAuthorizationController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($deficiency, $request, $cotizacion, $importe, $venta, $orden): void {
+        DB::transaction(function () use ($deficiency, $request, $cotizacion, $importe, $venta, $orden, $linea): void {
             // Bloqueada y releída (A1): dos requests a la vez no crean dos
             // autorizaciones ni dos cuotas por cobrar por la misma deficiencia.
             $this->bloquearYValidar($deficiency);
+            $linea = QuoteItem::query()->where('deficiency_id', $deficiency->id)->lockForUpdate()->first();
+            if ($linea) {
+                $cotizacion = Quote::query()->lockForUpdate()->findOrFail($linea->quote_id);
+                if (! in_array($cotizacion->estado, ['borrador', 'emitida', 'enviada', 'aceptada'], true) || $cotizacion->sale()->exists()) {
+                    throw ValidationException::withMessages(['cotizacion_adicional_id' => 'La cotización ya no está disponible para autorizar.']);
+                }
+                $importe = (float) $linea->subtotal;
+            }
 
             $autorizacion = $deficiency->authorization()->create([
                 'autorizado_por' => $request->string('autorizado_por')->toString(),
@@ -85,11 +109,12 @@ class DeficiencyAuthorizationController extends Controller
                 'importe' => $importe,
                 'vendedor_id' => $request->user()->id,
             ]);
-            $deficiency->update(['estado' => 'autorizada']);
+            $yaConsumido = InventoryMovement::query()->where('referencia_type', $deficiency->getMorphClass())->where('referencia_id', $deficiency->id)->where('tipo', 'salida_servicio')->exists();
+            $deficiency->update(['estado' => $yaConsumido ? 'resuelta' : 'autorizada']);
 
             // Deuda real: una cuota nueva de la venta de la orden, ligada a
             // esta autorización (se ve en Cobranzas).
-            if ($venta?->estado === 'confirmada' && $importe !== null) {
+            if ($venta?->estado === 'confirmada' && $importe !== null && ! $linea) {
                 $cuota = $venta->installments()->create([
                     'numero_cuota' => (int) $venta->installments()->max('numero_cuota') + 1,
                     'fecha_vencimiento' => today(),
@@ -100,7 +125,7 @@ class DeficiencyAuthorizationController extends Controller
 
                 $orden->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'payload' => ['accion' => 'saldo_adicional_pendiente', 'deficiency_id' => $deficiency->id, 'installment_id' => $cuota->id, 'importe' => $importe, 'mensaje' => 'La orden ya fue cobrada; el adicional autorizado quedó como cuota por cobrar en Cobranzas.']]);
             }
-        });
+        }, 3);
         $this->recordEvent($deficiency, $request->user()->id, true);
         $action->releaseFromAuthorizationHold($deficiency->serviceOrder, $request->user());
 
@@ -127,7 +152,7 @@ class DeficiencyAuthorizationController extends Controller
     {
         $bloqueada = Deficiency::query()->lockForUpdate()->findOrFail($deficiency->id);
 
-        if ($bloqueada->estado !== 'esperando_autorizacion') {
+        if ($bloqueada->estado !== 'esperando_autorizacion' && ! ($bloqueada->estado === 'resuelta' && ! $bloqueada->authorization()->exists() && QuoteItem::query()->where('deficiency_id', $bloqueada->id)->exists())) {
             throw ValidationException::withMessages([
                 'deficiency' => 'Esta deficiencia no está esperando autorización.',
             ]);

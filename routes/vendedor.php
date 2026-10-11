@@ -9,6 +9,7 @@ use App\Http\Controllers\Vendedor\ClientController;
 use App\Http\Controllers\Vendedor\ClientSiteController;
 use App\Http\Controllers\Vendedor\CollectionController;
 use App\Http\Controllers\Vendedor\CommunicationController;
+use App\Http\Controllers\Vendedor\ConstanciaDetraccionController;
 use App\Http\Controllers\Vendedor\CounterDeliveryController;
 use App\Http\Controllers\Vendedor\CreditNoteController;
 use App\Http\Controllers\Vendedor\DashboardController;
@@ -67,6 +68,9 @@ Route::prefix('vendedor')
 
         Route::get('cotizaciones', [QuoteController::class, 'index'])->name('cotizaciones.index');
         Route::get('cotizaciones/nueva', [QuoteController::class, 'create'])->middleware('can:quotes.create')->name('cotizaciones.create');
+        Route::post('cotizaciones/{quote}/orden-taller', [QuoteController::class, 'iniciarOrden'])->middleware('can:quotes.update')->name('cotizaciones.orden-taller');
+        Route::get('cotizaciones/{quote}/editar', [QuoteController::class, 'edit'])->middleware('can:quotes.update')->name('cotizaciones.edit');
+        Route::put('cotizaciones/{quote}', [QuoteController::class, 'update'])->middleware('can:quotes.update')->name('cotizaciones.update');
         Route::get('cotizaciones/buscar-catalogo', [QuoteController::class, 'searchCatalogo'])->name('cotizaciones.buscar-catalogo');
         Route::post('cotizaciones', [QuoteController::class, 'store'])->middleware('can:quotes.create')->name('cotizaciones.store');
         Route::post('cotizaciones/{quote}/enviar', [QuoteController::class, 'send'])->middleware('can:quotes.create')->name('cotizaciones.send');
@@ -89,6 +93,7 @@ Route::prefix('vendedor')
         Route::get('ventas/{sale}/certificado-servicio/{tipo:codigo}', [ServiceCertificateController::class, 'create'])->middleware('can:certificates.print')->name('ventas.certificado-servicio.create')->withoutScopedBindings();
         Route::post('ventas/{sale}/certificado-servicio/{tipo:codigo}', [ServiceCertificateController::class, 'store'])->middleware('can:certificates.print')->name('ventas.certificado-servicio.store')->withoutScopedBindings();
         Route::post('ventas/{sale}/items/{item}/cambiar-unidad', [SaleController::class, 'cambiarUnidad'])->middleware('can:sales.create')->name('ventas.cambiar-unidad');
+        Route::post('ventas/{sale}/detraccion', [ConstanciaDetraccionController::class, 'store'])->middleware('can:collections.register_payment')->name('ventas.detraccion.store');
         Route::get('ventas/{sale}/certificados', [SaleCertificateController::class, 'create'])->middleware('can:certificates.print')->name('ventas.certificados.create');
         Route::post('ventas/{sale}/certificados', [SaleCertificateController::class, 'store'])->middleware('can:certificates.print')->name('ventas.certificados.store');
 
@@ -98,6 +103,7 @@ Route::prefix('vendedor')
         Route::put('ordenes-servicio/{service_order}', [ServiceOrderController::class, 'update'])->name('ordenes-servicio.update');
         Route::post('ordenes-servicio/{service_order}/anular', [ServiceOrderController::class, 'anular'])->name('ordenes-servicio.anular');
         Route::post('ordenes-servicio/{service_order}/asignar-tecnico', [ServiceOrderController::class, 'assign'])->name('ordenes-servicio.asignar-tecnico');
+        Route::post('ordenes-servicio/{service_order}/asignar-entrega', [ServiceOrderController::class, 'assignDelivery'])->name('ordenes-servicio.asignar-entrega');
         Route::post('ordenes-servicio/{service_order}/equipos', [ServiceOrderEquipmentController::class, 'store'])->name('ordenes-servicio.equipos.store');
         Route::get('ordenes-servicio/{service_order}/constancia-recepcion', ServiceOrderReceiptController::class)->name('ordenes-servicio.constancia-recepcion');
         Route::get('ordenes-servicio/{service_order}/entrega-mostrador', [CounterDeliveryController::class, 'show'])->name('ordenes-servicio.entrega-mostrador.show');
@@ -108,6 +114,8 @@ Route::prefix('vendedor')
         Route::post('comunicacion/{service_order}/nota', [CommunicationController::class, 'nota'])->name('comunicacion.nota');
 
         Route::get('deficiencias', [DeficiencyController::class, 'index'])->name('deficiencias.index');
+        Route::post('ordenes-servicio/{service_order}/deficiencias', [DeficiencyController::class, 'store'])->name('deficiencias.store');
+        Route::post('deficiencias/{deficiency}/cotizar', [DeficiencyController::class, 'cotizar'])->name('deficiencias.cotizar');
         Route::post('deficiencias/{deficiency}/autorizar', [DeficiencyAuthorizationController::class, 'store'])->name('deficiencias.autorizar');
 
         Route::get('alertas', [AlertController::class, 'index'])->name('alertas.index');

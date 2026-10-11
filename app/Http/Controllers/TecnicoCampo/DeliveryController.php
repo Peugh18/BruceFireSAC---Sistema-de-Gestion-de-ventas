@@ -8,11 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
+use App\Services\AuditLogger;
 use App\Services\Reports\ActaConformidadPdfService;
 use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,7 +34,7 @@ class DeliveryController extends Controller
             ->with(['client', 'sede', 'equipments'])
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
-                    ->orWhereIn('estado', ['listo_entrega', 'entregado', 'cerrado']);
+                    ->orWhereIn('estado', [...ServiceOrder::ESTADOS_LISTOS, 'entregado', 'cerrado']);
             })
             ->latest('id');
 
@@ -46,7 +49,7 @@ class DeliveryController extends Controller
         }
 
         if ($tab === 'listas') {
-            $query->where('estado', 'listo_entrega');
+            $query->whereIn('estado', ServiceOrder::ESTADOS_LISTOS);
         } elseif ($tab === 'entregadas') {
             $query->where('estado', 'entregado');
         } elseif ($tab === 'cerradas') {
@@ -59,12 +62,12 @@ class DeliveryController extends Controller
             ->accessibleToTechnician($request->user())
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'campo')
-                    ->orWhereIn('estado', ['listo_entrega', 'entregado', 'cerrado']);
+                    ->orWhereIn('estado', [...ServiceOrder::ESTADOS_LISTOS, 'entregado', 'cerrado']);
             });
 
         $stats = [
-            'total' => (clone $baseStatsQuery)->whereIn('estado', ['listo_entrega', 'entregado', 'cerrado'])->count(),
-            'listas' => (clone $baseStatsQuery)->where('estado', 'listo_entrega')->count(),
+            'total' => (clone $baseStatsQuery)->whereIn('estado', [...ServiceOrder::ESTADOS_LISTOS, 'entregado', 'cerrado'])->count(),
+            'listas' => (clone $baseStatsQuery)->whereIn('estado', ServiceOrder::ESTADOS_LISTOS)->count(),
             'entregadas' => (clone $baseStatsQuery)->where('estado', 'entregado')->count(),
             'cerradas' => (clone $baseStatsQuery)->where('estado', 'cerrado')->count(),
         ];
@@ -86,7 +89,7 @@ class DeliveryController extends Controller
             'client',
             'sede',
             'vehicle',
-            'equipments',
+            'equipments.checklists' => fn ($query) => $query->where('service_order_id', $serviceOrder->id)->latest('id')->select(['id', 'equipment_id', 'resultado_general']),
             'events' => fn ($q) => $q->latest('created_at'),
             'certificates.certificateType',
         ]);
@@ -120,10 +123,6 @@ class DeliveryController extends Controller
         ServiceOrder $serviceOrder,
         RenewEquipmentAttentionDate $renewEquipmentAttentionDate,
     ): RedirectResponse {
-        // Se entrega una sola vez y solo lo que ya está listo.
-        abort_unless(in_array($serviceOrder->estado, ServiceOrder::ESTADOS_LISTOS, true), 422, 'La orden todavía no está lista para entregar.');
-        abort_if($serviceOrder->events()->where('payload->accion', 'entrega_final_realizada')->exists(), 422, 'Esta orden ya se entregó.');
-
         $validated = $request->validate([
             'receptor_nombre' => ['required', 'string', 'max:150'],
             'receptor_dni' => ['nullable', 'string', 'max:20'],
@@ -133,44 +132,56 @@ class DeliveryController extends Controller
             'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
         ]);
 
-        if (filled($validated['firma'] ?? null)) {
-            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'entrega', $request->user());
-        }
+        $debeCerrar = DB::transaction(function () use ($serviceOrder, $request, $validated, $renewEquipmentAttentionDate): bool {
+            // El relevo y la entrega comparten bloqueo; se revisa el responsable vigente.
+            $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            abort_unless($serviceOrder->atendiblePor($request->user()), 404);
+            // Se entrega una sola vez y solo lo que ya está listo.
+            abort_unless(in_array($serviceOrder->estado, ServiceOrder::ESTADOS_LISTOS, true), 422, 'La orden todavía no está lista para entregar.');
+            abort_if($serviceOrder->events()->where('payload->accion', 'entrega_final_realizada')->exists(), 422, 'Esta orden ya se entregó.');
+            $serviceOrder->tomarSiLibre($request->user());
 
-        $yaRenovadas = $serviceOrder->events()->where('tipo', 'trabajo_completado')->exists();
+            if (filled($validated['firma'] ?? null)) {
+                app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'entrega', $request->user());
+            }
 
-        // Registrar eslabón final de custodia (§22.4, §85.6.3)
-        ServiceOrderEvent::create([
-            'service_order_id' => $serviceOrder->id,
-            'tipo' => 'trabajo_completado',
-            'user_id' => $request->user()->id,
-            'payload' => [
-                'accion' => 'entrega_final_realizada',
-                'eslabon_custodia' => 'entrega_campo',
-                'responsable_nombre' => $request->user()->name,
-                'receptor_nombre' => $validated['receptor_nombre'],
-                'receptor_dni' => $validated['receptor_dni'] ?? null,
-                'observaciones_entrega' => $validated['observaciones_entrega'] ?? null,
-                'fecha_entrega' => now()->toIso8601String(),
-                'equipos_entregados_count' => $serviceOrder->equipments()->count(),
-            ],
-        ]);
+            $yaRenovadas = $serviceOrder->events()->where('tipo', 'trabajo_completado')->exists();
 
-        $debeCerrar = $request->boolean('cerrar_orden', true);
-        $serviceOrder->update([
-            'estado' => $debeCerrar ? 'cerrado' : 'entregado',
-        ]);
+            // Registrar eslabón final de custodia (§22.4, §85.6.3)
+            ServiceOrderEvent::create([
+                'service_order_id' => $serviceOrder->id,
+                'tipo' => 'trabajo_completado',
+                'user_id' => $request->user()->id,
+                'payload' => [
+                    'accion' => 'entrega_final_realizada',
+                    'eslabon_custodia' => 'entrega_campo',
+                    'responsable_nombre' => $request->user()->name,
+                    'receptor_nombre' => $validated['receptor_nombre'],
+                    'receptor_dni' => $validated['receptor_dni'] ?? null,
+                    'observaciones_entrega' => $validated['observaciones_entrega'] ?? null,
+                    'fecha_entrega' => now()->toIso8601String(),
+                    'equipos_entregados_count' => $serviceOrder->equipments()->count(),
+                ],
+            ]);
 
-        // Si el trabajo ya se registró (certificado del taller, inspección o
-        // instalación), las fechas ya quedaron como corresponden: entregar no
-        // las vuelve a mover. Un extintor descargado sigue avisando.
-        if ($debeCerrar && ! $yaRenovadas) {
-            $phRealizada = $serviceOrder->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
-            $renewEquipmentAttentionDate->execute(
-                $serviceOrder->equipments()->whereNotIn('equipment.estado', ['descargado', 'usado'])->get(),
-                $phRealizada,
-            );
-        }
+            $debeCerrar = $request->boolean('cerrar_orden', true);
+            $serviceOrder->update([
+                'estado' => $debeCerrar ? 'cerrado' : 'entregado',
+            ]);
+
+            // Si el trabajo ya se registró (certificado del taller, inspección o
+            // instalación), las fechas ya quedaron como corresponden: entregar no
+            // las vuelve a mover. Un extintor descargado sigue avisando.
+            if ($debeCerrar && ! $yaRenovadas) {
+                $phRealizada = $serviceOrder->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'prueba_hidrostatica'))->exists();
+                $renewEquipmentAttentionDate->execute(
+                    $serviceOrder->equipments()->whereNotIn('equipment.estado', ['descargado', 'usado'])->get(),
+                    $phRealizada,
+                );
+            }
+
+            return $debeCerrar;
+        });
 
         $msg = $debeCerrar
             ? 'Entrega final completada y orden de servicio cerrada exitosamente.'
@@ -182,6 +193,26 @@ class DeliveryController extends Controller
                 'service_order' => $serviceOrder->id,
             ])
             ->with('success', $msg);
+    }
+
+    /** Cierra una entrega ya registrada, sin crear otra acta ni renovar fechas. */
+    public function close(Team $current_team, ServiceOrder $serviceOrder, Request $request): RedirectResponse
+    {
+        DB::transaction(function () use ($serviceOrder, $request): void {
+            $orden = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            abort_unless($orden->atendiblePor($request->user()), 404);
+            if ($orden->estado !== 'entregado'
+                || ! $orden->events()->where('payload->accion', 'entrega_final_realizada')->exists()) {
+                throw ValidationException::withMessages(['estado' => 'Solo puedes cerrar una orden entregada con su acta registrada.']);
+            }
+            $orden->update(['estado' => 'cerrado']);
+            $orden->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id,
+                'payload' => ['accion' => 'orden_cerrada', 'mensaje' => 'Orden cerrada después de la entrega ya registrada.']]);
+            AuditLogger::log(action: 'orden.cerrada', entity: $orden,
+                oldValues: ['estado' => 'entregado'], newValues: ['estado' => 'cerrado'], userId: $request->user()->id);
+        });
+
+        return back()->with('success', 'Orden cerrada. El acta de entrega se conserva.');
     }
 
     /**

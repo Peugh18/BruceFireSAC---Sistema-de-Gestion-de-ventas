@@ -111,7 +111,7 @@ test('V4: una NC parcial aceptada rebaja el saldo y una ND agrega una cuota, una
     expect($sale->installments()->count())->toBe(2);
 });
 
-test('V6: autorizar un adicional con la orden cobrada crea una cuota por cobrar', function () {
+test('V6: un adicional con la orden cobrada se cotiza aparte sin deuda fuera de comprobante', function () {
     $sale = Sale::factory()->create(['vendedor_id' => $this->vendedor->id, 'estado' => 'confirmada', 'condicion_pago' => 'contado']);
     $order = ServiceOrder::factory()->create(['client_id' => $sale->client_id, 'sale_id' => $sale->id]);
     $deficiency = Deficiency::factory()->create(['service_order_id' => $order->id]);
@@ -121,15 +121,17 @@ test('V6: autorizar un adicional con la orden cobrada crea una cuota por cobrar'
         ->post(route('vendedor.deficiencias.autorizar', [...$this->team, 'deficiency' => $deficiency]), $datos)
         ->assertSessionHasErrors('importe');
 
+    $repuesto = Product::factory()->create(['serializado' => false, 'precio_venta' => 45.5]);
+    $this->post(route('vendedor.deficiencias.cotizar', [...$this->team, 'deficiency' => $deficiency]), ['product_id' => $repuesto->id, 'cantidad' => 1])->assertSessionHasNoErrors();
+
     $this->actingAs($this->vendedor)
         ->post(route('vendedor.deficiencias.autorizar', [...$this->team, 'deficiency' => $deficiency]), [...$datos, 'importe' => 45.5])
         ->assertSessionHasNoErrors();
 
-    $cuota = $sale->installments()->first();
-    expect($cuota)->not->toBeNull()
-        ->and((float) $cuota->monto)->toBe(45.5)
-        ->and($cuota->deficiency_authorization_id)->toBe($deficiency->authorization->id)
-        ->and($deficiency->refresh()->estado)->toBe('autorizada');
+    expect($sale->installments()->count())->toBe(0)
+        ->and((float) $deficiency->refresh()->authorization->importe)->toBe(45.5)
+        ->and((float) $deficiency->authorization->cotizacionAdicional->total)->toBe(45.5)
+        ->and($deficiency->estado)->toBe('autorizada');
 });
 
 test('V7: el cobro queda en su turno y anularlo despues no cambia el turno cerrado', function () {

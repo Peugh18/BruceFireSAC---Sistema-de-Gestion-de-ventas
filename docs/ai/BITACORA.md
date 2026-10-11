@@ -715,3 +715,254 @@
 - El usuario pidió guardar, subir y fusionar los cambios en `main` como respaldo, sin repetir CI local. Se conserva la verificación previa de accesibilidad y la suite completa anterior.
 - El hook local de pre-push se omite únicamente en estas subidas mediante configuración temporal de Git; no se modifica el hook ni se desactivan los flujos remotos de GitHub.
 - Se incluyen el código y el informe de accesibilidad; los archivos ignorados del entorno, secretos y respaldos de base de datos permanecen locales.
+
+## 2026-10-09 — Decisiones del dueño e investigación de detracciones
+
+- Usuario confirma cotizar recargas y adicionales antes de convertir a venta; precios con IGV desde catálogo, editables por el vendedor; contado/crédito por el flujo existente.
+- Correcciones por el vendedor con historial, sin nuevas aprobaciones; autorización de cliente con persona/canal/fecha/importe ya disponible en controlador y formulario.
+- Datos actuales son pruebas. Cinco años de hidrostática conservados; vendedor registra hallazgos, técnico determina aptitud, aviso de caja abierta y costos/márgenes diferidos.
+- Cuenta de detracciones existente; vendedor revisa constancia y comparte captura al gerente por WhatsApp manual. Sin integración de mensajería autorizada.
+- Revisados config/billing.php y DetraccionCalculator: 020 global por defecto, tasa 12%, mínimo S/700; no hay clasificación por servicio en ese cálculo.
+- SUNAT mantiene recarga de extintores en numeral 5 (otros servicios empresariales): https://orientacion.sunat.gob.pe/3350-consultas-sunat-empresas e Informe 017-2006 https://www.sunat.gob.pe/legislacion/oficios/2006/oficios/i0172006.htm . Inferencia de código: 022 para recarga, 020 para mantenimiento/reparación; no extender la antigua exclusión de mantenimiento del informe de 2006 a la normativa actual.
+- Tabla actual y códigos: https://orientacion.sunat.gob.pe/apendices-del-sistema-de-detracciones (020/022/037, 12%, clasificación distinta). Operaciones combinadas y otros servicios pendientes; configuración fiscal conservada.
+- Solo actualizados PLAN y BITACORA. Sin pruebas ejecutadas ni cambios de código/configuración, commit o push en esta aclaración.
+
+## 2026-10-09 — Detracción: el repuesto instalado va con el servicio
+
+- Regla confirmada por el dueño con su contador. El repuesto o producto que se
+  usa o instala **dentro del servicio** es parte del servicio: va en la **misma
+  factura** y la detracción se calcula sobre el **TOTAL** con el código del
+  servicio (`services.codigo_detraccion`). El producto **suelto** que no se
+  instala (extintor nuevo, accesorio vendido aparte) **no puede** acompañar a un
+  servicio sujeto a detracción: se emite en **factura aparte**.
+- Se considera "parte del servicio" en `DetraccionCalculator`:
+    1. la línea de servicio (`SaleItem::esServicio()`);
+    2. la línea con `sale_items.deficiency_id` (adicional detectado en una orden);
+    3. el repuesto consumido en una orden de servicio de esa misma venta
+       (`InventoryMovement` `tipo=salida_servicio` referenciando una `Deficiency`
+       cuyo `ServiceOrder.sale_id` es esta venta).
+- Sin cambios: boleta y nota de venta nunca llevan detracción; hasta S/700 no
+  hay detracción; la factura emitida conserva su snapshot
+  (`codigo_detraccion_snapshot`, `monto_detraccion_snapshot`); servicios con
+  códigos distintos o sin clasificar siguen bloqueados como antes.
+- Archivos: `app/Services/Billing/DetraccionCalculator.php` (nueva regla +
+  `esParteDelServicio` / `esRepuestoConsumidoEnLaVenta`),
+  `resources/js/pages/vendedor/ventas/nueva.tsx` (aviso antes de emitir),
+  `tests/Feature/DetraccionParteDelServicioTest.php` (9 pruebas nuevas).
+  `GreenterService` ya usaba `codigo_bien` y el monto sobre el total: sin cambios.
+- TDD: las pruebas se escribieron primero y fallaron con el mensaje antiguo
+  ("combina servicios con códigos distintos o conceptos no sujetos"); después de
+  la implementación pasan.
+- Verificación: 44/44 pruebas (154 aserciones) en detracción + `SaleModuleTest`;
+  Pint ✅ · PHPStan 0 errores ✅ · `tsc --noEmit` ✅ · `vp check` 212 archivos ✅.
+  Sunat solo beta; sin push.
+
+### 2026-10-09 — Auditoría independiente de Codex sobre 53cda2b
+
+- Informe: `docs/ai/AUDITORIA_CODEX_2026_10_09.md`; evidencia local ignorada en `storage/app/auditoria-independiente/`.
+- Suite 944/944, 5.060 aserciones; Pint, PHPStan 0 y tsc pasan. CI original detenido por formato de esta bitácora; composer.json restaurado byte por byte.
+- Navegación: 37 rutas, cinco roles; cuatro accesos cruzados 403. Axe: contraste insuficiente en Deficiencias del vendedor; otras cuatro pantallas sin infracciones automáticas.
+- Flujo UI: COT-0001 → OT-0004 → checklist/foto → válvula S/15 autorizada → consumo -1 → NV-0001 S/60 y pago efectivo S/60; stock 10→9, sin doble salida al cobrar.
+- Límite: equipo ID 7 quedó sin marcar recibido; cierre bloqueado correctamente. No se verificó entrega/certificado ni nuevo envío de red a SUNAT/GRE.
+- Dos regresiones nuevas fallan: consumir una unidad acredita diez vendidas u otra línea del mismo producto en detracción. También difieren criterios entre frontend y calculador.
+- Confirmados: hidratación de cero negativo en Cajas, aviso fiscal repetido tres veces, toast anterior visible inmediatamente tras éxito. Errores inline del producto sí se limpian.
+- Scheduler activo y respaldo de hoy; cuenta BN no configurada, credenciales GRE ausentes y servicio combinado sin clasificación. No se inventaron datos.
+- Tras formatear la documentación actualizada, npm run check pasa (213 archivos de formato, 175 de lint).
+- Datos de prueba identificados AUD-CODEX; sin código de aplicación modificado, dependencias, commit ni push. Pendientes y prompt de reauditación incluidos en informe.
+
+### 2026-10-09 — Corrección de Informe de Estado y Scrum Semana 8
+
+- Usuario confirmó cierres según cronograma hasta el 09/10 y costos reales iguales al presupuesto. Anexos limitados a actividades con fin del 02 al 09 inclusive.
+- Se corrigieron copias del Informe Sprint 07 y Scrum: 20 actividades, S/902 de costo completo, fechas y códigos concordantes. El PV semanal de Curva S S/890,59 conserva otro alcance.
+- Hitos actualizados al corte; sustento e indicadores del conjunto cerrado; Hacer=inicios del día, En espera=predecesoras pendientes, Haciendo=ejecución y Terminado=cierres del día.
+- Verificación: 539 fechas planeadas iguales al cronograma, tres anexos y Scrum con los mismos 20 cierres; Excel nativo recalcula totales, sin errores y con Sprints 1–6 conservados; Word renderizado, tablas e índice revisados.
+- Archivos en Entregables/Semana 8/Corregidos 09-10-2026; originales intactos. Métricas/instrumentos no se presentaron como mediciones aplicadas. Sin código de aplicación, commit o push.
+
+### 2026-10-10 — Revisión navegada, productos y coherencia de cobros
+
+- Autorización: revisar botones/coherencia, corregir errores y rediseñar registro de productos; comparación de empresas grandes queda para la siguiente fase.
+- 40 pantallas/5 roles, 68 acciones, 15 fichas distintas; sin errores JS en ese recorrido. Alcance y límites en REVISION_NAVEGADA_2026_10_10.md.
+- Corregido filtro SUNAT por día completo, con 4 regresiones rojo→verde y descargas de B001-3; producto rediseñado, errores/foco/móvil, estado sin falsa eliminación.
+- Servicios/Sedes, alta/consumo/resolución e historial usan Dialog; foco devuelto y cierre de 44 px. Llegada de nuevo equipo sincronizada sin perder desmarcaciones.
+- Cobranzas diferencia saldo de importe original, cuotas pagadas y pagos de hoy; historial identificado y aviso de certificado pendiente aclarado.
+- Copia aislada: recepción 3/2/1 aumenta stock 9→11; COT-0003→OT-0006→VTA-0005/NV-0002→OG-2026-0003; pagos 20+25 y turno nuevo S/10. Original conserva stock 9 y su caja.
+- Dos productos AUD-UI creados para probar el catálogo original quedaron desactivados. Sin eliminación de historia, dependencias, commit ni push; cambios previos preservados.
+- Suite 957/957 (5.115 aserciones); 31 pruebas afectadas; PHPStan 0 y Pint pasan. Axe: 8 estados + producto oscuro sin infracciones automáticas; no certificación WCAG total.
+- Verificación final: formato/lint, tipos y build pasan; revisión independiente detectó errores ocultos de compra y validación nativa, reproducidos y corregidos con verificación Edge rojo→verde; entrega con acta, deficiencias, GRE, hardware y benchmark pendientes.
+
+### 2026-10-10 — Comparación externa de catálogo y procesos
+
+- Pedido: investigar cómo sistemas consolidados registran productos y relacionan procesos, comparar con BRUCE FIRE y proponer mejoras.
+- Fuentes oficiales consultadas: Shopify, Odoo 19, Zoho Inventory y Dynamics 365 Field Service; documentación pública, sin prueba de sus consolas ni afirmaciones sobre operaciones internas de clientes grandes.
+- Contrastado con auditoría navegada y código actual: catálogo/unidad/equipo separados, estados/eventos, recepción, tránsito, costo promedio, venta/servicio, historial y seguimiento.
+- Informe: docs/ai/anexos/COMPARACION_PROCESOS_2026_10_10.md; propuestas ordenadas para productos, documentos/siguiente acción, recepción, deficiencias/campo y cobros/gerencia.
+- No atribuir todas las acciones como verificadas: 40 pantallas/68 acciones previas no prueban todos los botones; entrega/acta, deficiencias, GRE y hardware mantienen sus pendientes.
+- Recomendaciones todavía no implementadas; funciones nuevas sujetas a REQ/historia/matriz. Traslados en tránsito y costos ya existen: no repetir ausencias de auditorías antiguas.
+- Verificación documental: enlaces oficiales y contraste de archivos; sin cambios de código, datos, dependencias, commit ni push. No se repitieron pruebas del sistema para documentación.
+
+### 2026-10-10 — Comparación especializada con software de extintores
+
+- Aclaración del dueño: comparar software del mismo sector, como FireTrack; benchmark general anterior pasa a referencia secundaria.
+- Consultadas fuentes oficiales de FireTrack, Inspect Point, Uptick, ServiceTrade y Simpro; distinguido manual público, publicidad y demo simulada.
+- Edge: recorridos 5/4/3 pasos de inspector/administración/cliente de la demo FireTrack, más informe de ejemplo. Sin cuenta, contactos, GPS real ni emisión real.
+- Contraste local: entidades comerciales/equipo, mantenimiento, ubicación, fotos/firma, alertas y flujo existente. No atribuir como ausentes QR/fotos/firma que ya tenemos.
+- Informe: docs/ai/anexos/COMPARACION_SOFTWARE_EXTINTORES_2026_10_10.md; evidencia en storage/app/comparacion-sector-extintores-2026-10-10/.
+- Prioridades: alta comercial vs técnica, guía por equipo, continuidad de deficiencias, sugerencias revisables y próximas atenciones; préstamos/portal/offline como candidatas de alcance separado.
+- Verificación documental y de demo; no nuevas pruebas del sistema al no cambiar aplicación. Cobertura de auditoría previa mantiene sus límites.
+- Sin implementación, datos locales alterados, dependencias, commit ni push; PLAN actualizado con la corrección de alcance.
+
+### 2026-10-10 — Desglose por proveedor y brechas locales
+
+- Pedido: desglosar cada software competidor y compararlo con BRUCE FIRE, proponiendo mejoras concretas.
+- Informe: docs/ai/anexos/DESGLOSE_COMPETIDORES_2026_10_10.md; cinco proveedores, matrices por área, ejemplos y prioridades.
+- Fuentes oficiales reconsultadas; se reutilizó evidencia de los 12 pasos de la demo reducida de FireTrack, sin nuevas operaciones externas.
+- Contraste adicional: AlertController/alertas ya agrupan empresas y crean ofertas de recarga; CotizarDeficiencia ya enlaza la línea comercial; ReportController calcula valorización, no acredita costo total de orden.
+- Mejoras UX diferenciadas de funciones nuevas: guía/ficha/conexiones primero; sugerencias, préstamos, portal, offline y automatización/costos completos requieren definición propia.
+- Verificación documental y de fuentes/código puntual; sin nuevos tests de aplicación ni cambios funcionales o datos. Cobertura navegada anterior no ampliada.
+- PLAN actualizado; sin dependencias, commit ni push. Propuestas todavía no implementadas.
+
+### 2026-10-10 — Mejoras del benchmark integradas y cierre documental
+
+- Autorización: mejorar lo que encaje. Perfiles del catálogo, orden conectada/siguiente paso y avance/resumen de mantenimiento en campo implementados.
+- Backend: eager load de cotización/certificados; controles de sede conservados; nueva regresión roja por quote.id ausente y después verde.
+- Verificación previa: 10 pruebas/69 aserciones; PHPStan 0, Pint, tipos, lint y build. Suite anterior de 957 no repetida por cambio acotado.
+- Edge: 16 comprobaciones en copia, móvil, documentos y conteos; errores ocultos verdes; sin JS errors. Axe tres estados 0; 25 Tab contenidos.
+- Contrastes corregidos y revisión independiente sin P1/P2. Cierre sigue requiriendo al menos un checklist; pendientes solo se advierten.
+- Fixtures exclusivamente en copia bruce_fire_ui_audit_20261009; artículo de prueba desactivado. Original sin movimientos de esta fase.
+- Guardado retomado tras fallo de revisión automática por cuota; script original tenía contenido nulo y se reconstruyó verificando evidencia.
+- Informe MEJORAS_SECTOR_2026_10_10.md y evidencia storage/app/mejoras-sector-2026-10-10/; PLAN actualizado. Sin dependencias, commit ni push; cambios previos preservados.
+- Pendientes anteriores de autorización/consumo, acta, GRE/dispositivos y candidatas de préstamos/portal/offline se conservan.
+
+### 2026-10-10 — Auditoría visible de cinco roles (avance)
+
+- Pedido: observar en navegador real botones, relaciones y flujos. Edge visible y todas las mutaciones en copia aislada, sin emisiones externas.
+- Inventario de 40 pantallas y 436 controles; acciones y fichas documentadas con capturas y ledger. No equivale a botones únicos probados.
+- Corregidos 500 de alertas sin catálogo, checklist con foto nula y SQL de traslado; entrega/resultados/acta, certificado previo en venta y doble entrega campo/mostrador.
+- Autorización/consumo único de repuesto y entrega con acta antes pendientes ahora comprobados; cobro y arqueo exacto, usuario/contraseña/permisos y ajuste compensatorio.
+- Regresiones rojas y verdes por grupos; PHPStan 0, Pint, lint, tipos y build. Revisión independiente final sin P1/P2; suite histórica completa no repetida.
+- Informe AUDITORIA_VISIBLE_2026_10_10.md y evidencia storage/app/auditoria-visible-2026-10-10/; auditoría aún en curso con pendientes explícitos.
+- Sin dependencias, commit ni push; datos originales y cambios previos conservados.
+
+### 2026-10-10 — Continuación visible, CODEPLEX y notas/GRE
+
+- Usuario retomó y abrió su cuenta real en Chrome: observar y probar formularios, sin facturar/boletar. Sin grabar, emitir, eliminar ni alterar configuración externa.
+- Observados F/B/NC/ND, motivos/datos adicionales/referencias, lista/formulario GRE; cancelación y retorno al listado. CODEPLEX mantiene apartado GRE y entrada desde venta.
+- GRE de equipo técnico sin producto daba500; corregido fallback técnico sin inventar peso/artículo. ND rechazada se anunciaba exitosa; corregido retorno del resultado fiscal. Etiqueta neutral de importe.
+- Rojo2/2 y verde30/186; GRE posterior1/30; PHPStan 0, Pint, lint/tipos/build/diffcheck pasan. Revisión estática acotada sin P1/P2; suite histórica no repetida.
+- Cobertura anterior actualizada: recojo/instalación, recepción/cambio de unidad, configuración ficticia y traslado ida/vuelta ya recorridos. Dos GRE/CDR son simulados en copia, nunca SUNAT real.
+- Informe AUDITORIA_VISIBLE y anexo CODEPLEX_GRE_NOTAS actualizados; evidencia fresca copiada. Corregida afirmación anterior: las57 selecciones de firmas sí guardaban en copia.
+- Pendientes: GRE contextual/paginación/detalle; NC por motivo/línea/cuotas; retorno físico vs ajuste monetario; saldo/reportes; relevo Planta→Campo y cierre posentrega. No declarar auditoría total.
+- Código previo preservado, sin dependencias, commit ni push. Baseoriginal solo leída; pruebas fiscales en bruce_fire_testing con cliente simulado.
+
+### 2026-10-10 —GRE contextual y continuidad de entrega
+
+- Continuación autorizada: Edge visible, copia aislada y CODEPLEX/SUNAT externos sin emisión.
+- GRE con origen/ref., regreso por rol y paginación; corregido403 del Gerente.21 borradores AUD-VISIBLE en copia, 0 enviados.
+- Notas muestran original/acción por rol; cuotas 13 deshabilitadas tras reproducción UI, aún no implementadas.
+- Relevo taller 5 a Campo y cierre posterior 5/8 guardados; actas/certificados/fechas conservados y venta 10 mantiene S/ 45 pagados.
+- Asignación final bloqueada, confirmación/relevo coordinados y cola lista coherente; responsable desactualizado reproducido con regresión.
+- Rojo8/8 iniciales,403 Gerente, responsable viejo y cola vacía; verde final 33/285. Una comparación de factory se ajustó a snapshot persistido.
+- PHPStan 0, Pint, lint/tipos/build y revisión acotada sin P1/P2. Tres exclusiones antiguas de tipos retiradas; ninguna nueva.
+- Ledger actualizado a 628 registros, incluyendo repeticiones/guiones; no equivale a botones únicos. Informes/evidencia/PLAN actualizados.
+- Auditoría global en curso; pendientes NC por motivo, detalle/estados GRE, colas/sedes y hardware. Sin dependencias, commit/push ni datos originales alterados.
+
+### 2026-10-10 — Cierre de lo pendiente de GPT (notas por motivo, GRE, equipo)
+
+- Pedido: terminar lo que GPT dejó a medias. Había 8 pruebas en rojo escritas antes de implementar y la ficha de GRE sin página.
+- Notas de crédito: `DesgloseNota` calcula por línea los motivos 03, 05 y 07; `IssueCreditNote` exige el saldo completo en 01, 02 y 06 (acumulado contra el total de la venta). Panel de la venta con selección de líneas y casilla de recepción física.
+- Reporte y dashboard: ventas netas con notas de crédito y débito del período.
+- GRE: página `guias/show`, enlace desde el historial y reenvío visible para guías rechazadas.
+- Campo: colas por actividad. Nueva ficha `equipos.show`.
+- Pruebas corregidas por datos erróneos, no por lógica: motivos que ahora exigen líneas, venta de otro vendedor, servicio aleatorio incompatible con el equipo. La anulación sin recepción física conserva las unidades vendidas (decisión de GPT).
+- Verificación: suite completa 1014/1014, 5560 aserciones; formato, lint, tipos, PHPStan y Pint. No se revisó en navegador y no se probó SUNAT real.
+- Sin dependencias, commit ni push.
+
+### 2026-10-10 — Revisión en navegador de lo nuevo
+
+- Navegado por botones (no por URL) en la base de pruebas `bruce_fire`, con la migración `nota_datos` aplicada y el frontend compilado.
+- Hallazgos corregidos: la ficha del equipo se anidaba en un layout doble (`app.tsx` no la incluía); ninguna pantalla enlazaba a la ficha del equipo (ahora desde la orden del vendedor y la entrega de campo); el documento del destinatario de la GRE salía como código; el Gerente no veía a qué línea se aplicaba la nota que aprobaba.
+- Comprobado: devolución por ítem desde el formulario hasta "Notas por aprobar" del Gerente; reporte neto (315 − 20 = 295) igual al dashboard; historial y ficha de GRE; ficha del equipo.
+- Sin aprobar notas (enviaría a SUNAT beta). Pendiente revisar en celular, tema oscuro y axe.
+
+### 2026-10-10 — Auditoría por botones: automatización y errores del flujo de planta
+
+- Criterio del dueño: automatizar, no alargar procesos, y corregir errores. Recorrido por clics de Gerente (menú completo, sin errores de JS), Vendedor (venta, cobro desde orden) y Técnico de planta (recepción → checklist → cierre → entrega).
+- Error 500 al «Cerrar taller y emitir certificados»: un equipo de alta rápida guarda el año como «No legible / Pendiente de verificar» y `certificate_units.anio_fabricacion` es numérico. `IssueCertificate` ahora guarda solo años de cuatro cifras (si no, nulo). Prueba nueva en `CertificateModuleTest`.
+- Proceso más corto: en `en_proceso` hay un solo botón «Terminar trabajo y emitir certificados» (antes dos pantallas con P.H. en medio); el servidor encadena `trabajo_terminado` y `listo_certificado` en una transacción con las mismas validaciones. El botón de solo terminar se conserva como enlace secundario.
+- Tras guardar el checklist del último extintor recibido, se lleva a la ejecución (antes volvía a Recepción sin pista del paso siguiente).
+- Texto engañoso corregido: planta decía «avisa al vendedor» pero el aviso «Listo para entregar» ya es automático.
+- Ya automatizado y comprobado: confirmar recepción toma la orden; «Marcar todo conforme» en el checklist; el comprobante sale solo según el documento del cliente; «Cobrar» desde la orden precarga cliente y servicios.
+- Pendiente anotado: la pantalla de error 500 de una acción POST ofrece «Intentar de nuevo» que recarga esa URL y da 404; el panel del Gerente avisa que las tareas automáticas no corren si no está `schedule:work`.
+
+### 2026-10-11 — Entorno de auditoría por botones para los cinco roles
+
+- Pedido del dueño: todos los roles operativos y un entorno donde cualquiera (GPT, Claude o una persona) pueda auditar los flujos por botones.
+- Recorrido por clics de las pantallas de menú de los cinco roles: sin errores (Gerente 12, Vendedor 10, Almacén 8, Campo 6, Planta 3).
+- Nuevo `database/seeders/DemoAuditoriaSeeder.php` (idempotente, no corre en producción): cotizaciones en 4 estados, 10 órdenes en distintas etapas (taller y las cuatro colas de campo, una lista para entrega con acta), una deficiencia esperando autorización, alertas a 5 y 20 días, venta a crédito con cuota vencida y otra por vencer, comprobantes pendiente, observado y rechazado, un traslado a un segundo almacén, un vehículo y un conductor.
+- Programador de tareas (`schedule:work`) levantado; sin él el Gerente ve la alerta de tareas detenidas.
+- Automatización: la guía de remisión elige sola el único vehículo y conductor activos. Comprobado: traslado → «Emitir guía» → «Crear guía» en 2 clics, con motivo 04, destinatario, direcciones, bien y peso ya cargados.
+- Guía para auditores: `docs/ai/GUIA_AUDITORIA_POR_BOTONES.md` (arranque, cuentas, mapa de flujos, cómo registrar hallazgos).
+
+### 2026-10-11 — Auditoría por botones: Almacén, campo, adicionales y cobro
+
+- Recorrido solo con clics. Almacén: recepción de compra (genera BF-EQ y deja el botón de stickers), ajustes y traslado → «Emitir guía» → «Crear guía»; «Despachar» queda deshabilitado hasta tener CDR. Campo: recojo completo con firma sin tomar antes la orden (pasa solo a Planta), checklist de inspección que arranca en «conforme» (CO2: manómetro N/A) y entrega con acta que cierra la orden. Vendedor: deficiencia → «Cotizar adicional» (elige repuesto y se rellenan cantidad y precio) → «Aprobar» (cotización e importe preseleccionados) → la orden pasa sola a «autorizado»; «Registrar pago» de cuota con forma y monto ya cargados. Gerente: cobranzas y cajas cuadran con lo cobrado.
+- Defecto corregido: una orden entregada, cerrada o anulada seguía ofreciendo «Tomar esta orden». `ServiceOrder::asignacionPara` devuelve `finalizada` y `TomarOrden` no se muestra en esos estados. Prueba nueva en `CierreRolesEquiposTest`.
+- Error del seeder demo corregido: `Equipment::factory()` creaba un producto nuevo por equipo y ensuciaba el catálogo (11 «Extintor PQS ABC 6 Kg» duplicados); ahora usa el producto existente, y se limpiaron de la base. Las ventas demo quedan como `VTA-DEMO-n` y las órdenes como `OT-DEMO-n`.
+- Observaciones menores sin cambio: el desplegable de aprobar adicional muestra el total de la cotización (servicio + adicional) mientras la tarjeta muestra solo el adicional; «Despachar» deshabilitado no explica por qué junto al botón (sí en el texto superior).
+
+### 2026-10-11 — Auditoría por botones (segunda pasada): usuarios, productos, notas, caja, campo y alertas
+
+- Gerente: «Nuevo usuario» (los roles salen sin tilde: «Almacen», «Tecnico Planta»; la contraseña inicial se inventa a mano), «Nuevo producto» (el código interno es obligatorio y manual) y «Rechazar» una nota por aprobar funcionan. Vendedor: «Pasar a venta» precarga cliente, líneas y precio cotizado (falta elegir la serie del extintor); cierre de caja con arqueo ciego (2 campos) y apertura de turno (el fondo arranca en 0.00); «Ofrecer recarga» en alertas crea la cotización en 1 clic.
+- Instalación de campo: valida con mensajes claros, emite el certificado y deja la orden lista para entrega.
+- Defecto corregido: el técnico de campo que registraba una instalación, inspección, mantenimiento o entrega sin haber «tomado» la orden la dejaba sin responsable. `ServiceOrder::tomarSiLibre` la toma al registrar el trabajo (como ya hacía planta al recibir) y deja el evento `orden_tomada`; no pisa a otro responsable. Comprobado en la entrega de OT-DEMO-3.
+- Defecto corregido: la ficha del cliente del Vendedor mostraba como «Cancelado»/«Pagado» las ventas en borrador o anuladas; ahora dice «Borrador» o «Anulada».
+- Seeder demo: los extintores de alerta se ligan a una cotización de la sede (el vendedor solo ve extintores de su sede por venta, orden o cotización, como debe ser) y se agrega el servicio «Recarga CO2 5 lb».
+- Incidentes de entorno: MySQL de Laragon se cayó durante la sesión (por eso hubo 500 y pantallas en blanco) y Vite de desarrollo no volvió a arrancar; se levantó MySQL y se compiló con `npm run build` sin `public/hot`. Ejecutar pruebas a la vez que otra corrida de pruebas provoca bloqueos en `bruce_fire_testing`: una sola corrida a la vez.
+
+### 2026-10-11 — Cierre de pendientes y preparación de la auditoría total
+
+- Fricciones menores resueltas: roles con tilde («Almacén», «Técnico de planta», «Técnico de campo»); botón «Generar» para la contraseña inicial (12 caracteres aleatorios); código de producto sugerido (`PRD-####` libre, con prueba); apertura de caja propone lo contado en el último cierre. Las tres primeras comprobadas en el navegador; la apertura de caja no se vio en pantalla porque el vendedor tenía turno abierto.
+- Aprobar una nota de crédito en el navegador fue bloqueado por el control de permisos (envía un documento fiscal a SUNAT, aunque sea beta). La solicitud quedó creada y pendiente de aprobación del dueño. Recibir un traslado en destino depende del mismo envío.
+- Observación: la lista de Ventas del vendedor abre filtrada en «Hoy» y, sin ventas ese día, ofrece «Emitir primera venta» aunque haya ventas anteriores.
+- `docs/ai/GUIA_AUDITORIA_POR_BOTONES.md` incluye ahora los flujos y casos (OK, ERR, PERM y BORDE) por rol para la auditoría total.
+
+### 2026-10-11 — Cierre final antes de la auditoría total
+
+- Tras el reinicio de la PC se levantó MySQL, el servidor (8010) y el programador de tareas; datos demo intactos y los cinco roles responden 200 en todas sus pantallas.
+- Apertura de caja: el fondo propuesto se calculaba al cargar la página y quedaba desactualizado al cerrar y abrir sin recargar; ahora se calcula al abrir el diálogo (comprobado: propone 150.00 tras cerrar con 150). Caja del vendedor abierta y operativa.
+- Última suite completa: 1024/1024 (5589 aserciones). Después solo cambió una línea de `vendedor/cobranzas/index.tsx` (sin pruebas de frontend); tipos, lint y compilación pasan.
+- Pendiente de decisión del dueño: aprobar la nota de crédito de prueba (envía a SUNAT beta) y, con ella, recibir en destino un traslado despachado.
+
+### 2026-10-11 — Pruebas contra SUNAT beta, solo por botones (autorizadas por el dueño)
+
+- Aprobar nota de crédito (Gerente, «Aprobar y emitir»): BC01-2 aceptada por SUNAT beta con CDR (código 0) en 15 s; la devolución de S/ 5 en efectivo quedó registrada.
+- Boleta B001-4 y factura F001-1 emitidas desde «Nueva venta»: quedan «por enviar» (envío programado) y «Enviar ya» las envía; ambas aceptadas (10–12 s).
+- Anulación total FC01-1 sobre F001-1 con «recibí físicamente los equipos»: aceptada; la venta quedó anulada, el stock volvió (7→8) y la devolución de S/ 15 en efectivo cayó en caja.
+- Comunicación de baja de B001-4: SUNAT la aceptó, la venta quedó anulada, el stock volvió (8→9) y se registró la devolución.
+- Guías de remisión: «Enviar a SUNAT» falla con mensaje claro porque faltan SUNAT_GRE_CLIENT_ID y SUNAT_GRE_CLIENT_SECRET (credenciales de Menú SOL, a cargo del dueño). Eso bloquea despachar y recibir traslados; no se simuló.
+- Observaciones: los avisos (toasts) de éxito anteriores se acumulan en pantalla al emitir varios documentos seguidos; las boletas y facturas no salen a SUNAT hasta «Enviar ya» o el envío programado.
+
+### 2026-10-11 — Avisos (toasts) y prueba de guías
+
+- `use-flash-toast.ts`: un aviso nuevo reemplaza a los anteriores (`toast.dismiss()` y un `id` por mensaje, sin duplicados) y los errores duran 8 s. No se pudo comprobar la expiración visualmente: el panel del navegador de pruebas tiene la pestaña oculta (`document.hidden`) y Sonner pausa temporizadores y animaciones en ese estado, así que ahí los avisos nunca vencen. Revisar en un navegador visible.
+- Guías de remisión: no existe un beta público de la API REST de guías. La librería `greenter/gre-api` pide `client_id` y `client_secret` generados en el Menú SOL de cada RUC y no publica valores de prueba; `gre-test.nubefact.com` es un servicio de terceros cuyo acceso no se pudo confirmar. Opciones: credenciales reales del Menú SOL, cuenta de pruebas de Nubefact o una GRE simulada solo en local (sin tocar SUNAT).
+
+### 2026-10-11 — Guía de remisión simulada en la PC y traslado completo
+
+- Nuevo `GreSimuladoClient` (acepta toda guía con un CDR de mentira y el mensaje «SIMULADO…»), activo solo con `SUNAT_GRE_SIMULADO=true` y únicamente en los entornos `local` y `testing`; en producción la bandera se ignora (`AppServiceProvider`). `phpunit.xml` fuerza `false`. `.env` local con `true`, `.env.example` con `false`. Dos pruebas nuevas en `GuiaRemisionTest`. La pantalla de guías muestra el aviso «SIMULADO».
+- Recorrido por botones: traslado → «Enviar a SUNAT» (envía y consulta en un solo clic, queda «Lista para trasladar») → «Despachar» (en tránsito) → «Confirmar llegada» con un usuario de Almacén de la sede destino: la unidad pasó a Almacén Chimbote como disponible.
+- Alta de ese usuario por Gerente → Usuarios con «Generar»; primer ingreso: confirmar contraseña y cambiarla. Funciona.
+
+### 2026-10-11 — Mejora de la competencia #1: hallazgos y adicionales dentro de la orden
+
+- Origen: ServiceTrade («qué falta y quién continúa» en una ficha conectada) y hueco hallado al auditar: la orden del vendedor decía «Espera tu autorización» pero no mostraba el hallazgo ni permitía decidir; había que ir a Servicios → pestaña Deficiencias.
+- Cambio: la orden del vendedor muestra «Hallazgos y adicionales de esta orden» con las mismas tarjetas y acciones que la lista (Cotizar o Corregir adicional, Aprobar, Rechazar). Código compartido en `components/deficiencias-vendedor.tsx` (tarjeta, diálogos y lógica); la lista de deficiencias lo usa igual. Backend: `DeficiencyController::paraPantalla()` arma cada hallazgo para la lista y para la orden; `ServiceOrderController::show` envía `deficiencias`. Prueba nueva `DeficienciasEnLaOrdenTest`.
+- Comprobado por botones, con cierre de sesión por el botón y entrada por el formulario: en OT-DEMO-7, «Cotizar adicional» (manómetro S/ 35) → «Aprobar» → «Autorizada», sin salir de la orden; la lista de Deficiencias sigue igual.
+- Pendientes de la comparación: resumen de revisión en visitas (FireTrack), ofrecer recarga agrupada por empresa, repuestos sugeridos por hallazgo (Uptick; función nueva, pide REQ). Offline, préstamos, portal y margen por orden quedan a decisión del dueño.
+
+### 2026-10-11 — Mejoras de la competencia #2 y #3
+
+- #2 (FireTrack) Resumen de revisión: componente `components/resumen-revision.tsx` («N de M revisados, K con observaciones, P pendientes» y barra de avance; los observados cuentan entre los revisados). Lo usan la inspección de campo y mantenimiento en sitio (que tenía su propia versión, ahora única). Planta no lo muestra: su orden no trae los checklists por equipo.
+- #3 (ServiceTrade/Uptick) Cotizar la recarga por empresa: en «Por vencer → Por empresa», el botón «Cotizar recarga (N)» crea una sola cotización con todos los extintores con serie vencidos o por vencer del cliente (el endpoint ya aceptaba varios; las líneas se agrupan por servicio con su cantidad). Comprobado por botones: COT-0005 por S/ 90 (2 extintores de CO2 × S/ 45) en un clic, antes dos ofertas. Prueba nueva en `MejorasProcesosTest`.
+- Verificado por botones con cierre de sesión por el botón y entrada por el formulario.
+- Sin hacer: repuestos sugeridos por hallazgo (función nueva, necesita REQ en el DRS, historia y fila en la Matriz); offline, préstamos, portal y margen por orden, a decisión del dueño.

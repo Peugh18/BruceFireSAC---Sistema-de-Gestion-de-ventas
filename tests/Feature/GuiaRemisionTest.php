@@ -8,21 +8,26 @@ use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\DispatchGuide;
 use App\Models\Driver;
+use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Sede;
+use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\TransportVehicle;
 use App\Models\User;
 use App\Services\Billing\GreApiClient;
+use App\Services\Billing\GreSimuladoClient;
 use App\Services\Billing\GuiaRemisionService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia;
+use Tests\Support\TransferGuide;
 
 /**
  * Fase H. SUNAT se simula siempre: nunca se llama a la red real.
@@ -193,6 +198,11 @@ test('el traslado entre sedes queda en tránsito hasta que el destino confirma',
     $traslado = app(TransferInventory::class)->handle($origen->id, ['destination_sede_id' => $destino->id, 'serials' => [$unidad->numero_serie]], $almacenero);
     app(TransferInventory::class)->handle($origen->id, ['destination_sede_id' => $destino->id, 'product_id' => $producto->id, 'quantity' => 4], $almacenero);
 
+    foreach (InventoryTransfer::query()->get() as $preparado) {
+        TransferGuide::accepted($preparado, $almacenero);
+        app(TransferInventory::class)->despachar($preparado, $almacenero);
+    }
+    $traslado->refresh();
     expect($traslado->estado)->toBe(InventoryTransfer::EN_TRANSITO)
         ->and($unidad->refresh()->estado)->toBe('en_transito')
         ->and((int) InventoryMovement::where('product_id', $producto->id)->where('sede_id', $destino->id)->sum('cantidad'))->toBe(0);
@@ -234,4 +244,145 @@ test('la guía guarda el cliente de la venta u orden que la sustenta', function 
 
     expect(fn () => $soloGuia->delete())->toThrow(QueryException::class);
     $this->assertDatabaseHas('clients', ['id' => $soloGuia->id]);
+});
+
+test('GRE permite equipos técnicos sin producto en recojo y entrega', function () {
+    $team = Team::factory()->create();
+    $this->user->update(['current_team_id' => $team->id]);
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $orden = ServiceOrder::factory()->create(['sede_id' => $this->sede->id]);
+    $equipo = Equipment::factory()->create([
+        'client_id' => $orden->client_id, 'product_id' => null,
+        'tipo_agente' => 'PQS ABC', 'capacidad' => '6 kg', 'numero_serie' => 'BF-EQ-000009',
+    ]);
+    $orden->equipments()->attach($equipo);
+
+    foreach (['recojo', 'entrega'] as $origen) {
+        $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => $origen, 'id' => $orden->id]))
+            ->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('datos.items.0.product_id', null)
+            ->where('datos.items.0.codigo', 'BF-EQ-000009')
+            ->where('datos.items.0.descripcion', 'Extintor PQS ABC 6 kg (serie BF-EQ-000009)')
+            ->where('datos.items.0.peso_kg', 0));
+    }
+});
+
+test('historial GRE identifica origen y pagina sin mostrar guias de otra sede', function () {
+    $team = Team::factory()->create();
+    $this->user->update(['current_team_id' => $team->id]);
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $venta = Sale::factory()->create(['sede_id' => $this->sede->id, 'numero_interno' => 'VTA-AUD-001']);
+    $datos = datosGuia(['sale_id' => $venta->id]);
+    for ($i = 0; $i < 21; $i++) {
+        app(CreateDispatchGuide::class)->handle($datos, $this->user);
+    }
+    app(CreateDispatchGuide::class)->handle(datosGuia(['sede_id' => Sede::factory()->create()->id]), $this->user);
+    $this->actingAs($this->user)->get(route('guias.index', $team))
+        ->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->has('guias.data', 20)->where('guias.total', 21)
+        ->where('guias.data.0.origen', 'Venta VTA-AUD-001')
+        ->where('guias.data.0.comprobante_relacionado', 'F001-15'));
+    $this->get(route('guias.index', $team).'?page=2')
+        ->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->has('guias.data', 1)->where('guias.current_page', 2));
+});
+
+test('GRE desde venta conserva contexto y regreso a la venta autorizada', function () {
+    $team = Team::factory()->create();
+    $this->user->update(['current_team_id' => $team->id]);
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $venta = Sale::factory()->create(['sede_id' => $this->sede->id, 'vendedor_id' => $this->user->id]);
+    $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => 'venta', 'id' => $venta->id]))
+        ->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('origen.descripcion', 'Venta '.$venta->numero_interno)
+        ->where('origen.url', route('vendedor.ventas.show', ['current_team' => $team, 'sale' => $venta])));
+});
+
+test('GRE de campo regresa al recojo o entrega a su cargo', function () {
+    $team = Team::factory()->create();
+    $this->user->update(['current_team_id' => $team->id]);
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $this->user->syncRoles(['TecnicoCampo']);
+    $orden = ServiceOrder::factory()->create(['sede_id' => $this->sede->id, 'tecnico_id' => $this->user->id, 'departamento_tecnico' => 'campo']);
+    foreach (['recojo' => 'recojos', 'entrega' => 'entregas'] as $origen => $ruta) {
+        $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => $origen, 'id' => $orden->id]))
+            ->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('origen.url', route('tecnico-campo.'.$ruta.'.show', ['current_team' => $team, 'service_order' => $orden])));
+    }
+});
+
+test('GRE gerente sin rol operativo recibe regreso a ruta accesible', function () {
+    $team = Team::factory()->create();
+    $this->user->update(['current_team_id' => $team->id]);
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $this->user->syncRoles(['Gerente']);
+    $venta = Sale::factory()->create(['sede_id' => $this->sede->id]);
+    $orden = ServiceOrder::factory()->create(['sede_id' => $this->sede->id]);
+    foreach (['venta' => $venta, 'entrega' => $orden] as $origen => $fuente) {
+        $response = $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => $origen, 'id' => $fuente->id]))->assertOk();
+        $regreso = $response->viewData('page')['props']['origen']['url'];
+        $this->get($regreso)->assertOk();
+    }
+});
+
+test('ficha GRE consulta origen bienes transporte documentos y permisos por estado', function (string $estado) {
+    $team = Team::factory()->create();
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $sale = Sale::factory()->create(['sede_id' => $this->sede->id, 'vendedor_id' => $this->user->id]);
+    $guide = app(CreateDispatchGuide::class)->handle(datosGuia(['sale_id' => $sale->id]), $this->user);
+    $guide->update(['estado_sunat' => $estado]);
+    $this->actingAs($this->user)->get('/'.$team->slug.'/guias/'.$guide->id)->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('guias/show')
+            ->where('guia.numero', $guide->numero())
+            ->where('guia.origen.url', route('vendedor.ventas.show', ['current_team' => $team, 'sale' => $sale]))
+            ->has('guia.items', 1)->where('guia.puede_editar', $estado === 'borrador'));
+})->with(['borrador', 'enviada', 'aceptada', 'rechazada']);
+
+test('ficha y documentos GRE bloquean sede ajena y técnico planta', function () {
+    $team = Team::factory()->create();
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $guide = app(CreateDispatchGuide::class)->handle(datosGuia(['sede_id' => Sede::factory()->create()->id]), $this->user);
+    $this->actingAs($this->user)->get('/'.$team->slug.'/guias/'.$guide->id)->assertNotFound();
+    $this->get('/'.$team->slug.'/guias/'.$guide->id.'/documentos/xml')->assertNotFound();
+    $this->user->syncRoles(['TecnicoPlanta']);
+    $this->get('/'.$team->slug.'/guias/'.$guide->id)->assertForbidden();
+});
+
+test('corrección de borrador conserva origen numero bienes y bloquea guía transmitida', function () {
+    $team = Team::factory()->create();
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $guide = app(CreateDispatchGuide::class)->handle(datosGuia(), $this->user);
+    $numero = $guide->numero();
+    $items = $guide->items->toArray();
+    $this->actingAs($this->user)->patch('/'.$team->slug.'/guias/'.$guide->id, [
+        'fecha_traslado' => now()->toDateString(), 'modalidad' => '01', 'peso_bruto' => 22,
+        'transportista_ruc' => '20123456786', 'transportista_razon' => 'Transporte prueba',
+        'sale_id' => 999, 'correlativo' => 999, 'estado_sunat' => 'aceptada',
+    ])->assertRedirect();
+    expect($guide->refresh()->peso_bruto)->toBe('22.000')->and($guide->numero())->toBe($numero)
+        ->and($guide->sale_id)->toBeNull()->and($guide->estado_sunat)->toBe('borrador')
+        ->and($guide->items()->get()->toArray())->toBe($items);
+    $guide->update(['sunat_ticket' => 'ticket-simulado']);
+    $this->patch('/'.$team->slug.'/guias/'.$guide->id, [])->assertForbidden();
+});
+
+test('la guía simulada acepta sin salir a SUNAT y deja la guía lista para trasladar', function () {
+    config(['billing.gre.simulado' => true]);
+    $this->app->forgetInstance(GreClientInterface::class);
+    expect(app(GreClientInterface::class))->toBeInstanceOf(GreSimuladoClient::class);
+
+    $servicio = app(GuiaRemisionService::class);
+    $guia = $servicio->consultar($servicio->enviar(app(CreateDispatchGuide::class)->handle(datosGuia(), $this->user)));
+
+    expect($guia->estado_sunat)->toBe(DispatchGuide::ACEPTADA)
+        ->and($guia->estaListaParaTrasladar())->toBeTrue()
+        ->and($guia->sunat_mensaje)->toStartWith('SIMULADO');
+});
+
+test('en producción la guía simulada se ignora y se usa la API real', function () {
+    config(['billing.gre.simulado' => true]);
+    $this->app['env'] = 'production';
+    $this->app->forgetInstance(GreClientInterface::class);
+
+    expect(app(GreClientInterface::class))->toBeInstanceOf(GreApiClient::class);
 });

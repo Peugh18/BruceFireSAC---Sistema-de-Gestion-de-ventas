@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -145,15 +146,22 @@ class ExecutionController extends Controller
         ]);
 
         try {
-            $action->advanceState(
-                $service_order,
-                $validated['target_state'],
-                $request->user(),
-                [
-                    'ph_realizada' => (bool) ($validated['ph_realizada'] ?? false),
-                    ...(array_key_exists('ph_equipos', $validated) ? ['ph_equipos' => $validated['ph_equipos']] : []),
-                ]
-            );
+            $extra = [
+                'ph_realizada' => (bool) ($validated['ph_realizada'] ?? false),
+                ...(array_key_exists('ph_equipos', $validated) ? ['ph_equipos' => $validated['ph_equipos']] : []),
+            ];
+
+            // Terminar y certificar en un solo paso: el trabajo se marca como
+            // terminado (con sus mismas validaciones) y enseguida se emiten
+            // los certificados; si algo falla no queda a medias.
+            DB::transaction(function () use ($action, $service_order, $validated, $request, $extra): void {
+                if ($validated['target_state'] === 'listo_certificado' && $service_order->estado === 'en_proceso') {
+                    $action->advanceState($service_order, 'trabajo_terminado', $request->user());
+                    $service_order->refresh();
+                }
+
+                $action->advanceState($service_order, $validated['target_state'], $request->user(), $extra);
+            });
         } catch (\InvalidArgumentException $exception) {
             throw ValidationException::withMessages(['target_state' => $exception->getMessage()]);
         }

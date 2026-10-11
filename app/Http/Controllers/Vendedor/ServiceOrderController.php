@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Vendedor;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
+use App\Models\Deficiency;
 use App\Models\Sede;
 use App\Models\Service;
 use App\Models\ServiceOrder;
@@ -122,29 +123,88 @@ class ServiceOrderController extends Controller
             'equipments',
             'sale',
             'service',
+            'quote:id,numero,estado',
+            'certificates:id,service_order_id,numero,estado',
         ]);
 
         return Inertia::render('vendedor/ordenes-servicio/show', [
             'serviceOrder' => $service_order,
             'tecnicos' => $this->tecnicosQueAtienden($service_order)->get(['id', 'name']),
+            'tecnicosEntrega' => in_array($service_order->estado, ServiceOrder::ESTADOS_LISTOS, true)
+                ? $this->tecnicosDeEntrega($service_order)->get(['id', 'name'])
+                : [],
             'services' => Service::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
+            // Los hallazgos de la orden, para decidir el adicional sin salir de aquí.
+            'deficiencias' => $service_order->deficiencies()->latest('id')->get()
+                ->map(fn (Deficiency $deficiency) => DeficiencyController::paraPantalla($deficiency, $current_team))
+                ->values(),
         ]);
     }
 
     public function assign(Team $current_team, ServiceOrder $service_order, Request $request): RedirectResponse
     {
         $this->asegurarVisible($service_order);
-
         $validated = $request->validate(['tecnico_id' => ['required', 'integer', 'exists:users,id']]);
-        $technician = $this->tecnicosQueAtienden($service_order)->findOrFail($validated['tecnico_id']);
-        $anterior = $service_order->tecnico?->name;
-        $service_order->update(['tecnico_id' => $technician->id]);
-        $mensaje = $anterior ? "Orden reasignada de {$anterior} a {$technician->name}." : "Orden asignada a {$technician->name}.";
-        $service_order->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'payload' => ['accion' => 'tecnico_asignado', 'tecnico_id' => $technician->id, 'mensaje' => $mensaje]]);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => $mensaje]);
+        DB::transaction(function () use ($service_order, $request, $validated): void {
+            $orden = ServiceOrder::query()->lockForUpdate()->findOrFail($service_order->id);
+            $this->asegurarVisible($orden);
+            if (in_array($orden->estado, ['entregado', 'cerrado', 'anulada'], true)) {
+                throw ValidationException::withMessages(['tecnico_id' => 'La orden ya finalizó: no se puede reasignar.']);
+            }
+            $technician = $this->tecnicosQueAtienden($orden)->whereKey($validated['tecnico_id'])->firstOrFail();
+            $anterior = $orden->tecnico?->name;
+            $orden->update(['tecnico_id' => $technician->id]);
+            $mensaje = $anterior ? "Orden reasignada de {$anterior} a {$technician->name}." : "Orden asignada a {$technician->name}.";
+            $orden->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'payload' => ['accion' => 'tecnico_asignado', 'tecnico_id' => $technician->id, 'mensaje' => $mensaje]]);
+            Inertia::flash('toast', ['type' => 'success', 'message' => $mensaje]);
+        });
 
         return back();
+    }
+
+    /** Relevo del responsable para entregar; no cambia el área del trabajo realizado. */
+    public function assignDelivery(Team $current_team, ServiceOrder $service_order, Request $request): RedirectResponse
+    {
+        $this->asegurarVisible($service_order);
+        $validated = $request->validate(['tecnico_id' => ['required', 'integer', 'exists:users,id']]);
+        DB::transaction(function () use ($service_order, $request, $validated): void {
+            $orden = ServiceOrder::query()->lockForUpdate()->findOrFail($service_order->id);
+            $this->asegurarVisible($orden);
+            if (! in_array($orden->estado, ServiceOrder::ESTADOS_LISTOS, true)
+                || $orden->events()->where('payload->accion', 'entrega_final_realizada')->exists()) {
+                throw ValidationException::withMessages(['tecnico_id' => 'Solo se asigna la entrega de una orden lista y todavía no entregada.']);
+            }
+            $tecnico = $this->tecnicosDeEntrega($orden)->whereKey($validated['tecnico_id'])->first();
+            if (! $tecnico) {
+                throw ValidationException::withMessages(['tecnico_id' => 'Elige un técnico de Campo que atienda esta sede.']);
+            }
+            if ($orden->tecnico_id === $tecnico->id) {
+                return;
+            }
+            $anterior = $orden->tecnico_id;
+            $orden->update(['tecnico_id' => $tecnico->id]);
+            $mensaje = "Entrega asignada a {$tecnico->name}; se conserva el trabajo registrado.";
+            $orden->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'payload' => [
+                'accion' => 'entrega_asignada', 'tecnico_anterior_id' => $anterior,
+                'tecnico_id' => $tecnico->id, 'mensaje' => $mensaje,
+            ]]);
+            AuditLogger::log(action: 'orden.entrega_asignada', entity: $orden,
+                oldValues: ['tecnico_id' => $anterior], newValues: ['tecnico_id' => $tecnico->id], userId: $request->user()->id);
+        });
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'La entrega quedó a cargo del técnico de Campo.']);
+
+        return back();
+    }
+
+    /** @return Builder<User> */
+    protected function tecnicosDeEntrega(ServiceOrder $orden): Builder
+    {
+        $orden->loadMissing('sede');
+
+        return User::role('TecnicoCampo')
+            ->when($orden->sede, fn (Builder $query) => $query->whereIn('sede_id', $orden->sede->idsQueAtienden()))
+            ->orderBy('name');
     }
 
     /**
@@ -235,7 +295,7 @@ class ServiceOrderController extends Controller
 
         $tecnico = null;
         if (! empty($datos['tecnico_id'])) {
-            $tecnico = $this->tecnicosQueAtienden($service_order)->find($datos['tecnico_id']);
+            $tecnico = $this->tecnicosQueAtienden($service_order)->whereKey($datos['tecnico_id'])->first();
 
             if (! $tecnico) {
                 throw ValidationException::withMessages(['tecnico_id' => 'Ese técnico no atiende esta área o esta sede.']);
@@ -273,6 +333,8 @@ class ServiceOrderController extends Controller
     /**
      * Técnicos del área (Planta o Campo) que atienden la sede de la orden:
      * los de la misma sede y, si es una tienda, los de su almacén.
+     *
+     * @return Builder<User>
      */
     protected function tecnicosQueAtienden(ServiceOrder $serviceOrder): Builder
     {

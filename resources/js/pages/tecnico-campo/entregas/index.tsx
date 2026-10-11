@@ -72,6 +72,12 @@ const ESTADOS_MAP: Record<
     string,
     { label: string; bg: string; text: string; border: string }
 > = {
+    listo_certificado: {
+        label: 'Certificado listo para entregar',
+        bg: 'bg-amber-500/10',
+        text: 'text-warning-strong',
+        border: 'border-amber-500/20',
+    },
     listo_entrega: {
         label: 'Lista para Entrega',
         bg: 'bg-amber-500/10',

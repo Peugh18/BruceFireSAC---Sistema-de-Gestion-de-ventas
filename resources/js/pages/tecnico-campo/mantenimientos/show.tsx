@@ -11,6 +11,7 @@ import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
+import { ResumenRevision } from '@/components/resumen-revision';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import mantenimientos from '@/routes/tecnico-campo/mantenimientos';
@@ -83,6 +84,20 @@ export default function MantenimientoShow({
     const args = { current_team: equipo, service_order: order.id };
     const revisados = order.equipments.filter(
         (e) => (e.checklists?.length ?? 0) > 0,
+    ).length;
+    const pendientes = order.equipments.filter(
+        (item) => !item.checklists?.length,
+    );
+    const observados = order.equipments.filter(
+        (item) =>
+            item.checklists?.length &&
+            item.checklists[0].resultado_general !== 'conforme',
+    ).length;
+    const fotosAntes = evidencias.filter(
+        (item) => item.tipo === 'foto' && item.etapa === 'antes',
+    ).length;
+    const fotosDespues = evidencias.filter(
+        (item) => item.tipo === 'foto' && item.etapa === 'despues',
     ).length;
     const errores = cierre.errors as Record<string, string | undefined>;
 
@@ -203,7 +218,7 @@ export default function MantenimientoShow({
                             <button
                                 type="submit"
                                 disabled={agregar.processing}
-                                className="inline-flex min-h-[44px] items-center gap-1 rounded-[8px] bg-sky-600 px-4 text-xs font-bold text-white disabled:opacity-50"
+                                className="inline-flex min-h-[44px] items-center gap-1 rounded-[8px] bg-sky-700 px-4 text-xs font-bold text-white disabled:opacity-50"
                             >
                                 <Plus className="size-4" />
                                 Agregar
@@ -223,6 +238,37 @@ export default function MantenimientoShow({
                         </p>
                     )}
 
+                    <ResumenRevision equipos={order.equipments} />
+                    <div className="space-y-3">
+                        {!finalizado && pendientes.length > 0 && (
+                            <button
+                                type="button"
+                                className="min-h-11 rounded-lg border px-3 text-sm font-medium"
+                                onClick={() => {
+                                    const id = pendientes[0].id;
+                                    setRevisando(id);
+                                    requestAnimationFrame(() =>
+                                        document
+                                            .getElementById(
+                                                `revision-equipo-${id}`,
+                                            )
+                                            ?.scrollIntoView({
+                                                block: 'start',
+                                            }),
+                                    );
+                                }}
+                            >
+                                Revisar siguiente pendiente ·{' '}
+                                {pendientes[0].numero_serie}
+                            </button>
+                        )}
+                        {!order.equipments.length && (
+                            <p className="text-muted-foreground text-sm">
+                                Agrega o vincula un extintor para comenzar su
+                                revisión.
+                            </p>
+                        )}
+                    </div>
                     <ul className="space-y-2">
                         {order.equipments.map((eq) => {
                             const resultado =
@@ -231,7 +277,8 @@ export default function MantenimientoShow({
                             return (
                                 <li
                                     key={eq.id}
-                                    className="border-border rounded-[10px] border p-2.5"
+                                    id={`revision-equipo-${eq.id}`}
+                                    className="border-border scroll-mt-4 rounded-[10px] border p-2.5"
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <div>
@@ -384,6 +431,68 @@ export default function MantenimientoShow({
                                     errores.estado}
                             </p>
                         )}
+                        <section
+                            aria-labelledby="mantenimiento-resumen-titulo"
+                            className="bg-muted/40 space-y-2 rounded-lg p-3 text-sm"
+                        >
+                            <h3
+                                id="mantenimiento-resumen-titulo"
+                                className="font-semibold"
+                            >
+                                Revisa antes de finalizar
+                            </h3>
+                            <p>
+                                {revisados} equipos revisados; {observados} con
+                                observaciones.
+                            </p>
+                            <p>
+                                Fotos antes: {fotosAntes}. Fotos después:{' '}
+                                {fotosDespues}.
+                            </p>
+                            {pendientes.length > 0 && (
+                                <p className="font-medium">
+                                    Aún sin revisión:{' '}
+                                    {pendientes
+                                        .map((item) => item.numero_serie)
+                                        .join(', ')}
+                                    . Comprueba el alcance atendido antes de
+                                    cerrar.
+                                </p>
+                            )}
+                            {!revisados && (
+                                <p>
+                                    Falta el checklist de al menos un extintor.
+                                </p>
+                            )}
+                            {!fotosAntes && (
+                                <p>
+                                    Falta al menos una foto de antes del
+                                    trabajo.
+                                </p>
+                            )}
+                            {!fotosDespues && (
+                                <p>
+                                    Falta al menos una foto de después del
+                                    trabajo.
+                                </p>
+                            )}
+                            {!cierre.data.conformidad_nombre.trim() && (
+                                <p>Falta el nombre de quien recibe.</p>
+                            )}
+                            {!cierre.data.firma && (
+                                <p>Falta la firma del cliente.</p>
+                            )}
+                            {!cierre.data.conformidad_aceptada && (
+                                <p>
+                                    Falta confirmar la conformidad del cliente.
+                                </p>
+                            )}
+                            <p className="text-muted-foreground text-xs">
+                                El certificado corresponde a los equipos
+                                conformes. Tener un checklist guardado no
+                                significa que el equipo sea conforme.
+                            </p>
+                        </section>
                         <button
                             type="submit"
                             disabled={
@@ -391,7 +500,7 @@ export default function MantenimientoShow({
                                 !cierre.data.firma ||
                                 !cierre.data.conformidad_aceptada
                             }
-                            className="min-h-[48px] w-full rounded-[10px] bg-sky-600 text-xs font-bold text-white disabled:opacity-50"
+                            className="min-h-[48px] w-full rounded-[10px] bg-sky-700 text-xs font-bold text-white disabled:opacity-50"
                         >
                             Finalizar mantenimiento y generar acta
                         </button>

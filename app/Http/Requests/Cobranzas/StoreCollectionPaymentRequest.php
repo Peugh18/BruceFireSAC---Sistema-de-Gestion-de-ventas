@@ -4,6 +4,7 @@ namespace App\Http\Requests\Cobranzas;
 
 use App\Models\Installment;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreCollectionPaymentRequest extends FormRequest
@@ -21,7 +22,8 @@ class StoreCollectionPaymentRequest extends FormRequest
         return [
             'monto' => ['required', 'numeric', 'min:0.01'],
             'forma_pago' => ['required', 'string', 'in:efectivo,transferencia,yape,plin,pos,deposito,otro'],
-            'numero_operacion' => ['nullable', 'string', 'max:255'],
+            'es_detraccion' => ['sometimes', 'boolean'],
+            'numero_operacion' => ['nullable', Rule::requiredIf($this->boolean('es_detraccion')), 'string', 'max:255'],
         ];
     }
 
@@ -29,6 +31,9 @@ class StoreCollectionPaymentRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
+            if ($this->boolean('es_detraccion') && $this->input('forma_pago') !== 'deposito') {
+                $validator->errors()->add('forma_pago', 'La constancia de detracción corresponde a un depósito en el Banco de la Nación.');
+            }
             if ($validator->errors()->has('monto')) {
                 return;
             }

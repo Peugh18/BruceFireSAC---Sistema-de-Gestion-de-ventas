@@ -25,6 +25,8 @@ class ServiceCertificateController extends Controller
         $this->assertSedeAccess($request, $sale);
         abort_if(in_array($tipo->codigo, EmitirCertificadoDeServicio::TIPOS_DE_EXTINTORES, true) || empty($tipo->columnas), 404);
 
+        abort_unless(EmitirCertificadoDeServicio::tiposDeServicio($sale)->contains('id', $tipo->id), 404);
+
         $sale->load('client');
         $existente = Certificate::query()
             ->where('sale_id', $sale->id)

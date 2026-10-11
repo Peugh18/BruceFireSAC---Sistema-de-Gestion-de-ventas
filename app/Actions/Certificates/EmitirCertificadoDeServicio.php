@@ -31,11 +31,12 @@ class EmitirCertificadoDeServicio
      *
      * @return Collection<int, CertificateType>
      */
-    public static function tiposDeServicio(): Collection
+    public static function tiposDeServicio(?Sale $sale = null): Collection
     {
         return CertificateType::query()
             ->whereNotIn('codigo', self::TIPOS_DE_EXTINTORES)
             ->whereNotNull('columnas')
+            ->when($sale !== null, fn ($query) => $query->whereHas('services.saleItems', fn ($items) => $items->where('sale_id', $sale->id)))
             ->orderBy('nombre')
             ->get()
             ->filter(fn (CertificateType $tipo) => ! empty($tipo->columnas))
@@ -57,6 +58,10 @@ class EmitirCertificadoDeServicio
 
         if (in_array($tipo->codigo, self::TIPOS_DE_EXTINTORES, true) || empty($tipo->columnas)) {
             throw ValidationException::withMessages(['tipo' => 'Este tipo de certificado no se llena con formulario.']);
+        }
+
+        if (! $sale->items()->whereHas('service', fn ($query) => $query->where('certificate_type_id', $tipo->id))->exists()) {
+            throw ValidationException::withMessages(['tipo' => 'Esta venta no incluye el servicio correspondiente a este certificado.']);
         }
 
         $filas = $this->filas($tipo, $datos['filas'] ?? []);

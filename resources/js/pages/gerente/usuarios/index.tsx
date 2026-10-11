@@ -35,7 +35,13 @@ function roleLabel(role: string | null): string {
         return 'Sin rol asignado';
     }
 
-    return role.replace(/([a-z])([A-Z])/g, '$1 $2');
+    const etiquetas: Record<string, string> = {
+        Almacen: 'Almacén',
+        TecnicoPlanta: 'Técnico de planta',
+        TecnicoCampo: 'Técnico de campo',
+    };
+
+    return etiquetas[role] ?? role.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
 const MODULE_LABELS: Record<string, string> = {
@@ -197,7 +203,7 @@ export default function UsuariosIndex() {
                     pestanas={[
                         {
                             id: 'usuarios',
-                            titulo: 'Usuarios del Team',
+                            titulo: 'Usuarios',
                             icono: Users,
                         },
                         {

@@ -129,3 +129,15 @@ test('ya recibida no cambia de area y entregada no se edita', function () {
         ->put(rutaDeOrden($this->vendedor, 'vendedor.ordenes-servicio.update', $this->orden), [...$datos, 'departamento_tecnico' => 'planta'])
         ->assertSessionHasErrors('estado');
 });
+
+test('el tecnico no toma una orden cerrada al taller', function (string $estado) {
+    $this->orden->update(['estado' => $estado]);
+    $this->actingAs($this->tecnico)->post(rutaDeOrden($this->tecnico, 'tecnico-planta.ordenes.tomar', $this->orden))->assertSessionHasErrors('orden');
+    expect($this->orden->fresh()->tecnico_id)->toBeNull()
+        ->and($this->orden->events()->where('payload->accion', 'orden_tomada')->exists())->toBeFalse();
+})->with(['anulada', 'cerrado', 'entregado', 'trabajo_terminado']);
+
+test('el tecnico no toma una orden de una sede que no atiende', function () {
+    $this->actingAs($this->tecnicoAjeno)->post(rutaDeOrden($this->tecnicoAjeno, 'tecnico-planta.ordenes.tomar', $this->orden))->assertNotFound();
+    expect($this->orden->fresh()->tecnico_id)->toBeNull();
+});

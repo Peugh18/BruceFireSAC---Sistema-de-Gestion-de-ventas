@@ -75,6 +75,7 @@ class ProductController extends Controller
         $totalBajoMinimo = Product::query()->bajoMinimo()->count();
 
         return Inertia::render('gerente/productos/index', [
+            'siguienteCodigo' => $this->siguienteCodigo(),
             'categorias' => ProductCategory::conUsos(),
             'unidadesMedida' => UnidadMedidaSunat::opciones(),
             'agentes' => EquipmentType::opciones(),
@@ -153,5 +154,19 @@ class ProductController extends Controller
         $status = $producto->activo ? 'activado' : 'desactivado';
 
         return redirect()->back()->with('success', "Producto {$status} exitosamente.");
+    }
+
+    /**
+     * Código sugerido para el producto nuevo: el siguiente PRD-#### libre.
+     */
+    protected function siguienteCodigo(): string
+    {
+        $numero = (int) Product::query()->max('id') + 1;
+
+        do {
+            $codigo = sprintf('PRD-%04d', $numero++);
+        } while (Product::query()->where('codigo', $codigo)->exists());
+
+        return $codigo;
     }
 }

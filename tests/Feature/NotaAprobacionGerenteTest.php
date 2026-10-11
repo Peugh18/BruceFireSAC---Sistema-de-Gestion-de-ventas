@@ -39,7 +39,7 @@ function pedirNota(User $vendedor, ElectronicDocument $factura, string $tipo = '
 {
     return test()->actingAs($vendedor)->post(route("vendedor.notas-{$tipo}.store", ['current_team' => $vendedor->currentTeam]), [
         'electronic_document_id' => $factura->id,
-        'motivo_catalogo' => $tipo === 'credito' ? '07' : '01',
+        'motivo_catalogo' => $tipo === 'credito' ? '10' : '01',
         'detalle' => 'Devolvió un equipo',
         'importe' => 20,
         ...$datos,
@@ -62,7 +62,7 @@ test('la nota que pide un vendedor queda por aprobar sin número ni envío a SUN
 
     expect($solicitud->estado)->toBe('por_aprobar')
         ->and($solicitud->tipo)->toBe('nota_credito')
-        ->and($solicitud->motivo_catalogo)->toBe('07')
+        ->and($solicitud->motivo_catalogo)->toBe('10')
         ->and((float) $solicitud->importe)->toBe(20.0)
         ->and($solicitud->solicitado_por)->toBe($this->vendedor->id)
         ->and(ElectronicDocument::where('tipo', 'nota_credito')->exists())->toBeFalse()
@@ -157,4 +157,32 @@ test('un vendedor no entra al panel de aprobación', function () {
     $this->actingAs($this->vendedor)
         ->get(route('gerente.notas.index', ['current_team' => $this->vendedor->currentTeam]))
         ->assertForbidden();
+});
+
+test('nota de débito rechazada por SUNAT no se anuncia como emitida', function () {
+    $this->vendedor->assignRole('Gerente');
+    $this->app->instance(SunatClientInterface::class, new class extends SunatSoloEnvio
+    {
+        public function send(string $xmlSigned, string $documentName): array
+        {
+            return ['cdr_zip' => 'cdr-rechazado', 'codigo' => 2335, 'mensaje' => 'Motivo inválido', 'notas' => []];
+        }
+    });
+
+    pedirNota($this->vendedor, $this->factura, 'debito')
+        ->assertSessionHas('error')->assertSessionMissing('success');
+
+    expect(ElectronicDocument::where('tipo', 'nota_debito')->sole()->sunat_estado)->toBe('rechazado')
+        ->and($this->sale->refresh()->estado)->toBe('confirmada');
+});
+
+test('la devolución por ítem pedida por el vendedor conserva las líneas y valida el importe', function () {
+    pedirNota($this->vendedor, $this->factura, 'credito', ['motivo_catalogo' => '07', 'importe' => 10, 'nota_datos' => ['lineas' => [['indice' => 0, 'cantidad' => 1]]]])
+        ->assertSessionHasErrors('importe');
+    expect(NoteRequest::count())->toBe(0);
+
+    pedirNota($this->vendedor, $this->factura, 'credito', ['motivo_catalogo' => '07', 'importe' => 100, 'nota_datos' => ['lineas' => [['indice' => 0, 'cantidad' => 1]]]])
+        ->assertSessionHasNoErrors();
+
+    expect(NoteRequest::sole()->nota_datos['lineas'])->toBe([['indice' => 0, 'cantidad' => 1]]);
 });

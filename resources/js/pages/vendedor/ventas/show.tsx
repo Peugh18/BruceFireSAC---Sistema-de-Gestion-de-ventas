@@ -1,4 +1,4 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     Award,
@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
+    type LineaOriginal,
     SaleNotesPanel,
     type SolicitudNota,
 } from '@/components/sale-notes-panel';
@@ -32,6 +33,7 @@ import VendedorLayout from '@/layouts/vendedor-layout';
 import guias from '@/routes/guias';
 import facturacion from '@/routes/vendedor/facturacion';
 import ventas from '@/routes/vendedor/ventas';
+import detracciones from '@/routes/vendedor/ventas/detraccion';
 import type { Team } from '@/types';
 import CertificadosRoutes from '@/routes/vendedor/certificados';
 
@@ -58,6 +60,9 @@ type SaleItem = {
 type SalePayment = {
     id: number;
     forma_pago?: string;
+    es_detraccion?: boolean;
+    numero_operacion?: string | null;
+    fecha?: string;
     monto?: number | string;
     fecha_pago?: string;
     estado?: string;
@@ -108,12 +113,21 @@ type CertificadoVenta = {
 };
 
 type Props = {
+    errorDetraccion?: string | null;
     sale: Sale;
     editable: boolean;
+    detraccion?: {
+        aplica: boolean;
+        monto: number;
+        codigo_bien: string;
+        acreditado: number;
+        pendiente: number;
+    };
     certificados: CertificadoVenta[];
     tieneEquipos: boolean;
     tiposServicio: { codigo: string; nombre: string }[];
     solicitudesNota: SolicitudNota[];
+    lineasOriginal: LineaOriginal[];
 };
 
 function money(value?: number | string) {
@@ -157,10 +171,13 @@ function horaDeEnvio(value?: string | null) {
 export default function VentasShow({
     sale,
     editable,
+    detraccion,
+    errorDetraccion,
     certificados,
     tieneEquipos,
     tiposServicio,
     solicitudesNota,
+    lineasOriginal,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
@@ -169,6 +186,10 @@ export default function VentasShow({
         (typeof window !== 'undefined'
             ? window.location.pathname.split('/')[1]
             : '');
+    const constanciaForm = useForm({
+        monto: String(detraccion?.pendiente ?? 0),
+        numero_operacion: '',
+    });
     const [confirmando, setConfirmando] = useState(false);
     const [lineaACambiar, setLineaACambiar] = useState<LineaConSerie | null>(
         null,
@@ -291,6 +312,15 @@ export default function VentasShow({
 
     return (
         <VendedorLayout title="Detalle venta">
+            {errorDetraccion && (
+                <p
+                    role="alert"
+                    className="text-warning-strong rounded-xl border border-amber-500/30 p-3 text-sm"
+                >
+                    {errorDetraccion}
+                </p>
+            )}
+
             <div className="flex flex-col gap-4">
                 {dialogoConfirmacion}
                 <div className="flex flex-wrap items-center gap-3">
@@ -558,6 +588,104 @@ export default function VentasShow({
                         Items
                     </h2>
                     <div className="overflow-x-auto">
+                        {detraccion?.aplica && (
+                            <div className="border-border mb-4 rounded-lg border p-3 text-sm">
+                                <p>
+                                    Detracción {detraccion.codigo_bien}:{' '}
+                                    {money(detraccion.monto)} · Acreditada:{' '}
+                                    {money(detraccion.acreditado)} · Pendiente:{' '}
+                                    {money(detraccion.pendiente)}
+                                </p>
+                                {sale.estado === 'confirmada' &&
+                                    sale.condicion_pago === 'contado' &&
+                                    detraccion.pendiente > 0 && (
+                                        <form
+                                            className="mt-3 flex flex-wrap items-end gap-3"
+                                            onSubmit={(event) => {
+                                                event.preventDefault();
+                                                constanciaForm.post(
+                                                    detracciones.store.url({
+                                                        current_team: teamSlug,
+                                                        sale: sale.id,
+                                                    }),
+                                                    {
+                                                        preserveScroll: true,
+                                                        onSuccess: () =>
+                                                            constanciaForm.reset(
+                                                                'numero_operacion',
+                                                            ),
+                                                    },
+                                                );
+                                            }}
+                                        >
+                                            <label className="flex flex-col gap-1">
+                                                Monto depositado (S/)
+                                                <input
+                                                    className="border-border rounded border p-2"
+                                                    type="number"
+                                                    min="0.01"
+                                                    max={detraccion.pendiente}
+                                                    step="0.01"
+                                                    required
+                                                    value={
+                                                        constanciaForm.data
+                                                            .monto
+                                                    }
+                                                    onChange={(event) =>
+                                                        constanciaForm.setData(
+                                                            'monto',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                            </label>
+                                            <label className="flex flex-col gap-1">
+                                                Número de constancia BN
+                                                <input
+                                                    className="border-border rounded border p-2"
+                                                    required
+                                                    maxLength={255}
+                                                    value={
+                                                        constanciaForm.data
+                                                            .numero_operacion
+                                                    }
+                                                    onChange={(event) =>
+                                                        constanciaForm.setData(
+                                                            'numero_operacion',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                            </label>
+                                            <Button
+                                                type="submit"
+                                                disabled={
+                                                    constanciaForm.processing
+                                                }
+                                            >
+                                                Acreditar depósito verificado
+                                            </Button>
+                                            <p className="text-muted-foreground w-full text-xs">
+                                                El depósito reduce la deuda y
+                                                queda fuera de caja. Comparte la
+                                                captura al gerente por WhatsApp
+                                                de forma manual.
+                                            </p>
+                                            {Object.entries(
+                                                constanciaForm.errors,
+                                            ).map(([field, error]) => (
+                                                <p
+                                                    key={field}
+                                                    role="alert"
+                                                    className="text-destructive-strong w-full text-xs"
+                                                >
+                                                    {error}
+                                                </p>
+                                            ))}
+                                        </form>
+                                    )}
+                            </div>
+                        )}
                         <table className="w-full border-collapse text-[12.5px]">
                             <thead>
                                 <tr>
@@ -671,16 +799,34 @@ export default function VentasShow({
                                     (sale.payments ?? []).map((payment) => (
                                         <tr key={payment.id}>
                                             <td className="border-border border-b px-2.5 py-[13px] capitalize">
-                                                {medioPago(payment.forma_pago)}
+                                                {payment.es_detraccion
+                                                    ? 'Detracción BN'
+                                                    : medioPago(
+                                                          payment.forma_pago,
+                                                      )}
+                                                {payment.numero_operacion && (
+                                                    <span className="text-muted-foreground ml-2 text-xs">
+                                                        {
+                                                            payment.numero_operacion
+                                                        }
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px]">
-                                                {payment.fecha_pago ?? '-'}
+                                                {(
+                                                    payment.fecha_pago ??
+                                                    payment.fecha
+                                                )
+                                                    ?.split('T')[0]
+                                                    .split('-')
+                                                    .reverse()
+                                                    .join('/') ?? '-'}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px] font-bold">
                                                 {money(payment.monto)}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px] capitalize">
-                                                {payment.estado ?? '-'}
+                                                {payment.estado ?? 'Registrado'}
                                             </td>
                                         </tr>
                                     ))
@@ -690,7 +836,9 @@ export default function VentasShow({
                     </div>
                 </Card>
 
-                {sale.estado === 'confirmada' || certificados.length > 0 ? (
+                {(sale.estado === 'confirmada' &&
+                    (tieneEquipos || tiposServicio.length > 0)) ||
+                certificados.length > 0 ? (
                     <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
@@ -711,11 +859,7 @@ export default function VentasShow({
                                         })}
                                     >
                                         <Award className="size-4" />
-                                        {certificados.some(
-                                            (c) => c.estado === 'vigente',
-                                        )
-                                            ? 'Ajustar orden o grupos'
-                                            : 'Armar certificados'}
+                                        Gestionar certificados de venta
                                     </Link>
                                 </Button>
                             ) : null}
@@ -747,7 +891,7 @@ export default function VentasShow({
                             <p className="text-muted-foreground text-[12.5px]">
                                 {tieneEquipos
                                     ? 'Salen solos al confirmar la venta: Operatividad y Garantía más Capacitación (local) o Prueba Hidrostática (vehículo).'
-                                    : 'Esta venta no tiene extintores con serie; puedes emitir el certificado de capacitación.'}
+                                    : 'Aún no hay certificados emitidos. Los del servicio de taller se generan al cerrar el trabajo; la capacitación se registra con sus datos.'}
                             </p>
                         ) : (
                             <div className="border-border overflow-hidden rounded-[10px] border">
@@ -837,6 +981,7 @@ export default function VentasShow({
                     saleEstado={sale.estado}
                     abrirNotaCredito={abrirNotaCredito}
                     solicitudes={solicitudesNota}
+                    lineasOriginal={lineasOriginal}
                 />
             </div>
 

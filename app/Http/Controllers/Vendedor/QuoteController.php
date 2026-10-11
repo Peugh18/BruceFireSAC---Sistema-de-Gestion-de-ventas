@@ -11,12 +11,15 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Service;
+use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Quotes\QuotePdfService;
+use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -101,8 +104,8 @@ class QuoteController extends Controller
                     'tipo' => $item->product_id ? 'product' : 'service',
                     'product_id' => $item->product_id,
                     'service_id' => $item->service_id,
-                    'codigo' => $item->product?->codigo ?? $item->service?->codigo,
-                    'nombre' => $item->product?->nombre ?? $item->service?->nombre,
+                    'codigo' => $item->product->codigo ?? $item->service?->codigo,
+                    'nombre' => $item->product->nombre ?? $item->service?->nombre,
                     'cantidad' => (int) $item->cantidad,
                     'precio_unitario' => (float) $item->precio_unitario,
                     'descuento' => (float) $item->descuento,
@@ -116,6 +119,60 @@ class QuoteController extends Controller
      * de Nueva Cotización (ver nota en create() sobre por qué no se manda
      * el catálogo completo como prop).
      */
+    public function iniciarOrden(Team $current_team, Quote $quote, Request $request, ServiceOrderNumberGenerator $numeracion): RedirectResponse
+    {
+        $this->asegurarSede($quote->sede_id);
+        $orden = DB::transaction(function () use ($quote, $request, $numeracion): ServiceOrder {
+            $quote = Quote::query()->lockForUpdate()->findOrFail($quote->id);
+            if (! in_array($quote->estado, ['borrador', 'emitida', 'enviada', 'aceptada'], true) || $quote->sale()->exists()) {
+                throw ValidationException::withMessages(['quote_id' => 'Esta cotización ya no puede iniciar una orden antes de la venta.']);
+            }
+            $existente = $quote->serviceOrders()->where('estado', '!=', 'anulada')->first();
+            if ($existente) {
+                return $existente;
+            }
+            $servicio = $quote->items()->whereNotNull('service_id')->first();
+            if (! $servicio) {
+                throw ValidationException::withMessages(['quote_id' => 'La cotización debe incluir un servicio para abrir una orden de taller.']);
+            }
+            $orden = ServiceOrder::create([
+                'codigo' => $numeracion->next(), 'client_id' => $quote->client_id, 'sede_id' => $quote->sede_id,
+                'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'service_id' => $servicio->service_id,
+                'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'estado' => 'pendiente_recepcion',
+                'observaciones' => 'Trabajo cotizado en '.$quote->numero.'; pendiente de venta al terminar.',
+            ]);
+            $orden->equipments()->sync($quote->equipments()->allRelatedIds()->all());
+            $orden->events()->create(['tipo' => 'creada', 'user_id' => $request->user()->id, 'payload' => ['mensaje' => 'Orden iniciada desde cotización, sin generar venta ni cobro.', 'quote_id' => $quote->id]]);
+
+            return $orden;
+        });
+
+        return redirect()->route('vendedor.ordenes-servicio.show', [$current_team, $orden]);
+    }
+
+    public function edit(Team $current_team, Quote $quote): Response
+    {
+        $this->asegurarSede($quote->sede_id);
+        abort_unless(in_array($quote->estado, ['borrador', 'emitida', 'enviada', 'aceptada'], true) && ! $quote->sale()->exists(), 422);
+        $quote->load('client', 'items.product', 'items.service');
+
+        return Inertia::render('vendedor/cotizaciones/nueva', ['edicion' => [
+            'id' => $quote->id, 'numero' => $quote->numero, 'fecha' => $quote->fecha->toDateString(), 'vigencia_hasta' => $quote->vigencia_hasta->toDateString(),
+            'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'referencia' => $quote->referencia,
+            'condicion_pago_propuesta' => $quote->condicion_pago_propuesta, 'observaciones' => $quote->observaciones,
+            'items' => $quote->items->map(fn ($item): array => ['deficiency_id' => $item->deficiency_id, 'tipo' => $item->product_id ? 'product' : 'service', 'product_id' => $item->product_id, 'service_id' => $item->service_id, 'codigo' => $item->product->codigo ?? $item->service?->codigo, 'nombre' => $item->product->nombre ?? $item->service?->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento])->values(),
+        ]]);
+    }
+
+    public function update(Team $current_team, Quote $quote, StoreQuoteRequest $request, CreateQuote $action): RedirectResponse
+    {
+        $this->asegurarSede($quote->sede_id);
+        $action->actualizar($quote, $request->safe()->except('items'), $request->safe()->input('items'), $request->user()->id);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Cotización corregida; historial conservado.']);
+
+        return redirect()->route('vendedor.cotizaciones.index', [$current_team]);
+    }
+
     public function searchCatalogo(Request $request): JsonResponse
     {
         $search = $request->string('search')->toString();
@@ -147,6 +204,9 @@ class QuoteController extends Controller
     {
         $data = $request->safe()->except('items');
         $items = $request->safe()->input('items');
+        foreach ($items as $item) {
+            abort_if(! empty($item['deficiency_id']), 422);
+        }
 
         if ($sedeId = $request->user()->sedeRestringidaId()) {
             $data['sede_id'] = $sedeId;

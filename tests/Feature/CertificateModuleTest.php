@@ -4,6 +4,7 @@ use App\Actions\Certificates\IssueCertificate;
 use App\Models\Certificate;
 use App\Models\CertificateType;
 use App\Models\Client;
+use App\Models\Equipment;
 use Database\Seeders\CertificateTypeSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Str;
@@ -208,4 +209,20 @@ test('public route verifies certificate with valid token and returns 404 with in
 
     $responseInvalid = $this->getJson(route('certificados.verificar', ['token' => 'token-inexistente-12345']));
     $responseInvalid->assertNotFound();
+});
+
+test('un equipo de alta rápida con año ilegible no impide emitir el certificado', function () {
+    $tipoOG = CertificateType::firstOrCreate(
+        ['codigo' => 'operatividad_garantia'],
+        ['nombre' => 'Operatividad y Garantía', 'vigencia_meses' => 12, 'generado_por_rol' => 'tecnico_planta']
+    );
+    $client = Client::factory()->create();
+    $equipo = Equipment::factory()->create(['client_id' => $client->id, 'anio_fabricacion' => 'No legible / Pendiente de verificar']);
+
+    $certificate = app(IssueCertificate::class)->handle($tipoOG, $client, [
+        ['equipment_id' => $equipo->id, 'numero_serie' => 'SN-1', 'tipo_agente' => 'CO2', 'fecha_ultima_recarga' => '2026-03-10'],
+        ['equipment_id' => Equipment::factory()->create(['client_id' => $client->id, 'anio_fabricacion' => '2021'])->id, 'numero_serie' => 'SN-2', 'tipo_agente' => 'CO2', 'fecha_ultima_recarga' => '2026-03-10'],
+    ]);
+
+    expect($certificate->certificateUnits()->orderBy('orden')->pluck('anio_fabricacion')->all())->toBe([null, 2021]);
 });
