@@ -7,7 +7,6 @@ use App\Models\ServiceOrder;
 use App\Services\Tecnico\EvidenciasParaPdf;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DompdfWrapper;
-use Illuminate\Support\Facades\Storage;
 
 class ActaConformidadPdfService
 {
@@ -38,23 +37,11 @@ class ActaConformidadPdfService
             'sede' => $serviceOrder->sede,
             'equipments' => $serviceOrder->equipments,
             'company' => $company,
-            'logoBase64' => $this->logoBase64($company),
+            'logo' => $company->logoParaPdf(),
             'custody' => $custodyEvent?->payload ?? [],
             'firmaCliente' => $this->evidencias->firma($serviceOrder, ['entrega', 'instalacion', 'inspeccion', 'mantenimiento']),
             'fotos' => $this->evidencias->fotos($serviceOrder, ['antes', 'despues']),
             'fechaEntrega' => $custodyEvent?->created_at?->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i'),
         ])->setPaper('a4', 'portrait');
-    }
-
-    protected function logoBase64(CompanySetting $company): ?string
-    {
-        if (! $company->logo_path || ! Storage::disk('public')->exists($company->logo_path)) {
-            return null;
-        }
-
-        $mime = Storage::disk('public')->mimeType($company->logo_path) ?: 'image/png';
-        $contents = Storage::disk('public')->get($company->logo_path);
-
-        return 'data:'.$mime.';base64,'.base64_encode($contents);
     }
 }

@@ -146,11 +146,14 @@
     <table class="header-table">
         <tr>
             <td style="width: 58%;">
-                <div class="company-title">{{ $company->razon_social ?: 'BRUCE FIRE S.A.C.' }}</div>
+                @if ($logo)
+                    <img src="{{ $logo['src'] }}" alt="Logo de la empresa" style="width: {{ $logo['ancho'] }}px; height: {{ $logo['alto'] }}px; margin-bottom: 4px;">
+                @endif
+                <div class="company-title">{{ $company->razon_social }}</div>
                 <div class="company-info">
-                    RUC: {{ $company->ruc ?: '20600000000' }}<br>
-                    {{ $company->direccion ?: 'Av. Industrial 456, Trujillo - La Libertad' }}<br>
-                    Teléfono: {{ $company->telefono ?: '(044) 283921 / 944 123 456' }} | Email: operaciones@brucefire.pe
+                    RUC: {{ $company->ruc }}<br>
+                    @if ($company->direccion){{ $company->direccion }}<br>@endif
+                    {{ collect([$company->telefono ? 'Teléfono: '.$company->telefono : null, $company->email ? 'Email: '.$company->email : null])->filter()->implode(' | ') }}
                 </div>
             </td>
             <td style="width: 42%;">

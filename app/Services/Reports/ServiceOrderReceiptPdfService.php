@@ -2,6 +2,7 @@
 
 namespace App\Services\Reports;
 
+use App\Models\CompanySetting;
 use App\Models\ServiceOrder;
 use App\Services\Tecnico\EvidenciasParaPdf;
 use Barryvdh\DomPDF\Facade\Pdf as PdfFacade;
@@ -17,6 +18,7 @@ class ServiceOrderReceiptPdfService
 
         return PdfFacade::loadView('pdf.service-order-receipt', [
             'order' => $serviceOrder,
+            'company' => CompanySetting::current(),
             'firmaRecojo' => $this->evidencias->firma($serviceOrder, ['recojo']),
         ])->setPaper('a4');
     }
