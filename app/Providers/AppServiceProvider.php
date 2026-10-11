@@ -8,6 +8,7 @@ use App\Models\Sede;
 use App\Observers\SedeObserver;
 use App\Services\Billing\GreApiClient;
 use App\Services\Billing\GreenterSunatClient;
+use App\Services\Billing\GreSimuladoClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Middleware\TrustProxies;
@@ -25,7 +26,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(SunatClientInterface::class, GreenterSunatClient::class);
-        $this->app->bind(GreClientInterface::class, GreApiClient::class);
+        // La guía simulada solo existe en desarrollo y pruebas: en producción la
+        // bandera se ignora y se usa siempre la API real de SUNAT.
+        $this->app->bind(GreClientInterface::class, fn () => config('billing.gre.simulado') && $this->app->environment('local', 'testing')
+            ? new GreSimuladoClient
+            : new GreApiClient);
     }
 
     /**

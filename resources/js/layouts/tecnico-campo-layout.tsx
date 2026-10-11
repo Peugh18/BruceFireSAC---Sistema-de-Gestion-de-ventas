@@ -157,7 +157,7 @@ export default function TecnicoCampoLayout({
                             href={item.href}
                             className={`flex items-center gap-2 rounded-[8px] px-3.5 py-1.5 text-xs font-bold transition-all ${
                                 isActive
-                                    ? 'bg-info text-info-foreground shadow-xs'
+                                    ? 'bg-info dark:text-info-foreground text-black shadow-xs'
                                     : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                             }`}
                         >

@@ -1,4 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { ResumenRevision } from '@/components/resumen-revision';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import {
     AlertCircle,
@@ -367,6 +368,9 @@ export default function InspeccionShow({
                             Agregar Extintor
                         </button>
                     )}
+                </div>
+                <div className="mb-3">
+                    <ResumenRevision equipos={order.equipments} />
                 </div>
 
                 {/* Modal for adding/linking equipment */}

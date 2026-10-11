@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
+import React, { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -100,6 +106,7 @@ export default function EjecucionShow({
     repuestos,
     certificates,
 }: Props) {
+    const modalTrigger = useRef<HTMLElement | null>(null);
     const { currentTeam, errors } = usePage<{
         currentTeam?: Team | null;
         errors: Record<string, string>;
@@ -353,18 +360,8 @@ export default function EjecucionShow({
                             <Wrench className="h-4 w-4" />
                             <span>Iniciar Trabajo en Taller (En Proceso)</span>
                         </button>
-                    ) : order.estado === 'en_proceso' ? (
-                        <button
-                            aria-label="Marcar Trabajo como Terminado en Taller"
-                            type="button"
-                            onClick={() => handleAdvance('trabajo_terminado')}
-                            disabled={avanzando}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3 text-xs font-bold text-white shadow-sm hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
-                        >
-                            <CheckCircle2 className="h-4 w-4" />
-                            <span>Marcar Trabajo como Terminado en Taller</span>
-                        </button>
-                    ) : order.estado === 'trabajo_terminado' ||
+                    ) : order.estado === 'en_proceso' ||
+                      order.estado === 'trabajo_terminado' ||
                       order.estado === 'pendiente_datos' ||
                       order.estado === 'datos_completos' ? (
                         <div className="space-y-3">
@@ -417,18 +414,32 @@ export default function EjecucionShow({
                             >
                                 <Sparkles className="h-4 w-4" />
                                 <span>
-                                    Cerrar Taller y Emitir Certificados
-                                    Automáticos
+                                    {order.estado === 'en_proceso'
+                                        ? 'Terminar trabajo y emitir certificados'
+                                        : 'Cerrar Taller y Emitir Certificados Automáticos'}
                                 </span>
                             </button>
+                            {order.estado === 'en_proceso' ? (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handleAdvance('trabajo_terminado')
+                                    }
+                                    disabled={avanzando}
+                                    className="text-muted-foreground w-full text-center text-xs underline"
+                                >
+                                    Solo marcar el trabajo como terminado
+                                </button>
+                            ) : null}
                         </div>
                     ) : order.estado === 'listo_certificado' ? (
                         <div className="space-y-2">
                             <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
                                 <ShieldCheck className="text-success-strong h-5 w-5 flex-shrink-0" />
                                 <span>
-                                    Certificado emitido. Avisa al vendedor que
-                                    los equipos están listos.
+                                    Certificado emitido. Al marcarla lista para
+                                    entrega, el vendedor recibe el aviso en su
+                                    panel.
                                 </span>
                             </div>
                             <button
@@ -587,26 +598,34 @@ export default function EjecucionShow({
 
                 {/* MODAL: Consumir Repuesto de Almacén (§85) */}
                 {selectedDeficiency && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="animate-in slide-in-from-bottom bg-card w-full space-y-4 rounded-t-3xl border border-neutral-200 p-5 shadow-xl duration-200 sm:max-w-md sm:rounded-2xl dark:border-neutral-800 dark:bg-neutral-900">
+                    <Dialog
+                        open
+                        onOpenChange={(open) => {
+                            if (!open && !spareForm.processing)
+                                setSelectedDeficiency(null);
+                        }}
+                    >
+                        <DialogContent
+                            onOpenAutoFocus={() => {
+                                modalTrigger.current =
+                                    document.activeElement as HTMLElement;
+                            }}
+                            onCloseAutoFocus={(event) => {
+                                event.preventDefault();
+                                modalTrigger.current?.focus();
+                            }}
+                            className="border-border bg-card max-h-[90dvh] space-y-4 overflow-y-auto overscroll-contain sm:max-w-lg"
+                        >
                             <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
                                 <div>
-                                    <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                                    <DialogTitle className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                                         Consumo de Repuesto
-                                    </h3>
-                                    <p className="text-xs text-neutral-500">
+                                    </DialogTitle>
+                                    <DialogDescription className="text-xs text-neutral-500">
                                         Kardex Almacén para{' '}
                                         {selectedDeficiency.componente}
-                                    </p>
+                                    </DialogDescription>
                                 </div>
-                                <button
-                                    aria-label="Cerrar consumo de repuesto"
-                                    type="button"
-                                    onClick={() => setSelectedDeficiency(null)}
-                                    className="p-1 text-neutral-400"
-                                >
-                                    ✕
-                                </button>
                             </div>
 
                             <form
@@ -693,8 +712,8 @@ export default function EjecucionShow({
                                     </span>
                                 </button>
                             </form>
-                        </div>
-                    </div>
+                        </DialogContent>
+                    </Dialog>
                 )}
             </div>
         </TecnicoPlantaLayout>

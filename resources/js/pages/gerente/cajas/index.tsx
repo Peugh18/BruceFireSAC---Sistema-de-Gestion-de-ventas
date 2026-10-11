@@ -76,11 +76,17 @@ type PageProps = {
 };
 
 function formatCurrency(amount: number): string {
+    // Un cero negativo (-0, o un -0.001 que redondea a cero) se renderiza como
+    // "-S/ 0.00" en el servidor y como "S/ 0.00" en el navegador: React rompe la
+    // hidratación. El cero no tiene signo, así que se normaliza antes de formatear
+    // y el resultado es idéntico en ambos lados.
+    const normalizado = Math.round(Math.abs(amount) * 100) === 0 ? 0 : amount;
+
     return new Intl.NumberFormat('es-PE', {
         style: 'currency',
         currency: 'PEN',
         minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(normalizado);
 }
 
 export default function CajasConsolidadasIndex() {

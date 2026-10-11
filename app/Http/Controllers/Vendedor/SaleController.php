@@ -26,6 +26,7 @@ use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Billing\ComprobantePdfService;
+use App\Services\Billing\DatosEmision;
 use App\Services\Billing\DetraccionCalculator;
 use App\Services\Certificates\CertificadosDeVenta;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
@@ -491,7 +492,7 @@ class SaleController extends Controller
             'editable' => $sale->sePuedeEditar(),
             'detraccion' => [...$detraccion, 'acreditado' => (float) $sale->payments->where('es_detraccion', true)->sum('monto'), 'pendiente' => max(0, round($detraccion['monto'] - (float) $sale->payments->where('es_detraccion', true)->sum('monto'), 2))],
             'errorDetraccion' => $errorDetraccion,
-            'certificados' => CertificadosDeVenta::deLaVenta($sale),
+            'certificados' => CertificadosDeVenta::deLaVenta($sale, incluirOrdenes: true),
             'tieneEquipos' => $sale->items->contains(fn ($item) => $item->equipment_id !== null),
             // Notas pedidas al Gerente que aún no se emiten (por aprobar o rechazadas).
             'solicitudesNota' => NoteRequest::query()
@@ -499,10 +500,37 @@ class SaleController extends Controller
                 ->where('estado', '!=', 'aprobada')
                 ->latest('id')
                 ->get(['id', 'tipo', 'motivo_catalogo', 'importe', 'estado', 'motivo_rechazo']),
+            'lineasOriginal' => $this->lineasDelComprobante($sale),
             'tiposServicio' => EmitirCertificadoDeServicio::tiposDeServicio($sale)
                 ->map(fn ($tipo) => ['codigo' => $tipo->codigo, 'nombre' => $tipo->nombre])
                 ->values(),
         ]);
+    }
+
+    /**
+     * Líneas del comprobante afectado, en el orden del XML, para que las notas
+     * por motivo (03, 05 y 07) elijan sobre qué línea se aplican.
+     *
+     * @return list<array{indice: int, nombre: string, cantidad: float, total: float}>
+     */
+    protected function lineasDelComprobante(Sale $sale): array
+    {
+        $original = $sale->electronicDocuments
+            ->filter(fn ($d) => in_array($d->tipo, ['factura', 'boleta'], true) && in_array($d->sunat_estado, ['aceptado', 'observado'], true))
+            ->last();
+
+        try {
+            $datos = $original ? app(DatosEmision::class)->recuperar($original) : null;
+        } catch (\Throwable) {
+            $datos = null;
+        }
+
+        $lineas = [];
+        foreach ($datos['lineas'] ?? [] as $indice => $linea) {
+            $lineas[] = ['indice' => (int) $indice, 'nombre' => (string) $linea['nombre'], 'cantidad' => (float) $linea['cantidad'], 'total' => round($linea['base'] + $linea['igv'], 2)];
+        }
+
+        return $lineas;
     }
 
     public function notaVentaPdf(Team $current_team, Sale $sale, Request $request): HttpResponse

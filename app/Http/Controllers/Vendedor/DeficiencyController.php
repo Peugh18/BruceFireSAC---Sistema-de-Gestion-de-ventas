@@ -87,49 +87,62 @@ class DeficiencyController extends Controller
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString()
-            ->through(fn (Deficiency $deficiency) => [
-                'id' => $deficiency->id,
-                'service_order_id' => $deficiency->service_order_id,
-                'orden' => $deficiency->serviceOrder->codigo,
-                'cliente' => $deficiency->serviceOrder->client->razon_social,
-                'componente' => $deficiency->componente,
-                'condicion' => $deficiency->condicion,
-                'nota' => $deficiency->nota,
-                'accion_recomendada' => $deficiency->accion_recomendada,
-                'repuesto_sugerido' => $deficiency->repuesto_sugerido,
-                'equipo' => $deficiency->equipment?->numero_serie,
-                // ponytail: una consulta por fila; la página trae 15 como máximo.
-                'foto_url' => ($evidenciaId = $deficiency->foto_path ? Evidencia::query()->where('path', $deficiency->foto_path)->value('id') : null)
-                    ? route('evidencias.show', [$current_team, $evidenciaId])
-                    : null,
-                'estado' => $deficiency->estado,
-                'pendiente_autorizacion' => $deficiency->estado === 'resuelta' && $deficiency->requiere_autorizacion && ! $deficiency->authorization,
-                'requiere_autorizacion' => $deficiency->requiere_autorizacion,
-                'authorization' => $deficiency->authorization ? [
-                    'autorizado_por' => $deficiency->authorization->autorizado_por,
-                    'canal' => $deficiency->authorization->canal,
-                    'fecha' => $deficiency->authorization->fecha?->format('d/m/Y'),
-                    'observacion' => $deficiency->authorization->observacion,
-                    'importe' => $deficiency->authorization->importe !== null ? (float) $deficiency->authorization->importe : null,
-                ] : null,
-                'cotizacion_linea' => ($linea = QuoteItem::query()->with('quote', 'product', 'service')->where('deficiency_id', $deficiency->id)->first()) ? ['id' => $linea->quote_id, 'numero' => $linea->quote->numero, 'nombre' => $linea->product->nombre ?? $linea->service?->nombre, 'cantidad' => (int) $linea->cantidad, 'importe' => (float) $linea->subtotal] : null,
-                'orden_cobrada' => $deficiency->serviceOrder->sale_id !== null,
-                // V6: cotizaciones vigentes del cliente para elegir la del adicional.
-                'cotizaciones' => $deficiency->estado === 'esperando_autorizacion'
-                    ? Quote::query()
-                        ->where('client_id', $deficiency->serviceOrder->client_id)
-                        ->where(fn ($query) => $query->whereNull('sede_id')->orWhere('sede_id', $deficiency->serviceOrder->sede_id))
-                        ->whereIn('estado', ['borrador', 'emitida', 'enviada', 'aceptada'])
-                        ->latest('id')
-                        ->limit(20)
-                        ->get(['id', 'numero', 'total'])
-                        ->map(fn (Quote $quote) => ['id' => $quote->id, 'numero' => $quote->numero, 'total' => (float) $quote->total])
-                    : [],
-            ]);
+            ->through(fn (Deficiency $deficiency) => self::paraPantalla($deficiency, $current_team));
 
         return Inertia::render('vendedor/deficiencias/index', [
             'deficiencies' => $deficiencies,
             'filters' => ['estado' => $estado],
         ]);
+    }
+
+    /**
+     * Un hallazgo tal como lo ve el vendedor, con su autorización y su línea
+     * cotizada. Lo usan la lista de deficiencias y la ficha de la orden.
+     *
+     * @return array<string, mixed>
+     */
+    public static function paraPantalla(Deficiency $deficiency, Team $current_team): array
+    {
+        $deficiency->loadMissing(['serviceOrder.client', 'authorization', 'equipment']);
+
+        return [
+            'id' => $deficiency->id,
+            'service_order_id' => $deficiency->service_order_id,
+            'orden' => $deficiency->serviceOrder->codigo,
+            'cliente' => $deficiency->serviceOrder->client->razon_social,
+            'componente' => $deficiency->componente,
+            'condicion' => $deficiency->condicion,
+            'nota' => $deficiency->nota,
+            'accion_recomendada' => $deficiency->accion_recomendada,
+            'repuesto_sugerido' => $deficiency->repuesto_sugerido,
+            'equipo' => $deficiency->equipment?->numero_serie,
+            // ponytail: una consulta por fila; la página trae 15 como máximo.
+            'foto_url' => ($evidenciaId = $deficiency->foto_path ? Evidencia::query()->where('path', $deficiency->foto_path)->value('id') : null)
+                ? route('evidencias.show', [$current_team, $evidenciaId])
+                : null,
+            'estado' => $deficiency->estado,
+            'pendiente_autorizacion' => $deficiency->estado === 'resuelta' && $deficiency->requiere_autorizacion && ! $deficiency->authorization,
+            'requiere_autorizacion' => $deficiency->requiere_autorizacion,
+            'authorization' => $deficiency->authorization ? [
+                'autorizado_por' => $deficiency->authorization->autorizado_por,
+                'canal' => $deficiency->authorization->canal,
+                'fecha' => $deficiency->authorization->fecha?->format('d/m/Y'),
+                'observacion' => $deficiency->authorization->observacion,
+                'importe' => $deficiency->authorization->importe !== null ? (float) $deficiency->authorization->importe : null,
+            ] : null,
+            'cotizacion_linea' => ($linea = QuoteItem::query()->with('quote', 'product', 'service')->where('deficiency_id', $deficiency->id)->first()) ? ['id' => $linea->quote_id, 'numero' => $linea->quote->numero, 'nombre' => $linea->product->nombre ?? $linea->service?->nombre, 'cantidad' => (int) $linea->cantidad, 'importe' => (float) $linea->subtotal] : null,
+            'orden_cobrada' => $deficiency->serviceOrder->sale_id !== null,
+            // V6: cotizaciones vigentes del cliente para elegir la del adicional.
+            'cotizaciones' => $deficiency->estado === 'esperando_autorizacion'
+                ? Quote::query()
+                    ->where('client_id', $deficiency->serviceOrder->client_id)
+                    ->where(fn ($query) => $query->whereNull('sede_id')->orWhere('sede_id', $deficiency->serviceOrder->sede_id))
+                    ->whereIn('estado', ['borrador', 'emitida', 'enviada', 'aceptada'])
+                    ->latest('id')
+                    ->limit(20)
+                    ->get(['id', 'numero', 'total'])
+                    ->map(fn (Quote $quote) => ['id' => $quote->id, 'numero' => $quote->numero, 'total' => (float) $quote->total])
+                : [],
+        ];
     }
 }

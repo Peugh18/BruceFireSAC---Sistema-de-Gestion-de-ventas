@@ -32,6 +32,8 @@ return [
     'gre' => [
         'auth_host' => env('SUNAT_GRE_AUTH_HOST', 'https://gre-test.nubefact.com/v1'),
         'api_host' => env('SUNAT_GRE_API_HOST', 'https://gre-test.nubefact.com/v1'),
+        // Solo desarrollo: acepta las guías sin enviarlas a SUNAT (SUNAT_GRE_SIMULADO=true).
+        'simulado' => (bool) env('SUNAT_GRE_SIMULADO', false),
         'motivo_ordenes' => env('GRE_MOTIVO_ORDENES', '13'),
         'descripcion_recojo' => env('GRE_DESCRIPCION_RECOJO', 'Recojo para recarga/mantenimiento'),
         'descripcion_entrega' => env('GRE_DESCRIPCION_ENTREGA', 'Entrega de equipos recargados/mantenidos'),

@@ -1,11 +1,11 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
+import RoleLayout from '@/layouts/role-layout';
 import guias from '@/routes/guias';
 import type { Team } from '@/types';
 
@@ -50,11 +50,13 @@ const SELECT =
 
 export default function GuiaForm({
     datos,
+    origen,
     vehiculos,
     conductores,
     motivos,
 }: {
     datos: Datos;
+    origen: { descripcion: string; url: string };
     vehiculos: { id: number; placa: string; categoria: string }[];
     conductores: {
         id: number;
@@ -66,7 +68,16 @@ export default function GuiaForm({
 }) {
     const teamSlug =
         usePage<{ currentTeam?: Team | null }>().props.currentTeam?.slug ?? '';
-    const form = useForm<Datos>(datos);
+    // Con un solo vehículo o conductor activo no hay nada que elegir.
+    const form = useForm<Datos>({
+        ...datos,
+        transport_vehicle_id:
+            datos.transport_vehicle_id ||
+            (vehiculos.length === 1 ? vehiculos[0].id : ''),
+        driver_id:
+            datos.driver_id ||
+            (conductores.length === 1 ? conductores[0].id : ''),
+    });
 
     const campo = (
         id: keyof Datos,
@@ -111,7 +122,8 @@ export default function GuiaForm({
         );
 
     return (
-        <AppLayout
+        <RoleLayout
+            title="Guías de remisión"
             breadcrumbs={[
                 {
                     title: 'Guías de remisión',
@@ -133,7 +145,28 @@ export default function GuiaForm({
                     });
                 }}
             >
-                <h1 className="text-xl font-bold">Nueva guía de remisión</h1>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h1 className="text-xl font-bold">
+                            Nueva guía de remisión
+                        </h1>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            {origen.descripcion}
+                        </p>
+                    </div>
+                    <Button asChild variant="outline">
+                        <Link href={origen.url}>
+                            {origen.url.endsWith('/guias')
+                                ? 'Volver a guías'
+                                : 'Volver al origen'}
+                        </Link>
+                    </Button>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                    Revisa los bienes, las direcciones y el transporte. Crear la
+                    guía la deja sin enviar; el envío a SUNAT se realiza
+                    después.
+                </p>
                 <Card className="grid gap-3 p-4 sm:grid-cols-2">
                     <div>
                         <Label htmlFor="guia-motivo">Motivo del traslado</Label>
@@ -344,10 +377,15 @@ export default function GuiaForm({
                             {error}
                         </p>
                     ))}
-                <Button type="submit" disabled={form.processing}>
-                    Crear guía
-                </Button>
+                <div className="flex flex-wrap justify-end gap-3">
+                    <Button asChild variant="outline">
+                        <Link href={origen.url}>Cancelar</Link>
+                    </Button>
+                    <Button type="submit" disabled={form.processing}>
+                        Crear guía sin enviar
+                    </Button>
+                </div>
             </form>
-        </AppLayout>
+        </RoleLayout>
     );
 }

@@ -109,6 +109,19 @@ class ChecklistController extends Controller
             ? 'Checklist registrado con observaciones. Se generaron las deficiencias correspondientes.'
             : 'Checklist registrado exitosamente: Todos los componentes conformes.';
 
+        // Con todos los extintores recibidos ya revisados, el siguiente paso es
+        // terminar el trabajo: se lleva directo a la ejecución en vez de
+        // devolverlo a la recepción.
+        $conChecklist = $service_order->checklists()->pluck('equipment_id')->unique();
+        $recibidos = $service_order->equipments()->wherePivot('recibido', true)->get();
+        $faltan = $recibidos->reject(fn (Equipment $eq) => $conChecklist->contains($eq->id));
+
+        if ($recibidos->isNotEmpty() && $faltan->isEmpty() && $service_order->fresh()->estado === 'en_proceso') {
+            return redirect()
+                ->route('tecnico-planta.ejecucion.show', ['current_team' => $current_team, 'service_order' => $service_order])
+                ->with('success', $msg.' Ya están todos revisados: termina el trabajo y emite los certificados.');
+        }
+
         return redirect()
             ->route('tecnico-planta.recepciones.show', [
                 'current_team' => $current_team,

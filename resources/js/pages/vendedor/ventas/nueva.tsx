@@ -630,12 +630,12 @@ export default function NuevaVenta({
             return;
         }
 
-        if (emitir && productoSueltoConDetraccion) {
-            setAviso(
-                'Este producto no es parte del servicio: emítelo en una factura aparte.',
-            );
-            return;
-        }
+        // La regla de producto suelto se muestra como aviso permanente junto a los
+        // ítems (H-5: una sola ubicación). El envío NO se detiene aquí: la
+        // validación definitiva vive en el servidor (DetraccionCalculator), que
+        // es el único que conoce las cantidades realmente respaldadas por los
+        // consumos de taller de la venta. El formulario no duplica esa lógica
+        // fiscal para que no pueda divergir (H-2).
 
         if (
             form.data.condicion_pago === 'credito' &&
@@ -1189,11 +1189,15 @@ export default function NuevaVenta({
                             </div>
                         ) : null}
                         {productoSueltoConDetraccion ? (
-                            <p className="rounded-[7px] border border-amber-300 bg-amber-50 px-3 py-2 text-[11.5px] font-semibold text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-300">
+                            <p
+                                role="alert"
+                                className="rounded-[7px] border border-amber-300 bg-amber-50 px-3 py-2 text-[11.5px] font-semibold text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200"
+                            >
                                 Este producto no es parte del servicio: emítelo
                                 en una factura aparte. La detracción del
                                 servicio se calcula sobre el total del servicio
-                                con su repuesto instalado.
+                                con su repuesto instalado. Al emitir, el sistema
+                                lo valida.
                             </p>
                         ) : null}
                         <ReferenciaField
@@ -1323,8 +1327,9 @@ export default function NuevaVenta({
                                                         {item.tipo_linea ===
                                                         'unidad_nueva'
                                                             ? `Serie ${item.numero_serie}${item.detalle ? ` · ${item.detalle}` : ''}`
-                                                            : item.tipo_linea ===
-                                                                'servicio'
+                                                            : esServicioDeLinea(
+                                                                    item,
+                                                                )
                                                               ? 'Servicio'
                                                               : `Producto${item.stock !== undefined && item.stock !== null ? ` · stock ${item.stock}` : ''}`}
                                                     </span>

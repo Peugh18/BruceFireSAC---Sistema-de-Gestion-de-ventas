@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
+import RoleLayout from '@/layouts/role-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
@@ -19,6 +20,10 @@ void createInertiaApp({
             case name.startsWith('errors/'):
                 // Página de error propia, sin marca del starter-kit ni
                 // sidebar genérico — debe verse igual sin sesión iniciada.
+                return null;
+            case name.startsWith('equipos/'):
+            case name.startsWith('guias/'):
+                // Guias pages already include their AppLayout.
                 return null;
             case name.startsWith('vendedor/'):
                 // Las páginas de vendedor se envuelven a sí mismas con
@@ -39,6 +44,7 @@ void createInertiaApp({
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
+                return [RoleLayout, SettingsLayout];
             case name.startsWith('teams/'):
                 return [AppLayout, SettingsLayout];
             default:

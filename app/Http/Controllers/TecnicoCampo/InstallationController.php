@@ -33,10 +33,8 @@ class InstallationController extends Controller
             ->accessibleToTechnician($request->user())
             ->where('estado', '!=', 'anulada')
             ->with(['client', 'sede', 'equipments'])
-            ->where(function ($q) {
-                $q->where('departamento_tecnico', 'campo')
-                    ->orWhereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%'));
-            })
+            ->where('departamento_tecnico', 'campo')
+            ->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%'))
             ->latest('id');
 
         $baseStatsQuery = clone $query;
@@ -155,6 +153,7 @@ class InstallationController extends Controller
             throw ValidationException::withMessages(['equipos' => 'Falta escanear: '.$faltantes->implode(', ').'.']);
         }
 
+        $serviceOrder->tomarSiLibre($request->user());
         $registerInstallation->execute($serviceOrder, $request->user(), $validated);
 
         if (filled($validated['firma'] ?? null)) {

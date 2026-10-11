@@ -21,15 +21,17 @@ class NotaPorAprobar
     ) {}
 
     /**
+     * @param  array<string, mixed>  $opciones
+     *
      * @throws ValidationException
      */
-    public function solicitar(ElectronicDocument $original, string $tipo, string $motivoCatalogo, string $detalle, float $importe, int $solicitanteId): NoteRequest
+    public function solicitar(ElectronicDocument $original, string $tipo, string $motivoCatalogo, string $detalle, float $importe, int $solicitanteId, array $opciones = []): NoteRequest
     {
         $tipo === 'nota_credito'
             ? $this->issueCreditNote->validar($original, $motivoCatalogo)
             : $this->issueDebitNote->validar($original);
 
-        app(DesgloseNota::class)->calcular($original, $tipo, $motivoCatalogo, $importe);
+        app(DesgloseNota::class)->calcular($original, $tipo, $motivoCatalogo, $importe, $opciones);
 
         return NoteRequest::create([
             'electronic_document_id' => $original->id,
@@ -37,6 +39,7 @@ class NotaPorAprobar
             'motivo_catalogo' => $motivoCatalogo,
             'detalle' => $detalle,
             'importe' => $importe,
+            'nota_datos' => $opciones,
             'solicitado_por' => $solicitanteId,
         ]);
     }
@@ -54,7 +57,7 @@ class NotaPorAprobar
             $original = $solicitud->original()->firstOrFail();
 
             $nota = $solicitud->tipo === 'nota_credito'
-                ? $this->issueCreditNote->handle($original, $solicitud->motivo_catalogo, $solicitud->detalle, (float) $solicitud->importe)
+                ? $this->issueCreditNote->handle($original, $solicitud->motivo_catalogo, $solicitud->detalle, (float) $solicitud->importe, $solicitud->nota_datos ?? [])
                 : $this->issueDebitNote->handle($original, $solicitud->motivo_catalogo, $solicitud->detalle, (float) $solicitud->importe);
 
             $solicitud->update([

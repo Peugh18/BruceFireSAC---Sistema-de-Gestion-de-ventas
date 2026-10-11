@@ -1,3 +1,9 @@
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
 import { router, usePage } from '@inertiajs/react';
 import {
     BadgeAlert,
@@ -9,9 +15,8 @@ import {
     Search,
     TrendingUp,
     Users,
-    X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import GerenteLayout from '@/layouts/gerente-layout';
@@ -97,6 +102,7 @@ function formatCurrency(amount: number): string {
 }
 
 export default function CobranzasConsolidadasIndex() {
+    const modalTrigger = useRef<HTMLElement | null>(null);
     const { currentTeam, cuotas, filters, kpis, vendedores } =
         usePage<PageProps>().props;
 
@@ -491,6 +497,8 @@ export default function CobranzasConsolidadasIndex() {
                                                 <td className="px-4 py-3 text-center">
                                                     <button
                                                         type="button"
+                                                        aria-label={`Ver pagos de ${c.sale_numero}, cuota ${c.numero_cuota}`}
+                                                        title="Ver historial de pagos"
                                                         onClick={() =>
                                                             setViewingPayments(
                                                                 c,
@@ -558,27 +566,34 @@ export default function CobranzasConsolidadasIndex() {
 
                 {/* Modal Detalle de Pagos / Abonos */}
                 {viewingPayments && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="border-border bg-card w-full max-w-lg rounded-xl border p-6 shadow-xl">
+                    <Dialog
+                        open
+                        onOpenChange={(open) => {
+                            if (!open && !false) setViewingPayments(null);
+                        }}
+                    >
+                        <DialogContent
+                            onOpenAutoFocus={() => {
+                                modalTrigger.current =
+                                    document.activeElement as HTMLElement;
+                            }}
+                            onCloseAutoFocus={(event) => {
+                                event.preventDefault();
+                                modalTrigger.current?.focus();
+                            }}
+                            className="border-border bg-card max-h-[90dvh] space-y-4 overflow-y-auto overscroll-contain sm:max-w-lg"
+                        >
                             <div className="border-border flex items-center justify-between border-b pb-3">
                                 <div>
-                                    <h3 className="text-foreground font-['Oswald',sans-serif] text-base font-bold uppercase">
+                                    <DialogTitle className="text-foreground font-['Oswald',sans-serif] text-base font-bold uppercase">
                                         Historial de Pagos —{' '}
                                         {viewingPayments.sale_numero}
-                                    </h3>
-                                    <p className="text-muted-foreground text-xs">
+                                    </DialogTitle>
+                                    <DialogDescription className="text-muted-foreground text-xs">
                                         Cuota #{viewingPayments.numero_cuota} de{' '}
                                         {viewingPayments.cliente.razon_social}
-                                    </p>
+                                    </DialogDescription>
                                 </div>
-                                <button
-                                    aria-label="Cerrar detalle de pagos"
-                                    type="button"
-                                    onClick={() => setViewingPayments(null)}
-                                    className="text-muted-foreground hover:bg-background rounded-md p-1"
-                                >
-                                    <X className="size-4" />
-                                </button>
                             </div>
 
                             <div className="mt-4 space-y-3">
@@ -730,8 +745,8 @@ export default function CobranzasConsolidadasIndex() {
                                     Cerrar
                                 </button>
                             </div>
-                        </div>
-                    </div>
+                        </DialogContent>
+                    </Dialog>
                 )}
             </div>
         </GerenteLayout>

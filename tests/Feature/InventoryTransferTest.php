@@ -114,3 +114,11 @@ test('la guia del traslado conserva origen y bienes aunque el formulario inyecte
     ], $this->user);
     expect($guia->sede_id)->toBe($this->source->id)->and($guia->motivo)->toBe('04')->and((int) $guia->items->sum('cantidad'))->toBe(1);
 });
+
+test('listado de traslados carga guia mas reciente sin columnas ambiguas', function () {
+    $unit = InventoryUnit::factory()->create(['sede_almacen_id' => $this->source->id, 'estado' => 'disponible']);
+    $transfer = app(TransferInventory::class)->handle($this->source->id, ['destination_sede_id' => $this->destination->id, 'serials' => [$unit->numero_serie]], $this->user);
+    $this->actingAs($this->user)->get(route('almacen.traslados.index', ['current_team' => $this->team]))->assertOk();
+    TransferGuide::accepted($transfer, $this->user);
+    $this->actingAs($this->user)->get(route('almacen.traslados.index', ['current_team' => $this->team]))->assertOk()->assertInertia(fn ($page) => $page->where('enTransito.0.guia_aceptada', true));
+});

@@ -425,7 +425,7 @@ export default function FacturacionIndex({
                     </div>
 
                     <p className="text-muted-foreground mb-3 text-[12px]">
-                        {totalFiltrados} comprobante(s) de{' '}
+                        {totalFiltrados} comprobante(s) ·{' '}
                         {describirRango(filters, hoy)}
                         {filters.buscar
                             ? ` que coinciden con «${filters.buscar}»`
@@ -519,7 +519,9 @@ export default function FacturacionIndex({
                             ) : (
                                 <FileSpreadsheet className="size-3.5" />
                             )}
-                            {descargando === 'excel' ? 'Preparando…' : 'Excel'}
+                            {descargando === 'excel'
+                                ? 'Preparando…'
+                                : 'CSV para Excel'}
                         </Button>
                     </div>
 

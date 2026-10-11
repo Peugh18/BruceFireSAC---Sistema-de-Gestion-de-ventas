@@ -299,7 +299,7 @@ class IssueCertificate
                 'capacidad' => $u['capacidad'] ?? $equipo?->capacidad,
                 'marca' => $u['marca'] ?? $equipo?->marca,
                 'tipo_agente' => $u['tipo_agente'] ?? $equipo?->tipo_agente,
-                'anio_fabricacion' => $u['anio_fabricacion'] ?? $equipo?->anio_fabricacion,
+                'anio_fabricacion' => self::anioNumerico($u['anio_fabricacion'] ?? $equipo?->anio_fabricacion),
                 'fecha_ultima_ph' => ! empty($u['fecha_ultima_ph']) ? Carbon::parse($u['fecha_ultima_ph']) : null,
                 'fecha_ultima_recarga' => ! empty($u['fecha_ultima_recarga']) ? Carbon::parse($u['fecha_ultima_recarga']) : null,
                 'presion_ph' => $u['presion_ph'] ?? null,
@@ -351,5 +351,14 @@ class IssueCertificate
         }
 
         return CertificateDateCalculator::proximaOperatividad($fechaBase ?? now());
+    }
+
+    /**
+     * El equipo de alta rápida guarda "No legible / Pendiente de verificar"
+     * como año; el certificado solo admite un año de cuatro cifras.
+     */
+    protected static function anioNumerico(mixed $anio): ?int
+    {
+        return preg_match('/^\d{4}$/', trim((string) $anio)) === 1 ? (int) $anio : null;
     }
 }

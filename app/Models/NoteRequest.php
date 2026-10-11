@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $tipo
  * @property string $motivo_catalogo
  * @property string $detalle
+ * @property array<string, mixed>|null $nota_datos
  * @property string $importe
  * @property string $estado
  * @property int $solicitado_por
@@ -31,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property-read ElectronicDocument|null $nota
  */
 #[Fillable([
+    'nota_datos',
     'electronic_document_id', 'tipo', 'motivo_catalogo', 'detalle', 'importe', 'estado',
     'solicitado_por', 'revisado_por', 'revisado_at', 'motivo_rechazo', 'nota_id',
 ])]
@@ -43,6 +45,7 @@ class NoteRequest extends Model
     {
         return [
             'importe' => 'decimal:2',
+            'nota_datos' => 'array',
             'revisado_at' => 'datetime',
         ];
     }

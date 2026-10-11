@@ -1,11 +1,13 @@
 import { Link, router } from '@inertiajs/react';
-import { Building2, ChevronDown, MessageSquare } from 'lucide-react';
+import { Building2, ChevronDown, FilePlus2, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import WhatsappNumeroDialog from '@/components/whatsapp-numero-dialog';
 import { fechaCorta } from '@/lib/utils';
+import alertas from '@/routes/vendedor/alertas';
 import clientes from '@/routes/vendedor/clientes';
 
 export type EquipoEmpresa = {
@@ -40,6 +42,17 @@ export type Empresa = {
 };
 
 export type PlazoEmpresa = 'todas' | 'vencidas' | '30' | '90';
+
+/** Extintores con serie que ya vencieron o vencen en 30 días: los que se cotizan. */
+function idsParaRecarga(empresa: Empresa): number[] {
+    return empresa.equipos
+        .filter(
+            (equipo) =>
+                equipo.equipment_id !== null &&
+                ['vencido', 'descargado', 'por_vencer'].includes(equipo.estado),
+        )
+        .map((equipo) => equipo.equipment_id as number);
+}
 
 const ESTADO: Record<
     EquipoEmpresa['estado'],
@@ -110,6 +123,23 @@ export default function PorVencerEmpresas({
 }) {
     const [abierta, setAbierta] = useState<number | null>(null);
     const [pidiendoNumero, setPidiendoNumero] = useState<Empresa | null>(null);
+
+    const cotizarRecarga = (empresa: Empresa) =>
+        router.post(
+            alertas.ofrecerRecarga.url(teamSlug),
+            {
+                client_id: empresa.client_id,
+                equipment_ids: idsParaRecarga(empresa),
+            },
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ??
+                            'No se pudo ofrecer la recarga.',
+                    ),
+            },
+        );
 
     if (empresas.length === 0) {
         return (
@@ -209,6 +239,18 @@ export default function PorVencerEmpresas({
                                         </span>
                                     </div>
                                 </div>
+                                {idsParaRecarga(empresa).length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => cotizarRecarga(empresa)}
+                                        title="Una sola cotización con la recarga de todos sus extintores vencidos o por vencer"
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-8 items-center gap-1.5 rounded-[8px] px-3 text-[11.5px] font-bold transition-colors"
+                                    >
+                                        <FilePlus2 className="size-3.5" />
+                                        Cotizar recarga (
+                                        {idsParaRecarga(empresa).length})
+                                    </button>
+                                )}
                                 {empresa.whatsapp ? (
                                     <a
                                         href={mensajeWhatsapp(empresa)}

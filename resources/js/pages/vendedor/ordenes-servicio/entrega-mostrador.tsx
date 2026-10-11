@@ -57,8 +57,8 @@ export default function CounterDelivery({
                         role="alert"
                         className="rounded-xl border border-amber-400 bg-amber-50 p-4 text-sm font-semibold text-amber-900"
                     >
-                        Esta orden todavía no está cobrada. Puedes entregarla,
-                        pero registra el cobro pendiente.
+                        Esta orden todavía no tiene una venta vinculada. Puedes
+                        entregarla, pero registra la venta pendiente.
                     </div>
                 )}
 

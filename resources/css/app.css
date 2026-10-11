@@ -102,7 +102,7 @@
     --secondary: #eeeef0;
     --secondary-foreground: #27272a;
     --muted: #eeeef0;
-    --muted-foreground: #62626b;
+    --muted-foreground: #3a3b42; /* era #62626b: tras el lavado del tema no llegaba a 4.5:1 */
     --accent: #eeeef0;
     --accent-foreground: #18181b;
 
@@ -119,8 +119,10 @@
     --warning: oklch(0.75 0.18 75);
     --warning-foreground: oklch(1 0 0);
     /* Texto de estado sobre fondos claros o tintados: cumple WCAG AA (4.5:1) */
-    --success-strong: oklch(0.508 0.118 165.612); /* emerald-700 */
-    --primary-strong: #d20404; /* rojo de marca */
+    --success-strong: oklch(
+        0.37 0.085 165
+    ); /* era emerald-700: en texto chico no llegaba a 4.5:1 */
+    --primary-strong: #b80303; /* era #d20404: rojo de marca, oscurecido para 4.5:1 en texto chico */
     --warning-strong: oklch(0.555 0.163 48.998); /* amber-700 */
     --info: oklch(0.6 0.15 230);
     --info-foreground: oklch(1 0 0);

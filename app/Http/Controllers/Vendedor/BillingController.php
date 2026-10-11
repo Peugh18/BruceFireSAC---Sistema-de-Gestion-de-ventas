@@ -219,7 +219,7 @@ class BillingController extends Controller
             ->when($plazo === 'vencidos', fn ($query) => $query->vencidosSunat())
             // Fecha del comprobante (la que va a SUNAT), no la de registro.
             ->when(! in_array($plazo, ['por_vencer', 'vencidos'], true), fn ($query) => $query
-                ->whereRaw('COALESCE(fecha_emision, DATE(created_at)) BETWEEN ? AND ?', [$desde->toDateString(), $hasta->toDateString()]))
+                ->whereRaw('DATE(COALESCE(fecha_emision, created_at)) BETWEEN ? AND ?', [$desde->toDateString(), $hasta->toDateString()]))
             ->when($buscar !== '', function ($query) use ($buscar) {
                 $numero = preg_match('/^([A-Z0-9]{4})-0*(\d+)$/i', $buscar, $partes) === 1 ? $partes : null;
 

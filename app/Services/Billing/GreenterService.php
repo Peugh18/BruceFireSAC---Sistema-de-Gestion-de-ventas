@@ -222,7 +222,8 @@ class GreenterService
         $importe = (float) $note->importe;
         $descripcion = $esCredito ? $this->descripcionMotivoCredito($note->motivo_catalogo) : $this->descripcionMotivoDebito($note->motivo_catalogo);
 
-        $desglose = app(DesgloseNota::class)->calcular($original, $note->tipo, (string) $note->motivo_catalogo, $importe);
+        $desglose = $note->nota_datos['desglose'] ?? app(DesgloseNota::class)->calcular($original, $note->tipo, (string) $note->motivo_catalogo, $importe);
+        $descripcion = $note->nota_datos['detalle'] ?? $descripcion;
         $bases = ['10' => 0.0, '20' => 0.0, '30' => 0.0];
         $igv = 0.0;
         $details = [];

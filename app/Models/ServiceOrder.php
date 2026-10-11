@@ -269,7 +269,7 @@ class ServiceOrder extends Model
      * Quién tiene la orden a su cargo, para que el técnico sepa si puede
      * tomarla.
      *
-     * @return array{orden_id: int, area: string, tecnico: string|null, es_mia: bool}
+     * @return array{orden_id: int, area: string, tecnico: string|null, es_mia: bool, finalizada: bool}
      */
     public function asignacionPara(User $user): array
     {
@@ -280,7 +280,22 @@ class ServiceOrder extends Model
             'area' => $this->departamento_tecnico === 'campo' ? 'campo' : 'planta',
             'tecnico' => $this->tecnico?->name,
             'es_mia' => $this->tecnico_id === $user->id,
+            'finalizada' => in_array($this->estado, ['entregado', 'cerrado', 'anulada'], true),
         ];
+    }
+
+    /**
+     * El técnico que registra el trabajo se queda con la orden si nadie la
+     * tenía: no hace falta tomarla aparte antes de terminar.
+     */
+    public function tomarSiLibre(User $user): void
+    {
+        if ($this->tecnico_id !== null) {
+            return;
+        }
+
+        $this->update(['tecnico_id' => $user->id]);
+        $this->events()->create(['tipo' => 'otro', 'user_id' => $user->id, 'payload' => ['accion' => 'orden_tomada', 'mensaje' => "Orden tomada por {$user->name}."]]);
     }
 
     public function coarseLabel(): string

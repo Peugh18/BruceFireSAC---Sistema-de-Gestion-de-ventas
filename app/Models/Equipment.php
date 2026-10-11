@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $client_id
- * @property int $product_id
+ * @property int|null $product_id
  * @property string $numero_serie
  * @property Carbon $fecha_venta
  * @property string|null $ubicacion_actual
@@ -25,7 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Client $client
- * @property-read Product $product
+ * @property-read Product|null $product
  */
 #[Fillable([
     'client_id', 'product_id', 'numero_serie', 'numero_cliente', 'fecha_venta', 'ubicacion_actual',

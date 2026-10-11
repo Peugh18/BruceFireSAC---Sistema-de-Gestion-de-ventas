@@ -42,6 +42,12 @@ class CashRegisterConsolidatedController extends Controller
 
         $cajas = $query->paginate(15)->withQueryString()->through(function (CashRegister $cr) {
             $dif = $cr->diferencia !== null ? (float) $cr->diferencia : null;
+            // PHP conserva el signo de -0.0 y lo serializa como "-0": el servidor
+            // mandaba "-S/ 0.00" y el navegador "S/ 0.00", rompiendo la
+            // hidratación de React. El cero no tiene signo (H-4).
+            if ($dif !== null && abs($dif) < 0.005) {
+                $dif = 0.0;
+            }
             $tipoDiferencia = null;
             if ($cr->estado === 'cerrado' && $dif !== null) {
                 if ($dif === 0.0) {

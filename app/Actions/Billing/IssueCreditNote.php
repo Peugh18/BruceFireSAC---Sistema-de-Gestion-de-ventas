@@ -40,12 +40,15 @@ class IssueCreditNote
         protected RevertSale $revertSale,
     ) {}
 
-    public function handle(ElectronicDocument $original, string $motivoCatalogo09, string $detalle, float $importe): ElectronicDocument
+    /**
+     * @param  array<string, mixed>  $opciones  `lineas` (motivos 03, 05 y 07) y `devolucion_fisica` (01, 02 y 06).
+     */
+    public function handle(ElectronicDocument $original, string $motivoCatalogo09, string $detalle, float $importe, array $opciones = []): ElectronicDocument
     {
         $this->validar($original, $motivoCatalogo09);
-        app(DesgloseNota::class)->calcular($original, 'nota_credito', $motivoCatalogo09, $importe);
+        $desglose = app(DesgloseNota::class)->calcular($original, 'nota_credito', $motivoCatalogo09, $importe, $opciones);
 
-        return DB::transaction(function () use ($original, $motivoCatalogo09, $detalle, $importe) {
+        return DB::transaction(function () use ($original, $motivoCatalogo09, $detalle, $importe, $opciones, $desglose) {
             // Leida de nuevo y bloqueada: la venta pudo anularse desde que se
             // cargo el comprobante, y dos notas a la vez no deben pasar juntas
             // el control del total.
@@ -70,6 +73,13 @@ class IssueCreditNote
                 ]);
             }
 
+            if (in_array($motivoCatalogo09, self::MOTIVOS_QUE_ANULAN, true)
+                && abs($importe + $acreditado - (float) $sale->total) > 0.009) {
+                throw ValidationException::withMessages([
+                    'importe' => 'La anulación, el error de RUC y la devolución total deben acreditar todo lo que falta del comprobante (S/ '.number_format((float) $sale->total - $acreditado, 2).'). Para devolver solo parte usa la devolución por ítem.',
+                ]);
+            }
+
             // Si esta nota anula la venta, al aceptarla SUNAT se devuelve el
             // efectivo cobrado: tiene que caer en la caja abierta del vendedor.
             if (in_array($motivoCatalogo09, self::MOTIVOS_QUE_ANULAN, true)
@@ -90,6 +100,7 @@ class IssueCreditNote
                 'cpe_afectado_id' => $original->id,
                 'motivo_catalogo' => $motivoCatalogo09,
                 'importe' => $importe,
+                'nota_datos' => ['desglose' => $desglose, 'opciones' => $opciones, 'detalle' => $detalle],
                 'sunat_estado' => 'pendiente',
                 'sunat_mensaje' => $detalle,
                 'fecha_emision' => now(),
@@ -158,7 +169,7 @@ class IssueCreditNote
                 ->sum('importe');
 
             if ($aceptado >= (float) $sale->total - 0.001) {
-                $this->revertSale->handle($sale);
+                $this->revertSale->handle($sale, 'por nota de crédito', devolverStock: (bool) ($nota->nota_datos['opciones']['devolucion_fisica'] ?? false));
             }
         });
     }

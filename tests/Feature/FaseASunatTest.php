@@ -165,7 +165,7 @@ test('S5: fecha_emision se guarda como datetime con hora', function () {
 test('S5: buildNote usa la hora de emision persistida no now()', function () {
     [, $factura] = ventaConFactura();
     $hora = now()->subHours(3)->setSecond(0)->setMicrosecond(0);
-    $nota = app(IssueCreditNote::class)->handle($factura, '03', 'Correccion', 10);
+    $nota = app(IssueCreditNote::class)->handle($factura, '10', 'Correccion', 10);
     $nota->update(['fecha_emision' => $hora]);
     $nota->refresh();
     $noteObj = app(GreenterService::class)->buildNote($nota);
@@ -179,7 +179,7 @@ test('S5: buildNote usa la hora de emision persistida no now()', function () {
 test('S6: la nota de credito guarda su fecha_emision al crearse', function () {
     [, $factura] = ventaConFactura();
     $antes = now()->floorSecond();
-    $nota = app(IssueCreditNote::class)->handle($factura, '03', 'Correccion', 10);
+    $nota = app(IssueCreditNote::class)->handle($factura, '10', 'Correccion', 10);
     expect($nota->fecha_emision)->not->toBeNull()
         ->and($nota->fecha_emision->gte($antes))->toBeTrue();
 });

@@ -86,6 +86,6 @@ class CounterDeliveryController extends Controller
 
     protected function deliveryEvent(ServiceOrder $serviceOrder): mixed
     {
-        return $serviceOrder->events()->where('payload->accion', 'entrega_final_realizada')->where('payload->conformidad_aceptada', true)->latest()->first();
+        return $serviceOrder->events()->where('payload->accion', 'entrega_final_realizada')->latest()->first();
     }
 }

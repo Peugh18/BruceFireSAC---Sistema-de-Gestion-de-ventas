@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $fecha_emision
  * @property int|null $cpe_afectado_id
  * @property string|null $motivo_catalogo
+ * @property array<string, mixed>|null $nota_datos
  * @property string|null $importe
  * @property array<string, mixed>|null $datos_emision
  * @property Carbon|null $intento_envio_at
@@ -44,6 +45,7 @@ use Illuminate\Support\Carbon;
  * @property-read ElectronicDocument|null $cpeAfectado
  */
 #[Fillable([
+    'nota_datos',
     'sale_id', 'tipo', 'serie', 'correlativo', 'fecha_emision', 'cpe_afectado_id', 'motivo_catalogo', 'importe',
     'xml_path', 'cdr_path', 'pdf_path', 'pdf_firma', 'sunat_estado', 'sunat_codigo_respuesta',
     'sunat_mensaje', 'enviar_desde', 'enviado_at',
@@ -62,6 +64,7 @@ class ElectronicDocument extends Model
             'intento_envio_at' => 'datetime',
             'correlativo' => 'integer',
             'importe' => 'decimal:2',
+            'nota_datos' => 'array',
             // S5: guardamos la hora de emision (no solo la fecha) para cumplir
             // el requisito SUNAT de incluir la hora en el XML y el PDF.
             'fecha_emision' => 'datetime',

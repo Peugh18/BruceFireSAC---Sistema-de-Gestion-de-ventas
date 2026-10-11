@@ -76,7 +76,7 @@ test('el repuesto consumido en una orden de esa misma venta va en la misma factu
         'sede_id' => Sede::factory()->create()->id,
         'cantidad' => -1,
     ]);
-    lineaProductoSuelto($sale, ['product_id' => $repuesto->id]);
+    lineaProductoSuelto($sale, ['product_id' => $repuesto->id, 'cantidad' => 1]);
 
     $resultado = app(DetraccionCalculator::class)->paraVenta($sale);
 

@@ -1039,8 +1039,16 @@ export default function ClienteShow({
                                                             {soles(v.total)}
                                                         </span>
                                                         <div className="text-[10.5px]">
-                                                            {v.saldo_pendiente >
-                                                            0 ? (
+                                                            {v.estado !==
+                                                            'confirmada' ? (
+                                                                <span className="text-muted-foreground font-semibold">
+                                                                    {v.estado ===
+                                                                    'borrador'
+                                                                        ? 'Borrador'
+                                                                        : 'Anulada'}
+                                                                </span>
+                                                            ) : v.saldo_pendiente >
+                                                              0 ? (
                                                                 <span className="text-warning-strong font-semibold">
                                                                     Saldo:{' '}
                                                                     {soles(
@@ -1302,8 +1310,16 @@ export default function ClienteShow({
                                                                 {soles(v.total)}
                                                             </td>
                                                             <td className="py-3">
-                                                                {v.saldo_pendiente >
-                                                                0 ? (
+                                                                {v.estado !==
+                                                                'confirmada' ? (
+                                                                    <span className="text-muted-foreground font-semibold">
+                                                                        {v.estado ===
+                                                                        'borrador'
+                                                                            ? 'Borrador'
+                                                                            : 'Anulada'}
+                                                                    </span>
+                                                                ) : v.saldo_pendiente >
+                                                                  0 ? (
                                                                     <span className="text-warning-strong font-bold">
                                                                         {soles(
                                                                             v.saldo_pendiente,

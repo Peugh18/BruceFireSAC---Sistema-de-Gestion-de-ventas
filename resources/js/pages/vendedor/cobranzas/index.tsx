@@ -138,8 +138,21 @@ export default function CobranzasIndex({
     // Form: Abrir turno de caja
     const openForm = useForm({
         sede_id: sedes[0]?.id ? String(sedes[0].id) : '',
-        monto_apertura: '0.00',
+        // Se propone lo contado en el último cierre; se puede cambiar.
+        monto_apertura: cierres?.data?.[0]
+            ? Number(cierres.data[0].monto_contado_cierre).toFixed(2)
+            : '0.00',
     });
+
+    // Se propone lo contado en el último cierre (el más reciente al abrir).
+    const abrirDialogoApertura = () => {
+        const ultimo = cierres?.data?.[0];
+        openForm.setData(
+            'monto_apertura',
+            ultimo ? Number(ultimo.monto_contado_cierre).toFixed(2) : '0.00',
+        );
+        setOpenTurnoDialogOpen(true);
+    };
 
     const submitOpenTurno = (e: FormEvent) => {
         e.preventDefault();
@@ -398,9 +411,7 @@ export default function CobranzasIndex({
                                     <Button
                                         aria-label="Abrir turno de caja"
                                         type="button"
-                                        onClick={() =>
-                                            setOpenTurnoDialogOpen(true)
-                                        }
+                                        onClick={() => abrirDialogoApertura()}
                                         className="mt-1 rounded-[9px] bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-none hover:bg-emerald-700"
                                     >
                                         <Unlock className="mr-1.5 size-3.5" />
@@ -484,12 +495,15 @@ export default function CobranzasIndex({
                                         Mis cuentas por cobrar
                                     </span>
                                     <p className="text-muted-foreground mt-0.5 text-[11.5px]">
-                                        Cuotas pendientes o parciales de tus
-                                        clientes
+                                        Cuotas por cobrar y pagos registrados
+                                        hoy
                                     </p>
                                 </div>
                                 <Badge className="text-warning-strong border border-none border-amber-500/20 bg-amber-500/10">
-                                    {installmentRows.length} cuotas
+                                    {installmentRows.length}{' '}
+                                    {installmentRows.length === 1
+                                        ? 'cuota'
+                                        : 'cuotas'}
                                 </Badge>
                             </div>
 
@@ -504,7 +518,7 @@ export default function CobranzasIndex({
                                                 Cuota
                                             </th>
                                             <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
-                                                Monto
+                                                Saldo por cobrar
                                             </th>
                                             <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
                                                 Vencimiento
@@ -569,7 +583,8 @@ export default function CobranzasIndex({
                                                                 )}
                                                             </div>
                                                             <div className="text-muted-foreground text-[10px] font-normal">
-                                                                Saldo de{' '}
+                                                                Importe
+                                                                original:{' '}
                                                                 {soles(
                                                                     inst.monto,
                                                                 )}
@@ -658,7 +673,11 @@ export default function CobranzasIndex({
                                                                 }
                                                                 className="bg-foreground text-background hover:bg-foreground/90 h-7 rounded-[7px] px-3 text-[11px] font-bold shadow-xs transition-colors"
                                                             >
-                                                                Registrar pago
+                                                                {Number(
+                                                                    inst.saldo,
+                                                                ) <= 0
+                                                                    ? 'Pagada'
+                                                                    : 'Registrar pago'}
                                                             </Button>
                                                         </td>
                                                     </tr>

@@ -63,7 +63,7 @@ class GuiaRemisionPrefill
         $items = $orden->equipments->map(fn ($equipo) => [
             'product_id' => $equipo->product_id,
             'codigo' => $equipo->numero_serie,
-            'descripcion' => $equipo->product->nombre.' (serie '.$equipo->numero_serie.')',
+            'descripcion' => ($equipo->product->nombre ?? trim('Extintor '.($equipo->tipo_agente ?? '').' '.($equipo->capacidad ?? ''))).' (serie '.$equipo->numero_serie.')',
             'unidad' => 'NIU',
             'cantidad' => 1,
             'peso_kg' => (float) ($equipo->product->peso_kg ?? 0),

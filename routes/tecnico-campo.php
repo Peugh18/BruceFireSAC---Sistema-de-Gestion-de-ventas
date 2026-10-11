@@ -52,5 +52,6 @@ Route::prefix('tecnico-campo')
         Route::get('entregas', [DeliveryController::class, 'index'])->name('entregas.index');
         Route::get('entregas/{service_order}', [DeliveryController::class, 'show'])->name('entregas.show');
         Route::post('entregas/{service_order}/confirmar', [DeliveryController::class, 'confirm'])->name('entregas.confirm');
+        Route::post('entregas/{service_order}/cerrar', [DeliveryController::class, 'close'])->name('entregas.cerrar');
         Route::get('entregas/{service_order}/acta-pdf', [DeliveryController::class, 'pdf'])->name('entregas.pdf');
     });

@@ -13,7 +13,13 @@ export function useFlashToast(): void {
                 return;
             }
 
-            toast[data.type](data.message);
+            // Un aviso nuevo reemplaza a los anteriores: con el mismo id no se
+            // duplica y los errores se quedan más tiempo para poder leerlos.
+            toast.dismiss();
+            toast[data.type](data.message, {
+                id: `${data.type}:${data.message}`,
+                duration: data.type === 'error' ? 8000 : 4000,
+            });
         });
     }, []);
 }

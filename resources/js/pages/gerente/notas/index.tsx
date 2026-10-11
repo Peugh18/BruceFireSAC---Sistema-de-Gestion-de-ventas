@@ -12,6 +12,7 @@ type Solicitud = {
     tipo: 'nota_credito' | 'nota_debito';
     motivo: string;
     detalle: string;
+    lineas: string[];
     importe: number;
     comprobante: string;
     total_comprobante: number;
@@ -101,6 +102,13 @@ function FilaSolicitud({
                         <span className="font-semibold">Detalle:</span>{' '}
                         {solicitud.detalle}
                     </p>
+                    {solicitud.lineas.length > 0 && (
+                        <ul className="mt-1 list-disc pl-5 text-xs">
+                            {solicitud.lineas.map((linea) => (
+                                <li key={linea}>{linea}</li>
+                            ))}
+                        </ul>
+                    )}
                     <p className="text-muted-foreground mt-1 text-[11px]">
                         Pedida por {solicitud.solicitante}
                         {solicitud.fecha ? ` el ${solicitud.fecha}` : ''}

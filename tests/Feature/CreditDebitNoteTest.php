@@ -25,7 +25,7 @@ test('una nota de crédito de anulación total devuelve stock kardex y anula la 
     // Si lo cobrado fue en efectivo, la devolución sale de la caja abierta.
     CashRegister::factory()->create(['vendedor_id' => $sale->vendedor_id]);
 
-    $nota = aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total));
+    $nota = aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total, ['devolucion_fisica' => true]));
 
     expect($nota->serie)->toBe('FC01')
         ->and($nota->importe)->toBe(number_format((float) $sale->total, 2, '.', ''))
@@ -57,7 +57,7 @@ test('las notas de crédito acumuladas no pueden superar el total del comprobant
 
 test('una venta anulada rechaza nuevas notas de crédito y de débito', function () {
     [$sale, $factura] = ventaConFactura();
-    aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total));
+    aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total, ['devolucion_fisica' => true]));
 
     expect(fn () => app(IssueCreditNote::class)->handle($factura, '04', 'Descuento', 1))
         ->toThrow(ValidationException::class)

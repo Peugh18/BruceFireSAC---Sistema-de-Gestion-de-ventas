@@ -52,58 +52,69 @@ class DetraccionCalculator
         // El repuesto o producto que se instala dentro del servicio es parte del
         // servicio (va en la misma factura y se detrae sobre el total). El
         // producto suelto que no se instala va en factura aparte.
-        $sueltas = $sale->items->reject(fn (SaleItem $item) => $this->esParteDelServicio($item, $sale));
-        if ($sueltas->isNotEmpty()) {
-            throw ValidationException::withMessages([
-                'items' => 'Este producto no es parte del servicio: emítelo en una factura aparte. La detracción del servicio se calcula sobre el total del servicio con su repuesto instalado, no sobre productos vendidos sueltos.',
-            ]);
+        //
+        // Un consumo NO se reutiliza para justificar varias líneas: la cantidad
+        // acreditada no puede superar la realmente respaldada por las salidas de
+        // taller de ESTA venta. Que coincida el product_id no basta.
+        $respaldados = $this->consumosRespaldadosPorProducto($sale);
+        foreach ($sale->items as $item) {
+            if ($this->esParteDelServicioPorAutorizacion($item)) {
+                continue;
+            }
+
+            $cantidad = max(0, (int) $item->cantidad);
+            $productoId = $item->product_id === null ? null : (int) $item->product_id;
+            $disponible = $productoId === null ? 0 : (int) ($respaldados[$productoId] ?? 0);
+
+            if ($disponible < $cantidad) {
+                throw ValidationException::withMessages([
+                    'items' => 'Este producto no es parte del servicio: emítelo en una factura aparte. La detracción del servicio se calcula sobre el total del servicio con su repuesto instalado, no sobre productos vendidos sueltos.',
+                ]);
+            }
+
+            if ($productoId !== null) {
+                $respaldados[$productoId] = $disponible - $cantidad;
+            }
         }
 
         return $this->calcular((float) $sale->total, true, (string) $codigos->first());
     }
 
     /**
-     * Una línea es parte del servicio cuando es el propio servicio, el adicional
-     * que detectó el técnico en una orden (sale_items.deficiency_id) o el
-     * repuesto que se consumió en una orden de servicio de esta misma venta.
+     * Lo que autoriza una línea a ir con el servicio sin consumir del respaldo
+     * físico: el propio servicio o el adicional que detectó el técnico y que el
+     * cliente autorizó (sale_items.deficiency_id).
      */
-    private function esParteDelServicio(SaleItem $item, Sale $sale): bool
+    private function esParteDelServicioPorAutorizacion(SaleItem $item): bool
     {
-        if ($item->esServicio()) {
-            return true;
-        }
-
-        if ($item->deficiency_id !== null) {
-            return true;
-        }
-
-        return $this->esRepuestoConsumidoEnLaVenta($item, $sale);
+        return $item->esServicio() || $item->deficiency_id !== null;
     }
 
     /**
-     * ¿El producto de esta línea salió de Almacén como repuesto instalado en una
-     * orden de servicio de esta venta?
+     * Cantidades que salieron de Almacén instaladas en órdenes de servicio de
+     * esta venta, por producto. Es lo único que respalda una línea suelta.
+     *
+     * @return array<int,int>
      */
-    private function esRepuestoConsumidoEnLaVenta(SaleItem $item, Sale $sale): bool
+    private function consumosRespaldadosPorProducto(Sale $sale): array
     {
-        if ($item->product_id === null) {
-            return false;
-        }
-
         $deficiencias = Deficiency::query()
             ->whereHas('serviceOrder', fn ($q) => $q->where('sale_id', $sale->id))
             ->pluck('id');
 
         if ($deficiencias->isEmpty()) {
-            return false;
+            return [];
         }
 
         return InventoryMovement::query()
             ->where('tipo', 'salida_servicio')
-            ->where('product_id', $item->product_id)
             ->where('referencia_type', (new Deficiency)->getMorphClass())
             ->whereIn('referencia_id', $deficiencias)
-            ->exists();
+            ->whereNotNull('product_id')
+            ->get(['product_id', 'cantidad'])
+            ->groupBy('product_id')
+            ->map(fn ($movs) => (int) abs($movs->sum('cantidad')))
+            ->all();
     }
 
     /** @return array{aplica:bool,monto:float,codigo_bien:string} */

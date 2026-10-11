@@ -33,7 +33,7 @@ class TransferController extends Controller
             'enTransito' => InventoryTransfer::query()
                 ->whereIn('estado', [InventoryTransfer::PENDIENTE_GUIA, InventoryTransfer::EN_TRANSITO])
                 ->when($request->user()->almacenRestringidoId(), fn ($query, int $almacen) => $query->where(fn ($q) => $q->where('origen_sede_id', $almacen)->orWhere('destino_sede_id', $almacen)))
-                ->with('origen:id,nombre', 'destino:id,nombre', 'guia:id,inventory_transfer_id,estado_sunat,cdr_path', 'items')
+                ->with('origen:id,nombre', 'destino:id,nombre', 'guia:dispatch_guides.id,dispatch_guides.inventory_transfer_id,dispatch_guides.estado_sunat,dispatch_guides.cdr_path', 'items')
                 ->latest('id')
                 ->get()
                 ->map(fn (InventoryTransfer $t) => [

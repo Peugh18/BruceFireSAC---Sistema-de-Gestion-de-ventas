@@ -4,6 +4,7 @@ use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Models\CertificateType;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Quote;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -45,4 +46,17 @@ test('por vencer crea una cotizacion de recarga con el extintor ligado', functio
     $this->actingAs($seller)->post(route('vendedor.alertas.ofrecer-recarga', ['current_team' => $seller->currentTeam]), ['client_id' => $client->id, 'equipment_ids' => [$equipment->id]])->assertRedirect();
 
     expect($equipment->quotes()->count())->toBe(1);
+});
+
+test('ofrecer la recarga de una empresa crea una sola cotización con la cantidad de extintores por servicio', function () {
+    $seller = vendedorUser();
+    $client = Client::factory()->create();
+    $equipos = Equipment::factory()->count(3)->create(['client_id' => $client->id, 'tipo_agente' => 'PQS ABC', 'capacidad' => '6 kg']);
+    Service::factory()->create(['nombre' => 'Recarga de extintor', 'agente' => 'pqs', 'capacidad' => '6 kg', 'activo' => true, 'precio_venta' => 50]);
+
+    $this->actingAs($seller)->post(route('vendedor.alertas.ofrecer-recarga', ['current_team' => $seller->currentTeam]), ['client_id' => $client->id, 'equipment_ids' => $equipos->modelKeys()])->assertRedirect();
+
+    $cotizacion = Quote::query()->where('client_id', $client->id)->sole();
+    expect($cotizacion->items()->sole()->cantidad)->toEqual(3)
+        ->and($cotizacion->equipments()->count())->toBe(3);
 });

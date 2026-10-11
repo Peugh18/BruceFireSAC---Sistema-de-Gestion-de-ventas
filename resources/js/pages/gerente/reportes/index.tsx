@@ -19,6 +19,9 @@ type ComercialData = {
     fechaDesde: string;
     fechaHasta: string;
     totalVentas: number;
+    ventasOriginales: number;
+    notasCredito: number;
+    notasDebito: number;
     cantidadVentas: number;
     ticketPromedio: number;
     tasaConversion: number;
@@ -303,7 +306,7 @@ export default function ReportesIndex() {
                             <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
                                 <div className="text-muted-foreground flex items-center justify-between text-xs">
                                     <span className="font-medium uppercase">
-                                        Ventas Totales
+                                        Ventas netas
                                     </span>
                                     <CircleDollarSign className="text-success-strong size-4" />
                                 </div>
@@ -313,7 +316,19 @@ export default function ReportesIndex() {
                                     )}
                                 </div>
                                 <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Monto neto sin notas anuladas
+                                    Originales{' '}
+                                    {formatCurrency(
+                                        reporteComercial.ventasOriginales,
+                                    )}{' '}
+                                    − notas de crédito{' '}
+                                    {formatCurrency(
+                                        reporteComercial.notasCredito,
+                                    )}{' '}
+                                    + notas de débito{' '}
+                                    {formatCurrency(
+                                        reporteComercial.notasDebito,
+                                    )}
+                                    , aceptadas en el período.
                                 </p>
                             </div>
 

@@ -18,8 +18,11 @@ use App\Services\Billing\GuiaRemisionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
@@ -32,12 +35,21 @@ class DispatchGuideController extends Controller
     public function index(Team $current_team, Request $request): Response
     {
         $guias = $this->visibles($request->user())
-            ->with('sede:id,nombre')
+            ->with(['sede:id,nombre', 'sale:id,numero_interno', 'serviceOrder:id,codigo'])
             ->latest('id')
             ->paginate(20)
             ->through(fn (DispatchGuide $guia) => [
                 'id' => $guia->id,
+                'detalle_url' => route('guias.show', ['current_team' => $current_team, 'guide' => $guia]),
+                'puede_enviar' => $request->user()->can('guias_remision.create') && $guia->estado_sunat === DispatchGuide::BORRADOR,
                 'numero' => $guia->numero(),
+                'origen' => match (true) {
+                    $guia->sale !== null => 'Venta '.$guia->sale->numero_interno,
+                    $guia->serviceOrder !== null => 'Orden '.$guia->serviceOrder->codigo,
+                    $guia->inventory_transfer_id !== null => 'Traslado #'.$guia->inventory_transfer_id,
+                    default => 'Sin operación vinculada',
+                },
+                'comprobante_relacionado' => $guia->doc_relacionado_numero,
                 'fecha_traslado' => $guia->fecha_traslado->format('d/m/Y'),
                 'motivo' => DispatchGuide::MOTIVOS[$guia->motivo] ?? $guia->motivo,
                 'destinatario' => $guia->destinatario_nombre,
@@ -50,22 +62,131 @@ class DispatchGuideController extends Controller
         return Inertia::render('guias/index', ['guias' => $guias]);
     }
 
+    public function show(Team $current_team, Request $request, DispatchGuide $guide): Response
+    {
+        $this->asegurarVisible($request->user(), $guide);
+        $guide->load('sede', 'items', 'vehiculo', 'conductor', 'sale', 'serviceOrder', 'traslado');
+        $user = $request->user();
+        $origen = ['descripcion' => 'Sin operación vinculada', 'url' => null, 'crear_url' => null];
+        if ($guide->sale !== null) {
+            $origen['descripcion'] = 'Venta '.$guide->sale->numero_interno;
+            if ($user->hasRole('Vendedor') && $user->can('sales.view') && Sale::query()->visiblePara($user)->whereKey($guide->sale_id)->exists()) {
+                $origen['url'] = route('vendedor.ventas.show', ['current_team' => $current_team, 'sale' => $guide->sale]);
+            }
+            $tipo = 'venta';
+            $id = $guide->sale_id;
+        } elseif ($guide->serviceOrder !== null) {
+            $origen['descripcion'] = 'Orden '.$guide->serviceOrder->codigo;
+            $tipo = str_contains(mb_strtolower($guide->motivo_descripcion ?? ''), 'recojo') ? 'recojo' : 'entrega';
+            $id = $guide->service_order_id;
+            if ($user->hasRole('Vendedor') && $user->can('service_orders.view') && ServiceOrder::query()->visiblePara($user)->whereKey($id)->exists()) {
+                $origen['url'] = route('vendedor.ordenes-servicio.show', ['current_team' => $current_team, 'service_order' => $guide->serviceOrder]);
+            } elseif ($user->hasRole('TecnicoCampo') && $guide->serviceOrder->atendiblePor($user)) {
+                $origen['url'] = route('tecnico-campo.'.($tipo === 'recojo' ? 'recojos' : 'entregas').'.show', ['current_team' => $current_team, 'service_order' => $guide->serviceOrder]);
+            }
+        } elseif ($guide->traslado !== null) {
+            $origen['descripcion'] = 'Traslado #'.$guide->inventory_transfer_id;
+            $tipo = 'traslado';
+            $id = $guide->inventory_transfer_id;
+            if ($user->hasRole('Almacen')) {
+                $origen['url'] = route('almacen.traslados.index', ['current_team' => $current_team]);
+            }
+        }
+        if (isset($tipo, $id) && $user->can('guias_remision.create')) {
+            $origen['crear_url'] = route('guias.create', ['current_team' => $current_team, 'origen' => $tipo, 'id' => $id]);
+        }
+        $documentos = [];
+        foreach (['xml' => $guide->xml_path, 'cdr' => $guide->cdr_path] as $tipoDocumento => $path) {
+            if ($path !== null && Storage::disk('local')->exists($path)) {
+                $documentos[$tipoDocumento] = route('guias.documento', ['current_team' => $current_team, 'guide' => $guide, 'tipo' => $tipoDocumento]);
+            }
+        }
+
+        return Inertia::render('guias/show', [
+            'guia' => [
+                ...$guide->only(['id', 'estado_sunat', 'motivo_descripcion', 'modalidad', 'destinatario_tipo_doc', 'destinatario_num_doc', 'destinatario_nombre', 'partida_ubigeo', 'partida_direccion', 'llegada_ubigeo', 'llegada_direccion', 'peso_bruto', 'transport_vehicle_id', 'driver_id', 'transportista_ruc', 'transportista_razon', 'doc_relacionado_tipo', 'doc_relacionado_numero', 'sunat_ticket', 'sunat_codigo', 'sunat_mensaje']),
+                'numero' => $guide->numero(), 'sede' => $guide->sede->nombre,
+                'fecha_emision' => $guide->fecha_emision->format('d/m/Y H:i'), 'fecha_traslado' => $guide->fecha_traslado->toDateString(),
+                'motivo' => DispatchGuide::MOTIVOS[$guide->motivo] ?? $guide->motivo,
+                'items' => $guide->items, 'vehiculo' => $guide->vehiculo?->placa,
+                'conductor' => $guide->conductor === null ? null : $guide->conductor->nombres.' '.$guide->conductor->apellidos,
+                'origen' => $origen, 'documentos' => $documentos,
+                'lista_para_trasladar' => $guide->estaListaParaTrasladar(),
+                'puede_editar' => $user->can('guias_remision.create') && $this->esBorradorEditable($guide),
+                'puede_enviar' => $user->can('guias_remision.create') && in_array($guide->estado_sunat, [DispatchGuide::BORRADOR, 'rechazada'], true),
+            ],
+            'vehiculos' => TransportVehicle::query()->where('activo', true)->get(['id', 'placa']),
+            'conductores' => Driver::query()->where('activo', true)->get(['id', 'nombres', 'apellidos']),
+        ]);
+    }
+
+    public function documento(Team $current_team, Request $request, DispatchGuide $guide, string $tipo): StreamedResponse
+    {
+        $this->asegurarVisible($request->user(), $guide);
+        $path = match ($tipo) {
+            'xml' => $guide->xml_path, 'cdr' => $guide->cdr_path, default => null
+        };
+        abort_unless($path !== null && Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->download($path, $guide->numero().($tipo === 'xml' ? '.xml' : '-CDR.zip'));
+    }
+
+    public function update(Team $current_team, Request $request, DispatchGuide $guide): RedirectResponse
+    {
+        $this->asegurarVisible($request->user(), $guide);
+        abort_unless($this->esBorradorEditable($guide), 403);
+        $rules = (new StoreDispatchGuideRequest)->rules();
+        $campos = ['fecha_traslado', 'modalidad', 'peso_bruto', 'transport_vehicle_id', 'driver_id', 'transportista_ruc', 'transportista_razon'];
+        $datos = $request->validate(array_intersect_key($rules, array_flip($campos)));
+        DB::transaction(function () use ($guide, $datos): void {
+            $bloqueada = DispatchGuide::query()->whereKey($guide->id)->lockForUpdate()->firstOrFail();
+            abort_unless($this->esBorradorEditable($bloqueada), 403);
+            $bloqueada->update($datos + ($datos['modalidad'] === '01' ? ['transport_vehicle_id' => null, 'driver_id' => null] : ['transportista_ruc' => null, 'transportista_razon' => null]));
+        });
+
+        return back()->with('success', 'Transporte del borrador actualizado. El número, origen y bienes se conservaron.');
+    }
+
+    protected function esBorradorEditable(DispatchGuide $guide): bool
+    {
+        return $guide->estado_sunat === DispatchGuide::BORRADOR && $guide->sunat_ticket === null
+            && $guide->enviado_at === null && $guide->xml_path === null && $guide->cdr_path === null;
+    }
+
     public function create(Team $current_team, Request $request, GuiaRemisionPrefill $prefill): Response
     {
         $user = $request->user();
         $origen = $request->string('origen')->toString();
         $id = $request->integer('id');
 
-        $datos = match ($origen) {
-            'venta' => $prefill->desdeVenta(Sale::query()->visiblePara($user)->whereKey($id)->firstOrFail()),
-            'recojo', 'entrega' => $prefill->desdeOrden($this->orden($user, $id), $origen),
-            'traslado' => $prefill->desdeTraslado($this->traslado($user, $id)),
+        $fuente = match ($origen) {
+            'venta' => Sale::query()->visiblePara($user)->whereKey($id)->firstOrFail(),
+            'recojo', 'entrega' => $this->orden($user, $id),
+            'traslado' => $this->traslado($user, $id),
             default => abort(404),
+        };
+        $datos = match (true) {
+            $fuente instanceof Sale => $prefill->desdeVenta($fuente),
+            $fuente instanceof ServiceOrder => $prefill->desdeOrden($fuente, $origen),
+            default => $prefill->desdeTraslado($fuente),
+        };
+        $descripcion = match (true) {
+            $fuente instanceof Sale => 'Venta '.$fuente->numero_interno,
+            $fuente instanceof ServiceOrder => ucfirst($origen).' de '.$fuente->codigo,
+            default => 'Traslado #'.$fuente->id,
+        };
+        $regreso = match (true) {
+            $fuente instanceof Sale && $user->hasRole('Vendedor') && $user->can('sales.view') => route('vendedor.ventas.show', ['current_team' => $current_team, 'sale' => $fuente]),
+            $fuente instanceof ServiceOrder && $user->hasRole('Vendedor') && $user->can('service_orders.view') => route('vendedor.ordenes-servicio.show', ['current_team' => $current_team, 'service_order' => $fuente]),
+            $fuente instanceof ServiceOrder && $user->hasRole('TecnicoCampo') && $fuente->atendiblePor($user) => route('tecnico-campo.'.($origen === 'recojo' ? 'recojos' : 'entregas').'.show', ['current_team' => $current_team, 'service_order' => $fuente]),
+            $fuente instanceof InventoryTransfer && $user->hasRole('Almacen') => route('almacen.traslados.index', ['current_team' => $current_team]),
+            default => route('guias.index', ['current_team' => $current_team]),
         };
 
         $peso = array_sum(array_column($datos['items'], 'peso_kg'));
 
         return Inertia::render('guias/form', [
+            'origen' => ['descripcion' => $descripcion, 'url' => $regreso],
             'datos' => [
                 ...$datos,
                 'modalidad' => '02',

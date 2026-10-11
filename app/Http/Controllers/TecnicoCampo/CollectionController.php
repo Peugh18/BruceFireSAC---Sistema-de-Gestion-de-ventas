@@ -37,6 +37,10 @@ class CollectionController extends Controller
                 $q->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%recojo%'))
                     ->orWhere('estado', 'pendiente_recepcion');
             })
+            // Las demás actividades de campo tienen su propia cola.
+            ->whereDoesntHave('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')
+                ->orWhere('nombre', 'like', '%instalac%')
+                ->orWhere('nombre', 'like', '%mantenim%'))
             ->with([
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento,direccion_fiscal',
                 'vehicle:id,placa,marca',

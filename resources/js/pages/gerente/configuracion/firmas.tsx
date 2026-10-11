@@ -361,13 +361,13 @@ function TarjetaFirmante({
             <div className="grid gap-2 sm:grid-cols-[1fr_1fr_90px]">
                 <div>
                     <Label
-                        htmlFor="gerente-configuracion-firmas-nombre"
+                        htmlFor={`gerente-configuracion-firmas-nombre-${firmante.id}`}
                         className={etiqueta}
                     >
                         Nombre
                     </Label>
                     <Input
-                        id="gerente-configuracion-firmas-nombre"
+                        id={`gerente-configuracion-firmas-nombre-${firmante.id}`}
                         value={datos.nombre}
                         onChange={(e) =>
                             setDatos({ ...datos, nombre: e.target.value })
@@ -376,13 +376,13 @@ function TarjetaFirmante({
                 </div>
                 <div>
                     <Label
-                        htmlFor="gerente-configuracion-firmas-cargo"
+                        htmlFor={`gerente-configuracion-firmas-cargo-${firmante.id}`}
                         className={etiqueta}
                     >
                         Cargo
                     </Label>
                     <Input
-                        id="gerente-configuracion-firmas-cargo"
+                        id={`gerente-configuracion-firmas-cargo-${firmante.id}`}
                         value={datos.cargo}
                         onChange={(e) =>
                             setDatos({ ...datos, cargo: e.target.value })
@@ -391,13 +391,13 @@ function TarjetaFirmante({
                 </div>
                 <div>
                     <Label
-                        htmlFor="gerente-configuracion-firmas-cip"
+                        htmlFor={`gerente-configuracion-firmas-cip-${firmante.id}`}
                         className={etiqueta}
                     >
                         CIP
                     </Label>
                     <Input
-                        id="gerente-configuracion-firmas-cip"
+                        id={`gerente-configuracion-firmas-cip-${firmante.id}`}
                         value={datos.cip}
                         onChange={(e) =>
                             setDatos({ ...datos, cip: e.target.value })

@@ -257,7 +257,7 @@ export default function GerenteDashboard({
                             {formatCurrency(metrics.ventasMes)}
                         </div>
                         <p className="text-muted-foreground mt-1 text-[11px]">
-                            Total acumulado en el mes
+                            Ventas menos notas de crédito aceptadas u observadas
                         </p>
                     </div>
 

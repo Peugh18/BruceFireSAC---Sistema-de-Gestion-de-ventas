@@ -15,12 +15,17 @@ class CertificadosDeVenta
     /**
      * @return list<array<string, mixed>>
      */
-    public static function deLaVenta(Sale $sale): array
+    public static function deLaVenta(Sale $sale, bool $incluirOrdenes = false): array
     {
         $certificados = Certificate::query()
             ->with('certificateType')
             ->withCount('certificateUnits')
-            ->where('sale_id', $sale->id)
+            ->where(fn ($query) => $query
+                ->where('sale_id', $sale->id)
+                ->when($incluirOrdenes, fn ($query) => $query->orWhereHas('serviceOrder', fn ($order) => $order
+                    ->where('sale_id', $sale->id)
+                    ->where('client_id', $sale->client_id)
+                    ->where('sede_id', $sale->sede_id))))
             ->orderBy('id')
             ->get();
 

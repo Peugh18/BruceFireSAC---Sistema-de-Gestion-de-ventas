@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gerente;
 
 use App\Http\Controllers\Controller;
+use App\Models\ElectronicDocument;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Sale;
@@ -113,9 +114,21 @@ class ReportController extends Controller
             ->whereBetween('fecha', [$fechaDesde, $fechaHasta])
             ->when($vendedorId, fn ($q) => $q->where('vendedor_id', $vendedorId));
 
-        $totalVentas = (float) $salesQuery->sum('total');
+        // El comprobante original no se edita: las notas aceptadas u observadas
+        // se restan (crédito) o suman (débito) en el período de su emisión.
+        $ventasOriginales = (float) $salesQuery->sum('total');
         $cantidadVentas = (int) $salesQuery->count();
-        $ticketPromedio = $cantidadVentas > 0 ? round($totalVentas / $cantidadVentas, 2) : 0.0;
+        $notas = ElectronicDocument::query()
+            ->whereIn('sale_id', Sale::query()->whereIn('estado', ['confirmada', 'anulada'])
+                ->when($vendedorId, fn ($q) => $q->where('vendedor_id', $vendedorId))->select('id'))
+            ->whereIn('tipo', ['nota_credito', 'nota_debito'])
+            ->whereIn('sunat_estado', ['aceptado', 'observado'])
+            ->whereBetween('fecha_emision', [$fechaDesde, $fechaHasta])
+            ->selectRaw('tipo, sum(importe) as total')->groupBy('tipo')->pluck('total', 'tipo');
+        $notasCredito = (float) ($notas['nota_credito'] ?? 0);
+        $notasDebito = (float) ($notas['nota_debito'] ?? 0);
+        $totalVentas = $ventasOriginales - $notasCredito + $notasDebito;
+        $ticketPromedio = $cantidadVentas > 0 ? round($ventasOriginales / $cantidadVentas, 2) : 0.0;
 
         // Tasa de conversión de cotizaciones en el período
         // Las cotizaciones en borrador o anuladas no se ofrecieron al cliente.
@@ -187,6 +200,9 @@ class ReportController extends Controller
             'fechaDesde' => $fechaDesde,
             'fechaHasta' => $fechaHasta,
             'totalVentas' => round($totalVentas, 2),
+            'ventasOriginales' => round($ventasOriginales, 2),
+            'notasCredito' => round($notasCredito, 2),
+            'notasDebito' => round($notasDebito, 2),
             'cantidadVentas' => $cantidadVentas,
             'ticketPromedio' => $ticketPromedio,
             'tasaConversion' => $tasaConversion,

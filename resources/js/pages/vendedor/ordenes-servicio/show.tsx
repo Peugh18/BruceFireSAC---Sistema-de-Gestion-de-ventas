@@ -22,14 +22,22 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import equiposRoutes from '@/routes/equipos';
 import comunicacion from '@/routes/vendedor/comunicacion';
 import ordenes from '@/routes/vendedor/ordenes-servicio';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
 import OpcionesAgente from '@/components/opciones-agente';
 import EntregaMostradorRoutes from '@/routes/vendedor/ordenes-servicio/entrega-mostrador';
+import {
+    DeficienciaCard,
+    type DeficiencyItem,
+    useAccionesDeficiencia,
+} from '@/components/deficiencias-vendedor';
 import EquiposRoutes from '@/routes/vendedor/ordenes-servicio/equipos';
 import VentasRoutes from '@/routes/vendedor/ventas';
+import CotizacionesRoutes from '@/routes/vendedor/cotizaciones';
+import CertificadosRoutes from '@/routes/vendedor/certificados';
 
 export type ServiceOrderEvent = {
     id: number;
@@ -69,6 +77,9 @@ export type ServiceOrderDetails = {
         email?: string;
     } | null;
     sale_id?: number | null;
+    sale?: { id: number; numero_interno: string; estado: string } | null;
+    quote?: { id: number; numero: string; estado: string } | null;
+    certificates?: { id: number; numero: string; estado: string }[];
     equipments: Array<{
         id: number;
         numero_serie: string;
@@ -82,7 +93,9 @@ export type ServiceOrderDetails = {
 export type Props = {
     serviceOrder: ServiceOrderDetails;
     tecnicos: { id: number; name: string }[];
+    tecnicosEntrega: { id: number; name: string }[];
     services: { id: number; nombre: string }[];
+    deficiencias: DeficiencyItem[];
 };
 
 /** Cada estado técnico dicho como lo entiende la vendedora. */
@@ -128,6 +141,8 @@ function tituloDeEvento(evt: ServiceOrderEvent): string {
         typeof evt.payload?.accion === 'string' ? evt.payload.accion : '';
     const porAccion: Record<string, string> = {
         tecnico_asignado: 'Técnico asignado',
+        entrega_asignada: 'Entrega asignada a Campo',
+        orden_cerrada: 'Orden cerrada',
         orden_tomada: 'El técnico tomó la orden',
         orden_editada: 'Orden editada por ventas',
         entrega_final_realizada: 'Entregado al cliente',
@@ -200,7 +215,9 @@ function getCoarseStep(estado: string): number {
 export default function ServiceOrderShow({
     serviceOrder,
     tecnicos,
+    tecnicosEntrega,
     services,
+    deficiencias,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -209,6 +226,73 @@ export default function ServiceOrderShow({
             ? window.location.pathname.split('/')[1]
             : '');
 
+    const acciones = useAccionesDeficiencia(teamSlug);
+
+    const nextSteps: Record<string, { responsable: string; texto: string }> = {
+        pendiente_recepcion: {
+            responsable:
+                serviceOrder.departamento_tecnico === 'campo'
+                    ? 'Técnico de campo'
+                    : 'Recepción de taller',
+            texto:
+                serviceOrder.departamento_tecnico === 'campo'
+                    ? 'Coordinar la visita y revisar los equipos de esta orden.'
+                    : 'Confirmar los equipos que llegaron antes de iniciar su revisión.',
+        },
+        recibido_planta: {
+            responsable: 'Técnico de planta',
+            texto: 'Revisar cada equipo y registrar los hallazgos del checklist.',
+        },
+        en_revision: {
+            responsable: 'Técnico',
+            texto: 'Completar la revisión y comunicar los adicionales que requieran autorización.',
+        },
+        esperando_autorizacion: {
+            responsable: 'Vendedor',
+            texto: 'Revisar los adicionales y registrar la decisión del cliente antes de continuar el trabajo autorizado.',
+        },
+        autorizado: {
+            responsable: 'Técnico',
+            texto: 'Continuar únicamente con el trabajo autorizado y registrar los repuestos utilizados.',
+        },
+        en_proceso: {
+            responsable: 'Técnico',
+            texto: 'Completar el trabajo y registrar su resultado. Revisa los eventos para conocer los pendientes.',
+        },
+        trabajo_terminado: {
+            responsable: 'Técnico / Vendedor',
+            texto: 'Revisar los datos técnicos y los requisitos pendientes para el cierre y el certificado.',
+        },
+        pendiente_datos: {
+            responsable: 'Técnico / Vendedor',
+            texto: 'Completar los datos requeridos del certificado sin inventar fechas ni resultados.',
+        },
+        datos_completos: {
+            responsable: 'Responsable del certificado',
+            texto: 'Revisar los equipos aptos y emitir el certificado cuando se cumplan los requisitos.',
+        },
+        listo_certificado: {
+            responsable: 'Vendedor / Entrega',
+            texto: 'Comprobar el certificado y coordinar la entrega con la conformidad del cliente.',
+        },
+        listo_entrega: {
+            responsable: 'Vendedor / Técnico de campo',
+            texto: 'Coordinar la entrega y registrar el acta o conformidad correspondiente.',
+        },
+        entregado: {
+            responsable: 'Vendedor / Técnico de campo',
+            texto: 'Revisar el acta y la conformidad antes del cierre administrativo.',
+        },
+        cerrado: {
+            responsable: 'Orden cerrada',
+            texto: 'Consulta los documentos y el historial. El cierre técnico no confirma por sí solo que la venta esté pagada.',
+        },
+        anulada: {
+            responsable: 'Orden anulada',
+            texto: 'Consulta el motivo y el historial de la anulación.',
+        },
+    };
+    const nextStep = nextSteps[serviceOrder.estado];
     const currentStep = getCoarseStep(serviceOrder.estado);
     const editable = !['entregado', 'cerrado', 'anulada'].includes(
         serviceOrder.estado,
@@ -237,6 +321,7 @@ export default function ServiceOrderShow({
     };
     const [editando, setEditando] = useState(false);
     const [tecnicoElegido, setTecnicoElegido] = useState('');
+    const entrega = useForm({ tecnico_id: '' });
     const edicion = useForm({
         service_id: serviceOrder.service_id
             ? String(serviceOrder.service_id)
@@ -372,7 +457,7 @@ export default function ServiceOrderShow({
                                 <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
                                     {serviceOrder.codigo}
                                 </h2>
-                                <Badge className="border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                <Badge className="border border-blue-500/20 bg-blue-500/10 text-blue-800 dark:text-blue-300">
                                     {ESTADOS[serviceOrder.estado] ??
                                         serviceOrder.estado.replace(/_/g, ' ')}
                                 </Badge>
@@ -434,9 +519,10 @@ export default function ServiceOrderShow({
                             className="border-border bg-card text-foreground/80 rounded-[9px] text-xs font-semibold"
                         >
                             <Link
-                                href={comunicacion.index.url({
-                                    current_team: teamSlug,
-                                })}
+                                href={comunicacion.index.url(
+                                    { current_team: teamSlug },
+                                    { query: { orden: serviceOrder.id } },
+                                )}
                             >
                                 <MessageCircle className="mr-1.5 size-3.5" />
                                 <span>Ver en Seguimiento de taller</span>
@@ -445,6 +531,131 @@ export default function ServiceOrderShow({
                     </div>
                 </div>
 
+                <section
+                    aria-labelledby="orden-continuar-titulo"
+                    className="bg-card space-y-4 rounded-xl border p-4"
+                >
+                    <div>
+                        <h3
+                            id="orden-continuar-titulo"
+                            className="font-semibold"
+                        >
+                            Para continuar esta orden
+                        </h3>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            {nextStep?.texto ??
+                                'Revisa el estado y los eventos de esta orden.'}
+                        </p>
+                        {nextStep && (
+                            <p className="mt-2 text-sm">
+                                <strong>Responsable del siguiente paso:</strong>{' '}
+                                {nextStep.responsable}
+                            </p>
+                        )}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-lg border p-3">
+                            <p className="text-muted-foreground text-xs">
+                                Cotización vinculada
+                            </p>
+                            {serviceOrder.quote ? (
+                                <a
+                                    className="inline-flex min-h-11 items-center text-sm font-medium underline"
+                                    href={CotizacionesRoutes.pdf.url({
+                                        current_team: teamSlug,
+                                        quote: serviceOrder.quote.id,
+                                    })}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    {serviceOrder.quote.numero} · Ver PDF
+                                </a>
+                            ) : (
+                                <p className="mt-2 text-sm">
+                                    Sin cotización vinculada
+                                </p>
+                            )}
+                        </div>
+                        <div className="rounded-lg border p-3">
+                            <p className="text-muted-foreground text-xs">
+                                Venta vinculada
+                            </p>
+                            {serviceOrder.sale ? (
+                                <Link
+                                    className="inline-flex min-h-11 items-center text-sm font-medium underline"
+                                    href={VentasRoutes.show.url({
+                                        current_team: teamSlug,
+                                        sale: serviceOrder.sale.id,
+                                    })}
+                                >
+                                    {serviceOrder.sale.numero_interno} · Ver
+                                    venta
+                                </Link>
+                            ) : (
+                                <p className="mt-2 text-sm">
+                                    Sin venta vinculada
+                                </p>
+                            )}
+                            <p className="text-muted-foreground mt-1 text-xs">
+                                Consulta el saldo y los pagos desde la venta.
+                            </p>
+                        </div>
+                        <div className="rounded-lg border p-3">
+                            <p className="text-muted-foreground text-xs">
+                                Certificados de esta orden
+                            </p>
+                            {serviceOrder.certificates?.length ? (
+                                serviceOrder.certificates.map((certificate) => (
+                                    <Link
+                                        key={certificate.id}
+                                        className="flex min-h-11 items-center text-sm font-medium underline"
+                                        href={CertificadosRoutes.show.url({
+                                            current_team: teamSlug,
+                                            certificate: certificate.id,
+                                        })}
+                                    >
+                                        {certificate.numero} ·{' '}
+                                        {certificate.estado}
+                                    </Link>
+                                ))
+                            ) : (
+                                <p className="mt-2 text-sm">
+                                    Sin certificado emitido
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
+                        Trabajo, documentos, entrega y pago tienen avances
+                        distintos. Usa la venta para comprobar el cobro y los
+                        eventos para comprobar la entrega.
+                    </p>
+                </section>
+                {deficiencias.length > 0 && (
+                    <section
+                        aria-label="Hallazgos de la orden"
+                        className="space-y-3"
+                    >
+                        <div>
+                            <h3 className="font-bold">
+                                Hallazgos y adicionales de esta orden
+                            </h3>
+                            <p className="text-muted-foreground text-xs">
+                                Cotiza el adicional y registra la decisión del
+                                cliente aquí mismo.
+                            </p>
+                        </div>
+                        {deficiencias.map((item) => (
+                            <DeficienciaCard
+                                key={item.id}
+                                item={item}
+                                teamSlug={teamSlug}
+                                acciones={acciones}
+                                enOrden
+                            />
+                        ))}
+                    </section>
+                )}
                 <Card className="space-y-4 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
@@ -501,8 +712,16 @@ export default function ServiceOrderShow({
                                     key={item.id}
                                     className="rounded-lg border p-2"
                                 >
-                                    <strong>{item.numero_serie}</strong> ·{' '}
-                                    {item.capacidad} · {item.tipo_agente} ·{' '}
+                                    <Link
+                                        href={equiposRoutes.show.url({
+                                            current_team: teamSlug,
+                                            equipment: item.id,
+                                        })}
+                                        className="font-bold underline"
+                                    >
+                                        {item.numero_serie}
+                                    </Link>{' '}
+                                    · {item.capacidad} · {item.tipo_agente} ·{' '}
                                     {item.marca}
                                 </div>
                             ))
@@ -731,6 +950,91 @@ export default function ServiceOrderShow({
                                         </p>
                                     ) : null}
                                 </div>
+                                {[
+                                    'listo_certificado',
+                                    'listo_entrega',
+                                ].includes(serviceOrder.estado) && (
+                                    <form
+                                        className="border-border mt-3 space-y-2 border-t pt-3"
+                                        onSubmit={(event) => {
+                                            event.preventDefault();
+                                            entrega.post(
+                                                ordenes.asignarEntrega.url(
+                                                    ruta,
+                                                ),
+                                                {
+                                                    preserveScroll: true,
+                                                    onSuccess: () =>
+                                                        entrega.reset(),
+                                                },
+                                            );
+                                        }}
+                                    >
+                                        <label
+                                            htmlFor="entrega-tecnico"
+                                            className="text-foreground block text-xs font-semibold"
+                                        >
+                                            Responsable de la entrega en Campo
+                                        </label>
+                                        <p className="text-muted-foreground text-xs">
+                                            El técnico elegido podrá registrar
+                                            la entrega. Se conserva el área y el
+                                            historial del trabajo realizado.
+                                        </p>
+                                        <select
+                                            id="entrega-tecnico"
+                                            value={entrega.data.tecnico_id}
+                                            required
+                                            disabled={
+                                                tecnicosEntrega.length === 0
+                                            }
+                                            onChange={(event) =>
+                                                entrega.setData(
+                                                    'tecnico_id',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            className="border-border bg-card h-10 w-full rounded-lg border px-3 text-xs"
+                                        >
+                                            <option value="">
+                                                Selecciona un técnico de Campo…
+                                            </option>
+                                            {tecnicosEntrega.map((tecnico) => (
+                                                <option
+                                                    key={tecnico.id}
+                                                    value={tecnico.id}
+                                                >
+                                                    {tecnico.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {entrega.errors.tecnico_id && (
+                                            <p
+                                                role="alert"
+                                                className="text-destructive text-xs"
+                                            >
+                                                {entrega.errors.tecnico_id}
+                                            </p>
+                                        )}
+                                        {tecnicosEntrega.length === 0 && (
+                                            <p className="text-muted-foreground text-xs">
+                                                No hay técnicos de Campo para
+                                                esta sede. Puedes registrar la
+                                                entrega en mostrador o pedir al
+                                                Gerente que asigne uno.
+                                            </p>
+                                        )}
+                                        <Button
+                                            type="submit"
+                                            disabled={
+                                                entrega.processing ||
+                                                !entrega.data.tecnico_id
+                                            }
+                                        >
+                                            Asignar entrega a Campo
+                                        </Button>
+                                    </form>
+                                )}
                                 {serviceOrder.observaciones && (
                                     <div className="py-2">
                                         <div className="text-muted-foreground text-[11px]">
@@ -1111,6 +1415,7 @@ export default function ServiceOrderShow({
                     </div>
                 </DialogContent>
             </Dialog>
+            {acciones.dialogos}
         </VendedorLayout>
     );
 }

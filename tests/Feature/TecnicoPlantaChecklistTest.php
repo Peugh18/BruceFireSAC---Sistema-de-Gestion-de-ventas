@@ -78,7 +78,7 @@ test('checklist all conforme advances order to en_proceso', function () {
             'items' => $items,
             'observaciones' => 'Todo en óptimas condiciones',
         ])
-        ->assertRedirect(route('tecnico-planta.recepciones.show', [
+        ->assertRedirect(route('tecnico-planta.ejecucion.show', [
             'current_team' => $this->team,
             'service_order' => $order,
         ]));
@@ -140,4 +140,16 @@ test('checklist with observed element creates deficiency and advances order to e
     // Eventos inmutables de auditoría
     expect(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'deficiencia_detectada')->exists())->toBeTrue()
         ->and(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'notificacion_vendedor')->exists())->toBeTrue();
+});
+
+test('al revisar el último extintor recibido el checklist lleva directo a terminar el trabajo', function () {
+    $order = ServiceOrder::factory()->create(['estado' => 'recibido_planta']);
+    $equipments = Equipment::factory()->count(2)->create(['client_id' => $order->client_id, 'tipo_agente' => 'PQS ABC']);
+    $order->equipments()->attach($equipments->modelKeys(), ['recibido' => true]);
+    $guardar = fn (Equipment $equipment) => $this->actingAs($this->tecnicoPlanta)->post(route('tecnico-planta.checklist.store', [
+        'current_team' => $this->team, 'service_order' => $order, 'equipment' => $equipment,
+    ]), ['items' => ['cilindro' => ['estado' => 'conforme']]]);
+
+    $guardar($equipments[0])->assertRedirect(route('tecnico-planta.recepciones.show', ['current_team' => $this->team, 'service_order' => $order]));
+    $guardar($equipments[1])->assertRedirect(route('tecnico-planta.ejecucion.show', ['current_team' => $this->team, 'service_order' => $order]));
 });

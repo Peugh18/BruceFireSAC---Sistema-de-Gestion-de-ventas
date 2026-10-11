@@ -6,9 +6,15 @@ import {
     MapPin,
     Plus,
     Power,
-    X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
@@ -86,6 +92,7 @@ const EMPTY_FORM: SedeFormData = {
 };
 
 export default function SedesIndex() {
+    const modalTrigger = useRef<HTMLElement | null>(null);
     const { currentTeam, sedes, almacenes, kpis, flash } =
         usePage<PageProps>().props;
 
@@ -124,6 +131,7 @@ export default function SedesIndex() {
         setModalOpen(false);
         setEditing(null);
         form.reset();
+        form.clearErrors();
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -393,222 +401,218 @@ export default function SedesIndex() {
                     </div>
                 </div>
 
-                {modalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="border-border bg-card w-full max-w-lg rounded-xl border p-6 shadow-xl">
-                            <div className="border-border flex items-center justify-between border-b pb-3">
-                                <h3 className="text-foreground font-['Oswald',sans-serif] text-lg font-bold uppercase">
-                                    {editing ? 'Editar Sede' : 'Nueva Sede'}
-                                </h3>
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    aria-label="Cerrar"
-                                    className="text-muted-foreground hover:bg-background rounded-md p-1"
-                                >
-                                    <X className="size-4" />
-                                </button>
+                <Dialog
+                    open={modalOpen}
+                    onOpenChange={(open) => {
+                        if (!open && !form.processing) closeModal();
+                    }}
+                >
+                    <DialogContent
+                        onOpenAutoFocus={() => {
+                            modalTrigger.current =
+                                document.activeElement as HTMLElement;
+                        }}
+                        onCloseAutoFocus={(event) => {
+                            event.preventDefault();
+                            modalTrigger.current?.focus();
+                        }}
+                        className="border-border bg-card max-h-[90dvh] overflow-y-auto overscroll-contain sm:max-w-2xl"
+                    >
+                        <DialogHeader className="border-border border-b pb-3 text-left">
+                            <DialogTitle>
+                                {editing ? 'Editar Sede' : 'Nueva Sede'}
+                            </DialogTitle>
+                            <DialogDescription>
+                                Registra la ubicación y el tipo de sede. Los
+                                campos con * son obligatorios.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form
+                            onSubmit={handleSubmit}
+                            className="mt-4 space-y-4 text-xs"
+                        >
+                            <div>
+                                <label className="text-foreground/80 block font-semibold">
+                                    Nombre *
+                                </label>
+                                <input
+                                    aria-label="Nombre *"
+                                    type="text"
+                                    required
+                                    value={form.data.nombre}
+                                    onChange={(e) =>
+                                        form.setData('nombre', e.target.value)
+                                    }
+                                    className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                />
+                                {form.errors.nombre && (
+                                    <p className="mt-1 text-red-600">
+                                        {form.errors.nombre}
+                                    </p>
+                                )}
                             </div>
 
-                            <form
-                                onSubmit={handleSubmit}
-                                className="mt-4 space-y-4 text-xs"
-                            >
+                            <div>
+                                <label className="text-foreground/80 block font-semibold">
+                                    Tipo *
+                                </label>
+                                <select
+                                    aria-label="Tipo *"
+                                    value={form.data.tipo}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'tipo',
+                                            e.target.value as SedeTipo,
+                                        )
+                                    }
+                                    className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                >
+                                    {(
+                                        Object.keys(TIPO_LABELS) as SedeTipo[]
+                                    ).map((tipo) => (
+                                        <option key={tipo} value={tipo}>
+                                            {TIPO_LABELS[tipo]}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-muted-foreground mt-1">
+                                    {TIPO_DESCRIPCION[form.data.tipo]}
+                                </p>
+                                {form.errors.tipo && (
+                                    <p className="mt-1 text-red-600">
+                                        {form.errors.tipo}
+                                    </p>
+                                )}
+                            </div>
+
+                            {form.data.tipo === 'tienda' && (
                                 <div>
                                     <label className="text-foreground/80 block font-semibold">
-                                        Nombre *
+                                        Almacén del que saca stock *
                                     </label>
-                                    <input
-                                        aria-label="Nombre *"
-                                        type="text"
+                                    <select
+                                        aria-label="Almacén del que saca stock *"
                                         required
-                                        value={form.data.nombre}
+                                        value={form.data.almacen_id}
                                         onChange={(e) =>
                                             form.setData(
-                                                'nombre',
+                                                'almacen_id',
                                                 e.target.value,
                                             )
                                         }
                                         className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                    />
-                                    {form.errors.nombre && (
-                                        <p className="mt-1 text-red-600">
-                                            {form.errors.nombre}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="text-foreground/80 block font-semibold">
-                                        Tipo *
-                                    </label>
-                                    <select
-                                        aria-label="Tipo *"
-                                        value={form.data.tipo}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'tipo',
-                                                e.target.value as SedeTipo,
-                                            )
-                                        }
-                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                     >
-                                        {(
-                                            Object.keys(
-                                                TIPO_LABELS,
-                                            ) as SedeTipo[]
-                                        ).map((tipo) => (
-                                            <option key={tipo} value={tipo}>
-                                                {TIPO_LABELS[tipo]}
+                                        <option value="" disabled>
+                                            Seleccionar almacén
+                                        </option>
+                                        {almacenesElegibles.map((a) => (
+                                            <option key={a.id} value={a.id}>
+                                                {a.nombre}
                                             </option>
                                         ))}
                                     </select>
-                                    <p className="text-muted-foreground mt-1">
-                                        {TIPO_DESCRIPCION[form.data.tipo]}
-                                    </p>
-                                    {form.errors.tipo && (
+                                    {form.errors.almacen_id && (
                                         <p className="mt-1 text-red-600">
-                                            {form.errors.tipo}
+                                            {form.errors.almacen_id}
                                         </p>
                                     )}
                                 </div>
+                            )}
 
-                                {form.data.tipo === 'tienda' && (
-                                    <div>
-                                        <label className="text-foreground/80 block font-semibold">
-                                            Almacén del que saca stock *
-                                        </label>
-                                        <select
-                                            aria-label="Almacén del que saca stock *"
-                                            required
-                                            value={form.data.almacen_id}
-                                            onChange={(e) =>
-                                                form.setData(
-                                                    'almacen_id',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                        >
-                                            <option value="" disabled>
-                                                Seleccionar almacén
-                                            </option>
-                                            {almacenesElegibles.map((a) => (
-                                                <option key={a.id} value={a.id}>
-                                                    {a.nombre}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {form.errors.almacen_id && (
-                                            <p className="mt-1 text-red-600">
-                                                {form.errors.almacen_id}
-                                            </p>
-                                        )}
-                                    </div>
+                            <div>
+                                <label className="text-foreground/80 block font-semibold">
+                                    Ubicación (distrito)
+                                </label>
+                                <UbigeoPicker
+                                    value={ubicacion}
+                                    onChange={(ubigeo) => {
+                                        setUbicacion(ubigeo);
+                                        form.setData(
+                                            'ubigeo',
+                                            ubigeo?.codigo ?? '',
+                                        );
+                                    }}
+                                    error={form.errors.ubigeo}
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="sede-direccion"
+                                    className="text-foreground/80 block font-semibold"
+                                >
+                                    Dirección (para las guías de remisión)
+                                </label>
+                                <input
+                                    id="sede-direccion"
+                                    type="text"
+                                    maxLength={255}
+                                    value={form.data.direccion}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'direccion',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                />
+                                {form.errors.direccion && (
+                                    <p className="mt-1 text-red-600">
+                                        {form.errors.direccion}
+                                    </p>
                                 )}
+                            </div>
 
-                                <div>
-                                    <label className="text-foreground/80 block font-semibold">
-                                        Ubicación (distrito)
-                                    </label>
-                                    <UbigeoPicker
-                                        value={ubicacion}
-                                        onChange={(ubigeo) => {
-                                            setUbicacion(ubigeo);
-                                            form.setData(
-                                                'ubigeo',
-                                                ubigeo?.codigo ?? '',
-                                            );
-                                        }}
-                                        error={form.errors.ubigeo}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label
-                                        htmlFor="sede-direccion"
-                                        className="text-foreground/80 block font-semibold"
-                                    >
-                                        Dirección (para las guías de remisión)
-                                    </label>
-                                    <input
-                                        id="sede-direccion"
-                                        type="text"
-                                        maxLength={255}
-                                        value={form.data.direccion}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'direccion',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                    />
-                                    {form.errors.direccion && (
-                                        <p className="mt-1 text-red-600">
-                                            {form.errors.direccion}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label
-                                        htmlFor="sede-anexo"
-                                        className="text-foreground/80 block font-semibold"
-                                    >
-                                        Código de establecimiento anexo SUNAT
-                                    </label>
-                                    <input
-                                        id="sede-anexo"
-                                        type="text"
-                                        inputMode="numeric"
-                                        maxLength={4}
-                                        value={
-                                            form.data.cod_establecimiento_anexo
-                                        }
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'cod_establecimiento_anexo',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                    />
-                                    <p className="text-muted-foreground mt-1 text-xs">
-                                        0000 es la sede principal.
+                            <div>
+                                <label
+                                    htmlFor="sede-anexo"
+                                    className="text-foreground/80 block font-semibold"
+                                >
+                                    Código de establecimiento anexo SUNAT
+                                </label>
+                                <input
+                                    id="sede-anexo"
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={4}
+                                    value={form.data.cod_establecimiento_anexo}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'cod_establecimiento_anexo',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                />
+                                <p className="text-muted-foreground mt-1 text-xs">
+                                    0000 es la sede principal.
+                                </p>
+                                {form.errors.cod_establecimiento_anexo && (
+                                    <p className="mt-1 text-red-600">
+                                        {form.errors.cod_establecimiento_anexo}
                                     </p>
-                                    {form.errors.cod_establecimiento_anexo && (
-                                        <p className="mt-1 text-red-600">
-                                            {
-                                                form.errors
-                                                    .cod_establecimiento_anexo
-                                            }
-                                        </p>
-                                    )}
-                                </div>
+                                )}
+                            </div>
 
-                                <div className="border-border flex justify-end gap-2 border-t pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={closeModal}
-                                        className="border-border text-foreground/80 hover:bg-muted rounded-lg border px-4 py-2 font-semibold"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={form.processing}
-                                        className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-4 py-2 font-bold disabled:opacity-50"
-                                    >
-                                        {editing
-                                            ? 'Guardar cambios'
-                                            : 'Crear sede'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                            <div className="border-border flex justify-end gap-2 border-t pt-4">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="border-border text-foreground/80 hover:bg-muted rounded-lg border px-4 py-2 font-semibold"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={form.processing}
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-4 py-2 font-bold disabled:opacity-50"
+                                >
+                                    {editing ? 'Guardar cambios' : 'Crear sede'}
+                                </button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </GerenteLayout>
     );

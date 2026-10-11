@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
+    type LineaOriginal,
     SaleNotesPanel,
     type SolicitudNota,
 } from '@/components/sale-notes-panel';
@@ -126,6 +127,7 @@ type Props = {
     tieneEquipos: boolean;
     tiposServicio: { codigo: string; nombre: string }[];
     solicitudesNota: SolicitudNota[];
+    lineasOriginal: LineaOriginal[];
 };
 
 function money(value?: number | string) {
@@ -175,6 +177,7 @@ export default function VentasShow({
     tieneEquipos,
     tiposServicio,
     solicitudesNota,
+    lineasOriginal,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
@@ -810,15 +813,20 @@ export default function VentasShow({
                                                 )}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px]">
-                                                {payment.fecha_pago ??
-                                                    payment.fecha ??
-                                                    '-'}
+                                                {(
+                                                    payment.fecha_pago ??
+                                                    payment.fecha
+                                                )
+                                                    ?.split('T')[0]
+                                                    .split('-')
+                                                    .reverse()
+                                                    .join('/') ?? '-'}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px] font-bold">
                                                 {money(payment.monto)}
                                             </td>
                                             <td className="border-border border-b px-2.5 py-[13px] capitalize">
-                                                {payment.estado ?? '-'}
+                                                {payment.estado ?? 'Registrado'}
                                             </td>
                                         </tr>
                                     ))
@@ -828,7 +836,9 @@ export default function VentasShow({
                     </div>
                 </Card>
 
-                {sale.estado === 'confirmada' || certificados.length > 0 ? (
+                {(sale.estado === 'confirmada' &&
+                    (tieneEquipos || tiposServicio.length > 0)) ||
+                certificados.length > 0 ? (
                     <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
@@ -849,11 +859,7 @@ export default function VentasShow({
                                         })}
                                     >
                                         <Award className="size-4" />
-                                        {certificados.some(
-                                            (c) => c.estado === 'vigente',
-                                        )
-                                            ? 'Ajustar orden o grupos'
-                                            : 'Armar certificados'}
+                                        Gestionar certificados de venta
                                     </Link>
                                 </Button>
                             ) : null}
@@ -885,7 +891,7 @@ export default function VentasShow({
                             <p className="text-muted-foreground text-[12.5px]">
                                 {tieneEquipos
                                     ? 'Salen solos al confirmar la venta: Operatividad y Garantía más Capacitación (local) o Prueba Hidrostática (vehículo).'
-                                    : 'Esta venta no tiene extintores con serie; puedes emitir el certificado de capacitación.'}
+                                    : 'Aún no hay certificados emitidos. Los del servicio de taller se generan al cerrar el trabajo; la capacitación se registra con sus datos.'}
                             </p>
                         ) : (
                             <div className="border-border overflow-hidden rounded-[10px] border">
@@ -975,6 +981,7 @@ export default function VentasShow({
                     saleEstado={sale.estado}
                     abrirNotaCredito={abrirNotaCredito}
                     solicitudes={solicitudesNota}
+                    lineasOriginal={lineasOriginal}
                 />
             </div>
 
