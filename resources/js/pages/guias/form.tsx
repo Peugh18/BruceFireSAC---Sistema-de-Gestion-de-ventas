@@ -343,16 +343,12 @@ export default function GuiaForm({
                                 }
                             />
                             <Input
-                                aria-label="Peso en kg"
+                                aria-label="Peso en kg (viene del producto)"
+                                title="El peso viene del producto; el peso bruto total sí se puede ajustar abajo."
                                 type="number"
-                                min={0}
-                                step="0.001"
+                                readOnly
+                                className="bg-muted/50"
                                 value={item.peso_kg}
-                                onChange={(event) =>
-                                    cambiarItem(indice, {
-                                        peso_kg: event.target.value,
-                                    })
-                                }
                             />
                         </div>
                     ))}

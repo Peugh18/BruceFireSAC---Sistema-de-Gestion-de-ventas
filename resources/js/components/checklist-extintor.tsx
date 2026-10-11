@@ -1,3 +1,4 @@
+import { ProgresoSegmentado } from '@/components/progreso';
 import { useForm } from '@inertiajs/react';
 import { BotonFoto } from '@/components/captura-evidencia';
 import { toast } from 'sonner';
@@ -85,7 +86,7 @@ export default function ChecklistExtintor({
     return (
         <form
             onSubmit={enviar}
-            className="mt-3 space-y-2.5 rounded-xl border border-sky-500/30 bg-sky-500/5 p-3"
+            className="border-primary/30 bg-primary/5 mt-3 space-y-2.5 rounded-xl border p-3"
         >
             <div className="flex items-center justify-between">
                 <span className="text-xs font-black">Checklist de {serie}</span>
@@ -98,6 +99,38 @@ export default function ChecklistExtintor({
                 </button>
             </div>
 
+            <div className="border-border bg-card space-y-2 rounded-lg border p-3">
+                <p className="text-muted-foreground text-xs">
+                    Borrador: clasificación actual. Los valores precargados no
+                    acreditan una revisión guardada.
+                </p>
+                <ProgresoSegmentado
+                    label="Resultados del checklist en edición"
+                    segmentos={[
+                        {
+                            label: 'conformes',
+                            value: Object.values(form.data.items).filter(
+                                (item) => item.estado === 'conforme',
+                            ).length,
+                            tone: 'success',
+                        },
+                        {
+                            label: 'observados',
+                            value: Object.values(form.data.items).filter(
+                                (item) => item.estado === 'observado',
+                            ).length,
+                            tone: 'warning',
+                        },
+                        {
+                            label: 'no aplican',
+                            value: Object.values(form.data.items).filter(
+                                (item) => item.estado === 'no_aplica',
+                            ).length,
+                            tone: 'neutral',
+                        },
+                    ]}
+                />
+            </div>
             {Object.entries(elementos).map(([clave, nombre]) => {
                 const item = form.data.items[clave];
 
@@ -122,10 +155,10 @@ export default function ChecklistExtintor({
                                         className={`min-h-[44px] rounded-lg text-[11px] font-bold ${
                                             item.estado === estado
                                                 ? estado === 'observado'
-                                                    ? 'bg-amber-600 text-white'
+                                                    ? 'bg-warning-strong text-background'
                                                     : estado === 'conforme'
-                                                      ? 'bg-emerald-600 text-white'
-                                                      : 'bg-neutral-600 text-white'
+                                                      ? 'bg-success-strong text-background'
+                                                      : 'bg-muted-foreground text-background'
                                                 : 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200'
                                         }`}
                                     >
@@ -195,7 +228,7 @@ export default function ChecklistExtintor({
             </label>
             {Object.values(form.errors)[0] && (
                 <p
-                    className="text-[11px] font-semibold text-red-600"
+                    className="text-destructive-strong text-[11px] font-semibold"
                     role="alert"
                 >
                     {Object.values(form.errors)[0]}
@@ -204,7 +237,7 @@ export default function ChecklistExtintor({
             <button
                 type="submit"
                 disabled={form.processing || sinFoto}
-                className="min-h-[48px] w-full rounded-xl bg-sky-600 text-xs font-bold text-white disabled:opacity-50"
+                className="bg-primary min-h-[48px] w-full rounded-xl text-xs font-bold text-white disabled:opacity-50"
             >
                 Guardar checklist
             </button>

@@ -62,48 +62,49 @@ export function getStatusStyle(estado: string): {
     switch (estado) {
         case 'detectada':
             return {
-                borderClass: 'border-l-[5px] border-l-[#8A8680]',
+                borderClass: 'border-l-[5px] border-l-muted-foreground',
                 badgeClass: 'bg-muted text-muted-foreground',
                 label: 'Detectada',
             };
         case 'esperando_autorizacion':
             return {
-                borderClass: 'border-l-[5px] border-l-[#B45309]',
+                borderClass: 'border-l-[5px] border-l-warning-strong',
                 badgeClass:
-                    'bg-amber-500/10 text-warning-strong border border-amber-500/20',
+                    'bg-warning-strong/10 text-warning-strong border border-warning-strong/20',
                 label: 'Esperando autorización',
             };
         case 'autorizada':
             return {
-                borderClass: 'border-l-[5px] border-l-[#1E8E5A]',
+                borderClass: 'border-l-[5px] border-l-success-strong',
                 badgeClass:
-                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20',
+                    'bg-success-strong/10 text-success-strong border border-success-strong/20',
                 label: 'Autorizada',
             };
         case 'rechazada':
             return {
-                borderClass: 'border-l-[5px] border-l-[#B91C1C] opacity-80',
+                borderClass: 'border-l-[5px] border-l-destructive opacity-80',
                 badgeClass:
                     'bg-destructive/10 text-destructive-strong border border-destructive/20',
                 label: 'Rechazada',
             };
         case 'en_correccion':
             return {
-                borderClass: 'border-l-[5px] border-l-[#2563EB]',
+                borderClass: 'border-l-[5px] border-l-primary',
                 badgeClass:
-                    'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+                    'bg-primary/5 text-primary-strong border border-primary/20',
                 label: 'En corrección',
             };
         case 'resuelta':
             return {
-                borderClass: 'border-l-[5px] border-l-[#1E8E5A] opacity-75',
+                borderClass:
+                    'border-l-[5px] border-l-success-strong opacity-75',
                 badgeClass:
-                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20',
+                    'bg-success-strong/10 text-success-strong border border-success-strong/20',
                 label: 'Resuelta',
             };
         default:
             return {
-                borderClass: 'border-l-[5px] border-l-[#E4E1DC]',
+                borderClass: 'border-l-[5px] border-l-border',
                 badgeClass: 'bg-muted text-muted-foreground',
                 label: estado || 'Sin estado',
             };
@@ -199,7 +200,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                             <div
                                 className={`flex size-9 items-center justify-center rounded-[10px] ${
                                     actionModal?.isApproving
-                                        ? 'text-success-strong border border-emerald-500/20 bg-emerald-500/10'
+                                        ? 'text-success-strong border-success-strong/20 bg-success-strong/10 border'
                                         : 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
                                 }`}
                             >

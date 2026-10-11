@@ -25,6 +25,7 @@ import WhatsappNumeroDialog from '@/components/whatsapp-numero-dialog';
 import { Button } from '@/components/ui/button';
 import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import { Pasos, pasosCotizacion } from '@/components/progreso';
 import { soles } from '@/lib/utils';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
@@ -222,8 +223,8 @@ function getStatusBadgeConfig(estado: string): {
             return {
                 label: 'Vendida',
                 badgeClass:
-                    'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 border border-blue-500/20',
-                dotClass: 'bg-blue-600',
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20',
+                dotClass: 'bg-success-strong',
             };
         case 'anulada':
             return {
@@ -661,6 +662,18 @@ export default function CotizacionesIndex({
                                                         />
                                                         {badgeConfig.label}
                                                     </span>
+                                                    {pasosCotizacion(
+                                                        quote.estado,
+                                                    ).length > 0 && (
+                                                        <Pasos
+                                                            label={`Avance de la cotización ${quote.numero}`}
+                                                            variante="puntos"
+                                                            pasos={pasosCotizacion(
+                                                                quote.estado,
+                                                            )}
+                                                            className="mt-1.5"
+                                                        />
+                                                    )}
                                                 </td>
 
                                                 {/* Acciones */}

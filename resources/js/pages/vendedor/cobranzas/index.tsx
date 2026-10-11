@@ -1,3 +1,4 @@
+import { Progreso } from '@/components/progreso';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     CheckCircle2,
@@ -552,7 +553,11 @@ export default function CobranzasIndex({
                                             </tr>
                                         ) : (
                                             installmentRows.map((inst) => {
+                                                const pagada =
+                                                    Number(inst.saldo) <= 0;
+                                                // Una cuota ya pagada no es deuda vencida.
                                                 const isVencido =
+                                                    !pagada &&
                                                     inst.dias_vencido > 0;
 
                                                 return (
@@ -589,6 +594,39 @@ export default function CobranzasIndex({
                                                                     inst.monto,
                                                                 )}
                                                             </div>
+                                                            <div className="mt-2 min-w-36 space-y-1">
+                                                                <p className="text-muted-foreground text-xs">
+                                                                    Abonado:{' '}
+                                                                    {soles(
+                                                                        Math.max(
+                                                                            0,
+                                                                            Number(
+                                                                                inst.monto,
+                                                                            ) -
+                                                                                Number(
+                                                                                    inst.saldo,
+                                                                                ),
+                                                                        ),
+                                                                    )}
+                                                                </p>
+                                                                <Progreso
+                                                                    label={`Pago de cuota ${inst.numero_cuota} de ${inst.sale_numero}`}
+                                                                    value={Math.max(
+                                                                        0,
+                                                                        Number(
+                                                                            inst.monto,
+                                                                        ) -
+                                                                            Number(
+                                                                                inst.saldo,
+                                                                            ),
+                                                                    )}
+                                                                    max={Number(
+                                                                        inst.monto,
+                                                                    )}
+                                                                    aria-valuetext={`${soles(Math.max(0, Number(inst.monto) - Number(inst.saldo)))} de ${soles(inst.monto)}`}
+                                                                    tone="success"
+                                                                />
+                                                            </div>
                                                             {inst.anulados.map(
                                                                 (anulado) => (
                                                                     <div
@@ -622,14 +660,18 @@ export default function CobranzasIndex({
                                                         <td className="px-2.5 py-3.5">
                                                             <Badge
                                                                 className={`rounded-full border-none px-2 py-0.5 text-[10.5px] font-bold ${
-                                                                    isVencido
-                                                                        ? 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
-                                                                        : 'text-warning-strong border border-amber-500/20 bg-amber-500/10'
+                                                                    pagada
+                                                                        ? 'text-success-strong border border-emerald-500/20 bg-emerald-500/10'
+                                                                        : isVencido
+                                                                          ? 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
+                                                                          : 'text-warning-strong border border-amber-500/20 bg-amber-500/10'
                                                                 }`}
                                                             >
-                                                                {isVencido
-                                                                    ? `Vencido hace ${inst.dias_vencido}d`
-                                                                    : `Vence ${fechaCorta(inst.fecha_vencimiento)}`}
+                                                                {pagada
+                                                                    ? `Pagada · vencía ${fechaCorta(inst.fecha_vencimiento)}`
+                                                                    : isVencido
+                                                                      ? `Vencido hace ${inst.dias_vencido}d`
+                                                                      : `Vence ${fechaCorta(inst.fecha_vencimiento)}`}
                                                             </Badge>
                                                         </td>
 

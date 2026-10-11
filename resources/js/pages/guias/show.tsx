@@ -1,3 +1,4 @@
+import { Pasos } from '@/components/progreso';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 
@@ -183,6 +184,34 @@ export default function GuiaShow({
 
                 <Card className="space-y-3 p-4 text-sm">
                     <h2 className="font-semibold">Origen y estado</h2>
+                    <Pasos
+                        label="Estado de la guía"
+                        variante="cheuron"
+                        pasos={[
+                            'Borrador',
+                            'Enviada',
+                            'Respuesta',
+                            'Lista para trasladar',
+                        ].map((label, indice) => {
+                            const actual = guia.lista_para_trasladar
+                                ? 3
+                                : guia.estado_sunat === 'borrador'
+                                  ? 0
+                                  : guia.estado_sunat === 'enviada'
+                                    ? 1
+                                    : 2;
+                            return {
+                                id: label,
+                                label,
+                                estado:
+                                    indice < actual || guia.lista_para_trasladar
+                                        ? 'completado'
+                                        : indice === actual
+                                          ? 'actual'
+                                          : 'pendiente',
+                            };
+                        })}
+                    />
                     <dl className="grid gap-3 sm:grid-cols-2">
                         <div>
                             <dt className="text-muted-foreground text-xs">

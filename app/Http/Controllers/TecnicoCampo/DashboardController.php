@@ -5,6 +5,7 @@ namespace App\Http\Controllers\TecnicoCampo;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -63,7 +64,9 @@ class DashboardController extends Controller
         // Filtro por Tipo de Servicio (§5.5)
         if ($tipoFiltro !== 'todos') {
             match ($tipoFiltro) {
-                'recojos' => $query->where(fn ($q) => $q->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%recojo%'))->orWhere('estado', 'pendiente_recepcion')),
+                'recojos' => $query->where(fn ($q) => $q->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%recojo%'))
+                    ->orWhere(fn (Builder $pendiente) => $pendiente->where('estado', 'pendiente_recepcion')
+                        ->whereDoesntHave('service', fn ($service) => $service->where(fn ($s) => $s->where('nombre', 'like', '%inspecci%')->orWhere('nombre', 'like', '%instalac%')->orWhere('nombre', 'like', '%mantenim%'))))),
                 'entregas' => $query->where(fn ($q) => $q->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%entrega%'))->orWhereIn('estado', ['listo_entrega', 'entregado'])),
                 'inspecciones' => $query->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%inspecci%')),
                 'instalaciones' => $query->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%')),
@@ -75,11 +78,11 @@ class DashboardController extends Controller
         $orders = $query->paginate(15)->through(function (ServiceOrder $order) {
             // Determinar acción sugerida en campo
             $accionSugerida = match (true) {
-                $order->estado === 'pendiente_recepcion' => 'recojo',
                 $order->estado === 'listo_entrega' || $order->estado === 'entregado' => 'entrega',
                 str_contains(strtolower($order->service->nombre), 'inspecci') => 'inspeccion',
                 str_contains(strtolower($order->service->nombre), 'instalac') => 'instalacion',
                 str_contains(strtolower($order->service->nombre), 'mantenim') => 'mantenimiento',
+                $order->estado === 'pendiente_recepcion' => 'recojo',
                 default => 'ver',
             };
 
@@ -106,7 +109,7 @@ class DashboardController extends Controller
         // KPIs operativos de Campo (§5.5)
         $kpis = [
             'total_servicios' => ServiceOrder::accessibleToTechnician($request->user())->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereNull('departamento_tecnico'))
-                ->whereNotIn('estado', ['cerrado', 'anulada'])
+                ->where('estado', '!=', 'anulada')
                 ->count(),
             'pendientes' => ServiceOrder::accessibleToTechnician($request->user())->where(fn ($q) => $q->where('departamento_tecnico', 'campo')->orWhereNull('departamento_tecnico'))
                 ->whereIn('estado', ['pendiente_recepcion', 'recibido_planta', 'listo_entrega'])

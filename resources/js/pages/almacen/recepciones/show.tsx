@@ -1,3 +1,4 @@
+import { ProgresoConEtiqueta } from '@/components/progreso';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -71,6 +72,14 @@ export type Props = {
 };
 
 export default function RecepcionesShow({ reception, current_year }: Props) {
+    const recibidas = reception.items.reduce(
+        (total, item) => total + item.cantidad,
+        0,
+    );
+    const conformes = reception.items.reduce(
+        (total, item) => total + item.cantidad_conforme,
+        0,
+    );
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
@@ -234,6 +243,15 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                     </div>
                 )}
 
+                <Card className="p-4">
+                    <ProgresoConEtiqueta
+                        label="Unidades conformes"
+                        value={conformes}
+                        max={recibidas}
+                        tone="success"
+                        detalle={`${recibidas - conformes} observadas de ${recibidas} recibidas · Registro guardado`}
+                    />
+                </Card>
                 {/* FORM O DETALLE */}
                 {isEditing ? (
                     <form
@@ -679,7 +697,12 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                 Líneas del Documento
                             </h2>
 
-                            <div className="mt-3 overflow-x-auto">
+                            <div
+                                role="region"
+                                aria-label="Detalle de productos recibidos"
+                                tabIndex={0}
+                                className="focus-visible:ring-ring mt-3 overflow-x-auto focus-visible:ring-2 focus-visible:outline-none"
+                            >
                                 <table className="w-full text-left text-[12.5px]">
                                     <thead>
                                         <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">

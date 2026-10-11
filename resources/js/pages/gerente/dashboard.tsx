@@ -1,7 +1,7 @@
+import { KpiCard } from '@/components/kpi-card';
 import {
     AlertTriangle,
     Award,
-    BadgeAlert,
     BarChart3,
     Boxes,
     BrainCircuit,
@@ -223,288 +223,112 @@ export default function GerenteDashboard({
                     </div>
                 )}
 
-                {/* Grid de 12 Tarjetas KPI */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {/* 1. Ventas del Día */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Ventas de Hoy
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <CircleDollarSign className="text-success-strong size-4" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(metrics.ventasDia)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Monto total vendido hoy
-                        </p>
-                    </div>
-
-                    {/* 2. Ventas del Mes */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Ventas del Mes
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <TrendingUp className="text-success-strong size-4" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(metrics.ventasMes)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Ventas menos notas de crédito aceptadas u observadas
-                        </p>
-                    </div>
-
-                    {/* 3. Facturación del Mes */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Facturación CPE Mes
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <FileCheck className="size-4 text-blue-600" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(metrics.facturacionMes)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Facturas y boletas emitidas
-                        </p>
-                    </div>
-
-                    {/* 4. Monto Cobrado */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Monto Cobrado
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <CheckCircle2 className="text-success-strong size-4" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(metrics.montoCobrado)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Abonos ingresados este mes
-                        </p>
-                    </div>
-
-                    {/* 5. Cuentas por Cobrar */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Por Cobrar Total
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <Clock className="text-warning-strong size-4" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(metrics.cuentasPorCobrar)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Saldo pendiente en cartera
-                        </p>
-                    </div>
-
-                    {/* 6. Vencido por Cobrar */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Vencido por Cobrar
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <BadgeAlert className="text-primary-strong size-4" />
-                            </div>
-                        </div>
-                        <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(metrics.vencidoPorCobrar)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Cuotas con mora superada
-                        </p>
-                    </div>
-
-                    {/* X7: indicadores del proyecto */}
+                <section
+                    aria-label="Indicadores de Gerencia"
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                >
+                    <KpiCard
+                        titulo="Ventas de hoy"
+                        valor={formatCurrency(metrics.ventasDia)}
+                        detalle="Ventas netas del día"
+                        icono={<CircleDollarSign className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Ventas del mes"
+                        valor={formatCurrency(metrics.ventasMes)}
+                        detalle="Ventas ajustadas por notas aceptadas u observadas"
+                        icono={<TrendingUp className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Facturación del mes"
+                        valor={formatCurrency(metrics.facturacionMes)}
+                        detalle="Facturas y boletas emitidas"
+                        icono={<FileCheck className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Monto cobrado"
+                        valor={formatCurrency(metrics.montoCobrado)}
+                        detalle="Abonos ingresados este mes"
+                        icono={<CheckCircle2 className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Cuentas por cobrar"
+                        valor={formatCurrency(metrics.cuentasPorCobrar)}
+                        detalle="Saldo pendiente de las cuotas"
+                        icono={<Clock className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Deuda vencida"
+                        valor={formatCurrency(metrics.vencidoPorCobrar)}
+                        detalle="Saldo pendiente con vencimiento cumplido"
+                        icono={<AlertTriangle className="size-4" />}
+                    />
                     {kpisProyecto && (
                         <>
-                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium tracking-wider uppercase">
-                                        Tiempo de registro de venta
-                                    </span>
-                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                        <Clock className="size-4 text-indigo-600" />
-                                    </div>
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {kpisProyecto.venta_minutos === null
-                                        ? '—'
-                                        : `${kpisProyecto.venta_minutos} min`}
-                                </div>
-                                <p className="text-muted-foreground mt-1 text-[11px]">
-                                    Promedio del mes ·{' '}
-                                    {kpisProyecto.ventas_medidas} ventas
-                                </p>
-                            </div>
-                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium tracking-wider uppercase">
-                                        Tiempo de cotización
-                                    </span>
-                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                        <Clock className="size-4 text-purple-600" />
-                                    </div>
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {kpisProyecto.cotizacion_minutos === null
-                                        ? '—'
-                                        : `${kpisProyecto.cotizacion_minutos} min`}
-                                </div>
-                                <p className="text-muted-foreground mt-1 text-[11px]">
-                                    De crearla a emitirla ·{' '}
-                                    {kpisProyecto.cotizaciones_medidas}{' '}
-                                    cotizaciones
-                                </p>
-                            </div>
-                            <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium tracking-wider uppercase">
-                                        Clientes recuperados
-                                    </span>
-                                    <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                        <AlertTriangle className="size-4 text-amber-500" />
-                                    </div>
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {formatNumber(
-                                        kpisProyecto.clientes_recuperados,
-                                    )}
-                                </div>
-                                <p className="text-muted-foreground mt-1 text-[11px]">
-                                    Por alertas, con venta este mes
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Tiempo de venta"
+                                valor={
+                                    kpisProyecto.venta_minutos === null
+                                        ? 'Sin medición'
+                                        : `${kpisProyecto.venta_minutos} min`
+                                }
+                                detalle={`${kpisProyecto.ventas_medidas} ventas medidas este mes`}
+                            />
+                            <KpiCard
+                                titulo="Tiempo de cotización"
+                                valor={
+                                    kpisProyecto.cotizacion_minutos === null
+                                        ? 'Sin medición'
+                                        : `${kpisProyecto.cotizacion_minutos} min`
+                                }
+                                detalle={`${kpisProyecto.cotizaciones_medidas} cotizaciones medidas este mes`}
+                            />
+                            <KpiCard
+                                titulo="Clientes recuperados"
+                                valor={formatNumber(
+                                    kpisProyecto.clientes_recuperados,
+                                )}
+                                detalle="Por alertas, con venta este mes"
+                            />
                         </>
                     )}
-
-                    {/* 7. Cotizaciones Pendientes */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Cotizaciones Pendientes
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <FileText className="size-4 text-indigo-600" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatNumber(metrics.cotizacionesPendientes)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            En negociación comercial
-                        </p>
-                    </div>
-
-                    {/* 8. Tasa de Conversión */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Tasa de Conversión
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <Percent className="size-4 text-purple-600" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {metrics.tasaConversion}%
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Cotizaciones ganadas vs total
-                        </p>
-                    </div>
-
-                    {/* 9. Órdenes en Proceso */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Órdenes en Proceso
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <Wrench className="size-4 text-cyan-600" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatNumber(metrics.ordenesEnProceso)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            En planta o campo activos
-                        </p>
-                    </div>
-
-                    {/* 10. Equipos Próximos a Atención */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Próximos a Atención
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <AlertTriangle className="size-4 text-amber-500" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatNumber(metrics.equiposProximosAtencion)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Vencimiento en los próx. 30 días
-                        </p>
-                    </div>
-
-                    {/* 11. Stock Crítico */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                Stock Crítico
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <Boxes className="size-4 text-orange-600" />
-                            </div>
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatNumber(metrics.stockCritico)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Productos bajo el stock mínimo
-                        </p>
-                    </div>
-
-                    {/* 12. Documentos SUNAT con Error */}
-                    <div className="border-border bg-card rounded-xl border p-5 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium tracking-wider uppercase">
-                                SUNAT con Error
-                            </span>
-                            <div className="bg-muted/40 text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <ShieldAlert className="text-primary-strong size-4" />
-                            </div>
-                        </div>
-                        <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatNumber(metrics.documentosSunatError)}
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-[11px]">
-                            Rechazos o excepciones SUNAT
-                        </p>
-                    </div>
-                </div>
-
+                    <KpiCard
+                        titulo="Cotizaciones pendientes"
+                        valor={formatNumber(metrics.cotizacionesPendientes)}
+                        detalle="En negociación comercial"
+                        icono={<FileText className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Conversión de cotizaciones"
+                        valor={`${metrics.tasaConversion}%`}
+                        detalle="Aceptadas y convertidas del conjunto evaluado; no es una meta mensual"
+                        icono={<Percent className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Órdenes en proceso"
+                        valor={formatNumber(metrics.ordenesEnProceso)}
+                        detalle="Trabajo pendiente de finalizar"
+                        icono={<Wrench className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Equipos próximos a atención"
+                        valor={formatNumber(metrics.equiposProximosAtencion)}
+                        detalle="Equipos que requieren próxima atención"
+                        icono={<Award className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Stock crítico"
+                        valor={formatNumber(metrics.stockCritico)}
+                        detalle="Productos en el mínimo o por debajo"
+                        icono={<Boxes className="size-4" />}
+                    />
+                    <KpiCard
+                        titulo="Comprobantes con error"
+                        valor={formatNumber(metrics.documentosSunatError)}
+                        detalle="Rechazos o excepciones SUNAT"
+                        icono={<ShieldAlert className="size-4" />}
+                    />
+                </section>
                 {/* Sección Gráfica y Analítica */}
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     {/* Gráfico 1: Ventas Mensuales (Últimos 6 meses) */}

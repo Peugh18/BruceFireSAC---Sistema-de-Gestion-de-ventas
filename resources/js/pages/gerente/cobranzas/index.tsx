@@ -4,6 +4,7 @@ import {
     DialogTitle,
     DialogDescription,
 } from '@/components/ui/dialog';
+import { KpiCard } from '@/components/kpi-card';
 import { router, usePage } from '@inertiajs/react';
 import {
     BadgeAlert,
@@ -179,80 +180,58 @@ export default function CobranzasConsolidadasIndex() {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Por Cobrar Total
-                            </span>
-                            <Clock className="size-4 text-blue-600" />
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(kpis.totalPorCobrar)}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Saldo pendiente en cartera
-                        </p>
-                    </div>
+                    <KpiCard
+                        titulo="Por cobrar total"
+                        valor={formatCurrency(kpis.totalPorCobrar)}
+                        detalle="Saldo pendiente en cartera"
+                        icono={<Clock className="size-4" />}
+                    />
 
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Vencido
+                    <KpiCard
+                        titulo="Vencido"
+                        valor={
+                            <span
+                                className={
+                                    kpis.vencidoTotal > 0
+                                        ? 'text-primary-strong'
+                                        : 'text-success-strong'
+                                }
+                            >
+                                {formatCurrency(kpis.vencidoTotal)}
                             </span>
-                            <BadgeAlert className="text-primary-strong size-4" />
-                        </div>
-                        <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(kpis.vencidoTotal)}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Cuotas con fecha pasada
-                        </p>
-                    </div>
+                        }
+                        detalle="Cuotas con fecha pasada"
+                        icono={<BadgeAlert className="size-4" />}
+                    />
 
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Vence Esta Semana
+                    <KpiCard
+                        titulo="Vence esta semana"
+                        valor={
+                            <span className="text-warning-strong">
+                                {formatCurrency(kpis.venceEstaSemana)}
                             </span>
-                            <Calendar className="text-warning-strong size-4" />
-                        </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
-                            {formatCurrency(kpis.venceEstaSemana)}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Vencimientos hasta domingo
-                        </p>
-                    </div>
+                        }
+                        detalle="Vencimientos hasta domingo"
+                        icono={<Calendar className="size-4" />}
+                    />
 
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Cobrado en el Mes
+                    <KpiCard
+                        titulo="Cobrado en el mes"
+                        valor={
+                            <span className="text-success-strong">
+                                {formatCurrency(kpis.cobradoEsteMes)}
                             </span>
-                            <TrendingUp className="text-success-strong size-4" />
-                        </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
-                            {formatCurrency(kpis.cobradoEsteMes)}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Abonos ingresados en el mes
-                        </p>
-                    </div>
+                        }
+                        detalle="Abonos ingresados en el mes"
+                        icono={<TrendingUp className="size-4" />}
+                    />
 
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Clientes con Deuda
-                            </span>
-                            <Users className="size-4 text-purple-600" />
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {kpis.clientesConDeuda}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Empresas en cartera activa
-                        </p>
-                    </div>
+                    <KpiCard
+                        titulo="Clientes con deuda"
+                        valor={kpis.clientesConDeuda}
+                        detalle="Empresas en cartera activa"
+                        icono={<Users className="size-4" />}
+                    />
                 </div>
 
                 {/* Filtros */}

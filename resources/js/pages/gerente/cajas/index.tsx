@@ -1,4 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
+import { KpiCard } from '@/components/kpi-card';
 import {
     AlertCircle,
     CheckCircle2,
@@ -147,73 +148,57 @@ export default function CajasConsolidadasIndex() {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Turnos Hoy
-                            </span>
-                            <Clock className="size-4 text-blue-600" />
-                        </div>
-                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {kpis.turnosHoy}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Aperturas registradas hoy
-                        </p>
-                    </div>
+                    <KpiCard
+                        titulo="Turnos hoy"
+                        valor={kpis.turnosHoy}
+                        detalle="Aperturas registradas hoy"
+                        icono={<Clock className="size-4" />}
+                    />
 
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Cajas Abiertas Ahora
+                    <KpiCard
+                        titulo="Cajas abiertas ahora"
+                        valor={
+                            <span className="text-success-strong">
+                                {kpis.turnosAbiertos}
                             </span>
-                            <Wallet className="text-success-strong size-4" />
-                        </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
-                            {kpis.turnosAbiertos}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Puntos de cobro activos
-                        </p>
-                    </div>
+                        }
+                        detalle="Puntos de cobro activos"
+                        icono={<Wallet className="size-4" />}
+                    />
 
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Descuadres en el Mes
+                    <KpiCard
+                        titulo="Descuadres en el mes"
+                        valor={
+                            <span className="text-warning-strong">
+                                {kpis.turnosConDescuadreMes}
                             </span>
-                            <AlertCircle className="text-warning-strong size-4" />
-                        </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
-                            {kpis.turnosConDescuadreMes}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Cierres con faltante o sobrante
-                        </p>
-                    </div>
+                        }
+                        detalle="Cierres con faltante o sobrante"
+                        icono={<AlertCircle className="size-4" />}
+                    />
 
-                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <div className="text-muted-foreground flex items-center justify-between text-xs">
-                            <span className="font-medium uppercase">
-                                Faltantes de caja
+                    <KpiCard
+                        titulo="Faltantes de caja"
+                        valor={
+                            <span
+                                className={
+                                    kpis.faltantesMes > 0
+                                        ? 'text-primary-strong'
+                                        : 'text-success-strong'
+                                }
+                            >
+                                {formatCurrency(kpis.faltantesMes)}
                             </span>
-                            <TrendingDown className="text-primary-strong size-4" />
-                        </div>
-                        <div
-                            className={`mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold ${
-                                kpis.faltantesMes > 0
-                                    ? 'text-primary-strong'
-                                    : 'text-emerald-700'
-                            }`}
-                        >
-                            {formatCurrency(kpis.faltantesMes)}
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Faltantes del mes · sobrantes{' '}
-                            {formatCurrency(kpis.sobrantesMes)} (no se
-                            compensan)
-                        </p>
-                    </div>
+                        }
+                        detalle={
+                            <>
+                                Faltantes del mes · sobrantes{' '}
+                                {formatCurrency(kpis.sobrantesMes)} (no se
+                                compensan)
+                            </>
+                        }
+                        icono={<TrendingDown className="size-4" />}
+                    />
                 </div>
 
                 {/* Filtros */}

@@ -1,3 +1,4 @@
+import { Pasos, pasosOrdenAtencion } from '@/components/progreso';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Eye, Plus, RotateCcw, Wrench } from 'lucide-react';
 import { FormEvent, useState } from 'react';
@@ -81,21 +82,6 @@ const TABS = [
     { id: 'completadas', label: 'Completadas' },
     { id: 'anuladas', label: 'Anuladas' },
 ] as const;
-
-function getCoarseStep(coarseLabel: string): number {
-    switch (coarseLabel?.toLowerCase()) {
-        case 'asignada':
-            return 1;
-        case 'en_proceso':
-            return 2;
-        case 'completada':
-            return 3;
-        case 'cerrada':
-            return 4;
-        default:
-            return 1;
-    }
-}
 
 function getBadgeConfig(
     estado: string,
@@ -355,9 +341,11 @@ export default function ServiceOrdersIndex({
                                     </tr>
                                 ) : (
                                     orders.data.map((order) => {
-                                        const step = getCoarseStep(
-                                            order.coarse_label,
-                                        );
+                                        const pasosAtencion =
+                                            pasosOrdenAtencion(
+                                                order.estado,
+                                                Boolean(order.tecnico),
+                                            );
                                         const badgeConfig = getBadgeConfig(
                                             order.estado,
                                             order.coarse_label,
@@ -416,37 +404,24 @@ export default function ServiceOrdersIndex({
                                                     )}
                                                 </td>
 
-                                                {/* 4-point progress indicator */}
                                                 <td className="px-2.5 py-3.5 text-center">
-                                                    <div
-                                                        className="inline-flex items-center gap-1.5"
-                                                        title={`Etapa ${step} de 4: ${order.coarse_label}`}
-                                                    >
-                                                        {[1, 2, 3, 4].map(
-                                                            (s) => {
-                                                                let dotClass =
-                                                                    'bg-muted/40';
-                                                                if (s < step) {
-                                                                    dotClass =
-                                                                        'bg-emerald-600';
-                                                                } else if (
-                                                                    s === step
-                                                                ) {
-                                                                    dotClass =
-                                                                        step ===
-                                                                        4
-                                                                            ? 'bg-emerald-600'
-                                                                            : 'bg-blue-600 ring-2 ring-blue-200';
-                                                                }
-                                                                return (
-                                                                    <span
-                                                                        key={s}
-                                                                        className={`size-2.5 rounded-full transition-all ${dotClass}`}
-                                                                    />
-                                                                );
-                                                            },
-                                                        )}
-                                                    </div>
+                                                    {pasosAtencion.length >
+                                                    0 ? (
+                                                        <Pasos
+                                                            pasos={
+                                                                pasosAtencion
+                                                            }
+                                                            label={`Etapas de ${order.codigo}`}
+                                                            variante="puntos"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-xs">
+                                                            {order.estado ===
+                                                            'anulada'
+                                                                ? 'Anulada'
+                                                                : 'Sin avance disponible'}
+                                                        </span>
+                                                    )}
                                                 </td>
 
                                                 <td className="px-2.5 py-3.5">

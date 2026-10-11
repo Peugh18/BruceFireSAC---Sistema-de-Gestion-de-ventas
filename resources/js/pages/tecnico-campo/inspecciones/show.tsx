@@ -1,3 +1,4 @@
+import { ProgresoSegmentado } from '@/components/progreso';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ResumenRevision } from '@/components/resumen-revision';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
@@ -218,7 +219,7 @@ export default function InspeccionShow({
                     <ArrowLeft className="size-4" />
                     <span>Volver al listado</span>
                 </Link>
-                <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
+                <span className="text-primary-strong font-mono text-xs font-black">
                     {order.codigo}
                 </span>
             </div>
@@ -245,14 +246,14 @@ export default function InspeccionShow({
                             </span>
                         )}
                     </div>
-                    <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[10px] font-black text-sky-700 dark:text-sky-400">
+                    <span className="border-primary/20 bg-primary/5 text-primary-strong rounded-full border px-2.5 py-1 text-[10px] font-black">
                         {order.estado.replace('_', ' ').toUpperCase()}
                     </span>
                 </div>
 
                 <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2">
-                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-600 dark:text-sky-400" />
+                        <MapPin className="text-primary-strong mt-0.5 size-4 shrink-0" />
                         <div>
                             <span className="text-foreground font-semibold">
                                 Dirección:{' '}
@@ -317,7 +318,7 @@ export default function InspeccionShow({
 
                         {notasVendedor.length > 0 && (
                             <div className="mt-3 space-y-2">
-                                <span className="text-[11px] font-bold text-blue-900/70 uppercase dark:text-blue-300/70">
+                                <span className="text-foreground text-[11px] font-bold uppercase">
                                     Notas de Ventas:
                                 </span>
                                 {notasVendedor.map((n) => (
@@ -330,7 +331,7 @@ export default function InspeccionShow({
                                                 n.payload?.descripcion ||
                                                 JSON.stringify(n.payload)}
                                         </p>
-                                        <span className="mt-1 block text-[10.5px] text-neutral-400">
+                                        <span className="text-muted-foreground mt-1 block text-[10.5px]">
                                             {n.created_at
                                                 ? new Date(
                                                       n.created_at,
@@ -362,7 +363,7 @@ export default function InspeccionShow({
                         <button
                             type="button"
                             onClick={() => setShowAddEquipmentModal(true)}
-                            className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold text-sky-600 active:scale-95 dark:text-sky-400"
+                            className="border-primary/20 bg-primary/5 inline-flex items-center gap-1 rounded-[8px] border px-2.5 py-1.5 text-xs font-bold text-sky-600 active:scale-95 dark:text-sky-400"
                         >
                             <Plus className="size-3.5" />
                             Agregar Extintor
@@ -375,7 +376,7 @@ export default function InspeccionShow({
 
                 {/* Modal for adding/linking equipment */}
                 {showAddEquipmentModal && (
-                    <div className="bg-card mb-4 rounded-[14px] border-2 border-sky-500/20 p-4 shadow-md">
+                    <div className="bg-card border-primary/20 mb-4 rounded-[14px] border-2 p-4 shadow-md">
                         <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
                             <h3 className="text-foreground text-xs font-black">
                                 Registrar Extintor en Inspección
@@ -502,7 +503,7 @@ export default function InspeccionShow({
                             <button
                                 type="submit"
                                 disabled={addEquipmentForm.processing}
-                                className="min-h-[44px] w-full rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700"
+                                className="bg-primary hover:bg-primary/90 min-h-[44px] w-full rounded-[10px] text-xs font-bold text-white shadow-sm transition-all"
                             >
                                 Vincular a la Inspección
                             </button>
@@ -593,7 +594,7 @@ export default function InspeccionShow({
                                                             : eq.id,
                                                     )
                                                 }
-                                                className="bg-muted/40 flex min-h-[40px] w-full items-center justify-between rounded-[8px] px-3 text-xs font-bold text-sky-600 hover:bg-sky-500/10 dark:text-sky-400"
+                                                className="bg-muted/40 hover:bg-primary/5 flex min-h-[40px] w-full items-center justify-between rounded-[8px] px-3 text-xs font-bold text-sky-600 dark:text-sky-400"
                                             >
                                                 <span>
                                                     {latestChecklist
@@ -696,7 +697,7 @@ export default function InspeccionShow({
             {!isFinalizada && (
                 <div className="border-border bg-card rounded-[14px] border p-4 shadow-sm">
                     <h2 className="text-foreground mb-1 flex items-center gap-2 text-sm font-black">
-                        <UserCheck className="size-4 text-sky-600 dark:text-sky-400" />
+                        <UserCheck className="text-primary-strong size-4" />
                         Finalizar Inspección y Conformidad en Sitio
                     </h2>
                     <p className="text-muted-foreground mb-4 text-[11px]">
@@ -808,7 +809,7 @@ export default function InspeccionShow({
                         />
 
                         {/* Checkbox de conformidad (§85.6.2) */}
-                        <div className="rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3">
+                        <div className="border-primary/20 bg-primary/5 rounded-[10px] border p-3">
                             <label className="flex cursor-pointer items-start gap-2.5">
                                 <input
                                     type="checkbox"
@@ -822,9 +823,9 @@ export default function InspeccionShow({
                                             e.target.checked,
                                         )
                                     }
-                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-600 focus:ring-[#0284C7] dark:text-sky-400"
+                                    className="border-primary/20 focus:ring-ring mt-0.5 size-4 rounded text-sky-600 dark:text-sky-400"
                                 />
-                                <span className="text-xs leading-tight font-semibold text-sky-700 dark:text-sky-400">
+                                <span className="text-primary-strong text-xs leading-tight font-semibold">
                                     Conformidad en sitio: El encargado del
                                     cliente valida la inspección y el inventario
                                     de extintores revisados.
@@ -844,7 +845,7 @@ export default function InspeccionShow({
                                 !completeForm.data.firma ||
                                 !completeForm.data.conformidad_aceptada
                             }
-                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="bg-primary hover:bg-primary/90 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] text-xs font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
                             <span>Finalizar y Guardar Inspección de Campo</span>
@@ -952,11 +953,11 @@ function InlineChecklistForm({
     return (
         <form
             onSubmit={handleSubmit}
-            className="mt-3 space-y-3 rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3"
+            className="border-primary/20 bg-primary/5 mt-3 space-y-3 rounded-[10px] border p-3"
         >
             <AlertError errors={Object.values(checklistForm.errors)} />
-            <div className="flex items-center justify-between border-b border-sky-500/20 pb-2">
-                <span className="text-xs font-black text-sky-700 dark:text-sky-400">
+            <div className="border-primary/20 flex items-center justify-between border-b pb-2">
+                <span className="text-primary-strong text-xs font-black">
                     Evaluación Checklist: {equipment.numero_serie}
                 </span>
                 <button
@@ -968,6 +969,36 @@ function InlineChecklistForm({
                 </button>
             </div>
 
+            <ProgresoSegmentado
+                label="Estado del formulario de revisión"
+                segmentos={[
+                    {
+                        label: 'conformes',
+                        value: Object.values(checklistForm.data.items).filter(
+                            (item) => item.estado === 'conforme',
+                        ).length,
+                        tone: 'success',
+                    },
+                    {
+                        label: 'observados',
+                        value: Object.values(checklistForm.data.items).filter(
+                            (item) => item.estado === 'observado',
+                        ).length,
+                        tone: 'warning',
+                    },
+                    {
+                        label: 'no aplican',
+                        value: Object.values(checklistForm.data.items).filter(
+                            (item) => item.estado === 'no_aplica',
+                        ).length,
+                        tone: 'neutral',
+                    },
+                ]}
+            />
+            <p className="text-muted-foreground text-xs">
+                Borrador con valores precargados; la revisión se registra al
+                guardar.
+            </p>
             <div className="space-y-2">
                 {Object.entries(elementosChecklist).map(([clave, nombre]) => {
                     const item = checklistForm.data.items[clave] || {
@@ -992,7 +1023,7 @@ function InlineChecklistForm({
                                         }
                                         className={`min-h-[32px] rounded-[6px] px-2 py-1 text-[10px] font-bold transition-all ${
                                             item.estado === 'conforme'
-                                                ? 'bg-emerald-600 text-white shadow-xs'
+                                                ? 'bg-success-strong text-background shadow-xs'
                                                 : 'bg-muted text-muted-foreground'
                                         }`}
                                     >
@@ -1075,7 +1106,7 @@ function InlineChecklistForm({
             <button
                 type="submit"
                 disabled={checklistForm.processing}
-                className="min-h-[44px] w-full rounded-[8px] bg-emerald-600 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+                className="hover:bg-success-strong/90 min-h-[44px] w-full rounded-[8px] bg-emerald-600 text-xs font-bold text-white shadow-sm"
             >
                 Guardar Checklist de este Extintor
             </button>

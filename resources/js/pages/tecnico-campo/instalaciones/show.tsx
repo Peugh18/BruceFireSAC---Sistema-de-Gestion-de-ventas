@@ -4,6 +4,7 @@ import ConversacionOrden, {
     type ConversacionProps,
 } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
@@ -292,7 +293,7 @@ export default function InstalacionShow({
                         )}
                     </div>
                     <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[10px] font-black text-sky-700 dark:text-sky-400">
-                        {order.estado.replace('_', ' ').toUpperCase()}
+                        {etiquetaEstadoOrden(order.estado).toUpperCase()}
                     </span>
                 </div>
 

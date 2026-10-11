@@ -5,6 +5,7 @@ import { useState } from 'react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import mantenimientos from '@/routes/tecnico-campo/mantenimientos';
 import type { Team } from '@/types';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 
 type Orden = {
     id: number;
@@ -87,7 +88,7 @@ export default function MantenimientosIndex({
                                     </p>
                                 </div>
                                 <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-black text-sky-800 dark:text-sky-300">
-                                    {orden.estado.replace(/_/g, ' ')}
+                                    {etiquetaEstadoOrden(orden.estado)}
                                 </span>
                             </Link>
                         </li>

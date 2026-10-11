@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import { ProgresoSegmentado } from '@/components/progreso';
+import React, { useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { BotonFoto } from '@/components/captura-evidencia';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
@@ -169,7 +170,7 @@ export default function ChecklistCreate({
                         current_team: teamSlug,
                         service_order: order.id,
                     })}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
+                    className="dark:text-muted-foreground inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Volver a Recepción #{order.codigo}</span>
@@ -181,14 +182,14 @@ export default function ChecklistCreate({
                         <span className="text-warning-strong font-mono text-base font-extrabold">
                             {equipment.numero_serie}
                         </span>
-                        <span className="text-xs font-semibold text-neutral-500">
+                        <span className="text-muted-foreground text-xs font-semibold">
                             Orden: {order.codigo}
                         </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+                    <div className="dark:text-muted-foreground grid grid-cols-2 gap-2 text-xs text-neutral-600">
                         <div>
-                            <span className="text-neutral-400">
+                            <span className="text-muted-foreground">
                                 Agente/Tipo:{' '}
                             </span>
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
@@ -196,7 +197,7 @@ export default function ChecklistCreate({
                             </span>
                         </div>
                         <div>
-                            <span className="text-neutral-400">
+                            <span className="text-muted-foreground">
                                 Capacidad:{' '}
                             </span>
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
@@ -204,13 +205,17 @@ export default function ChecklistCreate({
                             </span>
                         </div>
                         <div>
-                            <span className="text-neutral-400">Marca: </span>
+                            <span className="text-muted-foreground">
+                                Marca:{' '}
+                            </span>
                             <span className="font-medium text-neutral-800 dark:text-neutral-200">
                                 {equipment.marca || 'N/A'}
                             </span>
                         </div>
                         <div>
-                            <span className="text-neutral-400">Año Fab: </span>
+                            <span className="text-muted-foreground">
+                                Año Fab:{' '}
+                            </span>
                             <span className="font-medium text-neutral-800 dark:text-neutral-200">
                                 {equipment.anio_fabricacion || 'N/A'}
                             </span>
@@ -235,12 +240,12 @@ export default function ChecklistCreate({
                                             {previo.resultado_general}
                                         </span>
                                         {previo.observaciones ? (
-                                            <p className="mt-0.5 text-[11px] text-neutral-500">
+                                            <p className="text-muted-foreground mt-0.5 text-[11px]">
                                                 {previo.observaciones}
                                             </p>
                                         ) : null}
                                     </div>
-                                    <span className="shrink-0 text-[10px] text-neutral-400">
+                                    <span className="text-muted-foreground shrink-0 text-[10px]">
                                         {previo.created_at
                                             ? new Date(
                                                   previo.created_at,
@@ -253,6 +258,38 @@ export default function ChecklistCreate({
                     </div>
                 )}
 
+                <div className="border-border bg-card space-y-2 rounded-lg border p-3">
+                    <p className="text-muted-foreground text-xs">
+                        Borrador: clasificación actual. Los valores precargados
+                        no acreditan una revisión guardada.
+                    </p>
+                    <ProgresoSegmentado
+                        label="Resultados del checklist en edición"
+                        segmentos={[
+                            {
+                                label: 'conformes',
+                                value: Object.values(items).filter(
+                                    (item) => item.estado === 'conforme',
+                                ).length,
+                                tone: 'success',
+                            },
+                            {
+                                label: 'observados',
+                                value: Object.values(items).filter(
+                                    (item) => item.estado === 'observado',
+                                ).length,
+                                tone: 'warning',
+                            },
+                            {
+                                label: 'no aplican',
+                                value: Object.values(items).filter(
+                                    (item) => item.estado === 'no_aplica',
+                                ).length,
+                                tone: 'neutral',
+                            },
+                        ]}
+                    />
+                </div>
                 {/* Quick Action bar */}
                 <div className="flex items-center justify-between gap-2 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800/80">
                     <div className="pl-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">
@@ -264,7 +301,7 @@ export default function ChecklistCreate({
                         ) : (
                             <span className="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
                                 <ShieldCheck className="h-3.5 w-3.5" />
-                                Todos conformes
+                                Sin observaciones en el formulario
                             </span>
                         )}
                     </div>
@@ -323,8 +360,8 @@ export default function ChecklistCreate({
                                             }
                                             className={`flex min-h-[44px] items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all ${
                                                 item.estado === 'conforme'
-                                                    ? 'bg-emerald-600 text-white shadow-sm'
-                                                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400'
+                                                    ? 'bg-success-strong text-background shadow-sm'
+                                                    : 'dark:text-muted-foreground text-neutral-600 hover:text-neutral-900'
                                             }`}
                                         >
                                             <CheckCircle2 className="h-4 w-4" />
@@ -345,8 +382,8 @@ export default function ChecklistCreate({
                                             }
                                             className={`flex min-h-[44px] items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all ${
                                                 item.estado === 'observado'
-                                                    ? 'bg-amber-600 text-white shadow-sm'
-                                                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400'
+                                                    ? 'bg-warning-strong text-background shadow-sm'
+                                                    : 'dark:text-muted-foreground text-neutral-600 hover:text-neutral-900'
                                             }`}
                                         >
                                             <AlertTriangle className="h-4 w-4" />
@@ -367,8 +404,8 @@ export default function ChecklistCreate({
                                             }
                                             className={`flex min-h-[44px] items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all ${
                                                 item.estado === 'no_aplica'
-                                                    ? 'bg-neutral-600 text-white shadow-sm'
-                                                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400'
+                                                    ? 'bg-muted-foreground text-background shadow-sm'
+                                                    : 'dark:text-muted-foreground text-neutral-600 hover:text-neutral-900'
                                             }`}
                                         >
                                             <MinusCircle className="h-4 w-4" />
@@ -461,7 +498,7 @@ export default function ChecklistCreate({
                                                                         .checked,
                                                                 )
                                                             }
-                                                            className="text-warning-strong h-4 w-4 rounded border-amber-400 focus:ring-amber-500"
+                                                            className="text-warning-strong focus:ring-ring h-4 w-4 rounded border-amber-400"
                                                         />
                                                         <span>
                                                             Requiere
@@ -543,7 +580,7 @@ export default function ChecklistCreate({
                             }
                             placeholder="Conclusiones técnicas adicionales..."
                             rows={2}
-                            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-2.5 text-xs focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-900"
+                            className="focus:ring-ring w-full rounded-xl border border-neutral-200 bg-neutral-50 p-2.5 text-xs focus:ring-2 dark:border-neutral-700 dark:bg-neutral-900"
                         />
                     </div>
 
@@ -553,7 +590,7 @@ export default function ChecklistCreate({
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 {countObservados > 0
                                     ? `${countObservados} Falla(s)`
-                                    : '100% Conforme'}
+                                    : 'Formulario sin observaciones'}
                             </span>
                         </div>
                         <button
@@ -564,7 +601,7 @@ export default function ChecklistCreate({
                                     (i) => i.estado === 'observado' && !i.foto,
                                 )
                             }
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-md hover:bg-amber-700 active:bg-amber-800"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold shadow-md"
                         >
                             <ClipboardCheck className="h-4 w-4" />
                             <span>Guardar Checklist Técnico</span>
@@ -572,7 +609,7 @@ export default function ChecklistCreate({
                     </div>
                     {Object.values(form.errors)[0] ? (
                         <p
-                            className="text-center text-[11px] font-semibold text-red-500"
+                            className="text-destructive-strong text-center text-[11px] font-semibold"
                             role="alert"
                         >
                             {Object.values(form.errors)[0]}

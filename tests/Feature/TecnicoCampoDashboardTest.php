@@ -112,3 +112,20 @@ test('tecnico campo no ve ordenes anuladas ni de otro tecnico en lista ni kpis',
             ->where('kpis.pendientes', 1)
             ->has('orders.data', 1));
 });
+
+test('una inspeccion por recibir se sugiere como inspeccion y no entra en recojos; el total incluye cerradas', function () {
+    $inspeccion = Service::factory()->create(['nombre' => 'Inspección técnica']);
+    ServiceOrder::factory()->create(['service_id' => $inspeccion->id, 'estado' => 'pendiente_recepcion', 'departamento_tecnico' => 'campo']);
+    ServiceOrder::factory()->create(['estado' => 'cerrado', 'departamento_tecnico' => 'campo']);
+
+    $this->actingAs($this->tecnicoCampo)
+        ->get(route('tecnico-campo.dashboard', ['current_team' => $this->team]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('kpis.total_servicios', 2)
+            ->where('kpis.finalizados', 1)
+            ->where('orders.data.1.accion_sugerida', 'inspeccion'));
+
+    $this->actingAs($this->tecnicoCampo)
+        ->get(route('tecnico-campo.dashboard', ['current_team' => $this->team, 'tipo' => 'recojos']))
+        ->assertInertia(fn (Assert $page) => $page->has('orders.data', 0));
+});

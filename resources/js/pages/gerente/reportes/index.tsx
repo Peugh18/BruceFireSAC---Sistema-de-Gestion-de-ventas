@@ -1,4 +1,5 @@
 ﻿import { router, usePage } from '@inertiajs/react';
+import { KpiCard } from '@/components/kpi-card';
 import {
     AlertTriangle,
     Boxes,
@@ -303,81 +304,61 @@ export default function ReportesIndex() {
 
                         {/* KPIs Comerciales */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium uppercase">
-                                        Ventas netas
-                                    </span>
-                                    <CircleDollarSign className="text-success-strong size-4" />
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {formatCurrency(
-                                        reporteComercial.totalVentas,
-                                    )}
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Originales{' '}
-                                    {formatCurrency(
-                                        reporteComercial.ventasOriginales,
-                                    )}{' '}
-                                    − notas de crédito{' '}
-                                    {formatCurrency(
-                                        reporteComercial.notasCredito,
-                                    )}{' '}
-                                    + notas de débito{' '}
-                                    {formatCurrency(
-                                        reporteComercial.notasDebito,
-                                    )}
-                                    , aceptadas en el período.
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Ventas netas"
+                                valor={
+                                    <>
+                                        {formatCurrency(
+                                            reporteComercial.totalVentas,
+                                        )}
+                                    </>
+                                }
+                                detalle={
+                                    <>
+                                        Originales{' '}
+                                        {formatCurrency(
+                                            reporteComercial.ventasOriginales,
+                                        )}{' '}
+                                        − notas de crédito{' '}
+                                        {formatCurrency(
+                                            reporteComercial.notasCredito,
+                                        )}{' '}
+                                        + notas de débito{' '}
+                                        {formatCurrency(
+                                            reporteComercial.notasDebito,
+                                        )}
+                                        , aceptadas en el período.
+                                    </>
+                                }
+                                icono={<CircleDollarSign className="size-4" />}
+                            />
 
-                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium uppercase">
-                                        Total de Operaciones
-                                    </span>
-                                    <FileText className="size-4 text-blue-600" />
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {reporteComercial.cantidadVentas}
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Ventas confirmadas en el período
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Total de operaciones"
+                                valor={<>{reporteComercial.cantidadVentas}</>}
+                                detalle={<>Ventas confirmadas en el período</>}
+                                icono={<FileText className="size-4" />}
+                            />
 
-                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium uppercase">
-                                        Ticket Promedio
-                                    </span>
-                                    <TrendingUp className="size-4 text-purple-600" />
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {formatCurrency(
-                                        reporteComercial.ticketPromedio,
-                                    )}
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Promedio por comprobante
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Ticket promedio"
+                                valor={
+                                    <>
+                                        {formatCurrency(
+                                            reporteComercial.ticketPromedio,
+                                        )}
+                                    </>
+                                }
+                                detalle={<>Promedio por comprobante</>}
+                                icono={<TrendingUp className="size-4" />}
+                            />
 
-                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium uppercase">
-                                        Conversión Cotizaciones
-                                    </span>
-                                    <Percent className="text-warning-strong size-4" />
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {reporteComercial.tasaConversion}%
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Efectividad de cierre comercial
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Conversión cotizaciones"
+                                valor={<>{reporteComercial.tasaConversion}%</>}
+                                detalle={<>Efectividad de cierre comercial</>}
+                                icono={<Percent className="size-4" />}
+                            />
                         </div>
 
                         {/* Tablas de Desglose Comercial */}
@@ -654,67 +635,50 @@ export default function ReportesIndex() {
 
                         {/* KPIs de Inventario */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium uppercase">
-                                        Valorización Total
-                                    </span>
-                                    <CircleDollarSign className="text-success-strong size-4" />
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {formatCurrency(
-                                        reporteInventario.valorizacionTotal,
-                                    )}
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Stock disponible × costo promedio de compra
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Valorización total"
+                                valor={
+                                    <>
+                                        {formatCurrency(
+                                            reporteInventario.valorizacionTotal,
+                                        )}
+                                    </>
+                                }
+                                detalle={
+                                    <>
+                                        Stock disponible × costo promedio de
+                                        compra
+                                    </>
+                                }
+                                icono={<CircleDollarSign className="size-4" />}
+                            />
 
-                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium uppercase">
-                                        Productos en Catálogo
-                                    </span>
-                                    <Layers className="size-4 text-blue-600" />
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {reporteInventario.totalProductos}
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Productos activos registrados
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Productos en catálogo"
+                                valor={<>{reporteInventario.totalProductos}</>}
+                                detalle={<>Productos activos registrados</>}
+                                icono={<Layers className="size-4" />}
+                            />
 
-                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium uppercase">
-                                        Unidades Físicas
-                                    </span>
-                                    <Boxes className="size-4 text-purple-600" />
-                                </div>
-                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {reporteInventario.totalUnidades}
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Disponibles para venta/operación
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Unidades físicas"
+                                valor={<>{reporteInventario.totalUnidades}</>}
+                                detalle={<>Disponibles para venta/operación</>}
+                                icono={<Boxes className="size-4" />}
+                            />
 
-                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                                <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                    <span className="font-medium uppercase">
-                                        Bajo Stock Mínimo
-                                    </span>
-                                    <AlertTriangle className="text-primary-strong size-4" />
-                                </div>
-                                <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                                    {reporteInventario.totalBajoMinimo}
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                                    Requieren reposición urgente
-                                </p>
-                            </div>
+                            <KpiCard
+                                titulo="Bajo stock mínimo"
+                                valor={
+                                    <>
+                                        <span className="text-primary-strong">
+                                            {reporteInventario.totalBajoMinimo}
+                                        </span>
+                                    </>
+                                }
+                                detalle={<>Requieren reposición urgente</>}
+                                icono={<AlertTriangle className="size-4" />}
+                            />
                         </div>
 
                         {/* Tabla de Existencias de Inventario */}

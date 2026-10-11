@@ -167,3 +167,16 @@ test('un color de marca claro lleva el texto oscuro encima', function () {
     expect($company->colorTextoSobreMarca())->toBe('#1A1A1A')
         ->and($company->colorMarcaSuave())->toBe('#FFFCF1');
 });
+
+test('sin logo subido el comprobante usa el logo de la marca y con logo subido usa el del gerente', function () {
+    $company = CompanySetting::current();
+
+    $marca = $company->logoParaPdf();
+    expect($marca)->not->toBeNull()
+        ->and($marca['src'])->toStartWith('data:image/png;base64,');
+
+    Storage::disk('public')->put('company/logo.png', UploadedFile::fake()->image('logo.png', 200, 100)->getContent());
+    $company->update(['logo_path' => 'company/logo.png']);
+
+    expect($company->fresh()->logoParaPdf()['src'])->not->toBe($marca['src']);
+});

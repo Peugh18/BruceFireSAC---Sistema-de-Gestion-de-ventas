@@ -1,3 +1,4 @@
+import { Pasos } from '@/components/progreso';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 
@@ -257,6 +258,40 @@ export default function Transfers({
                                           ? ' · guía pendiente de SUNAT'
                                           : ' · sin guía'}
                                 </span>
+                                <Pasos
+                                    label={`Traslado de ${traslado.origen} a ${traslado.destino}`}
+                                    variante="puntos"
+                                    pasos={[
+                                        {
+                                            id: 'preparado',
+                                            label: 'Preparado',
+                                            estado: 'completado',
+                                        },
+                                        {
+                                            id: 'guia',
+                                            label: traslado.guia_aceptada
+                                                ? 'Guía lista'
+                                                : 'Guía pendiente',
+                                            estado: traslado.guia_aceptada
+                                                ? 'completado'
+                                                : 'actual',
+                                        },
+                                        {
+                                            id: 'transito',
+                                            label: 'En tránsito',
+                                            estado:
+                                                traslado.estado ===
+                                                'en_transito'
+                                                    ? 'actual'
+                                                    : 'pendiente',
+                                        },
+                                        {
+                                            id: 'recibido',
+                                            label: 'Recibido',
+                                            estado: 'pendiente',
+                                        },
+                                    ]}
+                                />
                                 {traslado.puede_emitir_guia ? (
                                     <Button asChild variant="outline" size="sm">
                                         <Link

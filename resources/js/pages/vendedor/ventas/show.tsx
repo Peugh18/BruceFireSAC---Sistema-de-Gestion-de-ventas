@@ -996,7 +996,7 @@ export default function VentasShow({
             <CargaLarga
                 activo={procesando === 'enviar'}
                 titulo="Enviando el comprobante a SUNAT"
-                detalle="Suele tardar menos de 10 segundos"
+                detalle="La operación está en curso. El resultado se mostrará al terminar."
             />
             <CargaLarga
                 activo={procesando === 'anular'}

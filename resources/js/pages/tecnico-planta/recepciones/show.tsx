@@ -1,3 +1,4 @@
+import { ProgresoConEtiqueta } from '@/components/progreso';
 import {
     Dialog,
     DialogContent,
@@ -292,7 +293,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                             <h2 className="mt-1 text-base font-semibold text-neutral-900 dark:text-neutral-100">
                                 {order.cliente.nombre}
                             </h2>
-                            <p className="font-mono text-xs text-neutral-500">
+                            <p className="text-muted-foreground font-mono text-xs">
                                 RUC/DNI: {order.cliente.documento}{' '}
                                 {order.cliente.telefono
                                     ? `• Tel: ${order.cliente.telefono}`
@@ -381,7 +382,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             <span className="font-mono font-bold">
                                                 {eq.numero_serie}
                                             </span>
-                                            <span className="text-neutral-500">
+                                            <span className="text-muted-foreground">
                                                 {eq.tipo_agente} {eq.capacidad}
                                             </span>
                                         </label>
@@ -405,7 +406,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                         )
                                     }
                                     placeholder="Ej: Se reciben 2 cilindros en vez de 3, o con manguera rota..."
-                                    className="bg-card w-full rounded-xl border border-neutral-200 px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-900"
+                                    className="bg-card focus:ring-ring w-full rounded-xl border border-neutral-200 px-3 py-2 text-xs focus:ring-2 dark:border-neutral-700 dark:bg-neutral-900"
                                 />
                             </div>
 
@@ -413,7 +414,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                 aria-label="Confirmar Recepción Física en Planta"
                                 type="submit"
                                 disabled={confirmForm.processing}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-amber-700 active:bg-amber-800"
+                                className="bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold shadow-sm transition-colors"
                             >
                                 <CheckCircle2 className="h-4 w-4" />
                                 <span>
@@ -495,6 +496,15 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                     );
                 })()}
 
+                <ProgresoConEtiqueta
+                    label="Equipos recibidos registrados"
+                    value={
+                        order.equipments.filter((equipo) => equipo.recibido)
+                            .length
+                    }
+                    max={order.equipments.length}
+                    detalle="De los equipos vinculados a esta orden. La selección del formulario se registra al confirmar."
+                />
                 {/* Equipments Section */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -506,7 +516,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     {order.equipments.length})
                                 </span>
                             </h3>
-                            <p className="text-[11px] text-neutral-500">
+                            <p className="text-muted-foreground text-[11px]">
                                 Identificación con código de barras Bruce Fire
                             </p>
                         </div>
@@ -527,7 +537,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                             <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                                 Aún no hay equipos vinculados a esta orden
                             </p>
-                            <p className="text-[11px] text-neutral-500">
+                            <p className="text-muted-foreground text-[11px]">
                                 Presione "Alta Rápida" para escanear un equipo
                                 existente o generar un sticker nuevo.
                             </p>
@@ -561,7 +571,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 service_order: order.id,
                                                 equipment: eq.id,
                                             })}
-                                            className="flex items-center gap-1 rounded-xl bg-amber-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-xs hover:bg-amber-700"
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[11px] font-bold shadow-xs"
                                         >
                                             <Wrench className="h-3.5 w-3.5" />
                                             <span>Checklist</span>
@@ -596,7 +606,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     </div>
 
                                     {eq.notas && (
-                                        <p className="rounded-lg bg-neutral-50 p-2 text-[11px] text-neutral-500 dark:bg-neutral-900/40">
+                                        <p className="text-muted-foreground rounded-lg bg-neutral-50 p-2 text-[11px] dark:bg-neutral-900/40">
                                             {eq.notas}
                                         </p>
                                     )}
@@ -631,7 +641,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     <DialogTitle className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                                         Alta Técnica Rápida
                                     </DialogTitle>
-                                    <DialogDescription className="text-xs text-neutral-500">
+                                    <DialogDescription className="text-muted-foreground text-xs">
                                         Recepción de extintores en Planta
                                     </DialogDescription>
                                 </div>
@@ -681,7 +691,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 )
                                             }
                                             placeholder="BF-EQ-XXXXXX"
-                                            className="flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-3 py-2 font-mono text-xs uppercase focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-800"
+                                            className="focus:ring-ring flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-3 py-2 font-mono text-xs uppercase focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
                                         />
                                         <button
                                             type="button"
@@ -723,7 +733,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             <button
                                                 type="button"
                                                 onClick={handleLinkExisting}
-                                                className="w-full rounded-xl bg-amber-600 py-2 text-xs font-bold text-white hover:bg-amber-700"
+                                                className="bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-xl py-2 text-xs font-bold"
                                             >
                                                 Vincular a esta Orden
                                             </button>
@@ -912,7 +922,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                         aria-label="Generar Código BF-EQ y Registrar"
                                         type="submit"
                                         disabled={equipmentForm.processing}
-                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-700 active:bg-amber-800"
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold shadow-sm"
                                     >
                                         <Sparkles className="h-4 w-4" />
                                         <span>

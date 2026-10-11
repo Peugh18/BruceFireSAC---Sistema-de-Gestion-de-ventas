@@ -13,6 +13,7 @@ import { useState } from 'react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 
 type Customer = {
     id: number;
@@ -267,7 +268,7 @@ export default function InspeccionesIndex({
                 ) : (
                     inspecciones.data.map((order) => {
                         const estadoMeta = ESTADOS_MAP[order.estado] || {
-                            label: order.estado,
+                            label: etiquetaEstadoOrden(order.estado),
                             bg: 'bg-muted',
                             text: 'text-muted-foreground',
                             border: 'border-border',

@@ -452,6 +452,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     [class*='chispa-anim-'],
+    [class*='chispa-anim-'] *,
     .chispa-sombra,
     .chispa-boton .chispa {
         animation: none;
@@ -463,12 +464,12 @@
     }
 
     .cargando {
-        animation-duration: 1.6s;
+        animation: none;
     }
 
     .barra-indeterminada > span {
         width: 100%;
-        animation: barra-pulso 1.6s ease-in-out infinite;
+        animation: none;
     }
 }
 

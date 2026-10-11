@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
+import { KpiFiltro } from '@/components/kpi-filtro';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -76,7 +77,7 @@ function getEstadoBadge(estado: string) {
             );
         case 'recibido_planta':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10.5px] font-bold text-blue-600 dark:text-blue-400">
+                <span className="border-primary/20 bg-primary/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-bold">
                     <PackageCheck className="size-3" />
                     Recibido en Planta
                 </span>
@@ -199,97 +200,42 @@ export default function TecnicoPlantaDashboard({
 
                 {/* Mobile-First KPI Grid (2x2 on phone) */}
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                    <button
-                        type="button"
+                    <KpiFiltro
+                        titulo="Pendientes"
+                        valor={kpis.pendientes_recepcion}
+                        detalle="Por recibir"
+                        tono="warning"
+                        icono={<Clock className="size-4" />}
+                        activo={currentTab === 'pendientes'}
                         onClick={() => changeTab('pendientes')}
-                        className={`flex flex-col justify-between rounded-[12px] border p-3 text-left transition-all ${
-                            currentTab === 'pendientes'
-                                ? 'border-amber-500/20 bg-amber-500/10 ring-2 ring-[#F59E0B]/30'
-                                : 'border-border bg-card hover:bg-muted/40'
-                        }`}
-                    >
-                        <div className="text-warning-strong flex items-center justify-between">
-                            <span className="text-[10.5px] font-bold tracking-wider uppercase">
-                                Pendientes
-                            </span>
-                            <Clock className="size-4" />
-                        </div>
-                        <div className="text-foreground mt-2 text-2xl font-black">
-                            {kpis.pendientes_recepcion}
-                        </div>
-                        <span className="text-muted-foreground text-[10px]">
-                            Por recibir
-                        </span>
-                    </button>
-
-                    <button
-                        type="button"
+                    />
+                    <KpiFiltro
+                        titulo="En taller"
+                        valor={kpis.en_taller}
+                        detalle="En proceso"
+                        tono="primary"
+                        icono={<Wrench className="size-4" />}
+                        activo={currentTab === 'en_taller'}
                         onClick={() => changeTab('en_taller')}
-                        className={`flex flex-col justify-between rounded-[12px] border p-3 text-left transition-all ${
-                            currentTab === 'en_taller'
-                                ? 'border-blue-500/20 bg-sky-500/10 ring-2 ring-[#2563EB]/30'
-                                : 'border-border bg-card hover:bg-muted/40'
-                        }`}
-                    >
-                        <div className="flex items-center justify-between text-blue-600 dark:text-blue-400">
-                            <span className="text-[10.5px] font-bold tracking-wider uppercase">
-                                En Taller
-                            </span>
-                            <Wrench className="size-4" />
-                        </div>
-                        <div className="text-foreground mt-2 text-2xl font-black">
-                            {kpis.en_taller}
-                        </div>
-                        <span className="text-muted-foreground text-[10px]">
-                            En proceso
-                        </span>
-                    </button>
-
-                    <button
-                        type="button"
+                    />
+                    <KpiFiltro
+                        titulo="Por autorizar"
+                        valor={kpis.esperando_autorizacion}
+                        detalle="Deficiencias"
+                        tono="destructive"
+                        icono={<AlertTriangle className="size-4" />}
+                        activo={currentTab === 'esperando_autorizacion'}
                         onClick={() => changeTab('esperando_autorizacion')}
-                        className={`flex flex-col justify-between rounded-[12px] border p-3 text-left transition-all ${
-                            currentTab === 'esperando_autorizacion'
-                                ? 'border-destructive/20 bg-destructive/10 ring-2 ring-[#DC2626]/30'
-                                : 'border-border bg-card hover:bg-muted/40'
-                        }`}
-                    >
-                        <div className="text-destructive-strong flex items-center justify-between">
-                            <span className="text-[10.5px] font-bold tracking-wider uppercase">
-                                Por Autorizar
-                            </span>
-                            <AlertTriangle className="size-4" />
-                        </div>
-                        <div className="text-foreground mt-2 text-2xl font-black">
-                            {kpis.esperando_autorizacion}
-                        </div>
-                        <span className="text-muted-foreground text-[10px]">
-                            Deficiencias
-                        </span>
-                    </button>
-
-                    <button
-                        type="button"
+                    />
+                    <KpiFiltro
+                        titulo="Listas"
+                        valor={kpis.listas}
+                        detalle="Certificado o entrega"
+                        tono="success"
+                        icono={<CheckCircle2 className="size-4" />}
+                        activo={currentTab === 'por_entregar'}
                         onClick={() => changeTab('por_entregar')}
-                        className={`flex flex-col justify-between rounded-[12px] border p-3 text-left transition-all ${
-                            currentTab === 'por_entregar'
-                                ? 'border-emerald-500/20 bg-emerald-500/10 ring-2 ring-[#16A34A]/30'
-                                : 'border-border bg-card hover:bg-muted/40'
-                        }`}
-                    >
-                        <div className="text-success-strong flex items-center justify-between">
-                            <span className="text-[10.5px] font-bold tracking-wider uppercase">
-                                Listas
-                            </span>
-                            <CheckCircle2 className="size-4" />
-                        </div>
-                        <div className="text-foreground mt-2 text-2xl font-black">
-                            {kpis.listas}
-                        </div>
-                        <span className="text-muted-foreground text-[10px]">
-                            Certif / Entrega
-                        </span>
-                    </button>
+                    />
                 </div>
 
                 {/* Search Bar */}

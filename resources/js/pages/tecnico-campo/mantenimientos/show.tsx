@@ -11,7 +11,10 @@ import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
-import { ResumenRevision } from '@/components/resumen-revision';
+import {
+    ResumenRevision,
+    resumirRevision,
+} from '@/components/resumen-revision';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import mantenimientos from '@/routes/tecnico-campo/mantenimientos';
@@ -82,17 +85,9 @@ export default function MantenimientoShow({
     });
 
     const args = { current_team: equipo, service_order: order.id };
-    const revisados = order.equipments.filter(
-        (e) => (e.checklists?.length ?? 0) > 0,
-    ).length;
-    const pendientes = order.equipments.filter(
-        (item) => !item.checklists?.length,
+    const { revisados, observados, pendientes } = resumirRevision(
+        order.equipments,
     );
-    const observados = order.equipments.filter(
-        (item) =>
-            item.checklists?.length &&
-            item.checklists[0].resultado_general !== 'conforme',
-    ).length;
     const fotosAntes = evidencias.filter(
         (item) => item.tipo === 'foto' && item.etapa === 'antes',
     ).length;
