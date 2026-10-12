@@ -168,6 +168,13 @@ class ReceptionController extends Controller
             ? array_values(array_map('intval', (array) $validated['equipos_recibidos']))
             : null;
 
+        if ($recibidos !== null
+            && count($recibidos) < $service_order->equipments()->count()
+            && blank($validated['diferencias'] ?? null)
+            && blank($validated['observaciones'] ?? null)) {
+            throw ValidationException::withMessages(['diferencias' => 'Falta un equipo: escribe qué pasó (no llegó, quedó en sede, etc.).']);
+        }
+
         try {
             $this->recibir($action, $service_order, $request, $validated, $recibidos);
         } catch (\InvalidArgumentException $e) {

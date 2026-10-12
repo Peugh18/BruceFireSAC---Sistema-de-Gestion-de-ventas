@@ -261,13 +261,13 @@ export default function ServiciosIndex() {
                 {dialogoConfirmacion}
                 {/* Alertas Flash */}
                 {flash?.success && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <div className="text-success-strong flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
                         <CheckCircle2 className="text-success-strong size-4 shrink-0" />
                         <span>{flash.success}</span>
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <div className="text-destructive-strong flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm">
                         <AlertTriangle className="text-primary-strong size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
@@ -312,7 +312,7 @@ export default function ServiciosIndex() {
                             </span>
                             <CheckCircle2 className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.totalActivos}
                         </div>
                     </div>
@@ -454,7 +454,7 @@ export default function ServiciosIndex() {
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         s.activo
-                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            ? 'text-success-strong bg-emerald-100'
                                                             : 'bg-zinc-100 text-zinc-600'
                                                     }`}
                                                 >
@@ -605,7 +605,7 @@ export default function ServiciosIndex() {
                                         className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono uppercase focus:outline-none"
                                     />
                                     {form.errors.codigo && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.codigo}
                                         </p>
                                     )}
@@ -635,7 +635,7 @@ export default function ServiciosIndex() {
                                         ))}
                                     </NativeSelect>
                                     {form.errors.unidad_medida && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.unidad_medida}
                                         </p>
                                     )}
@@ -664,7 +664,7 @@ export default function ServiciosIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 />
                                 {form.errors.nombre && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.nombre}
                                     </p>
                                 )}
@@ -708,7 +708,7 @@ export default function ServiciosIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
                                 />
                                 {form.errors.precio_venta && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.precio_venta}
                                     </p>
                                 )}
@@ -754,7 +754,7 @@ export default function ServiciosIndex() {
                                         className="border-border rounded border p-2"
                                     />
                                     {form.errors.capacidad && (
-                                        <span className="text-red-600">
+                                        <span className="text-destructive-strong">
                                             {form.errors.capacidad}
                                         </span>
                                     )}
@@ -780,7 +780,10 @@ export default function ServiciosIndex() {
                                     ))}
                                 </NativeSelect>
                                 {form.errors.certificate_type_id && (
-                                    <span className="text-red-600" role="alert">
+                                    <span
+                                        className="text-destructive-strong"
+                                        role="alert"
+                                    >
                                         {form.errors.certificate_type_id}
                                     </span>
                                 )}
@@ -850,7 +853,7 @@ export default function ServiciosIndex() {
                                         <option value="30">Inafecto</option>
                                     </NativeSelect>
                                     {form.errors.tipo_afectacion_igv && (
-                                        <span className="text-red-600">
+                                        <span className="text-destructive-strong">
                                             {form.errors.tipo_afectacion_igv}
                                         </span>
                                     )}

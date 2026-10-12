@@ -139,7 +139,7 @@ export default function AuditoriaIndex() {
                             </span>
                             <Activity className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.registrosHoy}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">

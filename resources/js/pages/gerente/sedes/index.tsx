@@ -199,13 +199,13 @@ export default function SedesIndex() {
         <GerenteLayout title="Sedes">
             <div className="space-y-6">
                 {flash?.success && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <div className="text-success-strong flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
                         <CheckCircle2 className="text-success-strong size-4 shrink-0" />
                         <span>{flash.success}</span>
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <div className="text-destructive-strong flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm">
                         <AlertTriangle className="text-primary-strong size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
@@ -355,7 +355,7 @@ export default function SedesIndex() {
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         sede.activo
-                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            ? 'text-success-strong bg-emerald-100'
                                                             : 'bg-zinc-200 text-zinc-600'
                                                     }`}
                                                 >
@@ -453,7 +453,7 @@ export default function SedesIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 />
                                 {form.errors.nombre && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.nombre}
                                     </p>
                                 )}
@@ -486,7 +486,7 @@ export default function SedesIndex() {
                                     {TIPO_DESCRIPCION[form.data.tipo]}
                                 </p>
                                 {form.errors.tipo && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.tipo}
                                     </p>
                                 )}
@@ -519,7 +519,7 @@ export default function SedesIndex() {
                                         ))}
                                     </NativeSelect>
                                     {form.errors.almacen_id && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.almacen_id}
                                         </p>
                                     )}
@@ -564,7 +564,7 @@ export default function SedesIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 />
                                 {form.errors.direccion && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.direccion}
                                     </p>
                                 )}
@@ -595,7 +595,7 @@ export default function SedesIndex() {
                                     0000 es la sede principal.
                                 </p>
                                 {form.errors.cod_establecimiento_anexo && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.cod_establecimiento_anexo}
                                     </p>
                                 )}

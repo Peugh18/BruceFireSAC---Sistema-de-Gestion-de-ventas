@@ -69,32 +69,32 @@ const AVISOS: Record<Estado | 'no_encontrado', Aviso> = {
     vigente: {
         icono: ShieldCheck,
         titulo: 'Certificado válido y vigente',
-        tono: 'border-emerald-600/25 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+        tono: 'border-emerald-600/25 bg-emerald-600/10 text-success-strong dark:text-emerald-400',
     },
     sin_vencimiento: {
         icono: ShieldCheck,
         titulo: 'Certificado válido',
-        tono: 'border-emerald-600/25 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+        tono: 'border-emerald-600/25 bg-emerald-600/10 text-success-strong dark:text-emerald-400',
     },
     vencido: {
         icono: CalendarX,
         titulo: 'Certificado vencido',
-        tono: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+        tono: 'border-amber-500/30 bg-amber-500/10 text-warning-strong dark:text-amber-400',
     },
     reemplazado: {
         icono: RefreshCcw,
         titulo: 'Certificado reemplazado',
-        tono: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+        tono: 'border-amber-500/30 bg-amber-500/10 text-warning-strong dark:text-amber-400',
     },
     anulado: {
         icono: Ban,
         titulo: 'Certificado anulado',
-        tono: 'border-red-600/25 bg-red-600/10 text-red-700 dark:text-red-400',
+        tono: 'border-red-600/25 bg-red-600/10 text-destructive-strong dark:text-red-400',
     },
     no_encontrado: {
         icono: SearchX,
         titulo: 'No encontramos este certificado',
-        tono: 'border-red-600/25 bg-red-600/10 text-red-700 dark:text-red-400',
+        tono: 'border-red-600/25 bg-red-600/10 text-destructive-strong dark:text-red-400',
     },
 };
 

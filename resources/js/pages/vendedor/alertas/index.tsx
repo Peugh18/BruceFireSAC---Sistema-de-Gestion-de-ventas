@@ -347,7 +347,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                             'recarga_y_ph' && (
                                                             <Badge
                                                                 title="Requiere tanto recarga anual (1 año) como Prueba Hidrostática (5 años)"
-                                                                className="rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-xs font-bold text-red-700 dark:text-red-300"
+                                                                className="text-destructive-strong rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-xs font-bold dark:text-red-300"
                                                             >
                                                                 Recarga (1 año)
                                                                 + P.H. (5 años)

@@ -830,7 +830,7 @@ export default function ReportesIndex() {
                                                                 className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                                     p.bajo_minimo
                                                                         ? 'text-primary-strong bg-red-100'
-                                                                        : 'bg-emerald-100 text-emerald-800'
+                                                                        : 'text-success-strong bg-emerald-100'
                                                                 }`}
                                                             >
                                                                 {p.bajo_minimo

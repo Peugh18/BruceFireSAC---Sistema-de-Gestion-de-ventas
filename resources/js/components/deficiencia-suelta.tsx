@@ -73,7 +73,7 @@ export default function DeficienciaSuelta({
             <button
                 type="button"
                 onClick={() => setAbierto(true)}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-amber-500 px-3 text-xs font-bold text-amber-800 dark:text-amber-300"
+                className="text-warning-strong inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-amber-500 px-3 text-xs font-bold dark:text-amber-300"
             >
                 <AlertTriangle className="h-4 w-4" />
                 Registrar una deficiencia
@@ -169,7 +169,10 @@ export default function DeficienciaSuelta({
                 )}
             </div>
             {Object.values(form.errors)[0] && (
-                <p className="text-xs font-semibold text-red-600" role="alert">
+                <p
+                    className="text-destructive-strong text-xs font-semibold"
+                    role="alert"
+                >
                     {Object.values(form.errors)[0]}
                 </p>
             )}

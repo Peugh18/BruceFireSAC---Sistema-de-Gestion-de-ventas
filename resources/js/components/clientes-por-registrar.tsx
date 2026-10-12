@@ -30,11 +30,11 @@ export type PorRegistrarData = {
 const colores: Record<Recompra['categoria'], { pill: string; barra: string }> =
     {
         alta: {
-            pill: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+            pill: 'bg-emerald-500/10 text-success-strong dark:text-emerald-400',
             barra: 'bg-emerald-500',
         },
         media: {
-            pill: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+            pill: 'bg-amber-500/10 text-warning-strong dark:text-amber-400',
             barra: 'bg-amber-500',
         },
         baja: {

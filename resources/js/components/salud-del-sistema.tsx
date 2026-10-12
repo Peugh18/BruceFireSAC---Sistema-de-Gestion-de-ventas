@@ -44,7 +44,7 @@ export default function SaludDelSistema({
 
     if (avisos.length === 0) {
         return (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3.5 py-2 text-[12.5px] text-emerald-700 dark:text-emerald-400">
+            <div className="text-success-strong flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3.5 py-2 text-[12.5px] dark:text-emerald-400">
                 <CheckCircle2 className="size-4 shrink-0" />
                 <span>
                     Sistema al día: tareas automáticas activas, respaldo al día
@@ -60,7 +60,7 @@ export default function SaludDelSistema({
 
     return (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-            <div className="flex items-center gap-2 text-[13px] font-bold text-amber-800 dark:text-amber-400">
+            <div className="text-warning-strong flex items-center gap-2 text-[13px] font-bold dark:text-amber-400">
                 <AlertTriangle className="size-4 shrink-0" />
                 Revisa el sistema ({avisos.length})
             </div>

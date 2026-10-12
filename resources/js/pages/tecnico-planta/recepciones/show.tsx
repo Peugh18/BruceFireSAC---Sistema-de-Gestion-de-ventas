@@ -1,3 +1,4 @@
+import InputError from '@/components/input-error';
 import { ProgresoConEtiqueta } from '@/components/progreso';
 import {
     Dialog,
@@ -283,11 +284,11 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     {order.codigo}
                                 </span>
                                 {isPendiente ? (
-                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
+                                    <span className="text-warning-strong rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300">
                                         Pendiente de Recepción
                                     </span>
                                 ) : (
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                    <span className="text-success-strong rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold dark:bg-emerald-950/60 dark:text-emerald-300">
                                         Recibido en Planta
                                     </span>
                                 )}
@@ -344,13 +345,13 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                 {/* Status & Confirmation Section */}
                 {isPendiente ? (
                     <div className="space-y-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-4 dark:border-amber-900/40">
-                        <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300">
+                        <div className="text-warning-strong flex items-center gap-2 dark:text-amber-300">
                             <AlertTriangle className="h-4 w-4" />
                             <h3 className="text-xs font-bold tracking-wider uppercase">
                                 Confirmación de Ingreso a Taller
                             </h3>
                         </div>
-                        <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300/90">
+                        <p className="text-warning-strong text-xs leading-relaxed dark:text-amber-300/90">
                             Verifique que los extintores físicos coincidan con
                             la orden. Puede agregar observaciones o registrar
                             faltantes/sobrantes.
@@ -410,6 +411,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     placeholder="Ej: Se reciben 2 cilindros en vez de 3, o con manguera rota..."
                                     className="bg-card focus:ring-ring w-full rounded-xl border border-neutral-200 px-3 py-2 text-xs focus:ring-2 dark:border-neutral-700 dark:bg-neutral-900"
                                 />
+                                <InputError message={confirmForm.errors.diferencias} />
                             </div>
 
                             <button
@@ -426,7 +428,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                         </form>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-300">
+                    <div className="text-success-strong flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-300">
                         <CheckCircle2 className="text-success-strong h-4 w-4 flex-shrink-0" />
                         <span>
                             Esta orden ya ingresó formalmente al taller de
@@ -702,14 +704,14 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     </div>
 
                                     {scanError && (
-                                        <p className="text-xs font-medium text-rose-600">
+                                        <p className="text-destructive-strong text-xs font-medium">
                                             {scanError}
                                         </p>
                                     )}
 
                                     {scanResult && (
                                         <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/60 dark:bg-amber-950/40">
-                                            <div className="font-mono text-sm font-bold text-amber-900 dark:text-amber-300">
+                                            <div className="text-warning-strong font-mono text-sm font-bold dark:text-amber-300">
                                                 {scanResult.numero_serie}
                                             </div>
                                             <div className="text-xs text-neutral-700 dark:text-neutral-300">

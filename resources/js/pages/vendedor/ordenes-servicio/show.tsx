@@ -893,7 +893,7 @@ export default function ServiceOrderShow({
                                         </div>
                                     ) : null}
                                     {editable && tecnicos.length === 0 ? (
-                                        <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                                        <p className="text-warning-strong mt-1 text-xs dark:text-amber-400">
                                             No hay técnicos de{' '}
                                             {serviceOrder.departamento_tecnico ===
                                             'campo'

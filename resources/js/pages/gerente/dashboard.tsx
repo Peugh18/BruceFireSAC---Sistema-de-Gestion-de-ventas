@@ -193,7 +193,7 @@ export default function GerenteDashboard({
                     metrics.plazoSunat.vencidos > 0) && (
                     <div
                         role="alert"
-                        className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+                        className="text-warning-strong flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
                     >
                         <AlertTriangle className="mt-0.5 size-5 shrink-0" />
                         <p>
@@ -745,10 +745,10 @@ export default function GerenteDashboard({
                                 {/* Alta */}
                                 <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold tracking-wider text-emerald-700 uppercase dark:text-emerald-400">
+                                        <span className="text-success-strong text-xs font-semibold tracking-wider uppercase dark:text-emerald-400">
                                             Alta Oportunidad (P ≥ 60%)
                                         </span>
-                                        <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                                        <span className="text-success-strong rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-xs font-bold dark:text-emerald-300">
                                             {
                                                 aiRetention.distribucion.alta
                                                     .porcentaje
@@ -756,7 +756,7 @@ export default function GerenteDashboard({
                                             %
                                         </span>
                                     </div>
-                                    <div className="mt-2 font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                                    <div className="text-success-strong mt-2 font-mono text-2xl font-bold dark:text-emerald-300">
                                         {formatNumber(
                                             aiRetention.distribucion.alta
                                                 .cantidad,
@@ -774,11 +774,11 @@ export default function GerenteDashboard({
                                 {/* Media */}
                                 <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold tracking-wider text-amber-700 uppercase dark:text-amber-400">
+                                        <span className="text-warning-strong text-xs font-semibold tracking-wider uppercase dark:text-amber-400">
                                             Media Probabilidad (35% ≤ P &lt;
                                             60%)
                                         </span>
-                                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs font-bold text-amber-700 dark:text-amber-300">
+                                        <span className="text-warning-strong rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs font-bold dark:text-amber-300">
                                             {
                                                 aiRetention.distribucion.media
                                                     .porcentaje
@@ -786,7 +786,7 @@ export default function GerenteDashboard({
                                             %
                                         </span>
                                     </div>
-                                    <div className="mt-2 font-mono text-2xl font-bold text-amber-700 dark:text-amber-300">
+                                    <div className="text-warning-strong mt-2 font-mono text-2xl font-bold dark:text-amber-300">
                                         {formatNumber(
                                             aiRetention.distribucion.media
                                                 .cantidad,
@@ -875,9 +875,9 @@ export default function GerenteDashboard({
                                                             <span
                                                                 className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-xs font-bold ${
                                                                     isAlta
-                                                                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                                                                        ? 'text-success-strong bg-emerald-500/15 dark:text-emerald-400'
                                                                         : isMedia
-                                                                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                                                                          ? 'text-warning-strong bg-amber-500/15 dark:text-amber-400'
                                                                           : 'bg-muted text-muted-foreground'
                                                                 }`}
                                                             >
@@ -935,7 +935,7 @@ export default function GerenteDashboard({
                                                                         key={
                                                                             idx
                                                                         }
-                                                                        className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400"
+                                                                        className="text-success-strong flex items-center gap-1.5 text-xs dark:text-emerald-400"
                                                                     >
                                                                         <CheckCircle2 className="size-3 shrink-0" />
                                                                         <span className="truncate">
@@ -968,7 +968,7 @@ export default function GerenteDashboard({
                                                                             key={
                                                                                 idx
                                                                             }
-                                                                            className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400"
+                                                                            className="text-warning-strong flex items-center gap-1.5 text-xs dark:text-amber-400"
                                                                         >
                                                                             <AlertTriangle className="size-3 shrink-0" />
                                                                             <span className="truncate">
@@ -993,7 +993,7 @@ export default function GerenteDashboard({
                                                             href={`https://wa.me/51${c.telefono.replace(/[^0-9]/g, '')}`}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300"
+                                                            className="text-success-strong inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 py-1.5 text-xs font-medium hover:bg-emerald-500/20 dark:text-emerald-300"
                                                         >
                                                             <MessageCircle className="size-3.5" />
                                                             Contactar por

@@ -202,7 +202,7 @@ export default function UsuariosIndex() {
                 </div>
 
                 {flash?.success && (
-                    <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800">
+                    <div className="text-success-strong flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium">
                         <CheckCircle2 className="size-4" />
                         {flash.success}
                     </div>
@@ -283,7 +283,7 @@ export default function UsuariosIndex() {
                                                             className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                                 u.role
                                                                     ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
-                                                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+                                                                    : 'text-warning-strong bg-amber-100 dark:bg-amber-950/50 dark:text-amber-300'
                                                             }`}
                                                         >
                                                             {roleLabel(u.role)}

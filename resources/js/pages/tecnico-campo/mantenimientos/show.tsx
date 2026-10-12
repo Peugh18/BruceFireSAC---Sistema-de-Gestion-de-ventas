@@ -224,7 +224,7 @@ export default function MantenimientoShow({
                         errores.equipment_id ||
                         errores.estado) && (
                         <p
-                            className="text-xs font-semibold text-red-600"
+                            className="text-destructive-strong text-xs font-semibold"
                             role="alert"
                         >
                             {agregar.errors.numero_serie ??
@@ -343,7 +343,7 @@ export default function MantenimientoShow({
                 {finalizado ? (
                     <section className="space-y-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
                         <p className="flex items-center gap-2 text-xs font-black">
-                            <CheckCircle2 className="size-4 text-emerald-700" />
+                            <CheckCircle2 className="text-success-strong size-4" />
                             Mantenimiento finalizado.
                         </p>
                         <a
@@ -416,7 +416,7 @@ export default function MantenimientoShow({
                             errores.conformidad_nombre ||
                             errores.estado) && (
                             <p
-                                className="text-xs font-semibold text-red-600"
+                                className="text-destructive-strong text-xs font-semibold"
                                 role="alert"
                             >
                                 {errores.checklist ??

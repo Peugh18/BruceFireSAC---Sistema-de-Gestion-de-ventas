@@ -113,12 +113,12 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                                                 {r.codigo}
                                             </span>
                                             {r.ya_recogido ? (
-                                                <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                                <span className="text-success-strong flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold dark:bg-emerald-950/60 dark:text-emerald-300">
                                                     <CheckCircle2 className="h-2.5 w-2.5" />
                                                     Recogido
                                                 </span>
                                             ) : (
-                                                <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                                                <span className="text-warning-strong flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300">
                                                     <Clock className="h-2.5 w-2.5" />
                                                     Por Recoger
                                                 </span>

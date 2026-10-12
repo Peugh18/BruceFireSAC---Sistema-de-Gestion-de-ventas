@@ -148,11 +148,11 @@ export default function RecojoShow({
                                     {order.codigo}
                                 </span>
                                 {yaRecogido ? (
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                    <span className="text-success-strong rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold dark:bg-emerald-950/60 dark:text-emerald-300">
                                         Recojo Registrado
                                     </span>
                                 ) : (
-                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                                    <span className="text-warning-strong rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300">
                                         Pendiente de Recojo
                                     </span>
                                 )}
@@ -416,7 +416,7 @@ export default function RecojoShow({
                             </button>
                             {equipmentForm.errors.numero_serie && (
                                 <p
-                                    className="text-xs text-red-600"
+                                    className="text-destructive-strong text-xs"
                                     role="alert"
                                 >
                                     {equipmentForm.errors.numero_serie}
@@ -561,7 +561,7 @@ export default function RecojoShow({
                         </form>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+                    <div className="text-success-strong flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
                         <CheckCircle2 className="text-success-strong h-5 w-5 flex-shrink-0" />
                         <span>
                             Recojo formalizado. Los equipos se encuentran en

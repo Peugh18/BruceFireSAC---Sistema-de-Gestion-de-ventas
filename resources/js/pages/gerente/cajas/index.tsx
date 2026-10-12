@@ -178,7 +178,7 @@ export default function CajasConsolidadasIndex() {
                             </span>
                             <Wallet className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.turnosAbiertos}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
@@ -193,7 +193,7 @@ export default function CajasConsolidadasIndex() {
                             </span>
                             <AlertCircle className="text-warning-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
+                        <div className="text-warning-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.turnosConDescuadreMes}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
@@ -212,7 +212,7 @@ export default function CajasConsolidadasIndex() {
                             className={`mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold ${
                                 kpis.faltantesMes > 0
                                     ? 'text-primary-strong'
-                                    : 'text-emerald-700'
+                                    : 'text-success-strong'
                             }`}
                         >
                             {formatCurrency(kpis.faltantesMes)}
@@ -478,7 +478,7 @@ export default function CajasConsolidadasIndex() {
                                                     </span>
                                                 ) : c.tipo_diferencia ===
                                                   'cuadrado' ? (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-xs font-bold text-emerald-700">
+                                                    <span className="text-success-strong inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-xs font-bold">
                                                         <CheckCircle2 className="size-3" />
                                                         Cuadra exacto
                                                     </span>
@@ -491,7 +491,7 @@ export default function CajasConsolidadasIndex() {
                                                         )}
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 font-mono text-xs font-bold text-amber-800">
+                                                    <span className="text-warning-strong inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 font-mono text-xs font-bold">
                                                         <PlusCircle className="size-3" />
                                                         +
                                                         {formatCurrency(
@@ -504,7 +504,7 @@ export default function CajasConsolidadasIndex() {
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         c.estado === 'abierto'
-                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            ? 'text-success-strong bg-emerald-100'
                                                             : 'bg-zinc-100 text-zinc-700'
                                                     }`}
                                                 >

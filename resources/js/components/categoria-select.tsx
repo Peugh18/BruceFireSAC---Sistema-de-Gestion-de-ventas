@@ -159,12 +159,18 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                     </DialogHeader>
 
                     {errors.categoria && (
-                        <p className="text-sm text-red-600" role="alert">
+                        <p
+                            className="text-destructive-strong text-sm"
+                            role="alert"
+                        >
                             {errors.categoria}
                         </p>
                     )}
                     {errors.nombre && (
-                        <p className="text-sm text-red-600" role="alert">
+                        <p
+                            className="text-destructive-strong text-sm"
+                            role="alert"
+                        >
                             {errors.nombre}
                         </p>
                     )}
@@ -234,7 +240,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                                         <button
                                             type="button"
                                             onClick={() => borrar(c)}
-                                            className="font-semibold text-red-600 underline"
+                                            className="text-destructive-strong font-semibold underline"
                                         >
                                             Borrar
                                         </button>

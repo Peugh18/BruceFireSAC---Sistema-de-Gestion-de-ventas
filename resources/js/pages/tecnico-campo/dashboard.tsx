@@ -259,11 +259,11 @@ export default function TecnicoCampoDashboard({
                                                 <span
                                                     className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         isFinished
-                                                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                                            ? 'text-success-strong bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300'
                                                             : order.estado ===
                                                                 'en_proceso'
                                                               ? 'bg-primary/10 text-primary-strong'
-                                                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                                              : 'text-warning-strong bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300'
                                                     }`}
                                                 >
                                                     {etiquetaEstadoOrden(

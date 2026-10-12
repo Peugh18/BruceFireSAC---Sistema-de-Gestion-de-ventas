@@ -322,7 +322,7 @@ export default function FacturacionIndex({
                     filters.plazo) && (
                     <div
                         role="alert"
-                        className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+                        className="text-warning-strong flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
                     >
                         <AlertTriangle className="size-5 shrink-0" />
                         <p className="min-w-[14rem] flex-1">

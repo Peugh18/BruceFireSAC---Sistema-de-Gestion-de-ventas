@@ -198,7 +198,7 @@ export default function EjecucionShow({
                                 <span className="font-mono text-base font-extrabold text-neutral-900 dark:text-neutral-100">
                                     {order.codigo}
                                 </span>
-                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold text-amber-900 uppercase dark:bg-amber-950/60 dark:text-amber-300">
+                                <span className="text-warning-strong rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold uppercase dark:bg-amber-950/60 dark:text-amber-300">
                                     {order.estado.replace('_', ' ')}
                                 </span>
                             </div>
@@ -298,7 +298,7 @@ export default function EjecucionShow({
 
                 {/* Primary Action Buttons Bar */}
                 <div className="space-y-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-4 dark:border-amber-900/40">
-                    <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-amber-900 uppercase dark:text-amber-300">
+                    <h3 className="text-warning-strong flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase dark:text-amber-300">
                         <Wrench className="h-4 w-4" />
                         <span>Control de Ejecución en Planta</span>
                     </h3>
@@ -306,7 +306,7 @@ export default function EjecucionShow({
                     {errors.target_state ? (
                         <p
                             role="alert"
-                            className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+                            className="text-destructive-strong rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
                         >
                             {errors.target_state}
                         </p>
@@ -398,7 +398,7 @@ export default function EjecucionShow({
                         </div>
                     ) : order.estado === 'listo_certificado' ? (
                         <div className="space-y-2">
-                            <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                            <div className="text-success-strong flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
                                 <ShieldCheck className="text-success-strong h-5 w-5 flex-shrink-0" />
                                 <span>
                                     Certificado emitido. Al marcarla lista para
@@ -417,7 +417,7 @@ export default function EjecucionShow({
                             </button>
                         </div>
                     ) : order.estado === 'esperando_autorizacion' ? (
-                        <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
+                        <div className="text-warning-strong flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
                             <ShieldCheck className="h-5 w-5 flex-shrink-0" />
                             <span>
                                 Esperando que el cliente autorice las
@@ -427,7 +427,7 @@ export default function EjecucionShow({
                     ) : ['listo_entrega', 'entregado', 'cerrado'].includes(
                           order.estado,
                       ) ? (
-                        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <div className="text-success-strong flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
                             <ShieldCheck className="text-success-strong h-5 w-5 flex-shrink-0" />
                             <span>
                                 Trabajo terminado y certificado emitido: la
@@ -459,7 +459,7 @@ export default function EjecucionShow({
                                     className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-800/50 dark:bg-emerald-950/20"
                                 >
                                     <div>
-                                        <div className="font-mono text-xs font-bold text-emerald-900 dark:text-emerald-300">
+                                        <div className="text-success-strong font-mono text-xs font-bold dark:text-emerald-300">
                                             {cert.numero}
                                         </div>
                                         <div className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
@@ -470,7 +470,7 @@ export default function EjecucionShow({
                                             {cert.fecha_vigencia_hasta}
                                         </div>
                                     </div>
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 uppercase dark:bg-emerald-900/60 dark:text-emerald-300">
+                                    <span className="text-success-strong rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold uppercase dark:bg-emerald-900/60 dark:text-emerald-300">
                                         {cert.estado}
                                     </span>
                                 </div>
@@ -517,8 +517,8 @@ export default function EjecucionShow({
                                                 d.estado === 'resuelta'
                                                     ? 'bg-muted text-foreground '
                                                     : d.estado === 'autorizada'
-                                                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                                                      : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                                      ? 'text-success-strong bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                                      : 'text-warning-strong bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300'
                                             }`}
                                         >
                                             {d.estado.replace('_', ' ')}

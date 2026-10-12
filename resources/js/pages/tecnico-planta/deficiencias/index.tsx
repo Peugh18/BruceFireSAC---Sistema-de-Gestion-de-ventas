@@ -133,21 +133,21 @@ export default function DeficienciasIndex({
         switch (estado) {
             case 'esperando_autorizacion':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
+                    <span className="text-warning-strong inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300">
                         <Clock className="h-3 w-3" />
                         Por Autorizar
                     </span>
                 );
             case 'autorizada':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300">
+                    <span className="text-success-strong inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold dark:bg-emerald-950/60 dark:text-emerald-300">
                         <CheckCircle2 className="h-3 w-3" />
                         Autorizada
                     </span>
                 );
             case 'rechazada':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-900 dark:bg-rose-950/60 dark:text-rose-300">
+                    <span className="text-destructive-strong inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold dark:bg-rose-950/60 dark:text-rose-300">
                         <XCircle className="h-3 w-3" />
                         Rechazada
                     </span>
@@ -379,7 +379,7 @@ export default function DeficienciasIndex({
 
                                 {/* Authorization Banner from Vendedor (§17, §20) */}
                                 {d.authorization && (
-                                    <div className="space-y-1 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-900 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300">
+                                    <div className="text-success-strong space-y-1 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300">
                                         <div className="flex items-center gap-1.5 font-bold">
                                             <UserCheck className="text-success-strong h-3.5 w-3.5" />
                                             <span>
@@ -389,7 +389,7 @@ export default function DeficienciasIndex({
                                             </span>
                                         </div>
                                         {d.authorization.observacion && (
-                                            <p className="text-xs text-emerald-800 dark:text-emerald-400">
+                                            <p className="text-success-strong text-xs dark:text-emerald-400">
                                                 "{d.authorization.observacion}"
                                             </p>
                                         )}

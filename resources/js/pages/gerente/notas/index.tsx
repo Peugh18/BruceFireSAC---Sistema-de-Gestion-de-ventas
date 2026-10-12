@@ -197,7 +197,7 @@ export default function NotasPorAprobar() {
                 {flash?.success && (
                     <div
                         role="status"
-                        className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800"
+                        className="text-success-strong flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium"
                     >
                         <CheckCircle2 className="size-4" />
                         {flash.success}
@@ -206,7 +206,7 @@ export default function NotasPorAprobar() {
                 {errorGeneral && (
                     <div
                         role="alert"
-                        className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-800"
+                        className="text-warning-strong flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-medium"
                     >
                         <AlertTriangle className="size-4" />
                         {errorGeneral}

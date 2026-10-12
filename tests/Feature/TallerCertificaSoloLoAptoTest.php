@@ -39,7 +39,7 @@ function checklistConforme(Equipment $equipo): void
 test('se certifica solo lo que llego y no se rechazo, y la ph va por extintor', function () {
     [$llego, $rechazado, $noLlego] = $this->equipos;
 
-    $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id, $rechazado->id]])->assertSessionHasNoErrors();
+    $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id, $rechazado->id], 'diferencias' => 'Falta un equipo'])->assertSessionHasNoErrors();
 
     // No se puede terminar el trabajo sin el checklist de cada extintor recibido.
     $this->orden->update(['estado' => 'en_proceso']);
@@ -97,7 +97,7 @@ test('el vendedor anula una orden antes del certificado y no si ya se cobro o se
 test('la ph marcada solo en un extintor rechazado no emite un certificado de ph vacio', function () {
     [$llego, $rechazado] = $this->equipos;
 
-    $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id, $rechazado->id]])->assertSessionHasNoErrors();
+    $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id, $rechazado->id], 'diferencias' => 'Falta un equipo'])->assertSessionHasNoErrors();
     $this->orden->update(['estado' => 'en_proceso']);
     checklistConforme($llego);
     checklistConforme($rechazado);
@@ -130,7 +130,7 @@ test('un repuesto que sale de dos lotes deja los dos movimientos en la bitacora 
 
 test('terminar y emitir certificados es un solo paso y no deja la orden a medias si falta el checklist', function () {
     [$llego] = $this->equipos;
-    $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id]])->assertSessionHasNoErrors();
+    $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id], 'diferencias' => 'El otro equipo no llegó'])->assertSessionHasNoErrors();
     $this->orden->update(['estado' => 'en_proceso']);
     $avanzar = fn (array $extra = []) => $this->actingAs($this->tecnico)->post(($this->ruta)('ejecucion.advance'), ['target_state' => 'listo_certificado', ...$extra]);
 

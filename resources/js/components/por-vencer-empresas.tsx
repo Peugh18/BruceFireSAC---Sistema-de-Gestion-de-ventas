@@ -273,7 +273,7 @@ export default function PorVencerEmpresas({
                                             setPidiendoNumero(empresa)
                                         }
                                         title="El cliente no tiene celular: agrégalo y se abre WhatsApp"
-                                        className="flex h-8 items-center gap-1.5 rounded-lg border border-green-700 bg-green-700/5 px-3 text-xs font-bold text-green-800 transition-colors hover:bg-green-700/10 dark:text-green-400"
+                                        className="text-success-strong flex h-8 items-center gap-1.5 rounded-lg border border-green-700 bg-green-700/5 px-3 text-xs font-bold transition-colors hover:bg-green-700/10 dark:text-green-400"
                                     >
                                         <MessageSquare className="size-3.5" />
                                         Agregar número

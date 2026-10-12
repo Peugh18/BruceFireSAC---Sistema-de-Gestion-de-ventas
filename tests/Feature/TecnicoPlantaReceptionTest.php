@@ -152,3 +152,18 @@ test('tecnico planta can print barcode stickers for equipments in order', functi
     $response->assertOk();
     expect($response->headers->get('content-type'))->toBe('application/pdf');
 });
+
+test('no se confirma la recepción con un equipo faltante sin explicar qué pasó', function () {
+    $client = Client::factory()->create();
+    $order = ServiceOrder::factory()->create(['client_id' => $client->id, 'estado' => 'pendiente_recepcion']);
+    [$llego, $falta] = Equipment::factory()->count(2)->create(['client_id' => $client->id]);
+    $order->equipments()->attach([$llego->id, $falta->id]);
+    $ruta = route('tecnico-planta.recepciones.confirm', ['current_team' => $this->team, 'service_order' => $order]);
+
+    $this->actingAs($this->tecnicoPlanta)->post($ruta, ['equipos_recibidos' => [$llego->id]])
+        ->assertSessionHasErrors('diferencias');
+    expect($order->fresh()->estado)->toBe('pendiente_recepcion');
+
+    $this->actingAs($this->tecnicoPlanta)->post($ruta, ['equipos_recibidos' => [$llego->id], 'diferencias' => 'El segundo quedó en sede'])
+        ->assertSessionHasNoErrors();
+});

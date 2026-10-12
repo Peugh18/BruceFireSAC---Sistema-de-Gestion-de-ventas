@@ -329,7 +329,7 @@ export default function ProductosIndex() {
                 <p
                     id={`producto-${name}-error`}
                     role="alert"
-                    className="mt-1 text-sm text-red-700 dark:text-red-300"
+                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                 >
                     {form.errors[name]}
                 </p>
@@ -401,13 +401,13 @@ export default function ProductosIndex() {
                 {dialogoConfirmacion}
                 {/* Alertas Flash */}
                 {flash?.success && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <div className="text-success-strong flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
                         <CheckCircle2 className="text-success-strong size-4 shrink-0" />
                         <span>{flash.success}</span>
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <div className="text-destructive-strong flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm">
                         <AlertTriangle className="text-primary-strong size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
@@ -452,7 +452,7 @@ export default function ProductosIndex() {
                             </span>
                             <CheckCircle2 className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.totalActivos}
                         </div>
                     </div>
@@ -655,7 +655,7 @@ export default function ProductosIndex() {
                                                     <span
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                             p.activo
-                                                                ? 'bg-emerald-100 text-emerald-800'
+                                                                ? 'text-success-strong bg-emerald-100'
                                                                 : 'bg-zinc-100 text-zinc-600'
                                                         }`}
                                                     >
@@ -806,7 +806,7 @@ export default function ProductosIndex() {
                                 {Object.keys(form.errors).length > 0 && (
                                     <p
                                         role="alert"
-                                        className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+                                        className="text-destructive-strong rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
                                     >
                                         {Object.values(form.errors)[0]} Tus
                                         datos se mantienen; corrige el campo
@@ -965,7 +965,7 @@ export default function ProductosIndex() {
                                             {form.errors.categoria && (
                                                 <p
                                                     role="alert"
-                                                    className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                 >
                                                     {form.errors.categoria}
                                                 </p>
@@ -1034,7 +1034,7 @@ export default function ProductosIndex() {
                                                 <p
                                                     id="producto-unidad-error"
                                                     role="alert"
-                                                    className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                 >
                                                     {form.errors.unidad_medida}
                                                 </p>
@@ -1091,7 +1091,7 @@ export default function ProductosIndex() {
                                         {form.errors.tipo_afectacion_igv && (
                                             <p
                                                 role="alert"
-                                                className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                             >
                                                 {
                                                     form.errors
@@ -1163,7 +1163,7 @@ export default function ProductosIndex() {
                                                 {form.errors.agente && (
                                                     <p
                                                         role="alert"
-                                                        className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                        className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                     >
                                                         {form.errors.agente}
                                                     </p>
@@ -1262,7 +1262,7 @@ export default function ProductosIndex() {
                                             form.errors.controla_lote) && (
                                             <p
                                                 role="alert"
-                                                className="text-sm text-red-700 dark:text-red-300"
+                                                className="text-destructive-strong text-sm dark:text-red-300"
                                             >
                                                 {form.errors.serializado ||
                                                     form.errors.controla_lote}
@@ -1353,7 +1353,7 @@ export default function ProductosIndex() {
                                             {form.errors.descripcion && (
                                                 <p
                                                     role="alert"
-                                                    className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                 >
                                                     {form.errors.descripcion}
                                                 </p>
@@ -1440,7 +1440,7 @@ export default function ProductosIndex() {
                                         {form.errors.activo && (
                                             <p
                                                 role="alert"
-                                                className="text-sm text-red-700 dark:text-red-300"
+                                                className="text-destructive-strong text-sm dark:text-red-300"
                                             >
                                                 {form.errors.activo}
                                             </p>

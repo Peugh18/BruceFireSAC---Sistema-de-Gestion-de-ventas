@@ -258,7 +258,7 @@ export default function ConversacionOrden({
                 )}
                 {(form.errors.mensaje || form.errors.archivo) && (
                     <p
-                        className="text-xs font-semibold text-red-600"
+                        className="text-destructive-strong text-xs font-semibold"
                         role="alert"
                     >
                         {form.errors.mensaje ?? form.errors.archivo}

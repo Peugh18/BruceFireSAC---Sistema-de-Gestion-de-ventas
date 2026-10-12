@@ -467,7 +467,7 @@ export default function InstalacionShow({
                         )}
                         {errorEscaneo && (
                             <p
-                                className="text-xs font-semibold text-red-600"
+                                className="text-destructive-strong text-xs font-semibold"
                                 role="alert"
                             >
                                 {errorEscaneo}
@@ -494,7 +494,7 @@ export default function InstalacionShow({
                             ))}
                         </ul>
                         {faltantes.length > 0 && (
-                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                            <p className="text-warning-strong text-xs font-semibold dark:text-amber-400">
                                 Faltan {faltantes.length} unidad(es) por
                                 escanear.
                             </p>

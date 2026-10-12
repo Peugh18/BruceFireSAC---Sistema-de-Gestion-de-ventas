@@ -150,7 +150,7 @@ export default function Login({ status, canResetPassword }: Props) {
             </p>
 
             {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
+                <div className="text-success-strong mb-4 text-center text-sm font-medium">
                     {status}
                 </div>
             )}

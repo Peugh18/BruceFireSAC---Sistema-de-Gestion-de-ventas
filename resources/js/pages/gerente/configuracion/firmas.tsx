@@ -140,12 +140,12 @@ export default function FirmasYSellos({ firmantes, tipos }: Props) {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {tipo.sin_firma ? (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-400">
+                                        <span className="text-warning-strong inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-bold dark:text-amber-400">
                                             <AlertTriangle className="size-3" />
                                             Falta firma
                                         </span>
                                     ) : (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                        <span className="text-success-strong inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold dark:text-emerald-400">
                                             <CheckCircle2 className="size-3" />
                                             Completo
                                         </span>

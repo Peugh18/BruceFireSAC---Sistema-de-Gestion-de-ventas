@@ -767,7 +767,7 @@ export default function CotizacionesIndex({
                                                                         )
                                                                     }
                                                                     title="El cliente no tiene celular: agrégalo y se envía por WhatsApp"
-                                                                    className="flex h-7 items-center gap-1.5 rounded-md border border-green-700 bg-green-700/5 px-2.5 text-xs font-bold text-green-800 shadow-xs transition-colors hover:bg-green-700/10 dark:text-green-400"
+                                                                    className="text-success-strong flex h-7 items-center gap-1.5 rounded-md border border-green-700 bg-green-700/5 px-2.5 text-xs font-bold shadow-xs transition-colors hover:bg-green-700/10 dark:text-green-400"
                                                                 >
                                                                     <MessageCircle className="size-3" />
                                                                     <span>

@@ -405,14 +405,14 @@ export function SaleNotesPanel({
             </p>
 
             {original.sunat_estado === 'baja_pendiente' && (
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="text-warning-strong mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs">
                     <AlertTriangle className="size-4 shrink-0" />
                     Baja enviada a SUNAT: esperando su respuesta. La venta se
                     anula cuando SUNAT la acepte.
                 </div>
             )}
             {vigente && original.baja_mensaje && (
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="text-warning-strong mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs">
                     <AlertTriangle className="size-4 shrink-0" />
                     {original.baja_mensaje}
                 </div>
@@ -421,7 +421,7 @@ export function SaleNotesPanel({
             {flash?.success && (
                 <div
                     role="status"
-                    className="mb-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800"
+                    className="text-success-strong mb-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs"
                 >
                     <CheckCircle2 className="size-4 shrink-0" />
                     {flash.success}
@@ -430,7 +430,7 @@ export function SaleNotesPanel({
             {flash?.error && (
                 <div
                     role="alert"
-                    className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                    className="text-warning-strong mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs"
                 >
                     <AlertTriangle className="size-4 shrink-0" />
                     {flash.error}
@@ -604,7 +604,7 @@ export function SaleNotesPanel({
                                     ))}
                                 </NativeSelect>
                                 {form.errors.motivo_catalogo && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.motivo_catalogo}
                                     </p>
                                 )}
@@ -628,7 +628,7 @@ export function SaleNotesPanel({
                                     className="border-border mt-1 w-full rounded-lg border px-3 py-2"
                                 />
                                 {form.errors.detalle && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.detalle}
                                     </p>
                                 )}
@@ -796,7 +796,7 @@ export function SaleNotesPanel({
                                         </p>
                                     )}
                                     {form.errors.importe && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.importe}
                                         </p>
                                     )}
@@ -827,7 +827,7 @@ export function SaleNotesPanel({
                                         className="border-border mt-1 w-full rounded-lg border px-3 py-2 font-mono"
                                     />
                                     {form.errors.importe && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.importe}
                                         </p>
                                     )}
@@ -871,7 +871,10 @@ export function SaleNotesPanel({
                                 )}
 
                             {form.errors.electronic_document_id && (
-                                <p className="text-red-600" role="alert">
+                                <p
+                                    className="text-destructive-strong"
+                                    role="alert"
+                                >
                                     {form.errors.electronic_document_id}
                                 </p>
                             )}
@@ -953,7 +956,7 @@ export function SaleNotesPanel({
                                     className="border-border mt-1 w-full rounded-lg border px-3 py-2"
                                 />
                                 {baja.errors.motivo && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {baja.errors.motivo}
                                     </p>
                                 )}
@@ -979,12 +982,18 @@ export function SaleNotesPanel({
                                 </span>
                             </label>
                             {baja.errors.no_entregado && (
-                                <p className="text-red-600" role="alert">
+                                <p
+                                    className="text-destructive-strong"
+                                    role="alert"
+                                >
                                     {baja.errors.no_entregado}
                                 </p>
                             )}
                             {errorBaja && (
-                                <p className="text-red-600" role="alert">
+                                <p
+                                    className="text-destructive-strong"
+                                    role="alert"
+                                >
                                     {errorBaja}
                                 </p>
                             )}

@@ -229,7 +229,7 @@ export default function CobranzasConsolidadasIndex() {
                             </span>
                             <Calendar className="text-warning-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
+                        <div className="text-warning-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(kpis.venceEstaSemana)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
@@ -244,7 +244,7 @@ export default function CobranzasConsolidadasIndex() {
                             </span>
                             <TrendingUp className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(kpis.cobradoEsteMes)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
@@ -478,7 +478,7 @@ export default function CobranzasConsolidadasIndex() {
                                                 <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                     {formatCurrency(c.monto)}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-right font-mono text-emerald-700">
+                                                <TableCell className="text-success-strong px-4 py-3 text-right font-mono">
                                                     {formatCurrency(
                                                         c.monto_pagado,
                                                     )}
@@ -493,13 +493,13 @@ export default function CobranzasConsolidadasIndex() {
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                             c.estado ===
                                                             'pagado'
-                                                                ? 'bg-emerald-100 text-emerald-800'
+                                                                ? 'text-success-strong bg-emerald-100'
                                                                 : c.estado ===
                                                                     'vencido'
                                                                   ? 'text-primary-strong bg-red-100'
                                                                   : c.estado ===
                                                                       'parcial'
-                                                                    ? 'bg-amber-100 text-amber-800'
+                                                                    ? 'text-warning-strong bg-amber-100'
                                                                     : 'bg-muted text-foreground'
                                                         }`}
                                                     >
@@ -624,7 +624,7 @@ export default function CobranzasConsolidadasIndex() {
                                         <span className="text-muted-foreground">
                                             Abonado:
                                         </span>
-                                        <p className="font-mono font-bold text-emerald-700">
+                                        <p className="text-success-strong font-mono font-bold">
                                             {formatCurrency(
                                                 viewingPayments.monto_pagado,
                                             )}
@@ -676,7 +676,7 @@ export default function CobranzasConsolidadasIndex() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="font-mono font-bold text-emerald-700">
+                                                    <div className="text-success-strong font-mono font-bold">
                                                         +
                                                         {formatCurrency(
                                                             p.monto,
@@ -736,7 +736,7 @@ export default function CobranzasConsolidadasIndex() {
                                                                     p.id,
                                                                 );
                                                             }}
-                                                            className="mt-1 text-xs font-semibold text-red-600 underline"
+                                                            className="text-destructive-strong mt-1 text-xs font-semibold underline"
                                                         >
                                                             Anular pago
                                                         </button>

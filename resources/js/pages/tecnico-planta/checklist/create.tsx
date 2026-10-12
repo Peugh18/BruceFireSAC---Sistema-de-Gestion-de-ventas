@@ -294,12 +294,12 @@ export default function ChecklistCreate({
                 <div className="flex items-center justify-between gap-2 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800/80">
                     <div className="pl-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">
                         {countObservados > 0 ? (
-                            <span className="flex items-center gap-1 font-bold text-amber-700 dark:text-amber-400">
+                            <span className="text-warning-strong flex items-center gap-1 font-bold dark:text-amber-400">
                                 <AlertTriangle className="h-3.5 w-3.5" />
                                 {countObservados} componente(s) observado(s)
                             </span>
                         ) : (
-                            <span className="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
+                            <span className="text-success-strong flex items-center gap-1 font-semibold dark:text-emerald-400">
                                 <ShieldCheck className="h-3.5 w-3.5" />
                                 Sin observaciones en el formulario
                             </span>
@@ -483,7 +483,7 @@ export default function ChecklistCreate({
                                                     />
                                                 </div>
                                                 <div className="flex items-center pt-5">
-                                                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-300">
+                                                    <label className="text-warning-strong flex cursor-pointer items-center gap-2 text-xs font-semibold dark:text-amber-300">
                                                         <input
                                                             aria-label="Requiere Autorización"
                                                             type="checkbox"
@@ -529,7 +529,7 @@ export default function ChecklistCreate({
                                                     `items.${el.clave}.foto` as keyof typeof form.errors
                                                 ] && (
                                                     <span
-                                                        className="text-xs font-semibold text-red-600"
+                                                        className="text-destructive-strong text-xs font-semibold"
                                                         role="alert"
                                                     >
                                                         {
