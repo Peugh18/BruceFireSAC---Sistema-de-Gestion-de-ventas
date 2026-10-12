@@ -411,7 +411,9 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     placeholder="Ej: Se reciben 2 cilindros en vez de 3, o con manguera rota..."
                                     className="bg-card focus:ring-ring w-full rounded-xl border border-neutral-200 px-3 py-2 text-xs focus:ring-2 dark:border-neutral-700 dark:bg-neutral-900"
                                 />
-                                <InputError message={confirmForm.errors.diferencias} />
+                                <InputError
+                                    message={confirmForm.errors.diferencias}
+                                />
                             </div>
 
                             <button
