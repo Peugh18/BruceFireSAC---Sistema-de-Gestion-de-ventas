@@ -15,7 +15,7 @@ class StoreDetraccionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'monto' => ['required', 'numeric', 'min:0.01'],
+            'monto' => ['required', 'numeric', 'min:0.01', 'decimal:0,2', 'max:9999999.99'],
             'numero_operacion' => ['required', 'string', 'max:255'],
         ];
     }

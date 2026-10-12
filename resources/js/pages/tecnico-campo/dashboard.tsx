@@ -2,25 +2,17 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
-import {
-    Search,
-    MapPin,
-    Phone,
-    Truck,
-    PackageCheck,
-    ClipboardList,
-    Wrench,
-    ArrowRight,
-    Car,
-} from 'lucide-react';
+import { Search, MapPin, Phone, Truck, ArrowRight, Car } from 'lucide-react';
 import TecnicoCampoRoutes from '@/routes/tecnico-campo';
 import RecojosRoutes from '@/routes/tecnico-campo/recojos';
 import EntregasRoutes from '@/routes/tecnico-campo/entregas';
 import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
 import InstalacionesRoutes from '@/routes/tecnico-campo/instalaciones';
 import MantenimientosRoutes from '@/routes/tecnico-campo/mantenimientos';
+import FiltroSelect from '@/components/filtro-select';
 import { KpiFiltro } from '@/components/kpi-filtro';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
+import { Empty } from '@/components/ui/empty';
 
 interface OrderItem {
     id: number;
@@ -207,68 +199,19 @@ export default function TecnicoCampoDashboard({
                     />
                 </div>
 
-                {/* Service Type Pills (§5.5) */}
-                <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
-                    <button
-                        type="button"
-                        onClick={() => handleTipoFiltro('todos')}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.tipo === 'todos' || !filters.tipo
-                                ? 'bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        Todos
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleTipoFiltro('recojos')}
-                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.tipo === 'recojos'
-                                ? 'bg-primary text-primary-foreground shadow-xs'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        <Truck className="h-3.5 w-3.5" />
-                        <span>Recojos</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleTipoFiltro('entregas')}
-                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.tipo === 'entregas'
-                                ? 'bg-primary text-primary-foreground shadow-xs'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        <PackageCheck className="h-3.5 w-3.5" />
-                        <span>Entregas</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleTipoFiltro('inspecciones')}
-                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.tipo === 'inspecciones'
-                                ? 'bg-primary text-primary-foreground shadow-xs'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        <ClipboardList className="h-3.5 w-3.5" />
-                        <span>Inspecciones</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleTipoFiltro('instalaciones')}
-                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.tipo === 'instalaciones'
-                                ? 'bg-primary text-primary-foreground shadow-xs'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        <Wrench className="h-3.5 w-3.5" />
-                        <span>Instalaciones</span>
-                    </button>
-                </div>
+                <FiltroSelect
+                    etiqueta="Tipo de servicio"
+                    valor={filters.tipo || 'todos'}
+                    opciones={[
+                        { value: 'todos', label: 'Todos' },
+                        { value: 'recojos', label: 'Recojos' },
+                        { value: 'entregas', label: 'Entregas' },
+                        { value: 'inspecciones', label: 'Inspecciones' },
+                        { value: 'instalaciones', label: 'Instalaciones' },
+                        { value: 'mantenimientos', label: 'Mantenimientos' },
+                    ]}
+                    onCambiar={handleTipoFiltro}
+                />
 
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="relative">
@@ -283,7 +226,7 @@ export default function TecnicoCampoDashboard({
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
                         type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white dark:bg-neutral-700"
+                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
                     >
                         Buscar
                     </button>
@@ -292,12 +235,10 @@ export default function TecnicoCampoDashboard({
                 {/* Orders Cards List */}
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
-                        <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
-                            <Truck className="mx-auto h-8 w-8 text-neutral-400" />
-                            <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                                No hay servicios programados en esta cola
-                            </p>
-                        </div>
+                        <Empty
+                            icon={<Truck />}
+                            title="No hay servicios programados en esta cola"
+                        />
                     ) : (
                         orders.data.map((order) => {
                             const isFinished =

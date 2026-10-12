@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Driver;
 use App\Models\Team;
 use App\Models\TransportVehicle;
+use App\Rules\LicenciaPeru;
+use App\Rules\PlacaPeru;
+use App\Support\DatosPeru;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -31,7 +34,7 @@ class TransporteController extends Controller
     {
         $request->merge(['placa' => mb_strtoupper(preg_replace('/[\s-]+/', '', (string) $request->input('placa')) ?? '')]);
         $datos = $request->validate([
-            'placa' => ['required', 'string', 'max:10', 'unique:transport_vehicles,placa'],
+            'placa' => ['required', 'string', 'max:10', new PlacaPeru, 'unique:transport_vehicles,placa'],
             'categoria' => ['required', Rule::in(array_keys(TransportVehicle::CATEGORIAS))],
             'descripcion' => ['nullable', 'string', 'max:255'],
         ]);
@@ -43,11 +46,15 @@ class TransporteController extends Controller
 
     public function storeConductor(Team $current_team, Request $request): RedirectResponse
     {
+        $request->merge([
+            'dni' => DatosPeru::digitos($request->input('dni')),
+            'licencia' => DatosPeru::licencia($request->input('licencia')),
+        ]);
         $datos = $request->validate([
             'dni' => ['required', 'digits:8', 'unique:drivers,dni'],
             'nombres' => ['required', 'string', 'max:255'],
             'apellidos' => ['required', 'string', 'max:255'],
-            'licencia' => ['required', 'string', 'max:20'],
+            'licencia' => ['required', 'string', 'max:20', new LicenciaPeru],
         ]);
 
         Driver::create($datos);

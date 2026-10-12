@@ -14,8 +14,6 @@ use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\SalePayment;
-use App\Models\SaleRefund;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Cobranzas\CarteraDeCobranzas;
@@ -48,13 +46,8 @@ class DashboardController extends Controller
         $ventasMes = $this->ventasNetas($inicioMes, $finMes);
         $facturacionMes = $this->ventasNetas($inicioMes, $finMes, soloFacturadas: true);
 
-        // Cobrado en el mes menos lo devuelto a clientes.
-        $montoCobrado = (float) SalePayment::query()
-            ->whereBetween('fecha', [$inicioMes, $finMes])
-            ->sum('monto')
-            - (float) SaleRefund::query()
-                ->whereBetween('fecha', [$inicioMes, $finMes])
-                ->sum('monto');
+        // Cobrado en el mes menos lo devuelto a clientes (igual que en Cobranzas).
+        $montoCobrado = CarteraDeCobranzas::cobrado($inicioMes, $finMes);
 
         // Por el saldo que falta cobrar, igual que en Cobranzas.
         $deuda = fn () => Installment::query()

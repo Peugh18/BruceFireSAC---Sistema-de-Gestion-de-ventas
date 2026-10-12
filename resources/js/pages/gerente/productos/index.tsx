@@ -859,7 +859,7 @@ export default function ProductosIndex() {
                                                         inventoryControl ===
                                                         profile.value
                                                     }
-                                                    className="border-border aria-pressed:border-primary aria-pressed:bg-primary/5 min-h-11 rounded-lg border p-3 text-left"
+                                                    className="border-border aria-pressed:border-primary aria-pressed:bg-primary/5 min-h-11 rounded-lg border p-3 text-left transition hover:brightness-95"
                                                     onClick={() => {
                                                         const category =
                                                             profile.value ===

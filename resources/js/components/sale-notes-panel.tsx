@@ -29,7 +29,7 @@ import type { Auth } from '@/types';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
 
-export type SaleDocument = {
+type SaleDocument = {
     id: number;
     tipo?: string;
     serie?: string;
@@ -887,7 +887,7 @@ export function SaleNotesPanel({
                                 <button
                                     type="submit"
                                     disabled={form.processing}
-                                    className="bg-primary text-primary-foreground rounded-lg px-4 py-2 font-bold disabled:opacity-50"
+                                    className="bg-primary text-primary-foreground rounded-lg px-4 py-2 font-bold transition hover:brightness-95 disabled:opacity-50"
                                 >
                                     {(auth.roles ?? []).includes('Gerente')
                                         ? 'Emitir y enviar a SUNAT'
@@ -1000,7 +1000,7 @@ export function SaleNotesPanel({
                                 <button
                                     type="submit"
                                     disabled={baja.processing}
-                                    className="bg-destructive rounded-lg px-4 py-2 font-bold text-white disabled:opacity-50"
+                                    className="bg-destructive rounded-lg px-4 py-2 font-bold text-white transition hover:brightness-95 disabled:opacity-50"
                                 >
                                     Enviar baja
                                 </button>

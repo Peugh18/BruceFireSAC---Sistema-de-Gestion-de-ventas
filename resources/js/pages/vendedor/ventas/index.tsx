@@ -29,7 +29,8 @@ import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
-import RangoFechas, { describirRango } from '@/components/rango-fechas';
+import FiltroSelect from '@/components/filtro-select';
+import RangoFechas from '@/components/rango-fechas';
 import { fechaCorta } from '@/lib/utils';
 
 type SaleRow = {
@@ -195,7 +196,6 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
     };
 
     const esHoy = filters.desde === hoy && filters.hasta === hoy;
-    const periodo = describirRango(filters, hoy);
 
     const kpiItems = [
         {
@@ -289,100 +289,55 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <form
                         onSubmit={buscarVentas}
-                        className="border-border mb-4 flex flex-col gap-3 border-b pb-4 lg:flex-row lg:items-end"
+                        className="mb-4 flex flex-wrap items-end gap-3"
                     >
+                        <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex h-9 min-w-[14rem] flex-1 items-center gap-2 rounded-xl border px-3 focus-within:ring-[3px]">
+                            <Search className="text-muted-foreground size-4 shrink-0" />
+                            <input
+                                aria-label="Buscar ventas"
+                                value={buscar}
+                                onChange={(event) =>
+                                    setBuscar(event.target.value)
+                                }
+                                placeholder="Buscar cliente, RUC/DNI o número"
+                                className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
+                            />
+                        </div>
                         <RangoFechas
                             rango={filters}
                             hoy={hoy}
                             onCambiar={filtrar}
                         />
-                        <div className="flex flex-1 items-end gap-2">
-                            <div className="border-border bg-muted/40 focus-within:border-ring flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3">
-                                <Search className="text-muted-foreground size-3.5 shrink-0" />
-                                <input
-                                    aria-label="Buscar ventas"
-                                    value={buscar}
-                                    onChange={(event) =>
-                                        setBuscar(event.target.value)
-                                    }
-                                    placeholder="Cliente, RUC/DNI, N° de venta o comprobante..."
-                                    className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent text-[13px] outline-none"
-                                />
-                            </div>
-                            <Button
-                                type="submit"
-                                className="bg-foreground text-background hover:bg-foreground/90 h-9 rounded-[9px] px-4 text-[12.5px] font-bold shadow-none"
-                            >
-                                Buscar
-                            </Button>
-                        </div>
-                    </form>
-                    <p className="text-muted-foreground -mt-2 mb-3 text-[12px]">
-                        Ventas de {periodo}
-                        {filters.buscar
-                            ? ` que coinciden con «${filters.buscar}»`
-                            : ''}
-                        .
-                    </p>
-                    <div className="mb-4 flex flex-wrap items-center gap-2.5">
-                        <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
-                            {FILTERS.map((filter) => {
-                                const active =
-                                    filter.value === ''
-                                        ? !currentFilter ||
-                                          currentFilter === 'todas'
-                                        : currentFilter === filter.value;
-
-                                return (
-                                    <button
-                                        key={filter.label}
-                                        type="button"
-                                        onClick={() =>
-                                            changeFilter(filter.value)
-                                        }
-                                        className={`rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
-                                            active
-                                                ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                                                : 'text-muted-foreground hover:text-foreground'
-                                        }`}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
-                            {[
-                                { label: 'Todos', value: '' },
-                                { label: 'Con comprobante', value: 'sunat' },
+                        <FiltroSelect
+                            etiqueta="Estado"
+                            valor={
+                                currentFilter === 'todas' ? '' : currentFilter
+                            }
+                            opciones={FILTERS.map((filter) => ({
+                                value: filter.value,
+                                label: filter.label,
+                            }))}
+                            onCambiar={(valor) => changeFilter(valor)}
+                        />
+                        <FiltroSelect
+                            etiqueta="Documento"
+                            valor={currentComprobante}
+                            opciones={[
+                                { value: '', label: 'Todos' },
+                                { value: 'sunat', label: 'Con comprobante' },
                                 {
-                                    label: 'Notas de venta',
                                     value: 'nota_venta',
+                                    label: 'Notas de venta',
                                 },
-                            ].map((option) => (
-                                <button
-                                    key={option.label}
-                                    type="button"
-                                    aria-pressed={
-                                        currentComprobante === option.value
-                                    }
-                                    onClick={() =>
-                                        changeFilter(
-                                            currentFilter,
-                                            option.value,
-                                        )
-                                    }
-                                    className={`rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
-                                        currentComprobante === option.value
-                                            ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                            ]}
+                            onCambiar={(valor) =>
+                                changeFilter(currentFilter, valor)
+                            }
+                        />
+                        <Button type="submit" className="h-9">
+                            Buscar
+                        </Button>
+                    </form>
 
                     <div className="overflow-x-auto">
                         <Table className="w-full border-collapse text-[12.5px]">

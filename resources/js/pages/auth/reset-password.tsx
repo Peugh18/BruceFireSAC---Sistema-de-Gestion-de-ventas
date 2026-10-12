@@ -77,7 +77,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                         <Button
                             type="submit"
                             className="mt-4 w-full"
-                            disabled={processing}
+                            loading={processing}
                             data-test="reset-password-button"
                         >
                             {processing && <Spinner />}

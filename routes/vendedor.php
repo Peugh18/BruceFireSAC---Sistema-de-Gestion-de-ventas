@@ -16,7 +16,6 @@ use App\Http\Controllers\Vendedor\DashboardController;
 use App\Http\Controllers\Vendedor\DebitNoteController;
 use App\Http\Controllers\Vendedor\DeficiencyAuthorizationController;
 use App\Http\Controllers\Vendedor\DeficiencyController;
-use App\Http\Controllers\Vendedor\InventoryLookupController;
 use App\Http\Controllers\Vendedor\QuoteController;
 use App\Http\Controllers\Vendedor\RucLookupController;
 use App\Http\Controllers\Vendedor\SaleCertificateController;
@@ -39,8 +38,6 @@ Route::prefix('vendedor')
     ->middleware(['role:Vendedor', EnsureTieneSede::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
-
-        Route::get('inventario/buscar-serie', [InventoryLookupController::class, 'bySerial'])->name('inventario.buscar-serie');
 
         Route::get('clientes', [ClientController::class, 'index'])->name('clientes.index');
         Route::post('clientes', [ClientController::class, 'store'])->name('clientes.store');

@@ -18,7 +18,7 @@ class StoreOpenCashRegisterRequest extends FormRequest
     {
         return [
             'sede_id' => ['nullable', 'integer', 'exists:sedes,id'],
-            'monto_apertura' => ['required', 'numeric', 'min:0'],
+            'monto_apertura' => ['required', 'numeric', 'min:0', 'decimal:0,2', 'max:9999999.99'],
         ];
     }
 }

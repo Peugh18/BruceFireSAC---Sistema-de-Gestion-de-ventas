@@ -5,7 +5,7 @@ import { FormEvent, useState } from 'react';
 import type { Recompra } from '@/components/recompra-badge';
 import clientes from '@/routes/vendedor/clientes';
 
-export type ClientePorRegistrar = Recompra & {
+type ClientePorRegistrar = Recompra & {
     documento: string;
     nombre: string;
     ultima_compra: string;

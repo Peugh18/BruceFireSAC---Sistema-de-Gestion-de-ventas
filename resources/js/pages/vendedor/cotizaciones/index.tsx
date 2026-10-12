@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
+import FiltroSelect from '@/components/filtro-select';
 import { Cargando, FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
 import WhatsappNumeroDialog from '@/components/whatsapp-numero-dialog';
@@ -480,28 +481,19 @@ export default function CotizacionesIndex({
                 <div className="border-border bg-card rounded-[16px] border p-5 shadow-xs">
                     {/* Toolbar */}
                     <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2.5">
-                        {/* Status Filter Tabs */}
-                        <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
-                            {FILTER_TABS.map((tab) => {
-                                const active = isTabActive(tab.value);
-                                return (
-                                    <button
-                                        key={tab.label}
-                                        type="button"
-                                        onClick={() =>
-                                            handleFilterChange(tab.value)
-                                        }
-                                        className={`cursor-pointer rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
-                                            active
-                                                ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                                                : 'text-muted-foreground hover:text-foreground'
-                                        }`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        <FiltroSelect
+                            etiqueta="Estado"
+                            valor={
+                                FILTER_TABS.find((tab) =>
+                                    isTabActive(tab.value),
+                                )?.value ?? ''
+                            }
+                            opciones={FILTER_TABS.map((tab) => ({
+                                value: tab.value,
+                                label: tab.label,
+                            }))}
+                            onCambiar={handleFilterChange}
+                        />
                     </div>
 
                     {/* Table */}
@@ -732,7 +724,7 @@ export default function CotizacionesIndex({
                                                                             quote: quote.id,
                                                                         },
                                                                     )}
-                                                                    className="border-border focus-visible:ring-ring rounded-[7px] border px-2 py-1 text-xs font-bold focus-visible:ring-2"
+                                                                    className="border-border focus-visible:ring-ring hover:bg-muted/60 rounded-[7px] border px-2 py-1 text-xs font-bold transition-colors focus-visible:ring-2"
                                                                 >
                                                                     Editar
                                                                 </Link>
@@ -910,7 +902,7 @@ export default function CotizacionesIndex({
                                                                         },
                                                                     },
                                                                 )}
-                                                                className="bg-primary text-primary-foreground flex h-7 items-center gap-1.5 rounded-[7px] px-2.5 text-[11px] font-bold"
+                                                                className="bg-primary text-primary-foreground flex h-7 items-center gap-1.5 rounded-[7px] px-2.5 text-[11px] font-bold transition hover:brightness-95"
                                                             >
                                                                 <RotateCcw className="size-3" />
                                                                 Renovar

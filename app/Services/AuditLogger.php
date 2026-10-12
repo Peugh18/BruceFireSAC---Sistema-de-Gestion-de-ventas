@@ -73,14 +73,6 @@ class AuditLogger
     }
 
     /**
-     * ¿Hubo fallos de auditoría recientes (en este proceso)?
-     */
-    public static function huboFallos(): bool
-    {
-        return self::$fallos > 0;
-    }
-
-    /**
      * Cantidad de fallos de auditoría recientes (en este proceso).
      */
     public static function fallosRecientes(): int
@@ -96,14 +88,5 @@ class AuditLogger
     public static function detalleDeFallos(): array
     {
         return self::$detalleDeFallos;
-    }
-
-    /**
-     * Reinicia el registro de fallos recientes (para pruebas y tareas).
-     */
-    public static function reiniciarFallos(): void
-    {
-        self::$fallos = 0;
-        self::$detalleDeFallos = [];
     }
 }

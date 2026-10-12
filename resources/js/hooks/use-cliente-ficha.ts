@@ -48,5 +48,3 @@ export function useClienteFicha(
 
     return [ficha, (nueva) => setFicha(nueva)];
 }
-
-export default useClienteFicha;

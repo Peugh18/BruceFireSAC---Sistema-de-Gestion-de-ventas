@@ -134,7 +134,7 @@ export default function RecojoShow({
                     href={guias.create.url(teamSlug, {
                         query: { origen: 'recojo', id: order.id },
                     })}
-                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white"
+                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white transition hover:brightness-95"
                 >
                     Emitir guía de remisión (antes de salir)
                 </Link>
@@ -410,7 +410,7 @@ export default function RecojoShow({
                             <button
                                 type="submit"
                                 disabled={equipmentForm.processing}
-                                className="rounded-xl bg-neutral-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+                                className="hover:bg-muted/60 rounded-xl bg-neutral-900 px-3 py-2 text-xs font-bold text-white transition-colors disabled:opacity-50 dark:bg-white dark:text-neutral-900"
                             >
                                 Agregar extintor
                             </button>

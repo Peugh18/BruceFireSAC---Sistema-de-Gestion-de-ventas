@@ -650,7 +650,7 @@ export default function AjustesIndex({
                                 <Button
                                     aria-label="Confirmar Ajuste en Kardex"
                                     type="submit"
-                                    disabled={processing}
+                                    loading={processing}
                                     className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs font-bold text-white"
                                 >
                                     <CheckCircle2 className="size-4" />

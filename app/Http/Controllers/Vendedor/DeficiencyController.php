@@ -63,8 +63,8 @@ class DeficiencyController extends Controller
             'quote_id' => ['nullable', 'integer', 'exists:quotes,id'],
             'product_id' => ['nullable', 'required_without:service_id', 'integer', 'exists:products,id'],
             'service_id' => ['nullable', 'required_without:product_id', 'integer', 'exists:services,id'],
-            'cantidad' => ['required', 'integer', 'min:1'],
-            'precio_unitario' => ['nullable', 'numeric', 'gt:0'],
+            'cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
+            'precio_unitario' => ['nullable', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999.99'],
         ]);
         abort_if(! empty($datos['product_id']) && ! empty($datos['service_id']), 422);
         $action->handle($deficiency, $datos, $request->user());

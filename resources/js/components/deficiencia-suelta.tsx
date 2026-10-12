@@ -180,7 +180,7 @@ export default function DeficienciaSuelta({
                 <button
                     type="submit"
                     disabled={form.processing || !form.data.foto}
-                    className="min-h-[44px] flex-1 rounded-xl bg-amber-600 text-xs font-bold text-white disabled:opacity-50"
+                    className="min-h-[44px] flex-1 rounded-xl bg-amber-600 text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
                 >
                     Guardar deficiencia
                 </button>

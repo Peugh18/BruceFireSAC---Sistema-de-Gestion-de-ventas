@@ -209,16 +209,15 @@ function TwoFactorVerificationStep({
                                 variant="outline"
                                 className="flex-1"
                                 onClick={onBack}
-                                disabled={processing}
+                                loading={processing}
                             >
                                 Atrás
                             </Button>
                             <Button
                                 type="submit"
                                 className="flex-1"
-                                disabled={
-                                    processing || code.length < OTP_MAX_LENGTH
-                                }
+                                disabled={code.length < OTP_MAX_LENGTH}
+                                loading={processing}
                             >
                                 Confirmar
                             </Button>

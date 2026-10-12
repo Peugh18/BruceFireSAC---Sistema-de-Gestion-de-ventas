@@ -91,7 +91,13 @@ class StockAdjustmentController extends Controller
                     ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
                     ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                     ->count(),
-                'unidades_dadas_de_baja' => InventoryUnit::where('estado', 'baja')->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))->count(),
+                // Equipos con serie en baja más los repuestos sin serie dados de baja (bajas del Kardex).
+                'unidades_dadas_de_baja' => InventoryUnit::where('estado', 'baja')->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))->count()
+                    + abs((int) InventoryMovement::where('tipo', 'ajuste')
+                        ->where('cantidad', '<', 0)
+                        ->whereNull('inventory_unit_id')
+                        ->when($almacenId, fn ($q) => $q->where('sede_id', $almacenId))
+                        ->sum('cantidad')),
             ],
         ]);
     }

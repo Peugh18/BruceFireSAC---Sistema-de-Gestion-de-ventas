@@ -5,7 +5,7 @@ import { useInitials } from '@/hooks/use-initials';
 import { logout } from '@/routes';
 import type { Auth } from '@/types';
 
-export type AppNavItem = {
+type AppNavItem = {
     title: string;
     href: string;
     icon: LucideIcon;
@@ -13,7 +13,7 @@ export type AppNavItem = {
     activeMatch?: string;
 };
 
-export type AppNavGroup = {
+type AppNavGroup = {
     label?: string;
     items: AppNavItem[];
 };
@@ -45,7 +45,7 @@ function normalizePath(path: string): string {
     return withoutTrailingSlash === '' ? '/' : withoutTrailingSlash;
 }
 
-export function defaultIsItemActive(
+function defaultIsItemActive(
     currentPath: string,
     href: string,
     activeMatch?: string,

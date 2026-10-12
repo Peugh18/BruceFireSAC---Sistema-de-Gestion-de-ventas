@@ -3,6 +3,7 @@ import { Barcode, Building2, FileText, Printer } from 'lucide-react';
 import { useState } from 'react';
 
 import { Card } from '@/components/ui/card';
+import { Empty } from '@/components/ui/empty';
 import {
     Table,
     TableBody,
@@ -123,7 +124,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                 />
                                 <button
                                     type="submit"
-                                    className="bg-foreground text-background rounded-md px-3 py-1.5 font-bold"
+                                    className="bg-foreground text-background rounded-md px-3 py-1.5 font-bold transition hover:brightness-95"
                                 >
                                     Imprimir
                                 </button>
@@ -132,13 +133,10 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                     </div>
 
                     {receptions.data.length === 0 ? (
-                        <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                            <Barcode className="text-muted-foreground size-10" />
-                            <p className="text-muted-foreground mt-2 text-sm font-medium">
-                                Aún no hay recepciones con unidades serializadas
-                                para imprimir stickers.
-                            </p>
-                        </div>
+                        <Empty
+                            icon={<Barcode />}
+                            title="Aún no hay recepciones con unidades serializadas para imprimir stickers."
+                        />
                     ) : (
                         <div className="overflow-x-auto">
                             <Table className="w-full text-left text-[12.5px]">

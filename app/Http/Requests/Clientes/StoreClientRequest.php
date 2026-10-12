@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Clientes;
 
+use App\Rules\CelularPeru;
+use App\Rules\TelefonoPeru;
+use App\Support\DatosPeru;
 use App\Support\Ruc;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,6 +17,15 @@ class StoreClientRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'numero_documento' => preg_replace('/[\s-]/', '', (string) $this->input('numero_documento')),
+            'telefono' => DatosPeru::telefono($this->input('telefono')),
+            'whatsapp' => DatosPeru::telefono($this->input('whatsapp')),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -24,12 +36,13 @@ class StoreClientRequest extends FormRequest
             'numero_documento' => [
                 'required',
                 'string',
+                'regex:/^\d+$/',
                 Rule::unique('clients', 'numero_documento')->where('tipo_documento', $this->input('tipo_documento')),
             ],
             'razon_social' => ['required', 'string', 'max:255'],
             'nombre_comercial' => ['nullable', 'string', 'max:255'],
-            'telefono' => ['nullable', 'string', 'max:255'],
-            'whatsapp' => ['nullable', 'string', 'max:255'],
+            'telefono' => ['nullable', new TelefonoPeru],
+            'whatsapp' => ['nullable', new CelularPeru],
             'email' => ['nullable', 'email', 'max:255'],
             'direccion_fiscal' => ['nullable', 'string', 'max:255'],
             'ubigeo' => ['nullable', 'string', 'size:6', 'exists:ubigeos,codigo'],
@@ -79,5 +92,15 @@ class StoreClientRequest extends FormRequest
         if (! Ruc::esValido((string) $this->input('numero_documento'))) {
             $validator->errors()->add('numero_documento', 'El RUC no es válido: revisa los dígitos (debe empezar con 10 o 20 y su último dígito no coincide).');
         }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'numero_documento.regex' => 'Escribe solo números, sin letras ni espacios.',
+        ];
     }
 }

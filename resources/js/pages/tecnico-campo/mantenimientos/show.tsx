@@ -213,7 +213,7 @@ export default function MantenimientoShow({
                             <button
                                 type="submit"
                                 disabled={agregar.processing}
-                                className="inline-flex min-h-[44px] items-center gap-1 rounded-[8px] bg-sky-700 px-4 text-xs font-bold text-white disabled:opacity-50"
+                                className="inline-flex min-h-[44px] items-center gap-1 rounded-[8px] bg-sky-700 px-4 text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
                             >
                                 <Plus className="size-4" />
                                 Agregar
@@ -238,7 +238,7 @@ export default function MantenimientoShow({
                         {!finalizado && pendientes.length > 0 && (
                             <button
                                 type="button"
-                                className="min-h-11 rounded-lg border px-3 text-sm font-medium"
+                                className="hover:bg-muted/60 min-h-11 rounded-lg border px-3 text-sm font-medium transition-colors"
                                 onClick={() => {
                                     const id = pendientes[0].id;
                                     setRevisando(id);
@@ -495,7 +495,7 @@ export default function MantenimientoShow({
                                 !cierre.data.firma ||
                                 !cierre.data.conformidad_aceptada
                             }
-                            className="min-h-[48px] w-full rounded-[10px] bg-sky-700 text-xs font-bold text-white disabled:opacity-50"
+                            className="min-h-[48px] w-full rounded-[10px] bg-sky-700 text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
                         >
                             Finalizar mantenimiento y generar acta
                         </button>

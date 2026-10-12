@@ -266,7 +266,7 @@ export default function NuevaCotizacion({
                             />
 
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Precio válido por
                                 </Label>
                                 <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
@@ -298,7 +298,7 @@ export default function NuevaCotizacion({
 
                         <div className="grid gap-4 lg:grid-cols-[180px_minmax(0,1fr)]">
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Para
                                 </Label>
                                 <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
@@ -609,7 +609,7 @@ export default function NuevaCotizacion({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Condición de pago propuesta
                             </Label>
                             <div className="mt-1 flex flex-wrap gap-1.5">
@@ -643,7 +643,7 @@ export default function NuevaCotizacion({
                         <div>
                             <Label
                                 htmlFor="cotizacion-observaciones"
-                                className="text-foreground/80 text-[11px] font-bold uppercase"
+                                className="text-foreground text-sm font-medium"
                             >
                                 Observaciones
                             </Label>
@@ -662,7 +662,7 @@ export default function NuevaCotizacion({
 
                         <Button
                             type="submit"
-                            disabled={form.processing}
+                            loading={form.processing}
                             className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             {form.processing ? (

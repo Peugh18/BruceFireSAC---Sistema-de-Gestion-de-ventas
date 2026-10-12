@@ -14,6 +14,7 @@ import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
+import { Empty } from '@/components/ui/empty';
 
 type Customer = {
     id: number;
@@ -146,7 +147,7 @@ export default function InspeccionesIndex({
             <div className="mb-4 flex items-center justify-between">
                 <div>
                     <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
-                        <ClipboardCheck className="size-6 text-sky-600 dark:text-sky-400" />
+                        <ClipboardCheck className="size-6 text-sky-700 dark:text-sky-400" />
                         Inspecciones de Campo
                     </h1>
                     <p className="text-muted-foreground text-xs">
@@ -197,7 +198,7 @@ export default function InspeccionesIndex({
                     <span className="block text-[10px] font-bold uppercase opacity-80">
                         En Proceso
                     </span>
-                    <span className="text-lg font-black text-sky-600 dark:text-sky-400">
+                    <span className="text-lg font-black text-sky-700 dark:text-sky-400">
                         {stats.en_proceso}
                     </span>
                 </button>
@@ -236,16 +237,15 @@ export default function InspeccionesIndex({
             {/* List of Inspection Orders (Touch Cards) */}
             <div className="space-y-3">
                 {inspecciones.data.length === 0 ? (
-                    <div className="border-border bg-card rounded-[12px] border p-8 text-center">
-                        <ClipboardCheck className="text-muted-foreground/40 mx-auto mb-2 size-10" />
-                        <p className="text-foreground text-xs font-semibold">
-                            No hay inspecciones en este filtro
-                        </p>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            {searchTerm || currentTab !== 'todos'
+                    <Empty
+                        icon={<ClipboardCheck />}
+                        title="No hay inspecciones en este filtro"
+                        description={
+                            searchTerm || currentTab !== 'todos'
                                 ? 'No se encontraron inspecciones programadas para los filtros indicados.'
-                                : 'Aún no se han registrado órdenes de inspección técnica.'}
-                        </p>
+                                : 'Aún no se han registrado órdenes de inspección técnica.'
+                        }
+                    >
                         {(searchTerm || currentTab !== 'todos') && (
                             <button
                                 type="button"
@@ -264,7 +264,7 @@ export default function InspeccionesIndex({
                                 <span>Ver todas las inspecciones</span>
                             </button>
                         )}
-                    </div>
+                    </Empty>
                 ) : (
                     inspecciones.data.map((order) => {
                         const estadoMeta = ESTADOS_MAP[order.estado] || {
@@ -286,7 +286,7 @@ export default function InspeccionesIndex({
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
+                                            <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
                                                 {order.codigo}
                                             </span>
                                             <span
@@ -308,7 +308,7 @@ export default function InspeccionesIndex({
                                 </div>
 
                                 <div className="text-muted-foreground mb-3 flex items-center gap-1 text-[11px]">
-                                    <MapPin className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400" />
+                                    <MapPin className="size-3.5 shrink-0 text-sky-700 dark:text-sky-400" />
                                     <span className="line-clamp-1">
                                         {order.client?.direccion_fiscal ||
                                             'Sin dirección registrada'}
@@ -326,7 +326,7 @@ export default function InspeccionesIndex({
                                             registrados
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-600 dark:text-sky-400">
+                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-700 dark:text-sky-400">
                                         <span>Realizar checklist</span>
                                         <ArrowRight className="size-3.5" />
                                     </div>
@@ -343,7 +343,7 @@ export default function InspeccionesIndex({
                     {inspecciones.prev_page_url && (
                         <Link
                             href={inspecciones.prev_page_url}
-                            className="border-border bg-card text-foreground rounded-[8px] border px-3 py-1.5 text-xs font-bold"
+                            className="border-border bg-card text-foreground hover:bg-muted/60 rounded-[8px] border px-3 py-1.5 text-xs font-bold transition-colors"
                         >
                             Anterior
                         </Link>
@@ -355,7 +355,7 @@ export default function InspeccionesIndex({
                     {inspecciones.next_page_url && (
                         <Link
                             href={inspecciones.next_page_url}
-                            className="border-border bg-card text-foreground rounded-[8px] border px-3 py-1.5 text-xs font-bold"
+                            className="border-border bg-card text-foreground hover:bg-muted/60 rounded-[8px] border px-3 py-1.5 text-xs font-bold transition-colors"
                         >
                             Siguiente
                         </Link>

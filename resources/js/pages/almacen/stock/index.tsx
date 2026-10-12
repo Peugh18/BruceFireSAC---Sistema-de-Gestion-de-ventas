@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 export type SedeInfo = {
     id: number;
@@ -448,17 +449,15 @@ export default function StockIndex({
 
                             {/* Stock Table */}
                             {items.data.length === 0 ? (
-                                <div className="flex min-h-[260px] flex-col items-center justify-center p-8 text-center">
-                                    <Package className="text-muted-foreground/60 size-10" />
-                                    <p className="text-foreground mt-2 text-sm font-semibold">
-                                        No se encontraron productos en el
-                                        inventario
-                                    </p>
-                                    <p className="text-muted-foreground mt-1 max-w-sm text-xs">
-                                        {stockSearch || stockTipo !== 'todos'
+                                <Empty
+                                    icon={<Package />}
+                                    title="No se encontraron productos en el inventario"
+                                    description={
+                                        stockSearch || stockTipo !== 'todos'
                                             ? 'No hay productos que coincidan con los filtros aplicados.'
-                                            : 'Aún no hay productos registrados en las sedes seleccionadas.'}
-                                    </p>
+                                            : 'Aún no hay productos registrados en las sedes seleccionadas.'
+                                    }
+                                >
                                     {(stockSearch !== '' ||
                                         stockTipo !== 'todos') && (
                                         <Button
@@ -472,7 +471,7 @@ export default function StockIndex({
                                             <span>Limpiar filtros</span>
                                         </Button>
                                     )}
-                                </div>
+                                </Empty>
                             ) : (
                                 <div className="mt-4 overflow-x-auto">
                                     <Table className="w-full text-left text-[12.5px]">
@@ -875,20 +874,19 @@ export default function StockIndex({
 
                             {/* Kardex Records Table */}
                             {kardex.data.length === 0 ? (
-                                <div className="flex min-h-[260px] flex-col items-center justify-center p-8 text-center">
-                                    <History className="text-muted-foreground/60 size-10" />
-                                    <p className="text-foreground mt-2 text-sm font-semibold">
-                                        No se encontraron movimientos de Kardex
-                                    </p>
-                                    <p className="text-muted-foreground mt-1 max-w-sm text-xs">
-                                        {kProductId ||
+                                <Empty
+                                    icon={<History />}
+                                    title="No se encontraron movimientos de Kardex"
+                                    description={
+                                        kProductId ||
                                         kSedeId ||
                                         kTipo !== 'todos' ||
                                         kFechaDesde ||
                                         kFechaHasta
                                             ? 'No hay transacciones registradas con los filtros seleccionados.'
-                                            : 'Aún no se han registrado movimientos de entrada, salida o consumo.'}
-                                    </p>
+                                            : 'Aún no se han registrado movimientos de entrada, salida o consumo.'
+                                    }
+                                >
                                     {(kProductId !== '' ||
                                         kSedeId !== '' ||
                                         kTipo !== 'todos' ||
@@ -907,7 +905,7 @@ export default function StockIndex({
                                             </span>
                                         </Button>
                                     )}
-                                </div>
+                                </Empty>
                             ) : (
                                 <div className="mt-4 overflow-x-auto">
                                     <Table className="w-full text-left text-[12.5px]">

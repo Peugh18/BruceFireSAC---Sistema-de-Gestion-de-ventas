@@ -43,11 +43,24 @@ export default function ChispaSprite({
     const secuencia = SECUENCIAS[estado];
 
     useEffect(() => {
+        // La hoja de cuadros pesa casi medio MB: se pide cuando el navegador
+        // está libre, para que no compita con los datos de la pantalla.
         const imagen = new Image();
-        imagen.onload = () => setCargado(true);
-        imagen.src = IMAGEN;
+        const pedir = () => {
+            imagen.onload = () => setCargado(true);
+            imagen.src = IMAGEN;
+        };
+        const idle =
+            'requestIdleCallback' in window
+                ? window.requestIdleCallback.bind(window)
+                : null;
+        const id = idle
+            ? idle(pedir, { timeout: 3000 })
+            : window.setTimeout(pedir, 1500);
         return () => {
             imagen.onload = null;
+            if (idle) window.cancelIdleCallback(id as number);
+            else window.clearTimeout(id);
         };
     }, []);
 

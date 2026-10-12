@@ -9,6 +9,8 @@ import {
     useUnidadesDeProducto,
 } from '@/components/unidades-compartidas';
 import { Button } from '@/components/ui/button';
+import { Empty } from '@/components/ui/empty';
+import { Inbox } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -79,10 +81,10 @@ export default function UnidadesDialog({
                         <Cargando className="text-muted-foreground size-5" />
                     </div>
                 ) : unidades.length === 0 ? (
-                    <p className="text-muted-foreground py-6 text-center text-[13px]">
-                        No hay unidades disponibles de este producto en tu
-                        almacén.
-                    </p>
+                    <Empty
+                        icon={<Inbox />}
+                        title="No hay unidades disponibles de este producto en tu almacén."
+                    />
                 ) : (
                     <div className="border-border overflow-hidden rounded-[10px] border">
                         <button

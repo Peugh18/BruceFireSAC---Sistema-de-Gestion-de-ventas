@@ -14,6 +14,7 @@ import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import InstalacionesRoutes from '@/routes/tecnico-campo/instalaciones';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
+import { Empty } from '@/components/ui/empty';
 
 type Client = {
     id: number;
@@ -151,7 +152,7 @@ export default function InstalacionesIndex({
             {/* Header Mobile Title */}
             <div className="mb-4">
                 <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
-                    <Wrench className="size-6 text-sky-600 dark:text-sky-400" />
+                    <Wrench className="size-6 text-sky-700 dark:text-sky-400" />
                     Instalaciones en Campo
                 </h1>
                 <p className="text-muted-foreground text-xs">
@@ -201,7 +202,7 @@ export default function InstalacionesIndex({
                     <span className="block text-[10px] font-bold uppercase opacity-80">
                         En Proceso
                     </span>
-                    <span className="text-lg font-black text-sky-600 dark:text-sky-400">
+                    <span className="text-lg font-black text-sky-700 dark:text-sky-400">
                         {stats.en_proceso}
                     </span>
                 </button>
@@ -240,16 +241,15 @@ export default function InstalacionesIndex({
             {/* Cards List */}
             <div className="space-y-3">
                 {instalaciones.data.length === 0 ? (
-                    <div className="border-border bg-card rounded-[12px] border p-8 text-center">
-                        <Wrench className="text-muted-foreground/40 mx-auto mb-2 size-10" />
-                        <p className="text-foreground text-xs font-semibold">
-                            No hay instalaciones en este filtro
-                        </p>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            {searchTerm || currentTab !== 'todos'
+                    <Empty
+                        icon={<Wrench />}
+                        title="No hay instalaciones en este filtro"
+                        description={
+                            searchTerm || currentTab !== 'todos'
                                 ? 'No se encontraron órdenes de instalación para los filtros seleccionados.'
-                                : 'Aún no se han programado órdenes de instalación.'}
-                        </p>
+                                : 'Aún no se han programado órdenes de instalación.'
+                        }
+                    >
                         {(searchTerm || currentTab !== 'todos') && (
                             <button
                                 type="button"
@@ -268,7 +268,7 @@ export default function InstalacionesIndex({
                                 <span>Ver todas las instalaciones</span>
                             </button>
                         )}
-                    </div>
+                    </Empty>
                 ) : (
                     instalaciones.data.map((order) => {
                         const estadoMeta = ESTADOS_MAP[order.estado] || {
@@ -290,7 +290,7 @@ export default function InstalacionesIndex({
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
+                                            <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
                                                 {order.codigo}
                                             </span>
                                             <span
@@ -313,7 +313,7 @@ export default function InstalacionesIndex({
                                 </div>
 
                                 <div className="text-muted-foreground mb-3 flex items-center gap-1 text-[11px]">
-                                    <MapPin className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400" />
+                                    <MapPin className="size-3.5 shrink-0 text-sky-700 dark:text-sky-400" />
                                     <span className="line-clamp-1">
                                         {order.sede?.direccion ||
                                             order.client?.direccion_fiscal ||
@@ -332,7 +332,7 @@ export default function InstalacionesIndex({
                                             a instalar
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-600 dark:text-sky-400">
+                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-700 dark:text-sky-400">
                                         <span>
                                             {order.estado === 'cerrado'
                                                 ? 'Ver instalación'
@@ -353,7 +353,7 @@ export default function InstalacionesIndex({
                     {instalaciones.prev_page_url && (
                         <Link
                             href={instalaciones.prev_page_url}
-                            className="border-border bg-card text-foreground rounded-[8px] border px-3 py-1.5 text-xs font-bold"
+                            className="border-border bg-card text-foreground hover:bg-muted/60 rounded-[8px] border px-3 py-1.5 text-xs font-bold transition-colors"
                         >
                             Anterior
                         </Link>
@@ -365,7 +365,7 @@ export default function InstalacionesIndex({
                     {instalaciones.next_page_url && (
                         <Link
                             href={instalaciones.next_page_url}
-                            className="border-border bg-card text-foreground rounded-[8px] border px-3 py-1.5 text-xs font-bold"
+                            className="border-border bg-card text-foreground hover:bg-muted/60 rounded-[8px] border px-3 py-1.5 text-xs font-bold transition-colors"
                         >
                             Siguiente
                         </Link>

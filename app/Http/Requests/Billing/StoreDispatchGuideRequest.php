@@ -2,15 +2,26 @@
 
 namespace App\Http\Requests\Billing;
 
+use App\Support\DatosPeru;
+use App\Support\Ruc;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreDispatchGuideRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return $this->user()?->can('guias_remision.create') ?? false;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'destinatario_num_doc' => preg_replace('/[\s-]/', '', (string) $this->input('destinatario_num_doc')),
+            'transportista_ruc' => DatosPeru::digitos($this->input('transportista_ruc')),
+        ]);
     }
 
     /**
@@ -49,6 +60,33 @@ class StoreDispatchGuideRequest extends FormRequest
             'items.*.unidad' => ['required', 'string', 'min:2', 'max:3'],
             'items.*.cantidad' => ['required', 'numeric', 'gt:0'],
             'items.*.peso_kg' => ['nullable', 'numeric', 'min:0'],
+        ];
+    }
+
+    /**
+     * @return array<int, callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                $errores = $validator->errors();
+                $numero = (string) $this->input('destinatario_num_doc');
+
+                if (! $errores->has('destinatario_num_doc') && $this->input('destinatario_tipo_doc') === '1' && preg_match('/^\d{8}$/', $numero) !== 1) {
+                    $errores->add('destinatario_num_doc', 'El DNI tiene 8 números.');
+                }
+
+                if (! $errores->has('destinatario_num_doc') && $this->input('destinatario_tipo_doc') === '6' && ! Ruc::esValido($numero)) {
+                    $errores->add('destinatario_num_doc', 'El RUC del destinatario no es válido: revisa los dígitos.');
+                }
+
+                $transportista = (string) $this->input('transportista_ruc');
+
+                if (! $errores->has('transportista_ruc') && $transportista !== '' && ! Ruc::esValido($transportista)) {
+                    $errores->add('transportista_ruc', 'El RUC del transportista no es válido: revisa los dígitos.');
+                }
+            },
         ];
     }
 

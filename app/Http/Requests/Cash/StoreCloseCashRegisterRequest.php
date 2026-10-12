@@ -17,7 +17,7 @@ class StoreCloseCashRegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'monto_contado_cierre' => ['required', 'numeric', 'min:0'],
+            'monto_contado_cierre' => ['required', 'numeric', 'min:0', 'decimal:0,2', 'max:9999999.99'],
             'observacion' => ['nullable', 'string'],
         ];
     }

@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -66,6 +66,20 @@ void createInertiaApp({
         delay: 250,
         showSpinner: false,
     },
+});
+
+// Mientras Inertia trae datos, la raíz queda marcada (data-navegando) y el CSS
+// atenúa las listas. Se espera 150 ms para que las cargas rápidas no parpadeen.
+let esperaNavegando: ReturnType<typeof setTimeout> | undefined;
+router.on('start', () => {
+    clearTimeout(esperaNavegando);
+    esperaNavegando = setTimeout(() => {
+        document.documentElement.dataset.navegando = '';
+    }, 150);
+});
+router.on('finish', () => {
+    clearTimeout(esperaNavegando);
+    delete document.documentElement.dataset.navegando;
 });
 
 // This will set light / dark mode on load...

@@ -223,7 +223,8 @@ export default function Transfers({
                     ))}
                     <Button
                         type="submit"
-                        disabled={form.processing || destinations.length === 0}
+                        disabled={destinations.length === 0}
+                        loading={form.processing}
                     >
                         Preparar traslado
                     </Button>

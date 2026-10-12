@@ -30,6 +30,7 @@ import AlmacenLayout from '@/layouts/almacen-layout';
 import recepciones from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
 import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 export type SedeOption = {
     id: number;
@@ -332,7 +333,8 @@ export default function RecepcionesCreate({
                     <Button
                         aria-label="Confirmar Recepción"
                         type="submit"
-                        disabled={processing || data.items.length === 0}
+                        disabled={data.items.length === 0}
+                        loading={processing}
                         className="bg-primary hover:bg-primary/90 h-10 gap-2 px-6 text-xs font-bold text-white"
                     >
                         <Check className="size-4" />
@@ -537,13 +539,10 @@ export default function RecepcionesCreate({
                     </div>
 
                     {data.items.length === 0 ? (
-                        <div className="flex min-h-[160px] flex-col items-center justify-center text-center">
-                            <Package className="text-muted-foreground size-8" />
-                            <p className="text-muted-foreground mt-2 text-xs font-medium">
-                                Presiona "Agregar Ítem" para añadir los
-                                productos recibidos en este lote.
-                            </p>
-                        </div>
+                        <Empty
+                            icon={<Package />}
+                            title='Presiona "Agregar Ítem" para añadir los productos recibidos en este lote.'
+                        />
                     ) : (
                         <div className="divide-border mt-3 flex flex-col divide-y">
                             {data.items.map((item, index) => {

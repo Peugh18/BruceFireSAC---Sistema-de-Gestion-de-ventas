@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { rucLookup } from '@/routes/vendedor';
 import clientes from '@/routes/vendedor/clientes';
 import { NativeSelect } from '@/components/ui/native-select';
+import { InputPeru } from '@/components/ui/input-peru';
 
 export type ClientFormData = {
     tipo_documento: 'ruc' | 'dni';
@@ -98,7 +99,7 @@ function ClientFormFields({
             <div>
                 <Label
                     htmlFor={`${formId}-tipo_documento`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     Tipo doc.
                 </Label>
@@ -123,7 +124,7 @@ function ClientFormFields({
             <div>
                 <Label
                     htmlFor={`${formId}-numero_documento`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     Numero
                 </Label>
@@ -160,7 +161,7 @@ function ClientFormFields({
             <div className="sm:col-span-2">
                 <Label
                     htmlFor={`${formId}-razon_social`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     {data.tipo_documento === 'dni'
                         ? 'Nombres y apellidos'
@@ -181,12 +182,11 @@ function ClientFormFields({
                 <div>
                     <Label
                         htmlFor={`${formId}-nombre_comercial`}
-                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                        className="text-foreground text-sm font-medium"
                     >
                         Nombre comercial{' '}
                         <span className="text-muted-foreground font-normal normal-case">
-                            (opcional, no viene de SUNAT — se escribe a mano si
-                            aplica)
+                            (opcional)
                         </span>
                     </Label>
                     <Input
@@ -204,7 +204,7 @@ function ClientFormFields({
             <div>
                 <Label
                     htmlFor={`${formId}-email`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     Email
                 </Label>
@@ -222,7 +222,7 @@ function ClientFormFields({
                 <div className="flex items-center justify-between">
                     <Label
                         htmlFor={`${formId}-telefono`}
-                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                        className="text-foreground text-sm font-medium"
                     >
                         Teléfono / WhatsApp
                     </Label>
@@ -242,9 +242,9 @@ function ClientFormFields({
                             : '¿WhatsApp diferente?'}
                     </button>
                 </div>
-                <Input
+                <InputPeru
+                    tipo="telefono"
                     id={`${formId}-telefono`}
-                    type="tel"
                     value={data.telefono}
                     placeholder="999 999 999"
                     onChange={(event) => {
@@ -263,13 +263,13 @@ function ClientFormFields({
                 <div>
                     <Label
                         htmlFor={`${formId}-whatsapp`}
-                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                        className="text-foreground text-sm font-medium"
                     >
                         Número de WhatsApp
                     </Label>
-                    <Input
+                    <InputPeru
+                        tipo="celular"
                         id={`${formId}-whatsapp`}
-                        type="tel"
                         value={data.whatsapp}
                         placeholder="Ej. 988 888 888"
                         onChange={(event) =>
@@ -284,7 +284,7 @@ function ClientFormFields({
             <div className="sm:col-span-2">
                 <Label
                     htmlFor={`${formId}-direccion_fiscal`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     {data.tipo_documento === 'ruc'
                         ? 'Dirección fiscal (obligatoria para facturar)'
@@ -306,7 +306,7 @@ function ClientFormFields({
                     <div>
                         <Label
                             htmlFor={`${formId}-estado_contribuyente`}
-                            className="text-foreground/80 text-[11px] font-bold uppercase"
+                            className="text-foreground text-sm font-medium"
                         >
                             Estado SUNAT{' '}
                             <span className="text-muted-foreground font-normal normal-case">
@@ -326,7 +326,7 @@ function ClientFormFields({
                     <div>
                         <Label
                             htmlFor={`${formId}-condicion_domicilio`}
-                            className="text-foreground/80 text-[11px] font-bold uppercase"
+                            className="text-foreground text-sm font-medium"
                         >
                             Condicion{' '}
                             <span className="text-muted-foreground font-normal normal-case">
@@ -549,9 +549,8 @@ export default function ClientCreateDialog({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={
-                                form.processing || duplicateClient !== null
-                            }
+                            disabled={duplicateClient !== null}
+                            loading={form.processing}
                             className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
                         >
                             Guardar cliente

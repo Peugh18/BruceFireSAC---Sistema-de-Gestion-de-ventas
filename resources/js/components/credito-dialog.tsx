@@ -38,7 +38,7 @@ function redondear(valor: number) {
  * Reparte el total en cuotas iguales a lo largo del plazo; la última
  * absorbe los céntimos para que la suma sea exacta.
  */
-export function generarCuotas(
+function generarCuotas(
     total: number,
     fecha: string,
     plazoDias: number,
@@ -129,7 +129,7 @@ export default function CreditoDialog({
                 </DialogHeader>
 
                 <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-                    <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                    <label className="text-foreground text-sm font-medium">
                         Plazo (días)
                         <Input
                             type="number"
@@ -139,7 +139,7 @@ export default function CreditoDialog({
                             className="mt-1 h-9 rounded-[8px] text-[13px]"
                         />
                     </label>
-                    <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                    <label className="text-foreground text-sm font-medium">
                         N° de cuotas
                         <Input
                             type="number"

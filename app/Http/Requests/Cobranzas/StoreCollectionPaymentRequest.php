@@ -20,7 +20,7 @@ class StoreCollectionPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'monto' => ['required', 'numeric', 'min:0.01'],
+            'monto' => ['required', 'numeric', 'min:0.01', 'decimal:0,2', 'max:9999999.99'],
             'forma_pago' => ['required', 'string', 'in:efectivo,transferencia,yape,plin,pos,deposito,otro'],
             'es_detraccion' => ['sometimes', 'boolean'],
             'numero_operacion' => ['nullable', Rule::requiredIf($this->boolean('es_detraccion')), 'string', 'max:255'],

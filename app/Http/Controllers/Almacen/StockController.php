@@ -188,7 +188,14 @@ class StockController extends Controller
             'product_list' => $productList,
             'kpis' => [
                 'total_productos' => Product::where('activo', true)->count(),
-                'unidades_en_stock' => InventoryUnit::where('estado', 'disponible')->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))->count(),
+                // Equipos con serie disponibles más lo que hay de productos sin serie (Kardex),
+                // igual que la suma de las filas de la tabla.
+                'unidades_en_stock' => InventoryUnit::where('estado', 'disponible')->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))->count()
+                    + (int) InventoryMovement::query()
+                        ->join('products', 'inventory_movements.product_id', '=', 'products.id')
+                        ->where('products.serializado', false)
+                        ->when($almacenId, fn ($q) => $q->where('inventory_movements.sede_id', $almacenId))
+                        ->sum('inventory_movements.cantidad'),
                 // Con serie por unidades; sin serie (repuestos, EPP) por Kardex.
                 'bajo_minimo' => Product::query()->bajoMinimo($almacenId ? [$almacenId] : null)->count(),
             ],

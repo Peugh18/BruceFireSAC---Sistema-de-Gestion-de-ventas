@@ -329,7 +329,7 @@ export default function ChispaWidget({
                         <button
                             type="submit"
                             disabled={pensando || !texto.trim()}
-                            className="bg-primary flex size-10 items-center justify-center rounded-[9px] text-white disabled:opacity-50"
+                            className="bg-primary flex size-10 items-center justify-center rounded-[9px] text-white transition hover:brightness-95 disabled:opacity-50"
                             aria-label="Enviar pregunta"
                         >
                             <Send className="size-4" />

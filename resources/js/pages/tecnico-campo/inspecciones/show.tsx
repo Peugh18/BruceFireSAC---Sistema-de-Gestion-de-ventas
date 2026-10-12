@@ -276,7 +276,7 @@ export default function InspeccionShow({
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -364,7 +364,7 @@ export default function InspeccionShow({
                         <button
                             type="button"
                             onClick={() => setShowAddEquipmentModal(true)}
-                            className="border-primary/20 bg-primary/5 inline-flex items-center gap-1 rounded-[8px] border px-2.5 py-1.5 text-xs font-bold text-sky-600 active:scale-95 dark:text-sky-400"
+                            className="border-primary/20 bg-primary/5 inline-flex items-center gap-1 rounded-[8px] border px-2.5 py-1.5 text-xs font-bold text-sky-700 active:scale-95 dark:text-sky-400"
                         >
                             <Plus className="size-3.5" />
                             Agregar Extintor
@@ -526,7 +526,7 @@ export default function InspeccionShow({
                                     onClick={() =>
                                         setShowAddEquipmentModal(true)
                                     }
-                                    className="mt-2 text-xs font-bold text-sky-600 underline dark:text-sky-400"
+                                    className="mt-2 text-xs font-bold text-sky-700 underline dark:text-sky-400"
                                 >
                                     + Agregar primer extintor
                                 </button>
@@ -595,7 +595,7 @@ export default function InspeccionShow({
                                                             : eq.id,
                                                     )
                                                 }
-                                                className="bg-muted/40 hover:bg-primary/5 flex min-h-[40px] w-full items-center justify-between rounded-[8px] px-3 text-xs font-bold text-sky-600 dark:text-sky-400"
+                                                className="bg-muted/40 hover:bg-primary/5 flex min-h-[40px] w-full items-center justify-between rounded-[8px] px-3 text-xs font-bold text-sky-700 dark:text-sky-400"
                                             >
                                                 <span>
                                                     {latestChecklist
@@ -824,7 +824,7 @@ export default function InspeccionShow({
                                             e.target.checked,
                                         )
                                     }
-                                    className="border-primary/20 focus:ring-ring mt-0.5 size-4 rounded text-sky-600 dark:text-sky-400"
+                                    className="border-primary/20 focus:ring-ring mt-0.5 size-4 rounded text-sky-700 dark:text-sky-400"
                                 />
                                 <span className="text-primary-strong text-xs leading-tight font-semibold">
                                     Conformidad en sitio: El encargado del

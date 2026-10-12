@@ -11,6 +11,7 @@ import {
     ArrowRight,
 } from 'lucide-react';
 import RecojosRoutes from '@/routes/tecnico-campo/recojos';
+import { Empty } from '@/components/ui/empty';
 
 interface RecojoItem {
     id: number;
@@ -82,7 +83,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
                         type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white dark:bg-neutral-700"
+                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
                     >
                         Buscar
                     </button>
@@ -91,12 +92,10 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                 {/* List */}
                 <div className="space-y-3">
                     {recojos.data.length === 0 ? (
-                        <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
-                            <Truck className="mx-auto h-8 w-8 text-neutral-400" />
-                            <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                                No hay recojos pendientes
-                            </p>
-                        </div>
+                        <Empty
+                            icon={<Truck />}
+                            title="No hay recojos pendientes"
+                        />
                     ) : (
                         recojos.data.map((r) => (
                             <Link
@@ -105,7 +104,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                                     current_team: teamSlug,
                                     service_order: r.id,
                                 })}
-                                className="bg-card block space-y-2.5 rounded-2xl border border-neutral-200 p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
+                                className="bg-card hover:bg-muted/60 block space-y-2.5 rounded-2xl border border-neutral-200 p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div>

@@ -1,16 +1,8 @@
 <?php
 
-use App\Models\TeamInvitation;
 use App\Services\SaludDelSistema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
-
-Schedule::call(function () {
-    TeamInvitation::query()
-        ->whereNotNull('expires_at')
-        ->where('expires_at', '<', now())
-        ->delete();
-})->daily()->description('Delete expired team invitations');
 
 Schedule::command('quotes:expire')->daily()->withoutOverlapping();
 Schedule::command('alerts:recompute')->daily();

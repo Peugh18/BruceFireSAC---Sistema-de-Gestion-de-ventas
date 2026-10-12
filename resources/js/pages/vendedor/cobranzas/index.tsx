@@ -301,9 +301,9 @@ export default function CobranzasIndex({
                     description="El arqueo de tu turno y las cuotas que tus clientes tienen por pagar."
                 />
                 {/* 2-Column Main Layout */}
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
                     {/* Columna Izquierda: Panel de Arqueo de Caja (5 cols) */}
-                    <div className="flex flex-col gap-4 lg:col-span-5">
+                    <div className="flex flex-col gap-4 xl:col-span-5">
                         <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -497,7 +497,7 @@ export default function CobranzasIndex({
                     </div>
 
                     {/* Columna Derecha: Mis Cuentas por Cobrar (7 cols) */}
-                    <div className="flex flex-col lg:col-span-7">
+                    <div className="flex flex-col xl:col-span-7">
                         <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -819,7 +819,7 @@ export default function CobranzasIndex({
                         />
                         {sedes.length > 0 && (
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Sede
                                 </Label>
                                 <NativeSelect
@@ -844,7 +844,7 @@ export default function CobranzasIndex({
                         )}
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Fondo inicial (S/)
                             </Label>
                             <Input
@@ -882,7 +882,7 @@ export default function CobranzasIndex({
                             <Button
                                 aria-label="Confirmar apertura"
                                 type="submit"
-                                disabled={openForm.processing}
+                                loading={openForm.processing}
                                 className="rounded-[8px] bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
                             >
                                 Confirmar apertura
@@ -930,7 +930,7 @@ export default function CobranzasIndex({
                                 .map(([, mensaje]) => mensaje)}
                         />
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Monto contado en efectivo (S/) *
                             </Label>
                             <Input
@@ -957,7 +957,7 @@ export default function CobranzasIndex({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Observaciones (opcional)
                             </Label>
                             <Input
@@ -986,7 +986,7 @@ export default function CobranzasIndex({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={closeForm.processing}
+                                loading={closeForm.processing}
                                 className="bg-primary hover:bg-primary/90 rounded-[8px] text-xs font-bold text-white"
                             >
                                 Confirmar y cerrar turno
@@ -1051,7 +1051,7 @@ export default function CobranzasIndex({
                             </p>
                         )}
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Forma de pago
                             </Label>
                             <NativeSelect
@@ -1081,7 +1081,7 @@ export default function CobranzasIndex({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Monto a pagar (S/) *
                             </Label>
                             <Input
@@ -1106,7 +1106,7 @@ export default function CobranzasIndex({
 
                         {paymentForm.data.forma_pago !== 'efectivo' && (
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     N° Operación / Referencia
                                 </Label>
                                 <Input
@@ -1136,7 +1136,7 @@ export default function CobranzasIndex({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={paymentForm.processing}
+                                loading={paymentForm.processing}
                                 className="bg-foreground text-background hover:bg-foreground/90 rounded-[8px] text-xs font-bold shadow-xs transition-colors"
                             >
                                 Registrar pago
@@ -1197,7 +1197,7 @@ export default function CobranzasIndex({
                             <Button
                                 type="submit"
                                 variant="destructive"
-                                disabled={cancelForm.processing}
+                                loading={cancelForm.processing}
                             >
                                 Anular cobro
                             </Button>

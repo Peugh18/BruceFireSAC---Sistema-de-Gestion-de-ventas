@@ -32,7 +32,7 @@ class StoreStockAdjustmentRequest extends FormRequest
                 }),
             ],
             'tipo_ajuste' => ['required', 'string', 'in:incremento,decremento'],
-            'cantidad' => ['required', 'integer', 'min:1'],
+            'cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
             'motivo' => ['required', 'string', 'min:10', 'max:255'],
             'observacion' => ['nullable', 'string', 'max:500'],
             // Productos con lote: el ingreso dice su lote y vencimiento; la

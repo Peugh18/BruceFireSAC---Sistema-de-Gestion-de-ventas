@@ -186,4 +186,3 @@ export function TabsBf<T extends string = string>({
     );
 }
 
-export default TabsBf;

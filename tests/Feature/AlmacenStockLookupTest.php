@@ -162,3 +162,22 @@ test('usuario sin rol Almacen no puede acceder a consulta', function () {
         ->get(route('almacen.consulta.index', ['current_team' => $user->currentTeam]))
         ->assertForbidden();
 });
+
+test('la consulta rapida muestra solo los movimientos de la sede del almacenero', function () {
+    $sedeA = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
+    $sedeB = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
+    $user = almacenUserForLookupTest();
+    $user->update(['sede_id' => $sedeA->id]);
+    $otroUsuario = User::factory()->create(['name' => 'Usuario de la otra sede']);
+
+    $repuesto = Product::factory()->create(['codigo' => 'REP-SEDES', 'serializado' => false, 'activo' => true]);
+    InventoryMovement::create(['product_id' => $repuesto->id, 'sede_id' => $sedeA->id, 'tipo' => 'ingreso', 'cantidad' => 4, 'user_id' => $user->id, 'observacion' => 'Ingreso en mi sede']);
+    InventoryMovement::create(['product_id' => $repuesto->id, 'sede_id' => $sedeB->id, 'tipo' => 'ingreso', 'cantidad' => 9, 'user_id' => $otroUsuario->id, 'observacion' => 'Ingreso en la otra sede']);
+
+    $this->actingAs($user)
+        ->get(route('almacen.consulta.index', ['current_team' => $user->currentTeam, 'search' => 'REP-SEDES']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('productResult.movimientos', 1)
+            ->where('productResult.movimientos.0.observacion', 'Ingreso en mi sede')
+        );
+});

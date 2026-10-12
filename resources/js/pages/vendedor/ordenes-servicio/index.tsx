@@ -547,7 +547,7 @@ export default function ServiceOrdersIndex({
                         />
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Tipo de servicio *
                             </Label>
                             {createForm.data.tipo_servicio ? (
@@ -625,7 +625,7 @@ export default function ServiceOrdersIndex({
 
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Área
                                 </Label>
                                 <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
@@ -653,7 +653,7 @@ export default function ServiceOrdersIndex({
                                 </div>
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Responsable
                                 </Label>
                                 <NativeSelect
@@ -689,7 +689,7 @@ export default function ServiceOrdersIndex({
 
                         <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Para
                                 </Label>
                                 <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
@@ -728,7 +728,7 @@ export default function ServiceOrdersIndex({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Fecha programada *
                                 </Label>
                                 <Input
@@ -746,7 +746,7 @@ export default function ServiceOrdersIndex({
                                 />
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Prioridad
                                 </Label>
                                 <NativeSelect
@@ -768,7 +768,7 @@ export default function ServiceOrdersIndex({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Instrucciones para el técnico
                             </Label>
                             <textarea
@@ -796,7 +796,7 @@ export default function ServiceOrdersIndex({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={createForm.processing}
+                                loading={createForm.processing}
                                 className="bg-primary hover:bg-primary/90 rounded-[8px] text-xs font-bold text-white"
                             >
                                 Crear orden

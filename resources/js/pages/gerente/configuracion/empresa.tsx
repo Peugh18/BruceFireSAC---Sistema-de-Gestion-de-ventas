@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { InputPeru } from '@/components/ui/input-peru';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import cuentasBancarias from '@/routes/gerente/configuracion/cuentas-bancarias';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
@@ -297,7 +298,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-razon-social"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Razón social
                                 </Label>
@@ -316,7 +317,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-nombre-comercial"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Nombre comercial
                                 </Label>
@@ -334,11 +335,12 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-ruc"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     RUC
                                 </Label>
-                                <Input
+                                <InputPeru
+                                    tipo="ruc"
                                     id="gerente-configuracion-empresa-ruc"
                                     value={form.data.ruc}
                                     onChange={(e) =>
@@ -351,11 +353,12 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-telefono"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Teléfono
                                 </Label>
-                                <Input
+                                <InputPeru
+                                    tipo="telefono"
                                     id="gerente-configuracion-empresa-telefono"
                                     value={form.data.telefono}
                                     onChange={(e) =>
@@ -366,7 +369,7 @@ export default function EmpresaConfiguracion({
                             <div className="md:col-span-2">
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-direccion"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Dirección
                                 </Label>
@@ -382,7 +385,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Ubigeo (distrito)
                                 </Label>
                                 <UbigeoPicker
@@ -400,7 +403,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-email"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Email
                                 </Label>
@@ -415,7 +418,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-pagina-web"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Página web
                                 </Label>
@@ -434,11 +437,12 @@ export default function EmpresaConfiguracion({
                             <div className="md:col-span-2">
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-cuenta-de-detraccion-banco-de-la-nacion"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Cuenta de detracción (Banco de la Nación)
                                 </Label>
-                                <Input
+                                <InputPeru
+                                    tipo="cuenta"
                                     id="gerente-configuracion-empresa-cuenta-de-detraccion-banco-de-la-nacion"
                                     value={form.data.cuenta_detraccion}
                                     onChange={(e) =>
@@ -470,7 +474,7 @@ export default function EmpresaConfiguracion({
                                 venta o cotización.
                             </p>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Color de la marca
                                 </Label>
                                 <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -510,7 +514,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-mensaje-de-agradecimiento"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Mensaje de agradecimiento
                                 </Label>
@@ -530,7 +534,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-condiciones-de-venta-o-garantia-opcional"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Condiciones de venta o garantía (opcional)
                                 </Label>
@@ -554,7 +558,7 @@ export default function EmpresaConfiguracion({
                         <div>
                             <Label
                                 htmlFor="gerente-configuracion-empresa-leyenda-de-pie-opcional"
-                                className="text-foreground/80 text-[11px] font-bold uppercase"
+                                className="text-foreground text-sm font-medium"
                             >
                                 Leyenda de pie (opcional)
                             </Label>
@@ -572,7 +576,7 @@ export default function EmpresaConfiguracion({
                         <div className="flex flex-wrap items-center gap-2">
                             <Button
                                 type="submit"
-                                disabled={form.processing}
+                                loading={form.processing}
                                 className="bg-foreground text-background hover:bg-foreground/90 h-10 rounded-[9px] px-4 text-[13px] font-bold shadow-xs transition-colors"
                             >
                                 {form.processing
@@ -672,7 +676,8 @@ export default function EmpresaConfiguracion({
                                 bankForm.setData('titular', e.target.value)
                             }
                         />
-                        <Input
+                        <InputPeru
+                            tipo="cuenta"
                             aria-label="Número de cuenta"
                             placeholder="N° de cuenta"
                             value={bankForm.data.numero_cuenta}
@@ -683,7 +688,8 @@ export default function EmpresaConfiguracion({
                                 )
                             }
                         />
-                        <Input
+                        <InputPeru
+                            tipo="cci"
                             aria-label="CCI"
                             placeholder="CCI (opcional)"
                             value={bankForm.data.cci}
@@ -693,7 +699,7 @@ export default function EmpresaConfiguracion({
                         />
                         <Button
                             type="submit"
-                            disabled={bankForm.processing}
+                            loading={bankForm.processing}
                             className="h-10 rounded-[9px] bg-emerald-600 text-white shadow-none hover:bg-emerald-700"
                         >
                             Agregar

@@ -33,15 +33,15 @@ class StoreReceptionRequest extends FormRequest
             'observacion' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
-            'items.*.cantidad' => ['required', 'integer', 'min:1'],
-            'items.*.cantidad_conforme' => ['required', 'integer', 'min:0'],
+            'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
+            'items.*.cantidad_conforme' => ['required', 'integer', 'min:0', 'max:99999'],
             'items.*.costo_unitario' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
             'items.*.observacion_item' => ['nullable', 'string'],
             'items.*.lote' => ['nullable', 'string', 'max:50'],
             'items.*.fecha_vencimiento' => ['nullable', 'date'],
             'items.*.unidades' => ['nullable', 'array'],
             'items.*.unidades.*.capacidad' => ['required_with:items.*.unidades', 'string', 'max:50'],
-            'items.*.unidades.*.serie_fabricante' => ['nullable', 'string', 'max:100'],
+            'items.*.unidades.*.serie_fabricante' => ['nullable', 'string', 'max:100', 'distinct:ignore_case'],
             'items.*.unidades.*.marca' => ['required_with:items.*.unidades', 'string', 'max:100'],
             'items.*.unidades.*.anio_fabricacion' => [
                 'required_with:items.*.unidades',
@@ -124,6 +124,16 @@ class StoreReceptionRequest extends FormRequest
                     }
                 }
             },
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'items.*.unidades.*.serie_fabricante.distinct' => 'Hay dos equipos con la misma serie de fábrica: revisa cada serie.',
         ];
     }
 }

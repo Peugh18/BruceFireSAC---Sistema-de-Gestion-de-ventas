@@ -55,7 +55,7 @@ export type DeficiencyItem = {
     cotizaciones?: { id: number; numero: string; total: number }[];
 };
 
-export function getStatusStyle(estado: string): {
+function getStatusStyle(estado: string): {
     borderClass: string;
     badgeClass: string;
     label: string;
@@ -230,7 +230,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                         className="mt-3 space-y-3.5"
                     >
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 {actionModal?.isApproving
                                     ? 'Persona que autoriza en cliente *'
                                     : 'Persona que comunica el rechazo *'}
@@ -257,7 +257,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Canal *
                                 </Label>
                                 <NativeSelect
@@ -283,7 +283,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                             </div>
 
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Fecha *
                                 </Label>
                                 <Input
@@ -307,7 +307,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                 <div>
                                     <Label
                                         htmlFor="cotizacion_adicional_id"
-                                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                                        className="text-foreground text-sm font-medium"
                                     >
                                         Cotización del adicional
                                     </Label>
@@ -344,7 +344,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                 <div>
                                     <Label
                                         htmlFor="importe"
-                                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                                        className="text-foreground text-sm font-medium"
                                     >
                                         Importe aceptado (S/)
                                         {actionModal.item.orden_cobrada && ' *'}
@@ -380,7 +380,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                         )}
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Observaciones / Sustento
                             </Label>
                             <Input
@@ -408,7 +408,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={authForm.processing}
+                                loading={authForm.processing}
                                 className={`rounded-[8px] text-xs font-bold text-white ${
                                     actionModal?.isApproving
                                         ? 'bg-emerald-600 hover:bg-emerald-700'
@@ -514,7 +514,8 @@ export function useAccionesDeficiencia(teamSlug: string) {
                         <DialogFooter>
                             <Button
                                 type="submit"
-                                disabled={cotizarForm.processing || !seleccion}
+                                disabled={!seleccion}
+                                loading={cotizarForm.processing}
                             >
                                 Guardar en cotización
                             </Button>

@@ -237,7 +237,7 @@ export default function ChecklistExtintor({
             <button
                 type="submit"
                 disabled={form.processing || sinFoto}
-                className="bg-primary min-h-[48px] w-full rounded-xl text-xs font-bold text-white disabled:opacity-50"
+                className="bg-primary min-h-[48px] w-full rounded-xl text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
             >
                 Guardar checklist
             </button>

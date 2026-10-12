@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Clientes;
 
+use App\Rules\PlacaPeru;
+use App\Support\DatosPeru;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,13 +14,20 @@ class StoreVehicleRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'placa' => DatosPeru::placa($this->input('placa')),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'placa' => ['required', 'string', 'max:255', Rule::unique('vehicles', 'placa')],
+            'placa' => ['required', 'string', 'max:10', new PlacaPeru, Rule::unique('vehicles', 'placa')],
             'marca' => ['nullable', 'string', 'max:255'],
             'modelo' => ['nullable', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:255'],

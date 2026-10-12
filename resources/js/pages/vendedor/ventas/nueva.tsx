@@ -11,11 +11,11 @@ import {
     ScanLine,
     Trash2,
     Truck,
+    UserSearch,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Cargando } from '@/components/cargando';
 import CatalogPicker, {
     type CatalogItem,
     type CatalogUnit,
@@ -50,6 +50,7 @@ import type { Team } from '@/types';
 import { fechaLocal } from '@/lib/utils';
 import CajaRoutes from '@/routes/vendedor/caja';
 import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 type SedeOption = { id: number; nombre: string };
 
@@ -886,7 +887,7 @@ export default function NuevaVenta({
 
                             <div className="grid content-start gap-3">
                                 <div>
-                                    <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                    <Label className="text-foreground text-sm font-medium">
                                         Comprobante
                                     </Label>
                                     <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
@@ -1013,370 +1014,443 @@ export default function NuevaVenta({
                         ) : null}
                     </Card>
 
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
-                        <div className="grid gap-4">
-                            <div className="border-border rounded-[12px] border p-3">
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Destino de los equipos
-                                </Label>
-                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
-                                    <SegmentButton
-                                        active={
-                                            form.data.destino ===
-                                            'local_cliente'
-                                        }
-                                        onClick={() =>
-                                            form.setData((data) => ({
-                                                ...data,
-                                                destino: 'local_cliente',
-                                                referencia: '',
-                                                vehicle_id: '',
-                                            }))
-                                        }
-                                    >
-                                        <Building2 className="mr-1 inline size-3" />{' '}
-                                        Local
-                                    </SegmentButton>
-                                    <SegmentButton
-                                        active={
-                                            form.data.destino === 'vehiculo'
-                                        }
-                                        onClick={() =>
-                                            form.setData((data) => ({
-                                                ...data,
-                                                destino: 'vehiculo',
-                                                referencia: '',
-                                                vehicle_id: '',
-                                            }))
-                                        }
-                                    >
-                                        <Truck className="mr-1 inline size-3" />{' '}
-                                        Vehículo
-                                    </SegmentButton>
+                    {cliente ? (
+                        <>
+                            <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                                <div className="grid gap-4">
+                                    <div>
+                                        <Label className="text-foreground text-sm font-medium">
+                                            Dónde van los equipos
+                                        </Label>
+                                        <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                            <SegmentButton
+                                                active={
+                                                    form.data.destino ===
+                                                    'local_cliente'
+                                                }
+                                                onClick={() =>
+                                                    form.setData((data) => ({
+                                                        ...data,
+                                                        destino:
+                                                            'local_cliente',
+                                                        referencia: '',
+                                                        vehicle_id: '',
+                                                    }))
+                                                }
+                                            >
+                                                <Building2 className="mr-1 inline size-3" />{' '}
+                                                Local
+                                            </SegmentButton>
+                                            <SegmentButton
+                                                active={
+                                                    form.data.destino ===
+                                                    'vehiculo'
+                                                }
+                                                onClick={() =>
+                                                    form.setData((data) => ({
+                                                        ...data,
+                                                        destino: 'vehiculo',
+                                                        referencia: '',
+                                                        vehicle_id: '',
+                                                    }))
+                                                }
+                                            >
+                                                <Truck className="mr-1 inline size-3" />{' '}
+                                                Vehículo
+                                            </SegmentButton>
+                                        </div>
+                                        <p className="text-muted-foreground mt-1 text-xs">
+                                            {form.data.destino === 'vehiculo'
+                                                ? 'Certificado de operatividad y prueba hidrostática.'
+                                                : 'Certificado de operatividad y capacitación.'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-foreground text-sm font-medium">
+                                            Condición de pago
+                                        </Label>
+                                        <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                            <SegmentButton
+                                                active={
+                                                    form.data.condicion_pago ===
+                                                    'contado'
+                                                }
+                                                onClick={() =>
+                                                    cambiarCondicion('contado')
+                                                }
+                                            >
+                                                <CreditCard className="mr-1 inline size-3" />{' '}
+                                                Contado
+                                            </SegmentButton>
+                                            <SegmentButton
+                                                active={
+                                                    form.data.condicion_pago ===
+                                                    'credito'
+                                                }
+                                                onClick={() =>
+                                                    cambiarCondicion('credito')
+                                                }
+                                            >
+                                                Crédito
+                                            </SegmentButton>
+                                        </div>
+                                        {form.data.condicion_pago ===
+                                        'credito' ? (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setCreditoAbierto(true)
+                                                }
+                                                className={`mt-1 text-left text-[11.5px] font-semibold underline-offset-2 hover:underline ${creditoIncompleto || cuotasDesactualizadas ? 'text-destructive-strong' : 'text-primary-strong'}`}
+                                            >
+                                                {creditoIncompleto
+                                                    ? 'Define las cuotas del crédito'
+                                                    : cuotasDesactualizadas
+                                                      ? 'El total cambió: ajusta las cuotas'
+                                                      : `${form.data.cuotas.length} cuota(s), última el ${new Date(`${form.data.cuotas.at(-1)!.fecha_vencimiento}T00:00:00`).toLocaleDateString('es-PE')} · Editar`}
+                                            </button>
+                                        ) : null}
+                                        {fieldError(form.errors, 'cuotas')}
+                                    </div>
                                 </div>
-                                <p className="text-muted-foreground mt-1 text-[11px]">
-                                    {form.data.destino === 'vehiculo'
-                                        ? 'Operatividad y Garantía. Prueba Hidrostática al registrar sus datos técnicos.'
-                                        : 'Operatividad y Garantía. Capacitación al registrar sus datos.'}
-                                </p>
-                            </div>
-                            <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Condición de pago
-                                </Label>
-                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
-                                    <SegmentButton
-                                        active={
-                                            form.data.condicion_pago ===
-                                            'contado'
-                                        }
-                                        onClick={() =>
-                                            cambiarCondicion('contado')
-                                        }
-                                    >
-                                        <CreditCard className="mr-1 inline size-3" />{' '}
-                                        Contado
-                                    </SegmentButton>
-                                    <SegmentButton
-                                        active={
-                                            form.data.condicion_pago ===
-                                            'credito'
-                                        }
-                                        onClick={() =>
-                                            cambiarCondicion('credito')
-                                        }
-                                    >
-                                        Crédito
-                                    </SegmentButton>
-                                </div>
-                                {form.data.condicion_pago === 'credito' ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setCreditoAbierto(true)}
-                                        className={`mt-1 text-left text-[11.5px] font-semibold underline-offset-2 hover:underline ${creditoIncompleto || cuotasDesactualizadas ? 'text-destructive-strong' : 'text-primary-strong'}`}
-                                    >
-                                        {creditoIncompleto
-                                            ? 'Define las cuotas del crédito'
-                                            : cuotasDesactualizadas
-                                              ? 'El total cambió: ajusta las cuotas'
-                                              : `${form.data.cuotas.length} cuota(s), última el ${new Date(`${form.data.cuotas.at(-1)!.fecha_vencimiento}T00:00:00`).toLocaleDateString('es-PE')} · Editar`}
-                                    </button>
+                                {form.data.condicion_pago === 'contado' ? (
+                                    <div className="flex flex-col gap-2">
+                                        <Label className="text-foreground text-sm font-medium">
+                                            ¿Cómo paga?
+                                        </Label>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {MEDIOS_PAGO.map((medio) => (
+                                                <button
+                                                    key={medio.valor}
+                                                    type="button"
+                                                    aria-pressed={
+                                                        form.data.medio_pago ===
+                                                        medio.valor
+                                                    }
+                                                    onClick={() =>
+                                                        form.setData(
+                                                            'medio_pago',
+                                                            medio.valor,
+                                                        )
+                                                    }
+                                                    className={`rounded-full border px-3 py-1 text-[12px] font-bold transition-colors ${
+                                                        form.data.medio_pago ===
+                                                        medio.valor
+                                                            ? 'border-primary bg-primary text-primary-foreground'
+                                                            : 'border-border text-muted-foreground hover:border-primary/60 hover:text-primary-strong'
+                                                    }`}
+                                                >
+                                                    {medio.texto}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {form.data.medio_pago !== 'efectivo' ? (
+                                            <Input
+                                                aria-label="Número de operación"
+                                                value={
+                                                    form.data.numero_operacion
+                                                }
+                                                onChange={(event) =>
+                                                    form.setData(
+                                                        'numero_operacion',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                placeholder="N.º de operación (opcional)"
+                                                maxLength={60}
+                                                className="max-w-[260px]"
+                                            />
+                                        ) : null}
+                                        {caja_abierta === false &&
+                                            form.data.medio_pago ===
+                                                'efectivo' && (
+                                                <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-800 dark:text-amber-300">
+                                                    <AlertCircle className="text-warning-strong mt-0.5 size-4 shrink-0" />
+                                                    <div>
+                                                        <p className="font-bold">
+                                                            No tienes una caja
+                                                            abierta
+                                                        </p>
+                                                        <p className="mt-0.5">
+                                                            Para registrar
+                                                            cobros en efectivo
+                                                            necesitas abrir tu
+                                                            turno de caja
+                                                            primero.{' '}
+                                                            <a
+                                                                href={CajaRoutes.index.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                    },
+                                                                )}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="font-bold underline underline-offset-2 hover:opacity-80"
+                                                            >
+                                                                Abrir caja aquí
+                                                                ↗
+                                                            </a>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        {form.data.medio_pago === 'efectivo' &&
+                                        total >= LIMITE_BANCARIZACION ? (
+                                            <p className="text-[11.5px] font-semibold text-amber-700 dark:text-amber-400">
+                                                Desde S/ 2,000 el pago debe ir
+                                                por banco (transferencia,
+                                                depósito o tarjeta): en efectivo
+                                                el cliente pierde el crédito
+                                                fiscal.
+                                            </p>
+                                        ) : (
+                                            <p className="text-muted-foreground text-xs">
+                                                Se registra en tu caja al
+                                                emitir.
+                                            </p>
+                                        )}
+                                        {fieldError(form.errors, 'medio_pago')}
+                                    </div>
                                 ) : null}
-                                {fieldError(form.errors, 'cuotas')}
-                            </div>
-                        </div>
-                        {form.data.condicion_pago === 'contado' ? (
-                            <div className="border-border bg-muted/20 flex flex-col gap-1.5 rounded-[12px] border p-3">
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    ¿Cómo paga el cliente?
-                                </Label>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {MEDIOS_PAGO.map((medio) => (
-                                        <button
-                                            key={medio.valor}
-                                            type="button"
-                                            aria-pressed={
-                                                form.data.medio_pago ===
-                                                medio.valor
-                                            }
-                                            onClick={() =>
+                                {productoSueltoConDetraccion ? (
+                                    <p
+                                        role="alert"
+                                        className="rounded-[7px] border border-amber-300 bg-amber-50 px-3 py-2 text-[11.5px] font-semibold text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200"
+                                    >
+                                        Este producto no es parte del servicio:
+                                        emítelo en una factura aparte. La
+                                        detracción del servicio se calcula sobre
+                                        el total del servicio con su repuesto
+                                        instalado. Al emitir, el sistema lo
+                                        valida.
+                                    </p>
+                                ) : null}
+                                <ReferenciaField
+                                    cliente={cliente}
+                                    destino={form.data.destino}
+                                    value={form.data.referencia}
+                                    onChange={(valor) =>
+                                        form.setData('referencia', valor)
+                                    }
+                                    error={form.errors.referencia}
+                                />
+                                {sedeFija ? (
+                                    <div className="text-muted-foreground flex items-center gap-1.5 text-[12px]">
+                                        <MapPin className="size-3.5" />
+                                        Vendes desde{' '}
+                                        <b className="text-foreground">
+                                            {sedeFija.nombre}
+                                        </b>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <Label className="text-foreground text-sm font-medium">
+                                            Sede de la venta
+                                        </Label>
+                                        <NativeSelect
+                                            aria-label="Sede de la venta"
+                                            value={form.data.sede_id}
+                                            onChange={(event) =>
                                                 form.setData(
-                                                    'medio_pago',
-                                                    medio.valor,
+                                                    'sede_id',
+                                                    event.target.value
+                                                        ? Number(
+                                                              event.target
+                                                                  .value,
+                                                          )
+                                                        : '',
                                                 )
                                             }
-                                            className={`rounded-full border px-3 py-1 text-[12px] font-bold transition-colors ${
-                                                form.data.medio_pago ===
-                                                medio.valor
-                                                    ? 'border-primary bg-primary text-primary-foreground'
-                                                    : 'border-border text-muted-foreground hover:border-primary/60 hover:text-primary-strong'
-                                            }`}
+                                            className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-10 w-full rounded-[9px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                         >
-                                            {medio.texto}
-                                        </button>
-                                    ))}
-                                </div>
-                                {form.data.medio_pago !== 'efectivo' ? (
-                                    <Input
-                                        aria-label="Número de operación"
-                                        value={form.data.numero_operacion}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'numero_operacion',
-                                                event.target.value,
-                                            )
-                                        }
-                                        placeholder="N.º de operación (opcional)"
-                                        maxLength={60}
-                                        className="max-w-[260px]"
-                                    />
-                                ) : null}
-                                {caja_abierta === false &&
-                                    form.data.medio_pago === 'efectivo' && (
-                                        <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-800 dark:text-amber-300">
-                                            <AlertCircle className="text-warning-strong mt-0.5 size-4 shrink-0" />
-                                            <div>
-                                                <p className="font-bold">
-                                                    No tienes una caja abierta
-                                                </p>
-                                                <p className="mt-0.5">
-                                                    Para registrar cobros en
-                                                    efectivo necesitas abrir tu
-                                                    turno de caja primero.{' '}
-                                                    <a
-                                                        href={CajaRoutes.index.url(
-                                                            {
-                                                                current_team:
-                                                                    teamSlug,
-                                                            },
-                                                        )}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="font-bold underline underline-offset-2 hover:opacity-80"
-                                                    >
-                                                        Abrir caja aquí ↗
-                                                    </a>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-                                {form.data.medio_pago === 'efectivo' &&
-                                total >= LIMITE_BANCARIZACION ? (
-                                    <p className="text-[11.5px] font-semibold text-amber-700 dark:text-amber-400">
-                                        Desde S/ 2,000 el pago debe ir por banco
-                                        (transferencia, depósito o tarjeta): en
-                                        efectivo el cliente pierde el crédito
-                                        fiscal.
-                                    </p>
-                                ) : (
-                                    <p className="text-muted-foreground text-[11px]">
-                                        El cobro se registra solo al emitir y
-                                        suma en tu caja.
-                                    </p>
+                                            <option value="">
+                                                Selecciona una sede...
+                                            </option>
+                                            {sedes.map((sede) => (
+                                                <option
+                                                    key={sede.id}
+                                                    value={sede.id}
+                                                >
+                                                    {sede.nombre}
+                                                </option>
+                                            ))}
+                                        </NativeSelect>
+                                        {fieldError(form.errors, 'sede_id')}
+                                    </div>
                                 )}
-                                {fieldError(form.errors, 'medio_pago')}
-                            </div>
-                        ) : null}
-                        {productoSueltoConDetraccion ? (
-                            <p
-                                role="alert"
-                                className="rounded-[7px] border border-amber-300 bg-amber-50 px-3 py-2 text-[11.5px] font-semibold text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200"
-                            >
-                                Este producto no es parte del servicio: emítelo
-                                en una factura aparte. La detracción del
-                                servicio se calcula sobre el total del servicio
-                                con su repuesto instalado. Al emitir, el sistema
-                                lo valida.
-                            </p>
-                        ) : null}
-                        <ReferenciaField
-                            cliente={cliente}
-                            destino={form.data.destino}
-                            value={form.data.referencia}
-                            onChange={(valor) =>
-                                form.setData('referencia', valor)
-                            }
-                            error={form.errors.referencia}
-                        />
-                        {sedeFija ? (
-                            <div className="text-muted-foreground flex items-center gap-1.5 text-[12px]">
-                                <MapPin className="size-3.5" />
-                                Vendes desde{' '}
-                                <b className="text-foreground">
-                                    {sedeFija.nombre}
-                                </b>
-                            </div>
-                        ) : (
-                            <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
-                                    Sede de la venta
-                                </Label>
-                                <NativeSelect
-                                    aria-label="Sede de la venta"
-                                    value={form.data.sede_id}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'sede_id',
-                                            event.target.value
-                                                ? Number(event.target.value)
-                                                : '',
-                                        )
-                                    }
-                                    className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-10 w-full rounded-[9px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
-                                >
-                                    <option value="">
-                                        Selecciona una sede...
-                                    </option>
-                                    {sedes.map((sede) => (
-                                        <option key={sede.id} value={sede.id}>
-                                            {sede.nombre}
-                                        </option>
-                                    ))}
-                                </NativeSelect>
-                                {fieldError(form.errors, 'sede_id')}
-                            </div>
-                        )}
-                    </Card>
+                            </Card>
 
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[11px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                                <ScanLine className="size-5" />
-                            </div>
-                            <div>
-                                <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
-                                    Productos y servicios
-                                </h2>
-                                <p className="text-muted-foreground text-[12px]">
-                                    Escanea la serie o el código de barras, o
-                                    busca por nombre. Los precios incluyen IGV.
-                                </p>
-                            </div>
-                        </div>
+                            <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-[11px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                        <ScanLine className="size-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-foreground font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
+                                            Productos y servicios
+                                        </h2>
+                                        <p className="text-muted-foreground text-[12px]">
+                                            Escanea la serie o el código de
+                                            barras, o busca por nombre. Los
+                                            precios incluyen IGV.
+                                        </p>
+                                    </div>
+                                </div>
 
-                        <CatalogPicker
-                            teamSlug={teamSlug}
-                            sedeId={form.data.sede_id}
-                            onPick={agregarItem}
-                            onPickUnidad={(u) => agregarUnidades([u])}
-                            placeholder="Serie BF-EQ, código de barras o nombre del producto o servicio..."
-                        />
-                        {aviso ? (
-                            <div className="text-warning-strong flex items-center gap-2 rounded-[10px] bg-amber-500/10 px-3 py-2 text-[12px] font-semibold">
-                                <AlertCircle className="size-4" />
-                                {aviso}
-                            </div>
-                        ) : null}
-                        {fieldError(form.errors, 'items')}
+                                <CatalogPicker
+                                    teamSlug={teamSlug}
+                                    sedeId={form.data.sede_id}
+                                    onPick={agregarItem}
+                                    onPickUnidad={(u) => agregarUnidades([u])}
+                                    placeholder="Serie BF-EQ, código de barras o nombre del producto o servicio..."
+                                />
+                                {aviso ? (
+                                    <div className="text-warning-strong flex items-center gap-2 rounded-[10px] bg-amber-500/10 px-3 py-2 text-[12px] font-semibold">
+                                        <AlertCircle className="size-4" />
+                                        {aviso}
+                                    </div>
+                                ) : null}
+                                {fieldError(form.errors, 'items')}
 
-                        <div className="overflow-x-auto">
-                            <Table className="w-full border-collapse text-[12.5px]">
-                                <TableHeader>
-                                    <TableRow>
-                                        {[
-                                            'Ítem',
-                                            'Cant.',
-                                            'P. unit.',
-                                            'Desc.',
-                                            'Total',
-                                            '',
-                                        ].map((h) => (
-                                            <TableHead
-                                                key={h}
-                                                className="text-left"
-                                            >
-                                                {h || (
-                                                    <span className="sr-only">
-                                                        Acciones
-                                                    </span>
-                                                )}
-                                            </TableHead>
-                                        ))}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {form.data.items.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell
-                                                colSpan={6}
-                                                className="text-muted-foreground px-2.5 py-10 text-center"
-                                            >
-                                                Agrega un producto o servicio
-                                                para empezar.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        form.data.items.map((item) => (
-                                            <TableRow key={item.key}>
-                                                <TableCell className="border-border border-b px-2.5 py-2.5">
-                                                    <span className="text-foreground block font-semibold">
-                                                        {item.nombre}
-                                                    </span>
-                                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
-                                                        {item.tipo_linea ===
-                                                        'unidad_nueva'
-                                                            ? `Serie ${item.numero_serie}${item.detalle ? ` · ${item.detalle}` : ''}`
-                                                            : esServicioDeLinea(
-                                                                    item,
-                                                                )
-                                                              ? 'Servicio'
-                                                              : `Producto${item.stock !== undefined && item.stock !== null ? ` · stock ${item.stock}` : ''}`}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="border-border border-b px-2.5 py-2.5">
-                                                    {item.tipo_linea ===
-                                                    'unidad_nueva' ? (
-                                                        <span className="pl-2">
-                                                            1
-                                                        </span>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1">
-                                                            <button
-                                                                aria-label="Disminuir cantidad"
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    actualizarLinea(
-                                                                        item.key,
-                                                                        {
-                                                                            cantidad:
-                                                                                Math.max(
-                                                                                    1,
-                                                                                    item.cantidad -
+                                <div className="overflow-x-auto">
+                                    <Table className="w-full border-collapse text-[12.5px]">
+                                        <TableHeader>
+                                            <TableRow>
+                                                {[
+                                                    'Ítem',
+                                                    'Cant.',
+                                                    'P. unit.',
+                                                    'Desc.',
+                                                    'Total',
+                                                    '',
+                                                ].map((h) => (
+                                                    <TableHead
+                                                        key={h}
+                                                        className="text-left"
+                                                    >
+                                                        {h || (
+                                                            <span className="sr-only">
+                                                                Acciones
+                                                            </span>
+                                                        )}
+                                                    </TableHead>
+                                                ))}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {form.data.items.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell
+                                                        colSpan={6}
+                                                        className="text-muted-foreground px-2.5 py-10 text-center"
+                                                    >
+                                                        Agrega un producto o
+                                                        servicio para empezar.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                form.data.items.map((item) => (
+                                                    <TableRow key={item.key}>
+                                                        <TableCell className="border-border border-b px-2.5 py-2.5">
+                                                            <span className="text-foreground block font-semibold">
+                                                                {item.nombre}
+                                                            </span>
+                                                            <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                                {item.tipo_linea ===
+                                                                'unidad_nueva'
+                                                                    ? `Serie ${item.numero_serie}${item.detalle ? ` · ${item.detalle}` : ''}`
+                                                                    : esServicioDeLinea(
+                                                                            item,
+                                                                        )
+                                                                      ? 'Servicio'
+                                                                      : `Producto${item.stock !== undefined && item.stock !== null ? ` · stock ${item.stock}` : ''}`}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="border-border border-b px-2.5 py-2.5">
+                                                            {item.tipo_linea ===
+                                                            'unidad_nueva' ? (
+                                                                <span className="pl-2">
+                                                                    1
+                                                                </span>
+                                                            ) : (
+                                                                <div className="flex items-center gap-1">
+                                                                    <button
+                                                                        aria-label="Disminuir cantidad"
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            actualizarLinea(
+                                                                                item.key,
+                                                                                {
+                                                                                    cantidad:
+                                                                                        Math.max(
+                                                                                            1,
+                                                                                            item.cantidad -
+                                                                                                1,
+                                                                                        ),
+                                                                                },
+                                                                            )
+                                                                        }
+                                                                        className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                                    >
+                                                                        <Minus className="size-3" />
+                                                                    </button>
+                                                                    <Input
+                                                                        aria-label="Cantidad"
+                                                                        type="number"
+                                                                        min={1}
+                                                                        value={
+                                                                            item.cantidad
+                                                                        }
+                                                                        onChange={(
+                                                                            event,
+                                                                        ) =>
+                                                                            actualizarLinea(
+                                                                                item.key,
+                                                                                {
+                                                                                    cantidad:
+                                                                                        Math.max(
+                                                                                            1,
+                                                                                            Number(
+                                                                                                event
+                                                                                                    .target
+                                                                                                    .value,
+                                                                                            ) ||
+                                                                                                1,
+                                                                                        ),
+                                                                                },
+                                                                            )
+                                                                        }
+                                                                        className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
+                                                                    />
+                                                                    <button
+                                                                        aria-label="Aumentar cantidad"
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            actualizarLinea(
+                                                                                item.key,
+                                                                                {
+                                                                                    cantidad:
+                                                                                        item.cantidad +
                                                                                         1,
-                                                                                ),
-                                                                        },
-                                                                    )
-                                                                }
-                                                                className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
-                                                            >
-                                                                <Minus className="size-3" />
-                                                            </button>
+                                                                                },
+                                                                            )
+                                                                        }
+                                                                        className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                                    >
+                                                                        <Plus className="size-3" />
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="border-border border-b px-2.5 py-2.5">
                                                             <Input
-                                                                aria-label="Cantidad"
+                                                                aria-label="Precio unitario"
                                                                 type="number"
-                                                                min={1}
+                                                                min={0}
+                                                                step="0.01"
                                                                 value={
-                                                                    item.cantidad
+                                                                    item.precio_unitario
                                                                 }
                                                                 onChange={(
                                                                     event,
@@ -1384,135 +1458,103 @@ export default function NuevaVenta({
                                                                     actualizarLinea(
                                                                         item.key,
                                                                         {
-                                                                            cantidad:
-                                                                                Math.max(
-                                                                                    1,
-                                                                                    Number(
-                                                                                        event
-                                                                                            .target
-                                                                                            .value,
-                                                                                    ) ||
-                                                                                        1,
-                                                                                ),
-                                                                        },
-                                                                    )
-                                                                }
-                                                                className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
-                                                            />
-                                                            <button
-                                                                aria-label="Aumentar cantidad"
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    actualizarLinea(
-                                                                        item.key,
-                                                                        {
-                                                                            cantidad:
-                                                                                item.cantidad +
-                                                                                1,
-                                                                        },
-                                                                    )
-                                                                }
-                                                                className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
-                                                            >
-                                                                <Plus className="size-3" />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="border-border border-b px-2.5 py-2.5">
-                                                    <Input
-                                                        aria-label="Precio unitario"
-                                                        type="number"
-                                                        min={0}
-                                                        step="0.01"
-                                                        value={
-                                                            item.precio_unitario
-                                                        }
-                                                        onChange={(event) =>
-                                                            actualizarLinea(
-                                                                item.key,
-                                                                {
-                                                                    precio_unitario:
-                                                                        Number(
-                                                                            event
-                                                                                .target
-                                                                                .value,
-                                                                        ),
-                                                                },
-                                                            )
-                                                        }
-                                                        className="border-border h-8 w-24 rounded-[7px] text-[12px]"
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="border-border border-b px-2.5 py-2.5">
-                                                    <Input
-                                                        aria-label="Descuento"
-                                                        type="number"
-                                                        min={0}
-                                                        max={
-                                                            item.cantidad *
-                                                            item.precio_unitario
-                                                        }
-                                                        step="0.01"
-                                                        value={item.descuento}
-                                                        onChange={(event) =>
-                                                            actualizarLinea(
-                                                                item.key,
-                                                                {
-                                                                    descuento:
-                                                                        Math.min(
-                                                                            Math.max(
-                                                                                0,
+                                                                            precio_unitario:
                                                                                 Number(
                                                                                     event
                                                                                         .target
                                                                                         .value,
-                                                                                ) ||
-                                                                                    0,
-                                                                            ),
-                                                                            item.cantidad *
-                                                                                item.precio_unitario,
-                                                                        ),
-                                                                },
-                                                            )
-                                                        }
-                                                        className="border-border h-8 w-20 rounded-[7px] text-[12px]"
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
-                                                    {money(
-                                                        item.cantidad *
-                                                            item.precio_unitario -
-                                                            item.descuento,
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="border-border border-b px-2.5 py-2.5">
-                                                    <Button
-                                                        aria-label="Eliminar línea"
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        onClick={() =>
-                                                            setItems(
-                                                                form.data.items.filter(
-                                                                    (l) =>
-                                                                        l.key !==
+                                                                                ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="border-border h-8 w-24 rounded-[7px] text-[12px]"
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell className="border-border border-b px-2.5 py-2.5">
+                                                            <Input
+                                                                aria-label="Descuento"
+                                                                type="number"
+                                                                min={0}
+                                                                max={
+                                                                    item.cantidad *
+                                                                    item.precio_unitario
+                                                                }
+                                                                step="0.01"
+                                                                value={
+                                                                    item.descuento
+                                                                }
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
+                                                                    actualizarLinea(
                                                                         item.key,
-                                                                ),
-                                                            )
-                                                        }
-                                                        className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
-                                                    >
-                                                        <Trash2 className="size-3.5" />
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </Card>
+                                                                        {
+                                                                            descuento:
+                                                                                Math.min(
+                                                                                    Math.max(
+                                                                                        0,
+                                                                                        Number(
+                                                                                            event
+                                                                                                .target
+                                                                                                .value,
+                                                                                        ) ||
+                                                                                            0,
+                                                                                    ),
+                                                                                    item.cantidad *
+                                                                                        item.precio_unitario,
+                                                                                ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="border-border h-8 w-20 rounded-[7px] text-[12px]"
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
+                                                            {money(
+                                                                item.cantidad *
+                                                                    item.precio_unitario -
+                                                                    item.descuento,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="border-border border-b px-2.5 py-2.5">
+                                                            <Button
+                                                                aria-label="Eliminar línea"
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                    setItems(
+                                                                        form.data.items.filter(
+                                                                            (
+                                                                                l,
+                                                                            ) =>
+                                                                                l.key !==
+                                                                                item.key,
+                                                                        ),
+                                                                    )
+                                                                }
+                                                                className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
+                                                            >
+                                                                <Trash2 className="size-3.5" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </Card>
+                        </>
+                    ) : (
+                        <Card className="border-border bg-card rounded-[16px] border-dashed p-5 shadow-none">
+                            <Empty
+                                icon={<UserSearch />}
+                                title="Elige un cliente para continuar"
+                                description="Después agregas los productos y cobras."
+                            />
+                        </Card>
+                    )}
                 </div>
 
                 <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
@@ -1562,7 +1604,7 @@ export default function NuevaVenta({
                         </div>
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Observaciones
                             </Label>
                             <textarea
@@ -1594,12 +1636,10 @@ export default function NuevaVenta({
 
                         <Button
                             type="submit"
-                            disabled={form.processing}
+                            loading={form.processing}
                             className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                         >
-                            {form.processing ? (
-                                <Cargando className="size-4" />
-                            ) : (
+                            {form.processing ? null : (
                                 <FileText className="size-4" />
                             )}
                             {editandoEmitida
@@ -1634,7 +1674,7 @@ export default function NuevaVenta({
                                 type="submit"
                                 data-accion="borrador"
                                 variant="outline"
-                                disabled={form.processing}
+                                loading={form.processing}
                                 className="border-border bg-card text-foreground h-10 rounded-[9px] shadow-none"
                             >
                                 Guardar borrador

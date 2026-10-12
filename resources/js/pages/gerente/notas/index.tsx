@@ -1,9 +1,10 @@
 import { router, useForm, usePage } from '@inertiajs/react';
-import { AlertTriangle, Check, CheckCircle2, X } from 'lucide-react';
+import { AlertTriangle, Check, CheckCircle2, X, Inbox } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Empty } from '@/components/ui/empty';
 import GerenteLayout from '@/layouts/gerente-layout';
 import notas from '@/routes/gerente/notas';
 
@@ -118,7 +119,7 @@ function FilaSolicitud({
                     <Button
                         type="button"
                         onClick={aprobar}
-                        disabled={aprobando}
+                        loading={aprobando}
                         className="h-9"
                     >
                         <Check className="size-4" />
@@ -164,7 +165,7 @@ function FilaSolicitud({
                     <Button
                         type="submit"
                         variant="destructive"
-                        disabled={form.processing}
+                        loading={form.processing}
                         className="h-9"
                     >
                         Confirmar rechazo
@@ -227,9 +228,10 @@ export default function NotasPorAprobar() {
                     ))}
 
                 {solicitudes.length === 0 ? (
-                    <p className="border-border text-muted-foreground rounded-xl border border-dashed p-8 text-center text-sm">
-                        No hay notas esperando tu aprobación.
-                    </p>
+                    <Empty
+                        icon={<Inbox />}
+                        title="No hay notas esperando tu aprobación."
+                    />
                 ) : (
                     <ul className="space-y-3">
                         {solicitudes.map((solicitud) => (

@@ -63,6 +63,7 @@ import sitesRoutes from '@/routes/vendedor/clientes/sites';
 import vehiclesRoutes from '@/routes/vendedor/clientes/vehiculos';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
+import { InputPeru } from '@/components/ui/input-peru';
 
 // ==================== TIPOS CONTRATO BRIEF ====================
 
@@ -881,7 +882,7 @@ export default function ClienteShow({
                 {recompra && (
                     <Card className="border-border bg-card rounded-[16px] p-4 shadow-none">
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <span className="text-foreground text-sm font-medium">
                                 Probabilidad de volver a comprar (6 meses)
                             </span>
                             <RecompraBadge recompra={recompra} />
@@ -1015,10 +1016,10 @@ export default function ClienteShow({
                                     </div>
 
                                     {ventas.length === 0 ? (
-                                        <div className="text-muted-foreground py-8 text-center text-xs">
-                                            No hay ventas registradas para este
-                                            cliente aún.
-                                        </div>
+                                        <Empty
+                                            icon={<Inbox />}
+                                            title="No hay ventas registradas para este cliente aún."
+                                        />
                                     ) : (
                                         <div className="divide-border divide-y">
                                             {ventas.slice(0, 4).map((v) => (
@@ -1103,10 +1104,10 @@ export default function ClienteShow({
                                     </div>
 
                                     {extintores.length === 0 ? (
-                                        <div className="text-muted-foreground py-8 text-center text-xs">
-                                            No hay extintores vinculados a este
-                                            cliente.
-                                        </div>
+                                        <Empty
+                                            icon={<Inbox />}
+                                            title="No hay extintores vinculados a este cliente."
+                                        />
                                     ) : (
                                         <div className="divide-border divide-y">
                                             {extintores
@@ -2231,10 +2232,10 @@ export default function ClienteShow({
 
                                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                     {sites.length === 0 ? (
-                                        <p className="text-muted-foreground col-span-full py-6 text-center text-xs">
-                                            No hay sedes registradas para este
-                                            cliente.
-                                        </p>
+                                        <Empty
+                                            icon={<Inbox />}
+                                            title="No hay sedes registradas para este cliente."
+                                        />
                                     ) : (
                                         sites.map((s) => (
                                             <Card
@@ -2322,10 +2323,10 @@ export default function ClienteShow({
 
                                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                     {vehicles.length === 0 ? (
-                                        <p className="text-muted-foreground col-span-full py-6 text-center text-xs">
-                                            No hay vehículos registrados para
-                                            este cliente.
-                                        </p>
+                                        <Empty
+                                            icon={<Inbox />}
+                                            title="No hay vehículos registrados para este cliente."
+                                        />
                                     ) : (
                                         vehicles.map((v) => (
                                             <Card
@@ -2457,7 +2458,12 @@ export default function ClienteShow({
                             </div>
                             <div>
                                 <Label>Número doc</Label>
-                                <Input
+                                <InputPeru
+                                    tipo={
+                                        editForm.data.tipo_documento === 'dni'
+                                            ? 'dni'
+                                            : 'ruc'
+                                    }
                                     aria-label="Número de documento"
                                     value={editForm.data.numero_documento}
                                     onChange={(e) =>
@@ -2504,7 +2510,8 @@ export default function ClienteShow({
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <Label>Teléfono</Label>
-                                <Input
+                                <InputPeru
+                                    tipo="telefono"
                                     aria-label="Teléfono"
                                     value={editForm.data.telefono}
                                     onChange={(e) => {
@@ -2539,7 +2546,8 @@ export default function ClienteShow({
                                             </button>
                                         )}
                                 </div>
-                                <Input
+                                <InputPeru
+                                    tipo="celular"
                                     aria-label="WhatsApp"
                                     value={editForm.data.whatsapp}
                                     onChange={(e) =>
@@ -2621,7 +2629,7 @@ export default function ClienteShow({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={editForm.processing}
+                                loading={editForm.processing}
                                 className="bg-primary text-white"
                             >
                                 Guardar cambios
@@ -2729,7 +2737,8 @@ export default function ClienteShow({
                             </div>
                             <div>
                                 <Label>Teléfono contacto</Label>
-                                <Input
+                                <InputPeru
+                                    tipo="telefono"
                                     aria-label="Teléfono"
                                     value={siteForm.data.telefono}
                                     onChange={(e) =>
@@ -2753,7 +2762,7 @@ export default function ClienteShow({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={siteForm.processing}
+                                loading={siteForm.processing}
                                 className="bg-primary text-white"
                             >
                                 Guardar sede
@@ -2782,7 +2791,8 @@ export default function ClienteShow({
                     >
                         <div>
                             <Label>Placa del vehículo</Label>
-                            <Input
+                            <InputPeru
+                                tipo="placa"
                                 aria-label="Placa"
                                 value={vehicleForm.data.placa}
                                 onChange={(e) =>
@@ -2856,7 +2866,7 @@ export default function ClienteShow({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={vehicleForm.processing}
+                                loading={vehicleForm.processing}
                                 className="bg-primary text-white"
                             >
                                 Guardar vehículo

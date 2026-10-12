@@ -262,7 +262,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                                 type="button"
                                 disabled={nombreNueva.trim() === ''}
                                 onClick={crear}
-                                className="bg-foreground text-background rounded-lg px-3 py-1.5 font-semibold disabled:opacity-40"
+                                className="bg-foreground text-background rounded-lg px-3 py-1.5 font-semibold transition hover:brightness-95 disabled:opacity-40"
                             >
                                 Crear
                             </button>

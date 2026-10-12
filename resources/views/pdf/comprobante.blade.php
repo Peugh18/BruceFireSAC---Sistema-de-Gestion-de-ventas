@@ -257,7 +257,7 @@
     <table class="summary">
         <tr>
             <td style="padding-right: 18px;">
-                <div class="letras"><b>SON:</b> {{ $montoEnLetras }}</div>
+                <div class="letras">{{ $montoEnLetras }}</div>
                 @if($sale->observaciones)
                     <div class="obs"><b>Observaciones:</b> {{ $sale->observaciones }}</div>
                 @endif
