@@ -76,6 +76,7 @@ export type InstallmentItem = {
     id: number;
     sale_id: number;
     sale_numero: string;
+    con_detraccion?: boolean;
     numero_cuota: number;
     monto: number | string;
     saldo: number | string;
@@ -1025,23 +1026,25 @@ export default function CobranzasIndex({
                         onSubmit={submitRegisterPayment}
                         className="mt-3 space-y-3.5"
                     >
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={paymentForm.data.es_detraccion}
-                                onChange={(e) =>
-                                    paymentForm.setData({
-                                        ...paymentForm.data,
-                                        es_detraccion: e.target.checked,
-                                        forma_pago: e.target.checked
-                                            ? 'deposito'
-                                            : 'efectivo',
-                                    })
-                                }
-                            />
-                            Acreditar constancia de detracción (Banco de la
-                            Nación)
-                        </label>
+                        {selectedInstallment?.con_detraccion && (
+                            <label className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={paymentForm.data.es_detraccion}
+                                    onChange={(e) =>
+                                        paymentForm.setData({
+                                            ...paymentForm.data,
+                                            es_detraccion: e.target.checked,
+                                            forma_pago: e.target.checked
+                                                ? 'deposito'
+                                                : 'efectivo',
+                                        })
+                                    }
+                                />
+                                Acreditar constancia de detracción (Banco de la
+                                Nación)
+                            </label>
+                        )}
                         {paymentForm.data.es_detraccion && (
                             <p className="text-muted-foreground text-xs">
                                 Registra únicamente el depósito verificado.

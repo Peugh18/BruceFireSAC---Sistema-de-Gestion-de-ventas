@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
+import { cn } from '@/lib/utils';
 import { FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
 import ClientCreateDialog from '@/components/client-create-dialog';
@@ -397,7 +398,15 @@ export default function ClientesIndex({
                                                 {columns.map((column) => (
                                                     <TableHead
                                                         key={column}
-                                                        className="text-left whitespace-nowrap"
+                                                        className={cn(
+                                                            'text-left whitespace-nowrap',
+                                                            column
+                                                                .toLowerCase()
+                                                                .startsWith(
+                                                                    'direc',
+                                                                ) &&
+                                                                'hidden xl:table-cell',
+                                                        )}
                                                     >
                                                         {column}
                                                     </TableHead>
@@ -428,7 +437,7 @@ export default function ClientesIndex({
                                                                                 .cliente
                                                                                 .avatar}
                                                                     </div>
-                                                                    <div className="min-w-[180px]">
+                                                                    <div className="min-w-[120px]">
                                                                         <div className="text-foreground flex items-center gap-1.5 font-bold">
                                                                             <Link
                                                                                 href={clientes.show(
@@ -467,7 +476,7 @@ export default function ClientesIndex({
                                                                     client.documento
                                                                 }
                                                             </TableCell>
-                                                            <TableCell className="border-border text-muted-foreground max-w-[280px] border-b px-2.5 py-[13px]">
+                                                            <TableCell className="border-border text-muted-foreground hidden max-w-[280px] border-b px-2.5 py-[13px] xl:table-cell">
                                                                 <span className="line-clamp-2">
                                                                     {client.direccion ??
                                                                         '-'}
