@@ -536,7 +536,7 @@
     transform: none;
     outline: 2px solid var(--primary-strong);
 }
-.bf-workspace :is(button, a, input):focus-visible {
+.bf-workspace :is(button, a, input):focus-visible:not(.outline-none) {
     outline: 2px solid var(--primary-strong);
     outline-offset: 3px;
 }
@@ -909,4 +909,9 @@
     --color-border: #474b52;
     --color-input: #474b52;
     --color-muted-foreground: #bec1c7;
+}
+
+/* Flecha de los desplegables nativos (NativeSelect). */
+.select-flecha {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }

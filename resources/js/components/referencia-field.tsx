@@ -36,11 +36,11 @@ export default function ReferenciaField({
 
     return (
         <div>
-            <div className="text-foreground/80 text-[11px] font-bold uppercase">
+            <div className="text-foreground text-sm font-medium">
                 Referencia{' '}
                 <span className="text-muted-foreground font-normal normal-case">
-                    ({esVehiculo ? 'placa' : 'sede u oficina del cliente'}, sale
-                    impresa en el comprobante)
+                    ({esVehiculo ? 'placa' : 'sede u oficina'} · sale en el
+                    comprobante)
                 </span>
             </div>
             {opciones.length > 0 ? (

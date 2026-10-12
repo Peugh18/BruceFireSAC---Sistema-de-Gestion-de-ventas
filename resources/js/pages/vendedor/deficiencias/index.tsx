@@ -7,6 +7,7 @@ import {
     type DeficiencyItem,
     useAccionesDeficiencia,
 } from '@/components/deficiencias-vendedor';
+import FiltroSelect from '@/components/filtro-select';
 import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Empty } from '@/components/ui/empty';
@@ -85,31 +86,19 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
 
                 <PageHeader
                     title="Deficiencias y adicionales"
-                    description="Hallazgos que los técnicos reportaron en equipos de tus clientes. Si implica costo adicional, requiere autorización del cliente antes de proceder."
+                    description="Hallazgos de los técnicos en los equipos de tus clientes."
                 />
 
-                {/* Filter Tabs */}
-                <div className="bg-muted flex w-fit max-w-full flex-wrap overflow-x-auto rounded-[9px] p-[3px]">
-                    {TABS.map((tab) => {
-                        const active = currentEstado === tab.id;
-                        return (
-                            <button
-                                aria-pressed={currentEstado === tab.id}
-                                aria-label={tab.label}
-                                key={tab.id}
-                                type="button"
-                                onClick={() => handleFilterChange(tab.id)}
-                                className={`cursor-pointer rounded-[7px] px-3.5 py-1.5 text-xs font-bold transition-all ${
-                                    active
-                                        ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </div>
+                <FiltroSelect
+                    etiqueta="Estado"
+                    valor={currentEstado}
+                    opciones={TABS.map((tab) => ({
+                        value: tab.id,
+                        label: tab.label,
+                    }))}
+                    onCambiar={handleFilterChange}
+                    className="w-fit"
+                />
 
                 {/* List of Deficiency Cards */}
                 <div className="flex flex-col gap-3">

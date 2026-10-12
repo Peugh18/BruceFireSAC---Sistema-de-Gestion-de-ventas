@@ -13,6 +13,7 @@ import {
 import { FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
+import FiltroSelect from '@/components/filtro-select';
 import RangoFechas, { describirRango } from '@/components/rango-fechas';
 import { CargaLarga, Cargando, FilasCargando } from '@/components/cargando';
 import { Badge } from '@/components/ui/badge';
@@ -390,25 +391,19 @@ export default function FacturacionIndex({
 
                 <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
                     <div className="mb-2 flex flex-wrap items-end gap-2.5">
-                        <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
-                            {TYPE_FILTERS.map((filter) => {
-                                const active =
-                                    filter.value === ''
-                                        ? !filters.tipo ||
-                                          filters.tipo === 'todos'
-                                        : filters.tipo === filter.value;
-                                return (
-                                    <button
-                                        key={filter.label}
-                                        type="button"
-                                        onClick={() => changeType(filter.value)}
-                                        className={`rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${active ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        <FiltroSelect
+                            etiqueta="Tipo"
+                            valor={
+                                !filters.tipo || filters.tipo === 'todos'
+                                    ? ''
+                                    : filters.tipo
+                            }
+                            opciones={TYPE_FILTERS.map((filter) => ({
+                                value: filter.value,
+                                label: filter.label,
+                            }))}
+                            onCambiar={changeType}
+                        />
                         <RangoFechas
                             rango={filters}
                             hoy={hoy}

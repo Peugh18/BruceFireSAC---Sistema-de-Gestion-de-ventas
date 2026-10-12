@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import FiltroSelect from '@/components/filtro-select';
+import { Input } from '@/components/ui/input';
 import { fechaCorta } from '@/lib/utils';
 
 export type Rango = { desde: string; hasta: string };
@@ -43,7 +45,9 @@ export function describirRango({ desde, hasta }: Rango, hoy: string) {
 }
 
 /**
- * Filtro "Desde / Hasta" con atajos. Se aplica en cuanto se elige una fecha.
+ * Filtro de periodo en una sola lista corta (Hoy, Ayer, Esta semana, Este
+ * mes, Personalizado). Las fechas «Desde / Hasta» solo aparecen cuando se
+ * elige Personalizado. Se aplica en cuanto se elige una fecha.
  */
 export default function RangoFechas({
     rango,
@@ -54,6 +58,11 @@ export default function RangoFechas({
     hoy: string;
     onCambiar: (rango: Rango) => void;
 }) {
+    const lista = atajos(hoy);
+    const coincide = lista.find(
+        (atajo) => atajo.desde === rango.desde && atajo.hasta === rango.hasta,
+    );
+    const [personalizado, setPersonalizado] = useState(!coincide);
     const [desde, setDesde] = useState(rango.desde);
     const [hasta, setHasta] = useState(rango.hasta);
 
@@ -76,58 +85,63 @@ export default function RangoFechas({
         }
     };
 
-    const campo =
-        'border-border bg-card h-9 rounded-[9px] border px-2.5 text-[13px] font-normal normal-case';
+    const valorPeriodo = personalizado
+        ? 'Personalizado'
+        : (coincide?.label ?? 'Personalizado');
 
     return (
         <div className="flex flex-wrap items-end gap-2">
-            <label className="text-foreground/80 flex flex-col gap-1 text-[11px] font-bold uppercase">
-                Desde
-                <input
-                    type="date"
-                    value={desde}
-                    max={hoy}
-                    onChange={(event) => elegir('desde', event.target.value)}
-                    className={campo}
-                />
-            </label>
-            <label className="text-foreground/80 flex flex-col gap-1 text-[11px] font-bold uppercase">
-                Hasta
-                <input
-                    type="date"
-                    value={hasta}
-                    max={hoy}
-                    onChange={(event) => elegir('hasta', event.target.value)}
-                    className={campo}
-                />
-            </label>
-            <div className="bg-muted flex max-w-full overflow-x-auto rounded-[9px] p-[3px]">
-                {atajos(hoy).map((atajo) => {
-                    const activo =
-                        rango.desde === atajo.desde &&
-                        rango.hasta === atajo.hasta;
+            <FiltroSelect
+                etiqueta="Periodo"
+                valor={valorPeriodo}
+                opciones={[
+                    ...lista.map((atajo) => ({
+                        value: atajo.label,
+                        label: atajo.label,
+                    })),
+                    { value: 'Personalizado', label: 'Elegir fechas…' },
+                ]}
+                onCambiar={(valor) => {
+                    const atajo = lista.find((a) => a.label === valor);
 
-                    return (
-                        <button
-                            key={atajo.label}
-                            type="button"
-                            onClick={() =>
-                                onCambiar({
-                                    desde: atajo.desde,
-                                    hasta: atajo.hasta,
-                                })
+                    if (!atajo) {
+                        setPersonalizado(true);
+
+                        return;
+                    }
+
+                    setPersonalizado(false);
+                    onCambiar({ desde: atajo.desde, hasta: atajo.hasta });
+                }}
+            />
+            {valorPeriodo === 'Personalizado' ? (
+                <>
+                    <label className="text-muted-foreground flex flex-col gap-1 text-xs">
+                        Desde
+                        <Input
+                            type="date"
+                            value={desde}
+                            max={hoy}
+                            onChange={(event) =>
+                                elegir('desde', event.target.value)
                             }
-                            className={`rounded-[7px] px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
-                                activo
-                                    ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                        >
-                            {atajo.label}
-                        </button>
-                    );
-                })}
-            </div>
+                            className="text-foreground h-9 w-auto text-sm"
+                        />
+                    </label>
+                    <label className="text-muted-foreground flex flex-col gap-1 text-xs">
+                        Hasta
+                        <Input
+                            type="date"
+                            value={hasta}
+                            max={hoy}
+                            onChange={(event) =>
+                                elegir('hasta', event.target.value)
+                            }
+                            className="text-foreground h-9 w-auto text-sm"
+                        />
+                    </label>
+                </>
+            ) : null}
         </div>
     );
 }

@@ -131,14 +131,14 @@ export default function ClientPicker({
     return (
         <div>
             <div className="flex items-center justify-between gap-2">
-                <span className="text-foreground/80 text-[11px] font-bold uppercase">
+                <span className="text-foreground text-sm font-medium">
                     Cliente
                 </span>
                 {headerExtra}
             </div>
 
             {value ? (
-                <div className="border-primary/40 bg-destructive/5 mt-1 rounded-[10px] border p-3">
+                <div className="border-border bg-muted/40 mt-1 rounded-xl border p-3">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="text-foreground text-[14px] font-bold">
