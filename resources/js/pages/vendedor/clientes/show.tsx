@@ -882,7 +882,7 @@ export default function ClienteShow({
                 {recompra && (
                     <Card className="border-border bg-card rounded-[16px] p-4 shadow-none">
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <span className="text-foreground text-sm font-medium">
                                 Probabilidad de volver a comprar (6 meses)
                             </span>
                             <RecompraBadge recompra={recompra} />

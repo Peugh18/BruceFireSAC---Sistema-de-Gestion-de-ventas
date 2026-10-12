@@ -382,7 +382,7 @@ export default function ArmarCertificados({
                             registrada una revisión con el motivo. Solo un
                             certificado nuevo recibe número nuevo.
                         </p>
-                        <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                        <label className="text-foreground text-sm font-medium">
                             Motivo del ajuste (opcional)
                             <Input
                                 value={motivo}
@@ -460,7 +460,7 @@ export default function ArmarCertificados({
 
                             <div className="grid gap-4 lg:grid-cols-[170px_minmax(0,1fr)]">
                                 <div>
-                                    <div className="text-foreground/80 text-[11px] font-bold uppercase">
+                                    <div className="text-foreground text-sm font-medium">
                                         Destino
                                     </div>
                                     <TabsBf<'local_cliente' | 'vehiculo'>
@@ -516,7 +516,7 @@ export default function ArmarCertificados({
                             </div>
 
                             <div>
-                                <div className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <div className="text-foreground text-sm font-medium">
                                     Dirección que sale en el certificado
                                 </div>
                                 <Input
@@ -536,7 +536,7 @@ export default function ArmarCertificados({
                             </div>
 
                             <div>
-                                <div className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <div className="text-foreground text-sm font-medium">
                                     Certificados
                                 </div>
                                 <div className="mt-1 flex flex-wrap gap-2">
@@ -605,7 +605,7 @@ export default function ArmarCertificados({
                                         )}
                                     >
                                         <div className="grid gap-3 sm:grid-cols-[1fr_90px_1fr]">
-                                            <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                            <label className="text-foreground text-sm font-medium">
                                                 Curso
                                                 <Input
                                                     value={grupo.curso}
@@ -621,7 +621,7 @@ export default function ArmarCertificados({
                                                     className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
                                                 />
                                             </label>
-                                            <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                            <label className="text-foreground text-sm font-medium">
                                                 Horas
                                                 <Input
                                                     type="number"
@@ -641,7 +641,7 @@ export default function ArmarCertificados({
                                                     className="mt-1 h-9 rounded-[9px] text-[13px]"
                                                 />
                                             </label>
-                                            <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                            <label className="text-foreground text-sm font-medium">
                                                 Instructor
                                                 <Input
                                                     value={grupo.instructor}
@@ -1035,7 +1035,7 @@ export default function ArmarCertificados({
                                         'prueba_hidrostatica',
                                     ) ? (
                                         <div className="border-border grid gap-2 border-t p-2">
-                                            <div className="text-foreground/80 text-[11px] font-bold uppercase">
+                                            <div className="text-foreground text-sm font-medium">
                                                 Datos reales de la prueba
                                                 hidrostática
                                             </div>

@@ -140,7 +140,7 @@ export default function EntregasIndex({
             {/* Header Mobile Title */}
             <div className="mb-4">
                 <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
-                    <PackageCheck className="size-6 text-sky-600 dark:text-sky-400" />
+                    <PackageCheck className="size-6 text-sky-700 dark:text-sky-400" />
                     Entregas y Actas de Conformidad
                 </h1>
                 <p className="text-muted-foreground text-xs">
@@ -177,7 +177,7 @@ export default function EntregasIndex({
                     <span className="block text-[10px] font-bold uppercase opacity-80">
                         Entregadas
                     </span>
-                    <span className="text-lg font-black text-sky-600 dark:text-sky-400">
+                    <span className="text-lg font-black text-sky-700 dark:text-sky-400">
                         {stats.entregadas}
                     </span>
                 </button>
@@ -278,7 +278,7 @@ export default function EntregasIndex({
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
+                                            <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
                                                 {order.codigo}
                                             </span>
                                             <span
@@ -301,7 +301,7 @@ export default function EntregasIndex({
                                 </div>
 
                                 <div className="text-muted-foreground mb-3 flex items-center gap-1 text-[11px]">
-                                    <MapPin className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400" />
+                                    <MapPin className="size-3.5 shrink-0 text-sky-700 dark:text-sky-400" />
                                     <span className="line-clamp-1">
                                         {order.sede?.direccion ||
                                             order.client?.direccion_fiscal ||
@@ -320,7 +320,7 @@ export default function EntregasIndex({
                                             listos
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-600 dark:text-sky-400">
+                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-700 dark:text-sky-400">
                                         <span>Ver entrega & acta</span>
                                         <ArrowRight className="size-3.5" />
                                     </div>

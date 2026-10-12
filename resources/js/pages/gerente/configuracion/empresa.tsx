@@ -298,7 +298,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-razon-social"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Razón social
                                 </Label>
@@ -317,7 +317,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-nombre-comercial"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Nombre comercial
                                 </Label>
@@ -335,7 +335,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-ruc"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     RUC
                                 </Label>
@@ -353,7 +353,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-telefono"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Teléfono
                                 </Label>
@@ -369,7 +369,7 @@ export default function EmpresaConfiguracion({
                             <div className="md:col-span-2">
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-direccion"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Dirección
                                 </Label>
@@ -385,7 +385,7 @@ export default function EmpresaConfiguracion({
                                 />
                             </div>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Ubigeo (distrito)
                                 </Label>
                                 <UbigeoPicker
@@ -403,7 +403,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-email"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Email
                                 </Label>
@@ -418,7 +418,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-pagina-web"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Página web
                                 </Label>
@@ -437,7 +437,7 @@ export default function EmpresaConfiguracion({
                             <div className="md:col-span-2">
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-cuenta-de-detraccion-banco-de-la-nacion"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Cuenta de detracción (Banco de la Nación)
                                 </Label>
@@ -474,7 +474,7 @@ export default function EmpresaConfiguracion({
                                 venta o cotización.
                             </p>
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Color de la marca
                                 </Label>
                                 <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -514,7 +514,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-mensaje-de-agradecimiento"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Mensaje de agradecimiento
                                 </Label>
@@ -534,7 +534,7 @@ export default function EmpresaConfiguracion({
                             <div>
                                 <Label
                                     htmlFor="gerente-configuracion-empresa-condiciones-de-venta-o-garantia-opcional"
-                                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                                    className="text-foreground text-sm font-medium"
                                 >
                                     Condiciones de venta o garantía (opcional)
                                 </Label>
@@ -558,7 +558,7 @@ export default function EmpresaConfiguracion({
                         <div>
                             <Label
                                 htmlFor="gerente-configuracion-empresa-leyenda-de-pie-opcional"
-                                className="text-foreground/80 text-[11px] font-bold uppercase"
+                                className="text-foreground text-sm font-medium"
                             >
                                 Leyenda de pie (opcional)
                             </Label>

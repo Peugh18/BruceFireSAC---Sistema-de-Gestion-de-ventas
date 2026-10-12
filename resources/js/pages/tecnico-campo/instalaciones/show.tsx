@@ -264,7 +264,7 @@ export default function InstalacionShow({
                     <ArrowLeft className="size-4" />
                     <span>Volver a instalaciones</span>
                 </Link>
-                <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
+                <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
                     {order.codigo}
                 </span>
             </div>
@@ -300,7 +300,7 @@ export default function InstalacionShow({
 
                 <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2">
-                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-600 dark:text-sky-400" />
+                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-700 dark:text-sky-400" />
                         <div>
                             <span className="text-foreground font-semibold">
                                 Lugar de Instalación:{' '}
@@ -364,7 +364,7 @@ export default function InstalacionShow({
                 {/* 1. Datos del área y ubicación */}
                 <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
                     <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                        <Wrench className="size-4 text-sky-600 dark:text-sky-400" />
+                        <Wrench className="size-4 text-sky-700 dark:text-sky-400" />
                         1. Ubicación y Área de Instalación
                     </h2>
 
@@ -459,7 +459,7 @@ export default function InstalacionShow({
                                 <button
                                     type="button"
                                     onClick={escanear}
-                                    className="min-h-[44px] rounded-[8px] bg-sky-600 px-4 text-xs font-bold text-white transition hover:brightness-95"
+                                    className="min-h-[44px] rounded-[8px] bg-sky-700 px-4 text-xs font-bold text-white transition hover:brightness-95"
                                 >
                                     Agregar
                                 </button>
@@ -520,7 +520,7 @@ export default function InstalacionShow({
                             <button
                                 type="button"
                                 onClick={addEquipmentRow}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-sky-600 transition hover:brightness-95 active:scale-95 dark:text-sky-400"
+                                className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-sky-700 transition hover:brightness-95 active:scale-95 dark:text-sky-400"
                             >
                                 <Plus className="size-3.5" />
                                 Agregar
@@ -680,7 +680,7 @@ export default function InstalacionShow({
                                     e.target.checked,
                                 )
                             }
-                            className="size-4 rounded border-sky-500/20 text-sky-600 dark:text-sky-400"
+                            className="size-4 rounded border-sky-500/20 text-sky-700 dark:text-sky-400"
                         />
                         <span>
                             Emitir certificado automático al registrar la
@@ -719,7 +719,7 @@ export default function InstalacionShow({
                 {!isFinalizada && (
                     <div className="bg-card space-y-3 rounded-[14px] border border-sky-500/20 p-4 shadow-sm">
                         <h2 className="flex items-center gap-2 text-xs font-black tracking-wider text-sky-700 uppercase dark:text-sky-400">
-                            <UserCheck className="size-4 text-sky-600 dark:text-sky-400" />
+                            <UserCheck className="size-4 text-sky-700 dark:text-sky-400" />
                             4. Conformidad de Instalación en Sitio
                         </h2>
 
@@ -807,7 +807,7 @@ export default function InstalacionShow({
                                             e.target.checked,
                                         )
                                     }
-                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-600 dark:text-sky-400"
+                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-700 dark:text-sky-400"
                                 />
                                 <span className="text-xs leading-tight font-semibold text-sky-700 dark:text-sky-400">
                                     Conformidad en sitio: El cliente valida la
@@ -830,7 +830,7 @@ export default function InstalacionShow({
                                 !form.data.firma ||
                                 faltantes.length > 0
                             }
-                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-700 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
                             <span>Registrar y Guardar Instalación Técnica</span>

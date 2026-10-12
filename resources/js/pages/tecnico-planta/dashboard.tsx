@@ -207,7 +207,13 @@ export default function TecnicoPlantaDashboard({
                         tono="warning"
                         icono={<Clock className="size-4" />}
                         activo={currentTab === 'pendientes'}
-                        onClick={() => changeTab('pendientes')}
+                        onClick={() =>
+                            changeTab(
+                                currentTab === 'pendientes'
+                                    ? 'todas'
+                                    : 'pendientes',
+                            )
+                        }
                     />
                     <KpiFiltro
                         titulo="En taller"
@@ -216,7 +222,13 @@ export default function TecnicoPlantaDashboard({
                         tono="primary"
                         icono={<Wrench className="size-4" />}
                         activo={currentTab === 'en_taller'}
-                        onClick={() => changeTab('en_taller')}
+                        onClick={() =>
+                            changeTab(
+                                currentTab === 'en_taller'
+                                    ? 'todas'
+                                    : 'en_taller',
+                            )
+                        }
                     />
                     <KpiFiltro
                         titulo="Por autorizar"
@@ -225,7 +237,13 @@ export default function TecnicoPlantaDashboard({
                         tono="destructive"
                         icono={<AlertTriangle className="size-4" />}
                         activo={currentTab === 'esperando_autorizacion'}
-                        onClick={() => changeTab('esperando_autorizacion')}
+                        onClick={() =>
+                            changeTab(
+                                currentTab === 'esperando_autorizacion'
+                                    ? 'todas'
+                                    : 'esperando_autorizacion',
+                            )
+                        }
                     />
                     <KpiFiltro
                         titulo="Listas"
@@ -234,7 +252,13 @@ export default function TecnicoPlantaDashboard({
                         tono="success"
                         icono={<CheckCircle2 className="size-4" />}
                         activo={currentTab === 'por_entregar'}
-                        onClick={() => changeTab('por_entregar')}
+                        onClick={() =>
+                            changeTab(
+                                currentTab === 'por_entregar'
+                                    ? 'todas'
+                                    : 'por_entregar',
+                            )
+                        }
                     />
                 </div>
 
@@ -269,33 +293,15 @@ export default function TecnicoPlantaDashboard({
                     )}
                 </form>
 
-                {/* Mobile Filter Pills (Scrollable horizontally) */}
-                <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-1">
-                    {[
-                        { id: 'todas', label: 'Todas' },
-                        { id: 'pendientes', label: 'Pendientes' },
-                        { id: 'en_taller', label: 'En Taller' },
-                        {
-                            id: 'esperando_autorizacion',
-                            label: 'Esperando Autoriz.',
-                        },
-                        { id: 'por_entregar', label: 'Por Entregar' },
-                    ].map((t) => (
-                        <button
-                            key={t.id}
-                            type="button"
-                            aria-pressed={currentTab === t.id}
-                            onClick={() => changeTab(t.id)}
-                            className={`rounded-full px-3 py-1 text-[11px] font-bold whitespace-nowrap transition-all ${
-                                currentTab === t.id
-                                    ? 'bg-foreground text-background shadow-xs'
-                                    : 'border-border bg-card text-muted-foreground hover:bg-background border'
-                            }`}
-                        >
-                            {t.label}
-                        </button>
-                    ))}
-                </div>
+                {currentTab !== 'todas' ? (
+                    <button
+                        type="button"
+                        onClick={() => changeTab('todas')}
+                        className="text-primary-strong -mt-1 self-start text-sm font-medium hover:underline"
+                    >
+                        Quitar filtro y ver todas
+                    </button>
+                ) : null}
 
                 {/* Order List: Mobile Cards (Never horizontal tables) */}
                 <div className="space-y-3">

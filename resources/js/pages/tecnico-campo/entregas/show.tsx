@@ -107,7 +107,7 @@ const ESLABONES_MAP: Record<
     recojo_campo: {
         label: 'Recojo en Campo',
         icon: Truck,
-        color: 'text-sky-600 dark:text-sky-400 bg-sky-500/10',
+        color: 'text-sky-700 dark:text-sky-400 bg-sky-500/10',
     },
     recepcion_planta: {
         label: 'Recepción en Planta',
@@ -205,7 +205,7 @@ export default function EntregaShow({
                 >
                     Guía de remisión
                 </Link>
-                <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
+                <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
                     {order.codigo}
                 </span>
             </div>
@@ -252,7 +252,7 @@ export default function EntregaShow({
 
                 <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2">
-                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-600 dark:text-sky-400" />
+                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-700 dark:text-sky-400" />
                         <div>
                             <span className="text-foreground font-semibold">
                                 Lugar de Entrega:{' '}
@@ -294,7 +294,7 @@ export default function EntregaShow({
                             })}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-sky-500/20 bg-sky-500/10 text-xs font-black text-sky-600 shadow-2xs transition-all hover:bg-sky-500/10 dark:text-sky-400"
+                            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-sky-500/20 bg-sky-500/10 text-xs font-black text-sky-700 shadow-2xs transition-all hover:bg-sky-500/10 dark:text-sky-400"
                         >
                             <FileText className="size-4" />
                             <span>
@@ -374,7 +374,7 @@ export default function EntregaShow({
             {/* Custody Chain Trail (§22.4, §85.6.3) */}
             <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
                 <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                    <Truck className="size-4 text-sky-600 dark:text-sky-400" />
+                    <Truck className="size-4 text-sky-700 dark:text-sky-400" />
                     Cadena de Custodia del Servicio
                 </h2>
 
@@ -452,7 +452,7 @@ export default function EntregaShow({
                                             current_team: teamSlug,
                                             equipment: eq.id,
                                         })}
-                                        className="font-mono font-black text-sky-600 underline dark:text-sky-400"
+                                        className="font-mono font-black text-sky-700 underline dark:text-sky-400"
                                     >
                                         {eq.numero_serie}
                                     </Link>
@@ -537,7 +537,7 @@ export default function EntregaShow({
             {!isCerrada && !entregaRealizada && (
                 <div className="bg-card rounded-[14px] border border-sky-500/20 p-4 shadow-sm">
                     <h2 className="mb-1 flex items-center gap-2 text-sm font-black text-sky-700 dark:text-sky-400">
-                        <UserCheck className="size-4 text-sky-600 dark:text-sky-400" />
+                        <UserCheck className="size-4 text-sky-700 dark:text-sky-400" />
                         Confirmar Entrega y Acta de Conformidad
                     </h2>
                     <p className="text-muted-foreground mb-4 text-[11px]">
@@ -625,7 +625,7 @@ export default function EntregaShow({
                                             e.target.checked,
                                         )
                                     }
-                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-600 dark:text-sky-400"
+                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-700 dark:text-sky-400"
                                 />
                                 <span className="text-xs leading-tight font-semibold text-sky-700 dark:text-sky-400">
                                     Conformidad en sitio: El receptor declara
@@ -664,7 +664,7 @@ export default function EntregaShow({
                                         e.target.checked,
                                     )
                                 }
-                                className="size-4 rounded border-sky-500/20 text-sky-600 dark:text-sky-400"
+                                className="size-4 rounded border-sky-500/20 text-sky-700 dark:text-sky-400"
                             />
                             <span>
                                 Cerrar la Orden de Servicio definitivamente
@@ -675,7 +675,7 @@ export default function EntregaShow({
                         <button
                             type="submit"
                             disabled={form.processing || !form.data.firma}
-                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-700 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
                             <span>

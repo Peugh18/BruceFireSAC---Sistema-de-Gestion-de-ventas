@@ -147,7 +147,7 @@ export default function InspeccionesIndex({
             <div className="mb-4 flex items-center justify-between">
                 <div>
                     <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
-                        <ClipboardCheck className="size-6 text-sky-600 dark:text-sky-400" />
+                        <ClipboardCheck className="size-6 text-sky-700 dark:text-sky-400" />
                         Inspecciones de Campo
                     </h1>
                     <p className="text-muted-foreground text-xs">
@@ -198,7 +198,7 @@ export default function InspeccionesIndex({
                     <span className="block text-[10px] font-bold uppercase opacity-80">
                         En Proceso
                     </span>
-                    <span className="text-lg font-black text-sky-600 dark:text-sky-400">
+                    <span className="text-lg font-black text-sky-700 dark:text-sky-400">
                         {stats.en_proceso}
                     </span>
                 </button>
@@ -286,7 +286,7 @@ export default function InspeccionesIndex({
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="font-mono text-xs font-black text-sky-600 dark:text-sky-400">
+                                            <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
                                                 {order.codigo}
                                             </span>
                                             <span
@@ -308,7 +308,7 @@ export default function InspeccionesIndex({
                                 </div>
 
                                 <div className="text-muted-foreground mb-3 flex items-center gap-1 text-[11px]">
-                                    <MapPin className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400" />
+                                    <MapPin className="size-3.5 shrink-0 text-sky-700 dark:text-sky-400" />
                                     <span className="line-clamp-1">
                                         {order.client?.direccion_fiscal ||
                                             'Sin dirección registrada'}
@@ -326,7 +326,7 @@ export default function InspeccionesIndex({
                                             registrados
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-600 dark:text-sky-400">
+                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-700 dark:text-sky-400">
                                         <span>Realizar checklist</span>
                                         <ArrowRight className="size-3.5" />
                                     </div>

@@ -375,7 +375,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                             'estimado_historico' && (
                                                             <Badge
                                                                 title="No hay un equipo con número de serie registrado para este cliente — la fecha se estima desde su historial de compras."
-                                                                className="rounded-full border-none bg-sky-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-sky-600 dark:text-sky-400"
+                                                                className="rounded-full border-none bg-sky-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-sky-700 dark:text-sky-400"
                                                             >
                                                                 Estimado por
                                                                 historial

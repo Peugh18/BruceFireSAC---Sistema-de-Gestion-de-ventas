@@ -230,7 +230,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                         className="mt-3 space-y-3.5"
                     >
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 {actionModal?.isApproving
                                     ? 'Persona que autoriza en cliente *'
                                     : 'Persona que comunica el rechazo *'}
@@ -257,7 +257,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Canal *
                                 </Label>
                                 <NativeSelect
@@ -283,7 +283,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                             </div>
 
                             <div>
-                                <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <Label className="text-foreground text-sm font-medium">
                                     Fecha *
                                 </Label>
                                 <Input
@@ -307,7 +307,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                 <div>
                                     <Label
                                         htmlFor="cotizacion_adicional_id"
-                                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                                        className="text-foreground text-sm font-medium"
                                     >
                                         Cotización del adicional
                                     </Label>
@@ -344,7 +344,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                 <div>
                                     <Label
                                         htmlFor="importe"
-                                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                                        className="text-foreground text-sm font-medium"
                                     >
                                         Importe aceptado (S/)
                                         {actionModal.item.orden_cobrada && ' *'}
@@ -380,7 +380,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                         )}
 
                         <div>
-                            <Label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <Label className="text-foreground text-sm font-medium">
                                 Observaciones / Sustento
                             </Label>
                             <Input

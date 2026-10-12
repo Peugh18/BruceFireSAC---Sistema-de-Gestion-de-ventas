@@ -55,7 +55,7 @@ export default function MantenimientosIndex({
                 />
                 <button
                     type="submit"
-                    className="min-h-[44px] rounded-[10px] bg-sky-600 px-4 text-xs font-bold text-white transition hover:brightness-95"
+                    className="min-h-[44px] rounded-[10px] bg-sky-700 px-4 text-xs font-bold text-white transition hover:brightness-95"
                 >
                     Buscar
                 </button>
@@ -77,7 +77,7 @@ export default function MantenimientosIndex({
                                 })}
                                 className="border-border bg-card hover:bg-muted/60 flex min-h-[64px] items-center gap-3 rounded-[14px] border p-3.5 shadow-xs transition-colors"
                             >
-                                <Wrench className="size-5 shrink-0 text-sky-600 dark:text-sky-400" />
+                                <Wrench className="size-5 shrink-0 text-sky-700 dark:text-sky-400" />
                                 <div className="min-w-0 flex-1">
                                     <p className="text-foreground truncate text-sm font-black">
                                         {orden.client.razon_social}

@@ -116,7 +116,7 @@ export default function WhatsappNumeroDialog({
                 </DialogHeader>
                 <form onSubmit={guardar} className="space-y-3">
                     <div>
-                        <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                        <label className="text-foreground text-sm font-medium">
                             Celular (WhatsApp)
                         </label>
                         <Input

@@ -144,7 +144,7 @@ export default function CambiarUnidadDialog({
                     </p>
                 ) : null}
 
-                <div className="text-foreground/80 text-[11px] font-bold uppercase">
+                <div className="text-foreground text-sm font-medium">
                     O elige una disponible
                 </div>
                 {disponibles === null ? (

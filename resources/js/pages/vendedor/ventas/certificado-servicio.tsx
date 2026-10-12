@@ -240,7 +240,7 @@ export default function CertificadoServicio({
                             }}
                         />
                         <div className="grid gap-3">
-                            <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                            <label className="text-foreground text-sm font-medium">
                                 Dirección del servicio
                                 <Input
                                     value={direccion}
@@ -255,7 +255,7 @@ export default function CertificadoServicio({
                                 />
                             </label>
                             <div>
-                                <div className="text-foreground/80 text-[11px] font-bold uppercase">
+                                <div className="text-foreground text-sm font-medium">
                                     Tipo de atención
                                 </div>
                                 <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
@@ -558,7 +558,7 @@ export default function CertificadoServicio({
                 ) : null}
 
                 <Card className="border-border bg-card gap-2 rounded-[16px] p-5 shadow-none">
-                    <label className="text-foreground/80 text-[11px] font-bold uppercase">
+                    <label className="text-foreground text-sm font-medium">
                         Observaciones (salen en el certificado)
                         <textarea
                             value={observaciones}

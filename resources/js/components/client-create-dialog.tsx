@@ -99,7 +99,7 @@ function ClientFormFields({
             <div>
                 <Label
                     htmlFor={`${formId}-tipo_documento`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     Tipo doc.
                 </Label>
@@ -124,7 +124,7 @@ function ClientFormFields({
             <div>
                 <Label
                     htmlFor={`${formId}-numero_documento`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     Numero
                 </Label>
@@ -161,7 +161,7 @@ function ClientFormFields({
             <div className="sm:col-span-2">
                 <Label
                     htmlFor={`${formId}-razon_social`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     {data.tipo_documento === 'dni'
                         ? 'Nombres y apellidos'
@@ -182,12 +182,11 @@ function ClientFormFields({
                 <div>
                     <Label
                         htmlFor={`${formId}-nombre_comercial`}
-                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                        className="text-foreground text-sm font-medium"
                     >
                         Nombre comercial{' '}
                         <span className="text-muted-foreground font-normal normal-case">
-                            (opcional, no viene de SUNAT — se escribe a mano si
-                            aplica)
+                            (opcional)
                         </span>
                     </Label>
                     <Input
@@ -205,7 +204,7 @@ function ClientFormFields({
             <div>
                 <Label
                     htmlFor={`${formId}-email`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     Email
                 </Label>
@@ -223,7 +222,7 @@ function ClientFormFields({
                 <div className="flex items-center justify-between">
                     <Label
                         htmlFor={`${formId}-telefono`}
-                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                        className="text-foreground text-sm font-medium"
                     >
                         Teléfono / WhatsApp
                     </Label>
@@ -264,7 +263,7 @@ function ClientFormFields({
                 <div>
                     <Label
                         htmlFor={`${formId}-whatsapp`}
-                        className="text-foreground/80 text-[11px] font-bold uppercase"
+                        className="text-foreground text-sm font-medium"
                     >
                         Número de WhatsApp
                     </Label>
@@ -285,7 +284,7 @@ function ClientFormFields({
             <div className="sm:col-span-2">
                 <Label
                     htmlFor={`${formId}-direccion_fiscal`}
-                    className="text-foreground/80 text-[11px] font-bold uppercase"
+                    className="text-foreground text-sm font-medium"
                 >
                     {data.tipo_documento === 'ruc'
                         ? 'Dirección fiscal (obligatoria para facturar)'
@@ -307,7 +306,7 @@ function ClientFormFields({
                     <div>
                         <Label
                             htmlFor={`${formId}-estado_contribuyente`}
-                            className="text-foreground/80 text-[11px] font-bold uppercase"
+                            className="text-foreground text-sm font-medium"
                         >
                             Estado SUNAT{' '}
                             <span className="text-muted-foreground font-normal normal-case">
@@ -327,7 +326,7 @@ function ClientFormFields({
                     <div>
                         <Label
                             htmlFor={`${formId}-condicion_domicilio`}
-                            className="text-foreground/80 text-[11px] font-bold uppercase"
+                            className="text-foreground text-sm font-medium"
                         >
                             Condicion{' '}
                             <span className="text-muted-foreground font-normal normal-case">

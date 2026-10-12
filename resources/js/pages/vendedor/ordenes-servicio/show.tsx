@@ -802,9 +802,9 @@ export default function ServiceOrderShow({
                 </Card>
 
                 {/* 2-Column Info & Bitácora */}
-                <div className="grid gap-4 lg:grid-cols-12">
+                <div className="grid gap-4 xl:grid-cols-12">
                     {/* Left Column: Detalle del Servicio & Cliente (5 cols) */}
-                    <div className="flex flex-col gap-4 lg:col-span-5">
+                    <div className="flex flex-col gap-4 xl:col-span-5">
                         <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                             <div className="text-foreground text-[13.5px] font-bold">
                                 Detalles del servicio
@@ -1038,7 +1038,7 @@ export default function ServiceOrderShow({
                     </div>
 
                     {/* Right Column: Bitácora de Eventos (7 cols) */}
-                    <div className="flex flex-col lg:col-span-7">
+                    <div className="flex flex-col xl:col-span-7">
                         <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
