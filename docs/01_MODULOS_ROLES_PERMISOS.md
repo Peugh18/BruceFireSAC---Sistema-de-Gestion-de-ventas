@@ -166,7 +166,7 @@ desplegar código nuevo.
 El usuario proporcionó los formatos oficiales ya en uso — **no son
 diseño a mejorar, son la plantilla real** que el motor de certificados
 debe reproducir con datos dinámicos. Guardadas en
-`documentos/plantillas_certificados/`:
+`docs/plantillas_certificados/`:
 
 1. **Informe Técnico — Sistema de Detección y Alarma**: datos del
    servicio, objeto del informe, checklist de actividades, tabla de

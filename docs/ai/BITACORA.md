@@ -158,7 +158,7 @@
 
 - Antigravity entregó `almacen-gerente.md`. Reporte unificado: `docs/ai/auditoria/REPORTE_CONSOLIDADO.md` (11 críticos, 15 importantes, 3 falsos positivos descartados). El usuario pidió no cambiar código hasta revisar el reporte.
 
-- Manuales SUNAT (factura, boleta, NC, ND y resumen diario) convertidos a Markdown en `documentos/sunat/`, con `README.md` como índice. Comparación con el código en `docs/ai/auditoria/facturacion-sunat.md`. Verificado: NC con motivos 04 y 05 sobre boleta (prohibido), hora de emisión 00:00:00 en el XML y URL de producción equivocada en la guía interna.
+- Manuales SUNAT (factura, boleta, NC, ND y resumen diario) convertidos a Markdown en `docs/sunat/`, con `README.md` como índice. Comparación con el código en `docs/ai/auditoria/facturacion-sunat.md`. Verificado: NC con motivos 04 y 05 sobre boleta (prohibido), hora de emisión 00:00:00 en el XML y URL de producción equivocada en la guía interna.
 
 ## [2026-10-06] — Normativa SUNAT vigente y documentación unificada
 
@@ -180,7 +180,7 @@
 
     - `docs/ai/auditoria/` se eliminó; su contenido pasó a `AUDITORIA.md` y `SUNAT.md`.
 
-- Corregida en `docs/FACTURACION_GREENTER_SUNAT.md` la URL de producción (era la de consulta). Las guías de `documentos/sunat/guia-*.md` quedan excluidas del formateador (`vite.config.ts`).
+- Corregida en `docs/FACTURACION_GREENTER_SUNAT.md` la URL de producción (era la de consulta). Las guías de `docs/sunat/guia-*.md` quedan excluidas del formateador (`vite.config.ts`).
 
 ## [2026-10-06] — GRE, documentación unificada y auditoría transversal
 
@@ -194,11 +194,11 @@
 
     - Greenter instalado: v4.3.1 (2021), que no trae la GRE. La versión actual es la v5.3.0 (2026) más `greenter/gre-api`. Requiere aprobación porque cambia dependencias.
 
-- `documentos/` unificado:
+- `docs/` unificado:
 
     - El Documento Maestro queda como especificación (§1–75) con una fe de erratas al inicio.
 
-    - §76–90 y `00_PLAN_POR_FASES.md` pasan a `documentos/archivo/`.
+    - §76–90 y `00_PLAN_POR_FASES.md` pasan a `docs/archivo/`.
 
     - `01_MODULOS_ROLES_PERMISOS.md` queda marcado como parcialmente obsoleto.
 
@@ -795,7 +795,7 @@
 - Pedido: investigar cómo sistemas consolidados registran productos y relacionan procesos, comparar con BRUCE FIRE y proponer mejoras.
 - Fuentes oficiales consultadas: Shopify, Odoo 19, Zoho Inventory y Dynamics 365 Field Service; documentación pública, sin prueba de sus consolas ni afirmaciones sobre operaciones internas de clientes grandes.
 - Contrastado con auditoría navegada y código actual: catálogo/unidad/equipo separados, estados/eventos, recepción, tránsito, costo promedio, venta/servicio, historial y seguimiento.
-- Informe: docs/ai/anexos/COMPARACION_PROCESOS_2026_10_10.md; propuestas ordenadas para productos, documentos/siguiente acción, recepción, deficiencias/campo y cobros/gerencia.
+- Informe: docs/ai/anexos/COMPARACION_PROCESOS_2026_10_10.md; propuestas ordenadas para productos, docs/siguiente acción, recepción, deficiencias/campo y cobros/gerencia.
 - No atribuir todas las acciones como verificadas: 40 pantallas/68 acciones previas no prueban todos los botones; entrega/acta, deficiencias, GRE y hardware mantienen sus pendientes.
 - Recomendaciones todavía no implementadas; funciones nuevas sujetas a REQ/historia/matriz. Traslados en tránsito y costos ya existen: no repetir ausencias de auditorías antiguas.
 - Verificación documental: enlaces oficiales y contraste de archivos; sin cambios de código, datos, dependencias, commit ni push. No se repitieron pruebas del sistema para documentación.

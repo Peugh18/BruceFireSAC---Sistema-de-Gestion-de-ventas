@@ -6,7 +6,7 @@
 
 **Fuentes de este documento:**
 
-- Las guías XML UBL 2.1 oficiales de 2017–2018, convertidas en `documentos/sunat/`.
+- Las guías XML UBL 2.1 oficiales de 2017–2018, convertidas en `docs/sunat/`.
 - La normativa posterior que las modificó, buscada el 2026-10-06 (sección 6).
 
 Si una guía de 2017 choca con una norma posterior, **manda la norma posterior**.

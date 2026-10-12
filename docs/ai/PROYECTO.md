@@ -60,12 +60,12 @@
 | Normativa SUNAT vigente, estado de la facturación y guía de remisión | `docs/ai/SUNAT.md`                                           |
 | Historial de sesiones                                                | `docs/ai/BITACORA.md`                                        |
 | Detalle por rol e investigación de empresas grandes                  | `docs/ai/anexos/`                                            |
-| Especificación funcional (§1–§75, con fe de erratas al inicio)       | `documentos/BRUCE_FIRE_Documento_Maestro_v9.md`              |
-| Historial del Maestro (§76–§90) y plan por fases viejo               | `documentos/archivo/`                                        |
-| Matriz de permisos (parcialmente obsoleta: manda el seeder)          | `documentos/01_MODULOS_ROLES_PERMISOS.md`                    |
-| Lo que pidió el dueño por voz                                        | `documentos/notas_de_voz_usuario.md`                         |
-| Guías oficiales de SUNAT                                             | `documentos/sunat/`                                          |
-| Certificados e informes reales de referencia                         | `documentos/plantillas_certificados/`                        |
+| Especificación funcional (§1–§75, con fe de erratas al inicio)       | `docs/BRUCE_FIRE_Documento_Maestro_v9.md`                    |
+| Historial del Maestro (§76–§90) y plan por fases viejo               | `docs/archivo/`                                              |
+| Matriz de permisos (parcialmente obsoleta: manda el seeder)          | `docs/01_MODULOS_ROLES_PERMISOS.md`                          |
+| Lo que pidió el dueño por voz                                        | `docs/notas_de_voz_usuario.md`                               |
+| Guías oficiales de SUNAT                                             | `docs/sunat/`                                                |
+| Certificados e informes reales de referencia                         | `docs/plantillas_certificados/`                              |
 | Cómo se usa Greenter                                                 | `docs/FACTURACION_GREENTER_SUNAT.md`                         |
 | Decisiones y documentos del curso (DRS, EDT, backlog)                | Obsidian: `Bruce Fire/` y `Documentación de Bruce Fire SAC/` |
 

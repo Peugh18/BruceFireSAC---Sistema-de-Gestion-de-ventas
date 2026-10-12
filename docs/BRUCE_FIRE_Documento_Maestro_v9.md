@@ -5,7 +5,7 @@
 > ## Estado del documento y fe de erratas (2026-10-06)
 >
 > - **Nombre oficial del proyecto:** Sistema web para la gestión de ventas en BRUCE FIRE S.A.C. El alcance académico está fijado en el DRS v3.1 (Obsidian).
-> - **Este documento es la especificación funcional (§1–§75).** Las secciones **§76–§90** (adendas, auditorías, planes y bitácoras) se movieron a `documentos/archivo/Documento_Maestro_v9_historial_76-90.md` con sus mismos números.
+> - **Este documento es la especificación funcional (§1–§75).** Las secciones **§76–§90** (adendas, auditorías, planes y bitácoras) se movieron a `docs/archivo/Documento_Maestro_v9_historial_76-90.md` con sus mismos números.
 > - **Qué falta hacer:** `docs/ai/PLAN.md`. **Qué está mal:** `docs/ai/AUDITORIA.md`. **Normativa SUNAT vigente:** `docs/ai/SUNAT.md`. Ante cualquier choque con este documento, mandan esos tres.
 > - **Erratas conocidas:**
 >     1. **Rol Administrador** (§5.6, §35.6, §69): nunca se creó. El **Gerente** absorbe su alcance; hay 5 roles.
@@ -3349,4 +3349,4 @@ apoyarán en datos y procesos ya estabilizados.
 
 ---
 
-> Las secciones §76–§90 (historial) están en `documentos/archivo/Documento_Maestro_v9_historial_76-90.md`.
+> Las secciones §76–§90 (historial) están en `docs/archivo/Documento_Maestro_v9_historial_76-90.md`.

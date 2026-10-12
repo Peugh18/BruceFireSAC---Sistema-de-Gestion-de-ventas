@@ -77,7 +77,7 @@ export default defineConfig({
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
-            'documentos/sunat/guia-*.md',
+            'docs/sunat/guia-*.md',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],

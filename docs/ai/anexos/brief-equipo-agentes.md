@@ -14,8 +14,8 @@ Repositorio: `D:\TiomiguelonGgs\Documents\BRUCE FIRE\BruceFireSacv2`. La app cor
 ## Lee primero
 
 - `docs/ai/PROYECTO.md`, `docs/ai/PLAN.md` (Fase 5) y `docs/ai/anexos/investigacion-campo-y-comunicacion.md`.
-- `documentos/BRUCE_FIRE_Documento_Maestro_v9.md`: la especificación. Busca las secciones de tu rol.
-- `documentos/01_MODULOS_ROLES_PERMISOS.md` y `documentos/notas_de_voz_usuario.md`: lo que pidió el dueño.
+- `docs/BRUCE_FIRE_Documento_Maestro_v9.md`: la especificación. Busca las secciones de tu rol.
+- `docs/01_MODULOS_ROLES_PERMISOS.md` y `docs/notas_de_voz_usuario.md`: lo que pidió el dueño.
 
 ## Qué revisar en cada funcionalidad de tu rol
 

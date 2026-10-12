@@ -18,7 +18,7 @@ Fuentes primarias: [FireTrack](https://firetrack.pe/app-inspeccion-extintores), 
 
 ## Ya integrado y comprobado
 
-Alta comercial con perfiles, orden con documentos/siguiente acción y avance de mantenimiento pertenecen a la fase anterior. En esta continuación: GRE con contexto/paginación/regreso por rol; notas con original/acción y cuotas claramente no disponibles; relevo Planta→Campo, entrega y cierre posterior con responsable/eventos y documentos conservados. Se mantuvo catálogo, área del trabajo, custodia, autorizaciones, fiscalidad y permisos por sede.
+Alta comercial con perfiles, orden con docs/siguiente acción y avance de mantenimiento pertenecen a la fase anterior. En esta continuación: GRE con contexto/paginación/regreso por rol; notas con original/acción y cuotas claramente no disponibles; relevo Planta→Campo, entrega y cierre posterior con responsable/eventos y documentos conservados. Se mantuvo catálogo, área del trabajo, custodia, autorizaciones, fiscalidad y permisos por sede.
 
 ## Siguientes mejoras, por prioridad
 
