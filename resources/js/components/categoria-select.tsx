@@ -11,6 +11,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import categoriasRoutes from '@/routes/gerente/categorias';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type CategoriaItem = {
     id: number;
@@ -130,7 +131,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                     Gestionar
                 </button>
             </div>
-            <select
+            <NativeSelect
                 id="categoria-select"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
@@ -145,7 +146,7 @@ export function CategoriaSelect({ value, onChange, categorias }: Props) {
                             {c.activo ? '' : ' (desactivada)'}
                         </option>
                     ))}
-            </select>
+            </NativeSelect>
 
             <Dialog open={abierto} onOpenChange={setAbierto}>
                 <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">

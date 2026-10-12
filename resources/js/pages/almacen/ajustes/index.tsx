@@ -19,9 +19,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import type { Team } from '@/types';
 import AjustesRoutes from '@/routes/almacen/ajustes';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type SedeOption = {
     id: number;
@@ -312,7 +321,7 @@ export default function AjustesIndex({
                                         Producto / Componente{' '}
                                         <span className="text-red-500">*</span>
                                     </Label>
-                                    <select
+                                    <NativeSelect
                                         aria-label="Producto / Componente"
                                         value={data.product_id}
                                         onChange={(e) => {
@@ -333,7 +342,7 @@ export default function AjustesIndex({
                                                     : '• (A granel)'}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 {/* Sede */}
@@ -342,7 +351,7 @@ export default function AjustesIndex({
                                         Sede Almacén{' '}
                                         <span className="text-red-500">*</span>
                                     </Label>
-                                    <select
+                                    <NativeSelect
                                         aria-label="Sede Almacén"
                                         value={data.sede_id}
                                         onChange={(e) => {
@@ -360,7 +369,7 @@ export default function AjustesIndex({
                                                 {s.nombre} ({s.tipo})
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 {/* Tipo de Ajuste */}
@@ -432,7 +441,7 @@ export default function AjustesIndex({
                                                 </span>
                                             )}
                                         </Label>
-                                        <select
+                                        <NativeSelect
                                             aria-label="Unidad de inventario"
                                             value={data.inventory_unit_id}
                                             onChange={(e) => {
@@ -463,7 +472,7 @@ export default function AjustesIndex({
                                                     - [{u.estado}]
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         {availableUnits.length === 0 && (
                                             <p className="text-destructive-strong text-[11px]">
                                                 No hay unidades físicas
@@ -477,7 +486,7 @@ export default function AjustesIndex({
                                         <Label className="text-foreground text-xs font-bold">
                                             Lote
                                         </Label>
-                                        <select
+                                        <NativeSelect
                                             aria-label="Lote"
                                             value={data.product_lot_id}
                                             onChange={(e) =>
@@ -506,7 +515,7 @@ export default function AjustesIndex({
                                                         : ''}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                     </div>
                                 ) : selectedProduct?.controla_lote ? (
                                     <div className="grid grid-cols-2 gap-2">
@@ -671,49 +680,43 @@ export default function AjustesIndex({
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-border bg-muted/30/50 text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
-                                <tr>
-                                    <th className="px-4 py-2.5">
-                                        Fecha y Hora
-                                    </th>
-                                    <th className="px-4 py-2.5">Producto</th>
-                                    <th className="px-4 py-2.5">Sede</th>
-                                    <th className="px-4 py-2.5 text-center">
+                        <Table className="w-full text-left text-xs">
+                            <TableHeader className="border-border bg-muted/30/50 text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                <TableRow>
+                                    <TableHead>Fecha y Hora</TableHead>
+                                    <TableHead>Producto</TableHead>
+                                    <TableHead>Sede</TableHead>
+                                    <TableHead className="text-center">
                                         Tipo & Cantidad
-                                    </th>
-                                    <th className="px-4 py-2.5">
-                                        Unidad Serie
-                                    </th>
-                                    <th className="px-4 py-2.5">
-                                        Motivo / Kardex
-                                    </th>
-                                    <th className="px-4 py-2.5">Usuario</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-border divide-y">
+                                    </TableHead>
+                                    <TableHead>Unidad Serie</TableHead>
+                                    <TableHead>Motivo / Kardex</TableHead>
+                                    <TableHead>Usuario</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-border divide-y">
                                 {ajustes.data.length === 0 ? (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={7}
                                             className="text-muted-foreground py-8 text-center text-xs"
                                         >
                                             No se han registrado ajustes de
                                             stock aún.
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     ajustes.data.map((m) => {
                                         const isPositive = m.cantidad > 0;
                                         return (
-                                            <tr
+                                            <TableRow
                                                 key={m.id}
                                                 className="hover:bg-muted/40"
                                             >
-                                                <td className="text-muted-foreground px-4 py-3 font-mono text-[11px]">
+                                                <TableCell className="text-muted-foreground px-4 py-3 font-mono text-[11px]">
                                                     {formatDate(m.created_at)}
-                                                </td>
-                                                <td className="text-foreground px-4 py-3 font-semibold">
+                                                </TableCell>
+                                                <TableCell className="text-foreground px-4 py-3 font-semibold">
                                                     <div>
                                                         [{m.product.codigo}]{' '}
                                                         {m.product.nombre}
@@ -729,11 +732,11 @@ export default function AjustesIndex({
                                                         }
                                                         )
                                                     </div>
-                                                </td>
-                                                <td className="text-foreground px-4 py-3">
+                                                </TableCell>
+                                                <TableCell className="text-foreground px-4 py-3">
                                                     {m.sede.nombre}
-                                                </td>
-                                                <td className="px-4 py-3 text-center">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-center">
                                                     <span
                                                         className={`inline-flex items-center gap-1 rounded-[6px] border px-2 py-0.5 text-[11px] font-black ${
                                                             isPositive
@@ -750,8 +753,8 @@ export default function AjustesIndex({
                                                             ? `+${m.cantidad}`
                                                             : m.cantidad}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-3 font-mono text-xs">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 font-mono text-xs">
                                                     {m.inventory_unit ? (
                                                         <span className="text-foreground font-bold">
                                                             {
@@ -774,13 +777,13 @@ export default function AjustesIndex({
                                                             —
                                                         </span>
                                                     )}
-                                                </td>
-                                                <td className="text-foreground max-w-xs px-4 py-3">
+                                                </TableCell>
+                                                <TableCell className="text-foreground max-w-xs px-4 py-3">
                                                     <p className="line-clamp-2 text-[11.5px]">
                                                         {m.observacion ?? '—'}
                                                     </p>
-                                                </td>
-                                                <td className="text-muted-foreground px-4 py-3">
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground px-4 py-3">
                                                     <div className="flex items-center gap-1">
                                                         <User className="text-muted-foreground size-3" />
                                                         <span>
@@ -788,13 +791,13 @@ export default function AjustesIndex({
                                                                 'Sistema'}
                                                         </span>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     {/* Paginación */}

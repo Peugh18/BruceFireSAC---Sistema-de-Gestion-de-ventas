@@ -17,10 +17,19 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useClienteFicha } from '@/hooks/use-cliente-ficha';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type Unidad = {
     equipment_id: number;
@@ -868,35 +877,29 @@ export default function ArmarCertificados({
 
                             {filasDelGrupo.length > 0 ? (
                                 <div className="border-border overflow-x-auto rounded-[10px] border">
-                                    <table className="w-full min-w-[640px] text-[12.5px]">
-                                        <thead className="bg-muted/50 text-muted-foreground text-left text-[10px] font-bold uppercase">
-                                            <tr>
-                                                <th className="px-2.5 py-2">
-                                                    Orden
-                                                </th>
-                                                <th className="px-2.5 py-2">
+                                    <Table className="w-full min-w-[640px] text-[12.5px]">
+                                        <TableHeader className="bg-muted/50 text-muted-foreground text-left text-[10px] font-bold uppercase">
+                                            <TableRow>
+                                                <TableHead>Orden</TableHead>
+                                                <TableHead>
                                                     N° del cliente
-                                                </th>
-                                                <th className="px-2.5 py-2">
-                                                    Extintor
-                                                </th>
-                                                <th className="px-2.5 py-2">
+                                                </TableHead>
+                                                <TableHead>Extintor</TableHead>
+                                                <TableHead>
                                                     Serie fab.
-                                                </th>
-                                                <th className="px-2.5 py-2">
-                                                    Grupo
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                                                </TableHead>
+                                                <TableHead>Grupo</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
                                             {filas.map((fila, index) =>
                                                 fila.grupo !==
                                                 grupo.id ? null : (
-                                                    <tr
+                                                    <TableRow
                                                         key={fila.equipment_id}
                                                         className="border-border border-t"
                                                     >
-                                                        <td className="px-2.5 py-1.5">
+                                                        <TableCell className="px-2.5 py-1.5">
                                                             <div className="flex gap-1">
                                                                 <button
                                                                     aria-label="Mover extintor arriba"
@@ -925,8 +928,8 @@ export default function ArmarCertificados({
                                                                     <ArrowDown className="size-3" />
                                                                 </button>
                                                             </div>
-                                                        </td>
-                                                        <td className="px-2.5 py-1.5">
+                                                        </TableCell>
+                                                        <TableCell className="px-2.5 py-1.5">
                                                             <Input
                                                                 aria-label="Número de extintor del cliente"
                                                                 value={
@@ -955,8 +958,8 @@ export default function ArmarCertificados({
                                                                 }
                                                                 className="h-8 w-24 rounded-[7px] text-[12px]"
                                                             />
-                                                        </td>
-                                                        <td className="px-2.5 py-1.5">
+                                                        </TableCell>
+                                                        <TableCell className="px-2.5 py-1.5">
                                                             <span className="block font-semibold">
                                                                 {fila.producto}
                                                             </span>
@@ -972,13 +975,13 @@ export default function ArmarCertificados({
                                                                     : ''}
                                                                 {` · ${fila.agente_conocido ? fila.agente : 'Sin agente'}`}
                                                             </span>
-                                                        </td>
-                                                        <td className="px-2.5 py-1.5 font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
+                                                        </TableCell>
+                                                        <TableCell className="px-2.5 py-1.5 font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
                                                             {fila.serie_fabricante ??
                                                                 '—'}
-                                                        </td>
-                                                        <td className="px-2.5 py-1.5">
-                                                            <select
+                                                        </TableCell>
+                                                        <TableCell className="px-2.5 py-1.5">
+                                                            <NativeSelect
                                                                 aria-label="Grupo del extintor"
                                                                 value={
                                                                     fila.grupo
@@ -1021,13 +1024,13 @@ export default function ArmarCertificados({
                                                                         </option>
                                                                     ),
                                                                 )}
-                                                            </select>
-                                                        </td>
-                                                    </tr>
+                                                            </NativeSelect>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ),
                                             )}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                     {grupo.tipos.includes(
                                         'prueba_hidrostatica',
                                     ) ? (
@@ -1114,7 +1117,7 @@ export default function ArmarCertificados({
                                                     </label>
                                                     <label className="text-muted-foreground text-[10px] font-bold uppercase">
                                                         Resultado
-                                                        <select
+                                                        <NativeSelect
                                                             value={
                                                                 fila.ph_resultado
                                                             }
@@ -1140,7 +1143,7 @@ export default function ArmarCertificados({
                                                             <option value="desaprobado">
                                                                 No aprobado
                                                             </option>
-                                                        </select>
+                                                        </NativeSelect>
                                                     </label>
                                                 </div>
                                             ))}

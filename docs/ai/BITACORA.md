@@ -1053,3 +1053,9 @@
 - Los campos (teléfono, correo, web, condiciones, leyenda, cuenta de detracción) sí se leen de la configuración; están vacíos en la base y por eso no salen: se llenan en Gerente → Configuración.
 - Pest completo 1030/1030 antes del cambio; después: CompanySettingModule, BillingModule y NotaVenta en verde.
 - Documentos alineados a la configuración del Gerente: la cotización usa el logo, el color de marca y el mensaje de agradecimiento de Configuración; el acta de conformidad dibuja el logo y ya no inventa RUC, teléfono ni correo cuando faltan; la constancia de recepción usa razón social y RUC reales. Pruebas de PDF de cotización, actas y configuración 30/30.
+
+### 2026-10-11 — Componentes shadcn en todo el sistema
+
+- A pedido del dueño: las tarjetas del Gerente (Caja, Cobranzas, Reportes) vuelven a su diseño anterior (solo se conserva «Vencido» en cero sin rojo); los puntos de estado de Cotizaciones se quedan.
+- Nuevos en components/ui: table, empty y native-select (sin dependencias). Las 29 pantallas con tabla armada a mano usan Table (encabezado legible y filas uniformes); 39 archivos con <select> usan NativeSelect (misma cara que Input); 17 estados vacíos simples usan Empty.
+- Verificado por navegador (vendedor): cotizaciones, ventas, cobranzas, órdenes y certificados; axe sin violaciones. tsc, check y build en verde. Solo frontend.

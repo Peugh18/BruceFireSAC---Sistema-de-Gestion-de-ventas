@@ -3,6 +3,14 @@ import { Barcode, Building2, FileText, Printer } from 'lucide-react';
 import { useState } from 'react';
 
 import { Card } from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import recepciones from '@/routes/almacen/recepciones';
 import stickersRutas from '@/routes/almacen/stickers';
@@ -133,41 +141,37 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-[12.5px]">
-                                <thead>
-                                    <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
-                                        <th className="py-2.5 pr-3">N° Doc.</th>
-                                        <th className="px-3 py-2.5">Fecha</th>
-                                        <th className="px-4 py-2.5">
-                                            Proveedor
-                                        </th>
-                                        <th className="px-3 py-2.5">
-                                            Sede Almacén
-                                        </th>
-                                        <th className="px-3 py-2.5 text-center">
+                            <Table className="w-full text-left text-[12.5px]">
+                                <TableHeader>
+                                    <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                        <TableHead>N° Doc.</TableHead>
+                                        <TableHead>Fecha</TableHead>
+                                        <TableHead>Proveedor</TableHead>
+                                        <TableHead>Sede Almacén</TableHead>
+                                        <TableHead className="text-center">
                                             Unidades Serializadas
-                                        </th>
-                                        <th className="py-2.5 pl-4 text-right">
+                                        </TableHead>
+                                        <TableHead className="text-right">
                                             Acción
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-border divide-y">
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="divide-border divide-y">
                                     {receptions.data.map((rec) => (
-                                        <tr
+                                        <TableRow
                                             key={rec.id}
                                             className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="text-foreground py-3 pr-3 font-mono font-bold">
+                                            <TableCell className="text-foreground py-3 pr-3 font-mono font-bold">
                                                 #{rec.id}
-                                            </td>
-                                            <td className="text-foreground/80 px-3 py-3 font-mono text-[11.5px] whitespace-nowrap">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-3 py-3 font-mono text-[11.5px] whitespace-nowrap">
                                                 {formatDate(rec.fecha)}
-                                            </td>
-                                            <td className="text-foreground px-4 py-3 font-bold">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-4 py-3 font-bold">
                                                 {rec.proveedor}
-                                            </td>
-                                            <td className="text-foreground/80 px-3 py-3">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-3 py-3">
                                                 <div className="flex items-center gap-1.5">
                                                     <Building2 className="text-muted-foreground size-3.5" />
                                                     <span>
@@ -175,11 +179,11 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                             ?.nombre ?? '—'}
                                                     </span>
                                                 </div>
-                                            </td>
-                                            <td className="text-foreground px-3 py-3 text-center font-mono font-bold">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-3 py-3 text-center font-mono font-bold">
                                                 {rec.unidades_count}
-                                            </td>
-                                            <td className="py-3 pl-4 text-right">
+                                            </TableCell>
+                                            <TableCell className="py-3 pl-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Link
                                                         href={recepciones.show.url(
@@ -217,11 +221,11 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                         <span>Imprimir</span>
                                                     </a>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
 
                             {receptions.links.length > 3 && (
                                 <div className="border-border text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-xs">

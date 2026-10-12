@@ -1,5 +1,4 @@
 ﻿import { router, usePage } from '@inertiajs/react';
-import { KpiCard } from '@/components/kpi-card';
 import {
     AlertTriangle,
     Boxes,
@@ -10,11 +9,22 @@ import {
     Layers,
     Percent,
     TrendingUp,
+    Inbox,
 } from 'lucide-react';
 import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
 import ReportesRoutes from '@/routes/gerente/reportes';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 type ComercialData = {
     fechaDesde: string;
@@ -262,7 +272,7 @@ export default function ReportesIndex() {
                                     >
                                         Vendedor
                                     </label>
-                                    <select
+                                    <NativeSelect
                                         id="gerente-reportes-vendedor"
                                         value={vendedorId}
                                         onChange={(e) =>
@@ -278,7 +288,7 @@ export default function ReportesIndex() {
                                                 {v.name}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
                             </div>
 
@@ -304,61 +314,81 @@ export default function ReportesIndex() {
 
                         {/* KPIs Comerciales */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <KpiCard
-                                titulo="Ventas netas"
-                                valor={
-                                    <>
-                                        {formatCurrency(
-                                            reporteComercial.totalVentas,
-                                        )}
-                                    </>
-                                }
-                                detalle={
-                                    <>
-                                        Originales{' '}
-                                        {formatCurrency(
-                                            reporteComercial.ventasOriginales,
-                                        )}{' '}
-                                        − notas de crédito{' '}
-                                        {formatCurrency(
-                                            reporteComercial.notasCredito,
-                                        )}{' '}
-                                        + notas de débito{' '}
-                                        {formatCurrency(
-                                            reporteComercial.notasDebito,
-                                        )}
-                                        , aceptadas en el período.
-                                    </>
-                                }
-                                icono={<CircleDollarSign className="size-4" />}
-                            />
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium uppercase">
+                                        Ventas netas
+                                    </span>
+                                    <CircleDollarSign className="text-success-strong size-4" />
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {formatCurrency(
+                                        reporteComercial.totalVentas,
+                                    )}
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    Originales{' '}
+                                    {formatCurrency(
+                                        reporteComercial.ventasOriginales,
+                                    )}{' '}
+                                    − notas de crédito{' '}
+                                    {formatCurrency(
+                                        reporteComercial.notasCredito,
+                                    )}{' '}
+                                    + notas de débito{' '}
+                                    {formatCurrency(
+                                        reporteComercial.notasDebito,
+                                    )}
+                                    , aceptadas en el período.
+                                </p>
+                            </div>
 
-                            <KpiCard
-                                titulo="Total de operaciones"
-                                valor={<>{reporteComercial.cantidadVentas}</>}
-                                detalle={<>Ventas confirmadas en el período</>}
-                                icono={<FileText className="size-4" />}
-                            />
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium uppercase">
+                                        Total de Operaciones
+                                    </span>
+                                    <FileText className="size-4 text-blue-600" />
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {reporteComercial.cantidadVentas}
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    Ventas confirmadas en el período
+                                </p>
+                            </div>
 
-                            <KpiCard
-                                titulo="Ticket promedio"
-                                valor={
-                                    <>
-                                        {formatCurrency(
-                                            reporteComercial.ticketPromedio,
-                                        )}
-                                    </>
-                                }
-                                detalle={<>Promedio por comprobante</>}
-                                icono={<TrendingUp className="size-4" />}
-                            />
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium uppercase">
+                                        Ticket Promedio
+                                    </span>
+                                    <TrendingUp className="size-4 text-purple-600" />
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {formatCurrency(
+                                        reporteComercial.ticketPromedio,
+                                    )}
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    Promedio por comprobante
+                                </p>
+                            </div>
 
-                            <KpiCard
-                                titulo="Conversión cotizaciones"
-                                valor={<>{reporteComercial.tasaConversion}%</>}
-                                detalle={<>Efectividad de cierre comercial</>}
-                                icono={<Percent className="size-4" />}
-                            />
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium uppercase">
+                                        Conversión Cotizaciones
+                                    </span>
+                                    <Percent className="text-warning-strong size-4" />
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {reporteComercial.tasaConversion}%
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    Efectividad de cierre comercial
+                                </p>
+                            </div>
                         </div>
 
                         {/* Tablas de Desglose Comercial */}
@@ -373,53 +403,52 @@ export default function ReportesIndex() {
                                 </p>
 
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
-                                        <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
-                                            <tr>
-                                                <th className="px-3 py-2">
-                                                    Vendedor
-                                                </th>
-                                                <th className="px-3 py-2 text-center">
+                                    <Table className="w-full text-left text-xs">
+                                        <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
+                                            <TableRow>
+                                                <TableHead>Vendedor</TableHead>
+                                                <TableHead className="text-center">
                                                     Operaciones
-                                                </th>
-                                                <th className="px-3 py-2 text-right">
+                                                </TableHead>
+                                                <TableHead className="text-right">
                                                     Total Facturado
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-border divide-y">
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-border divide-y">
                                             {reporteComercial.porVendedor
                                                 .length === 0 ? (
-                                                <tr>
-                                                    <td
-                                                        colSpan={3}
-                                                        className="text-muted-foreground py-4 text-center"
-                                                    >
-                                                        Sin ventas en este
-                                                        período.
-                                                    </td>
-                                                </tr>
+                                                <TableRow>
+                                                    <TableCell colSpan={3}>
+                                                        <Empty
+                                                            icon={<Inbox />}
+                                                            title="Sin ventas en este período."
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
                                             ) : (
                                                 reporteComercial.porVendedor.map(
                                                     (v) => (
-                                                        <tr key={v.nombre}>
-                                                            <td className="text-foreground px-3 py-2.5 font-medium">
+                                                        <TableRow
+                                                            key={v.nombre}
+                                                        >
+                                                            <TableCell className="text-foreground px-3 py-2.5 font-medium">
                                                                 {v.nombre}
-                                                            </td>
-                                                            <td className="px-3 py-2.5 text-center font-mono">
+                                                            </TableCell>
+                                                            <TableCell className="px-3 py-2.5 text-center font-mono">
                                                                 {v.cantidad}
-                                                            </td>
-                                                            <td className="text-foreground px-3 py-2.5 text-right font-mono font-bold">
+                                                            </TableCell>
+                                                            <TableCell className="text-foreground px-3 py-2.5 text-right font-mono font-bold">
                                                                 {formatCurrency(
                                                                     v.monto,
                                                                 )}
-                                                            </td>
-                                                        </tr>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     ),
                                                 )
                                             )}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                 </div>
                             </div>
 
@@ -433,55 +462,55 @@ export default function ReportesIndex() {
                                 </p>
 
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
-                                        <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
-                                            <tr>
-                                                <th className="px-3 py-2">
-                                                    Cliente
-                                                </th>
-                                                <th className="px-3 py-2 text-center">
+                                    <Table className="w-full text-left text-xs">
+                                        <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
+                                            <TableRow>
+                                                <TableHead>Cliente</TableHead>
+                                                <TableHead className="text-center">
                                                     Compras
-                                                </th>
-                                                <th className="px-3 py-2 text-right">
+                                                </TableHead>
+                                                <TableHead className="text-right">
                                                     Total
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-border divide-y">
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-border divide-y">
                                             {reporteComercial.topClientes
                                                 .length === 0 ? (
-                                                <tr>
-                                                    <td
-                                                        colSpan={3}
-                                                        className="text-muted-foreground py-4 text-center"
-                                                    >
-                                                        Sin datos de clientes.
-                                                    </td>
-                                                </tr>
+                                                <TableRow>
+                                                    <TableCell colSpan={3}>
+                                                        <Empty
+                                                            icon={<Inbox />}
+                                                            title="Sin datos de clientes."
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
                                             ) : (
                                                 reporteComercial.topClientes.map(
                                                     (c, i) => (
-                                                        <tr key={c.cliente}>
-                                                            <td className="text-foreground max-w-xs truncate px-3 py-2.5 font-medium">
+                                                        <TableRow
+                                                            key={c.cliente}
+                                                        >
+                                                            <TableCell className="text-foreground max-w-xs truncate px-3 py-2.5 font-medium">
                                                                 <b className="text-primary-strong mr-1">
                                                                     #{i + 1}
                                                                 </b>{' '}
                                                                 {c.cliente}
-                                                            </td>
-                                                            <td className="px-3 py-2.5 text-center font-mono">
+                                                            </TableCell>
+                                                            <TableCell className="px-3 py-2.5 text-center font-mono">
                                                                 {c.cantidad}
-                                                            </td>
-                                                            <td className="text-foreground px-3 py-2.5 text-right font-mono font-bold">
+                                                            </TableCell>
+                                                            <TableCell className="text-foreground px-3 py-2.5 text-right font-mono font-bold">
                                                                 {formatCurrency(
                                                                     c.total,
                                                                 )}
-                                                            </td>
-                                                        </tr>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     ),
                                                 )
                                             )}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                 </div>
                             </div>
                         </div>
@@ -496,55 +525,53 @@ export default function ReportesIndex() {
                             </p>
 
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
-                                        <tr>
-                                            <th className="px-4 py-2.5">
-                                                Ítem
-                                            </th>
-                                            <th className="px-4 py-2.5 text-center">
+                                <Table className="w-full text-left text-xs">
+                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
+                                        <TableRow>
+                                            <TableHead>Ítem</TableHead>
+                                            <TableHead className="text-center">
                                                 Cantidad Total
-                                            </th>
-                                            <th className="px-4 py-2.5 text-right">
+                                            </TableHead>
+                                            <TableHead className="text-right">
                                                 Monto Facturado
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-border divide-y">
                                         {reporteComercial.topItems.length ===
                                         0 ? (
-                                            <tr>
-                                                <td
-                                                    colSpan={3}
-                                                    className="text-muted-foreground py-6 text-center"
-                                                >
-                                                    Sin ítems registrados.
-                                                </td>
-                                            </tr>
+                                            <TableRow>
+                                                <TableCell colSpan={3}>
+                                                    <Empty
+                                                        icon={<Inbox />}
+                                                        title="Sin ítems registrados."
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
                                         ) : (
                                             reporteComercial.topItems.map(
                                                 (item, i) => (
-                                                    <tr key={item.nombre}>
-                                                        <td className="text-foreground px-4 py-3 font-medium">
+                                                    <TableRow key={item.nombre}>
+                                                        <TableCell className="text-foreground px-4 py-3 font-medium">
                                                             <b className="text-primary-strong mr-2">
                                                                 #{i + 1}
                                                             </b>{' '}
                                                             {item.nombre}
-                                                        </td>
-                                                        <td className="text-foreground/80 px-4 py-3 text-center font-mono font-semibold">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground/80 px-4 py-3 text-center font-mono font-semibold">
                                                             {item.cantidad}
-                                                        </td>
-                                                        <td className="text-foreground px-4 py-3 text-right font-mono font-bold">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground px-4 py-3 text-right font-mono font-bold">
                                                             {formatCurrency(
                                                                 item.monto,
                                                             )}
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ),
                                             )
                                         )}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
                         </div>
                     </div>
@@ -563,7 +590,7 @@ export default function ReportesIndex() {
                                     >
                                         Sede / Almacén
                                     </label>
-                                    <select
+                                    <NativeSelect
                                         id="gerente-reportes-sede-almacen"
                                         value={sedeId}
                                         onChange={(e) =>
@@ -579,7 +606,7 @@ export default function ReportesIndex() {
                                                 {s.nombre}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 <div className="flex items-center pt-5">
@@ -635,138 +662,149 @@ export default function ReportesIndex() {
 
                         {/* KPIs de Inventario */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <KpiCard
-                                titulo="Valorización total"
-                                valor={
-                                    <>
-                                        {formatCurrency(
-                                            reporteInventario.valorizacionTotal,
-                                        )}
-                                    </>
-                                }
-                                detalle={
-                                    <>
-                                        Stock disponible × costo promedio de
-                                        compra
-                                    </>
-                                }
-                                icono={<CircleDollarSign className="size-4" />}
-                            />
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium uppercase">
+                                        Valorización Total
+                                    </span>
+                                    <CircleDollarSign className="text-success-strong size-4" />
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {formatCurrency(
+                                        reporteInventario.valorizacionTotal,
+                                    )}
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    Stock disponible × costo promedio de compra
+                                </p>
+                            </div>
 
-                            <KpiCard
-                                titulo="Productos en catálogo"
-                                valor={<>{reporteInventario.totalProductos}</>}
-                                detalle={<>Productos activos registrados</>}
-                                icono={<Layers className="size-4" />}
-                            />
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium uppercase">
+                                        Productos en Catálogo
+                                    </span>
+                                    <Layers className="size-4 text-blue-600" />
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {reporteInventario.totalProductos}
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    Productos activos registrados
+                                </p>
+                            </div>
 
-                            <KpiCard
-                                titulo="Unidades físicas"
-                                valor={<>{reporteInventario.totalUnidades}</>}
-                                detalle={<>Disponibles para venta/operación</>}
-                                icono={<Boxes className="size-4" />}
-                            />
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium uppercase">
+                                        Unidades Físicas
+                                    </span>
+                                    <Boxes className="size-4 text-purple-600" />
+                                </div>
+                                <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {reporteInventario.totalUnidades}
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    Disponibles para venta/operación
+                                </p>
+                            </div>
 
-                            <KpiCard
-                                titulo="Bajo stock mínimo"
-                                valor={
-                                    <>
-                                        <span className="text-primary-strong">
-                                            {reporteInventario.totalBajoMinimo}
-                                        </span>
-                                    </>
-                                }
-                                detalle={<>Requieren reposición urgente</>}
-                                icono={<AlertTriangle className="size-4" />}
-                            />
+                            <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                                    <span className="font-medium uppercase">
+                                        Bajo Stock Mínimo
+                                    </span>
+                                    <AlertTriangle className="text-primary-strong size-4" />
+                                </div>
+                                <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                                    {reporteInventario.totalBajoMinimo}
+                                </div>
+                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    Requieren reposición urgente
+                                </p>
+                            </div>
                         </div>
 
                         {/* Tabla de Existencias de Inventario */}
                         <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                        <tr>
-                                            <th className="px-4 py-3">
-                                                Código
-                                            </th>
-                                            <th className="px-4 py-3">
-                                                Producto
-                                            </th>
-                                            <th className="px-4 py-3 text-center">
+                                <Table className="w-full text-left text-xs">
+                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                        <TableRow>
+                                            <TableHead>Código</TableHead>
+                                            <TableHead>Producto</TableHead>
+                                            <TableHead className="text-center">
                                                 Tipo
-                                            </th>
-                                            <th className="px-4 py-3 text-center">
+                                            </TableHead>
+                                            <TableHead className="text-center">
                                                 U.M.
-                                            </th>
-                                            <th className="px-4 py-3 text-right">
+                                            </TableHead>
+                                            <TableHead className="text-right">
                                                 Costo promedio
-                                            </th>
-                                            <th className="px-4 py-3 text-center">
+                                            </TableHead>
+                                            <TableHead className="text-center">
                                                 Stock Mínimo
-                                            </th>
-                                            <th className="px-4 py-3 text-center">
+                                            </TableHead>
+                                            <TableHead className="text-center">
                                                 Stock Actual
-                                            </th>
-                                            <th className="px-4 py-3 text-right">
+                                            </TableHead>
+                                            <TableHead className="text-right">
                                                 Valorización
-                                            </th>
-                                            <th className="px-4 py-3 text-center">
+                                            </TableHead>
+                                            <TableHead className="text-center">
                                                 Estado
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-border divide-y">
                                         {reporteInventario.productos.length ===
                                         0 ? (
-                                            <tr>
-                                                <td
-                                                    colSpan={9}
-                                                    className="text-muted-foreground py-8 text-center"
-                                                >
-                                                    No se encontraron productos
-                                                    con los filtros
-                                                    seleccionados.
-                                                </td>
-                                            </tr>
+                                            <TableRow>
+                                                <TableCell colSpan={9}>
+                                                    <Empty
+                                                        icon={<Inbox />}
+                                                        title="No se encontraron productos con los filtros seleccionados."
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
                                         ) : (
                                             reporteInventario.productos.map(
                                                 (p) => (
-                                                    <tr
+                                                    <TableRow
                                                         key={p.id}
                                                         className="hover:bg-muted/40 transition-colors"
                                                     >
-                                                        <td className="text-foreground px-4 py-3 font-mono font-bold">
+                                                        <TableCell className="text-foreground px-4 py-3 font-mono font-bold">
                                                             {p.codigo}
-                                                        </td>
-                                                        <td className="text-foreground px-4 py-3 font-medium">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground px-4 py-3 font-medium">
                                                             {p.nombre}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-center">
+                                                        </TableCell>
+                                                        <TableCell className="px-4 py-3 text-center">
                                                             <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px]">
                                                                 {p.serializado
                                                                     ? 'Serializado'
                                                                     : 'A Granel'}
                                                             </span>
-                                                        </td>
-                                                        <td className="text-foreground/80 px-4 py-3 text-center font-mono">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground/80 px-4 py-3 text-center font-mono">
                                                             {p.unidad_medida}
-                                                        </td>
-                                                        <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                             {p.costo_promedio !==
                                                             null
                                                                 ? formatCurrency(
                                                                       p.costo_promedio,
                                                                   )
                                                                 : 'Sin costo'}
-                                                        </td>
-                                                        <td className="text-foreground/80 px-4 py-3 text-center font-mono">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground/80 px-4 py-3 text-center font-mono">
                                                             {p.stock_minimo !==
                                                             null
                                                                 ? p.stock_minimo
                                                                 : '—'}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-center">
+                                                        </TableCell>
+                                                        <TableCell className="px-4 py-3 text-center">
                                                             <span
                                                                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
                                                                     p.bajo_minimo
@@ -781,13 +819,13 @@ export default function ReportesIndex() {
                                                                     p.stock_disponible
                                                                 }
                                                             </span>
-                                                        </td>
-                                                        <td className="text-foreground px-4 py-3 text-right font-mono font-bold">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground px-4 py-3 text-right font-mono font-bold">
                                                             {formatCurrency(
                                                                 p.valorizacion,
                                                             )}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-center">
+                                                        </TableCell>
+                                                        <TableCell className="px-4 py-3 text-center">
                                                             <span
                                                                 className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                                     p.bajo_minimo
@@ -799,13 +837,13 @@ export default function ReportesIndex() {
                                                                     ? 'Bajo Mínimo'
                                                                     : 'Normal'}
                                                             </span>
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ),
                                             )
                                         )}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
                             {reporteInventario.paginacion &&
                                 reporteInventario.paginacion.ultima > 1 && (

@@ -33,6 +33,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import { useClienteFicha } from '@/hooks/use-cliente-ficha';
 import { leerCookie } from '@/lib/cookies';
@@ -41,6 +49,7 @@ import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 import { fechaLocal } from '@/lib/utils';
 import CajaRoutes from '@/routes/vendedor/caja';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type SedeOption = { id: number; nombre: string };
 
@@ -1222,7 +1231,7 @@ export default function NuevaVenta({
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Sede de la venta
                                 </Label>
-                                <select
+                                <NativeSelect
                                     aria-label="Sede de la venta"
                                     value={form.data.sede_id}
                                     onChange={(event) =>
@@ -1243,7 +1252,7 @@ export default function NuevaVenta({
                                             {sede.nombre}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 {fieldError(form.errors, 'sede_id')}
                             </div>
                         )}
@@ -1281,9 +1290,9 @@ export default function NuevaVenta({
                         {fieldError(form.errors, 'items')}
 
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse text-[12.5px]">
-                                <thead>
-                                    <tr>
+                            <Table className="w-full border-collapse text-[12.5px]">
+                                <TableHeader>
+                                    <TableRow>
                                         {[
                                             'Ítem',
                                             'Cant.',
@@ -1292,34 +1301,34 @@ export default function NuevaVenta({
                                             'Total',
                                             '',
                                         ].map((h) => (
-                                            <th
+                                            <TableHead
                                                 key={h}
-                                                className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
+                                                className="text-left"
                                             >
                                                 {h || (
                                                     <span className="sr-only">
                                                         Acciones
                                                     </span>
                                                 )}
-                                            </th>
+                                            </TableHead>
                                         ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {form.data.items.length === 0 ? (
-                                        <tr>
-                                            <td
+                                        <TableRow>
+                                            <TableCell
                                                 colSpan={6}
                                                 className="text-muted-foreground px-2.5 py-10 text-center"
                                             >
                                                 Agrega un producto o servicio
                                                 para empezar.
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ) : (
                                         form.data.items.map((item) => (
-                                            <tr key={item.key}>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                            <TableRow key={item.key}>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <span className="text-foreground block font-semibold">
                                                         {item.nombre}
                                                     </span>
@@ -1333,8 +1342,8 @@ export default function NuevaVenta({
                                                               ? 'Servicio'
                                                               : `Producto${item.stock !== undefined && item.stock !== null ? ` · stock ${item.stock}` : ''}`}
                                                     </span>
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     {item.tipo_linea ===
                                                     'unidad_nueva' ? (
                                                         <span className="pl-2">
@@ -1409,8 +1418,8 @@ export default function NuevaVenta({
                                                             </button>
                                                         </div>
                                                     )}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <Input
                                                         aria-label="Precio unitario"
                                                         type="number"
@@ -1434,8 +1443,8 @@ export default function NuevaVenta({
                                                         }
                                                         className="border-border h-8 w-24 rounded-[7px] text-[12px]"
                                                     />
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <Input
                                                         aria-label="Descuento"
                                                         type="number"
@@ -1469,15 +1478,15 @@ export default function NuevaVenta({
                                                         }
                                                         className="border-border h-8 w-20 rounded-[7px] text-[12px]"
                                                     />
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                     {money(
                                                         item.cantidad *
                                                             item.precio_unitario -
                                                             item.descuento,
                                                     )}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <Button
                                                         aria-label="Eliminar línea"
                                                         type="button"
@@ -1496,12 +1505,12 @@ export default function NuevaVenta({
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </Button>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ))
                                     )}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </Card>
                 </div>

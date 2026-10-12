@@ -7,6 +7,7 @@ import {
     Power,
     Search,
     Wrench,
+    Inbox,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import {
@@ -17,6 +18,14 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import {
     CategoriaSelect,
     type CategoriaItem,
 } from '@/components/categoria-select';
@@ -24,6 +33,8 @@ import GerenteLayout from '@/layouts/gerente-layout';
 import { toast } from 'sonner';
 import ServiciosRoutes from '@/routes/gerente/servicios';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 type ServiceItem = {
     id: number;
     codigo: string;
@@ -369,49 +380,48 @@ export default function ServiciosIndex() {
                 {/* Tabla de Servicios */}
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                <tr>
-                                    <th className="px-4 py-3">Código</th>
-                                    <th className="px-4 py-3">
+                        <Table className="w-full text-left text-xs">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                <TableRow>
+                                    <TableHead>Código</TableHead>
+                                    <TableHead>
                                         Servicio / Descripción
-                                    </th>
-                                    <th className="px-4 py-3">U.M.</th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead>U.M.</TableHead>
+                                    <TableHead className="text-right">
                                         Precio Venta
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         IGV
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Estado
-                                    </th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Acciones
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-border divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-border divide-y">
                                 {servicios.data.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={7}
-                                            className="text-muted-foreground py-8 text-center"
-                                        >
-                                            No se encontraron servicios técnicos
-                                            registrados.
-                                        </td>
-                                    </tr>
+                                    <TableRow>
+                                        <TableCell colSpan={7}>
+                                            <Empty
+                                                icon={<Inbox />}
+                                                title="No se encontraron servicios técnicos registrados."
+                                            />
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     servicios.data.map((s) => (
-                                        <tr
+                                        <TableRow
                                             key={s.id}
                                             className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="text-foreground px-4 py-3 font-mono font-bold">
+                                            <TableCell className="text-foreground px-4 py-3 font-mono font-bold">
                                                 {s.codigo}
-                                            </td>
-                                            <td className="px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
                                                 <div className="text-foreground font-medium">
                                                     {s.nombre}
                                                 </div>
@@ -420,14 +430,14 @@ export default function ServiciosIndex() {
                                                         {s.descripcion}
                                                     </div>
                                                 )}
-                                            </td>
-                                            <td className="text-foreground/80 px-4 py-3 font-mono">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono">
                                                 {s.unidad_medida}
-                                            </td>
-                                            <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                 {formatCurrency(s.precio_venta)}
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3 text-center">
                                                 <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
                                                     {s.igv_requiere_revision
                                                         ? 'Elegir afectación'
@@ -439,8 +449,8 @@ export default function ServiciosIndex() {
                                                             ? 'Inafecto'
                                                             : 'Gravado (18%)'}
                                                 </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3 text-center">
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                         s.activo
@@ -452,8 +462,8 @@ export default function ServiciosIndex() {
                                                         ? 'Activo'
                                                         : 'Inactivo'}
                                                 </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
                                                     <button
                                                         aria-label="Editar servicio"
@@ -492,12 +502,12 @@ export default function ServiciosIndex() {
                                                         <Power className="size-3.5" />
                                                     </button>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                     {/* Paginación */}
                     {servicios.links && servicios.links.length > 3 && (
@@ -604,7 +614,7 @@ export default function ServiciosIndex() {
                                     <label className="text-foreground/80 block font-semibold">
                                         U.M. *
                                     </label>
-                                    <select
+                                    <NativeSelect
                                         aria-label="U.M. *"
                                         value={form.data.unidad_medida}
                                         onChange={(e) =>
@@ -623,7 +633,7 @@ export default function ServiciosIndex() {
                                                 {u.codigo} ({u.nombre})
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                     {form.errors.unidad_medida && (
                                         <p className="mt-1 text-red-600">
                                             {form.errors.unidad_medida}
@@ -706,7 +716,7 @@ export default function ServiciosIndex() {
                             <div className="grid grid-cols-2 gap-3">
                                 <label className="flex flex-col gap-1">
                                     Agente que recarga
-                                    <select
+                                    <NativeSelect
                                         value={form.data.agente}
                                         onChange={(e) =>
                                             form.setData(
@@ -727,7 +737,7 @@ export default function ServiciosIndex() {
                                                 {agente.etiqueta}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </label>
                                 <label className="flex flex-col gap-1">
                                     Capacidad
@@ -752,7 +762,7 @@ export default function ServiciosIndex() {
                             </div>
                             <label className="flex flex-col gap-1">
                                 Certificado que emite
-                                <select
+                                <NativeSelect
                                     value={form.data.certificate_type_id}
                                     onChange={(e) =>
                                         form.setData(
@@ -768,7 +778,7 @@ export default function ServiciosIndex() {
                                             {tipo.nombre}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 {form.errors.certificate_type_id && (
                                     <span className="text-red-600" role="alert">
                                         {form.errors.certificate_type_id}
@@ -777,7 +787,7 @@ export default function ServiciosIndex() {
                             </label>
                             <label className="flex flex-col gap-1 text-[13px]">
                                 Clasificación de detracción
-                                <select
+                                <NativeSelect
                                     value={form.data.codigo_detraccion}
                                     onChange={(e) =>
                                         form.setData(
@@ -801,7 +811,7 @@ export default function ServiciosIndex() {
                                         037 · Demás servicios gravados
                                         (residual)
                                     </option>
-                                </select>
+                                </NativeSelect>
                                 <span className="text-muted-foreground text-xs">
                                     12% en facturas gravadas mayores a S/ 700.
                                     Los paquetes combinados requieren revisión
@@ -819,7 +829,7 @@ export default function ServiciosIndex() {
                             <div className="flex items-center gap-6 pt-1">
                                 <label className="flex flex-col gap-1">
                                     Afectación del IGV
-                                    <select
+                                    <NativeSelect
                                         value={form.data.tipo_afectacion_igv}
                                         required
                                         onChange={(e) =>
@@ -838,7 +848,7 @@ export default function ServiciosIndex() {
                                         </option>
                                         <option value="20">Exonerado</option>
                                         <option value="30">Inafecto</option>
-                                    </select>
+                                    </NativeSelect>
                                     {form.errors.tipo_afectacion_igv && (
                                         <span className="text-red-600">
                                             {form.errors.tipo_afectacion_igv}

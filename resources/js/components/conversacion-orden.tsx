@@ -5,6 +5,7 @@ import { show as verEvidencia } from '@/routes/evidencias';
 import { store as enviarMensaje } from '@/routes/ordenes/mensajes';
 import type { Team } from '@/types';
 import { toast } from 'sonner';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export interface EventoConversacion {
     id: number;
@@ -197,7 +198,7 @@ export default function ConversacionOrden({
                             >
                                 Extintor del que hablas
                             </label>
-                            <select
+                            <NativeSelect
                                 aria-label="Extintor del que hablas"
                                 id={`equipo-${ordenId}`}
                                 value={form.data.equipment_id}
@@ -212,7 +213,7 @@ export default function ConversacionOrden({
                                         {e.serie}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </>
                     )}
                     <BotonFoto

@@ -30,6 +30,7 @@ import RecepcionesRoutes from '@/routes/tecnico-planta/recepciones';
 import EquiposRoutes from '@/routes/tecnico-planta/equipos';
 import Equipos2Routes from '@/routes/tecnico-planta/recepciones/equipos';
 import ChecklistRoutes from '@/routes/tecnico-planta/checklist';
+import { NativeSelect } from '@/components/ui/native-select';
 
 interface EquipmentItem {
     id: number;
@@ -757,7 +758,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
                                                 Agente / Tipo *
                                             </label>
-                                            <select
+                                            <NativeSelect
                                                 aria-label="Agente / Tipo *"
                                                 value={
                                                     equipmentForm.data
@@ -772,7 +773,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                             >
                                                 <OpcionesAgente vacia="Sin registrar" />
-                                            </select>
+                                            </NativeSelect>
                                         </div>
 
                                         <div>

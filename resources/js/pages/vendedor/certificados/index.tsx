@@ -18,12 +18,21 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import certificados from '@/routes/vendedor/certificados';
 import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 import { fechaCorta } from '@/lib/utils';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type CertificateRow = {
     id: number;
@@ -177,7 +186,7 @@ export default function CertificadosIndex({
                         {tipos.length > 1 ? (
                             <div className="border-border bg-card text-foreground/80 focus-within:border-ring focus-within:ring-ring/50 flex h-10 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
                                 <Filter className="size-3.5" />
-                                <select
+                                <NativeSelect
                                     aria-label="Filtrar por tipo de certificado"
                                     value={tipo}
                                     onChange={(event) =>
@@ -194,7 +203,7 @@ export default function CertificadosIndex({
                                             {opcion.nombre}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </div>
                         ) : null}
                     </div>
@@ -232,9 +241,9 @@ export default function CertificadosIndex({
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse text-[12.5px]">
-                                <thead>
-                                    <tr>
+                            <Table className="w-full border-collapse text-[12.5px]">
+                                <TableHeader>
+                                    <TableRow>
                                         {[
                                             'Certificado',
                                             'Cliente',
@@ -244,22 +253,22 @@ export default function CertificadosIndex({
                                             'Estado',
                                             '',
                                         ].map((h) => (
-                                            <th
+                                            <TableHead
                                                 key={h}
-                                                className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
+                                                className="text-left"
                                             >
                                                 {h || (
                                                     <span className="sr-only">
                                                         Acciones
                                                     </span>
                                                 )}
-                                            </th>
+                                            </TableHead>
                                         ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {certificates.data.map((certificate) => (
-                                        <tr
+                                        <TableRow
                                             key={certificate.id}
                                             onClick={() =>
                                                 router.visit(
@@ -270,7 +279,7 @@ export default function CertificadosIndex({
                                             }
                                             className="hover:bg-muted/40 cursor-pointer"
                                         >
-                                            <td className="border-border border-b px-2.5 py-[11px]">
+                                            <TableCell className="border-border border-b px-2.5 py-[11px]">
                                                 <div className="flex items-center gap-2">
                                                     <div
                                                         className={`flex size-[30px] shrink-0 items-center justify-center rounded-[8px] ${certificate.estado === 'vigente' ? 'bg-destructive/10 text-primary-strong' : 'bg-muted text-muted-foreground'}`}
@@ -287,8 +296,8 @@ export default function CertificadosIndex({
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[11px]">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[11px]">
                                                 {certificate.client_id ? (
                                                     <Link
                                                         href={clientes.show.url(
@@ -313,8 +322,8 @@ export default function CertificadosIndex({
                                                         {certificate.referencia}
                                                     </div>
                                                 ) : null}
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[11px] whitespace-nowrap">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[11px] whitespace-nowrap">
                                                 {certificate.venta ? (
                                                     <Link
                                                         href={ventas.show.url({
@@ -350,8 +359,8 @@ export default function CertificadosIndex({
                                                         Orden de servicio
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[11px]">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[11px]">
                                                 {certificate.participantes >
                                                 0 ? (
                                                     <span className="text-foreground/80 inline-flex items-center gap-1 text-[11.5px]">
@@ -391,20 +400,20 @@ export default function CertificadosIndex({
                                                         -
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="border-border text-foreground/80 border-b px-2.5 py-[11px] whitespace-nowrap">
+                                            </TableCell>
+                                            <TableCell className="border-border text-foreground/80 border-b px-2.5 py-[11px] whitespace-nowrap">
                                                 {fechaCorta(
                                                     certificate.fecha_vigencia_hasta,
                                                 ) || '-'}
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[11px]">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[11px]">
                                                 <Badge
                                                     className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold capitalize ${badgeClass(certificate.estado)}`}
                                                 >
                                                     {certificate.estado}
                                                 </Badge>
-                                            </td>
-                                            <td
+                                            </TableCell>
+                                            <TableCell
                                                 className="border-border border-b px-2.5 py-[11px]"
                                                 onClick={(event) =>
                                                     event.stopPropagation()
@@ -498,11 +507,11 @@ export default function CertificadosIndex({
                                                         </a>
                                                     </Button>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     )}
 

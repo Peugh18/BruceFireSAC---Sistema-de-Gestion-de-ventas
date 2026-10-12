@@ -1,5 +1,4 @@
 import { router, usePage } from '@inertiajs/react';
-import { KpiCard } from '@/components/kpi-card';
 import {
     AlertCircle,
     CheckCircle2,
@@ -16,6 +15,15 @@ import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
 import CajasRoutes from '@/routes/gerente/cajas';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type CashRegisterItem = {
     id: number;
@@ -148,57 +156,73 @@ export default function CajasConsolidadasIndex() {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <KpiCard
-                        titulo="Turnos hoy"
-                        valor={kpis.turnosHoy}
-                        detalle="Aperturas registradas hoy"
-                        icono={<Clock className="size-4" />}
-                    />
-
-                    <KpiCard
-                        titulo="Cajas abiertas ahora"
-                        valor={
-                            <span className="text-success-strong">
-                                {kpis.turnosAbiertos}
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Turnos Hoy
                             </span>
-                        }
-                        detalle="Puntos de cobro activos"
-                        icono={<Wallet className="size-4" />}
-                    />
+                            <Clock className="size-4 text-blue-600" />
+                        </div>
+                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                            {kpis.turnosHoy}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Aperturas registradas hoy
+                        </p>
+                    </div>
 
-                    <KpiCard
-                        titulo="Descuadres en el mes"
-                        valor={
-                            <span className="text-warning-strong">
-                                {kpis.turnosConDescuadreMes}
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Cajas Abiertas Ahora
                             </span>
-                        }
-                        detalle="Cierres con faltante o sobrante"
-                        icono={<AlertCircle className="size-4" />}
-                    />
+                            <Wallet className="text-success-strong size-4" />
+                        </div>
+                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                            {kpis.turnosAbiertos}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Puntos de cobro activos
+                        </p>
+                    </div>
 
-                    <KpiCard
-                        titulo="Faltantes de caja"
-                        valor={
-                            <span
-                                className={
-                                    kpis.faltantesMes > 0
-                                        ? 'text-primary-strong'
-                                        : 'text-success-strong'
-                                }
-                            >
-                                {formatCurrency(kpis.faltantesMes)}
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Descuadres en el Mes
                             </span>
-                        }
-                        detalle={
-                            <>
-                                Faltantes del mes · sobrantes{' '}
-                                {formatCurrency(kpis.sobrantesMes)} (no se
-                                compensan)
-                            </>
-                        }
-                        icono={<TrendingDown className="size-4" />}
-                    />
+                            <AlertCircle className="text-warning-strong size-4" />
+                        </div>
+                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
+                            {kpis.turnosConDescuadreMes}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Cierres con faltante o sobrante
+                        </p>
+                    </div>
+
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Faltantes de caja
+                            </span>
+                            <TrendingDown className="text-primary-strong size-4" />
+                        </div>
+                        <div
+                            className={`mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold ${
+                                kpis.faltantesMes > 0
+                                    ? 'text-primary-strong'
+                                    : 'text-emerald-700'
+                            }`}
+                        >
+                            {formatCurrency(kpis.faltantesMes)}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Faltantes del mes · sobrantes{' '}
+                            {formatCurrency(kpis.sobrantesMes)} (no se
+                            compensan)
+                        </p>
+                    </div>
                 </div>
 
                 {/* Filtros */}
@@ -211,7 +235,7 @@ export default function CajasConsolidadasIndex() {
                             >
                                 Vendedor
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cajas-vendedor"
                                 value={vendedorId}
                                 onChange={(e) => setVendedorId(e.target.value)}
@@ -223,7 +247,7 @@ export default function CajasConsolidadasIndex() {
                                         {v.name}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -233,7 +257,7 @@ export default function CajasConsolidadasIndex() {
                             >
                                 Sede
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cajas-sede"
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
@@ -245,7 +269,7 @@ export default function CajasConsolidadasIndex() {
                                         {s.nombre}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -255,7 +279,7 @@ export default function CajasConsolidadasIndex() {
                             >
                                 Estado
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cajas-estado"
                                 value={estado}
                                 onChange={(e) => setEstado(e.target.value)}
@@ -264,7 +288,7 @@ export default function CajasConsolidadasIndex() {
                                 <option value="todos">Todos los estados</option>
                                 <option value="abierto">Solo Abiertas</option>
                                 <option value="cerrado">Solo Cerradas</option>
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -339,35 +363,35 @@ export default function CajasConsolidadasIndex() {
                 {/* Tabla de Cajas */}
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                <tr>
-                                    <th className="px-4 py-3">Vendedor</th>
-                                    <th className="px-4 py-3">Sede</th>
-                                    <th className="px-4 py-3">Apertura</th>
-                                    <th className="px-4 py-3">Cierre</th>
-                                    <th className="px-4 py-3 text-right">
+                        <Table className="w-full text-left text-xs">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                <TableRow>
+                                    <TableHead>Vendedor</TableHead>
+                                    <TableHead>Sede</TableHead>
+                                    <TableHead>Apertura</TableHead>
+                                    <TableHead>Cierre</TableHead>
+                                    <TableHead className="text-right">
                                         Fondo Apertura
-                                    </th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Contado Cierre
-                                    </th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Calculado Sistema
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Diferencia
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Estado
-                                    </th>
-                                    <th className="px-4 py-3">Observación</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-border divide-y">
+                                    </TableHead>
+                                    <TableHead>Observación</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-border divide-y">
                                 {cajas.data.length === 0 ? (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={10}
                                             className="text-muted-foreground py-12 text-center"
                                         >
@@ -407,47 +431,47 @@ export default function CajasConsolidadasIndex() {
                                                     </button>
                                                 )}
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     cajas.data.map((c) => (
-                                        <tr
+                                        <TableRow
                                             key={c.id}
                                             className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="text-foreground px-4 py-3 font-semibold">
+                                            <TableCell className="text-foreground px-4 py-3 font-semibold">
                                                 {c.vendedor.name}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3">
                                                 {c.sede}
-                                            </td>
-                                            <td className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
                                                 {c.fecha_apertura}
-                                            </td>
-                                            <td className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
                                                 {c.fecha_cierre || '—'}
-                                            </td>
-                                            <td className="text-foreground px-4 py-3 text-right font-mono">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-4 py-3 text-right font-mono">
                                                 {formatCurrency(
                                                     c.monto_apertura,
                                                 )}
-                                            </td>
-                                            <td className="text-foreground px-4 py-3 text-right font-mono font-medium">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-4 py-3 text-right font-mono font-medium">
                                                 {c.monto_contado_cierre !== null
                                                     ? formatCurrency(
                                                           c.monto_contado_cierre,
                                                       )
                                                     : '—'}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3 text-right font-mono">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3 text-right font-mono">
                                                 {c.monto_esperado_calculado !==
                                                 null
                                                     ? formatCurrency(
                                                           c.monto_esperado_calculado,
                                                       )
                                                     : '—'}
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3 text-center">
                                                 {c.estado === 'abierto' ? (
                                                     <span className="rounded-full bg-blue-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-blue-700">
                                                         En curso
@@ -475,8 +499,8 @@ export default function CajasConsolidadasIndex() {
                                                         )}
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3 text-center">
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                         c.estado === 'abierto'
@@ -486,15 +510,15 @@ export default function CajasConsolidadasIndex() {
                                                 >
                                                     {c.estado}
                                                 </span>
-                                            </td>
-                                            <td className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
                                                 {c.observacion || '—'}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     {/* Paginación */}

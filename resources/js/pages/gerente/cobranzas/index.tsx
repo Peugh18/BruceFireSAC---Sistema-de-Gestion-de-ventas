@@ -4,7 +4,14 @@ import {
     DialogTitle,
     DialogDescription,
 } from '@/components/ui/dialog';
-import { KpiCard } from '@/components/kpi-card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { router, usePage } from '@inertiajs/react';
 import {
     BadgeAlert,
@@ -16,6 +23,7 @@ import {
     Search,
     TrendingUp,
     Users,
+    Inbox,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -23,6 +31,8 @@ import { toast } from 'sonner';
 import GerenteLayout from '@/layouts/gerente-layout';
 import pagosRutas from '@/routes/gerente/cobranzas/pagos';
 import CobranzasRoutes from '@/routes/gerente/cobranzas';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 type PaymentItem = {
     id: number;
@@ -180,58 +190,82 @@ export default function CobranzasConsolidadasIndex() {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                    <KpiCard
-                        titulo="Por cobrar total"
-                        valor={formatCurrency(kpis.totalPorCobrar)}
-                        detalle="Saldo pendiente en cartera"
-                        icono={<Clock className="size-4" />}
-                    />
-
-                    <KpiCard
-                        titulo="Vencido"
-                        valor={
-                            <span
-                                className={
-                                    kpis.vencidoTotal > 0
-                                        ? 'text-primary-strong'
-                                        : 'text-success-strong'
-                                }
-                            >
-                                {formatCurrency(kpis.vencidoTotal)}
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Por Cobrar Total
                             </span>
-                        }
-                        detalle="Cuotas con fecha pasada"
-                        icono={<BadgeAlert className="size-4" />}
-                    />
+                            <Clock className="size-4 text-blue-600" />
+                        </div>
+                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                            {formatCurrency(kpis.totalPorCobrar)}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Saldo pendiente en cartera
+                        </p>
+                    </div>
 
-                    <KpiCard
-                        titulo="Vence esta semana"
-                        valor={
-                            <span className="text-warning-strong">
-                                {formatCurrency(kpis.venceEstaSemana)}
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Vencido
                             </span>
-                        }
-                        detalle="Vencimientos hasta domingo"
-                        icono={<Calendar className="size-4" />}
-                    />
+                            <BadgeAlert className="text-primary-strong size-4" />
+                        </div>
+                        <div
+                            className={`${kpis.vencidoTotal > 0 ? 'text-primary-strong' : 'text-success-strong'} mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold`}
+                        >
+                            {formatCurrency(kpis.vencidoTotal)}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Cuotas con fecha pasada
+                        </p>
+                    </div>
 
-                    <KpiCard
-                        titulo="Cobrado en el mes"
-                        valor={
-                            <span className="text-success-strong">
-                                {formatCurrency(kpis.cobradoEsteMes)}
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Vence Esta Semana
                             </span>
-                        }
-                        detalle="Abonos ingresados en el mes"
-                        icono={<TrendingUp className="size-4" />}
-                    />
+                            <Calendar className="text-warning-strong size-4" />
+                        </div>
+                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
+                            {formatCurrency(kpis.venceEstaSemana)}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Vencimientos hasta domingo
+                        </p>
+                    </div>
 
-                    <KpiCard
-                        titulo="Clientes con deuda"
-                        valor={kpis.clientesConDeuda}
-                        detalle="Empresas en cartera activa"
-                        icono={<Users className="size-4" />}
-                    />
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Cobrado en el Mes
+                            </span>
+                            <TrendingUp className="text-success-strong size-4" />
+                        </div>
+                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                            {formatCurrency(kpis.cobradoEsteMes)}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Abonos ingresados en el mes
+                        </p>
+                    </div>
+
+                    <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
+                            <span className="font-medium uppercase">
+                                Clientes con Deuda
+                            </span>
+                            <Users className="size-4 text-purple-600" />
+                        </div>
+                        <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
+                            {kpis.clientesConDeuda}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                            Empresas en cartera activa
+                        </p>
+                    </div>
                 </div>
 
                 {/* Filtros */}
@@ -261,7 +295,7 @@ export default function CobranzasConsolidadasIndex() {
                             >
                                 Vendedor
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cobranzas-vendedor"
                                 value={vendedorId}
                                 onChange={(e) => setVendedorId(e.target.value)}
@@ -273,7 +307,7 @@ export default function CobranzasConsolidadasIndex() {
                                         {v.name}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -283,7 +317,7 @@ export default function CobranzasConsolidadasIndex() {
                             >
                                 Estado de Cuota
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cobranzas-estado-de-cuota"
                                 value={estado}
                                 onChange={(e) => setEstado(e.target.value)}
@@ -296,7 +330,7 @@ export default function CobranzasConsolidadasIndex() {
                                     Con Pago Parcial
                                 </option>
                                 <option value="pagado">Pagados</option>
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -306,7 +340,7 @@ export default function CobranzasConsolidadasIndex() {
                             >
                                 Periodo / Vencimiento
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cobranzas-periodo-vencimiento"
                                 value={periodo}
                                 onChange={(e) => setPeriodo(e.target.value)}
@@ -320,7 +354,7 @@ export default function CobranzasConsolidadasIndex() {
                                     Vence esta semana
                                 </option>
                                 <option value="mes">Vence este mes</option>
-                            </select>
+                            </NativeSelect>
                         </div>
                     </div>
 
@@ -346,41 +380,40 @@ export default function CobranzasConsolidadasIndex() {
                 {/* Tabla de Cuotas */}
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                <tr>
-                                    <th className="px-4 py-3">Venta / Cuota</th>
-                                    <th className="px-4 py-3">Cliente</th>
-                                    <th className="px-4 py-3">Vendedor</th>
-                                    <th className="px-4 py-3">Vencimiento</th>
-                                    <th className="px-4 py-3 text-right">
+                        <Table className="w-full text-left text-xs">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                <TableRow>
+                                    <TableHead>Venta / Cuota</TableHead>
+                                    <TableHead>Cliente</TableHead>
+                                    <TableHead>Vendedor</TableHead>
+                                    <TableHead>Vencimiento</TableHead>
+                                    <TableHead className="text-right">
                                         Monto Cuota
-                                    </th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Pagado
-                                    </th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Saldo
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Estado
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Pagos
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-border divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-border divide-y">
                                 {cuotas.data.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={9}
-                                            className="text-muted-foreground py-8 text-center"
-                                        >
-                                            No se encontraron cuotas con los
-                                            filtros seleccionados.
-                                        </td>
-                                    </tr>
+                                    <TableRow>
+                                        <TableCell colSpan={9}>
+                                            <Empty
+                                                icon={<Inbox />}
+                                                title="No se encontraron cuotas con los filtros seleccionados."
+                                            />
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     cuotas.data.map((c) => {
                                         const isVencido =
@@ -388,19 +421,19 @@ export default function CobranzasConsolidadasIndex() {
                                             c.dias_vencido > 0;
 
                                         return (
-                                            <tr
+                                            <TableRow
                                                 key={c.id}
                                                 className="hover:bg-muted/40 transition-colors"
                                             >
-                                                <td className="px-4 py-3">
+                                                <TableCell className="px-4 py-3">
                                                     <div className="text-foreground font-mono font-bold">
                                                         {c.sale_numero}
                                                     </div>
                                                     <div className="text-muted-foreground text-[11px]">
                                                         Cuota #{c.numero_cuota}
                                                     </div>
-                                                </td>
-                                                <td className="px-4 py-3">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3">
                                                     <div className="text-foreground font-medium">
                                                         {c.cliente.razon_social}
                                                     </div>
@@ -425,11 +458,11 @@ export default function CobranzasConsolidadasIndex() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                </td>
-                                                <td className="text-foreground/80 px-4 py-3">
+                                                </TableCell>
+                                                <TableCell className="text-foreground/80 px-4 py-3">
                                                     {c.vendedor.name}
-                                                </td>
-                                                <td className="px-4 py-3">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3">
                                                     <div className="text-foreground font-mono text-[11px]">
                                                         {c.fecha_vencimiento}
                                                     </div>
@@ -441,21 +474,21 @@ export default function CobranzasConsolidadasIndex() {
                                                                 días de mora
                                                             </div>
                                                         )}
-                                                </td>
-                                                <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
+                                                </TableCell>
+                                                <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                     {formatCurrency(c.monto)}
-                                                </td>
-                                                <td className="px-4 py-3 text-right font-mono text-emerald-700">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-right font-mono text-emerald-700">
                                                     {formatCurrency(
                                                         c.monto_pagado,
                                                     )}
-                                                </td>
-                                                <td className="text-foreground px-4 py-3 text-right font-mono font-bold">
+                                                </TableCell>
+                                                <TableCell className="text-foreground px-4 py-3 text-right font-mono font-bold">
                                                     {formatCurrency(
                                                         c.saldo_pendiente,
                                                     )}
-                                                </td>
-                                                <td className="px-4 py-3 text-center">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-center">
                                                     <span
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                             c.estado ===
@@ -472,8 +505,8 @@ export default function CobranzasConsolidadasIndex() {
                                                     >
                                                         {c.estado}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-center">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-center">
                                                     <button
                                                         type="button"
                                                         aria-label={`Ver pagos de ${c.sale_numero}, cuota ${c.numero_cuota}`}
@@ -490,13 +523,13 @@ export default function CobranzasConsolidadasIndex() {
                                                             {c.pagos.length}
                                                         </span>
                                                     </button>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     {/* Paginación */}

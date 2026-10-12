@@ -34,6 +34,7 @@ import OpcionesAgente from '@/components/opciones-agente';
 import EquiposRoutes from '@/routes/tecnico-campo/inspecciones/equipos';
 import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
 import ChecklistRoutes from '@/routes/tecnico-campo/inspecciones/checklist';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type TechnicalChecklistItem = {
     clave?: string;
@@ -402,7 +403,7 @@ export default function InspeccionShow({
                                     <label className="text-foreground mb-1 block text-[11px] font-bold">
                                         Seleccionar existente del cliente:
                                     </label>
-                                    <select
+                                    <NativeSelect
                                         aria-label="Seleccionar existente del cliente:"
                                         value={
                                             addEquipmentForm.data.equipment_id
@@ -428,7 +429,7 @@ export default function InspeccionShow({
                                                 )
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
                             )}
 
@@ -438,7 +439,7 @@ export default function InspeccionShow({
                                         <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
                                             Agente
                                         </label>
-                                        <select
+                                        <NativeSelect
                                             aria-label="Agente"
                                             value={
                                                 addEquipmentForm.data
@@ -453,7 +454,7 @@ export default function InspeccionShow({
                                             className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
                                         >
                                             <OpcionesAgente vacia="Sin registrar" />
-                                        </select>
+                                        </NativeSelect>
                                     </div>
                                     <div>
                                         <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">

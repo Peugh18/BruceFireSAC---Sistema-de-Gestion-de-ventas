@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import TecnicoPlantaRoutes from '@/routes/tecnico-planta';
 import EjecucionRoutes from '@/routes/tecnico-planta/ejecucion';
+import { NativeSelect } from '@/components/ui/native-select';
 
 interface EquipmentItem {
     id: number;
@@ -601,7 +602,7 @@ export default function EjecucionShow({
                                     <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Producto / Repuesto de Almacén *
                                     </label>
-                                    <select
+                                    <NativeSelect
                                         aria-label="Producto / Repuesto de Almacén *"
                                         value={spareForm.data.product_id}
                                         onChange={(e) =>
@@ -621,7 +622,7 @@ export default function EjecucionShow({
                                                 {p.nombre}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 <div>

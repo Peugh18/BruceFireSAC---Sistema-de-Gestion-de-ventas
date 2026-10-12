@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import RoleLayout from '@/layouts/role-layout';
 import guias from '@/routes/guias';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type Item = {
     product_id: number | null;
@@ -170,7 +171,7 @@ export default function GuiaForm({
                 <Card className="grid gap-3 p-4 sm:grid-cols-2">
                     <div>
                         <Label htmlFor="guia-motivo">Motivo del traslado</Label>
-                        <select
+                        <NativeSelect
                             id="guia-motivo"
                             className={SELECT}
                             value={form.data.motivo}
@@ -183,12 +184,12 @@ export default function GuiaForm({
                                     {codigo} · {texto}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                     </div>
                     {campo('motivo_descripcion', 'Descripción del motivo')}
                     <div>
                         <Label htmlFor="guia-modalidad">Modalidad</Label>
-                        <select
+                        <NativeSelect
                             id="guia-modalidad"
                             className={SELECT}
                             value={form.data.modalidad}
@@ -198,7 +199,7 @@ export default function GuiaForm({
                         >
                             <option value="02">Transporte privado</option>
                             <option value="01">Transporte público</option>
-                        </select>
+                        </NativeSelect>
                     </div>
                     {campo('fecha_traslado', 'Inicio del traslado', 'date')}
                     {campo('peso_bruto', 'Peso bruto total (kg)', 'number')}
@@ -214,7 +215,7 @@ export default function GuiaForm({
                     <Card className="grid gap-3 p-4 sm:grid-cols-2">
                         <div>
                             <Label htmlFor="guia-vehiculo">Vehículo</Label>
-                            <select
+                            <NativeSelect
                                 id="guia-vehiculo"
                                 className={SELECT}
                                 value={form.data.transport_vehicle_id}
@@ -234,7 +235,7 @@ export default function GuiaForm({
                                         {vehiculo.placa} ({vehiculo.categoria})
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                             {form.errors.transport_vehicle_id ? (
                                 <p className="text-destructive-strong mt-1 text-xs">
                                     {form.errors.transport_vehicle_id}
@@ -243,7 +244,7 @@ export default function GuiaForm({
                         </div>
                         <div>
                             <Label htmlFor="guia-conductor">Conductor</Label>
-                            <select
+                            <NativeSelect
                                 id="guia-conductor"
                                 className={SELECT}
                                 value={form.data.driver_id}
@@ -265,7 +266,7 @@ export default function GuiaForm({
                                         {conductor.dni}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                             {form.errors.driver_id ? (
                                 <p className="text-destructive-strong mt-1 text-xs">
                                     {form.errors.driver_id}
@@ -288,7 +289,7 @@ export default function GuiaForm({
                         <Label htmlFor="guia-destinatario_tipo_doc">
                             Tipo de documento del destinatario
                         </Label>
-                        <select
+                        <NativeSelect
                             id="guia-destinatario_tipo_doc"
                             className={SELECT}
                             value={form.data.destinatario_tipo_doc}
@@ -301,7 +302,7 @@ export default function GuiaForm({
                         >
                             <option value="6">RUC</option>
                             <option value="1">DNI</option>
-                        </select>
+                        </NativeSelect>
                     </div>
                     {campo('destinatario_num_doc', 'Número de documento')}
                     {campo('destinatario_nombre', 'Nombre o razón social')}

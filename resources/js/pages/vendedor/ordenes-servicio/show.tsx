@@ -39,6 +39,7 @@ import EquiposRoutes from '@/routes/vendedor/ordenes-servicio/equipos';
 import VentasRoutes from '@/routes/vendedor/ventas';
 import CotizacionesRoutes from '@/routes/vendedor/cotizaciones';
 import CertificadosRoutes from '@/routes/vendedor/certificados';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type ServiceOrderEvent = {
     id: number;
@@ -735,7 +736,7 @@ export default function ServiceOrderShow({
                                     equipo.setData('capacidad', e.target.value)
                                 }
                             />
-                            <select
+                            <NativeSelect
                                 aria-label="Agente extintor"
                                 className="rounded-md border p-2 text-sm"
                                 value={equipo.data.tipo_agente}
@@ -747,7 +748,7 @@ export default function ServiceOrderShow({
                                 }
                             >
                                 <OpcionesAgente vacia="Agente" />
-                            </select>
+                            </NativeSelect>
                             <input
                                 aria-label="Marca"
                                 className="rounded-md border p-2 text-sm"
@@ -847,7 +848,7 @@ export default function ServiceOrderShow({
                                     </div>
                                     {editable && tecnicos.length > 0 ? (
                                         <div className="mt-2 flex gap-2">
-                                            <select
+                                            <NativeSelect
                                                 aria-label="Técnico asignado"
                                                 value={tecnicoElegido}
                                                 onChange={(event) =>
@@ -877,7 +878,7 @@ export default function ServiceOrderShow({
                                                             {tecnico.name}
                                                         </option>
                                                     ))}
-                                            </select>
+                                            </NativeSelect>
                                             <Button
                                                 type="button"
                                                 size="sm"
@@ -934,7 +935,7 @@ export default function ServiceOrderShow({
                                             la entrega. Se conserva el área y el
                                             historial del trabajo realizado.
                                         </p>
-                                        <select
+                                        <NativeSelect
                                             id="entrega-tecnico"
                                             value={entrega.data.tecnico_id}
                                             required
@@ -960,7 +961,7 @@ export default function ServiceOrderShow({
                                                     {tecnico.name}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         {entrega.errors.tecnico_id && (
                                             <p
                                                 role="alert"
@@ -1160,7 +1161,7 @@ export default function ServiceOrderShow({
                             <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                 Servicio del catálogo
                             </span>
-                            <select
+                            <NativeSelect
                                 aria-label="Servicio del catálogo"
                                 value={edicion.data.service_id}
                                 onChange={(event) =>
@@ -1178,7 +1179,7 @@ export default function ServiceOrderShow({
                                         {service.nombre}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </label>
                         <label className="flex flex-col gap-1">
                             <span className="text-muted-foreground text-[11px] font-bold uppercase">
@@ -1199,7 +1200,7 @@ export default function ServiceOrderShow({
                                 <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Prioridad
                                 </span>
-                                <select
+                                <NativeSelect
                                     aria-label="Prioridad"
                                     value={edicion.data.prioridad}
                                     onChange={(event) =>
@@ -1213,13 +1214,13 @@ export default function ServiceOrderShow({
                                     <option value="normal">Normal</option>
                                     <option value="alta">Alta</option>
                                     <option value="urgente">Urgente</option>
-                                </select>
+                                </NativeSelect>
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Área
                                 </span>
-                                <select
+                                <NativeSelect
                                     aria-label="Área"
                                     value={edicion.data.departamento_tecnico}
                                     disabled={
@@ -1242,7 +1243,7 @@ export default function ServiceOrderShow({
                                     <option value="campo">
                                         Campo (en el local del cliente)
                                     </option>
-                                </select>
+                                </NativeSelect>
                             </label>
                         </div>
                         {edicion.data.departamento_tecnico ===
@@ -1251,7 +1252,7 @@ export default function ServiceOrderShow({
                                 <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Técnico
                                 </span>
-                                <select
+                                <NativeSelect
                                     aria-label="Técnico"
                                     value={edicion.data.tecnico_id}
                                     onChange={(event) =>
@@ -1273,7 +1274,7 @@ export default function ServiceOrderShow({
                                             {tecnico.name}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </label>
                         ) : (
                             <p className="text-muted-foreground text-[11.5px]">

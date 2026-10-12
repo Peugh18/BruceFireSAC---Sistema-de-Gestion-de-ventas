@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import RoleLayout from '@/layouts/role-layout';
 import guias from '@/routes/guias';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type Item = {
     id: number;
@@ -384,7 +385,7 @@ export default function GuiaShow({
                             </div>
                             <div>
                                 <Label htmlFor="modalidad">Modalidad</Label>
-                                <select
+                                <NativeSelect
                                     id="modalidad"
                                     className={SELECT}
                                     value={form.data.modalidad}
@@ -401,7 +402,7 @@ export default function GuiaShow({
                                     <option value="02">
                                         Transporte privado (propio)
                                     </option>
-                                </select>
+                                </NativeSelect>
                             </div>
                             {privado ? (
                                 <>
@@ -409,7 +410,7 @@ export default function GuiaShow({
                                         <Label htmlFor="transport_vehicle_id">
                                             Vehículo
                                         </Label>
-                                        <select
+                                        <NativeSelect
                                             id="transport_vehicle_id"
                                             className={SELECT}
                                             value={
@@ -430,7 +431,7 @@ export default function GuiaShow({
                                                     {v.placa}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         {form.errors.transport_vehicle_id ? (
                                             <p className="text-destructive-strong">
                                                 {
@@ -444,7 +445,7 @@ export default function GuiaShow({
                                         <Label htmlFor="driver_id">
                                             Conductor
                                         </Label>
-                                        <select
+                                        <NativeSelect
                                             id="driver_id"
                                             className={SELECT}
                                             value={form.data.driver_id}
@@ -463,7 +464,7 @@ export default function GuiaShow({
                                                     {c.nombres} {c.apellidos}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         {form.errors.driver_id ? (
                                             <p className="text-destructive-strong">
                                                 {form.errors.driver_id}

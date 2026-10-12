@@ -1,5 +1,12 @@
 import { useForm, usePage } from '@inertiajs/react';
-import { AlertTriangle, Ban, CheckCircle2, FilePlus2, X } from 'lucide-react';
+import {
+    AlertTriangle,
+    Ban,
+    CheckCircle2,
+    FilePlus2,
+    X,
+    Inbox,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -7,10 +14,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import facturacion from '@/routes/vendedor/facturacion';
 import notasCredito from '@/routes/vendedor/notas-credito';
 import notasDebito from '@/routes/vendedor/notas-debito';
 import type { Auth } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 export type SaleDocument = {
     id: number;
@@ -421,40 +438,37 @@ export function SaleNotesPanel({
             )}
 
             <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-[12.5px]">
-                    <thead>
-                        <tr>
+                <Table className="w-full border-collapse text-[12.5px]">
+                    <TableHeader>
+                        <TableRow>
                             {['Documento', 'Motivo', 'Importe', 'SUNAT'].map(
                                 (h) => (
-                                    <th
-                                        key={h}
-                                        className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
-                                    >
+                                    <TableHead key={h} className="text-left">
                                         {h}
-                                    </th>
+                                    </TableHead>
                                 ),
                             )}
-                        </tr>
-                    </thead>
-                    <tbody>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {notas.length === 0 && solicitudes.length === 0 ? (
-                            <tr>
-                                <td
-                                    colSpan={4}
-                                    className="text-muted-foreground px-2.5 py-6 text-center"
-                                >
-                                    Sin notas emitidas
-                                </td>
-                            </tr>
+                            <TableRow>
+                                <TableCell colSpan={4}>
+                                    <Empty
+                                        icon={<Inbox />}
+                                        title="Sin notas emitidas"
+                                    />
+                                </TableCell>
+                            </TableRow>
                         ) : (
                             <>
                                 {solicitudes.map((solicitud) => (
-                                    <tr key={`solicitud-${solicitud.id}`}>
-                                        <td className="border-border border-b px-2.5 py-[13px] font-bold">
+                                    <TableRow key={`solicitud-${solicitud.id}`}>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px] font-bold">
                                             {KIND_LABEL[solicitud.tipo]} (sin
                                             número)
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             {MOTIVOS[solicitud.tipo]?.find(
                                                 (m) =>
                                                     m.value ===
@@ -467,11 +481,11 @@ export function SaleNotesPanel({
                                                     {solicitud.motivo_rechazo}
                                                 </span>
                                             )}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px] font-bold">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px] font-bold">
                                             {money(solicitud.importe)}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             <Badge
                                                 className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold shadow-none ${estadoClass(solicitud.estado)}`}
                                             >
@@ -479,17 +493,17 @@ export function SaleNotesPanel({
                                                     solicitud.estado
                                                 ] ?? solicitud.estado}
                                             </Badge>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                                 {notas.map((nota) => (
-                                    <tr key={nota.id}>
-                                        <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
+                                    <TableRow key={nota.id}>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
                                             {KIND_LABEL[nota.tipo ?? ''] ??
                                                 nota.tipo}{' '}
                                             {nota.serie}-{nota.correlativo}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             {MOTIVOS[
                                                 nota.tipo as NoteKind
                                             ]?.find(
@@ -497,11 +511,11 @@ export function SaleNotesPanel({
                                                     m.value ===
                                                     nota.motivo_catalogo,
                                             )?.label ?? nota.motivo_catalogo}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px] font-bold">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px] font-bold">
                                             {money(nota.importe)}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             <Badge
                                                 className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold capitalize shadow-none ${estadoClass(nota.sunat_estado)}`}
                                             >
@@ -509,13 +523,13 @@ export function SaleNotesPanel({
                                                     nota.sunat_estado ?? ''
                                                 ] ?? nota.sunat_estado}
                                             </Badge>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                             </>
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
 
             {open && (
@@ -560,7 +574,7 @@ export function SaleNotesPanel({
                                 >
                                     Motivo *
                                 </label>
-                                <select
+                                <NativeSelect
                                     id="nota-motivo"
                                     value={form.data.motivo_catalogo}
                                     onChange={(e) => {
@@ -588,7 +602,7 @@ export function SaleNotesPanel({
                                                 : ''}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 {form.errors.motivo_catalogo && (
                                     <p className="mt-1 text-red-600">
                                         {form.errors.motivo_catalogo}

@@ -5,6 +5,14 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import WhatsappNumeroDialog from '@/components/whatsapp-numero-dialog';
 import { fechaCorta } from '@/lib/utils';
 import alertas from '@/routes/vendedor/alertas';
@@ -289,37 +297,29 @@ export default function PorVencerEmpresas({
 
                         {estaAbierta ? (
                             <div className="border-border overflow-x-auto border-t">
-                                <table className="w-full text-[12px]">
-                                    <thead>
-                                        <tr className="bg-muted/50 text-muted-foreground text-left text-[10.5px] uppercase">
-                                            <th className="px-4 py-2">Serie</th>
-                                            <th className="px-3 py-2">
-                                                Extintor
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                Ubicación
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                Recarga
-                                            </th>
-                                            <th className="px-3 py-2">
+                                <Table className="w-full text-[12px]">
+                                    <TableHeader>
+                                        <TableRow className="bg-muted/50 text-muted-foreground text-left text-[10.5px] uppercase">
+                                            <TableHead>Serie</TableHead>
+                                            <TableHead>Extintor</TableHead>
+                                            <TableHead>Ubicación</TableHead>
+                                            <TableHead>Recarga</TableHead>
+                                            <TableHead>
                                                 P. hidrostática
-                                            </th>
-                                            <th className="px-3 py-2">
-                                                Estado
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                            </TableHead>
+                                            <TableHead>Estado</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                         {empresa.equipos.map((equipo, i) => (
-                                            <tr
+                                            <TableRow
                                                 key={
                                                     equipo.equipment_id ??
                                                     `estimado-${i}`
                                                 }
                                                 className="border-border border-t"
                                             >
-                                                <td className="px-4 py-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]">
+                                                <TableCell className="px-4 py-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]">
                                                     {equipo.numero_serie ?? (
                                                         <span
                                                             className="text-muted-foreground font-sans"
@@ -328,8 +328,8 @@ export default function PorVencerEmpresas({
                                                             Sin serie
                                                         </span>
                                                     )}
-                                                </td>
-                                                <td className="px-3 py-2">
+                                                </TableCell>
+                                                <TableCell className="px-3 py-2">
                                                     {equipo.cantidad > 1 ? (
                                                         <b>
                                                             {equipo.cantidad}{' '}
@@ -345,25 +345,25 @@ export default function PorVencerEmpresas({
                                                             estimado
                                                         </span>
                                                     ) : null}
-                                                </td>
-                                                <td className="text-muted-foreground px-3 py-2">
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground px-3 py-2">
                                                     {equipo.ubicacion ?? '—'}
-                                                </td>
-                                                <td className="px-3 py-2">
+                                                </TableCell>
+                                                <TableCell className="px-3 py-2">
                                                     {equipo.recarga
                                                         ? fechaCorta(
                                                               equipo.recarga,
                                                           )
                                                         : '—'}
-                                                </td>
-                                                <td className="px-3 py-2">
+                                                </TableCell>
+                                                <TableCell className="px-3 py-2">
                                                     {equipo.prueba_hidrostatica
                                                         ? fechaCorta(
                                                               equipo.prueba_hidrostatica,
                                                           )
                                                         : '—'}
-                                                </td>
-                                                <td className="px-3 py-2">
+                                                </TableCell>
+                                                <TableCell className="px-3 py-2">
                                                     <span
                                                         className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${ESTADO[equipo.estado].clase}`}
                                                     >
@@ -373,11 +373,11 @@ export default function PorVencerEmpresas({
                                                             ].texto
                                                         }
                                                     </span>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
                         ) : null}
                     </Card>

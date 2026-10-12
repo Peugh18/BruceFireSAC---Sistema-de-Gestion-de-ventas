@@ -20,6 +20,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import clientes from '@/routes/vendedor/clientes';
@@ -383,20 +391,20 @@ export default function ClientesIndex({
                                 </div>
 
                                 <div className="overflow-x-auto">
-                                    <table className="w-full border-collapse text-[12.5px]">
-                                        <thead>
-                                            <tr>
+                                    <Table className="w-full border-collapse text-[12.5px]">
+                                        <TableHeader>
+                                            <TableRow>
                                                 {columns.map((column) => (
-                                                    <th
+                                                    <TableHead
                                                         key={column}
-                                                        className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] whitespace-nowrap uppercase"
+                                                        className="text-left whitespace-nowrap"
                                                     >
                                                         {column}
-                                                    </th>
+                                                    </TableHead>
                                                 ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
                                             {recargando ? (
                                                 <FilasCargando
                                                     columnas={columns.length}
@@ -405,8 +413,10 @@ export default function ClientesIndex({
                                             ) : (
                                                 clients.data.map((client) => {
                                                     return (
-                                                        <tr key={client.id}>
-                                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                                        <TableRow
+                                                            key={client.id}
+                                                        >
+                                                            <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                                 <div className="flex items-center gap-2.5">
                                                                     <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
                                                                         {initials(
@@ -451,29 +461,29 @@ export default function ClientesIndex({
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </td>
-                                                            <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
+                                                            </TableCell>
+                                                            <TableCell className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
                                                                 {
                                                                     client.documento
                                                                 }
-                                                            </td>
-                                                            <td className="border-border text-muted-foreground max-w-[280px] border-b px-2.5 py-[13px]">
+                                                            </TableCell>
+                                                            <TableCell className="border-border text-muted-foreground max-w-[280px] border-b px-2.5 py-[13px]">
                                                                 <span className="line-clamp-2">
                                                                     {client.direccion ??
                                                                         '-'}
                                                                 </span>
-                                                            </td>
-                                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                                            </TableCell>
+                                                            <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                                 {renderSunatBadge(
                                                                     client,
                                                                 )}
-                                                            </td>
-                                                            <td className="border-border text-muted-foreground border-b px-2.5 py-[13px]">
+                                                            </TableCell>
+                                                            <TableCell className="border-border text-muted-foreground border-b px-2.5 py-[13px]">
                                                                 {fechaCorta(
                                                                     client.ultima_compra,
                                                                 ) || '-'}
-                                                            </td>
-                                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                                            </TableCell>
+                                                            <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                                 <div className="flex gap-1.5">
                                                                     <Button
                                                                         asChild
@@ -495,13 +505,13 @@ export default function ClientesIndex({
                                                                         </Link>
                                                                     </Button>
                                                                 </div>
-                                                            </td>
-                                                        </tr>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     );
                                                 })
                                             )}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                 </div>
 
                                 <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">

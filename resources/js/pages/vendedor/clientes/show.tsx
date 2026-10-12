@@ -18,6 +18,7 @@ import {
     ShoppingCart,
     Trash2,
     Wrench,
+    Inbox,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
@@ -36,6 +37,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import VendedorLayout from '@/layouts/vendedor-layout';
@@ -52,6 +61,8 @@ import ComunicacionRoutes from '@/routes/vendedor/comunicacion';
 import CobranzasRoutes from '@/routes/vendedor/cobranzas';
 import sitesRoutes from '@/routes/vendedor/clientes/sites';
 import vehiclesRoutes from '@/routes/vendedor/clientes/vehiculos';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 // ==================== TIPOS CONTRATO BRIEF ====================
 
@@ -1209,53 +1220,44 @@ export default function ClienteShow({
                             >
                                 {comprasSubtab === 'ventas' ? (
                                     <div className="mt-4 overflow-x-auto">
-                                        <table className="w-full text-left text-xs">
-                                            <thead>
-                                                <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                                    <th className="py-2.5">
+                                        <Table className="w-full text-left text-xs">
+                                            <TableHeader>
+                                                <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                    <TableHead>
                                                         N.º Venta
-                                                    </th>
-                                                    <th className="py-2.5">
-                                                        Fecha
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>Fecha</TableHead>
+                                                    <TableHead>
                                                         Comprobante
-                                                    </th>
-                                                    <th className="py-2.5">
-                                                        SUNAT
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>SUNAT</TableHead>
+                                                    <TableHead>
                                                         Condición
-                                                    </th>
-                                                    <th className="py-2.5">
-                                                        Total
-                                                    </th>
-                                                    <th className="py-2.5">
-                                                        Saldo
-                                                    </th>
-                                                    <th className="py-2.5 text-right">
+                                                    </TableHead>
+                                                    <TableHead>Total</TableHead>
+                                                    <TableHead>Saldo</TableHead>
+                                                    <TableHead className="text-right">
                                                         Acción
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-border divide-y">
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-border divide-y">
                                                 {ventas.length === 0 ? (
-                                                    <tr>
-                                                        <td
-                                                            colSpan={8}
-                                                            className="text-muted-foreground py-8 text-center"
-                                                        >
-                                                            No hay ventas
-                                                            registradas.
-                                                        </td>
-                                                    </tr>
+                                                    <TableRow>
+                                                        <TableCell colSpan={8}>
+                                                            <Empty
+                                                                icon={<Inbox />}
+                                                                title="No hay ventas registradas."
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ) : (
                                                     ventas.map((v) => (
-                                                        <tr
+                                                        <TableRow
                                                             key={v.id}
                                                             className="hover:bg-muted/30"
                                                         >
-                                                            <td className="text-foreground py-3 font-mono font-bold">
+                                                            <TableCell className="text-foreground py-3 font-mono font-bold">
                                                                 <Link
                                                                     href={VentasRoutes.show.url(
                                                                         {
@@ -1270,15 +1272,15 @@ export default function ClienteShow({
                                                                         v.numero_interno
                                                                     }
                                                                 </Link>
-                                                            </td>
-                                                            <td className="text-muted-foreground py-3">
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-3">
                                                                 {v.fecha}
-                                                            </td>
-                                                            <td className="py-3 font-medium">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 font-medium">
                                                                 {v.comprobante ||
                                                                     'Nota de venta'}
-                                                            </td>
-                                                            <td className="py-3">
+                                                            </TableCell>
+                                                            <TableCell className="py-3">
                                                                 {v.sunat_estado ? (
                                                                     <Badge
                                                                         className={`text-[10px] ${
@@ -1297,19 +1299,19 @@ export default function ClienteShow({
                                                                         -
                                                                     </span>
                                                                 )}
-                                                            </td>
-                                                            <td className="text-muted-foreground py-3 capitalize">
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-3 capitalize">
                                                                 {
                                                                     v.condicion_pago
                                                                 }
                                                                 {v.medio_pago
                                                                     ? ` (${v.medio_pago})`
                                                                     : ''}
-                                                            </td>
-                                                            <td className="py-3 font-bold">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 font-bold">
                                                                 {soles(v.total)}
-                                                            </td>
-                                                            <td className="py-3">
+                                                            </TableCell>
+                                                            <TableCell className="py-3">
                                                                 {v.estado !==
                                                                 'confirmada' ? (
                                                                     <span className="text-muted-foreground font-semibold">
@@ -1330,8 +1332,8 @@ export default function ClienteShow({
                                                                         Pagado
                                                                     </span>
                                                                 )}
-                                                            </td>
-                                                            <td className="py-3 text-right">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 text-right">
                                                                 <Button
                                                                     asChild
                                                                     variant="outline"
@@ -1351,80 +1353,75 @@ export default function ClienteShow({
                                                                         venta
                                                                     </Link>
                                                                 </Button>
-                                                            </td>
-                                                        </tr>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     ))
                                                 )}
-                                            </tbody>
-                                        </table>
+                                            </TableBody>
+                                        </Table>
                                     </div>
                                 ) : (
                                     <div className="mt-4 overflow-x-auto">
-                                        <table className="w-full text-left text-xs">
-                                            <thead>
-                                                <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                                    <th className="py-2.5">
+                                        <Table className="w-full text-left text-xs">
+                                            <TableHeader>
+                                                <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                    <TableHead>
                                                         N.º Cotización
-                                                    </th>
-                                                    <th className="py-2.5">
-                                                        Fecha
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>Fecha</TableHead>
+                                                    <TableHead>
                                                         Vigencia
-                                                    </th>
-                                                    <th className="py-2.5">
-                                                        Total
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>Total</TableHead>
+                                                    <TableHead>
                                                         Estado
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>
                                                         Venta Vinculada
-                                                    </th>
-                                                    <th className="py-2.5 text-right">
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
                                                         Acción
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-border divide-y">
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-border divide-y">
                                                 {cotizaciones.length === 0 ? (
-                                                    <tr>
-                                                        <td
-                                                            colSpan={7}
-                                                            className="text-muted-foreground py-8 text-center"
-                                                        >
-                                                            No hay cotizaciones
-                                                            registradas.
-                                                        </td>
-                                                    </tr>
+                                                    <TableRow>
+                                                        <TableCell colSpan={7}>
+                                                            <Empty
+                                                                icon={<Inbox />}
+                                                                title="No hay cotizaciones registradas."
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ) : (
                                                     cotizaciones.map((c) => (
-                                                        <tr
+                                                        <TableRow
                                                             key={c.id}
                                                             className="hover:bg-muted/30"
                                                         >
-                                                            <td className="text-foreground py-3 font-mono font-bold">
+                                                            <TableCell className="text-foreground py-3 font-mono font-bold">
                                                                 {c.numero}
-                                                            </td>
-                                                            <td className="text-muted-foreground py-3">
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-3">
                                                                 {c.fecha}
-                                                            </td>
-                                                            <td className="text-muted-foreground py-3">
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-3">
                                                                 {c.vigencia_hasta ||
                                                                     '-'}
-                                                            </td>
-                                                            <td className="py-3 font-bold">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 font-bold">
                                                                 {soles(c.total)}
-                                                            </td>
-                                                            <td className="py-3">
+                                                            </TableCell>
+                                                            <TableCell className="py-3">
                                                                 <Badge
                                                                     variant="outline"
                                                                     className="text-[10px] capitalize"
                                                                 >
                                                                     {c.estado}
                                                                 </Badge>
-                                                            </td>
-                                                            <td className="py-3">
+                                                            </TableCell>
+                                                            <TableCell className="py-3">
                                                                 {c.venta ? (
                                                                     <Link
                                                                         href={VentasRoutes.show.url(
@@ -1449,8 +1446,8 @@ export default function ClienteShow({
                                                                         -
                                                                     </span>
                                                                 )}
-                                                            </td>
-                                                            <td className="py-3 text-right">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 text-right">
                                                                 <Button
                                                                     asChild
                                                                     variant="outline"
@@ -1471,12 +1468,12 @@ export default function ClienteShow({
                                                                         PDF
                                                                     </a>
                                                                 </Button>
-                                                            </td>
-                                                        </tr>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     ))
                                                 )}
-                                            </tbody>
-                                        </table>
+                                            </TableBody>
+                                        </Table>
                                     </div>
                                 )}
                             </div>
@@ -1515,60 +1512,58 @@ export default function ClienteShow({
                             >
                                 {extintoresSubtab === 'extintores' ? (
                                     <div className="mt-4 overflow-x-auto">
-                                        <table className="w-full text-left text-xs">
-                                            <thead>
-                                                <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                                    <th className="py-2.5">
+                                        <Table className="w-full text-left text-xs">
+                                            <TableHeader>
+                                                <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                    <TableHead>
                                                         Serie BF-EQ
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>
                                                         Producto
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>
                                                         Capacidad / Marca
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>
                                                         F. Venta
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>
                                                         Próx. Recarga (1 año)
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>
                                                         Próx. P.H. (5 años)
-                                                    </th>
-                                                    <th className="py-2.5 text-center">
+                                                    </TableHead>
+                                                    <TableHead className="text-center">
                                                         Semáforo
-                                                    </th>
-                                                    <th className="py-2.5 text-right">
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
                                                         Acciones
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-border divide-y">
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-border divide-y">
                                                 {extintores.length === 0 ? (
-                                                    <tr>
-                                                        <td
-                                                            colSpan={8}
-                                                            className="text-muted-foreground py-8 text-center"
-                                                        >
-                                                            No hay extintores
-                                                            registrados para
-                                                            este cliente.
-                                                        </td>
-                                                    </tr>
+                                                    <TableRow>
+                                                        <TableCell colSpan={8}>
+                                                            <Empty
+                                                                icon={<Inbox />}
+                                                                title="No hay extintores registrados para este cliente."
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ) : (
                                                     extintores.map((e) => (
-                                                        <tr
+                                                        <TableRow
                                                             key={e.id}
                                                             className="hover:bg-muted/30"
                                                         >
-                                                            <td className="text-foreground py-3 font-mono font-bold">
+                                                            <TableCell className="text-foreground py-3 font-mono font-bold">
                                                                 {e.numero_serie}
-                                                            </td>
-                                                            <td className="py-3 font-medium">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 font-medium">
                                                                 {e.producto}
-                                                            </td>
-                                                            <td className="text-muted-foreground py-3">
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-3">
                                                                 {[
                                                                     e.capacidad,
                                                                     e.marca,
@@ -1579,20 +1574,20 @@ export default function ClienteShow({
                                                                     .join(
                                                                         ' · ',
                                                                     ) || '-'}
-                                                            </td>
-                                                            <td className="text-muted-foreground py-3">
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-3">
                                                                 {e.fecha_venta ||
                                                                     '-'}
-                                                            </td>
-                                                            <td className="py-3 font-semibold">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 font-semibold">
                                                                 {e.proxima_fecha_atencion ||
                                                                     '-'}
-                                                            </td>
-                                                            <td className="text-muted-foreground py-3">
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-3">
                                                                 {e.proxima_prueba_hidrostatica ||
                                                                     '-'}
-                                                            </td>
-                                                            <td className="py-3 text-center">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 text-center">
                                                                 {e.es_descargado ||
                                                                 e.estado ===
                                                                     'descargado' ||
@@ -1639,8 +1634,8 @@ export default function ClienteShow({
                                                                         (Operativo)
                                                                     </Badge>
                                                                 )}
-                                                            </td>
-                                                            <td className="py-3 text-right">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 text-right">
                                                                 <div className="flex items-center justify-end gap-1.5">
                                                                     {e.vencido ||
                                                                     e.es_descargado ||
@@ -1677,74 +1672,69 @@ export default function ClienteShow({
                                                                         </button>
                                                                     )}
                                                                 </div>
-                                                            </td>
-                                                        </tr>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     ))
                                                 )}
-                                            </tbody>
-                                        </table>
+                                            </TableBody>
+                                        </Table>
                                     </div>
                                 ) : (
                                     <div className="mt-4 overflow-x-auto">
-                                        <table className="w-full text-left text-xs">
-                                            <thead>
-                                                <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                                    <th className="py-2.5">
+                                        <Table className="w-full text-left text-xs">
+                                            <TableHeader>
+                                                <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                    <TableHead>
                                                         N.º Certificado
-                                                    </th>
-                                                    <th className="py-2.5">
-                                                        Tipo
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>Tipo</TableHead>
+                                                    <TableHead>
                                                         Emisión
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>
                                                         Vigencia hasta
-                                                    </th>
-                                                    <th className="py-2.5">
+                                                    </TableHead>
+                                                    <TableHead>
                                                         Estado
-                                                    </th>
-                                                    <th className="py-2.5">
-                                                        Venta
-                                                    </th>
-                                                    <th className="py-2.5 text-right">
+                                                    </TableHead>
+                                                    <TableHead>Venta</TableHead>
+                                                    <TableHead className="text-right">
                                                         PDF
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-border divide-y">
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-border divide-y">
                                                 {certificados.length === 0 ? (
-                                                    <tr>
-                                                        <td
-                                                            colSpan={7}
-                                                            className="text-muted-foreground py-8 text-center"
-                                                        >
-                                                            No hay certificados
-                                                            emitidos.
-                                                        </td>
-                                                    </tr>
+                                                    <TableRow>
+                                                        <TableCell colSpan={7}>
+                                                            <Empty
+                                                                icon={<Inbox />}
+                                                                title="No hay certificados emitidos."
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ) : (
                                                     certificados.map((c) => (
-                                                        <tr
+                                                        <TableRow
                                                             key={c.id}
                                                             className="hover:bg-muted/30"
                                                         >
-                                                            <td className="text-foreground py-3 font-mono font-bold">
+                                                            <TableCell className="text-foreground py-3 font-mono font-bold">
                                                                 {c.numero}
-                                                            </td>
-                                                            <td className="py-3 font-medium">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 font-medium">
                                                                 {c.tipo}
-                                                            </td>
-                                                            <td className="text-muted-foreground py-3">
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-3">
                                                                 {
                                                                     c.fecha_emision
                                                                 }
-                                                            </td>
-                                                            <td className="py-3 font-semibold">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 font-semibold">
                                                                 {c.fecha_vigencia_hasta ||
                                                                     '-'}
-                                                            </td>
-                                                            <td className="py-3">
+                                                            </TableCell>
+                                                            <TableCell className="py-3">
                                                                 <Badge
                                                                     className={`text-[10px] ${
                                                                         c.estado ===
@@ -1755,8 +1745,8 @@ export default function ClienteShow({
                                                                 >
                                                                     {c.estado}
                                                                 </Badge>
-                                                            </td>
-                                                            <td className="py-3">
+                                                            </TableCell>
+                                                            <TableCell className="py-3">
                                                                 {c.venta ? (
                                                                     <Link
                                                                         href={VentasRoutes.show.url(
@@ -1779,8 +1769,8 @@ export default function ClienteShow({
                                                                 ) : (
                                                                     '-'
                                                                 )}
-                                                            </td>
-                                                            <td className="py-3 text-right">
+                                                            </TableCell>
+                                                            <TableCell className="py-3 text-right">
                                                                 <Button
                                                                     asChild
                                                                     variant="outline"
@@ -1803,12 +1793,12 @@ export default function ClienteShow({
                                                                         PDF
                                                                     </a>
                                                                 </Button>
-                                                            </td>
-                                                        </tr>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     ))
                                                 )}
-                                            </tbody>
-                                        </table>
+                                            </TableBody>
+                                        </Table>
                                     </div>
                                 )}
                             </div>
@@ -1844,50 +1834,46 @@ export default function ClienteShow({
                             </div>
 
                             <div className="mt-4 overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead>
-                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                            <th className="py-2.5">
-                                                Código OS
-                                            </th>
-                                            <th className="py-2.5">Fecha</th>
-                                            <th className="py-2.5">Servicio</th>
-                                            <th className="py-2.5">Área</th>
-                                            <th className="py-2.5">Estado</th>
-                                            <th className="py-2.5">Técnico</th>
-                                            <th className="py-2.5 text-right">
+                                <Table className="w-full text-left text-xs">
+                                    <TableHeader>
+                                        <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                            <TableHead>Código OS</TableHead>
+                                            <TableHead>Fecha</TableHead>
+                                            <TableHead>Servicio</TableHead>
+                                            <TableHead>Área</TableHead>
+                                            <TableHead>Estado</TableHead>
+                                            <TableHead>Técnico</TableHead>
+                                            <TableHead className="text-right">
                                                 Acción
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-border divide-y">
                                         {servicios.length === 0 ? (
-                                            <tr>
-                                                <td
-                                                    colSpan={7}
-                                                    className="text-muted-foreground py-8 text-center"
-                                                >
-                                                    No hay órdenes de servicio
-                                                    registradas para este
-                                                    cliente.
-                                                </td>
-                                            </tr>
+                                            <TableRow>
+                                                <TableCell colSpan={7}>
+                                                    <Empty
+                                                        icon={<Inbox />}
+                                                        title="No hay órdenes de servicio registradas para este cliente."
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
                                         ) : (
                                             servicios.map((s) => (
-                                                <tr
+                                                <TableRow
                                                     key={s.id}
                                                     className="hover:bg-muted/30"
                                                 >
-                                                    <td className="text-foreground py-3 font-mono font-bold">
+                                                    <TableCell className="text-foreground py-3 font-mono font-bold">
                                                         {s.numero}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3">
+                                                    </TableCell>
+                                                    <TableCell className="text-muted-foreground py-3">
                                                         {s.fecha}
-                                                    </td>
-                                                    <td className="py-3 font-semibold">
+                                                    </TableCell>
+                                                    <TableCell className="py-3 font-semibold">
                                                         {s.servicio}
-                                                    </td>
-                                                    <td className="py-3">
+                                                    </TableCell>
+                                                    <TableCell className="py-3">
                                                         <Badge
                                                             className={`text-[10.5px] uppercase ${
                                                                 s.area ===
@@ -1898,8 +1884,8 @@ export default function ClienteShow({
                                                         >
                                                             {s.area}
                                                         </Badge>
-                                                    </td>
-                                                    <td className="py-3">
+                                                    </TableCell>
+                                                    <TableCell className="py-3">
                                                         <Badge
                                                             variant="outline"
                                                             className="text-[11px]"
@@ -1907,15 +1893,15 @@ export default function ClienteShow({
                                                             {s.estado_texto ||
                                                                 s.estado}
                                                         </Badge>
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3">
+                                                    </TableCell>
+                                                    <TableCell className="text-muted-foreground py-3">
                                                         {s.tecnico || (
                                                             <span className="text-warning-strong font-semibold">
                                                                 Por asignar
                                                             </span>
                                                         )}
-                                                    </td>
-                                                    <td className="py-3 text-right">
+                                                    </TableCell>
+                                                    <TableCell className="py-3 text-right">
                                                         <Button
                                                             asChild
                                                             variant="outline"
@@ -1938,12 +1924,12 @@ export default function ClienteShow({
                                                                 Seguimiento
                                                             </Link>
                                                         </Button>
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
                                             ))
                                         )}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
                         </Card>
                     )}
@@ -2001,45 +1987,33 @@ export default function ClienteShow({
 
                             {cobranzasSubtab === 'cuotas' ? (
                                 <div className="mt-4 overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
-                                        <thead>
-                                            <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                                <th className="py-2.5">
-                                                    Venta
-                                                </th>
-                                                <th className="py-2.5">
-                                                    Cuota
-                                                </th>
-                                                <th className="py-2.5">
-                                                    Monto
-                                                </th>
-                                                <th className="py-2.5">
-                                                    Saldo
-                                                </th>
-                                                <th className="py-2.5">
+                                    <Table className="w-full text-left text-xs">
+                                        <TableHeader>
+                                            <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                <TableHead>Venta</TableHead>
+                                                <TableHead>Cuota</TableHead>
+                                                <TableHead>Monto</TableHead>
+                                                <TableHead>Saldo</TableHead>
+                                                <TableHead>
                                                     Vencimiento
-                                                </th>
-                                                <th className="py-2.5">
-                                                    Estado
-                                                </th>
-                                                <th className="py-2.5 text-right">
+                                                </TableHead>
+                                                <TableHead>Estado</TableHead>
+                                                <TableHead className="text-right">
                                                     Recordatorio
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-border divide-y">
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-border divide-y">
                                             {!cobranzas.cuotas ||
                                             cobranzas.cuotas.length === 0 ? (
-                                                <tr>
-                                                    <td
-                                                        colSpan={7}
-                                                        className="text-muted-foreground py-8 text-center"
-                                                    >
-                                                        No hay cuotas de crédito
-                                                        registradas para este
-                                                        cliente.
-                                                    </td>
-                                                </tr>
+                                                <TableRow>
+                                                    <TableCell colSpan={7}>
+                                                        <Empty
+                                                            icon={<Inbox />}
+                                                            title="No hay cuotas de crédito registradas para este cliente."
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
                                             ) : (
                                                 cobranzas.cuotas.map(
                                                     (cuota) => {
@@ -2057,11 +2031,11 @@ export default function ClienteShow({
                                                             );
 
                                                         return (
-                                                            <tr
+                                                            <TableRow
                                                                 key={cuota.id}
                                                                 className="hover:bg-muted/30"
                                                             >
-                                                                <td className="text-foreground py-3 font-mono font-bold">
+                                                                <TableCell className="text-foreground py-3 font-mono font-bold">
                                                                     <Link
                                                                         href={VentasRoutes.show.url(
                                                                             {
@@ -2080,24 +2054,24 @@ export default function ClienteShow({
                                                                                 .numero
                                                                         }
                                                                     </Link>
-                                                                </td>
-                                                                <td className="py-3 font-semibold">
+                                                                </TableCell>
+                                                                <TableCell className="py-3 font-semibold">
                                                                     Cuota{' '}
                                                                     {
                                                                         cuota.numero_cuota
                                                                     }
-                                                                </td>
-                                                                <td className="text-muted-foreground py-3">
+                                                                </TableCell>
+                                                                <TableCell className="text-muted-foreground py-3">
                                                                     {soles(
                                                                         cuota.monto,
                                                                     )}
-                                                                </td>
-                                                                <td className="text-foreground py-3 font-bold">
+                                                                </TableCell>
+                                                                <TableCell className="text-foreground py-3 font-bold">
                                                                     {soles(
                                                                         cuota.saldo,
                                                                     )}
-                                                                </td>
-                                                                <td className="py-3 font-semibold">
+                                                                </TableCell>
+                                                                <TableCell className="py-3 font-semibold">
                                                                     {
                                                                         cuota.fecha_vencimiento
                                                                     }
@@ -2112,8 +2086,8 @@ export default function ClienteShow({
                                                                                 día(s)
                                                                             </span>
                                                                         )}
-                                                                </td>
-                                                                <td className="py-3">
+                                                                </TableCell>
+                                                                <TableCell className="py-3">
                                                                     <Badge
                                                                         className={`text-[10px] ${
                                                                             isVencido
@@ -2125,8 +2099,8 @@ export default function ClienteShow({
                                                                             cuota.estado
                                                                         }
                                                                     </Badge>
-                                                                </td>
-                                                                <td className="py-3 text-right">
+                                                                </TableCell>
+                                                                <TableCell className="py-3 text-right">
                                                                     {phoneClean ? (
                                                                         <a
                                                                             href={`https://wa.me/${phoneClean}?text=${waText}`}
@@ -2143,59 +2117,54 @@ export default function ClienteShow({
                                                                             teléfono
                                                                         </span>
                                                                     )}
-                                                                </td>
-                                                            </tr>
+                                                                </TableCell>
+                                                            </TableRow>
                                                         );
                                                     },
                                                 )
                                             )}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                 </div>
                             ) : (
                                 <div className="mt-4 overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
-                                        <thead>
-                                            <tr className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
-                                                <th className="py-2.5">
-                                                    Fecha
-                                                </th>
-                                                <th className="py-2.5">
-                                                    Venta
-                                                </th>
-                                                <th className="py-2.5">
+                                    <Table className="w-full text-left text-xs">
+                                        <TableHeader>
+                                            <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                <TableHead>Fecha</TableHead>
+                                                <TableHead>Venta</TableHead>
+                                                <TableHead>
                                                     Monto Pagado
-                                                </th>
-                                                <th className="py-2.5">
+                                                </TableHead>
+                                                <TableHead>
                                                     Forma de Pago
-                                                </th>
-                                                <th className="py-2.5">
+                                                </TableHead>
+                                                <TableHead>
                                                     N.º Operación
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-border divide-y">
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-border divide-y">
                                             {!cobranzas.pagos ||
                                             cobranzas.pagos.length === 0 ? (
-                                                <tr>
-                                                    <td
-                                                        colSpan={5}
-                                                        className="text-muted-foreground py-8 text-center"
-                                                    >
-                                                        No hay pagos
-                                                        registrados.
-                                                    </td>
-                                                </tr>
+                                                <TableRow>
+                                                    <TableCell colSpan={5}>
+                                                        <Empty
+                                                            icon={<Inbox />}
+                                                            title="No hay pagos registrados."
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
                                             ) : (
                                                 cobranzas.pagos.map((pago) => (
-                                                    <tr
+                                                    <TableRow
                                                         key={pago.id}
                                                         className="hover:bg-muted/30"
                                                     >
-                                                        <td className="text-muted-foreground py-3">
+                                                        <TableCell className="text-muted-foreground py-3">
                                                             {pago.fecha}
-                                                        </td>
-                                                        <td className="text-foreground py-3 font-mono font-bold">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground py-3 font-mono font-bold">
                                                             <Link
                                                                 href={VentasRoutes.show.url(
                                                                     {
@@ -2213,22 +2182,22 @@ export default function ClienteShow({
                                                                         .numero
                                                                 }
                                                             </Link>
-                                                        </td>
-                                                        <td className="text-success-strong py-3 font-bold">
+                                                        </TableCell>
+                                                        <TableCell className="text-success-strong py-3 font-bold">
                                                             {soles(pago.monto)}
-                                                        </td>
-                                                        <td className="text-muted-foreground py-3 capitalize">
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground py-3 capitalize">
                                                             {pago.forma_pago}
-                                                        </td>
-                                                        <td className="text-muted-foreground py-3 font-mono">
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground py-3 font-mono">
                                                             {pago.numero_operacion ||
                                                                 '-'}
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ))
                                             )}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                 </div>
                             )}
                         </Card>
@@ -2470,7 +2439,7 @@ export default function ClienteShow({
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <Label>Tipo doc</Label>
-                                <select
+                                <NativeSelect
                                     aria-label="Tipo doc"
                                     value={editForm.data.tipo_documento}
                                     onChange={(e) =>
@@ -2484,7 +2453,7 @@ export default function ClienteShow({
                                 >
                                     <option value="ruc">RUC</option>
                                     <option value="dni">DNI</option>
-                                </select>
+                                </NativeSelect>
                             </div>
                             <div>
                                 <Label>Número doc</Label>
@@ -2674,7 +2643,7 @@ export default function ClienteShow({
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <Label>Tipo de sede</Label>
-                                <select
+                                <NativeSelect
                                     aria-label="Tipo de sede"
                                     value={siteForm.data.tipo}
                                     onChange={(e) =>
@@ -2691,7 +2660,7 @@ export default function ClienteShow({
                                             {t}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </div>
                             <div>
                                 <Label>Nombre de la sede</Label>

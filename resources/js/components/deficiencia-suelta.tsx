@@ -5,6 +5,7 @@ import { BotonFoto } from '@/components/captura-evidencia';
 import { store as registrarDeficiencia } from '@/routes/tecnico-planta/deficiencias';
 import type { Team } from '@/types';
 import { toast } from 'sonner';
+import { NativeSelect } from '@/components/ui/native-select';
 
 interface Props {
     destino?: string;
@@ -90,7 +91,7 @@ export default function DeficienciaSuelta({
             </h3>
             <label className="block text-[11px] font-semibold">
                 Extintor
-                <select
+                <NativeSelect
                     value={form.data.equipment_id}
                     onChange={(e) =>
                         form.setData('equipment_id', e.target.value)
@@ -102,7 +103,7 @@ export default function DeficienciaSuelta({
                             {e.serie}
                         </option>
                     ))}
-                </select>
+                </NativeSelect>
             </label>
             <label className="block text-[11px] font-semibold">
                 Componente *

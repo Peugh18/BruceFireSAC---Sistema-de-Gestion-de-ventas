@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import type { Team } from '@/types';
 import ConsultaRoutes from '@/routes/almacen/consulta';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type SedeOption = {
     id: number;
@@ -217,7 +218,7 @@ export default function ConsultaIndex({
                         </div>
 
                         <div className="w-full md:w-56">
-                            <select
+                            <NativeSelect
                                 aria-label="Filtrar por sede"
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
@@ -229,7 +230,7 @@ export default function ConsultaIndex({
                                         {s.nombre} ({s.tipo})
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div className="flex gap-2">

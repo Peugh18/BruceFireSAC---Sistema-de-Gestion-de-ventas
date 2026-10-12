@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { fechaLocal } from '@/lib/utils';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type DeficiencyItem = {
     id: number;
@@ -259,7 +260,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Canal *
                                 </Label>
-                                <select
+                                <NativeSelect
                                     aria-label="Canal *"
                                     value={authForm.data.canal}
                                     onChange={(e) =>
@@ -278,7 +279,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                     <option value="presencial">
                                         Presencial / Llamada
                                     </option>
-                                </select>
+                                </NativeSelect>
                             </div>
 
                             <div>
@@ -310,7 +311,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                     >
                                         Cotización del adicional
                                     </Label>
-                                    <select
+                                    <NativeSelect
                                         id="cotizacion_adicional_id"
                                         value={
                                             authForm.data
@@ -338,7 +339,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                                 {cotizacion.total.toFixed(2)}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
                                 <div>
                                     <Label

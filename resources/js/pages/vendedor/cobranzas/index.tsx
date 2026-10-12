@@ -28,10 +28,19 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import pagos from '@/routes/vendedor/cobranzas/pagos';
 import type { Team } from '@/types';
 import { fechaCorta, soles } from '@/lib/utils';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type Sede = {
     id: number;
@@ -509,30 +518,30 @@ export default function CobranzasIndex({
                             </div>
 
                             <div className="mt-4 overflow-x-auto">
-                                <table className="w-full border-collapse text-[12.5px]">
-                                    <thead>
-                                        <tr className="border-border border-b">
-                                            <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                <Table className="w-full border-collapse text-[12.5px]">
+                                    <TableHeader>
+                                        <TableRow className="border-border border-b">
+                                            <TableHead className="text-left">
                                                 Cliente
-                                            </th>
-                                            <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                            </TableHead>
+                                            <TableHead className="text-left">
                                                 Cuota
-                                            </th>
-                                            <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                            </TableHead>
+                                            <TableHead className="text-left">
                                                 Saldo por cobrar
-                                            </th>
-                                            <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                            </TableHead>
+                                            <TableHead className="text-left">
                                                 Vencimiento
-                                            </th>
-                                            <th className="text-muted-foreground px-2.5 py-2.5 text-right font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                            </TableHead>
+                                            <TableHead className="text-right">
                                                 Acción
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                         {installmentRows.length === 0 ? (
-                                            <tr>
-                                                <td
+                                            <TableRow>
+                                                <TableCell
                                                     colSpan={5}
                                                     className="text-muted-foreground px-4 py-12 text-center"
                                                 >
@@ -549,8 +558,8 @@ export default function CobranzasIndex({
                                                             pagos.
                                                         </p>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ) : (
                                             installmentRows.map((inst) => {
                                                 const pagada =
@@ -561,11 +570,11 @@ export default function CobranzasIndex({
                                                     inst.dias_vencido > 0;
 
                                                 return (
-                                                    <tr
+                                                    <TableRow
                                                         key={inst.id}
                                                         className="border-border hover:bg-muted/40 border-b transition-colors"
                                                     >
-                                                        <td className="px-2.5 py-3.5">
+                                                        <TableCell className="px-2.5 py-3.5">
                                                             <div className="text-foreground font-bold">
                                                                 {inst.cliente ||
                                                                     'Cliente'}
@@ -575,13 +584,13 @@ export default function CobranzasIndex({
                                                                 {inst.sale_numero ||
                                                                     `#${inst.sale_id}`}
                                                             </div>
-                                                        </td>
+                                                        </TableCell>
 
-                                                        <td className="text-foreground/80 px-2.5 py-3.5 font-mono text-xs">
+                                                        <TableCell className="text-foreground/80 px-2.5 py-3.5 font-mono text-xs">
                                                             {inst.numero_cuota}
-                                                        </td>
+                                                        </TableCell>
 
-                                                        <td className="text-foreground px-2.5 py-3.5 font-bold">
+                                                        <TableCell className="text-foreground px-2.5 py-3.5 font-bold">
                                                             <div>
                                                                 {soles(
                                                                     inst.saldo,
@@ -655,9 +664,9 @@ export default function CobranzasIndex({
                                                                     </div>
                                                                 ),
                                                             )}
-                                                        </td>
+                                                        </TableCell>
 
-                                                        <td className="px-2.5 py-3.5">
+                                                        <TableCell className="px-2.5 py-3.5">
                                                             <Badge
                                                                 className={`rounded-full border-none px-2 py-0.5 text-[10.5px] font-bold ${
                                                                     pagada
@@ -673,9 +682,9 @@ export default function CobranzasIndex({
                                                                       ? `Vencido hace ${inst.dias_vencido}d`
                                                                       : `Vence ${fechaCorta(inst.fecha_vencimiento)}`}
                                                             </Badge>
-                                                        </td>
+                                                        </TableCell>
 
-                                                        <td className="px-2.5 py-3.5 text-right">
+                                                        <TableCell className="px-2.5 py-3.5 text-right">
                                                             {inst.pagos
                                                                 .filter(
                                                                     (pago) =>
@@ -721,13 +730,13 @@ export default function CobranzasIndex({
                                                                     ? 'Pagada'
                                                                     : 'Registrar pago'}
                                                             </Button>
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 );
                                             })
                                         )}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
 
                             {/* Paginación si existe */}
@@ -813,7 +822,7 @@ export default function CobranzasIndex({
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Sede
                                 </Label>
-                                <select
+                                <NativeSelect
                                     aria-label="Sede"
                                     value={openForm.data.sede_id}
                                     onChange={(e) =>
@@ -830,7 +839,7 @@ export default function CobranzasIndex({
                                             {s.tipo ? `(${s.tipo})` : ''}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </div>
                         )}
 
@@ -1045,7 +1054,7 @@ export default function CobranzasIndex({
                             <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                 Forma de pago
                             </Label>
-                            <select
+                            <NativeSelect
                                 aria-label="Forma de pago"
                                 disabled={paymentForm.data.es_detraccion}
                                 value={paymentForm.data.forma_pago}
@@ -1068,7 +1077,7 @@ export default function CobranzasIndex({
                                     Depósito bancario
                                 </option>
                                 <option value="otro">Otro</option>
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>

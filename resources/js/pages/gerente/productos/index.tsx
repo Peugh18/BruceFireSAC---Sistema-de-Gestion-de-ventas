@@ -7,6 +7,7 @@ import {
     Plus,
     Power,
     Search,
+    Inbox,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -17,6 +18,14 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import {
     CategoriaSelect,
     type CategoriaItem,
 } from '@/components/categoria-select';
@@ -24,6 +33,8 @@ import GerenteLayout from '@/layouts/gerente-layout';
 import { toast } from 'sonner';
 import ProductosRoutes from '@/routes/gerente/productos';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 type ProductItem = {
     id: number;
     codigo: string;
@@ -534,45 +545,44 @@ export default function ProductosIndex() {
                 {/* Tabla de Productos */}
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                <tr>
-                                    <th className="px-4 py-3">Código</th>
-                                    <th className="px-4 py-3">
+                        <Table className="w-full text-left text-xs">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                <TableRow>
+                                    <TableHead>Código</TableHead>
+                                    <TableHead>
                                         Producto / Descripción
-                                    </th>
-                                    <th className="px-4 py-3">U.M.</th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead>U.M.</TableHead>
+                                    <TableHead className="text-right">
                                         Precio Venta
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Stock Actual
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Stock Mínimo
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Tipo
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Estado
-                                    </th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Acciones
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-border divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-border divide-y">
                                 {productos.data.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={9}
-                                            className="text-muted-foreground py-8 text-center"
-                                        >
-                                            No se encontraron productos con los
-                                            criterios seleccionados.
-                                        </td>
-                                    </tr>
+                                    <TableRow>
+                                        <TableCell colSpan={9}>
+                                            <Empty
+                                                icon={<Inbox />}
+                                                title="No se encontraron productos con los criterios seleccionados."
+                                            />
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     productos.data.map((p) => {
                                         const isBajoMinimo =
@@ -581,19 +591,19 @@ export default function ProductosIndex() {
                                             p.stock_disponible <=
                                                 p.stock_minimo;
                                         return (
-                                            <tr
+                                            <TableRow
                                                 key={p.id}
                                                 className="hover:bg-muted/40 transition-colors"
                                             >
-                                                <td className="text-foreground px-4 py-3 font-mono font-bold">
+                                                <TableCell className="text-foreground px-4 py-3 font-mono font-bold">
                                                     {p.codigo}
                                                     {p.codigo_barras ? (
                                                         <div className="text-muted-foreground text-[10.5px] font-normal">
                                                             ▮▮ {p.codigo_barras}
                                                         </div>
                                                     ) : null}
-                                                </td>
-                                                <td className="px-4 py-3">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3">
                                                     <div className="text-foreground font-medium">
                                                         {p.nombre}
                                                     </div>
@@ -602,18 +612,18 @@ export default function ProductosIndex() {
                                                             {p.descripcion}
                                                         </div>
                                                     )}
-                                                </td>
-                                                <td className="text-foreground/80 px-4 py-3 font-mono">
+                                                </TableCell>
+                                                <TableCell className="text-foreground/80 px-4 py-3 font-mono">
                                                     {p.unidad_medida === 'NIU'
                                                         ? 'Unidad'
                                                         : p.unidad_medida}
-                                                </td>
-                                                <td className="text-foreground px-4 py-3 text-right font-mono font-semibold">
+                                                </TableCell>
+                                                <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                     {formatCurrency(
                                                         p.precio_venta,
                                                     )}
-                                                </td>
-                                                <td className="px-4 py-3 text-center">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-center">
                                                     <span
                                                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
                                                             isBajoMinimo
@@ -626,13 +636,13 @@ export default function ProductosIndex() {
                                                         )}
                                                         {p.stock_disponible}
                                                     </span>
-                                                </td>
-                                                <td className="text-foreground/80 px-4 py-3 text-center font-mono">
+                                                </TableCell>
+                                                <TableCell className="text-foreground/80 px-4 py-3 text-center font-mono">
                                                     {p.stock_minimo !== null
                                                         ? p.stock_minimo
                                                         : '—'}
-                                                </td>
-                                                <td className="px-4 py-3 text-center">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-center">
                                                     <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
                                                         {p.serializado
                                                             ? 'Por serie'
@@ -640,8 +650,8 @@ export default function ProductosIndex() {
                                                               ? 'Por lote'
                                                               : 'Por cantidad'}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-center">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-center">
                                                     <span
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                             p.activo
@@ -653,8 +663,8 @@ export default function ProductosIndex() {
                                                             ? 'Activo'
                                                             : 'Inactivo'}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-right">
                                                     <div className="flex items-center justify-end gap-1.5">
                                                         <button
                                                             aria-label="Editar producto y stock mínimo"
@@ -693,13 +703,13 @@ export default function ProductosIndex() {
                                                             <Power className="size-3.5" />
                                                         </button>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                     {/* Paginación */}
                     {productos.links && productos.links.length > 3 && (
@@ -984,7 +994,7 @@ export default function ProductosIndex() {
                                             >
                                                 Unidad de venta *
                                             </label>
-                                            <select
+                                            <NativeSelect
                                                 id="producto-unidad_medida"
                                                 name="unidad_medida"
                                                 value={form.data.unidad_medida}
@@ -1012,7 +1022,7 @@ export default function ProductosIndex() {
                                                         {u.nombre}
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </NativeSelect>
                                             <p
                                                 id="producto-unidad-ayuda"
                                                 className="text-muted-foreground mt-1.5 text-xs"
@@ -1038,7 +1048,7 @@ export default function ProductosIndex() {
                                         >
                                             Tratamiento del IGV *
                                         </label>
-                                        <select
+                                        <NativeSelect
                                             id="producto-tipo_afectacion_igv"
                                             name="tipo_afectacion_igv"
                                             required
@@ -1069,7 +1079,7 @@ export default function ProductosIndex() {
                                                 Exonerado
                                             </option>
                                             <option value="30">Inafecto</option>
-                                        </select>
+                                        </NativeSelect>
                                         <p
                                             id="producto-igv-ayuda"
                                             className="text-muted-foreground mt-1.5 text-xs"
@@ -1119,7 +1129,7 @@ export default function ProductosIndex() {
                                                 >
                                                     Agente extintor
                                                 </label>
-                                                <select
+                                                <NativeSelect
                                                     id="producto-agente"
                                                     name="agente"
                                                     value={form.data.agente}
@@ -1145,7 +1155,7 @@ export default function ProductosIndex() {
                                                             {a.etiqueta}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </NativeSelect>
                                                 <p className="text-muted-foreground mt-1.5 text-xs">
                                                     Completa el agente para
                                                     poder emitir el certificado.

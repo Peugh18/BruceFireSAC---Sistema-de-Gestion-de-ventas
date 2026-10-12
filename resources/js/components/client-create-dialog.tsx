@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { rucLookup } from '@/routes/vendedor';
 import clientes from '@/routes/vendedor/clientes';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type ClientFormData = {
     tipo_documento: 'ruc' | 'dni';
@@ -101,7 +102,7 @@ function ClientFormFields({
                 >
                     Tipo doc.
                 </Label>
-                <select
+                <NativeSelect
                     id={`${formId}-tipo_documento`}
                     aria-label="Tipo doc."
                     value={data.tipo_documento}
@@ -115,7 +116,7 @@ function ClientFormFields({
                 >
                     <option value="ruc">RUC</option>
                     <option value="dni">DNI</option>
-                </select>
+                </NativeSelect>
                 <FieldError message={errors.tipo_documento} />
             </div>
 
