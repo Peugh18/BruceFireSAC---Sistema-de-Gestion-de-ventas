@@ -446,11 +446,6 @@
     .cargando {
         animation: none;
     }
-
-    .barra-indeterminada > span {
-        width: 100%;
-        animation: none;
-    }
 }
 
 /* Marco del vendedor: pestaña cóncava fluida que conecta limpiamente con el lienzo */
