@@ -1059,3 +1059,9 @@
 - A pedido del dueño: las tarjetas del Gerente (Caja, Cobranzas, Reportes) vuelven a su diseño anterior (solo se conserva «Vencido» en cero sin rojo); los puntos de estado de Cotizaciones se quedan.
 - Nuevos en components/ui: table, empty y native-select (sin dependencias). Las 29 pantallas con tabla armada a mano usan Table (encabezado legible y filas uniformes); 39 archivos con <select> usan NativeSelect (misma cara que Input); 17 estados vacíos simples usan Empty.
 - Verificado por navegador (vendedor): cotizaciones, ventas, cobranzas, órdenes y certificados; axe sin violaciones. tsc, check y build en verde. Solo frontend.
+
+### 2026-10-11 — Limpieza de código y assets sin uso
+
+- Quitado lo que ningún archivo del proyecto referencia: 10 componentes/layouts sin importar (nav-footer, 3 layouts, ui checkbox/collapsible/icon/select/toggle/toggle-group), 4 fuentes y licencia sin uso (Archivo, Barlow semicondensed semibold), 10 imágenes de marca duplicadas en resources/images y el sello sin texto, pnpm-workspace.yaml (el proyecto usa npm).
+- Se conservan el kit de logos de public/brand, los sprites de Chispa (se cargan por nombre dinámico) y las fuentes de los certificados.
+- PHP revisado: ninguna clase huérfana (TeamPolicy se descubre por convención). tsc, check, build y 32 pruebas de certificados en verde.
