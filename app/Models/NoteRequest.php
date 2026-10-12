@@ -67,16 +67,6 @@ class NoteRequest extends Model
     }
 
     /**
-     * Gerente que revisó la solicitud (aprobada o rechazada).
-     *
-     * @return BelongsTo<User, $this>
-     */
-    public function revisadoPor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'revisado_por');
-    }
-
-    /**
      * @return BelongsTo<ElectronicDocument, $this>
      */
     public function nota(): BelongsTo

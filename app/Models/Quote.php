@@ -148,9 +148,4 @@ class Quote extends Model
     {
         return in_array($estado, self::TRANSITIONS[$this->estado] ?? [], true);
     }
-
-    public function tieneServicios(): bool
-    {
-        return $this->items->contains(fn (QuoteItem $item) => $item->esServicio());
-    }
 }

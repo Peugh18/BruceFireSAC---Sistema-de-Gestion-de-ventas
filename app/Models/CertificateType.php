@@ -96,14 +96,6 @@ class CertificateType extends Model
     }
 
     /**
-     * @return HasMany<CertificateSequence, $this>
-     */
-    public function sequences(): HasMany
-    {
-        return $this->hasMany(CertificateSequence::class);
-    }
-
-    /**
      * @return HasMany<CertificateTypeVersion, $this>
      */
     public function versions(): HasMany

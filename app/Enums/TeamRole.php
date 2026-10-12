@@ -27,8 +27,6 @@ enum TeamRole: string
             self::Owner => TeamPermission::cases(),
             self::Admin => [
                 TeamPermission::UpdateTeam,
-                TeamPermission::CreateInvitation,
-                TeamPermission::CancelInvitation,
             ],
             self::Member => [],
         };
@@ -61,19 +59,5 @@ enum TeamRole: string
     public function isAtLeast(TeamRole $role): bool
     {
         return $this->level() >= $role->level();
-    }
-
-    /**
-     * Get the roles that can be assigned to team members (excludes Owner).
-     *
-     * @return array<array{value: string, label: string}>
-     */
-    public static function assignable(): array
-    {
-        return collect(self::cases())
-            ->filter(fn (self $role) => $role !== self::Owner)
-            ->map(fn (self $role) => ['value' => $role->value, 'label' => $role->label()])
-            ->values()
-            ->toArray();
     }
 }
