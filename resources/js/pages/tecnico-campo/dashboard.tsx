@@ -221,12 +221,12 @@ export default function TecnicoCampoDashboard({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar cliente, dirección o código de orden..."
-                        className="bg-card focus:ring-primary w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card focus:ring-primary min-h-12 w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
                     />
-                    <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
+                    <Search className="absolute top-4 left-3 h-4 w-4 text-neutral-400" />
                     <button
                         type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
+                        className="absolute top-0.5 right-0.5 bottom-0.5 min-w-11 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
                     >
                         Buscar
                     </button>
@@ -296,7 +296,7 @@ export default function TecnicoCampoDashboard({
                                                 <Phone className="text-success-strong h-3.5 w-3.5 flex-shrink-0" />
                                                 <a
                                                     href={`tel:${order.telefono}`}
-                                                    className="text-primary-strong font-medium hover:underline"
+                                                    className="text-primary-strong inline-flex min-h-11 items-center font-medium hover:underline"
                                                 >
                                                     {order.telefono}
                                                 </a>
@@ -322,7 +322,7 @@ export default function TecnicoCampoDashboard({
 
                                         <Link
                                             href={getActionRoute(order)}
-                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-transform active:scale-95"
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex min-h-11 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition-transform active:scale-95"
                                         >
                                             <span>{getActionLabel(order)}</span>
                                             <ArrowRight className="h-3.5 w-3.5" />

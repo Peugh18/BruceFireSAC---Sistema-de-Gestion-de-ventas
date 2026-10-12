@@ -22,7 +22,7 @@ export function ThemeToggle({
         <button
             type="button"
             onClick={toggleTheme}
-            className={`border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex ${showLabel ? 'h-11 gap-2 px-4' : 'size-[38px]'} shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 ${className}`}
+            className={`border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex ${showLabel ? 'h-11 gap-2 px-4' : 'size-11'} shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 ${className}`}
             title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             aria-label={
                 isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'

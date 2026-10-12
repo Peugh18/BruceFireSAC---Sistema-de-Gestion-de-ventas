@@ -26,7 +26,7 @@ export default function FiltroSelect({
             <NativeSelect
                 value={valor}
                 onChange={(event) => onCambiar(event.target.value)}
-                className="text-foreground h-9 min-w-[9rem] text-sm"
+                className="text-foreground h-11 min-w-[9rem] text-sm sm:h-9"
             >
                 {opciones.map((opcion) => (
                     <option key={opcion.value} value={opcion.value}>

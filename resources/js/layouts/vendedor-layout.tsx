@@ -94,7 +94,7 @@ export default function VendedorLayout({
                             aria-label="Abrir menú"
                             aria-expanded={sidebarOpen}
                             aria-controls="app-navigation-sidebar"
-                            className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 lg:hidden"
+                            className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground flex size-11 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 lg:hidden"
                         >
                             <Menu className="size-4" strokeWidth={2} />
                         </button>
@@ -151,7 +151,7 @@ export default function VendedorLayout({
                             <button
                                 type="button"
                                 onClick={() => setNotifsOpen(!notifsOpen)}
-                                className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-[38px] shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95"
+                                className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-11 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95"
                                 aria-label="Notificaciones"
                                 aria-expanded={notifsOpen}
                             >

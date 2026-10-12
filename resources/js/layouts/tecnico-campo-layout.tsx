@@ -120,7 +120,7 @@ export default function TecnicoCampoLayout({
 
                 {/* User badge + theme toggle + logout */}
                 <div className="flex items-center gap-2">
-                    <ThemeToggle className="size-8 rounded-lg" />
+                    <ThemeToggle className="size-11 rounded-lg" />
 
                     <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs">
                         <div className="bg-primary flex size-5 items-center justify-center rounded-full text-xs font-bold text-white">
@@ -135,7 +135,7 @@ export default function TecnicoCampoLayout({
                         href="/logout"
                         method="post"
                         as="button"
-                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive-strong flex size-8 items-center justify-center rounded-lg border transition-colors"
+                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive-strong flex size-11 items-center justify-center rounded-lg border transition-colors"
                         title="Cerrar sesión"
                     >
                         <LogOut className="size-3.5" />

@@ -47,8 +47,14 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content>) {
+  // Al cerrar (también con Escape) el foco vuelve a lo que lo tenía antes de
+  // abrir, aunque el diálogo se abra por código y no desde un botón con Trigger.
+  const anterior = React.useRef<HTMLElement | null>(null)
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
@@ -58,6 +64,18 @@ function DialogContent({
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
           className
         )}
+        onOpenAutoFocus={(event) => {
+          anterior.current = document.activeElement as HTMLElement | null
+          onOpenAutoFocus?.(event)
+        }}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event)
+
+          if (!event.defaultPrevented && anterior.current?.isConnected) {
+            event.preventDefault()
+            anterior.current.focus()
+          }
+        }}
         {...props}
       >
         {children}
