@@ -6,6 +6,7 @@ import {
     CircleDollarSign,
     LayoutDashboard,
     MapPin,
+    MessageCircleQuestion,
     ShieldCheck,
     Truck,
     Users,
@@ -25,6 +26,7 @@ import CajasRoutes from '@/routes/gerente/cajas';
 import CobranzasRoutes from '@/routes/gerente/cobranzas';
 import ReportesRoutes from '@/routes/gerente/reportes';
 import AuditoriaRoutes from '@/routes/gerente/auditoria';
+import ChispaRoutes from '@/routes/gerente/chispa';
 import SedesRoutes from '@/routes/gerente/sedes';
 import UsuariosRoutes from '@/routes/gerente/usuarios';
 import EmpresaRoutes from '@/routes/gerente/configuracion/empresa';
@@ -121,6 +123,11 @@ function buildNavGroups(
                     title: 'Auditoría',
                     href: AuditoriaRoutes.index.url({ current_team: teamSlug }),
                     icon: ShieldCheck,
+                },
+                {
+                    title: 'Preguntas a Chispa',
+                    href: ChispaRoutes.index.url({ current_team: teamSlug }),
+                    icon: MessageCircleQuestion,
                 },
                 {
                     title: 'Sedes',

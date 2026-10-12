@@ -2,6 +2,7 @@
 
 namespace App\Services\Chispa;
 
+use App\Models\ChispaRegistro;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,30 +17,60 @@ class ChispaAssistant
      * no hay key o el proveedor falla, responde con la sección más parecida
      * del manual para que la ayuda nunca quede muda.
      *
+     * Antes de salir al proveedor se ocultan claves y números de tarjeta, y
+     * cada pregunta queda registrada (ya sin esos datos) para que el Gerente
+     * vea qué no se supo responder.
+     *
      * @param  list<array{role: string, content: string}>  $mensajes
-     * @return array{respuesta: string, fuente: string}
+     * @return array{respuesta: string, fuente: string, id: int}
      */
     public function responder(User $user, array $mensajes, ?string $pagina = null): array
     {
+        $mensajes = array_map(fn (array $m) => ['role' => $m['role'], 'content' => $this->ocultarDatosSensibles($m['content'])], $mensajes);
         $manual = $this->manual($user);
         $pregunta = (string) (collect($mensajes)->where('role', 'user')->last()['content'] ?? '');
         $proveedor = (string) config('services.chispa.provider', 'gemini');
 
         try {
-            $respuesta = match ($proveedor) {
+            $respuesta = trim(match ($proveedor) {
                 'groq' => $this->groq($this->sistema($user, $manual, $pagina), $mensajes),
                 default => $this->gemini($this->sistema($user, $manual, $pagina), $mensajes),
-            };
-
-            return ['respuesta' => trim($respuesta), 'fuente' => $proveedor];
+            });
+            $fuente = $proveedor;
         } catch (Throwable $exception) {
             Log::warning('Chispa no pudo usar el proveedor de IA; responde con el manual.', [
                 'proveedor' => $proveedor,
                 'error' => $exception->getMessage(),
             ]);
 
-            return ['respuesta' => $this->buscarEnManual($manual, $pregunta), 'fuente' => 'manual'];
+            $respuesta = $this->buscarEnManual($manual, $pregunta);
+            $fuente = str_contains($respuesta, self::NO_ENCONTRADO) ? 'sin_respuesta' : 'manual';
         }
+
+        $registro = ChispaRegistro::create([
+            'user_id' => $user->id,
+            'rol' => implode(' y ', $this->rolesDe($user)),
+            'pagina' => $pagina === null ? null : mb_substr($pagina, 0, 200),
+            'pregunta' => $pregunta,
+            'respuesta' => $respuesta,
+            'fuente' => $fuente,
+        ]);
+
+        return ['respuesta' => $respuesta, 'fuente' => $fuente, 'id' => $registro->id];
+    }
+
+    private const NO_ENCONTRADO = 'no encontré eso en el manual';
+
+    /**
+     * Oculta números de tarjeta, claves y tokens que el usuario escriba por
+     * error: no deben llegar al proveedor de IA ni quedar guardados.
+     */
+    public function ocultarDatosSensibles(string $texto): string
+    {
+        $texto = (string) preg_replace('/(contraseña|clave|password|token)(\s*(?:es|:|=)?\s*)\S+/iu', '$1$2[oculto]', $texto);
+        $texto = (string) preg_replace('/\b(?:\d[ -]?){13,19}\b/', '[número oculto]', $texto);
+
+        return (string) preg_replace('/\b[A-Za-z0-9_\-]{32,}\b/', '[código oculto]', $texto);
     }
 
     /**
@@ -91,6 +122,8 @@ class ChispaAssistant
         $roles = $this->rolesDe($user);
         $rol = implode(' y ', $roles);
         $perfil = collect($roles)->map(fn (string $r) => self::PERFIL[$r])->implode("\n");
+        $datos = app(DatosDelMomento::class)->para($user, $roles);
+        $datosDeHoy = $datos === [] ? 'No hay cifras de hoy para este rol.' : implode("\n", $datos);
 
         return <<<PROMPT
         Eres Chispa, el asistente de ayuda del sistema de gestión de Bruce Fire S.A.C. (venta, recarga y mantenimiento de extintores en Trujillo, Perú).
@@ -99,6 +132,10 @@ class ChispaAssistant
         Con quién hablas:
         {$perfil}
         El usuario es {$user->name}, con rol {$rol}. Está en la pantalla: {$pagina}.
+
+        Cifras de hoy de este usuario (las mismas de su pantalla de Inicio; puedes citarlas si las pide):
+        {$datosDeHoy}
+        Si pide otros números, dile que los vea en su pantalla; no los inventes.
 
         Reglas:
         - Responde SOLO con lo que dice el MANUAL de abajo. Si algo no está en el manual, dilo con honestidad y sugiere preguntar al Gerente.
@@ -203,7 +240,7 @@ class ChispaAssistant
             ->first();
 
         if (! $mejor || $mejor['puntaje'] === 0) {
-            return 'Ahora no puedo conectarme al asistente y no encontré eso en el manual. Prueba con otras palabras o consulta al Gerente.';
+            return 'Ahora no puedo conectarme al asistente y '.self::NO_ENCONTRADO.'. Prueba con otras palabras o consulta al Gerente.';
         }
 
         return "Ahora no puedo conectarme al asistente, pero esto dice el manual:\n\n".$mejor['texto'];

@@ -13,8 +13,15 @@ import ChispaAvatar from '@/components/chispa-avatar';
 import ChispaSprite, { type ChispaEstado } from '@/components/chispa-sprite';
 import { leerCookie } from '@/lib/cookies';
 import { asistente } from '@/routes';
+import { valorar } from '@/routes/asistente';
 
-type Mensaje = { role: 'user' | 'assistant'; content: string };
+type Mensaje = {
+    role: 'user' | 'assistant';
+    content: string;
+    /** Registro de la respuesta, para marcar si sirvió. */
+    id?: number;
+    util?: boolean;
+};
 
 const CLAVE = 'chispa-conversacion';
 /** El globo "¿Te ayudo?" se muestra solo una vez por sesión; después, al pasar el mouse. */
@@ -28,7 +35,10 @@ const SUGERENCIAS: Record<string, string[]> = {
     ],
     gerente: ['¿Cómo creo un servicio?', '¿Cómo asigno la sede a un usuario?'],
     almacen: ['¿Cómo registro una recepción?', '¿Cómo ajusto el stock?'],
-    tecnico: ['¿Cómo registro una deficiencia?', '¿Qué hago en una entrega?'],
+    tecnico: [
+        '¿Qué necesito para cerrar una entrega?',
+        '¿Cómo registro una deficiencia?',
+    ],
 };
 
 /**
@@ -163,6 +173,7 @@ export default function ChispaWidget({
             const data = (await response.json()) as {
                 respuesta?: string;
                 message?: string;
+                id?: number;
             };
             const respuestaValida =
                 response.ok &&
@@ -174,6 +185,7 @@ export default function ChispaWidget({
                 ...historial,
                 {
                     role: 'assistant',
+                    id: respuestaValida ? data.id : undefined,
                     content:
                         (respuestaValida ? data.respuesta : undefined) ??
                         (response.status === 429
@@ -192,6 +204,32 @@ export default function ChispaWidget({
             ]);
         } finally {
             setPensando(false);
+        }
+    };
+
+    const marcar = async (indice: number, util: boolean) => {
+        const id = mensajes[indice]?.id;
+
+        if (!id) {
+            return;
+        }
+
+        setMensajes((actuales) =>
+            actuales.map((m, i) => (i === indice ? { ...m, util } : m)),
+        );
+
+        try {
+            await fetch(valorar.url(id), {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-XSRF-TOKEN': leerCookie('XSRF-TOKEN'),
+                },
+                body: JSON.stringify({ util }),
+            });
+        } catch {
+            // Si no hay conexión, la marca queda solo en pantalla.
         }
     };
 
@@ -289,6 +327,41 @@ export default function ChispaWidget({
                                     className={`max-w-[88%] rounded-2xl px-3 py-2 leading-relaxed ${m.role === 'user' ? 'bg-primary text-white' : 'bg-muted text-foreground'}`}
                                 >
                                     <Formato texto={m.content} />
+                                    {m.role === 'assistant' && m.id ? (
+                                        <div className="mt-1.5 flex items-center gap-1 text-[12px]">
+                                            {m.util === undefined ? (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            void marcar(i, true)
+                                                        }
+                                                        className="text-muted-foreground hover:text-foreground min-h-9 rounded-md px-2 font-medium underline-offset-2 hover:underline"
+                                                    >
+                                                        Me sirvió
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            void marcar(
+                                                                i,
+                                                                false,
+                                                            )
+                                                        }
+                                                        className="text-muted-foreground hover:text-foreground min-h-9 rounded-md px-2 font-medium underline-offset-2 hover:underline"
+                                                    >
+                                                        No me sirvió
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <span className="text-muted-foreground px-2">
+                                                    {m.util
+                                                        ? 'Gracias. Me alegra haber ayudado.'
+                                                        : 'Gracias. El Gerente verá tu duda para mejorar la ayuda.'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : null}
                                 </div>
                             </div>
                         ))}

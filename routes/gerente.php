@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Gerente\AuditController;
 use App\Http\Controllers\Gerente\CashRegisterConsolidatedController;
+use App\Http\Controllers\Gerente\ChispaController;
 use App\Http\Controllers\Gerente\CollectionConsolidatedController;
 use App\Http\Controllers\Gerente\CompanyBankAccountController;
 use App\Http\Controllers\Gerente\CompanySettingController;
@@ -62,6 +63,9 @@ Route::prefix('gerente')
         Route::get('reportes', [ReportController::class, 'index'])->name('reportes.index');
         Route::get('reportes/comercial/pdf', [ReportController::class, 'exportComercialPdf'])->name('reportes.comercial.pdf');
         Route::get('reportes/inventario/pdf', [ReportController::class, 'exportInventarioPdf'])->name('reportes.inventario.pdf');
+
+        // Preguntas que Chispa no supo responder (para mejorar los manuales)
+        Route::get('chispa', [ChispaController::class, 'index'])->name('chispa.index');
 
         // Auditoría (§37)
         Route::get('auditoria', [AuditController::class, 'index'])->name('auditoria.index');
