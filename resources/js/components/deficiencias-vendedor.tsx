@@ -55,7 +55,7 @@ export type DeficiencyItem = {
     cotizaciones?: { id: number; numero: string; total: number }[];
 };
 
-export function getStatusStyle(estado: string): {
+function getStatusStyle(estado: string): {
     borderClass: string;
     badgeClass: string;
     label: string;

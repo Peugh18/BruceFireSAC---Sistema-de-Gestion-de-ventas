@@ -7,7 +7,7 @@ import type { Team } from '@/types';
 import { toast } from 'sonner';
 import { NativeSelect } from '@/components/ui/native-select';
 
-export interface EventoConversacion {
+interface EventoConversacion {
     id: number;
     titulo: string;
     mensaje: string | null;

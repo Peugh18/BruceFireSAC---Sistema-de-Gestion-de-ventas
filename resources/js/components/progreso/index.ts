@@ -5,7 +5,7 @@ export {
     ProgresoSegmentado,
     AnilloProgreso,
 } from './progreso';
-export { Pasos, type Paso } from './pasos';
+export { Pasos } from './pasos';
 export {
     pasosEntrega,
     pasosOrdenAtencion,

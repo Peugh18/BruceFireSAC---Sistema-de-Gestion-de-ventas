@@ -7,7 +7,7 @@ export type ChispaPose =
     | 'busto';
 
 /** `auto` sigue el tema del sistema; `claro` fuerza la versión con contorno (sobre fondo blanco). */
-export type ChispaTema = 'auto' | 'claro' | 'oscuro';
+type ChispaTema = 'auto' | 'claro' | 'oscuro';
 
 type Props = {
     /** Pose del personaje. Por debajo de 28 px siempre se usa el busto. */

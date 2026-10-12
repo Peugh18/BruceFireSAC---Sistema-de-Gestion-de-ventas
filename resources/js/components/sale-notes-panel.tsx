@@ -29,7 +29,7 @@ import type { Auth } from '@/types';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
 
-export type SaleDocument = {
+type SaleDocument = {
     id: number;
     tipo?: string;
     serie?: string;

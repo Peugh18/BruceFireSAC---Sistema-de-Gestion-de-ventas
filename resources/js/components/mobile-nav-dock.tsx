@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 
-export type MobileDockItem = {
+type MobileDockItem = {
     title: string;
     href: string;
     icon: LucideIcon;

@@ -18,7 +18,7 @@ import { fechaCorta } from '@/lib/utils';
 import alertas from '@/routes/vendedor/alertas';
 import clientes from '@/routes/vendedor/clientes';
 
-export type EquipoEmpresa = {
+type EquipoEmpresa = {
     equipment_id: number | null;
     numero_serie: string | null;
     equipo: string;

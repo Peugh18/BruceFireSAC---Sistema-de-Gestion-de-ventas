@@ -38,7 +38,7 @@ function redondear(valor: number) {
  * Reparte el total en cuotas iguales a lo largo del plazo; la última
  * absorbe los céntimos para que la suma sea exacta.
  */
-export function generarCuotas(
+function generarCuotas(
     total: number,
     fecha: string,
     plazoDias: number,
