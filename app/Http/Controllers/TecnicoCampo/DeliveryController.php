@@ -54,6 +54,8 @@ class DeliveryController extends Controller
             $query->where('estado', 'entregado');
         } elseif ($tab === 'cerradas') {
             $query->where('estado', 'cerrado');
+        } else {
+            $query->whereIn('estado', [...ServiceOrder::ESTADOS_LISTOS, 'entregado', 'cerrado']);
         }
 
         $entregas = $query->paginate(15)->withQueryString();

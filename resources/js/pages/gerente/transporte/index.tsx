@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import GerenteLayout from '@/layouts/gerente-layout';
 import transporte from '@/routes/gerente/transporte';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type Vehiculo = {
     id: number;
@@ -128,7 +129,7 @@ export default function Transporte({
                         </div>
                         <div>
                             <Label htmlFor="veh-categoria">Categoría</Label>
-                            <select
+                            <NativeSelect
                                 id="veh-categoria"
                                 className="border-border bg-background h-10 w-full rounded-md border px-3"
                                 value={vehiculo.data.categoria}
@@ -146,7 +147,7 @@ export default function Transporte({
                                         </option>
                                     ),
                                 )}
-                            </select>
+                            </NativeSelect>
                         </div>
                         <Button
                             type="submit"

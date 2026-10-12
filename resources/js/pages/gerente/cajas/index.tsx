@@ -15,6 +15,15 @@ import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
 import CajasRoutes from '@/routes/gerente/cajas';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type CashRegisterItem = {
     id: number;
@@ -226,7 +235,7 @@ export default function CajasConsolidadasIndex() {
                             >
                                 Vendedor
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cajas-vendedor"
                                 value={vendedorId}
                                 onChange={(e) => setVendedorId(e.target.value)}
@@ -238,7 +247,7 @@ export default function CajasConsolidadasIndex() {
                                         {v.name}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -248,7 +257,7 @@ export default function CajasConsolidadasIndex() {
                             >
                                 Sede
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cajas-sede"
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
@@ -260,7 +269,7 @@ export default function CajasConsolidadasIndex() {
                                         {s.nombre}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -270,7 +279,7 @@ export default function CajasConsolidadasIndex() {
                             >
                                 Estado
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-cajas-estado"
                                 value={estado}
                                 onChange={(e) => setEstado(e.target.value)}
@@ -279,7 +288,7 @@ export default function CajasConsolidadasIndex() {
                                 <option value="todos">Todos los estados</option>
                                 <option value="abierto">Solo Abiertas</option>
                                 <option value="cerrado">Solo Cerradas</option>
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -354,35 +363,35 @@ export default function CajasConsolidadasIndex() {
                 {/* Tabla de Cajas */}
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                <tr>
-                                    <th className="px-4 py-3">Vendedor</th>
-                                    <th className="px-4 py-3">Sede</th>
-                                    <th className="px-4 py-3">Apertura</th>
-                                    <th className="px-4 py-3">Cierre</th>
-                                    <th className="px-4 py-3 text-right">
+                        <Table className="w-full text-left text-xs">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                <TableRow>
+                                    <TableHead>Vendedor</TableHead>
+                                    <TableHead>Sede</TableHead>
+                                    <TableHead>Apertura</TableHead>
+                                    <TableHead>Cierre</TableHead>
+                                    <TableHead className="text-right">
                                         Fondo Apertura
-                                    </th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Contado Cierre
-                                    </th>
-                                    <th className="px-4 py-3 text-right">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Calculado Sistema
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Diferencia
-                                    </th>
-                                    <th className="px-4 py-3 text-center">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Estado
-                                    </th>
-                                    <th className="px-4 py-3">Observación</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-border divide-y">
+                                    </TableHead>
+                                    <TableHead>Observación</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-border divide-y">
                                 {cajas.data.length === 0 ? (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={10}
                                             className="text-muted-foreground py-12 text-center"
                                         >
@@ -422,47 +431,47 @@ export default function CajasConsolidadasIndex() {
                                                     </button>
                                                 )}
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     cajas.data.map((c) => (
-                                        <tr
+                                        <TableRow
                                             key={c.id}
                                             className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="text-foreground px-4 py-3 font-semibold">
+                                            <TableCell className="text-foreground px-4 py-3 font-semibold">
                                                 {c.vendedor.name}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3">
                                                 {c.sede}
-                                            </td>
-                                            <td className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
                                                 {c.fecha_apertura}
-                                            </td>
-                                            <td className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
                                                 {c.fecha_cierre || '—'}
-                                            </td>
-                                            <td className="text-foreground px-4 py-3 text-right font-mono">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-4 py-3 text-right font-mono">
                                                 {formatCurrency(
                                                     c.monto_apertura,
                                                 )}
-                                            </td>
-                                            <td className="text-foreground px-4 py-3 text-right font-mono font-medium">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-4 py-3 text-right font-mono font-medium">
                                                 {c.monto_contado_cierre !== null
                                                     ? formatCurrency(
                                                           c.monto_contado_cierre,
                                                       )
                                                     : '—'}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3 text-right font-mono">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3 text-right font-mono">
                                                 {c.monto_esperado_calculado !==
                                                 null
                                                     ? formatCurrency(
                                                           c.monto_esperado_calculado,
                                                       )
                                                     : '—'}
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3 text-center">
                                                 {c.estado === 'abierto' ? (
                                                     <span className="rounded-full bg-blue-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-blue-700">
                                                         En curso
@@ -490,8 +499,8 @@ export default function CajasConsolidadasIndex() {
                                                         )}
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3 text-center">
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                         c.estado === 'abierto'
@@ -501,15 +510,15 @@ export default function CajasConsolidadasIndex() {
                                                 >
                                                     {c.estado}
                                                 </span>
-                                            </td>
-                                            <td className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
                                                 {c.observacion || '—'}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     {/* Paginación */}

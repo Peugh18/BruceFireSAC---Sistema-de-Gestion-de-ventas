@@ -1,9 +1,19 @@
 import { router, usePage } from '@inertiajs/react';
-import { Activity, Filter, ShieldCheck } from 'lucide-react';
+import { Activity, Filter, ShieldCheck, Inbox } from 'lucide-react';
 import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
 import AuditoriaRoutes from '@/routes/gerente/auditoria';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 type AuditLogItem = {
     id: number;
@@ -147,7 +157,7 @@ export default function AuditoriaIndex() {
                             >
                                 Acción
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-auditoria-accion"
                                 value={accion}
                                 onChange={(e) => setAccion(e.target.value)}
@@ -161,7 +171,7 @@ export default function AuditoriaIndex() {
                                         {a}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -171,7 +181,7 @@ export default function AuditoriaIndex() {
                             >
                                 Usuario
                             </label>
-                            <select
+                            <NativeSelect
                                 id="gerente-auditoria-usuario"
                                 value={userId}
                                 onChange={(e) => setUserId(e.target.value)}
@@ -183,7 +193,7 @@ export default function AuditoriaIndex() {
                                         {u.name}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div>
@@ -240,66 +250,65 @@ export default function AuditoriaIndex() {
 
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                <tr>
-                                    <th className="px-4 py-3">Fecha</th>
-                                    <th className="px-4 py-3">Acción</th>
-                                    <th className="px-4 py-3">Usuario</th>
-                                    <th className="px-4 py-3">Entidad</th>
-                                    <th className="px-4 py-3">Detalle</th>
-                                    <th className="px-4 py-3">IP</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-border divide-y">
+                        <Table className="w-full text-left text-xs">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                <TableRow>
+                                    <TableHead>Fecha</TableHead>
+                                    <TableHead>Acción</TableHead>
+                                    <TableHead>Usuario</TableHead>
+                                    <TableHead>Entidad</TableHead>
+                                    <TableHead>Detalle</TableHead>
+                                    <TableHead>IP</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-border divide-y">
                                 {registros.data.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="text-muted-foreground py-8 text-center"
-                                        >
-                                            No se encontraron registros de
-                                            auditoría con estos filtros.
-                                        </td>
-                                    </tr>
+                                    <TableRow>
+                                        <TableCell colSpan={6}>
+                                            <Empty
+                                                icon={<Inbox />}
+                                                title="No se encontraron registros de auditoría con estos filtros."
+                                            />
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     registros.data.map((r) => (
-                                        <tr
+                                        <TableRow
                                             key={r.id}
                                             className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
                                                 {r.fecha}
-                                            </td>
-                                            <td className="px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
                                                 <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 font-mono text-[10px] font-bold text-zinc-700 uppercase">
                                                     {r.accion}
                                                 </span>
-                                            </td>
-                                            <td className="text-foreground px-4 py-3 font-semibold">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-4 py-3 font-semibold">
                                                 {r.usuario}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3">
                                                 {r.entidad
                                                     ? `${r.entidad} #${r.entidad_id}`
                                                     : '—'}
-                                            </td>
-                                            <td className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
                                                 {formatValues(r.new_values) !==
                                                 '—'
                                                     ? formatValues(r.new_values)
                                                     : formatValues(
                                                           r.old_values,
                                                       )}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3 font-mono text-[11px]">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3 font-mono text-[11px]">
                                                 {r.ip_address || '—'}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     {registros.links && registros.links.length > 3 && (

@@ -18,9 +18,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import recepciones from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type SedeOption = {
     id: number;
@@ -438,7 +447,7 @@ export default function RecepcionesCreate({
                                 Sede de Almacén Destino{' '}
                                 <span className="text-primary-strong">*</span>
                             </Label>
-                            <select
+                            <NativeSelect
                                 id="recepcion-sede-de-almacen-destino"
                                 value={data.sede_almacen_id}
                                 onChange={(e) =>
@@ -456,7 +465,7 @@ export default function RecepcionesCreate({
                                         {sede.ciudad || 'Principal'})
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div className="sm:col-span-2">
@@ -585,7 +594,7 @@ export default function RecepcionesCreate({
                                                         *
                                                     </span>
                                                 </Label>
-                                                <select
+                                                <NativeSelect
                                                     aria-label="Producto"
                                                     id={`recepcion-producto-${index}`}
                                                     value={item.product_id}
@@ -611,7 +620,7 @@ export default function RecepcionesCreate({
                                                                 : ''}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </NativeSelect>
                                             </div>
 
                                             <div>
@@ -944,44 +953,44 @@ export default function RecepcionesCreate({
                                                     </div>
 
                                                     <div className="border-border bg-card overflow-x-auto rounded-lg border">
-                                                        <table className="w-full min-w-[560px] text-xs">
-                                                            <thead>
-                                                                <tr className="bg-primary text-primary-foreground text-left text-[10px] font-bold tracking-wide uppercase">
-                                                                    <th className="w-12 px-2 py-2 text-center">
+                                                        <Table className="w-full min-w-[560px] text-xs">
+                                                            <TableHeader>
+                                                                <TableRow className="bg-primary text-primary-foreground text-left text-[10px] font-bold tracking-wide uppercase">
+                                                                    <TableHead className="w-12 text-center">
                                                                         Ítem
-                                                                    </th>
-                                                                    <th className="px-2 py-2">
+                                                                    </TableHead>
+                                                                    <TableHead>
                                                                         Capacidad
-                                                                    </th>
-                                                                    <th className="px-2 py-2">
+                                                                    </TableHead>
+                                                                    <TableHead>
                                                                         N° de
                                                                         serie
-                                                                    </th>
-                                                                    <th className="px-2 py-2">
+                                                                    </TableHead>
+                                                                    <TableHead>
                                                                         Marca
-                                                                    </th>
-                                                                    <th className="w-24 px-2 py-2">
+                                                                    </TableHead>
+                                                                    <TableHead className="w-24">
                                                                         Año fab.
-                                                                    </th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
+                                                                    </TableHead>
+                                                                </TableRow>
+                                                            </TableHeader>
+                                                            <TableBody>
                                                                 {item.unidades.map(
                                                                     (
                                                                         unit,
                                                                         uIdx,
                                                                     ) => (
-                                                                        <tr
+                                                                        <TableRow
                                                                             key={
                                                                                 uIdx
                                                                             }
                                                                             className="border-border border-t"
                                                                         >
-                                                                            <td className="text-muted-foreground px-2 py-1.5 text-center font-bold">
+                                                                            <TableCell className="text-muted-foreground px-2 py-1.5 text-center font-bold">
                                                                                 {uIdx +
                                                                                     1}
-                                                                            </td>
-                                                                            <td className="px-2 py-1.5">
+                                                                            </TableCell>
+                                                                            <TableCell className="px-2 py-1.5">
                                                                                 <Input
                                                                                     aria-label="Capacidad"
                                                                                     placeholder="Ej. 6 kg"
@@ -1003,8 +1012,8 @@ export default function RecepcionesCreate({
                                                                                     className="h-7 text-[11px]"
                                                                                     required
                                                                                 />
-                                                                            </td>
-                                                                            <td className="px-2 py-1.5">
+                                                                            </TableCell>
+                                                                            <TableCell className="px-2 py-1.5">
                                                                                 <Input
                                                                                     aria-label="Serie del fabricante"
                                                                                     placeholder="Serie del fabricante"
@@ -1025,8 +1034,8 @@ export default function RecepcionesCreate({
                                                                                     }
                                                                                     className="h-7 text-[11px]"
                                                                                 />
-                                                                            </td>
-                                                                            <td className="px-2 py-1.5">
+                                                                            </TableCell>
+                                                                            <TableCell className="px-2 py-1.5">
                                                                                 <Input
                                                                                     aria-label="Marca"
                                                                                     placeholder="Ej. BADGER"
@@ -1048,8 +1057,8 @@ export default function RecepcionesCreate({
                                                                                     className="h-7 text-[11px]"
                                                                                     required
                                                                                 />
-                                                                            </td>
-                                                                            <td className="px-2 py-1.5">
+                                                                            </TableCell>
+                                                                            <TableCell className="px-2 py-1.5">
                                                                                 <Input
                                                                                     aria-label="Año de fabricación"
                                                                                     type="number"
@@ -1078,12 +1087,12 @@ export default function RecepcionesCreate({
                                                                                     className="h-7 text-[11px]"
                                                                                     required
                                                                                 />
-                                                                            </td>
-                                                                        </tr>
+                                                                            </TableCell>
+                                                                        </TableRow>
                                                                     ),
                                                                 )}
-                                                            </tbody>
-                                                        </table>
+                                                            </TableBody>
+                                                        </Table>
                                                     </div>
                                                 </div>
                                             )}

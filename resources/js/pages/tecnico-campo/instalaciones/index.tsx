@@ -13,6 +13,7 @@ import React, { useState } from 'react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import InstalacionesRoutes from '@/routes/tecnico-campo/instalaciones';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 
 type Client = {
     id: number;
@@ -271,7 +272,7 @@ export default function InstalacionesIndex({
                 ) : (
                     instalaciones.data.map((order) => {
                         const estadoMeta = ESTADOS_MAP[order.estado] || {
-                            label: order.estado,
+                            label: etiquetaEstadoOrden(order.estado),
                             bg: 'bg-muted',
                             text: 'text-muted-foreground',
                             border: 'border-border',
@@ -332,7 +333,11 @@ export default function InstalacionesIndex({
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-1 text-[11px] font-bold text-sky-600 dark:text-sky-400">
-                                        <span>Registrar instalación</span>
+                                        <span>
+                                            {order.estado === 'cerrado'
+                                                ? 'Ver instalación'
+                                                : 'Registrar instalación'}
+                                        </span>
                                         <ArrowRight className="size-3.5" />
                                     </div>
                                 </div>

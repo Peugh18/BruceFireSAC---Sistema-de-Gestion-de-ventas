@@ -1,3 +1,4 @@
+import { Progreso } from '@/components/progreso';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -105,11 +106,11 @@ export function CargaLarga({ activo, titulo, detalle }: CargaLargaProps) {
     }
 
     return createPortal(
-        <div className="bg-background/75 animate-in fade-in-0 fixed inset-0 z-[60] grid place-items-center p-4 backdrop-blur-[2px] duration-200">
+        <div className="bg-background/75 motion-safe:animate-in motion-safe:fade-in-0 fixed inset-0 z-[60] grid place-items-center p-4 backdrop-blur-[2px] duration-200">
             <div
                 role="status"
                 aria-live="polite"
-                className="border-border bg-card animate-in fade-in-0 zoom-in-95 grid w-full max-w-[320px] justify-items-center gap-3 rounded-[16px] border px-6 py-6 text-center shadow-xl duration-200 ease-out"
+                className="border-border bg-card motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 grid w-full max-w-[320px] justify-items-center gap-3 rounded-[16px] border px-6 py-6 text-center shadow-xl duration-200 ease-out"
             >
                 <div className="relative grid h-[104px] place-items-end">
                     <ChispaAvatar pose="corre" size={96} animado />
@@ -118,9 +119,7 @@ export function CargaLarga({ activo, titulo, detalle }: CargaLargaProps) {
                 <p className="text-foreground text-[14px] font-bold text-balance">
                     {titulo}
                 </p>
-                <span className="barra-indeterminada" aria-hidden>
-                    <span />
-                </span>
+                <Progreso label={titulo} className="w-full" />
                 {detalle ? (
                     <p className="text-muted-foreground text-[12px]">
                         {detalle}

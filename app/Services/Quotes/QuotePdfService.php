@@ -19,10 +19,16 @@ class QuotePdfService
     {
         $quote->loadMissing('client', 'vendedor', 'items.product', 'items.service');
 
+        $company = CompanySetting::current();
+
         return Pdf::loadView('pdf.cotizacion', [
             'quote' => $quote,
-            'company' => CompanySetting::current(),
-            'logo' => $this->imagen(resource_path('images/brand/bruce-fire-logo-grafito.png')),
+            'company' => $company,
+            'marca' => [
+                'color' => $company->colorMarca(),
+                'texto' => $company->colorTextoSobreMarca(),
+            ],
+            'logo' => $company->logoParaPdf(),
             'bankAccounts' => CompanyBankAccount::query()->where('activo', true)->orderBy('orden')->get(),
         ])->setPaper('a4');
     }
@@ -43,10 +49,5 @@ class QuotePdfService
     public function nombreArchivo(Quote $quote): string
     {
         return "cotizacion-{$quote->numero}.pdf";
-    }
-
-    protected function imagen(string $ruta): ?string
-    {
-        return is_file($ruta) ? 'data:image/png;base64,'.base64_encode((string) file_get_contents($ruta)) : null;
     }
 }

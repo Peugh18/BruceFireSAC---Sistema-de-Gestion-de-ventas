@@ -15,11 +15,20 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { toast } from 'sonner';
 
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import GerenteLayout from '@/layouts/gerente-layout';
 import SedesRoutes from '@/routes/gerente/sedes';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type SedeTipo = 'tienda' | 'almacen' | 'mixta';
 
@@ -243,53 +252,51 @@ export default function SedesIndex() {
 
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                <tr>
-                                    <th className="px-4 py-3">Sede</th>
-                                    <th className="px-4 py-3">Tipo</th>
-                                    <th className="px-4 py-3">Ciudad</th>
-                                    <th className="px-4 py-3">
-                                        Almacén de stock
-                                    </th>
-                                    <th className="px-4 py-3">Trabajadores</th>
-                                    <th className="px-4 py-3">Estado</th>
-                                    <th className="px-4 py-3 text-right">
+                        <Table className="w-full text-left text-xs">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                <TableRow>
+                                    <TableHead>Sede</TableHead>
+                                    <TableHead>Tipo</TableHead>
+                                    <TableHead>Ciudad</TableHead>
+                                    <TableHead>Almacén de stock</TableHead>
+                                    <TableHead>Trabajadores</TableHead>
+                                    <TableHead>Estado</TableHead>
+                                    <TableHead className="text-right">
                                         Acciones
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-border divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-border divide-y">
                                 {sedes.length === 0 ? (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={7}
                                             className="text-muted-foreground py-8 text-center"
                                         >
                                             Todavía no hay sedes registradas.
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     sedes.map((sede) => (
-                                        <tr
+                                        <TableRow
                                             key={sede.id}
                                             className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="text-foreground px-4 py-3 font-semibold">
+                                            <TableCell className="text-foreground px-4 py-3 font-semibold">
                                                 <span className="flex items-center gap-1.5">
                                                     <MapPin className="text-primary-strong size-3.5" />
                                                     {sede.nombre}
                                                 </span>
-                                            </td>
-                                            <td className="px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
                                                 <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-bold text-zinc-700 uppercase">
                                                     {TIPO_LABELS[sede.tipo]}
                                                 </span>
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3">
                                                 {sede.ciudad ?? '—'}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3">
                                                 {sede.tipo === 'tienda' ? (
                                                     <span>
                                                         Del almacén{' '}
@@ -313,8 +320,8 @@ export default function SedesIndex() {
                                                         ) : null}
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="text-muted-foreground px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-4 py-3">
                                                 {sede.trabajadores.length ===
                                                 0 ? (
                                                     <span>Nadie asignado</span>
@@ -343,8 +350,8 @@ export default function SedesIndex() {
                                                         )}
                                                     </ul>
                                                 )}
-                                            </td>
-                                            <td className="px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                         sede.activo
@@ -356,8 +363,8 @@ export default function SedesIndex() {
                                                         ? 'Activa'
                                                         : 'Inactiva'}
                                                 </span>
-                                            </td>
-                                            <td className="px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
                                                 <div className="flex justify-end gap-1.5">
                                                     <button
                                                         aria-label="Editar sede"
@@ -392,12 +399,12 @@ export default function SedesIndex() {
                                                         <Power className="size-3.5" />
                                                     </button>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
 
@@ -456,7 +463,7 @@ export default function SedesIndex() {
                                 <label className="text-foreground/80 block font-semibold">
                                     Tipo *
                                 </label>
-                                <select
+                                <NativeSelect
                                     aria-label="Tipo *"
                                     value={form.data.tipo}
                                     onChange={(e) =>
@@ -474,7 +481,7 @@ export default function SedesIndex() {
                                             {TIPO_LABELS[tipo]}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 <p className="text-muted-foreground mt-1">
                                     {TIPO_DESCRIPCION[form.data.tipo]}
                                 </p>
@@ -490,7 +497,7 @@ export default function SedesIndex() {
                                     <label className="text-foreground/80 block font-semibold">
                                         Almacén del que saca stock *
                                     </label>
-                                    <select
+                                    <NativeSelect
                                         aria-label="Almacén del que saca stock *"
                                         required
                                         value={form.data.almacen_id}
@@ -510,7 +517,7 @@ export default function SedesIndex() {
                                                 {a.nombre}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                     {form.errors.almacen_id && (
                                         <p className="mt-1 text-red-600">
                                             {form.errors.almacen_id}

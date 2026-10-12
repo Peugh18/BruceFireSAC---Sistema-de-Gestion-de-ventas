@@ -1,3 +1,4 @@
+import { Pasos } from '@/components/progreso';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 
@@ -9,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import RoleLayout from '@/layouts/role-layout';
 import guias from '@/routes/guias';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type Item = {
     id: number;
@@ -183,6 +185,34 @@ export default function GuiaShow({
 
                 <Card className="space-y-3 p-4 text-sm">
                     <h2 className="font-semibold">Origen y estado</h2>
+                    <Pasos
+                        label="Estado de la guía"
+                        variante="cheuron"
+                        pasos={[
+                            'Borrador',
+                            'Enviada',
+                            'Respuesta',
+                            'Lista para trasladar',
+                        ].map((label, indice) => {
+                            const actual = guia.lista_para_trasladar
+                                ? 3
+                                : guia.estado_sunat === 'borrador'
+                                  ? 0
+                                  : guia.estado_sunat === 'enviada'
+                                    ? 1
+                                    : 2;
+                            return {
+                                id: label,
+                                label,
+                                estado:
+                                    indice < actual || guia.lista_para_trasladar
+                                        ? 'completado'
+                                        : indice === actual
+                                          ? 'actual'
+                                          : 'pendiente',
+                            };
+                        })}
+                    />
                     <dl className="grid gap-3 sm:grid-cols-2">
                         <div>
                             <dt className="text-muted-foreground text-xs">
@@ -355,7 +385,7 @@ export default function GuiaShow({
                             </div>
                             <div>
                                 <Label htmlFor="modalidad">Modalidad</Label>
-                                <select
+                                <NativeSelect
                                     id="modalidad"
                                     className={SELECT}
                                     value={form.data.modalidad}
@@ -372,7 +402,7 @@ export default function GuiaShow({
                                     <option value="02">
                                         Transporte privado (propio)
                                     </option>
-                                </select>
+                                </NativeSelect>
                             </div>
                             {privado ? (
                                 <>
@@ -380,7 +410,7 @@ export default function GuiaShow({
                                         <Label htmlFor="transport_vehicle_id">
                                             Vehículo
                                         </Label>
-                                        <select
+                                        <NativeSelect
                                             id="transport_vehicle_id"
                                             className={SELECT}
                                             value={
@@ -401,7 +431,7 @@ export default function GuiaShow({
                                                     {v.placa}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         {form.errors.transport_vehicle_id ? (
                                             <p className="text-destructive-strong">
                                                 {
@@ -415,7 +445,7 @@ export default function GuiaShow({
                                         <Label htmlFor="driver_id">
                                             Conductor
                                         </Label>
-                                        <select
+                                        <NativeSelect
                                             id="driver_id"
                                             className={SELECT}
                                             value={form.data.driver_id}
@@ -434,7 +464,7 @@ export default function GuiaShow({
                                                     {c.nombres} {c.apellidos}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         {form.errors.driver_id ? (
                                             <p className="text-destructive-strong">
                                                 {form.errors.driver_id}

@@ -966,3 +966,96 @@
 - #3 (ServiceTrade/Uptick) Cotizar la recarga por empresa: en «Por vencer → Por empresa», el botón «Cotizar recarga (N)» crea una sola cotización con todos los extintores con serie vencidos o por vencer del cliente (el endpoint ya aceptaba varios; las líneas se agrupan por servicio con su cantidad). Comprobado por botones: COT-0005 por S/ 90 (2 extintores de CO2 × S/ 45) en un clic, antes dos ofertas. Prueba nueva en `MejorasProcesosTest`.
 - Verificado por botones con cierre de sesión por el botón y entrada por el formulario.
 - Sin hacer: repuestos sugeridos por hallazgo (función nueva, necesita REQ en el DRS, historia y fila en la Matriz); offline, préstamos, portal y margen por orden, a decisión del dueño.
+
+### 2026-10-11 — Inventario de progreso con recorrido de los cinco roles
+
+- El dueño pidió revisar todos los roles antes del informe; inventario anterior de solo código reemplazado por INVENTARIO_PROGRESO_POR_ROLES_2026_10_11.md.
+- Gerente, Vendedor, Almacén, Planta y Campo recorridos por menús/enlaces/pestañas; acceso y salida con formulario/botón. Listas, fichas y formularios abiertos sin guardar operaciones del negocio.
+- Servidor local iniciado; DemoAuditoriaSeeder confirmó datos existentes. Algunos estados demo ya avanzados no se repusieron. Guía aceptada observada explícitamente SIMULADO.
+- Hallazgos H1–H10: check de Por asignar; visitas de campo enviadas a recojo; conteos/universos distintos; cuota pagada aún rotulada vencida; checklist precargado; aviso en el mínimo; móvil/Chispa; contexto financiero y etiquetas.
+- Cinco pantallas representativas a 375 px en claro/oscuro y muestra de Tab/Escape del alta de usuario; tema devuelto a claro, viewport restaurado, sesión cerrada. Registro disponible de consola sin errores/avisos al finalizar.
+- Sin axe, contraste medido, teclado completo, hardware, primer acceso/2FA ni emisión externa. Sin check/tsc/Pint/PHPStan/Pest: aplicación no modificada. No heredar como verificadas las pruebas previas.
+- Rama codex/inventario-progreso-roles desde main; solo informe, PLAN y BITACORA, sin commit ni push.
+- Pendiente aprobación del inventario/alcance; piloto recomendado ahora orden del Vendedor. No hay fases implementadas ni autorización nueva para corregir H1–H10.
+
+### Auditoría de operaciones de todos los roles — 11/10/2026 (en curso)
+
+- El dueño amplió el alcance: ejecutar procesos completos, no solo secciones principales. Informe en AUDITORIA_OPERACIONES_POR_BOTONES_2026_10_11.md; código de aplicación sin modificar.
+- Operaciones ficticias AUD TOTAL1110 con respaldo previo. Recepción/no conformidad/corrección/ajuste/traslado con GRE simulada; cotización→nota interna crédito→pago parcial→anulación; arqueo/reapertura; taller→deficiencia→cotización/autorización→consumo→certificado→entregaCampo; mantenimiento, inspección, instalación y recojo→Planta ejecutados por botones.
+- Nuevo500 reproducido al cotizar desde ficha (clients.sede_id inexistente); peso de líneaGRE no conservado; estados y textos inconsistentes descritos con evidencia. Sin correcciones hasta aprobación.
+- CuentaChimbote existe pero password rechazado. Recepción destino bloqueada; sin cambiar credenciales. Envíos fiscales reales y cambios de acceso excluidos de esta ejecución.
+- Stock7 conciliado tras todas las operaciones del producto19; venta19 anulada retira cuotas. Producto19, cliente6, recepción5/6 y órdenes14/15/16 son fixtures locales persistentes; no borrados.
+- Tsc/PHPStan/Pint pasaron. Check señaló formato de informes. Suite completa iniciada una vez serial contra bruce_fire_testing; resultado pendiente. Sin commit/push/dependencias.
+- Pendientes detallados en informe: combinaciones fiscales simuladas, otros controles/CRUD, móvil/teclado integral, axe, hardware y algunos documentos. Auditoría total NO terminada.
+
+### 2026-10-11 — Continuación de auditoría: notas, mostrador y calidad
+
+- NC descripción e ND aumento ficticias solicitadas por Vendedor, rechazadas por Gerente, rechazo y motivo confirmados desde venta original; sin número ni envío fiscal. Orden 16 entregada en mostrador con receptor ficticio, cerrada, acta PDF descargada y renderizada; conserva OG y PH. No conformidad física real.
+- Cotizar recarga desde Por vencer crea COT-0008 con dos servicios por 90 en un clic. COT-DEMO-2 rechazada, retira acciones de venta. Muestra de cotizaciones a 375 px claro/oscuro: desplazamiento horizontal y Chispa sobre contenido.
+- Precisado GRE: el servidor reemplaza ítems del traslado por datos del origen; el campo de peso parece editable pero se descarta. No afirmar fallo genérico de persistencia ni cambiar reglas.
+- Suite completa terminó: 1028/1028 pruebas, 5612 aserciones, 764445 ms, una única corrida serial. Tsc, PHPStan y Pint pasaron; formato de documentos corregido y check final pendiente de registrar.
+- Auditoría total sigue abierta: destino Chimbote sin credencial válida, emisión fiscal externa, acceso/2FA, hardware, axe y teclado por cada pantalla, combinaciones indicadas en informe. No código de aplicación, dependencias, commit ni push.
+
+### 2026-10-11 — Traslado recibido en Chimbote
+
+- A pedido del dueño se buscó la cuenta en registros del proyecto. Se recuperó la credencial vigente de su auditoría anterior, sin adivinar/resetear/cambiar acceso. Login por formulario de Almacen Chimbote Demo; Confirmar llegada termina traslado 2, Kardex destino +1, Consulta Rápida con Enter muestra 1 en Chimbote. Saldo origen 7, total 8; sesión cerrada por botón.
+- Hallazgo adicional: Consulta Rápida restringe stock por sede pero muestra movimientos de producto de otras sedes y responsables. Confirmado por pantalla y StockLookupController; requiere revisar política de visibilidad, sin cambiar permisos ni código.
+- PDF de reporte aún no observable; cotización demo visualizada en su visor. Informe mantiene límites de exportaciones/accesibilidad/hardware y emisión real; no afirmar auditoría total concluida.
+
+- Check final pasó: 229 archivos formateados y 180 sin avisos/errores de lint. Git diff --check pasó. Solo documentación; PLAN actualizado está ignorado por el repositorio. La suite no se repitió tras cambios únicamente documentales.
+
+### 2026-10-11 — Reporte de mejoras con shadcn/ui y Tremor
+
+- A pedido del dueño se redactó PROPUESTA_UI_SHADCN_TREMOR_2026_10_11.md: referencias oficiales concretas, adaptación de marca, plan por rol/pantalla con datos/esfuerzo/riesgo, familia compartida, límites y fases A/B/C.
+- Skill design-system aplicada. Referencias verificadas: shadcn Progress/Card/Badge; Tremor KPI Cards, Status Monitoring, Tables, Bar Lists y templates Overview/Planner/Insights. Solo inspiración de composición; no instalar sus dependencias ni migrar el stack.
+- Condiciones del diseño: sin clics/pasos/campos nuevos, metas/ETA inventadas ni cambios de reglas fiscales/inventario/permisos. Piloto recomendado: orden del Vendedor. Correcciones funcionales separadas para aprobación.
+- Solo documentación; no implementación ni nueva operación del negocio. La suite completa anterior no se repite por el reporte. Formato/check de esta entrega se registrará al finalizar.
+
+- Verificación del reporte: npm run check pasó (230 archivos formateados, 180 sin avisos/errores de lint), git diff --check pasó. Se comprobó y precisó recojos/show.tsx en el mapa; sin cambios de aplicación ni corrida nueva de Pest.
+
+### 2026-10-11 — Inicio aprobado de componentes y piloto (Fase A)
+
+- El dueño aprobó comenzar con «a ver go». Familia sin dependencias en components/progreso/: barra determinada/indeterminada, etiqueta, segmentos, anillo y Pasos numerado/cheurón/puntos.
+- Piloto Vendedor: detalle y lista de órdenes comparten pasosOrdenAtencion; Por asignar no recibe check si falta técnico, incluso con estado avanzado. Anulada/desconocida no simula una secuencia exitosa. Seguimiento de taller migra a Pasos con la etapa enviada por servidor.
+- ResumenRevision delega en Progreso: sin progress nativo ni azul; conserva conteos. Inspección y mantenimiento comprobados por botones con aria 1/1, móvil 375 claro/oscuro. OT-DEMO-7 probado sin guardar: falta técnico, etapa en proceso; Enter abre orden y edición, Tab a fecha, Escape cierra. Indicadores sin interacción/foco nuevo.
+- Comprobaciones iniciales: 5 pruebas Node nativas de representación pasaron; Pest afectado 12/12 con 82 aserciones serial; tsc, check, build, Pint y PHPStan pasaron. Ajuste posterior de texto visible Etapa actual y consumidor seguimiento pendiente de nueva compilación/recorrido.
+- Axe no instalado; no se añadió dependencia ni se ejecutó mediante inyección. Contraste medido y teclado integral aún pendientes; no declarar WCAG completa. Solo cambios frontend y prueba de representación; backend/reglas/accesos intactos.
+- Continuar fases aprobadas y guardar por fase; no commit/push. Suite completa de implementación reservada al final, sin pruebas paralelas; no confundir con la corrida anterior de auditoría.
+
+### 2026-10-11 — Revisión y cierre del trabajo de GPT (progreso y UX)
+
+- Revisada la familia components/progreso (accesibilidad, tokens, motion-safe) y sus usos en los cinco roles: sin hallazgos bloqueantes.
+- Añadido: pasosCotizacion (Borrador → Enviada → Aceptada → Vendida, compacto en la lista de cotizaciones; rechazada/vencida/anulada sin secuencia), etiquetas en español de estado de orden en Campo (lib/estados-orden.ts), limpieza del panel de Campo (chip «Hoy» falso, azules sueltos).
+- Corregido: 500 al cotizar desde la ficha del cliente (QuoteController::create filtraba clients por sede, columna inexistente); H2 acción sugerida y filtro «Recojos» de Campo ya no tratan una inspección/instalación/mantenimiento por recibir como recojo; H3 total de servicios de Campo coincide con la suma de sus tarjetas; H5 cuota pagada ya no dice «Vencido hace Nd» (ahora «Pagada · vencía …»).
+- Pruebas: Node 9/9, Pest TecnicoCampoDashboard (con caso nuevo) y CotizacionDesdeCliente en verde; tsc, check, Pint y PHPStan pasaron. Suite completa final lanzada una sola vez, pendiente de registrar.
+- Pendiente (sin tocar): H4 entregas, H9, H10 restante, peso GRE editable que se descarta, Consulta Rápida por sede, hitos en recojos/entregas/instalaciones show, KpiCard en paneles restantes. No commit/push.
+
+### 2026-10-11 — Cierre de la modernización de progreso/KPI (Fases B y C)
+
+- Pasos «Por entregar → Entregada → Cerrada» en la ficha de entrega de Campo (compactos a 375 px) y etiqueta de estado en español en instalaciones.
+- Nuevo KpiFiltro (cifra que filtra, aria-pressed, tokens de marca) en los paneles de Campo y Planta; azules sueltos de esos paneles pasan a tokens primary. Cajas, Cobranzas y Reportes del Gerente usan KpiCard; «Vencido» en cero ya no sale en rojo.
+- Decisión: el azul restante (~170 usos) es el color informativo del sistema (token info); no se mezcla con el rojo de marca. Notas del Gerente y recojos no reciben pasos: solo hay una cola pendiente, sería decoración.
+- Verificado por botones: Campo (375 px claro/oscuro, filtro Pendientes con aria-pressed), ficha de entrega, Gerente Cajas/Cobranzas/Reportes con axe (WCAG 2 A/AA/2.2 AA) sin violaciones en claro y oscuro. Login/logout por formulario y botón.
+- Pruebas: Pest completo 1030/1030 (antes de estos cambios solo-frontend), Node 10/10, tsc, check, build, Pint y PHPStan en verde. No commit/push.
+- Quedan fuera por decisión del dueño: Consulta Rápida por sede, peso GRE editable, H4/H9/H10.
+
+### 2026-10-11 — Cierre de pendientes H4, H9, H10 y peso de guía
+
+- H4: la lista de entregas de Campo en «Todas» usa el mismo universo que sus cifras (listas, entregadas, cerradas).
+- H10: la tarjeta de instalación cerrada dice «Ver instalación» en vez de «Registrar instalación».
+- H9: el resumen del Vendedor aclara «sin descontar notas de crédito»; el del Gerente ya decía «netas».
+- Guía de remisión: el peso por línea es de solo lectura (viene del producto); el peso bruto total sigue editable.
+- Pruebas de entrega de Campo 14/14, tsc, check, build, Pint y PHPStan en verde. Pendiente solo Consulta Rápida por sede (decisión del dueño). No commit/push.
+
+### 2026-10-11 — Logo del comprobante
+
+- Causa: el Gerente no había subido logo en Configuración y el comprobante solo usaba ese; la cotización siempre usa el de la marca. CompanySetting::logoParaPdf usa ahora el logo de la marca como respaldo y el del Gerente cuando existe. Prueba nueva en CompanySettingModuleTest.
+- Los campos (teléfono, correo, web, condiciones, leyenda, cuenta de detracción) sí se leen de la configuración; están vacíos en la base y por eso no salen: se llenan en Gerente → Configuración.
+- Pest completo 1030/1030 antes del cambio; después: CompanySettingModule, BillingModule y NotaVenta en verde.
+- Documentos alineados a la configuración del Gerente: la cotización usa el logo, el color de marca y el mensaje de agradecimiento de Configuración; el acta de conformidad dibuja el logo y ya no inventa RUC, teléfono ni correo cuando faltan; la constancia de recepción usa razón social y RUC reales. Pruebas de PDF de cotización, actas y configuración 30/30.
+
+### 2026-10-11 — Componentes shadcn en todo el sistema
+
+- A pedido del dueño: las tarjetas del Gerente (Caja, Cobranzas, Reportes) vuelven a su diseño anterior (solo se conserva «Vencido» en cero sin rojo); los puntos de estado de Cotizaciones se quedan.
+- Nuevos en components/ui: table, empty y native-select (sin dependencias). Las 29 pantallas con tabla armada a mano usan Table (encabezado legible y filas uniformes); 39 archivos con <select> usan NativeSelect (misma cara que Input); 17 estados vacíos simples usan Empty.
+- Verificado por navegador (vendedor): cotizaciones, ventas, cobranzas, órdenes y certificados; axe sin violaciones. tsc, check y build en verde. Solo frontend.

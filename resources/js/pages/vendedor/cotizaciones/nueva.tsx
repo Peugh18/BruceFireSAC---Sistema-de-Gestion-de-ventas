@@ -23,6 +23,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import cotizaciones from '@/routes/vendedor/cotizaciones';
 import type { Team } from '@/types';
@@ -351,9 +359,9 @@ export default function NuevaCotizacion({
                         {fieldError(form.errors, 'items')}
 
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse text-[12.5px]">
-                                <thead>
-                                    <tr>
+                            <Table className="w-full border-collapse text-[12.5px]">
+                                <TableHeader>
+                                    <TableRow>
                                         {[
                                             'Ítem',
                                             'Cant.',
@@ -362,34 +370,34 @@ export default function NuevaCotizacion({
                                             'Total',
                                             '',
                                         ].map((h) => (
-                                            <th
+                                            <TableHead
                                                 key={h}
-                                                className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
+                                                className="text-left"
                                             >
                                                 {h || (
                                                     <span className="sr-only">
                                                         Acciones
                                                     </span>
                                                 )}
-                                            </th>
+                                            </TableHead>
                                         ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {form.data.items.length === 0 ? (
-                                        <tr>
-                                            <td
+                                        <TableRow>
+                                            <TableCell
                                                 colSpan={6}
                                                 className="text-muted-foreground px-2.5 py-10 text-center"
                                             >
                                                 Agrega un producto o servicio
                                                 para empezar.
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ) : (
                                         form.data.items.map((item) => (
-                                            <tr key={item.key}>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                            <TableRow key={item.key}>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <span className="text-foreground flex items-center gap-2 font-semibold">
                                                         {item.tipo ===
                                                         'service' ? (
@@ -402,8 +410,8 @@ export default function NuevaCotizacion({
                                                     <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
                                                         {item.codigo ?? '—'}
                                                     </span>
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             aria-label="Disminuir cantidad"
@@ -469,8 +477,8 @@ export default function NuevaCotizacion({
                                                             <Plus className="size-3" />
                                                         </button>
                                                     </div>
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <Input
                                                         aria-label="Precio unitario"
                                                         type="number"
@@ -494,8 +502,8 @@ export default function NuevaCotizacion({
                                                         }
                                                         className="border-border h-8 w-24 rounded-[7px] text-[12px]"
                                                     />
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <Input
                                                         aria-label="Descuento"
                                                         type="number"
@@ -517,15 +525,15 @@ export default function NuevaCotizacion({
                                                         }
                                                         className="border-border h-8 w-20 rounded-[7px] text-[12px]"
                                                     />
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                     {money(
                                                         item.cantidad *
                                                             item.precio_unitario -
                                                             item.descuento,
                                                     )}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-2.5">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-2.5">
                                                     <Button
                                                         aria-label="Eliminar línea"
                                                         type="button"
@@ -544,12 +552,12 @@ export default function NuevaCotizacion({
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </Button>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ))
                                     )}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </Card>
                 </div>

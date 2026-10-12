@@ -12,19 +12,19 @@
         @page { margin: 16mm 15mm 18mm; }
         body { font-family: Helvetica, Arial, sans-serif; color: #1b1918; font-size: 10.5px; line-height: 1.4; }
         table { border-collapse: collapse; width: 100%; }
-        .rojo { color: #d20404; }
+        .rojo { color: {{ $marca['color'] }}; }
         .gris { color: #6b6965; }
 
         .cabecera td { vertical-align: middle; }
-        .cabecera .logo img { width: 62mm; }
-        .caja { border: 1.4px solid #d20404; border-radius: 6px; text-align: center; padding: 7px 10px; }
-        .caja .titulo { font-size: 15px; font-weight: bold; letter-spacing: 3px; color: #d20404; }
+        
+        .caja { border: 1.4px solid {{ $marca['color'] }}; border-radius: 6px; text-align: center; padding: 7px 10px; }
+        .caja .titulo { font-size: 15px; font-weight: bold; letter-spacing: 3px; color: {{ $marca['color'] }}; }
         .caja .numero { font-size: 14px; font-weight: bold; font-family: 'DejaVu Sans Mono', monospace; margin-top: 2px; }
         .caja .fechas { font-size: 9px; color: #3f3d3b; margin-top: 3px; }
-        .empresa { margin-top: 6px; font-size: 9px; color: #3f3d3b; border-bottom: 2px solid #d20404; padding-bottom: 7px; }
+        .empresa { margin-top: 6px; font-size: 9px; color: #3f3d3b; border-bottom: 2px solid {{ $marca['color'] }}; padding-bottom: 7px; }
         .empresa b { color: #1b1918; }
 
-        .seccion { margin-top: 12px; font-size: 9px; font-weight: bold; letter-spacing: 1.5px; color: #d20404; text-transform: uppercase; }
+        .seccion { margin-top: 12px; font-size: 9px; font-weight: bold; letter-spacing: 1.5px; color: {{ $marca['color'] }}; text-transform: uppercase; }
         .datos { margin-top: 4px; background: #f6f5f3; border-radius: 5px; }
         .datos td { padding: 4px 9px; font-size: 10px; vertical-align: top; }
         .datos .et { width: 19%; color: #6b6965; font-weight: bold; }
@@ -40,7 +40,7 @@
         .totales { margin-top: 8px; }
         .totales td { padding: 3px 8px; }
         .totales .monto { text-align: right; font-weight: bold; }
-        .totales .total td { background: #d20404; color: #fff; font-size: 13px; font-weight: bold; padding: 6px 8px; }
+        .totales .total td { background: {{ $marca['color'] }}; color: {{ $marca['texto'] }}; font-size: 13px; font-weight: bold; padding: 6px 8px; }
 
         .condiciones { margin-top: 8px; font-size: 9.5px; }
         .condiciones li { margin-bottom: 2px; }
@@ -53,7 +53,7 @@
         <tr>
             <td class="logo">
                 @if ($logo)
-                    <img src="{{ $logo }}" alt="Extintores Bruce Fire">
+                    <img src="{{ $logo['src'] }}" alt="Logo de la empresa" style="width: {{ $logo['ancho'] }}px; height: {{ $logo['alto'] }}px;">
                 @else
                     <b style="font-size: 18px;">{{ $company->razon_social }}</b>
                 @endif
@@ -165,7 +165,7 @@
     @endif
 
     <div class="final">
-        Gracias por su preferencia. Para aceptar esta cotización responda a este mensaje o llámenos.
+        {{ $company->mensaje_agradecimiento ?: 'Gracias por su preferencia.' }} Para aceptar esta cotización responda a este mensaje o llámenos.
         @if ($company->leyenda_pie)
             <br><i>{{ $company->leyenda_pie }}</i>
         @endif

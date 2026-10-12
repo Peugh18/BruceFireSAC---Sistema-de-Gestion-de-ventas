@@ -1,3 +1,4 @@
+import { KpiCard } from '@/components/kpi-card';
 import { Link, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -227,7 +228,7 @@ export default function VendedorDashboard({
         {
             label: 'Ventas de hoy',
             value: soles(ventas_hoy.total),
-            detail: `${ventas_hoy.count} ventas · ticket promedio ${soles(ventas_hoy.ticket_promedio)}`,
+            detail: `${ventas_hoy.count} ventas emitidas · ticket promedio ${soles(ventas_hoy.ticket_promedio)} · sin descontar notas de crédito`,
         },
         {
             label: 'Cotizaciones del mes',
@@ -323,20 +324,12 @@ export default function VendedorDashboard({
                     className="bf-summary border-border bg-card grid grid-cols-2 overflow-hidden rounded-xl border sm:grid-cols-4"
                 >
                     {resumen.map((item) => (
-                        <div
+                        <KpiCard
                             key={item.label}
-                            className="border-border border-r p-4 last:border-r-0 lg:p-5"
-                        >
-                            <h2 className="text-muted-foreground text-xs">
-                                {item.label}
-                            </h2>
-                            <p className="mt-2 text-[24px] leading-tight font-semibold tracking-tight tabular-nums lg:text-[28px]">
-                                {item.value}
-                            </p>
-                            <p className="text-muted-foreground mt-2 text-[11px] leading-relaxed">
-                                {item.detail}
-                            </p>
-                        </div>
+                            titulo={item.label}
+                            valor={item.value}
+                            detalle={item.detail}
+                        />
                     ))}
                 </section>
 

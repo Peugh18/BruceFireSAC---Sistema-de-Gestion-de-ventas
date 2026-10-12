@@ -17,6 +17,14 @@ import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import ventas from '@/routes/vendedor/ventas';
@@ -377,12 +385,12 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-[12.5px]">
+                        <Table className="w-full border-collapse text-[12.5px]">
                             <caption className="sr-only">
                                 Ventas y estado de sus comprobantes
                             </caption>
-                            <thead>
-                                <tr>
+                            <TableHeader>
+                                <TableRow>
                                     {[
                                         'Venta',
                                         'Cliente',
@@ -392,25 +400,25 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                         'Estado',
                                         'Acciones',
                                     ].map((column) => (
-                                        <th
+                                        <TableHead
                                             key={column}
                                             scope="col"
-                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left text-[11px] font-medium whitespace-nowrap"
+                                            className="text-left whitespace-nowrap"
                                         >
                                             {column}
-                                        </th>
+                                        </TableHead>
                                     ))}
-                                </tr>
-                            </thead>
-                            <tbody>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {recargando ? (
                                     <FilasCargando
                                         columnas={7}
                                         filas={sales.data.length}
                                     />
                                 ) : sales.data.length === 0 ? (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={7}
                                             className="text-muted-foreground px-4 py-12 text-center"
                                         >
@@ -461,24 +469,24 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                     </Button>
                                                 )}
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     sales.data.map((sale) => (
-                                        <tr
+                                        <TableRow
                                             key={sale.id}
                                             className="hover:bg-muted/40"
                                         >
-                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
+                                            <TableCell className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                 {sale.numero_interno}
-                                            </td>
-                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
+                                            </TableCell>
+                                            <TableCell className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
                                                 {sale.cliente}
-                                            </td>
-                                            <td className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
+                                            </TableCell>
+                                            <TableCell className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
                                                 {fechaCorta(sale.fecha)}
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                 <span className="bg-muted text-foreground/80 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">
                                                     {sale.comprobante ??
                                                         sale.comprobante_tipo.replace(
@@ -497,19 +505,19 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                         }
                                                     </div>
                                                 ) : null}
-                                            </td>
-                                            <td className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
+                                            </TableCell>
+                                            <TableCell className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                 {money(sale.total)}
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                 <Badge
                                                     className={`rounded-full px-2.5 py-1 text-[10.5px] font-bold capitalize shadow-none ${statusBadge(sale.estado)}`}
                                                 >
                                                     <CheckCircle2 className="size-3" />
                                                     {sale.estado}
                                                 </Badge>
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                 <div className="flex gap-1.5">
                                                     <Button
                                                         aria-label="Ver venta"
@@ -580,12 +588,12 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                         </Button>
                                                     ) : null}
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">

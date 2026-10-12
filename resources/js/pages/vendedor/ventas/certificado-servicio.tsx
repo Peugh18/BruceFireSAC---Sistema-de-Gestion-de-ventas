@@ -7,10 +7,19 @@ import ReferenciaField from '@/components/referencia-field';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useClienteFicha } from '@/hooks/use-cliente-ficha';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type Columna = {
     clave: string;
@@ -283,11 +292,11 @@ export default function CertificadoServicio({
                         </Button>
                     </div>
                     <div className="border-border overflow-x-auto rounded-[10px] border">
-                        <table className="w-full min-w-[720px] text-[12.5px]">
-                            <thead className="bg-muted/50 text-muted-foreground text-left text-[10px] font-bold uppercase">
-                                <tr>
+                        <Table className="w-full min-w-[720px] text-[12.5px]">
+                            <TableHeader className="bg-muted/50 text-muted-foreground text-left text-[10px] font-bold uppercase">
+                                <TableRow>
                                     {tipo.columnas.map((c) => (
-                                        <th key={c.clave} className="px-2 py-2">
+                                        <TableHead key={c.clave}>
                                             {c.titulo}
                                             {c.unidad ? ` (${c.unidad})` : ''}
                                             {c.obligatorio ? (
@@ -296,14 +305,14 @@ export default function CertificadoServicio({
                                                     *
                                                 </span>
                                             ) : null}
-                                        </th>
+                                        </TableHead>
                                     ))}
-                                    <th className="w-16" />
-                                </tr>
-                            </thead>
-                            <tbody>
+                                    <TableHead className="w-16" />
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {filas.map((fila, i) => (
-                                    <tr
+                                    <TableRow
                                         key={i}
                                         className="border-border border-t align-top"
                                     >
@@ -322,12 +331,12 @@ export default function CertificadoServicio({
                                                 );
 
                                             return (
-                                                <td
+                                                <TableCell
                                                     key={c.clave}
                                                     className="px-2 py-1.5"
                                                 >
                                                     {c.tipo === 'resultado' ? (
-                                                        <select
+                                                        <NativeSelect
                                                             aria-label={`Resultado de ${c.clave}`}
                                                             value={
                                                                 valor ||
@@ -359,7 +368,7 @@ export default function CertificadoServicio({
                                                                     </option>
                                                                 ),
                                                             )}
-                                                        </select>
+                                                        </NativeSelect>
                                                     ) : (
                                                         <Input
                                                             aria-label={`${c.titulo}: fila ${i + 1}`}
@@ -411,10 +420,10 @@ export default function CertificadoServicio({
                                                             {error}
                                                         </div>
                                                     ) : null}
-                                                </td>
+                                                </TableCell>
                                             );
                                         })}
-                                        <td className="px-2 py-1.5">
+                                        <TableCell className="px-2 py-1.5">
                                             <div className="flex gap-1">
                                                 <button
                                                     aria-label="Duplicar fila"
@@ -459,11 +468,11 @@ export default function CertificadoServicio({
                                                     <Trash2 className="size-3" />
                                                 </button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </Card>
 

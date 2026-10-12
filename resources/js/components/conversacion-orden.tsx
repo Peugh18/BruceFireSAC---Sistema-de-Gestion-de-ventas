@@ -5,6 +5,7 @@ import { show as verEvidencia } from '@/routes/evidencias';
 import { store as enviarMensaje } from '@/routes/ordenes/mensajes';
 import type { Team } from '@/types';
 import { toast } from 'sonner';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export interface EventoConversacion {
     id: number;
@@ -88,7 +89,7 @@ export default function ConversacionOrden({
 
             <ol className="max-h-96 space-y-2 overflow-y-auto">
                 {conversacion.eventos.length === 0 && (
-                    <li className="text-xs text-neutral-500">
+                    <li className="text-muted-foreground text-xs">
                         Todavía no hay mensajes en esta orden.
                     </li>
                 )}
@@ -197,7 +198,7 @@ export default function ConversacionOrden({
                             >
                                 Extintor del que hablas
                             </label>
-                            <select
+                            <NativeSelect
                                 aria-label="Extintor del que hablas"
                                 id={`equipo-${ordenId}`}
                                 value={form.data.equipment_id}
@@ -212,7 +213,7 @@ export default function ConversacionOrden({
                                         {e.serie}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </>
                     )}
                     <BotonFoto
@@ -244,7 +245,7 @@ export default function ConversacionOrden({
                             form.processing ||
                             (!form.data.mensaje.trim() && !form.data.archivo)
                         }
-                        className="ml-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-amber-600 px-4 text-xs font-bold text-white disabled:opacity-50"
+                        className="bg-primary text-primary-foreground ml-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-4 text-xs font-bold disabled:opacity-50"
                     >
                         <Send className="h-4 w-4" />
                         Enviar

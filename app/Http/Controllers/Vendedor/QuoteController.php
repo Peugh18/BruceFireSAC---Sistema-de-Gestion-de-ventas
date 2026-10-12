@@ -89,8 +89,8 @@ class QuoteController extends Controller
         return Inertia::render('vendedor/cotizaciones/nueva', [
             // Precarga desde el enlace "Nueva cotización" de la ficha del cliente (?client_id=).
             'cliente' => $request->filled('client_id')
+                // El cliente se comparte entre sedes: no hay clients.sede_id que filtrar.
                 ? Client::query()
-                    ->when($request->user()->sedeRestringidaId(), fn ($query, int $sede) => $query->where('sede_id', $sede))
                     ->whereKey($request->integer('client_id'))
                     ->first(['id', 'tipo_documento', 'razon_social', 'numero_documento'])
                 : null,

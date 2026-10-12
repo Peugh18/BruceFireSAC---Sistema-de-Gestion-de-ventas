@@ -5,9 +5,18 @@ import { useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 import NuevoUsuarioDialog from './nuevo-usuario-dialog';
 import UsuariosRoutes from '@/routes/gerente/usuarios';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type UsuarioItem = {
     id: number;
@@ -222,26 +231,20 @@ export default function UsuariosIndex() {
                     {tab === 'usuarios' && (
                         <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs">
-                                    <thead className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
-                                        <tr>
-                                            <th className="px-4 py-3">
-                                                Nombre
-                                            </th>
-                                            <th className="px-4 py-3">Email</th>
-                                            <th className="px-4 py-3">
-                                                Rol Actual
-                                            </th>
-                                            <th className="px-4 py-3">
-                                                Cambiar Rol
-                                            </th>
-                                            <th className="px-4 py-3">Sede</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
+                                <Table className="w-full text-left text-xs">
+                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                        <TableRow>
+                                            <TableHead>Nombre</TableHead>
+                                            <TableHead>Email</TableHead>
+                                            <TableHead>Rol Actual</TableHead>
+                                            <TableHead>Cambiar Rol</TableHead>
+                                            <TableHead>Sede</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-border divide-y">
                                         {usuarios.length === 0 ? (
-                                            <tr>
-                                                <td
+                                            <TableRow>
+                                                <TableCell
                                                     colSpan={5}
                                                     className="text-muted-foreground py-12 text-center"
                                                 >
@@ -261,21 +264,21 @@ export default function UsuariosIndex() {
                                                             sede de operaciones.
                                                         </p>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ) : (
                                             usuarios.map((u) => (
-                                                <tr
+                                                <TableRow
                                                     key={u.id}
                                                     className="hover:bg-muted/40 transition-colors"
                                                 >
-                                                    <td className="text-foreground px-4 py-3 font-semibold">
+                                                    <TableCell className="text-foreground px-4 py-3 font-semibold">
                                                         {u.name}
-                                                    </td>
-                                                    <td className="text-muted-foreground px-4 py-3">
+                                                    </TableCell>
+                                                    <TableCell className="text-muted-foreground px-4 py-3">
                                                         {u.email}
-                                                    </td>
-                                                    <td className="px-4 py-3">
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3">
                                                         <span
                                                             className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                                                 u.role
@@ -285,9 +288,9 @@ export default function UsuariosIndex() {
                                                         >
                                                             {roleLabel(u.role)}
                                                         </span>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <select
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3">
+                                                        <NativeSelect
                                                             aria-label={`Rol de ${u.name}`}
                                                             value={u.role ?? ''}
                                                             disabled={
@@ -319,10 +322,10 @@ export default function UsuariosIndex() {
                                                                     )}
                                                                 </option>
                                                             ))}
-                                                        </select>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <select
+                                                        </NativeSelect>
+                                                    </TableCell>
+                                                    <TableCell className="px-4 py-3">
+                                                        <NativeSelect
                                                             aria-label={`Sede de ${u.name}`}
                                                             value={
                                                                 u.sede_id ?? ''
@@ -362,7 +365,7 @@ export default function UsuariosIndex() {
                                                                     }
                                                                 </option>
                                                             ))}
-                                                        </select>
+                                                        </NativeSelect>
                                                         {u.role !== 'Gerente' &&
                                                         !u.sede_id ? (
                                                             <p className="text-destructive-strong mt-1 text-[11px] font-bold">
@@ -372,12 +375,12 @@ export default function UsuariosIndex() {
                                                                 asignes una.
                                                             </p>
                                                         ) : null}
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
                                             ))
                                         )}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
                         </div>
                     )}

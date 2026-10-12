@@ -3,7 +3,6 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import {
-    Calendar,
     Search,
     MapPin,
     Phone,
@@ -20,6 +19,8 @@ import EntregasRoutes from '@/routes/tecnico-campo/entregas';
 import InspeccionesRoutes from '@/routes/tecnico-campo/inspecciones';
 import InstalacionesRoutes from '@/routes/tecnico-campo/instalaciones';
 import MantenimientosRoutes from '@/routes/tecnico-campo/mantenimientos';
+import { KpiFiltro } from '@/components/kpi-filtro';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 
 interface OrderItem {
     id: number;
@@ -169,81 +170,41 @@ export default function TecnicoCampoDashboard({
                             Ruta diaria, recojos, entregas e inspecciones
                         </p>
                     </div>
-                    <div className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>Hoy</span>
-                    </div>
                 </div>
 
                 {/* KPIs Grid (2x2) (§5.5) */}
-                <div className="grid grid-cols-2 gap-2.5">
-                    <button
-                        type="button"
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                    <KpiFiltro
+                        titulo="Total"
+                        valor={kpis.total_servicios}
+                        detalle="Servicios"
+                        activo={filters.tab === 'todos' || !filters.tab}
                         onClick={() => handleStatusTab('todos')}
-                        className={`rounded-2xl border p-3.5 text-left transition-all ${
-                            filters.tab === 'todos' || !filters.tab
-                                ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm dark:bg-neutral-100 dark:text-neutral-900'
-                                : 'bg-card border-neutral-200 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
-                        }`}
-                    >
-                        <div className="text-[11px] font-semibold opacity-70">
-                            Total Servicios
-                        </div>
-                        <div className="mt-1 text-2xl font-black">
-                            {kpis.total_servicios}
-                        </div>
-                    </button>
-
-                    <button
-                        type="button"
+                    />
+                    <KpiFiltro
+                        titulo="Pendientes"
+                        valor={kpis.pendientes}
+                        detalle="Por atender"
+                        tono="warning"
+                        activo={filters.tab === 'pendientes'}
                         onClick={() => handleStatusTab('pendientes')}
-                        className={`rounded-2xl border p-3.5 text-left transition-all ${
-                            filters.tab === 'pendientes'
-                                ? 'border-amber-600 bg-amber-600 text-white shadow-sm'
-                                : 'bg-card border-neutral-200 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
-                        }`}
-                    >
-                        <div className="text-[11px] font-semibold text-amber-500">
-                            Pendientes
-                        </div>
-                        <div className="text-warning-strong mt-1 text-2xl font-black">
-                            {kpis.pendientes}
-                        </div>
-                    </button>
-
-                    <button
-                        type="button"
+                    />
+                    <KpiFiltro
+                        titulo="En proceso"
+                        valor={kpis.en_proceso}
+                        detalle="En ruta o en trabajo"
+                        tono="primary"
+                        activo={filters.tab === 'en_proceso'}
                         onClick={() => handleStatusTab('en_proceso')}
-                        className={`rounded-2xl border p-3.5 text-left transition-all ${
-                            filters.tab === 'en_proceso'
-                                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                                : 'bg-card border-neutral-200 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
-                        }`}
-                    >
-                        <div className="text-[11px] font-semibold text-blue-500">
-                            En Ruta / Proceso
-                        </div>
-                        <div className="mt-1 text-2xl font-black text-blue-600 dark:text-blue-400">
-                            {kpis.en_proceso}
-                        </div>
-                    </button>
-
-                    <button
-                        type="button"
+                    />
+                    <KpiFiltro
+                        titulo="Finalizados"
+                        valor={kpis.finalizados}
+                        detalle="Terminados y cerrados"
+                        tono="success"
+                        activo={filters.tab === 'finalizados'}
                         onClick={() => handleStatusTab('finalizados')}
-                        className={`rounded-2xl border p-3.5 text-left transition-all ${
-                            filters.tab === 'finalizados'
-                                ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'
-                                : 'bg-card border-neutral-200 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
-                        }`}
-                    >
-                        <div className="text-[11px] font-semibold text-emerald-500">
-                            Finalizados
-                        </div>
-                        <div className="text-success-strong mt-1 text-2xl font-black">
-                            {kpis.finalizados}
-                        </div>
-                    </button>
+                    />
                 </div>
 
                 {/* Service Type Pills (§5.5) */}
@@ -264,7 +225,7 @@ export default function TecnicoCampoDashboard({
                         onClick={() => handleTipoFiltro('recojos')}
                         className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'recojos'
-                                ? 'bg-blue-600 text-white shadow-xs'
+                                ? 'bg-primary text-primary-foreground shadow-xs'
                                 : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
@@ -276,7 +237,7 @@ export default function TecnicoCampoDashboard({
                         onClick={() => handleTipoFiltro('entregas')}
                         className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'entregas'
-                                ? 'bg-blue-600 text-white shadow-xs'
+                                ? 'bg-primary text-primary-foreground shadow-xs'
                                 : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
@@ -288,7 +249,7 @@ export default function TecnicoCampoDashboard({
                         onClick={() => handleTipoFiltro('inspecciones')}
                         className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'inspecciones'
-                                ? 'bg-blue-600 text-white shadow-xs'
+                                ? 'bg-primary text-primary-foreground shadow-xs'
                                 : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
@@ -300,7 +261,7 @@ export default function TecnicoCampoDashboard({
                         onClick={() => handleTipoFiltro('instalaciones')}
                         className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.tipo === 'instalaciones'
-                                ? 'bg-blue-600 text-white shadow-xs'
+                                ? 'bg-primary text-primary-foreground shadow-xs'
                                 : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
@@ -317,7 +278,7 @@ export default function TecnicoCampoDashboard({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar cliente, dirección o código de orden..."
-                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card focus:ring-primary w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
@@ -360,13 +321,12 @@ export default function TecnicoCampoDashboard({
                                                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                                                             : order.estado ===
                                                                 'en_proceso'
-                                                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                                                              ? 'bg-primary/10 text-primary-strong'
                                                               : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
                                                     }`}
                                                 >
-                                                    {order.estado.replace(
-                                                        '_',
-                                                        ' ',
+                                                    {etiquetaEstadoOrden(
+                                                        order.estado,
                                                     )}
                                                 </span>
                                             </div>
@@ -384,7 +344,7 @@ export default function TecnicoCampoDashboard({
                                     <div className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
                                         {order.direccion && (
                                             <div className="flex items-start gap-1.5">
-                                                <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+                                                <MapPin className="text-primary-strong mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                                                 <span className="line-clamp-2">
                                                     {order.direccion}
                                                 </span>
@@ -395,7 +355,7 @@ export default function TecnicoCampoDashboard({
                                                 <Phone className="text-success-strong h-3.5 w-3.5 flex-shrink-0" />
                                                 <a
                                                     href={`tel:${order.telefono}`}
-                                                    className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                    className="text-primary-strong font-medium hover:underline"
                                                 >
                                                     {order.telefono}
                                                 </a>
@@ -421,7 +381,7 @@ export default function TecnicoCampoDashboard({
 
                                         <Link
                                             href={getActionRoute(order)}
-                                            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-transform hover:bg-blue-700 active:scale-95"
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-transform active:scale-95"
                                         >
                                             <span>{getActionLabel(order)}</span>
                                             <ArrowRight className="h-3.5 w-3.5" />

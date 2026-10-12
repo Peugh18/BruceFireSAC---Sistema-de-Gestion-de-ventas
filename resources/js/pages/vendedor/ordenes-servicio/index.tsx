@@ -1,3 +1,4 @@
+import { Pasos, pasosOrdenAtencion } from '@/components/progreso';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Eye, Plus, RotateCcw, Wrench } from 'lucide-react';
 import { FormEvent, useState } from 'react';
@@ -22,10 +23,19 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
 import { fechaCorta, fechaLocal } from '@/lib/utils';
 import OrdenesServicioRoutes from '@/routes/vendedor/ordenes-servicio';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type ServiceOrderItem = {
     id: number;
@@ -81,21 +91,6 @@ const TABS = [
     { id: 'completadas', label: 'Completadas' },
     { id: 'anuladas', label: 'Anuladas' },
 ] as const;
-
-function getCoarseStep(coarseLabel: string): number {
-    switch (coarseLabel?.toLowerCase()) {
-        case 'asignada':
-            return 1;
-        case 'en_proceso':
-            return 2;
-        case 'completada':
-            return 3;
-        case 'cerrada':
-            return 4;
-        default:
-            return 1;
-    }
-}
 
 function getBadgeConfig(
     estado: string,
@@ -268,36 +263,36 @@ export default function ServiceOrdersIndex({
                 {/* Table Card */}
                 <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                     <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-[12.5px]">
-                            <thead>
-                                <tr className="border-border border-b">
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                        <Table className="w-full border-collapse text-[12.5px]">
+                            <TableHeader>
+                                <TableRow className="border-border border-b">
+                                    <TableHead className="text-left">
                                         N° Orden
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Cliente
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Servicio
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Técnico
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-center font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Avance
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Estado
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-right font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Acción
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {orders.data.length === 0 ? (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={7}
                                             className="text-muted-foreground px-4 py-12 text-center"
                                         >
@@ -351,13 +346,15 @@ export default function ServiceOrdersIndex({
                                                     </Button>
                                                 )}
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     orders.data.map((order) => {
-                                        const step = getCoarseStep(
-                                            order.coarse_label,
-                                        );
+                                        const pasosAtencion =
+                                            pasosOrdenAtencion(
+                                                order.estado,
+                                                Boolean(order.tecnico),
+                                            );
                                         const badgeConfig = getBadgeConfig(
                                             order.estado,
                                             order.coarse_label,
@@ -365,11 +362,11 @@ export default function ServiceOrdersIndex({
                                         );
 
                                         return (
-                                            <tr
+                                            <TableRow
                                                 key={order.id}
                                                 className="border-border hover:bg-muted/40 border-b transition-colors"
                                             >
-                                                <td className="text-foreground px-2.5 py-3.5 font-mono text-xs font-bold">
+                                                <TableCell className="text-foreground px-2.5 py-3.5 font-mono text-xs font-bold">
                                                     <Link
                                                         href={ServiceOrderController.show.url(
                                                             {
@@ -383,13 +380,13 @@ export default function ServiceOrdersIndex({
                                                     >
                                                         {order.codigo}
                                                     </Link>
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="text-foreground px-2.5 py-3.5 font-semibold">
+                                                <TableCell className="text-foreground px-2.5 py-3.5 font-semibold">
                                                     {order.cliente}
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="text-foreground/80 px-2.5 py-3.5">
+                                                <TableCell className="text-foreground/80 px-2.5 py-3.5">
                                                     <span className="line-clamp-1">
                                                         {order.tipo_servicio}
                                                     </span>
@@ -398,9 +395,9 @@ export default function ServiceOrdersIndex({
                                                             order.fecha,
                                                         )}
                                                     </span>
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="text-foreground/80 px-2.5 py-3.5 text-[12px]">
+                                                <TableCell className="text-foreground/80 px-2.5 py-3.5 text-[12px]">
                                                     <div>
                                                         {order.tecnico ||
                                                             'Por asignar'}
@@ -414,50 +411,37 @@ export default function ServiceOrdersIndex({
                                                             )
                                                         </div>
                                                     )}
-                                                </td>
+                                                </TableCell>
 
-                                                {/* 4-point progress indicator */}
-                                                <td className="px-2.5 py-3.5 text-center">
-                                                    <div
-                                                        className="inline-flex items-center gap-1.5"
-                                                        title={`Etapa ${step} de 4: ${order.coarse_label}`}
-                                                    >
-                                                        {[1, 2, 3, 4].map(
-                                                            (s) => {
-                                                                let dotClass =
-                                                                    'bg-muted/40';
-                                                                if (s < step) {
-                                                                    dotClass =
-                                                                        'bg-emerald-600';
-                                                                } else if (
-                                                                    s === step
-                                                                ) {
-                                                                    dotClass =
-                                                                        step ===
-                                                                        4
-                                                                            ? 'bg-emerald-600'
-                                                                            : 'bg-blue-600 ring-2 ring-blue-200';
-                                                                }
-                                                                return (
-                                                                    <span
-                                                                        key={s}
-                                                                        className={`size-2.5 rounded-full transition-all ${dotClass}`}
-                                                                    />
-                                                                );
-                                                            },
-                                                        )}
-                                                    </div>
-                                                </td>
+                                                <TableCell className="px-2.5 py-3.5 text-center">
+                                                    {pasosAtencion.length >
+                                                    0 ? (
+                                                        <Pasos
+                                                            pasos={
+                                                                pasosAtencion
+                                                            }
+                                                            label={`Etapas de ${order.codigo}`}
+                                                            variante="puntos"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-xs">
+                                                            {order.estado ===
+                                                            'anulada'
+                                                                ? 'Anulada'
+                                                                : 'Sin avance disponible'}
+                                                        </span>
+                                                    )}
+                                                </TableCell>
 
-                                                <td className="px-2.5 py-3.5">
+                                                <TableCell className="px-2.5 py-3.5">
                                                     <Badge
                                                         className={`rounded-full border-none px-2.5 py-0.5 text-[10.5px] font-bold ${badgeConfig.badgeClass}`}
                                                     >
                                                         {badgeConfig.label}
                                                     </Badge>
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="px-2.5 py-3.5 text-right">
+                                                <TableCell className="px-2.5 py-3.5 text-right">
                                                     <Button
                                                         asChild
                                                         variant="outline"
@@ -478,13 +462,13 @@ export default function ServiceOrdersIndex({
                                                             <Eye className="size-3.5" />
                                                         </Link>
                                                     </Button>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     {/* Pagination */}
@@ -672,7 +656,7 @@ export default function ServiceOrdersIndex({
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Responsable
                                 </Label>
-                                <select
+                                <NativeSelect
                                     aria-label="Responsable"
                                     value={createForm.data.tecnico_id}
                                     onChange={(e) =>
@@ -694,7 +678,7 @@ export default function ServiceOrdersIndex({
                                             {tecnico.name}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                                 {createForm.errors.tecnico_id && (
                                     <p className="text-destructive-strong mt-1 text-[11px]">
                                         {createForm.errors.tecnico_id}
@@ -765,7 +749,7 @@ export default function ServiceOrdersIndex({
                                 <Label className="text-foreground/80 text-[11px] font-bold uppercase">
                                     Prioridad
                                 </Label>
-                                <select
+                                <NativeSelect
                                     aria-label="Prioridad"
                                     value={createForm.data.prioridad}
                                     onChange={(e) =>
@@ -779,7 +763,7 @@ export default function ServiceOrdersIndex({
                                     <option value="normal">Normal</option>
                                     <option value="alta">Alta</option>
                                     <option value="urgente">Urgente</option>
-                                </select>
+                                </NativeSelect>
                             </div>
                         </div>
 

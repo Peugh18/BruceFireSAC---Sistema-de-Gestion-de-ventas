@@ -1,5 +1,6 @@
+import { Pasos } from '@/components/progreso';
 import { Link, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, Check, ExternalLink, Wrench, X } from 'lucide-react';
+import { AlertTriangle, ExternalLink, Wrench, X } from 'lucide-react';
 
 import { TarjetaCargando } from '@/components/cargando';
 import ConversacionOrden, {
@@ -207,40 +208,20 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-1 overflow-x-auto">
-                            {seleccionada.etapas.map((etapa, i) => {
-                                const hecha = i < seleccionada.etapa_actual;
-                                const actual = i === seleccionada.etapa_actual;
-
-                                return (
-                                    <div
-                                        key={etapa}
-                                        className="flex min-w-[110px] flex-1 items-center gap-1"
-                                    >
-                                        <div
-                                            className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${hecha ? 'bg-emerald-500 text-white' : actual ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}
-                                        >
-                                            {hecha ? (
-                                                <Check className="size-3.5" />
-                                            ) : (
-                                                i + 1
-                                            )}
-                                        </div>
-                                        <span
-                                            className={`text-[11.5px] ${actual ? 'text-foreground font-bold' : 'text-muted-foreground'}`}
-                                        >
-                                            {etapa}
-                                        </span>
-                                        {i < seleccionada.etapas.length - 1 ? (
-                                            <div
-                                                className={`h-0.5 flex-1 ${hecha ? 'bg-emerald-500' : 'bg-border'}`}
-                                            />
-                                        ) : null}
-                                    </div>
-                                );
-                            })}
-                        </div>
-
+                        <Pasos
+                            label={`Seguimiento de ${seleccionada.codigo}`}
+                            variante="numerada"
+                            pasos={seleccionada.etapas.map((etapa, indice) => ({
+                                id: etapa,
+                                label: etapa,
+                                estado:
+                                    indice < seleccionada.etapa_actual
+                                        ? 'completado'
+                                        : indice === seleccionada.etapa_actual
+                                          ? 'actual'
+                                          : 'pendiente',
+                            }))}
+                        />
                         {seleccionada.observaciones ? (
                             <p className="bg-muted/40 rounded-[10px] px-3 py-2 text-[12.5px]">
                                 <b>Instrucciones:</b>{' '}

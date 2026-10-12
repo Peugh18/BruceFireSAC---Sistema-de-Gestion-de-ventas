@@ -1,3 +1,4 @@
+import { Pasos, pasosOrdenAtencion } from '@/components/progreso';
 import DeficienciaSuelta from '@/components/deficiencia-suelta';
 import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
@@ -38,6 +39,7 @@ import EquiposRoutes from '@/routes/vendedor/ordenes-servicio/equipos';
 import VentasRoutes from '@/routes/vendedor/ventas';
 import CotizacionesRoutes from '@/routes/vendedor/cotizaciones';
 import CertificadosRoutes from '@/routes/vendedor/certificados';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type ServiceOrderEvent = {
     id: number;
@@ -186,32 +188,6 @@ function fechaLegible(valor: string): string {
         : '—';
 }
 
-const STEPS = [
-    { key: 'asignada', label: '1. Asignada' },
-    { key: 'en_proceso', label: '2. En proceso' },
-    { key: 'completada', label: '3. Completada' },
-    { key: 'cerrada', label: '4. Cerrada' },
-];
-
-function getCoarseStep(estado: string): number {
-    const map: Record<string, number> = {
-        pendiente_recepcion: 1,
-        recibido_planta: 1,
-        en_revision: 1,
-        esperando_autorizacion: 1,
-        autorizado: 2,
-        en_proceso: 2,
-        trabajo_terminado: 2,
-        pendiente_datos: 2,
-        datos_completos: 2,
-        listo_certificado: 3,
-        listo_entrega: 3,
-        entregado: 3,
-        cerrado: 4,
-    };
-    return map[estado] ?? 1;
-}
-
 export default function ServiceOrderShow({
     serviceOrder,
     tecnicos,
@@ -293,7 +269,10 @@ export default function ServiceOrderShow({
         },
     };
     const nextStep = nextSteps[serviceOrder.estado];
-    const currentStep = getCoarseStep(serviceOrder.estado);
+    const pasosAtencion = pasosOrdenAtencion(
+        serviceOrder.estado,
+        Boolean(serviceOrder.tecnico),
+    );
     const editable = !['entregado', 'cerrado', 'anulada'].includes(
         serviceOrder.estado,
     );
@@ -757,7 +736,7 @@ export default function ServiceOrderShow({
                                     equipo.setData('capacidad', e.target.value)
                                 }
                             />
-                            <select
+                            <NativeSelect
                                 aria-label="Agente extintor"
                                 className="rounded-md border p-2 text-sm"
                                 value={equipo.data.tipo_agente}
@@ -769,7 +748,7 @@ export default function ServiceOrderShow({
                                 }
                             >
                                 <OpcionesAgente vacia="Agente" />
-                            </select>
+                            </NativeSelect>
                             <input
                                 aria-label="Marca"
                                 className="rounded-md border p-2 text-sm"
@@ -798,53 +777,28 @@ export default function ServiceOrderShow({
                     )}
                 </Card>
 
-                {/* 4-Step Progress Tracker Banner */}
-                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
-                    <div className="text-muted-foreground mb-3 text-xs font-bold uppercase">
+                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                    <h3 className="text-sm font-semibold">
                         Progreso de atención
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        {STEPS.map((stepItem, idx) => {
-                            const stepNum = idx + 1;
-                            const isDone = stepNum < currentStep;
-                            const isCurrent = stepNum === currentStep;
-
-                            return (
-                                <div
-                                    key={stepItem.key}
-                                    className={`flex items-center gap-2 rounded-[10px] p-3 text-xs font-bold transition-all ${
-                                        isCurrent
-                                            ? 'border border-blue-500/20 bg-blue-500/10 text-blue-600 ring-1 ring-blue-300 dark:text-blue-400'
-                                            : isDone
-                                              ? 'text-success-strong border border-emerald-500/20 bg-emerald-500/10'
-                                              : 'bg-muted/40 text-muted-foreground'
-                                    }`}
-                                >
-                                    <div
-                                        className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] ${
-                                            isCurrent
-                                                ? 'bg-blue-600 text-white'
-                                                : isDone
-                                                  ? 'bg-emerald-600 text-white'
-                                                  : 'bg-muted/40 text-muted-foreground'
-                                        }`}
-                                    >
-                                        {isDone ? (
-                                            <CheckCircle2 className="size-3.5" />
-                                        ) : (
-                                            stepNum
-                                        )}
-                                    </div>
-                                    <span className="truncate">
-                                        {stepItem.key === 'asignada' &&
-                                        !serviceOrder.tecnico
-                                            ? '1. Por asignar'
-                                            : stepItem.label}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    </h3>
+                    {pasosAtencion.length > 0 ? (
+                        <Pasos
+                            pasos={pasosAtencion}
+                            label="Etapas de atención de la orden"
+                            variante="cheuron"
+                        />
+                    ) : (
+                        <p className="text-muted-foreground text-sm">
+                            {ESTADOS[serviceOrder.estado] ??
+                                'Estado sin etapa de progreso disponible'}
+                        </p>
+                    )}
+                    {!serviceOrder.tecnico &&
+                        serviceOrder.estado !== 'anulada' && (
+                            <p className="text-warning-strong text-sm">
+                                La orden todavía no tiene un técnico asignado.
+                            </p>
+                        )}
                 </Card>
 
                 {/* 2-Column Info & Bitácora */}
@@ -894,7 +848,7 @@ export default function ServiceOrderShow({
                                     </div>
                                     {editable && tecnicos.length > 0 ? (
                                         <div className="mt-2 flex gap-2">
-                                            <select
+                                            <NativeSelect
                                                 aria-label="Técnico asignado"
                                                 value={tecnicoElegido}
                                                 onChange={(event) =>
@@ -924,7 +878,7 @@ export default function ServiceOrderShow({
                                                             {tecnico.name}
                                                         </option>
                                                     ))}
-                                            </select>
+                                            </NativeSelect>
                                             <Button
                                                 type="button"
                                                 size="sm"
@@ -981,7 +935,7 @@ export default function ServiceOrderShow({
                                             la entrega. Se conserva el área y el
                                             historial del trabajo realizado.
                                         </p>
-                                        <select
+                                        <NativeSelect
                                             id="entrega-tecnico"
                                             value={entrega.data.tecnico_id}
                                             required
@@ -1007,7 +961,7 @@ export default function ServiceOrderShow({
                                                     {tecnico.name}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </NativeSelect>
                                         {entrega.errors.tecnico_id && (
                                             <p
                                                 role="alert"
@@ -1207,7 +1161,7 @@ export default function ServiceOrderShow({
                             <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                 Servicio del catálogo
                             </span>
-                            <select
+                            <NativeSelect
                                 aria-label="Servicio del catálogo"
                                 value={edicion.data.service_id}
                                 onChange={(event) =>
@@ -1225,7 +1179,7 @@ export default function ServiceOrderShow({
                                         {service.nombre}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </label>
                         <label className="flex flex-col gap-1">
                             <span className="text-muted-foreground text-[11px] font-bold uppercase">
@@ -1246,7 +1200,7 @@ export default function ServiceOrderShow({
                                 <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Prioridad
                                 </span>
-                                <select
+                                <NativeSelect
                                     aria-label="Prioridad"
                                     value={edicion.data.prioridad}
                                     onChange={(event) =>
@@ -1260,13 +1214,13 @@ export default function ServiceOrderShow({
                                     <option value="normal">Normal</option>
                                     <option value="alta">Alta</option>
                                     <option value="urgente">Urgente</option>
-                                </select>
+                                </NativeSelect>
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Área
                                 </span>
-                                <select
+                                <NativeSelect
                                     aria-label="Área"
                                     value={edicion.data.departamento_tecnico}
                                     disabled={
@@ -1289,7 +1243,7 @@ export default function ServiceOrderShow({
                                     <option value="campo">
                                         Campo (en el local del cliente)
                                     </option>
-                                </select>
+                                </NativeSelect>
                             </label>
                         </div>
                         {edicion.data.departamento_tecnico ===
@@ -1298,7 +1252,7 @@ export default function ServiceOrderShow({
                                 <span className="text-muted-foreground text-[11px] font-bold uppercase">
                                     Técnico
                                 </span>
-                                <select
+                                <NativeSelect
                                     aria-label="Técnico"
                                     value={edicion.data.tecnico_id}
                                     onChange={(event) =>
@@ -1320,7 +1274,7 @@ export default function ServiceOrderShow({
                                             {tecnico.name}
                                         </option>
                                     ))}
-                                </select>
+                                </NativeSelect>
                             </label>
                         ) : (
                             <p className="text-muted-foreground text-[11.5px]">

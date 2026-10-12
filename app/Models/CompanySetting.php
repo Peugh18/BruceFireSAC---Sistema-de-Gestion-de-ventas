@@ -114,17 +114,17 @@ class CompanySetting extends Model
     }
 
     /**
-     * Logo listo para el PDF (data URI) con el tamaño en que debe dibujarse.
+     * Logo listo para el PDF (data URI) con el tamaño en que debe dibujarse:
+     * el subido por el Gerente o, si no hay, el de la marca.
      *
      * @return array{src: string, ancho: int, alto: int}|null
      */
     public function logoParaPdf(): ?array
     {
-        if (! $this->logo_path || ! Storage::disk('public')->exists($this->logo_path)) {
-            return null;
-        }
-
-        $contenido = Storage::disk('public')->get($this->logo_path);
+        // Sin logo subido en Configuración, el comprobante usa el de la marca.
+        $contenido = $this->logo_path && Storage::disk('public')->exists($this->logo_path)
+            ? Storage::disk('public')->get($this->logo_path)
+            : @file_get_contents(resource_path('images/brand/bruce-fire-logo-horizontal.png'));
         $medidas = $contenido ? @getimagesizefromstring($contenido) : false;
 
         if (! $contenido || ! $medidas || $medidas[0] < 1 || $medidas[1] < 1) {

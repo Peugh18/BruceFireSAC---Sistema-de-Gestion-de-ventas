@@ -62,7 +62,7 @@ export function MobileNavDock({
                                 className={[
                                     'group relative flex h-11 min-w-[54px] flex-col items-center justify-center rounded-2xl px-2 transition-[color,transform] duration-150 active:scale-[0.96] select-none',
                                     item.isActive
-                                        ? 'text-primary font-bold'
+                                        ? 'text-primary-strong font-bold'
                                         : 'text-muted-foreground hover:text-foreground',
                                 ].join(' ')}
                             >

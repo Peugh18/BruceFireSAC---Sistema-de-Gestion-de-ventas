@@ -25,6 +25,7 @@ import AlertError from '@/components/alert-error';
 import OpcionesAgente from '@/components/opciones-agente';
 import { toast } from 'sonner';
 import EquiposRoutes from '@/routes/tecnico-campo/recojos/equipos';
+import { NativeSelect } from '@/components/ui/native-select';
 
 interface CustodyEventItem {
     id: number;
@@ -380,7 +381,7 @@ export default function RecojoShow({
                                 className="w-full rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                             />
                             <div className="grid grid-cols-2 gap-2">
-                                <select
+                                <NativeSelect
                                     aria-label="Agente extintor"
                                     value={equipmentForm.data.tipo_agente}
                                     onChange={(event) =>
@@ -392,7 +393,7 @@ export default function RecojoShow({
                                     className="rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                 >
                                     <OpcionesAgente vacia="Agente (alta nueva)" />
-                                </select>
+                                </NativeSelect>
                                 <input
                                     aria-label="Capacidad"
                                     value={equipmentForm.data.capacidad}

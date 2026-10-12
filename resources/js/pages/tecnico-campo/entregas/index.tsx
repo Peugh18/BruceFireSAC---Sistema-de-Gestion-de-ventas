@@ -13,6 +13,7 @@ import React, { useState } from 'react';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import EntregasRoutes from '@/routes/tecnico-campo/entregas';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 
 type Client = {
     id: number;
@@ -259,7 +260,7 @@ export default function EntregasIndex({
                 ) : (
                     entregas.data.map((order) => {
                         const estadoMeta = ESTADOS_MAP[order.estado] || {
-                            label: order.estado,
+                            label: etiquetaEstadoOrden(order.estado),
                             bg: 'bg-muted',
                             text: 'text-muted-foreground',
                             border: 'border-border',

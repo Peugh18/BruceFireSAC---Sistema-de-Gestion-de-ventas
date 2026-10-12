@@ -1,3 +1,4 @@
+import { Pasos, pasosTaller } from '@/components/progreso';
 import {
     Dialog,
     DialogContent,
@@ -23,11 +24,11 @@ import {
     Sparkles,
     ShieldCheck,
     FileCheck2,
-    ChevronRight,
     MessageSquare,
 } from 'lucide-react';
 import TecnicoPlantaRoutes from '@/routes/tecnico-planta';
 import EjecucionRoutes from '@/routes/tecnico-planta/ejecucion';
+import { NativeSelect } from '@/components/ui/native-select';
 
 interface EquipmentItem {
     id: number;
@@ -203,60 +204,22 @@ export default function EjecucionShow({
                             <h2 className="mt-1 text-base font-semibold text-neutral-900 dark:text-neutral-100">
                                 {order.cliente}
                             </h2>
-                            <p className="font-mono text-xs text-neutral-500">
+                            <p className="text-muted-foreground font-mono text-xs">
                                 RUC/DNI: {order.cliente_doc}{' '}
                                 {order.telefono ? `• ${order.telefono}` : ''}
                             </p>
                         </div>
                     </div>
 
-                    {/* Progress steps (§16.2) */}
-                    <div className="border-t border-neutral-100 pt-2 dark:border-neutral-700/60">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-neutral-500">
-                            <span
-                                className={
-                                    order.estado === 'recibido_planta' ||
-                                    order.estado === 'en_revision'
-                                        ? 'text-warning-strong font-extrabold'
-                                        : ''
-                                }
-                            >
-                                1. Taller
-                            </span>
-                            <ChevronRight className="h-3 w-3 text-neutral-300" />
-                            <span
-                                className={
-                                    order.estado === 'en_proceso'
-                                        ? 'text-warning-strong font-extrabold'
-                                        : ''
-                                }
-                            >
-                                2. En Proceso
-                            </span>
-                            <ChevronRight className="h-3 w-3 text-neutral-300" />
-                            <span
-                                className={
-                                    order.estado === 'trabajo_terminado'
-                                        ? 'text-warning-strong font-extrabold'
-                                        : ''
-                                }
-                            >
-                                3. Terminado
-                            </span>
-                            <ChevronRight className="h-3 w-3 text-neutral-300" />
-                            <span
-                                className={
-                                    order.estado === 'listo_certificado'
-                                        ? 'text-success-strong font-extrabold'
-                                        : ''
-                                }
-                            >
-                                4. Certificado
-                            </span>
-                        </div>
-                    </div>
+                    <Pasos
+                        pasos={pasosTaller(
+                            order.estado,
+                            certificates.length > 0,
+                        )}
+                        label="Avance del trabajo en taller"
+                        variante="numerada"
+                    />
                 </div>
-
                 <TomarOrden asignacion={asignacion} />
 
                 <ConversacionOrden
@@ -355,7 +318,7 @@ export default function EjecucionShow({
                             type="button"
                             onClick={() => handleAdvance('en_proceso')}
                             disabled={avanzando}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-700"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold shadow-sm"
                         >
                             <Wrench className="h-4 w-4" />
                             <span>Iniciar Trabajo en Taller (En Proceso)</span>
@@ -391,12 +354,12 @@ export default function EjecucionShow({
                                                               ),
                                                     )
                                                 }
-                                                className="text-warning-strong h-4 w-4 rounded border-neutral-300 focus:ring-amber-500"
+                                                className="text-warning-strong focus:ring-ring h-4 w-4 rounded border-neutral-300"
                                             />
                                             <span className="font-mono font-bold">
                                                 {eq.numero_serie}
                                             </span>
-                                            <span className="text-neutral-500">
+                                            <span className="text-muted-foreground">
                                                 {eq.tipo_agente} {eq.capacidad}
                                             </span>
                                         </label>
@@ -501,7 +464,7 @@ export default function EjecucionShow({
                                         <div className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
                                             {cert.tipo}
                                         </div>
-                                        <div className="text-[11px] text-neutral-500">
+                                        <div className="text-muted-foreground text-[11px]">
                                             Vigente hasta:{' '}
                                             {cert.fecha_vigencia_hasta}
                                         </div>
@@ -564,7 +527,7 @@ export default function EjecucionShow({
                                     </div>
 
                                     {d.repuesto_sugerido && (
-                                        <div className="text-[11px] text-neutral-500">
+                                        <div className="text-muted-foreground text-[11px]">
                                             <b>Repuesto requerido: </b>{' '}
                                             {d.repuesto_sugerido}
                                         </div>
@@ -621,7 +584,7 @@ export default function EjecucionShow({
                                     <DialogTitle className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                                         Consumo de Repuesto
                                     </DialogTitle>
-                                    <DialogDescription className="text-xs text-neutral-500">
+                                    <DialogDescription className="text-muted-foreground text-xs">
                                         Kardex Almacén para{' '}
                                         {selectedDeficiency.componente}
                                     </DialogDescription>
@@ -639,7 +602,7 @@ export default function EjecucionShow({
                                     <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Producto / Repuesto de Almacén *
                                     </label>
-                                    <select
+                                    <NativeSelect
                                         aria-label="Producto / Repuesto de Almacén *"
                                         value={spareForm.data.product_id}
                                         onChange={(e) =>
@@ -659,7 +622,7 @@ export default function EjecucionShow({
                                                 {p.nombre}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 <div>
@@ -704,7 +667,7 @@ export default function EjecucionShow({
                                 <button
                                     type="submit"
                                     disabled={spareForm.processing}
-                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-amber-700"
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold shadow-sm"
                                 >
                                     <Package className="h-4 w-4" />
                                     <span>

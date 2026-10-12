@@ -5,6 +5,7 @@ import { store as guardarEvidencia } from '@/routes/ordenes/evidencias';
 import { show as verEvidencia } from '@/routes/evidencias';
 import type { Team } from '@/types';
 import { toast } from 'sonner';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export interface EvidenciaListada {
     id: number;
@@ -67,7 +68,7 @@ export default function SubirEvidencia({
                     {titulo} ({propias.length})
                 </span>
                 {equipos.length > 0 && (
-                    <select
+                    <NativeSelect
                         aria-label="Extintor de la foto"
                         value={equipoId}
                         onChange={(e) => setEquipoId(e.target.value)}
@@ -79,7 +80,7 @@ export default function SubirEvidencia({
                                 {e.serie}
                             </option>
                         ))}
-                    </select>
+                    </NativeSelect>
                 )}
                 <BotonFoto onFoto={subir} etiqueta="Agregar foto" />
                 {subiendo && (

@@ -20,6 +20,14 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import facturacion from '@/routes/vendedor/facturacion';
@@ -526,10 +534,10 @@ export default function FacturacionIndex({
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-[12.5px]">
-                            <thead>
-                                <tr>
-                                    <th className="border-border w-8 border-b px-2.5 py-2.5">
+                        <Table className="w-full border-collapse text-[12.5px]">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-8">
                                         <input
                                             type="checkbox"
                                             aria-label="Marcar la página"
@@ -537,7 +545,7 @@ export default function FacturacionIndex({
                                             checked={paginaMarcada}
                                             onChange={alternarPagina}
                                         />
-                                    </th>
+                                    </TableHead>
                                     {[
                                         'Comprobante',
                                         'Cliente',
@@ -547,16 +555,16 @@ export default function FacturacionIndex({
                                         'Código',
                                         'Acciones',
                                     ].map((h) => (
-                                        <th
+                                        <TableHead
                                             key={h}
-                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
+                                            className="text-left"
                                         >
                                             {h}
-                                        </th>
+                                        </TableHead>
                                     ))}
-                                </tr>
-                            </thead>
-                            <tbody>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {recargando ? (
                                     <FilasCargando
                                         columnas={8}
@@ -571,11 +579,11 @@ export default function FacturacionIndex({
                                         const number = `${document.serie}-${String(document.correlativo).padStart(8, '0')}`;
 
                                         return (
-                                            <tr
+                                            <TableRow
                                                 key={document.id}
                                                 className="hover:bg-muted/40"
                                             >
-                                                <td className="border-border border-b px-2.5 py-[13px]">
+                                                <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                     <input
                                                         type="checkbox"
                                                         aria-label={`Marcar ${number}`}
@@ -592,8 +600,8 @@ export default function FacturacionIndex({
                                                             )
                                                         }
                                                     />
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                     <span className="bg-muted text-foreground/80 mr-1.5 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">
                                                         {document.tipo}
                                                     </span>
@@ -616,17 +624,17 @@ export default function FacturacionIndex({
                                                             {number}
                                                         </span>
                                                     )}
-                                                </td>
-                                                <td className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
+                                                </TableCell>
+                                                <TableCell className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
                                                     {document.cliente}
-                                                </td>
-                                                <td className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
+                                                </TableCell>
+                                                <TableCell className="border-border text-foreground/80 border-b px-2.5 py-[13px]">
                                                     {document.created_at ?? '-'}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
                                                     {money(document.total)}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                     <Badge
                                                         title={
                                                             document.sunat_mensaje ??
@@ -640,12 +648,12 @@ export default function FacturacionIndex({
                                                             )}
                                                         </span>
                                                     </Badge>
-                                                </td>
-                                                <td className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px] whitespace-nowrap tabular-nums">
+                                                </TableCell>
+                                                <TableCell className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px] whitespace-nowrap tabular-nums">
                                                     {document.sunat_codigo_respuesta ??
                                                         '-'}
-                                                </td>
-                                                <td className="border-border border-b px-2.5 py-[13px]">
+                                                </TableCell>
+                                                <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                     <div className="flex items-center gap-1.5">
                                                         {canResend && (
                                                             <Button
@@ -714,13 +722,13 @@ export default function FacturacionIndex({
                                                             PDF
                                                         </a>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
@@ -758,7 +766,7 @@ export default function FacturacionIndex({
             <CargaLarga
                 activo={processingId !== null}
                 titulo="Reenviando el comprobante a SUNAT"
-                detalle="Suele tardar menos de 10 segundos"
+                detalle="La operación está en curso. El resultado se mostrará al terminar."
             />
         </VendedorLayout>
     );

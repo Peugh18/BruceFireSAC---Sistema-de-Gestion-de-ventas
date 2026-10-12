@@ -11,6 +11,14 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { fechaLocal } from '@/lib/utils';
 
 export type Cuota = { fecha_vencimiento: string; monto: number };
@@ -172,25 +180,25 @@ export default function CreditoDialog({
                 </div>
 
                 <div className="border-border overflow-hidden rounded-[10px] border">
-                    <table className="w-full text-[12.5px]">
-                        <thead className="bg-muted/50">
-                            <tr className="text-muted-foreground text-left text-[10px] font-bold uppercase">
-                                <th className="px-2.5 py-2">Cuota</th>
-                                <th className="px-2.5 py-2">Vencimiento</th>
-                                <th className="px-2.5 py-2">Monto S/</th>
-                                <th />
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <Table className="w-full text-[12.5px]">
+                        <TableHeader className="bg-muted/50">
+                            <TableRow className="text-muted-foreground text-left text-[10px] font-bold uppercase">
+                                <TableHead>Cuota</TableHead>
+                                <TableHead>Vencimiento</TableHead>
+                                <TableHead>Monto S/</TableHead>
+                                <TableHead />
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {filas.map((cuota, index) => (
-                                <tr
+                                <TableRow
                                     key={index}
                                     className="border-border border-t"
                                 >
-                                    <td className="px-2.5 py-1.5 font-bold">
+                                    <TableCell className="px-2.5 py-1.5 font-bold">
                                         {index + 1}
-                                    </td>
-                                    <td className="px-2.5 py-1.5">
+                                    </TableCell>
+                                    <TableCell className="px-2.5 py-1.5">
                                         <Input
                                             type="date"
                                             value={cuota.fecha_vencimiento}
@@ -203,8 +211,8 @@ export default function CreditoDialog({
                                             }
                                             className="h-8 rounded-[7px] text-[12px]"
                                         />
-                                    </td>
-                                    <td className="px-2.5 py-1.5">
+                                    </TableCell>
+                                    <TableCell className="px-2.5 py-1.5">
                                         <Input
                                             type="number"
                                             min={0}
@@ -219,8 +227,8 @@ export default function CreditoDialog({
                                             }
                                             className="h-8 w-28 rounded-[7px] text-[12px]"
                                         />
-                                    </td>
-                                    <td className="px-2 py-1.5">
+                                    </TableCell>
+                                    <TableCell className="px-2 py-1.5">
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -237,11 +245,11 @@ export default function CreditoDialog({
                                         >
                                             <Trash2 className="size-3.5" />
                                         </Button>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 </div>
 
                 <div className="flex items-center justify-between gap-2">

@@ -1,3 +1,4 @@
+import { Pasos } from '@/components/progreso';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 
@@ -9,6 +10,7 @@ import AlmacenLayout from '@/layouts/almacen-layout';
 import { confirmar, despachar, index, store } from '@/routes/almacen/traslados';
 import guias from '@/routes/guias';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type Option = { id: number; nombre: string; codigo?: string };
 
@@ -78,7 +80,7 @@ export default function Transfers({
                 {origenes.length > 0 ? (
                     <div>
                         <Label htmlFor="almacen-traslados-origen">Origen</Label>
-                        <select
+                        <NativeSelect
                             id="almacen-traslados-origen"
                             value={sourceSede.id}
                             onChange={(event) =>
@@ -97,7 +99,7 @@ export default function Transfers({
                                     {sede.nombre}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                     </div>
                 ) : null}
                 {destinations.length === 0 && (
@@ -132,7 +134,7 @@ export default function Transfers({
                         <Label htmlFor="almacen-traslados-destino">
                             Destino
                         </Label>
-                        <select
+                        <NativeSelect
                             id="almacen-traslados-destino"
                             value={form.data.destination_sede_id}
                             onChange={(event) =>
@@ -150,7 +152,7 @@ export default function Transfers({
                                     {sede.nombre}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                     </div>
                     <div>
                         <Label htmlFor="almacen-traslados-unidades-bf-eq">
@@ -170,7 +172,7 @@ export default function Transfers({
                         o, para productos sin serie
                     </p>
                     <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
-                        <select
+                        <NativeSelect
                             aria-label="Producto sin serie"
                             value={form.data.product_id}
                             onChange={(event) =>
@@ -184,7 +186,7 @@ export default function Transfers({
                                     {product.codigo} · {product.nombre}
                                 </option>
                             ))}
-                        </select>
+                        </NativeSelect>
                         <Input
                             aria-label="Cantidad a trasladar"
                             type="number"
@@ -257,6 +259,40 @@ export default function Transfers({
                                           ? ' · guía pendiente de SUNAT'
                                           : ' · sin guía'}
                                 </span>
+                                <Pasos
+                                    label={`Traslado de ${traslado.origen} a ${traslado.destino}`}
+                                    variante="puntos"
+                                    pasos={[
+                                        {
+                                            id: 'preparado',
+                                            label: 'Preparado',
+                                            estado: 'completado',
+                                        },
+                                        {
+                                            id: 'guia',
+                                            label: traslado.guia_aceptada
+                                                ? 'Guía lista'
+                                                : 'Guía pendiente',
+                                            estado: traslado.guia_aceptada
+                                                ? 'completado'
+                                                : 'actual',
+                                        },
+                                        {
+                                            id: 'transito',
+                                            label: 'En tránsito',
+                                            estado:
+                                                traslado.estado ===
+                                                'en_transito'
+                                                    ? 'actual'
+                                                    : 'pendiente',
+                                        },
+                                        {
+                                            id: 'recibido',
+                                            label: 'Recibido',
+                                            estado: 'pendiente',
+                                        },
+                                    ]}
+                                />
                                 {traslado.puede_emitir_guia ? (
                                     <Button asChild variant="outline" size="sm">
                                         <Link

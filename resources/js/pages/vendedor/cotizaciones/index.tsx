@@ -23,8 +23,18 @@ import { Cargando, FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
 import WhatsappNumeroDialog from '@/components/whatsapp-numero-dialog';
 import { Button } from '@/components/ui/button';
+import { Empty } from '@/components/ui/empty';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import { Pasos, pasosCotizacion } from '@/components/progreso';
 import { soles } from '@/lib/utils';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
@@ -222,8 +232,8 @@ function getStatusBadgeConfig(estado: string): {
             return {
                 label: 'Vendida',
                 badgeClass:
-                    'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 border border-blue-500/20',
-                dotClass: 'bg-blue-600',
+                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20',
+                dotClass: 'bg-success-strong',
             };
         case 'anulada':
             return {
@@ -496,52 +506,50 @@ export default function CotizacionesIndex({
 
                     {/* Table */}
                     <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-[12.5px]">
-                            <thead>
-                                <tr className="border-border border-b">
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                        <Table className="w-full border-collapse text-[12.5px]">
+                            <TableHeader>
+                                <TableRow className="border-border border-b">
+                                    <TableHead className="text-left">
                                         Nº Cotización
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Cliente
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Monto
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Vigencia
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Estado
-                                    </th>
-                                    <th className="text-muted-foreground px-2.5 py-2.5 text-left font-mono text-[9.5px] font-semibold tracking-[0.05em] uppercase">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Acciones
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {recargando ? (
                                     <FilasCargando
                                         columnas={6}
                                         filas={quotes.data.length}
                                     />
                                 ) : quotes.data.length === 0 ? (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={6}
-                                            className="text-muted-foreground px-4 py-12 text-center"
+                                            className="text-muted-foreground px-4 text-center"
                                         >
-                                            <div className="flex flex-col items-center justify-center gap-2">
-                                                <Inbox className="text-muted-foreground size-9" />
-                                                <p className="text-foreground text-sm font-medium">
-                                                    No se encontraron
-                                                    cotizaciones
-                                                </p>
-                                                <p className="text-muted-foreground text-xs">
-                                                    {currentFilter
+                                            <Empty
+                                                icon={<Inbox />}
+                                                title="No se encontraron cotizaciones"
+                                                description={
+                                                    currentFilter
                                                         ? 'No hay registros para el filtro seleccionado.'
-                                                        : 'Aún no hay cotizaciones registradas.'}
-                                                </p>
+                                                        : 'Aún no hay cotizaciones registradas.'
+                                                }
+                                            >
                                                 {currentFilter ? (
                                                     <button
                                                         type="button"
@@ -574,9 +582,9 @@ export default function CotizacionesIndex({
                                                         </Link>
                                                     </Button>
                                                 )}
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </Empty>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     quotes.data.map((quote) => {
                                         const badgeConfig =
@@ -612,27 +620,27 @@ export default function CotizacionesIndex({
                                         ].includes(quote.estado);
 
                                         return (
-                                            <tr
+                                            <TableRow
                                                 key={quote.id}
                                                 className="border-border hover:bg-muted/40 border-b transition-colors"
                                             >
                                                 {/* Nº Cotización */}
-                                                <td className="text-foreground px-2.5 py-3.5 font-mono text-xs font-medium">
+                                                <TableCell className="text-foreground px-2.5 py-3.5 font-mono text-xs font-medium">
                                                     {quote.numero}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Cliente */}
-                                                <td className="text-foreground px-2.5 py-3.5 font-medium">
+                                                <TableCell className="text-foreground px-2.5 py-3.5 font-medium">
                                                     {quote.cliente}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Monto */}
-                                                <td className="text-foreground px-2.5 py-3.5 font-bold">
+                                                <TableCell className="text-foreground px-2.5 py-3.5 font-bold">
                                                     {soles(quote.total)}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Vigencia */}
-                                                <td className="px-2.5 py-3.5">
+                                                <TableCell className="px-2.5 py-3.5">
                                                     <span
                                                         className={`text-xs ${
                                                             vigencia.isExpired
@@ -649,10 +657,10 @@ export default function CotizacionesIndex({
                                                             {vigencia.subLabel}
                                                         </div>
                                                     ) : null}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Estado */}
-                                                <td className="px-2.5 py-3.5">
+                                                <TableCell className="px-2.5 py-3.5">
                                                     <span
                                                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${badgeConfig.badgeClass}`}
                                                     >
@@ -661,10 +669,22 @@ export default function CotizacionesIndex({
                                                         />
                                                         {badgeConfig.label}
                                                     </span>
-                                                </td>
+                                                    {pasosCotizacion(
+                                                        quote.estado,
+                                                    ).length > 0 && (
+                                                        <Pasos
+                                                            label={`Avance de la cotización ${quote.numero}`}
+                                                            variante="puntos"
+                                                            pasos={pasosCotizacion(
+                                                                quote.estado,
+                                                            )}
+                                                            className="mt-1.5"
+                                                        />
+                                                    )}
+                                                </TableCell>
 
                                                 {/* Acciones */}
-                                                <td className="px-2.5 py-3.5">
+                                                <TableCell className="px-2.5 py-3.5">
                                                     <div className="flex items-center gap-1.5">
                                                         {!quote.venta &&
                                                             [
@@ -922,13 +942,13 @@ export default function CotizacionesIndex({
                                                             </Link>
                                                         ) : null}
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     {/* Pagination */}

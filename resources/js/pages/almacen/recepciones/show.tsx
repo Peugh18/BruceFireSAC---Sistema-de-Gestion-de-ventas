@@ -1,3 +1,4 @@
+import { ProgresoConEtiqueta } from '@/components/progreso';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -14,6 +15,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import recepciones from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
@@ -71,6 +80,14 @@ export type Props = {
 };
 
 export default function RecepcionesShow({ reception, current_year }: Props) {
+    const recibidas = reception.items.reduce(
+        (total, item) => total + item.cantidad,
+        0,
+    );
+    const conformes = reception.items.reduce(
+        (total, item) => total + item.cantidad_conforme,
+        0,
+    );
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
@@ -234,6 +251,15 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                     </div>
                 )}
 
+                <Card className="p-4">
+                    <ProgresoConEtiqueta
+                        label="Unidades conformes"
+                        value={conformes}
+                        max={recibidas}
+                        tone="success"
+                        detalle={`${recibidas - conformes} observadas de ${recibidas} recibidas · Registro guardado`}
+                    />
+                </Card>
                 {/* FORM O DETALLE */}
                 {isEditing ? (
                     <form
@@ -679,37 +705,42 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                 Líneas del Documento
                             </h2>
 
-                            <div className="mt-3 overflow-x-auto">
-                                <table className="w-full text-left text-[12.5px]">
-                                    <thead>
-                                        <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
-                                            <th className="py-2 pr-3">Ítem</th>
-                                            <th className="px-3 py-2 text-center">
+                            <div
+                                role="region"
+                                aria-label="Detalle de productos recibidos"
+                                tabIndex={0}
+                                className="focus-visible:ring-ring mt-3 overflow-x-auto focus-visible:ring-2 focus-visible:outline-none"
+                            >
+                                <Table className="w-full text-left text-[12.5px]">
+                                    <TableHeader>
+                                        <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                            <TableHead>Ítem</TableHead>
+                                            <TableHead className="text-center">
                                                 Tipo
-                                            </th>
-                                            <th className="px-3 py-2 text-center">
+                                            </TableHead>
+                                            <TableHead className="text-center">
                                                 Recibido
-                                            </th>
-                                            <th className="px-3 py-2 text-center">
+                                            </TableHead>
+                                            <TableHead className="text-center">
                                                 Conforme
-                                            </th>
-                                            <th className="px-3 py-2 text-center">
+                                            </TableHead>
+                                            <TableHead className="text-center">
                                                 Observado
-                                            </th>
-                                            <th className="py-2 pl-4">
+                                            </TableHead>
+                                            <TableHead>
                                                 Motivo No Conforme
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-border divide-y">
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-border divide-y">
                                         {reception.items.map((it) => {
                                             const noConforme =
                                                 it.cantidad -
                                                 it.cantidad_conforme;
 
                                             return (
-                                                <tr key={it.id}>
-                                                    <td className="py-3 pr-3">
+                                                <TableRow key={it.id}>
+                                                    <TableCell className="py-3 pr-3">
                                                         <div className="text-foreground font-bold">
                                                             {it.producto.nombre}
                                                         </div>
@@ -725,8 +756,8 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                     : ''}
                                                             </div>
                                                         )}
-                                                    </td>
-                                                    <td className="px-3 py-3 text-center">
+                                                    </TableCell>
+                                                    <TableCell className="px-3 py-3 text-center">
                                                         {it.producto
                                                             .serializado ? (
                                                             <span className="text-success-strong inline-flex items-center gap-1 rounded-[6px] border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold">
@@ -738,14 +769,14 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                 No serializado
                                                             </span>
                                                         )}
-                                                    </td>
-                                                    <td className="text-foreground px-3 py-3 text-center font-mono font-bold">
+                                                    </TableCell>
+                                                    <TableCell className="text-foreground px-3 py-3 text-center font-mono font-bold">
                                                         {it.cantidad}
-                                                    </td>
-                                                    <td className="text-success-strong px-3 py-3 text-center font-mono font-bold">
+                                                    </TableCell>
+                                                    <TableCell className="text-success-strong px-3 py-3 text-center font-mono font-bold">
                                                         {it.cantidad_conforme}
-                                                    </td>
-                                                    <td className="px-3 py-3 text-center font-mono font-bold">
+                                                    </TableCell>
+                                                    <TableCell className="px-3 py-3 text-center font-mono font-bold">
                                                         {noConforme > 0 ? (
                                                             <span className="text-primary-strong">
                                                                 {noConforme}
@@ -755,16 +786,16 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                 0
                                                             </span>
                                                         )}
-                                                    </td>
-                                                    <td className="text-muted-foreground py-3 pl-4 text-xs">
+                                                    </TableCell>
+                                                    <TableCell className="text-muted-foreground py-3 pl-4 text-xs">
                                                         {it.observacion_item ||
                                                             '—'}
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
                                             );
                                         })}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
                         </Card>
 

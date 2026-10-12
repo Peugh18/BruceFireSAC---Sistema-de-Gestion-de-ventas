@@ -18,9 +18,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import recepciones from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type ReceptionRow = {
     id: number;
@@ -223,7 +232,7 @@ export default function RecepcionesIndex({
                             >
                                 Sede almacén
                             </Label>
-                            <select
+                            <NativeSelect
                                 id="almacen-recepciones-sede-almacen"
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
@@ -235,7 +244,7 @@ export default function RecepcionesIndex({
                                         {s.nombre}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
 
                         <div className="w-[130px]">
@@ -308,66 +317,60 @@ export default function RecepcionesIndex({
                         </div>
                     ) : (
                         <div className="mt-4 overflow-x-auto">
-                            <table className="w-full text-left text-[12.5px]">
-                                <thead>
-                                    <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
-                                        <th className="py-2.5 pr-3">N° Doc.</th>
-                                        <th className="px-3 py-2.5">Fecha</th>
-                                        <th className="px-4 py-2.5">
-                                            Proveedor
-                                        </th>
-                                        <th className="px-3 py-2.5">
-                                            Doc. Referencia
-                                        </th>
-                                        <th className="px-3 py-2.5">
-                                            Sede Almacén
-                                        </th>
-                                        <th className="px-3 py-2.5 text-center">
+                            <Table className="w-full text-left text-[12.5px]">
+                                <TableHeader>
+                                    <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                        <TableHead>N° Doc.</TableHead>
+                                        <TableHead>Fecha</TableHead>
+                                        <TableHead>Proveedor</TableHead>
+                                        <TableHead>Doc. Referencia</TableHead>
+                                        <TableHead>Sede Almacén</TableHead>
+                                        <TableHead className="text-center">
                                             Cant. Recibida
-                                        </th>
-                                        <th className="px-3 py-2.5 text-center">
+                                        </TableHead>
+                                        <TableHead className="text-center">
                                             Conforme
-                                        </th>
-                                        <th className="px-3 py-2.5 text-center">
+                                        </TableHead>
+                                        <TableHead className="text-center">
                                             Estado Conformidad
-                                        </th>
-                                        <th className="py-2.5 pl-4 text-right">
+                                        </TableHead>
+                                        <TableHead className="text-right">
                                             Acción
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-border divide-y">
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="divide-border divide-y">
                                     {receptions.data.map((rec) => (
-                                        <tr
+                                        <TableRow
                                             key={rec.id}
                                             className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <td className="text-foreground py-3 pr-3 font-mono font-bold">
+                                            <TableCell className="text-foreground py-3 pr-3 font-mono font-bold">
                                                 #{rec.id}
-                                            </td>
-                                            <td className="text-foreground/80 px-3 py-3 font-mono text-[11.5px] whitespace-nowrap">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-3 py-3 font-mono text-[11.5px] whitespace-nowrap">
                                                 {formatDate(rec.fecha)}
-                                            </td>
-                                            <td className="text-foreground px-4 py-3 font-bold">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-4 py-3 font-bold">
                                                 {rec.proveedor}
-                                            </td>
-                                            <td className="text-muted-foreground px-3 py-3 font-mono text-[11.5px]">
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground px-3 py-3 font-mono text-[11.5px]">
                                                 {rec.documento_referencia ||
                                                     '—'}
-                                            </td>
-                                            <td className="text-foreground/80 px-3 py-3">
+                                            </TableCell>
+                                            <TableCell className="text-foreground/80 px-3 py-3">
                                                 <div className="flex items-center gap-1.5">
                                                     <Building2 className="text-muted-foreground size-3.5" />
                                                     <span>{rec.sede}</span>
                                                 </div>
-                                            </td>
-                                            <td className="text-foreground px-3 py-3 text-center font-mono font-bold">
+                                            </TableCell>
+                                            <TableCell className="text-foreground px-3 py-3 text-center font-mono font-bold">
                                                 {rec.total_recibido}
-                                            </td>
-                                            <td className="text-success-strong px-3 py-3 text-center font-mono font-bold">
+                                            </TableCell>
+                                            <TableCell className="text-success-strong px-3 py-3 text-center font-mono font-bold">
                                                 {rec.total_conforme}
-                                            </td>
-                                            <td className="px-3 py-3 text-center">
+                                            </TableCell>
+                                            <TableCell className="px-3 py-3 text-center">
                                                 {rec.tiene_no_conforme ? (
                                                     <span className="border-destructive/20 bg-destructive/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold">
                                                         <AlertTriangle className="size-3" />
@@ -386,8 +389,8 @@ export default function RecepcionesIndex({
                                                         </span>
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="py-3 pl-4 text-right">
+                                            </TableCell>
+                                            <TableCell className="py-3 pl-4 text-right">
                                                 <Link
                                                     href={recepciones.show.url({
                                                         current_team: teamSlug,
@@ -398,11 +401,11 @@ export default function RecepcionesIndex({
                                                     <FileText className="size-3.5" />
                                                     <span>Detalle</span>
                                                 </Link>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
 
                             {/* Paginador */}
                             {receptions.links.length > 3 && (

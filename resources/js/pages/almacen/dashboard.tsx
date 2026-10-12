@@ -1,3 +1,4 @@
+import { ProgresoConMarcador } from '@/components/progreso';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -469,7 +470,7 @@ export default function AlmacenDashboard({
                         <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
                             <div className="border-border flex items-center justify-between border-b pb-4">
                                 <span className="text-foreground text-[14px] font-bold">
-                                    Stock bajo el mínimo
+                                    Stock en el mínimo o por debajo
                                 </span>
                                 <span className="bg-destructive/10 text-primary-strong rounded-full px-2 py-0.5 text-[11px] font-bold">
                                     {productos_bajo_minimo.length}
@@ -496,19 +497,19 @@ export default function AlmacenDashboard({
                                                     {prod.nombre}
                                                 </span>
                                                 <span className="text-primary-strong font-mono text-[11px] font-bold">
-                                                    Faltan {prod.diferencia}
+                                                    {prod.diferencia > 0
+                                                        ? `Faltan ${prod.diferencia}`
+                                                        : 'En el mínimo'}
                                                 </span>
                                             </div>
                                             <div className="text-muted-foreground mt-1 flex items-center justify-between text-[11px]">
                                                 <span>Cód: {prod.codigo}</span>
-                                                <span>
-                                                    Disp:{' '}
-                                                    <b className="text-foreground">
-                                                        {prod.stock_disponible}
-                                                    </b>{' '}
-                                                    / Mín: {prod.stock_minimo}
-                                                </span>
                                             </div>
+                                            <ProgresoConMarcador
+                                                label={`Stock de ${prod.nombre}`}
+                                                value={prod.stock_disponible}
+                                                minimo={prod.stock_minimo}
+                                            />
                                         </div>
                                     ))}
                                 </div>

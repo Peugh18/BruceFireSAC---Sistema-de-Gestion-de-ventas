@@ -12,6 +12,7 @@ import {
     TriangleAlert,
     ShieldCheck,
     XCircle,
+    Inbox,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
@@ -25,6 +26,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import {
     type LineaOriginal,
     SaleNotesPanel,
     type SolicitudNota,
@@ -36,6 +45,7 @@ import ventas from '@/routes/vendedor/ventas';
 import detracciones from '@/routes/vendedor/ventas/detraccion';
 import type { Team } from '@/types';
 import CertificadosRoutes from '@/routes/vendedor/certificados';
+import { Empty } from '@/components/ui/empty';
 
 type ComprobanteClient = {
     id: number;
@@ -686,9 +696,9 @@ export default function VentasShow({
                                     )}
                             </div>
                         )}
-                        <table className="w-full border-collapse text-[12.5px]">
-                            <thead>
-                                <tr>
+                        <Table className="w-full border-collapse text-[12.5px]">
+                            <TableHeader>
+                                <TableRow>
                                     {[
                                         'Producto',
                                         'Serie',
@@ -698,24 +708,24 @@ export default function VentasShow({
                                         'Desc.',
                                         'Subtotal',
                                     ].map((h) => (
-                                        <th
+                                        <TableHead
                                             key={h}
-                                            className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
+                                            className="text-left"
                                         >
                                             {h}
-                                        </th>
+                                        </TableHead>
                                     ))}
-                                </tr>
-                            </thead>
-                            <tbody>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {(sale.items ?? []).map((item) => (
-                                    <tr key={item.id}>
-                                        <td className="border-border border-b px-2.5 py-[13px] font-semibold">
+                                    <TableRow key={item.id}>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px] font-semibold">
                                             {item.product?.nombre ??
                                                 item.service?.nombre ??
                                                 '-'}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
                                             {item.numero_serie ?? '-'}
                                             {puedeCambiarExtintor &&
                                             item.tipo_linea ===
@@ -742,26 +752,26 @@ export default function VentasShow({
                                                     Cambiar
                                                 </button>
                                             ) : null}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px] capitalize">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px] capitalize">
                                             {nice(item.tipo_linea)}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             {item.cantidad ?? 1}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             {money(item.precio_unitario)}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px]">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             {money(item.descuento)}
-                                        </td>
-                                        <td className="border-border border-b px-2.5 py-[13px] font-bold">
+                                        </TableCell>
+                                        <TableCell className="border-border border-b px-2.5 py-[13px] font-bold">
                                             {money(item.subtotal)}
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </Card>
 
@@ -770,35 +780,35 @@ export default function VentasShow({
                         Pagos
                     </h2>
                     <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-[12.5px]">
-                            <thead>
-                                <tr>
+                        <Table className="w-full border-collapse text-[12.5px]">
+                            <TableHeader>
+                                <TableRow>
                                     {['Forma', 'Fecha', 'Monto', 'Estado'].map(
                                         (h) => (
-                                            <th
+                                            <TableHead
                                                 key={h}
-                                                className="border-border text-muted-foreground border-b px-2.5 py-2.5 text-left font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase"
+                                                className="text-left"
                                             >
                                                 {h}
-                                            </th>
+                                            </TableHead>
                                         ),
                                     )}
-                                </tr>
-                            </thead>
-                            <tbody>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {(sale.payments ?? []).length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={4}
-                                            className="text-muted-foreground px-2.5 py-8 text-center"
-                                        >
-                                            Sin pagos registrados
-                                        </td>
-                                    </tr>
+                                    <TableRow>
+                                        <TableCell colSpan={4}>
+                                            <Empty
+                                                icon={<Inbox />}
+                                                title="Sin pagos registrados"
+                                            />
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     (sale.payments ?? []).map((payment) => (
-                                        <tr key={payment.id}>
-                                            <td className="border-border border-b px-2.5 py-[13px] capitalize">
+                                        <TableRow key={payment.id}>
+                                            <TableCell className="border-border border-b px-2.5 py-[13px] capitalize">
                                                 {payment.es_detraccion
                                                     ? 'Detracción BN'
                                                     : medioPago(
@@ -811,8 +821,8 @@ export default function VentasShow({
                                                         }
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[13px]">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                 {(
                                                     payment.fecha_pago ??
                                                     payment.fecha
@@ -821,18 +831,18 @@ export default function VentasShow({
                                                     .split('-')
                                                     .reverse()
                                                     .join('/') ?? '-'}
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[13px] font-bold">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[13px] font-bold">
                                                 {money(payment.monto)}
-                                            </td>
-                                            <td className="border-border border-b px-2.5 py-[13px] capitalize">
+                                            </TableCell>
+                                            <TableCell className="border-border border-b px-2.5 py-[13px] capitalize">
                                                 {payment.estado ?? 'Registrado'}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </Card>
 
@@ -996,7 +1006,7 @@ export default function VentasShow({
             <CargaLarga
                 activo={procesando === 'enviar'}
                 titulo="Enviando el comprobante a SUNAT"
-                detalle="Suele tardar menos de 10 segundos"
+                detalle="La operación está en curso. El resultado se mostrará al terminar."
             />
             <CargaLarga
                 activo={procesando === 'anular'}

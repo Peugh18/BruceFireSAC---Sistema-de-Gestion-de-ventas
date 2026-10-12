@@ -19,6 +19,8 @@ import ConversacionOrden, {
     type ConversacionProps,
 } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
+import { Pasos, pasosEntrega } from '@/components/progreso';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
@@ -237,9 +239,16 @@ export default function EntregaShow({
                                 : 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
                         }`}
                     >
-                        {order.estado.replace('_', ' ').toUpperCase()}
+                        {etiquetaEstadoOrden(order.estado).toUpperCase()}
                     </span>
                 </div>
+
+                <Pasos
+                    label={`Avance de la entrega ${order.codigo}`}
+                    pasos={pasosEntrega(order.estado)}
+                    variante="cheuron"
+                    className="grid-cols-3 [&>li]:flex-col [&>li]:items-start [&>li]:gap-1 [&>li]:p-2 [&>li]:text-xs sm:[&>li]:flex-row sm:[&>li]:items-center"
+                />
 
                 <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2">

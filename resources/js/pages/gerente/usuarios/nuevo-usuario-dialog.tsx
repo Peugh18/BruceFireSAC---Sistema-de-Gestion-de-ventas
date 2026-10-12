@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import UsuariosRoutes from '@/routes/gerente/usuarios';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type SedeOption = { id: number; nombre: string; tipo: string };
 
@@ -115,7 +116,7 @@ export default function NuevoUsuarioDialog({
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <Label htmlFor="nuevo-rol">Rol</Label>
-                            <select
+                            <NativeSelect
                                 id="nuevo-rol"
                                 value={form.data.role}
                                 onChange={(e) =>
@@ -132,12 +133,12 @@ export default function NuevoUsuarioDialog({
                                         {roleLabel(rol)}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                             <InputError message={form.errors.role} />
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="nuevo-sede">Sede</Label>
-                            <select
+                            <NativeSelect
                                 id="nuevo-sede"
                                 value={form.data.sede_id}
                                 onChange={(e) =>
@@ -155,7 +156,7 @@ export default function NuevoUsuarioDialog({
                                         {sede.nombre}
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                             <InputError message={form.errors.sede_id} />
                         </div>
                     </div>

@@ -17,7 +17,16 @@ import { Card } from '@/components/ui/card';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AlmacenLayout from '@/layouts/almacen-layout';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export type SedeInfo = {
     id: number;
@@ -395,7 +404,7 @@ export default function StockIndex({
                                     >
                                         Tipo de ítem
                                     </Label>
-                                    <select
+                                    <NativeSelect
                                         id="almacen-stock-tipo-de-item"
                                         value={stockTipo}
                                         onChange={(e) =>
@@ -409,7 +418,7 @@ export default function StockIndex({
                                         <option value="producto">
                                             Solo Productos
                                         </option>
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -466,28 +475,24 @@ export default function StockIndex({
                                 </div>
                             ) : (
                                 <div className="mt-4 overflow-x-auto">
-                                    <table className="w-full text-left text-[12.5px]">
-                                        <thead>
-                                            <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
-                                                <th className="py-2.5 pr-4">
-                                                    Código
-                                                </th>
-                                                <th className="px-4 py-2.5">
+                                    <Table className="w-full text-left text-[12.5px]">
+                                        <TableHeader>
+                                            <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                                <TableHead>Código</TableHead>
+                                                <TableHead>
                                                     Ítem / Descripción
-                                                </th>
-                                                <th className="px-3 py-2.5">
-                                                    Tipo
-                                                </th>
-                                                <th className="px-3 py-2.5 text-center">
+                                                </TableHead>
+                                                <TableHead>Tipo</TableHead>
+                                                <TableHead className="text-center">
                                                     U.M.
-                                                </th>
-                                                <th className="px-3 py-2.5 text-right">
+                                                </TableHead>
+                                                <TableHead className="text-right">
                                                     Precio Ref.
-                                                </th>
+                                                </TableHead>
                                                 {sedes.map((sede) => (
-                                                    <th
+                                                    <TableHead
                                                         key={sede.id}
-                                                        className="px-3 py-2.5 text-center"
+                                                        className="text-center"
                                                     >
                                                         <div className="flex items-center justify-center gap-1">
                                                             <Building2 className="text-muted-foreground size-3" />
@@ -495,14 +500,14 @@ export default function StockIndex({
                                                                 {sede.nombre}
                                                             </span>
                                                         </div>
-                                                    </th>
+                                                    </TableHead>
                                                 ))}
-                                                <th className="py-2.5 pl-4 text-center">
+                                                <TableHead className="text-center">
                                                     Stock Total
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-border divide-y">
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-border divide-y">
                                             {items.data.map((item) => {
                                                 const isBajoMinimo =
                                                     item.tipo === 'producto' &&
@@ -513,14 +518,14 @@ export default function StockIndex({
                                                         0) <= item.stock_minimo;
 
                                                 return (
-                                                    <tr
+                                                    <TableRow
                                                         key={`${item.tipo}-${item.id}`}
                                                         className="hover:bg-muted/40 transition-colors"
                                                     >
-                                                        <td className="text-foreground py-3 pr-4 font-mono font-bold">
+                                                        <TableCell className="text-foreground py-3 pr-4 font-mono font-bold">
                                                             {item.codigo}
-                                                        </td>
-                                                        <td className="px-4 py-3">
+                                                        </TableCell>
+                                                        <TableCell className="px-4 py-3">
                                                             <div className="text-foreground font-bold">
                                                                 {item.nombre}
                                                             </div>
@@ -574,18 +579,18 @@ export default function StockIndex({
                                                                         : ''}
                                                                 </div>
                                                             ))}
-                                                        </td>
-                                                        <td className="px-3 py-3">
+                                                        </TableCell>
+                                                        <TableCell className="px-3 py-3">
                                                             {getTipoBadge()}
-                                                        </td>
-                                                        <td className="text-muted-foreground px-3 py-3 text-center font-mono">
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground px-3 py-3 text-center font-mono">
                                                             {item.unidad_medida}
-                                                        </td>
-                                                        <td className="text-foreground px-3 py-3 text-right font-mono font-medium">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground px-3 py-3 text-right font-mono font-medium">
                                                             {formatCurrency(
                                                                 item.precio_venta,
                                                             )}
-                                                        </td>
+                                                        </TableCell>
 
                                                         {/* Stock por sede */}
                                                         {sedes.map((sede) => {
@@ -595,7 +600,7 @@ export default function StockIndex({
                                                                     sede.id
                                                                 ];
                                                             return (
-                                                                <td
+                                                                <TableCell
                                                                     key={
                                                                         sede.id
                                                                     }
@@ -616,12 +621,12 @@ export default function StockIndex({
                                                                         {qty ??
                                                                             0}
                                                                     </span>
-                                                                </td>
+                                                                </TableCell>
                                                             );
                                                         })}
 
                                                         {/* Stock Total */}
-                                                        <td className="py-3 pl-4 text-center">
+                                                        <TableCell className="py-3 pl-4 text-center">
                                                             <div className="flex flex-col items-center">
                                                                 <span
                                                                     className={[
@@ -646,12 +651,12 @@ export default function StockIndex({
                                                                         </span>
                                                                     )}
                                                             </div>
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 );
                                             })}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
 
                                     {/* Paginador del catálogo */}
                                     {items.links.length > 3 && (
@@ -717,7 +722,7 @@ export default function StockIndex({
                                     >
                                         Producto
                                     </Label>
-                                    <select
+                                    <NativeSelect
                                         id="almacen-stock-producto"
                                         value={kProductId}
                                         onChange={(e) =>
@@ -736,7 +741,7 @@ export default function StockIndex({
                                                 {prod.codigo} - {prod.nombre}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 <div className="w-[160px]">
@@ -746,7 +751,7 @@ export default function StockIndex({
                                     >
                                         Sede / Almacén
                                     </Label>
-                                    <select
+                                    <NativeSelect
                                         id="almacen-stock-sede-almacen"
                                         value={kSedeId}
                                         onChange={(e) =>
@@ -765,7 +770,7 @@ export default function StockIndex({
                                                 {sede.nombre}
                                             </option>
                                         ))}
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 <div className="w-[150px]">
@@ -775,7 +780,7 @@ export default function StockIndex({
                                     >
                                         Tipo movimiento
                                     </Label>
-                                    <select
+                                    <NativeSelect
                                         id="almacen-stock-tipo-movimiento"
                                         value={kTipo}
                                         onChange={(e) =>
@@ -801,7 +806,7 @@ export default function StockIndex({
                                         <option value="traslado">
                                             Traslado entre sedes
                                         </option>
-                                    </select>
+                                    </NativeSelect>
                                 </div>
 
                                 <div className="w-[130px]">
@@ -905,36 +910,26 @@ export default function StockIndex({
                                 </div>
                             ) : (
                                 <div className="mt-4 overflow-x-auto">
-                                    <table className="w-full text-left text-[12.5px]">
-                                        <thead>
-                                            <tr className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
-                                                <th className="py-2.5 pr-4">
-                                                    Fecha
-                                                </th>
-                                                <th className="px-3 py-2.5">
-                                                    Tipo
-                                                </th>
-                                                <th className="px-4 py-2.5">
-                                                    Producto
-                                                </th>
-                                                <th className="px-3 py-2.5">
+                                    <Table className="w-full text-left text-[12.5px]">
+                                        <TableHeader>
+                                            <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                                <TableHead>Fecha</TableHead>
+                                                <TableHead>Tipo</TableHead>
+                                                <TableHead>Producto</TableHead>
+                                                <TableHead>
                                                     Unidad / Serie
-                                                </th>
-                                                <th className="px-3 py-2.5">
-                                                    Sede
-                                                </th>
-                                                <th className="px-3 py-2.5 text-right">
+                                                </TableHead>
+                                                <TableHead>Sede</TableHead>
+                                                <TableHead className="text-right">
                                                     Cantidad
-                                                </th>
-                                                <th className="px-4 py-2.5">
-                                                    Usuario
-                                                </th>
-                                                <th className="py-2.5 pl-4">
+                                                </TableHead>
+                                                <TableHead>Usuario</TableHead>
+                                                <TableHead>
                                                     Observación
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-border divide-y">
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-border divide-y">
                                             {kardex.data.map((mov) => {
                                                 const badge =
                                                     getTipoMovimientoBadge(
@@ -944,23 +939,23 @@ export default function StockIndex({
                                                     Number(mov.cantidad) < 0;
 
                                                 return (
-                                                    <tr
+                                                    <TableRow
                                                         key={mov.id}
                                                         className="hover:bg-muted/40 transition-colors"
                                                     >
-                                                        <td className="text-foreground/80 py-3 pr-4 font-mono text-[11.5px] whitespace-nowrap">
+                                                        <TableCell className="text-foreground/80 py-3 pr-4 font-mono text-[11.5px] whitespace-nowrap">
                                                             {formatDate(
                                                                 mov.fecha,
                                                             )}
-                                                        </td>
-                                                        <td className="px-3 py-3">
+                                                        </TableCell>
+                                                        <TableCell className="px-3 py-3">
                                                             <span
                                                                 className={`inline-flex items-center rounded-[6px] border px-2 py-0.5 text-[10.5px] font-bold ${badge.className}`}
                                                             >
                                                                 {badge.label}
                                                             </span>
-                                                        </td>
-                                                        <td className="px-4 py-3">
+                                                        </TableCell>
+                                                        <TableCell className="px-4 py-3">
                                                             <div className="text-foreground font-bold">
                                                                 {
                                                                     mov.producto
@@ -974,8 +969,8 @@ export default function StockIndex({
                                                                         .codigo
                                                                 }
                                                             </div>
-                                                        </td>
-                                                        <td className="px-3 py-3">
+                                                        </TableCell>
+                                                        <TableCell className="px-3 py-3">
                                                             {mov.unidad_serie ? (
                                                                 <span className="text-foreground flex items-center gap-1 font-mono text-[11.5px] font-bold">
                                                                     <ScanBarcode className="text-success-strong size-3" />
@@ -988,11 +983,11 @@ export default function StockIndex({
                                                                     —
                                                                 </span>
                                                             )}
-                                                        </td>
-                                                        <td className="text-foreground/80 px-3 py-3">
+                                                        </TableCell>
+                                                        <TableCell className="text-foreground/80 px-3 py-3">
                                                             {mov.sede || '—'}
-                                                        </td>
-                                                        <td className="px-3 py-3 text-right font-mono text-[12.5px] font-bold">
+                                                        </TableCell>
+                                                        <TableCell className="px-3 py-3 text-right font-mono text-[12.5px] font-bold">
                                                             <span
                                                                 className={
                                                                     isSalida
@@ -1010,20 +1005,20 @@ export default function StockIndex({
                                                                         .unidad_medida
                                                                 }
                                                             </span>
-                                                        </td>
-                                                        <td className="text-muted-foreground px-4 py-3 text-[11.5px]">
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground px-4 py-3 text-[11.5px]">
                                                             {mov.usuario ||
                                                                 'Sistema'}
-                                                        </td>
-                                                        <td className="text-muted-foreground max-w-[200px] truncate py-3 pl-4 text-[11.5px]">
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground max-w-[200px] truncate py-3 pl-4 text-[11.5px]">
                                                             {mov.observacion ||
                                                                 '—'}
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 );
                                             })}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
 
                                     {/* Paginador del Kardex */}
                                     {kardex.links.length > 3 && (

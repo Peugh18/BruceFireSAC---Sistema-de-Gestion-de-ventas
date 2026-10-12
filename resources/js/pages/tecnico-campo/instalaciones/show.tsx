@@ -4,6 +4,7 @@ import ConversacionOrden, {
     type ConversacionProps,
 } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
@@ -29,6 +30,7 @@ import type { Team } from '@/types';
 import OpcionesAgente, {
     useAgentesExtintor,
 } from '@/components/opciones-agente';
+import { NativeSelect } from '@/components/ui/native-select';
 
 type Client = {
     id: number;
@@ -292,7 +294,7 @@ export default function InstalacionShow({
                         )}
                     </div>
                     <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[10px] font-black text-sky-700 dark:text-sky-400">
-                        {order.estado.replace('_', ' ').toUpperCase()}
+                        {etiquetaEstadoOrden(order.estado).toUpperCase()}
                     </span>
                 </div>
 
@@ -558,7 +560,7 @@ export default function InstalacionShow({
                                         <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
                                             Agente Extintor
                                         </label>
-                                        <select
+                                        <NativeSelect
                                             aria-label="Agente Extintor"
                                             disabled={isFinalizada}
                                             value={item.tipo_agente}
@@ -572,7 +574,7 @@ export default function InstalacionShow({
                                             className="border-border bg-card w-full rounded-[6px] border p-1.5 text-xs"
                                         >
                                             <OpcionesAgente vacia="Sin registrar" />
-                                        </select>
+                                        </NativeSelect>
                                     </div>
                                     <div>
                                         <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
@@ -691,7 +693,7 @@ export default function InstalacionShow({
                             <label className="text-muted-foreground mb-1 block text-[10px] font-bold">
                                 Tipo de Certificado
                             </label>
-                            <select
+                            <NativeSelect
                                 aria-label="Tipo de Certificado"
                                 disabled={isFinalizada}
                                 value={form.data.tipo_certificado_codigo}
@@ -708,7 +710,7 @@ export default function InstalacionShow({
                                         {ct.nombre} ({ct.codigo})
                                     </option>
                                 ))}
-                            </select>
+                            </NativeSelect>
                         </div>
                     )}
                 </div>
