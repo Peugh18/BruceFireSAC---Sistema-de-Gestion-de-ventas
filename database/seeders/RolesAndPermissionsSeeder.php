@@ -41,8 +41,7 @@ class RolesAndPermissionsSeeder extends Seeder
     ];
 
     /**
-     * Permissions granted to the Vendedor role, per Documento Maestro §35.2
-     * and the refined matrix in docs/01_MODULOS_ROLES_PERMISOS.md §4.
+     * Permissions granted to the Vendedor role.
      *
      * @var list<string>
      */

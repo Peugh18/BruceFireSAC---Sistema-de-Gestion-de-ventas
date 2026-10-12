@@ -51,5 +51,3 @@ export function ServiciosTabs({
         />
     );
 }
-
-export default ServiciosTabs;

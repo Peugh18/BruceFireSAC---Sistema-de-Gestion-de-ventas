@@ -24,7 +24,7 @@ use RuntimeException;
 /**
  * Arma, firma y envía la guía de remisión (tipo 09, serie T001) por la API
  * REST de SUNAT. La guía queda "lista para trasladar" solo con el CDR
- * aceptado (docs/ai/SUNAT.md §5).
+ * aceptado.
  */
 class GuiaRemisionService
 {
