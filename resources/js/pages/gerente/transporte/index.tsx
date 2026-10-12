@@ -9,6 +9,7 @@ import GerenteLayout from '@/layouts/gerente-layout';
 import transporte from '@/routes/gerente/transporte';
 import type { Team } from '@/types';
 import { NativeSelect } from '@/components/ui/native-select';
+import { InputPeru } from '@/components/ui/input-peru';
 
 type Vehiculo = {
     id: number;
@@ -114,7 +115,8 @@ export default function Transporte({
                     >
                         <div>
                             <Label htmlFor="veh-placa">Placa</Label>
-                            <Input
+                            <InputPeru
+                                tipo="placa"
                                 id="veh-placa"
                                 value={vehiculo.data.placa}
                                 onChange={(e) =>
@@ -228,13 +230,30 @@ export default function Transporte({
                                 <Label htmlFor={`cond-${campo}`}>
                                     {etiqueta}
                                 </Label>
-                                <Input
-                                    id={`cond-${campo}`}
-                                    value={conductor.data[campo]}
-                                    onChange={(e) =>
-                                        conductor.setData(campo, e.target.value)
-                                    }
-                                />
+                                {campo === 'dni' || campo === 'licencia' ? (
+                                    <InputPeru
+                                        tipo={campo}
+                                        id={`cond-${campo}`}
+                                        value={conductor.data[campo]}
+                                        onChange={(e) =>
+                                            conductor.setData(
+                                                campo,
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                ) : (
+                                    <Input
+                                        id={`cond-${campo}`}
+                                        value={conductor.data[campo]}
+                                        onChange={(e) =>
+                                            conductor.setData(
+                                                campo,
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                )}
                                 {conductor.errors[campo] ? (
                                     <p className="text-destructive-strong text-xs">
                                         {conductor.errors[campo]}

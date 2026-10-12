@@ -28,7 +28,7 @@ class StoreTransferRequest extends FormRequest
             'serials' => ['nullable', 'array'],
             'serials.*' => ['string', 'distinct', 'max:100'],
             'product_id' => ['nullable', 'required_without:serials', 'integer', 'exists:products,id'],
-            'quantity' => ['nullable', 'required_with:product_id', 'integer', 'min:1'],
+            'quantity' => ['nullable', 'required_with:product_id', 'integer', 'min:1', 'max:99999'],
             'observation' => ['nullable', 'string', 'max:1000'],
         ];
     }

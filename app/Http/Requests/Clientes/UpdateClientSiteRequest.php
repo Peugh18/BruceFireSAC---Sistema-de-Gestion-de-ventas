@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Clientes;
 
+use App\Rules\TelefonoPeru;
+use App\Support\DatosPeru;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,6 +12,13 @@ class UpdateClientSiteRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'telefono' => DatosPeru::telefono($this->input('telefono')),
+        ]);
     }
 
     /**
@@ -24,7 +33,7 @@ class UpdateClientSiteRequest extends FormRequest
             'ubigeo' => ['nullable', 'string', 'size:6', 'exists:ubigeos,codigo'],
             'referencia' => ['nullable', 'string', 'max:255'],
             'contacto' => ['nullable', 'string', 'max:255'],
-            'telefono' => ['nullable', 'string', 'max:255'],
+            'telefono' => ['nullable', new TelefonoPeru],
             'email' => ['nullable', 'email', 'max:255'],
             'estado' => ['sometimes', Rule::in(['activo', 'inactivo'])],
         ];

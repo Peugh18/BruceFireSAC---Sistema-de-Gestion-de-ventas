@@ -37,7 +37,7 @@ class UpdateServiceRequest extends FormRequest
             // X9: "Ofrecer recarga" elige el servicio por agente y capacidad del extintor.
             'agente' => ['nullable', Rule::enum(EquipmentType::class)],
             'capacidad' => ['nullable', 'string', 'max:20'],
-            'precio_venta' => ['required', 'numeric', 'min:0'],
+            'precio_venta' => ['required', 'numeric', 'min:0', 'decimal:0,2', 'max:9999999.99'],
             'aplica_igv' => ['boolean'],
             'codigo_detraccion' => ['nullable', Rule::in(['020', '022', '037'])],
             'tipo_afectacion_igv' => ['sometimes', 'required', Rule::in(['10', '20', '30'])],

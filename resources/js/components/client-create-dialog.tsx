@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { rucLookup } from '@/routes/vendedor';
 import clientes from '@/routes/vendedor/clientes';
 import { NativeSelect } from '@/components/ui/native-select';
+import { InputPeru } from '@/components/ui/input-peru';
 
 export type ClientFormData = {
     tipo_documento: 'ruc' | 'dni';
@@ -242,9 +243,9 @@ function ClientFormFields({
                             : '¿WhatsApp diferente?'}
                     </button>
                 </div>
-                <Input
+                <InputPeru
+                    tipo="telefono"
                     id={`${formId}-telefono`}
-                    type="tel"
                     value={data.telefono}
                     placeholder="999 999 999"
                     onChange={(event) => {
@@ -267,9 +268,9 @@ function ClientFormFields({
                     >
                         Número de WhatsApp
                     </Label>
-                    <Input
+                    <InputPeru
+                        tipo="celular"
                         id={`${formId}-whatsapp`}
-                        type="tel"
                         value={data.whatsapp}
                         placeholder="Ej. 988 888 888"
                         onChange={(event) =>

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { InputPeru } from '@/components/ui/input-peru';
 import { Label } from '@/components/ui/label';
 import RoleLayout from '@/layouts/role-layout';
 import guias from '@/routes/guias';
@@ -95,16 +96,39 @@ export default function GuiaForm({
                   ? valor
                   : '';
 
+        // Documentos con su largo exacto: DNI de 8 o RUC de 11, sin letras.
+        const documento =
+            id === 'transportista_ruc'
+                ? ('ruc' as const)
+                : id === 'destinatario_num_doc'
+                  ? form.data.destinatario_tipo_doc === '1'
+                      ? ('dni' as const)
+                      : ('ruc' as const)
+                  : null;
+
         return (
             <div>
                 <Label htmlFor={`guia-${id}`}>{etiqueta}</Label>
-                <Input
-                    id={`guia-${id}`}
-                    type={tipo}
-                    step={tipo === 'number' ? '0.001' : undefined}
-                    value={texto}
-                    onChange={(event) => form.setData(id, event.target.value)}
-                />
+                {documento ? (
+                    <InputPeru
+                        tipo={documento}
+                        id={`guia-${id}`}
+                        value={texto}
+                        onChange={(event) =>
+                            form.setData(id, event.target.value)
+                        }
+                    />
+                ) : (
+                    <Input
+                        id={`guia-${id}`}
+                        type={tipo}
+                        step={tipo === 'number' ? '0.001' : undefined}
+                        value={texto}
+                        onChange={(event) =>
+                            form.setData(id, event.target.value)
+                        }
+                    />
+                )}
                 {form.errors[id] ? (
                     <p className="text-destructive-strong mt-1 text-xs">
                         {form.errors[id]}

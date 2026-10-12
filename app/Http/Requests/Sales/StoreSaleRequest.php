@@ -38,7 +38,7 @@ class StoreSaleRequest extends FormRequest
             'emitir' => ['sometimes', 'boolean'],
             'cuotas' => ['exclude_unless:condicion_pago,credito', 'required', 'array', 'min:1', 'max:36'],
             'cuotas.*.fecha_vencimiento' => ['exclude_unless:condicion_pago,credito', 'required', 'date', 'after:fecha'],
-            'cuotas.*.monto' => ['exclude_unless:condicion_pago,credito', 'required', 'numeric', 'min:0.01'],
+            'cuotas.*.monto' => ['exclude_unless:condicion_pago,credito', 'required', 'numeric', 'min:0.01', 'decimal:0,2', 'max:9999999.99'],
             'referencia' => ['nullable', 'string', 'max:150'],
             'comprobante_tipo' => ['required', Rule::in(['factura', 'boleta', 'nota_venta'])],
             'observaciones' => ['nullable', 'string'],
@@ -50,9 +50,9 @@ class StoreSaleRequest extends FormRequest
             'items.*.numero_serie' => ['required_if:items.*.tipo_linea,unidad_nueva,recarga_servicio', 'nullable', 'string'],
             'items.*.product_id' => ['required_if:items.*.tipo_linea,unidad_nueva,producto', 'nullable', 'integer', 'exists:products,id'],
             'items.*.service_id' => ['required_if:items.*.tipo_linea,recarga_servicio,servicio', 'nullable', 'integer', 'exists:services,id'],
-            'items.*.cantidad' => ['required', 'integer', 'min:1'],
-            'items.*.precio_unitario' => ['required', 'numeric', 'gt:0'],
-            'items.*.descuento' => ['nullable', 'numeric', 'min:0'],
+            'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
+            'items.*.precio_unitario' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999.99'],
+            'items.*.descuento' => ['nullable', 'numeric', 'min:0', 'decimal:0,2', 'max:9999999.99'],
         ];
     }
 

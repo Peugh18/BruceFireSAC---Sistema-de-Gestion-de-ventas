@@ -42,7 +42,7 @@ class UpdateProductRequest extends FormRequest
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
             'unidad_medida' => ['required', Rule::in(UnidadMedidaSunat::codigos())],
-            'precio_venta' => ['required', 'numeric', 'min:0'],
+            'precio_venta' => ['required', 'numeric', 'min:0', 'decimal:0,2', 'max:9999999.99'],
             'aplica_igv' => ['boolean'],
             'tipo_afectacion_igv' => ['sometimes', 'required', Rule::in(['10', '20', '30'])],
             'serializado' => ['boolean'],

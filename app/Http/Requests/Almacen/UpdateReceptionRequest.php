@@ -24,8 +24,8 @@ class UpdateReceptionRequest extends FormRequest
             'observacion' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['required', 'integer', 'exists:reception_items,id'],
-            'items.*.cantidad' => ['required', 'integer', 'min:1'],
-            'items.*.cantidad_conforme' => ['required', 'integer', 'min:0'],
+            'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
+            'items.*.cantidad_conforme' => ['required', 'integer', 'min:0', 'max:99999'],
             'items.*.observacion_item' => ['nullable', 'string'],
             // Se puede corregir el vencimiento de un lote mal tipeado.
             'items.*.fecha_vencimiento' => ['nullable', 'date'],

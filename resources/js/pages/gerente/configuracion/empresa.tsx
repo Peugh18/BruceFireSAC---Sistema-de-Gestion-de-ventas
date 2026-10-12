@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { InputPeru } from '@/components/ui/input-peru';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import cuentasBancarias from '@/routes/gerente/configuracion/cuentas-bancarias';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
@@ -338,7 +339,8 @@ export default function EmpresaConfiguracion({
                                 >
                                     RUC
                                 </Label>
-                                <Input
+                                <InputPeru
+                                    tipo="ruc"
                                     id="gerente-configuracion-empresa-ruc"
                                     value={form.data.ruc}
                                     onChange={(e) =>
@@ -355,7 +357,8 @@ export default function EmpresaConfiguracion({
                                 >
                                     Teléfono
                                 </Label>
-                                <Input
+                                <InputPeru
+                                    tipo="telefono"
                                     id="gerente-configuracion-empresa-telefono"
                                     value={form.data.telefono}
                                     onChange={(e) =>
@@ -438,7 +441,8 @@ export default function EmpresaConfiguracion({
                                 >
                                     Cuenta de detracción (Banco de la Nación)
                                 </Label>
-                                <Input
+                                <InputPeru
+                                    tipo="cuenta"
                                     id="gerente-configuracion-empresa-cuenta-de-detraccion-banco-de-la-nacion"
                                     value={form.data.cuenta_detraccion}
                                     onChange={(e) =>
@@ -672,7 +676,8 @@ export default function EmpresaConfiguracion({
                                 bankForm.setData('titular', e.target.value)
                             }
                         />
-                        <Input
+                        <InputPeru
+                            tipo="cuenta"
                             aria-label="Número de cuenta"
                             placeholder="N° de cuenta"
                             value={bankForm.data.numero_cuenta}
@@ -683,7 +688,8 @@ export default function EmpresaConfiguracion({
                                 )
                             }
                         />
-                        <Input
+                        <InputPeru
+                            tipo="cci"
                             aria-label="CCI"
                             placeholder="CCI (opcional)"
                             value={bankForm.data.cci}

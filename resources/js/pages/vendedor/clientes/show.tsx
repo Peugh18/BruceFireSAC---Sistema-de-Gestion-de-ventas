@@ -63,6 +63,7 @@ import sitesRoutes from '@/routes/vendedor/clientes/sites';
 import vehiclesRoutes from '@/routes/vendedor/clientes/vehiculos';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
+import { InputPeru } from '@/components/ui/input-peru';
 
 // ==================== TIPOS CONTRATO BRIEF ====================
 
@@ -2457,7 +2458,12 @@ export default function ClienteShow({
                             </div>
                             <div>
                                 <Label>Número doc</Label>
-                                <Input
+                                <InputPeru
+                                    tipo={
+                                        editForm.data.tipo_documento === 'dni'
+                                            ? 'dni'
+                                            : 'ruc'
+                                    }
                                     aria-label="Número de documento"
                                     value={editForm.data.numero_documento}
                                     onChange={(e) =>
@@ -2504,7 +2510,8 @@ export default function ClienteShow({
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <Label>Teléfono</Label>
-                                <Input
+                                <InputPeru
+                                    tipo="telefono"
                                     aria-label="Teléfono"
                                     value={editForm.data.telefono}
                                     onChange={(e) => {
@@ -2539,7 +2546,8 @@ export default function ClienteShow({
                                             </button>
                                         )}
                                 </div>
-                                <Input
+                                <InputPeru
+                                    tipo="celular"
                                     aria-label="WhatsApp"
                                     value={editForm.data.whatsapp}
                                     onChange={(e) =>
@@ -2729,7 +2737,8 @@ export default function ClienteShow({
                             </div>
                             <div>
                                 <Label>Teléfono contacto</Label>
-                                <Input
+                                <InputPeru
+                                    tipo="telefono"
                                     aria-label="Teléfono"
                                     value={siteForm.data.telefono}
                                     onChange={(e) =>
@@ -2782,7 +2791,8 @@ export default function ClienteShow({
                     >
                         <div>
                             <Label>Placa del vehículo</Label>
-                            <Input
+                            <InputPeru
+                                tipo="placa"
                                 aria-label="Placa"
                                 value={vehicleForm.data.placa}
                                 onChange={(e) =>

@@ -111,7 +111,7 @@ class ExecutionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
-            'cantidad' => ['required', 'integer', 'min:1'],
+            'cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
             'observacion' => ['nullable', 'string', 'max:500'],
         ]);
 
