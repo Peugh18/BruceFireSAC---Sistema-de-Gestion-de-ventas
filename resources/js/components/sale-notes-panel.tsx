@@ -816,6 +816,16 @@ export function SaleNotesPanel({
                                         type="number"
                                         required
                                         min="0.01"
+                                        max={
+                                            kind === 'nota_credito' &&
+                                            lineasOriginal.length > 0
+                                                ? lineasOriginal.reduce(
+                                                      (suma, l) =>
+                                                          suma + l.total,
+                                                      0,
+                                                  )
+                                                : undefined
+                                        }
                                         step="0.01"
                                         value={form.data.importe}
                                         onChange={(e) =>

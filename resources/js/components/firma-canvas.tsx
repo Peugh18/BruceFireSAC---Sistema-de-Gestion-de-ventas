@@ -18,6 +18,8 @@ export default function FirmaCanvas({
 }: Props) {
     const lienzo = useRef<HTMLCanvasElement>(null);
     const dibujando = useRef(false);
+    const largoTrazo = useRef(0);
+    const ultimo = useRef({ x: 0, y: 0 });
     const [firmado, setFirmado] = useState(false);
 
     const preparar = useCallback(() => {
@@ -56,6 +58,7 @@ export default function FirmaCanvas({
         dibujando.current = true;
         const ctx = e.currentTarget.getContext('2d');
         const { x, y } = punto(e);
+        ultimo.current = { x, y };
         ctx?.beginPath();
         ctx?.moveTo(x, y);
     };
@@ -69,6 +72,11 @@ export default function FirmaCanvas({
         const { x, y } = punto(e);
         ctx?.lineTo(x, y);
         ctx?.stroke();
+        largoTrazo.current += Math.hypot(
+            x - ultimo.current.x,
+            y - ultimo.current.y,
+        );
+        ultimo.current = { x, y };
     };
 
     const terminar = () => {
@@ -77,6 +85,12 @@ export default function FirmaCanvas({
         }
 
         dibujando.current = false;
+
+        // Un toque suelto no es una firma: pide un trazo de largo razonable.
+        if (largoTrazo.current < 40) {
+            return;
+        }
+
         setFirmado(true);
         onChange(lienzo.current?.toDataURL('image/png') ?? null);
     };
@@ -84,6 +98,7 @@ export default function FirmaCanvas({
     const borrar = () => {
         const el = lienzo.current;
         el?.getContext('2d')?.clearRect(0, 0, el.width, el.height);
+        largoTrazo.current = 0;
         setFirmado(false);
         onChange(null);
     };

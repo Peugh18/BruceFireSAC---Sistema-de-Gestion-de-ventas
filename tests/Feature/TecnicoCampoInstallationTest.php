@@ -4,6 +4,7 @@ use App\Enums\TeamRole;
 use App\Models\Certificate;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Evidencia;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
@@ -73,6 +74,9 @@ test('tecnico campo can register installation, creating client equipments and ce
         'departamento_tecnico' => 'campo',
         'estado' => 'recibido_planta',
     ]);
+    foreach (['antes', 'despues'] as $etapa) {
+        Evidencia::factory()->create(['service_order_id' => $order->id, 'etapa' => $etapa]);
+    }
 
     $this->actingAs($this->user)
         ->post(route('tecnico-campo.instalaciones.store', [
@@ -84,6 +88,7 @@ test('tecnico campo can register installation, creating client equipments and ce
             'pruebas' => 'Soporte y gancho anclados según norma técnica',
             'conformidad_nombre' => 'Roberto Sánchez (Jefe de Planta)',
             'conformidad_aceptada' => true,
+            'firma' => FIRMA_PNG,
             'emitir_certificado' => true,
             'tipo_certificado_codigo' => 'operatividad_garantia',
             'equipos' => [

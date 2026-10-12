@@ -50,6 +50,7 @@ it('registra la entrega conforme como acta en la bitácora y cierra la orden', f
             'receptor_nombre' => 'Cliente QA',
             'receptor_dni' => '12345678',
             'conformidad_aceptada' => true,
+            'firma' => FIRMA_PNG,
             'cerrar_orden' => true,
         ])
         ->assertSessionHasNoErrors();

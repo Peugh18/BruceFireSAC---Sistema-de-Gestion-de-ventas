@@ -89,9 +89,10 @@ test('tecnico campo can confirm final delivery and close service order', functio
             'service_order' => $order->id,
         ]), [
             'receptor_nombre' => 'María Del Carmen (Gerente Operaciones)',
-            'receptor_dni' => 'DNI 09483210',
+            'receptor_dni' => '09483210',
             'observaciones_entrega' => 'Extintores ubicados según mapa de evacuación',
             'conformidad_aceptada' => true,
+            'firma' => FIRMA_PNG,
             'cerrar_orden' => true,
         ])
         ->assertRedirect(route('tecnico-campo.entregas.show', [
@@ -152,6 +153,7 @@ test('tecnico campo can download acta de conformidad PDF once the delivery is co
         'receptor_nombre' => 'María Del Carmen',
         'receptor_dni' => '09483210',
         'conformidad_aceptada' => true,
+        'firma' => FIRMA_PNG,
     ]);
 
     $response = $this->actingAs($this->user)

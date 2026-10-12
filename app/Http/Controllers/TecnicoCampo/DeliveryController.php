@@ -126,12 +126,17 @@ class DeliveryController extends Controller
         RenewEquipmentAttentionDate $renewEquipmentAttentionDate,
     ): RedirectResponse {
         $validated = $request->validate([
-            'receptor_nombre' => ['required', 'string', 'max:150'],
-            'receptor_dni' => ['nullable', 'string', 'max:20'],
+            'receptor_nombre' => ['required', 'string', 'min:3', 'max:150', 'regex:/\p{L}{2}/u'],
+            'receptor_dni' => ['nullable', 'digits:8'],
             'observaciones_entrega' => ['nullable', 'string', 'max:1000'],
             'conformidad_aceptada' => ['required', 'accepted'],
             'cerrar_orden' => ['nullable', 'boolean'],
-            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
+            'firma' => ['required', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
+        ], [
+            'firma.required' => 'El cliente debe firmar en la pantalla.',
+            'receptor_nombre.regex' => 'Escribe el nombre de quien recibe (nombre y apellido).',
+            'receptor_nombre.min' => 'Escribe el nombre de quien recibe (nombre y apellido).',
+            'receptor_dni.digits' => 'El DNI tiene 8 números.',
         ]);
 
         $debeCerrar = DB::transaction(function () use ($serviceOrder, $request, $validated, $renewEquipmentAttentionDate): bool {
@@ -143,9 +148,7 @@ class DeliveryController extends Controller
             abort_if($serviceOrder->events()->where('payload->accion', 'entrega_final_realizada')->exists(), 422, 'Esta orden ya se entregó.');
             $serviceOrder->tomarSiLibre($request->user());
 
-            if (filled($validated['firma'] ?? null)) {
-                app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'entrega', $request->user());
-            }
+            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'entrega', $request->user());
 
             $yaRenovadas = $serviceOrder->events()->where('tipo', 'trabajo_completado')->exists();
 

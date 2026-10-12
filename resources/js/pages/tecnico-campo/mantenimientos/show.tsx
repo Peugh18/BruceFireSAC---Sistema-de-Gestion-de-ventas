@@ -492,6 +492,10 @@ export default function MantenimientoShow({
                             type="submit"
                             disabled={
                                 cierre.processing ||
+                                !revisados ||
+                                !fotosAntes ||
+                                !fotosDespues ||
+                                !cierre.data.conformidad_nombre.trim() ||
                                 !cierre.data.firma ||
                                 !cierre.data.conformidad_aceptada
                             }

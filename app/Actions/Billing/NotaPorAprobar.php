@@ -33,6 +33,23 @@ class NotaPorAprobar
 
         app(DesgloseNota::class)->calcular($original, $tipo, $motivoCatalogo, $importe, $opciones);
 
+        if (NoteRequest::query()->where('electronic_document_id', $original->id)->where('tipo', $tipo)->where('estado', 'por_aprobar')->exists()) {
+            throw ValidationException::withMessages(['solicitud' => 'Ya hay una solicitud igual esperando al Gerente. Espera su respuesta antes de pedir otra.']);
+        }
+
+        if ($tipo === 'nota_credito') {
+            $acreditado = (float) ElectronicDocument::query()
+                ->where('cpe_afectado_id', $original->id)
+                ->where('tipo', 'nota_credito')
+                ->whereNotIn('sunat_estado', ['rechazado'])
+                ->sum('importe');
+            $total = (float) $original->sale()->value('total');
+
+            if ($importe + $acreditado > $total + 0.001) {
+                throw ValidationException::withMessages(['importe' => 'El importe no puede superar lo que queda por acreditar del comprobante (S/ '.number_format(max($total - $acreditado, 0), 2).').']);
+            }
+        }
+
         return NoteRequest::create([
             'electronic_document_id' => $original->id,
             'tipo' => $tipo,
