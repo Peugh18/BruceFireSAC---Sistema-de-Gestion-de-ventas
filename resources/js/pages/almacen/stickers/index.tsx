@@ -73,7 +73,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                     </p>
                 </div>
 
-                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                     <div className="grid gap-4 text-xs sm:grid-cols-2">
                         <div>
                             <label
@@ -141,7 +141,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                         <div className="overflow-x-auto">
                             <Table className="w-full text-left text-[12.5px]">
                                 <TableHeader>
-                                    <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                    <TableRow className="border-border text-muted-foreground border-b text-xs font-bold tracking-wider uppercase">
                                         <TableHead>N° Doc.</TableHead>
                                         <TableHead>Fecha</TableHead>
                                         <TableHead>Proveedor</TableHead>
@@ -163,7 +163,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                             <TableCell className="text-foreground py-3 pr-3 font-mono font-bold">
                                                 #{rec.id}
                                             </TableCell>
-                                            <TableCell className="text-foreground/80 px-3 py-3 font-mono text-[11.5px] whitespace-nowrap">
+                                            <TableCell className="text-foreground/80 px-3 py-3 font-mono text-xs whitespace-nowrap">
                                                 {formatDate(rec.fecha)}
                                             </TableCell>
                                             <TableCell className="text-foreground px-4 py-3 font-bold">

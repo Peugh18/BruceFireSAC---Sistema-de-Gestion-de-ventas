@@ -176,7 +176,7 @@ export default function VerificarCertificado({
                     </header>
 
                     <section
-                        className={`rounded-[16px] border p-4 ${aviso.tono}`}
+                        className={`rounded-2xl border p-4 ${aviso.tono}`}
                         role="status"
                     >
                         <div className="flex items-start gap-3">
@@ -197,8 +197,8 @@ export default function VerificarCertificado({
 
                     {certificado ? (
                         <>
-                            <section className="border-border bg-card rounded-[16px] border p-4">
-                                <div className="text-muted-foreground text-[11px] font-bold tracking-[0.08em] uppercase">
+                            <section className="border-border bg-card rounded-2xl border p-4">
+                                <div className="text-muted-foreground text-xs font-bold tracking-[0.08em] uppercase">
                                     N.° de certificado
                                 </div>
                                 <div className="font-['IBM_Plex_Mono',monospace] text-[22px] font-bold">
@@ -269,7 +269,7 @@ export default function VerificarCertificado({
                             </section>
 
                             {equipos.length > 0 ? (
-                                <section className="border-border bg-card rounded-[16px] border p-4">
+                                <section className="border-border bg-card rounded-2xl border p-4">
                                     <h2 className="text-[13px] font-bold">
                                         Equipos certificados ({equipos.length})
                                     </h2>
@@ -313,7 +313,7 @@ export default function VerificarCertificado({
                                 href={certificado.pdf_url}
                                 target="_blank"
                                 rel="noopener"
-                                className="bg-primary text-primary-foreground flex h-12 items-center justify-center gap-2 rounded-[12px] text-[14px] font-bold transition-transform duration-150 ease-out hover:brightness-95 active:scale-[0.97]"
+                                className="bg-primary text-primary-foreground flex h-12 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold transition-transform duration-150 ease-out hover:brightness-95 active:scale-[0.97]"
                             >
                                 <FileText className="size-4" />
                                 Ver certificado original (PDF)
@@ -350,7 +350,7 @@ export default function VerificarCertificado({
                                 </a>
                             ) : null}
                         </div>
-                        <div className="mt-3 text-[11.5px]">
+                        <div className="mt-3 text-xs">
                             Consultado el {consultadoEl}
                         </div>
                     </footer>

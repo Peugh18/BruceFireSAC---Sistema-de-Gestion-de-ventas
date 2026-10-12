@@ -420,7 +420,7 @@ export default function ServiceOrderShow({
                             asChild
                             variant="outline"
                             size="icon"
-                            className="border-border bg-card text-foreground/80 size-8 rounded-[8px] shadow-none"
+                            className="border-border bg-card text-foreground/80 size-8 rounded-lg shadow-none"
                         >
                             <Link
                                 href={ServiceOrderController.index.url(
@@ -436,7 +436,7 @@ export default function ServiceOrderShow({
                                 <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
                                     {serviceOrder.codigo}
                                 </h2>
-                                <Badge className="border border-blue-500/20 bg-blue-500/10 text-blue-800 dark:text-blue-300">
+                                <Badge className="border-border bg-muted text-foreground border">
                                     {ESTADOS[serviceOrder.estado] ??
                                         serviceOrder.estado.replace(/_/g, ' ')}
                                 </Badge>
@@ -459,7 +459,7 @@ export default function ServiceOrderShow({
                                     setErrorAnulacion(null);
                                     setAnulando(true);
                                 }}
-                                className="border-destructive/40 text-destructive-strong rounded-[9px] text-xs font-semibold"
+                                className="border-destructive/40 text-destructive-strong rounded-lg text-xs font-semibold"
                             >
                                 Anular orden
                             </Button>
@@ -469,7 +469,7 @@ export default function ServiceOrderShow({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setEditando(true)}
-                                className="border-border bg-card text-foreground rounded-[9px] text-xs font-semibold"
+                                className="border-border bg-card text-foreground rounded-lg text-xs font-semibold"
                             >
                                 <PencilLine className="mr-1.5 size-3.5" />
                                 Editar orden
@@ -495,7 +495,7 @@ export default function ServiceOrderShow({
                         <Button
                             asChild
                             variant="outline"
-                            className="border-border bg-card text-foreground/80 rounded-[9px] text-xs font-semibold"
+                            className="border-border bg-card text-foreground/80 rounded-lg text-xs font-semibold"
                         >
                             <Link
                                 href={comunicacion.index.url(
@@ -805,13 +805,13 @@ export default function ServiceOrderShow({
                 <div className="grid gap-4 xl:grid-cols-12">
                     {/* Left Column: Detalle del Servicio & Cliente (5 cols) */}
                     <div className="flex flex-col gap-4 xl:col-span-5">
-                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                             <div className="text-foreground text-[13.5px] font-bold">
                                 Detalles del servicio
                             </div>
                             <div className="divide-border mt-3 divide-y text-[12.5px]">
                                 <div className="py-2">
-                                    <div className="text-muted-foreground text-[11px]">
+                                    <div className="text-muted-foreground text-xs">
                                         Tipo de servicio
                                     </div>
                                     <div className="text-foreground font-semibold">
@@ -819,7 +819,7 @@ export default function ServiceOrderShow({
                                     </div>
                                 </div>
                                 <div className="py-2">
-                                    <div className="text-muted-foreground text-[11px]">
+                                    <div className="text-muted-foreground text-xs">
                                         Fecha programada
                                     </div>
                                     <div className="text-foreground capitalize">
@@ -827,7 +827,7 @@ export default function ServiceOrderShow({
                                     </div>
                                 </div>
                                 <div className="py-2">
-                                    <div className="text-muted-foreground text-[11px]">
+                                    <div className="text-muted-foreground text-xs">
                                         Departamento / Prioridad
                                     </div>
                                     <div className="text-foreground capitalize">
@@ -839,7 +839,7 @@ export default function ServiceOrderShow({
                                     </div>
                                 </div>
                                 <div className="py-2">
-                                    <div className="text-muted-foreground text-[11px]">
+                                    <div className="text-muted-foreground text-xs">
                                         Técnico asignado
                                     </div>
                                     <div className="text-foreground font-semibold">
@@ -893,7 +893,7 @@ export default function ServiceOrderShow({
                                         </div>
                                     ) : null}
                                     {editable && tecnicos.length === 0 ? (
-                                        <p className="mt-1 text-[11.5px] text-amber-700 dark:text-amber-400">
+                                        <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                                             No hay técnicos de{' '}
                                             {serviceOrder.departamento_tecnico ===
                                             'campo'
@@ -989,7 +989,7 @@ export default function ServiceOrderShow({
                                 )}
                                 {serviceOrder.observaciones && (
                                     <div className="py-2">
-                                        <div className="text-muted-foreground text-[11px]">
+                                        <div className="text-muted-foreground text-xs">
                                             Observaciones
                                         </div>
                                         <div className="text-foreground/80">
@@ -1001,7 +1001,7 @@ export default function ServiceOrderShow({
                         </Card>
 
                         {serviceOrder.client && (
-                            <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                                 <div className="text-foreground text-[13.5px] font-bold">
                                     Datos del cliente
                                 </div>
@@ -1039,7 +1039,7 @@ export default function ServiceOrderShow({
 
                     {/* Right Column: Bitácora de Eventos (7 cols) */}
                     <div className="flex flex-col xl:col-span-7">
-                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Clock className="text-muted-foreground size-4" />
@@ -1047,7 +1047,7 @@ export default function ServiceOrderShow({
                                         Bitácora y eventos de orden
                                     </span>
                                 </div>
-                                <span className="text-muted-foreground text-[11px]">
+                                <span className="text-muted-foreground text-xs">
                                     {serviceOrder.events?.length ?? 0} eventos
                                 </span>
                             </div>
@@ -1096,12 +1096,12 @@ export default function ServiceOrderShow({
                                             <div className="bg-muted text-muted-foreground mt-1 flex size-6 shrink-0 items-center justify-center rounded-full">
                                                 <CheckCircle2 className="size-3.5" />
                                             </div>
-                                            <div className="border-border bg-muted/40 flex-1 rounded-[10px] border p-3">
+                                            <div className="border-border bg-muted/40 flex-1 rounded-lg border p-3">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-foreground font-bold capitalize">
                                                         {tituloDeEvento(evt)}
                                                     </span>
-                                                    <span className="text-muted-foreground font-mono text-[10.5px]">
+                                                    <span className="text-muted-foreground font-mono text-xs">
                                                         {new Date(
                                                             evt.created_at,
                                                         ).toLocaleString(
@@ -1127,7 +1127,7 @@ export default function ServiceOrderShow({
                                                             : 'Evento registrado en orden de servicio')}
                                                 </div>
                                                 {evt.user?.name && (
-                                                    <div className="text-muted-foreground mt-1 text-[11px]">
+                                                    <div className="text-muted-foreground mt-1 text-xs">
                                                         Registrado por:{' '}
                                                         <b>{evt.user.name}</b>
                                                     </div>
@@ -1156,7 +1156,7 @@ export default function ServiceOrderShow({
                         className="flex flex-col gap-3 text-[13px]"
                     >
                         <label className="flex flex-col gap-1">
-                            <span className="text-muted-foreground text-[11px] font-bold uppercase">
+                            <span className="text-muted-foreground text-xs font-bold uppercase">
                                 Servicio del catálogo
                             </span>
                             <NativeSelect
@@ -1180,7 +1180,7 @@ export default function ServiceOrderShow({
                             </NativeSelect>
                         </label>
                         <label className="flex flex-col gap-1">
-                            <span className="text-muted-foreground text-[11px] font-bold uppercase">
+                            <span className="text-muted-foreground text-xs font-bold uppercase">
                                 Fecha programada
                             </span>
                             <input
@@ -1195,7 +1195,7 @@ export default function ServiceOrderShow({
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <label className="flex flex-col gap-1">
-                                <span className="text-muted-foreground text-[11px] font-bold uppercase">
+                                <span className="text-muted-foreground text-xs font-bold uppercase">
                                     Prioridad
                                 </span>
                                 <NativeSelect
@@ -1215,7 +1215,7 @@ export default function ServiceOrderShow({
                                 </NativeSelect>
                             </label>
                             <label className="flex flex-col gap-1">
-                                <span className="text-muted-foreground text-[11px] font-bold uppercase">
+                                <span className="text-muted-foreground text-xs font-bold uppercase">
                                     Área
                                 </span>
                                 <NativeSelect
@@ -1247,7 +1247,7 @@ export default function ServiceOrderShow({
                         {edicion.data.departamento_tecnico ===
                         serviceOrder.departamento_tecnico ? (
                             <label className="flex flex-col gap-1">
-                                <span className="text-muted-foreground text-[11px] font-bold uppercase">
+                                <span className="text-muted-foreground text-xs font-bold uppercase">
                                     Técnico
                                 </span>
                                 <NativeSelect
@@ -1275,13 +1275,13 @@ export default function ServiceOrderShow({
                                 </NativeSelect>
                             </label>
                         ) : (
-                            <p className="text-muted-foreground text-[11.5px]">
+                            <p className="text-muted-foreground text-xs">
                                 Al cambiar de área, asigna el técnico después de
                                 guardar.
                             </p>
                         )}
                         <label className="flex flex-col gap-1">
-                            <span className="text-muted-foreground text-[11px] font-bold uppercase">
+                            <span className="text-muted-foreground text-xs font-bold uppercase">
                                 Indicaciones para el técnico
                             </span>
                             <textarea
@@ -1299,7 +1299,7 @@ export default function ServiceOrderShow({
                         </label>
                         {Object.values(edicion.errors)[0] ? (
                             <p
-                                className="text-destructive-strong text-[11.5px]"
+                                className="text-destructive-strong text-xs"
                                 role="alert"
                             >
                                 {Object.values(edicion.errors)[0]}

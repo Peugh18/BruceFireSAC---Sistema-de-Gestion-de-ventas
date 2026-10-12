@@ -52,7 +52,7 @@ export function useConfirmarAccion() {
                 }
             }}
         >
-            <DialogContent className="border-border bg-card rounded-[16px] sm:max-w-md">
+            <DialogContent className="border-border bg-card rounded-2xl sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Confirmar acción</DialogTitle>
                     <DialogDescription>{pendiente.mensaje}</DialogDescription>
@@ -62,7 +62,7 @@ export function useConfirmarAccion() {
                         type="button"
                         variant="outline"
                         onClick={() => resolver(false)}
-                        className="rounded-[8px] text-xs font-semibold"
+                        className="rounded-lg text-xs font-semibold"
                     >
                         Cancelar
                     </Button>
@@ -70,7 +70,7 @@ export function useConfirmarAccion() {
                         type="button"
                         variant="destructive"
                         onClick={() => resolver(true)}
-                        className="rounded-[8px] text-xs font-bold"
+                        className="rounded-lg text-xs font-bold"
                     >
                         Confirmar
                     </Button>

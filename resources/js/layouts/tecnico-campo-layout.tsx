@@ -107,11 +107,11 @@ export default function TecnicoCampoLayout({
                             <span className="text-foreground text-xs font-black tracking-tight">
                                 BRUCE FIRE
                             </span>
-                            <span className="py-0.2 inline-flex items-center rounded-full border border-sky-500/30 bg-sky-500/10 px-1.5 text-[9.5px] font-black tracking-wide text-sky-800 dark:text-sky-300">
+                            <span className="py-0.2 border-border bg-muted text-foreground inline-flex items-center rounded-full border px-1.5 text-xs font-black tracking-wide">
                                 CAMPO
                             </span>
                         </div>
-                        <p className="text-muted-foreground max-w-[140px] truncate text-[10px] leading-none font-medium">
+                        <p className="text-muted-foreground max-w-[140px] truncate text-xs leading-none font-medium">
                             {page.props.currentTeam?.name ??
                                 'Operaciones de Campo'}
                         </p>
@@ -120,13 +120,13 @@ export default function TecnicoCampoLayout({
 
                 {/* User badge + theme toggle + logout */}
                 <div className="flex items-center gap-2">
-                    <ThemeToggle className="size-8 rounded-[8px]" />
+                    <ThemeToggle className="size-8 rounded-lg" />
 
-                    <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-[8px] border px-2.5 py-1 text-xs">
-                        <div className="flex size-5 items-center justify-center rounded-full bg-sky-700 text-[9px] font-bold text-white">
+                    <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs">
+                        <div className="bg-primary flex size-5 items-center justify-center rounded-full text-xs font-bold text-white">
                             {initials}
                         </div>
-                        <span className="text-foreground max-w-[90px] truncate text-[11px] font-semibold">
+                        <span className="text-foreground max-w-[90px] truncate text-xs font-semibold">
                             {user?.name?.split(' ')[0] ?? 'Técnico'}
                         </span>
                     </div>
@@ -135,7 +135,7 @@ export default function TecnicoCampoLayout({
                         href="/logout"
                         method="post"
                         as="button"
-                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive-strong flex size-8 items-center justify-center rounded-[8px] border transition-colors"
+                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive-strong flex size-8 items-center justify-center rounded-lg border transition-colors"
                         title="Cerrar sesión"
                     >
                         <LogOut className="size-3.5" />
@@ -155,9 +155,9 @@ export default function TecnicoCampoLayout({
                             aria-label={item.title}
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-2 rounded-[8px] px-3.5 py-1.5 text-xs font-bold transition-all ${
+                            className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
                                 isActive
-                                    ? 'bg-info dark:text-info-foreground text-black shadow-xs'
+                                    ? 'bg-primary text-primary-foreground shadow-xs'
                                     : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                             }`}
                         >

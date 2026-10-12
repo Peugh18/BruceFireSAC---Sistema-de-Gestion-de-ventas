@@ -117,7 +117,7 @@ export default function CreditoDialog({
                 onOpenChange(abierto);
             }}
         >
-            <DialogContent className="border-border bg-card max-h-[88vh] overflow-y-auto rounded-[16px] sm:max-w-lg">
+            <DialogContent className="border-border bg-card max-h-[88vh] overflow-y-auto rounded-2xl sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
                         Venta a crédito
@@ -136,7 +136,7 @@ export default function CreditoDialog({
                             min={1}
                             value={plazo}
                             onChange={(e) => setPlazo(Number(e.target.value))}
-                            className="mt-1 h-9 rounded-[8px] text-[13px]"
+                            className="mt-1 h-9 rounded-lg text-[13px]"
                         />
                     </label>
                     <label className="text-foreground text-sm font-medium">
@@ -147,7 +147,7 @@ export default function CreditoDialog({
                             max={36}
                             value={numero}
                             onChange={(e) => setNumero(Number(e.target.value))}
-                            className="mt-1 h-9 rounded-[8px] text-[13px]"
+                            className="mt-1 h-9 rounded-lg text-[13px]"
                         />
                     </label>
                     <Button
@@ -156,7 +156,7 @@ export default function CreditoDialog({
                         onClick={() =>
                             setFilas(generarCuotas(total, fecha, plazo, numero))
                         }
-                        className="h-9 rounded-[8px] shadow-none"
+                        className="h-9 rounded-lg shadow-none"
                     >
                         Calcular
                     </Button>
@@ -172,17 +172,17 @@ export default function CreditoDialog({
                                     generarCuotas(total, fecha, dias, numero),
                                 );
                             }}
-                            className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-bold ${plazo === dias ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                            className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${plazo === dias ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
                         >
                             {dias} días
                         </button>
                     ))}
                 </div>
 
-                <div className="border-border overflow-hidden rounded-[10px] border">
+                <div className="border-border overflow-hidden rounded-lg border">
                     <Table className="w-full text-[12.5px]">
                         <TableHeader className="bg-muted/50">
-                            <TableRow className="text-muted-foreground text-left text-[10px] font-bold uppercase">
+                            <TableRow className="text-muted-foreground text-left text-xs font-bold uppercase">
                                 <TableHead>Cuota</TableHead>
                                 <TableHead>Vencimiento</TableHead>
                                 <TableHead>Monto S/</TableHead>
@@ -209,7 +209,7 @@ export default function CreditoDialog({
                                                         e.target.value,
                                                 })
                                             }
-                                            className="h-8 rounded-[7px] text-[12px]"
+                                            className="h-8 rounded-md text-[12px]"
                                         />
                                     </TableCell>
                                     <TableCell className="px-2.5 py-1.5">
@@ -225,7 +225,7 @@ export default function CreditoDialog({
                                                     ),
                                                 })
                                             }
-                                            className="h-8 w-28 rounded-[7px] text-[12px]"
+                                            className="h-8 w-28 rounded-md text-[12px]"
                                         />
                                     </TableCell>
                                     <TableCell className="px-2 py-1.5">
@@ -241,7 +241,7 @@ export default function CreditoDialog({
                                                     ),
                                                 )
                                             }
-                                            className="text-destructive-strong size-7 rounded-[7px] shadow-none"
+                                            className="text-destructive-strong size-7 rounded-md shadow-none"
                                         >
                                             <Trash2 className="size-3.5" />
                                         </Button>
@@ -268,7 +268,7 @@ export default function CreditoDialog({
                                 },
                             ]);
                         }}
-                        className="rounded-[8px] shadow-none"
+                        className="rounded-lg shadow-none"
                     >
                         <Plus className="size-3.5" />
                         Agregar cuota
@@ -283,7 +283,7 @@ export default function CreditoDialog({
                     </div>
                 </div>
                 {!fechasValidas ? (
-                    <p className="text-destructive-strong text-[11.5px] font-semibold">
+                    <p className="text-destructive-strong text-xs font-semibold">
                         Cada cuota debe vencer después de la fecha de la venta.
                     </p>
                 ) : null}
@@ -296,7 +296,7 @@ export default function CreditoDialog({
                             onCancel?.();
                             onOpenChange(false);
                         }}
-                        className="rounded-[9px] shadow-none"
+                        className="rounded-lg shadow-none"
                     >
                         Cancelar
                     </Button>
@@ -312,7 +312,7 @@ export default function CreditoDialog({
                             );
                             onOpenChange(false);
                         }}
-                        className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
+                        className="bg-primary hover:bg-primary/90 rounded-lg font-bold text-white shadow-none"
                     >
                         Guardar crédito
                     </Button>

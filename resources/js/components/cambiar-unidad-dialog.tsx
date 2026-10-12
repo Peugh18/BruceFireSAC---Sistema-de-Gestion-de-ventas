@@ -111,7 +111,7 @@ export default function CambiarUnidadDialog({
                     onSubmit={(event) => cambiar(serie, event)}
                     className="flex gap-2"
                 >
-                    <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
+                    <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 focus-within:ring-[3px]">
                         <ScanLine className="text-muted-foreground size-4 shrink-0" />
                         <input
                             aria-label="Serie de reemplazo"
@@ -126,7 +126,7 @@ export default function CambiarUnidadDialog({
                         type="submit"
                         disabled={!serie.trim()}
                         loading={guardando}
-                        className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] text-white shadow-none"
+                        className="bg-primary hover:bg-primary/90 h-10 rounded-lg text-white shadow-none"
                     >
                         {guardando ? (
                             <Loader2 className="size-4 animate-spin" />
@@ -137,7 +137,7 @@ export default function CambiarUnidadDialog({
 
                 {error ? (
                     <p
-                        className="bg-destructive/10 text-destructive-strong rounded-[9px] px-3 py-2 text-[12px] font-semibold"
+                        className="bg-destructive/10 text-destructive-strong rounded-lg px-3 py-2 text-[12px] font-semibold"
                         role="alert"
                     >
                         {error}
@@ -157,7 +157,7 @@ export default function CambiarUnidadDialog({
                         la sede.
                     </p>
                 ) : (
-                    <div className="border-border max-h-[260px] overflow-y-auto rounded-[10px] border">
+                    <div className="border-border max-h-[260px] overflow-y-auto rounded-lg border">
                         {disponibles.map((unidad) => (
                             <button
                                 key={unidad.inventory_unit_id}
@@ -177,7 +177,7 @@ export default function CambiarUnidadDialog({
                         type="button"
                         variant="outline"
                         onClick={onClose}
-                        className="rounded-[9px] shadow-none"
+                        className="rounded-lg shadow-none"
                     >
                         Cerrar
                     </Button>

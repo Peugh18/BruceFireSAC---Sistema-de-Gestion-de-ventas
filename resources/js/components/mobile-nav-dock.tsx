@@ -79,7 +79,7 @@ export function MobileNavDock({
                                         <span className="bg-primary ring-card absolute -top-1 -right-1.5 size-2 rounded-full ring-2" />
                                     )}
                                 </div>
-                                <span className="mt-0.5 text-[10px] leading-tight tracking-tight">
+                                <span className="mt-0.5 text-xs leading-tight tracking-tight">
                                     {item.title}
                                 </span>
                                 {item.isActive && (

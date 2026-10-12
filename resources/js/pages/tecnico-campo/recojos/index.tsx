@@ -78,7 +78,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar por cliente, orden o dirección..."
-                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card focus:ring-ring w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
@@ -113,12 +113,12 @@ export default function RecojosIndex({ recojos, filters }: Props) {
                                                 {r.codigo}
                                             </span>
                                             {r.ya_recogido ? (
-                                                <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                                <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                                                     <CheckCircle2 className="h-2.5 w-2.5" />
                                                     Recogido
                                                 </span>
                                             ) : (
-                                                <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                                                <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
                                                     <Clock className="h-2.5 w-2.5" />
                                                     Por Recoger
                                                 </span>
@@ -133,14 +133,14 @@ export default function RecojosIndex({ recojos, filters }: Props) {
 
                                 {r.direccion && (
                                     <div className="flex items-start gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
-                                        <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+                                        <MapPin className="text-foreground mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                                         <span className="line-clamp-2">
                                             {r.direccion}
                                         </span>
                                     </div>
                                 )}
 
-                                <div className="flex items-center justify-between border-t border-neutral-100 pt-2 text-[11px] text-neutral-500 dark:border-neutral-700/60">
+                                <div className="flex items-center justify-between border-t border-neutral-100 pt-2 text-xs text-neutral-500 dark:border-neutral-700/60">
                                     <span>
                                         {r.equipos_count > 0
                                             ? `${r.equipos_count} equipo(s)`

@@ -349,7 +349,7 @@ export default function ArmarCertificados({
                     <Button
                         asChild
                         variant="outline"
-                        className="border-border bg-card h-9 rounded-[9px] shadow-none"
+                        className="border-border bg-card h-9 rounded-lg shadow-none"
                     >
                         <Link
                             href={ventas.show.url({
@@ -374,7 +374,7 @@ export default function ArmarCertificados({
                 </div>
 
                 {vigentes.length > 0 ? (
-                    <Card className="gap-3 rounded-[14px] border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
+                    <Card className="gap-3 rounded-2xl border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
                         <p>
                             Estos certificados ya se emitieron al confirmar la
                             venta. Al guardar se corrigen{' '}
@@ -389,14 +389,14 @@ export default function ArmarCertificados({
                                 maxLength={255}
                                 onChange={(e) => setMotivo(e.target.value)}
                                 placeholder="Ej. el cliente pidió su propia numeración"
-                                className="bg-card mt-1 h-9 rounded-[9px] text-[13px] normal-case"
+                                className="bg-card mt-1 h-9 rounded-lg text-[13px] normal-case"
                             />
                         </label>
                     </Card>
                 ) : null}
 
                 {pendientes.length > 0 ? (
-                    <Card className="gap-1 rounded-[14px] border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
+                    <Card className="gap-1 rounded-2xl border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
                         <p className="font-semibold">
                             Pendientes de datos técnicos:{' '}
                             {pendientes.map((t) => t.nombre).join(' y ')}.
@@ -411,7 +411,7 @@ export default function ArmarCertificados({
                 ) : null}
 
                 {sinAgente.length > 0 ? (
-                    <Card className="border-destructive/40 bg-destructive/5 rounded-[14px] p-4 text-[12.5px] shadow-none">
+                    <Card className="border-destructive/40 bg-destructive/5 rounded-2xl p-4 text-[12.5px] shadow-none">
                         Falta el agente extintor de{' '}
                         {sinAgente.map((u) => u.codigo_interno).join(', ')}.
                         Regístralo en el producto del catálogo o en el equipo:
@@ -420,7 +420,7 @@ export default function ArmarCertificados({
                 ) : null}
 
                 {unidades.length === 0 ? (
-                    <Card className="border-border text-muted-foreground rounded-[14px] p-4 text-[12.5px] shadow-none">
+                    <Card className="border-border text-muted-foreground rounded-2xl p-4 text-[12.5px] shadow-none">
                         Esta venta no tiene extintores con serie: solo se puede
                         emitir el certificado de capacitación.
                     </Card>
@@ -434,7 +434,7 @@ export default function ArmarCertificados({
                     return (
                         <Card
                             key={grupo.id}
-                            className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none"
+                            className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none"
                         >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <h2 className="flex items-center gap-2 font-['Oswald',sans-serif] text-[17px] font-semibold uppercase">
@@ -450,7 +450,7 @@ export default function ArmarCertificados({
                                         variant="outline"
                                         size="sm"
                                         onClick={() => quitarGrupo(grupo.id)}
-                                        className="text-destructive-strong rounded-[8px] shadow-none"
+                                        className="text-destructive-strong rounded-lg shadow-none"
                                     >
                                         <Trash2 className="size-3.5" />
                                         Quitar grupo
@@ -531,7 +531,7 @@ export default function ArmarCertificados({
                                         sale.client.direccion_fiscal ??
                                         'Dirección fiscal del cliente'
                                     }
-                                    className="mt-1 h-9 rounded-[9px] text-[13px]"
+                                    className="mt-1 h-9 rounded-lg text-[13px]"
                                 />
                             </div>
 
@@ -543,7 +543,7 @@ export default function ArmarCertificados({
                                     {TIPOS.map((tipo) => (
                                         <label
                                             key={tipo.codigo}
-                                            className="border-border flex cursor-pointer items-center gap-2 rounded-[9px] border px-3 py-1.5 text-[12.5px] font-semibold"
+                                            className="border-border flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold"
                                         >
                                             <input
                                                 type="checkbox"
@@ -618,7 +618,7 @@ export default function ArmarCertificados({
                                                             },
                                                         )
                                                     }
-                                                    className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
+                                                    className="mt-1 h-9 rounded-lg text-[13px] normal-case"
                                                 />
                                             </label>
                                             <label className="text-foreground text-sm font-medium">
@@ -638,7 +638,7 @@ export default function ArmarCertificados({
                                                             },
                                                         )
                                                     }
-                                                    className="mt-1 h-9 rounded-[9px] text-[13px]"
+                                                    className="mt-1 h-9 rounded-lg text-[13px]"
                                                 />
                                             </label>
                                             <label className="text-foreground text-sm font-medium">
@@ -655,13 +655,13 @@ export default function ArmarCertificados({
                                                             },
                                                         )
                                                     }
-                                                    className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
+                                                    className="mt-1 h-9 rounded-lg text-[13px] normal-case"
                                                 />
                                             </label>
                                         </div>
 
                                         {grupo.modo === 'con_fotos' ? (
-                                            <label className="border-border rounded-[10px] border border-dashed p-3 text-[12px]">
+                                            <label className="border-border rounded-lg border border-dashed p-3 text-[12px]">
                                                 <span className="font-bold">
                                                     Fotos de la capacitación
                                                 </span>
@@ -699,13 +699,13 @@ export default function ArmarCertificados({
                                         ) : null}
 
                                         {grupo.modo === 'por_trabajador' ? (
-                                            <div className="border-border grid gap-2 rounded-[10px] border p-3">
+                                            <div className="border-border grid gap-2 rounded-lg border p-3">
                                                 <div className="flex items-center justify-between gap-2">
                                                     <div>
                                                         <div className="text-[12px] font-bold">
                                                             Trabajadores
                                                         </div>
-                                                        <div className="text-muted-foreground text-[11px]">
+                                                        <div className="text-muted-foreground text-xs">
                                                             Cada persona tendrá
                                                             número y QR propios.
                                                         </div>
@@ -876,9 +876,9 @@ export default function ArmarCertificados({
                             ) : null}
 
                             {filasDelGrupo.length > 0 ? (
-                                <div className="border-border overflow-x-auto rounded-[10px] border">
+                                <div className="border-border overflow-x-auto rounded-lg border">
                                     <Table className="w-full min-w-[640px] text-[12.5px]">
-                                        <TableHeader className="bg-muted/50 text-muted-foreground text-left text-[10px] font-bold uppercase">
+                                        <TableHeader className="bg-muted/50 text-muted-foreground text-left text-xs font-bold uppercase">
                                             <TableRow>
                                                 <TableHead>Orden</TableHead>
                                                 <TableHead>
@@ -910,7 +910,7 @@ export default function ArmarCertificados({
                                                                             -1,
                                                                         )
                                                                     }
-                                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                                 >
                                                                     <ArrowUp className="size-3" />
                                                                 </button>
@@ -923,7 +923,7 @@ export default function ArmarCertificados({
                                                                             1,
                                                                         )
                                                                     }
-                                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                                 >
                                                                     <ArrowDown className="size-3" />
                                                                 </button>
@@ -956,14 +956,14 @@ export default function ArmarCertificados({
                                                                         ),
                                                                     )
                                                                 }
-                                                                className="h-8 w-24 rounded-[7px] text-[12px]"
+                                                                className="h-8 w-24 rounded-md text-[12px]"
                                                             />
                                                         </TableCell>
                                                         <TableCell className="px-2.5 py-1.5">
                                                             <span className="block font-semibold">
                                                                 {fila.producto}
                                                             </span>
-                                                            <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                            <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                                                 {
                                                                     fila.codigo_interno
                                                                 }
@@ -1006,7 +1006,7 @@ export default function ArmarCertificados({
                                                                         ),
                                                                     )
                                                                 }
-                                                                className="border-border bg-card h-8 rounded-[7px] border px-2 text-[12px]"
+                                                                className="border-border bg-card h-8 rounded-md border px-2 text-[12px]"
                                                             >
                                                                 {grupos.map(
                                                                     (g, i) => (
@@ -1044,10 +1044,10 @@ export default function ArmarCertificados({
                                                     key={fila.equipment_id}
                                                     className="grid items-end gap-2 sm:grid-cols-[120px_repeat(4,minmax(0,1fr))]"
                                                 >
-                                                    <span className="font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                    <span className="font-['IBM_Plex_Mono',monospace] text-xs">
                                                         {fila.codigo_interno}
                                                     </span>
-                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
+                                                    <label className="text-muted-foreground text-xs font-bold uppercase">
                                                         Fecha
                                                         <Input
                                                             type="date"
@@ -1065,10 +1065,10 @@ export default function ArmarCertificados({
                                                                     },
                                                                 )
                                                             }
-                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
+                                                            className="mt-1 h-8 rounded-md text-[12px]"
                                                         />
                                                     </label>
-                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
+                                                    <label className="text-muted-foreground text-xs font-bold uppercase">
                                                         Presión
                                                         <Input
                                                             value={
@@ -1090,10 +1090,10 @@ export default function ArmarCertificados({
                                                                     },
                                                                 )
                                                             }
-                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
+                                                            className="mt-1 h-8 rounded-md text-[12px]"
                                                         />
                                                     </label>
-                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
+                                                    <label className="text-muted-foreground text-xs font-bold uppercase">
                                                         Tiempo
                                                         <Input
                                                             value={
@@ -1112,10 +1112,10 @@ export default function ArmarCertificados({
                                                                     },
                                                                 )
                                                             }
-                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
+                                                            className="mt-1 h-8 rounded-md text-[12px]"
                                                         />
                                                     </label>
-                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
+                                                    <label className="text-muted-foreground text-xs font-bold uppercase">
                                                         Resultado
                                                         <NativeSelect
                                                             value={
@@ -1132,7 +1132,7 @@ export default function ArmarCertificados({
                                                                     },
                                                                 )
                                                             }
-                                                            className="border-border bg-card mt-1 h-8 w-full rounded-[7px] border px-2 text-[12px] normal-case"
+                                                            className="border-border bg-card mt-1 h-8 w-full rounded-md border px-2 text-[12px] normal-case"
                                                         >
                                                             <option value="">
                                                                 Elegir
@@ -1155,7 +1155,7 @@ export default function ArmarCertificados({
                                             variant="outline"
                                             size="sm"
                                             onClick={() => numerar(grupo.id)}
-                                            className="rounded-[8px] shadow-none"
+                                            className="rounded-lg shadow-none"
                                         >
                                             <ListOrdered className="size-3.5" />
                                             Numerar 01, 02, 03… en este orden
@@ -1172,7 +1172,7 @@ export default function ArmarCertificados({
                         type="button"
                         variant="outline"
                         onClick={() => setGrupos([...grupos, nuevoGrupo()])}
-                        className="rounded-[9px] shadow-none"
+                        className="rounded-lg shadow-none"
                     >
                         <Plus className="size-4" />
                         Otro local o vehículo
@@ -1181,7 +1181,7 @@ export default function ArmarCertificados({
                         type="button"
                         loading={enviando}
                         onClick={emitir}
-                        className="bg-primary hover:bg-primary/90 rounded-[9px] px-5 font-bold text-white shadow-none"
+                        className="bg-primary hover:bg-primary/90 rounded-lg px-5 font-bold text-white shadow-none"
                     >
                         {enviando ? (
                             <Cargando className="size-4" />

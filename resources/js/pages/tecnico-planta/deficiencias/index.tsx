@@ -133,35 +133,35 @@ export default function DeficienciasIndex({
         switch (estado) {
             case 'esperando_autorizacion':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
                         <Clock className="h-3 w-3" />
                         Por Autorizar
                     </span>
                 );
             case 'autorizada':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300">
                         <CheckCircle2 className="h-3 w-3" />
                         Autorizada
                     </span>
                 );
             case 'rechazada':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-900 dark:bg-rose-950/60 dark:text-rose-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-900 dark:bg-rose-950/60 dark:text-rose-300">
                         <XCircle className="h-3 w-3" />
                         Rechazada
                     </span>
                 );
             case 'resuelta':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-900 dark:bg-blue-950/60 dark:text-blue-300">
+                    <span className="bg-muted text-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold">
                         <PackageCheck className="h-3 w-3" />
                         Resuelta
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
                         {estado}
                     </span>
                 );
@@ -226,7 +226,7 @@ export default function DeficienciasIndex({
                         onClick={() => handleFilterChange('resuelta')}
                         className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.estado === 'resuelta'
-                                ? 'bg-blue-600 text-white shadow-xs'
+                                ? 'bg-primary text-white shadow-xs'
                                 : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
@@ -315,7 +315,7 @@ export default function DeficienciasIndex({
                                                     current_team: teamSlug,
                                                     service_order: d.orden_id,
                                                 })}
-                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
+                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
                                                 title="Requiere repuesto: resuélvela desde Ejecución para descontar el Kardex de Almacén"
                                             >
                                                 <PackageCheck className="h-3 w-3" />
@@ -331,7 +331,7 @@ export default function DeficienciasIndex({
                                                 onClick={() =>
                                                     setResolveModalItem(d)
                                                 }
-                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
+                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
                                             >
                                                 <Wrench className="h-3 w-3" />
                                                 <span>Resolver</span>
@@ -353,7 +353,7 @@ export default function DeficienciasIndex({
                                 {/* Actions / Spare Parts */}
                                 {(d.accion_recomendada ||
                                     d.repuesto_sugerido) && (
-                                    <div className="grid grid-cols-2 gap-2 text-[11px] text-neutral-600 dark:text-neutral-400">
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
                                         {d.accion_recomendada && (
                                             <div>
                                                 <span className="text-neutral-400">
@@ -389,7 +389,7 @@ export default function DeficienciasIndex({
                                             </span>
                                         </div>
                                         {d.authorization.observacion && (
-                                            <p className="text-[11px] text-emerald-800 dark:text-emerald-400">
+                                            <p className="text-xs text-emerald-800 dark:text-emerald-400">
                                                 "{d.authorization.observacion}"
                                             </p>
                                         )}
@@ -398,7 +398,7 @@ export default function DeficienciasIndex({
 
                                 {/* Resolution Note if Resolved */}
                                 {d.resolucion && (
-                                    <div className="rounded-xl border border-blue-200 bg-blue-50 p-2.5 text-xs text-blue-900 dark:border-blue-800/60 dark:bg-blue-950/30 dark:text-blue-300">
+                                    <div className="border-border bg-muted text-foreground rounded-xl border p-2.5 text-xs">
                                         <span className="font-bold">
                                             Resolución:{' '}
                                         </span>

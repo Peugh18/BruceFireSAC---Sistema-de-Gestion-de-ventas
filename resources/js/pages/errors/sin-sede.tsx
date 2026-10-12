@@ -15,7 +15,7 @@ export default function SinSede({ nombre }: Props) {
     return (
         <div className="bg-background flex min-h-screen items-center justify-center px-4">
             <Head title="Falta tu sede" />
-            <div className="border-border bg-card w-full max-w-md rounded-[16px] border p-8 text-center">
+            <div className="border-border bg-card w-full max-w-md rounded-2xl border p-8 text-center">
                 <div className="bg-destructive/10 text-primary-strong mx-auto mb-4 flex size-12 items-center justify-center rounded-full">
                     <MapPin className="size-6" />
                 </div>

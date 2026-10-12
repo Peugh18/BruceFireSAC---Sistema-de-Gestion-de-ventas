@@ -381,7 +381,7 @@ export default function ServiciosIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Código</TableHead>
                                     <TableHead>
@@ -426,7 +426,7 @@ export default function ServiciosIndex() {
                                                     {s.nombre}
                                                 </div>
                                                 {s.descripcion && (
-                                                    <div className="text-muted-foreground max-w-xs truncate text-[11px]">
+                                                    <div className="text-muted-foreground max-w-xs truncate text-xs">
                                                         {s.descripcion}
                                                     </div>
                                                 )}
@@ -438,7 +438,7 @@ export default function ServiciosIndex() {
                                                 {formatCurrency(s.precio_venta)}
                                             </TableCell>
                                             <TableCell className="px-4 py-3 text-center">
-                                                <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
+                                                <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-xs font-medium">
                                                     {s.igv_requiere_revision
                                                         ? 'Elegir afectación'
                                                         : s.tipo_afectacion_igv ===
@@ -452,7 +452,7 @@ export default function ServiciosIndex() {
                                             </TableCell>
                                             <TableCell className="px-4 py-3 text-center">
                                                 <span
-                                                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         s.activo
                                                             ? 'bg-emerald-100 text-emerald-800'
                                                             : 'bg-zinc-100 text-zinc-600'

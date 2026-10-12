@@ -257,7 +257,7 @@ export default function TecnicoCampoDashboard({
                                                     {order.codigo}
                                                 </span>
                                                 <span
-                                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                    className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         isFinished
                                                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                                                             : order.estado ===
@@ -303,7 +303,7 @@ export default function TecnicoCampoDashboard({
                                             </div>
                                         )}
                                         {order.vehiculo && (
-                                            <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                                            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
                                                 <Car className="h-3 w-3 text-neutral-400" />
                                                 <span>
                                                     Vehículo: {order.vehiculo}
@@ -314,7 +314,7 @@ export default function TecnicoCampoDashboard({
 
                                     {/* Quick Touch Action Button */}
                                     <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-700/60">
-                                        <span className="text-[11px] text-neutral-500">
+                                        <span className="text-xs text-neutral-500">
                                             {order.equipos_count > 0
                                                 ? `${order.equipos_count} equipo(s)`
                                                 : 'Sin equipos registrados'}

@@ -283,11 +283,11 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     {order.codigo}
                                 </span>
                                 {isPendiente ? (
-                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
+                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
                                         Pendiente de Recepción
                                     </span>
                                 ) : (
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300">
                                         Recibido en Planta
                                     </span>
                                 )}
@@ -362,14 +362,14 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                         >
                             {order.equipments.length > 0 ? (
                                 <div className="space-y-1">
-                                    <p className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                    <p className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Extintores que llegaron (desmarca los
                                         que faltan)
                                     </p>
                                     {order.equipments.map((eq) => (
                                         <label
                                             key={eq.id}
-                                            className="bg-card flex items-center gap-2 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-[11.5px] dark:border-neutral-700"
+                                            className="bg-card flex items-center gap-2 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs dark:border-neutral-700"
                                         >
                                             <input
                                                 aria-label={`Confirmar recepción del extintor ${eq.numero_serie}`}
@@ -393,7 +393,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                             ) : null}
 
                             <div>
-                                <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                     Diferencias o novedades en la recepción
                                     física
                                 </label>
@@ -451,17 +451,17 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                     }
 
                     return (
-                        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
-                            <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
-                                <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
+                        <div className="border-border bg-muted rounded-2xl border p-4">
+                            <div className="text-foreground flex items-center gap-2 text-xs font-bold">
+                                <MessageSquare className="text-foreground size-4" />
                                 <span>
                                     Indicaciones de Ventas y Coordinación
                                 </span>
                             </div>
 
                             {order.observaciones && (
-                                <p className="mt-2 text-xs text-blue-800 dark:text-blue-200">
-                                    <span className="font-semibold text-blue-950 dark:text-blue-100">
+                                <p className="text-foreground mt-2 text-xs">
+                                    <span className="text-foreground font-semibold">
                                         Observación inicial:{' '}
                                     </span>
                                     {order.observaciones}
@@ -470,20 +470,20 @@ export default function RecepcionShow({ asignacion, order }: Props) {
 
                             {notasVendedor.length > 0 && (
                                 <div className="mt-3 space-y-2">
-                                    <span className="text-[11px] font-bold text-blue-900/70 uppercase dark:text-blue-300/70">
+                                    <span className="text-foreground text-xs font-bold uppercase">
                                         Notas dejadas por el Vendedor:
                                     </span>
                                     {notasVendedor.map((n) => (
                                         <div
                                             key={n.id}
-                                            className="rounded-xl border border-blue-100 bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:border-blue-800/40 dark:bg-neutral-900/80 dark:text-neutral-200"
+                                            className="border-border rounded-xl border bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:bg-neutral-900/80 dark:text-neutral-200"
                                         >
                                             <p className="font-medium">
                                                 {n.payload?.mensaje ||
                                                     n.payload?.descripcion ||
                                                     JSON.stringify(n.payload)}
                                             </p>
-                                            <span className="mt-1 block text-[10.5px] text-neutral-400">
+                                            <span className="mt-1 block text-xs text-neutral-400">
                                                 {n.created_at
                                                     ? new Date(
                                                           n.created_at,
@@ -518,7 +518,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     {order.equipments.length})
                                 </span>
                             </h3>
-                            <p className="text-muted-foreground text-[11px]">
+                            <p className="text-muted-foreground text-xs">
                                 Identificación con código de barras Bruce Fire
                             </p>
                         </div>
@@ -551,11 +551,11 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             <span className="text-warning-strong font-mono text-sm font-extrabold">
                                                 {eq.numero_serie}
                                             </span>
-                                            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
+                                            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
                                                 {eq.tipo_agente || 'Extintor'}
                                             </span>
                                             {eq.capacidad && (
-                                                <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
+                                                <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
                                                     {eq.capacidad}
                                                 </span>
                                             )}
@@ -568,14 +568,14 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 service_order: order.id,
                                                 equipment: eq.id,
                                             })}
-                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[11px] font-bold shadow-xs"
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold shadow-xs"
                                         >
                                             <Wrench className="h-3.5 w-3.5" />
                                             <span>Checklist</span>
                                         </Link>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-2 text-[11px] text-neutral-600 dark:text-neutral-400">
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
                                         <div>
                                             <span className="text-neutral-400">
                                                 Marca:{' '}
@@ -603,7 +603,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     </div>
 
                                     {eq.notas && (
-                                        <p className="text-muted-foreground rounded-lg bg-neutral-50 p-2 text-[11px] dark:bg-neutral-900/40">
+                                        <p className="text-muted-foreground rounded-lg bg-neutral-50 p-2 text-xs dark:bg-neutral-900/40">
                                             {eq.notas}
                                         </p>
                                     )}
@@ -742,7 +742,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     onSubmit={handleCreateNew}
                                     className="space-y-3"
                                 >
-                                    <div className="rounded-xl bg-neutral-50 p-2.5 text-[11px] text-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-400">
+                                    <div className="rounded-xl bg-neutral-50 p-2.5 text-xs text-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-400">
                                         💡 Se asignará un correlativo oficial{' '}
                                         <b>BF-EQ-XXXXXX</b> de Bruce Fire. Si
                                         algún dato no se puede leer, use el
@@ -751,7 +751,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                            <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                 Agente / Tipo *
                                             </label>
                                             <NativeSelect
@@ -773,7 +773,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                         </div>
 
                                         <div>
-                                            <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                            <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                 Capacidad *
                                             </label>
                                             <input
@@ -796,7 +796,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
 
                                     <div>
                                         <div className="mb-1 flex items-center justify-between">
-                                            <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                 Marca del Cilindro
                                             </label>
                                             <button
@@ -804,7 +804,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                 onClick={() =>
                                                     setUnreadable('marca')
                                                 }
-                                                className="text-warning-strong text-[10px] hover:underline"
+                                                className="text-warning-strong text-xs hover:underline"
                                             >
                                                 No legible
                                             </button>
@@ -827,7 +827,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
                                             <div className="mb-1 flex items-center justify-between">
-                                                <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                     Serie Fab.
                                                 </label>
                                                 <button
@@ -837,7 +837,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                             'serie_fabricante',
                                                         )
                                                     }
-                                                    className="text-warning-strong text-[10px] hover:underline"
+                                                    className="text-warning-strong text-xs hover:underline"
                                                 >
                                                     No legible
                                                 </button>
@@ -862,7 +862,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
 
                                         <div>
                                             <div className="mb-1 flex items-center justify-between">
-                                                <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                     Año Fab.
                                                 </label>
                                                 <button
@@ -872,7 +872,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                                             'anio_fabricacion',
                                                         )
                                                     }
-                                                    className="text-warning-strong text-[10px] hover:underline"
+                                                    className="text-warning-strong text-xs hover:underline"
                                                 >
                                                     No legible
                                                 </button>
@@ -897,7 +897,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                     </div>
 
                                     <div>
-                                        <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                        <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                             Notas de Recepción / Ubicación
                                         </label>
                                         <input

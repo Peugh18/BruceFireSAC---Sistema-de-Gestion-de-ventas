@@ -88,9 +88,9 @@ const ESTADOS_MAP: Record<
     },
     en_ruta_entrega: {
         label: 'En Ruta',
-        bg: 'bg-sky-500/10',
-        text: 'text-sky-700 dark:text-sky-400',
-        border: 'border-sky-500/20',
+        bg: 'bg-muted',
+        text: 'text-foreground ',
+        border: 'border-border',
     },
     entregado: {
         label: 'Entregada',
@@ -140,7 +140,7 @@ export default function EntregasIndex({
             {/* Header Mobile Title */}
             <div className="mb-4">
                 <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
-                    <PackageCheck className="size-6 text-sky-700 dark:text-sky-400" />
+                    <PackageCheck className="text-foreground size-6" />
                     Entregas y Actas de Conformidad
                 </h1>
                 <p className="text-muted-foreground text-xs">
@@ -153,13 +153,13 @@ export default function EntregasIndex({
             <div className="mb-4 grid grid-cols-4 gap-2">
                 <button
                     onClick={() => handleTabChange('listas')}
-                    className={`rounded-[12px] border p-2.5 text-left transition-all ${
+                    className={`rounded-2xl border p-2.5 text-left transition-all ${
                         currentTab === 'listas'
-                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
+                            ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
-                    <span className="block text-[10px] font-bold uppercase opacity-80">
+                    <span className="block text-xs font-bold uppercase opacity-80">
                         Listas
                     </span>
                     <span className="text-warning-strong text-lg font-black">
@@ -168,28 +168,28 @@ export default function EntregasIndex({
                 </button>
                 <button
                     onClick={() => handleTabChange('entregadas')}
-                    className={`rounded-[12px] border p-2.5 text-left transition-all ${
+                    className={`rounded-2xl border p-2.5 text-left transition-all ${
                         currentTab === 'entregadas'
-                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
+                            ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
-                    <span className="block text-[10px] font-bold uppercase opacity-80">
+                    <span className="block text-xs font-bold uppercase opacity-80">
                         Entregadas
                     </span>
-                    <span className="text-lg font-black text-sky-700 dark:text-sky-400">
+                    <span className="text-foreground text-lg font-black">
                         {stats.entregadas}
                     </span>
                 </button>
                 <button
                     onClick={() => handleTabChange('cerradas')}
-                    className={`rounded-[12px] border p-2.5 text-left transition-all ${
+                    className={`rounded-2xl border p-2.5 text-left transition-all ${
                         currentTab === 'cerradas'
-                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
+                            ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
-                    <span className="block text-[10px] font-bold uppercase opacity-80">
+                    <span className="block text-xs font-bold uppercase opacity-80">
                         Cerradas
                     </span>
                     <span className="text-success-strong text-lg font-black">
@@ -198,13 +198,13 @@ export default function EntregasIndex({
                 </button>
                 <button
                     onClick={() => handleTabChange('todos')}
-                    className={`rounded-[12px] border p-2.5 text-left transition-all ${
+                    className={`rounded-2xl border p-2.5 text-left transition-all ${
                         currentTab === 'todos'
-                            ? 'border-sky-500/20 bg-sky-800 text-white shadow-sm [&_span]:text-white!'
+                            ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
-                    <span className="block text-[10px] font-bold uppercase opacity-80">
+                    <span className="block text-xs font-bold uppercase opacity-80">
                         Todas
                     </span>
                     <span className="text-lg font-black">{stats.total}</span>
@@ -221,7 +221,7 @@ export default function EntregasIndex({
                         placeholder="Buscar por orden, RUC o cliente..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="border-border bg-card w-full rounded-[10px] border py-2 pr-4 pl-9 text-xs focus:ring-2 focus:ring-[#0284C7] focus:outline-hidden"
+                        className="border-border bg-card focus:ring-ring w-full rounded-lg border py-2 pr-4 pl-9 text-xs focus:ring-2 focus:outline-hidden"
                     />
                 </div>
             </form>
@@ -273,16 +273,16 @@ export default function EntregasIndex({
                                     current_team: teamSlug,
                                     service_order: order.id,
                                 })}
-                                className="border-border bg-card block rounded-[14px] border p-4 shadow-xs transition-all hover:border-sky-500/20 active:scale-[0.99]"
+                                className="border-border bg-card hover:border-border block rounded-2xl border p-4 shadow-xs transition-all active:scale-[0.99]"
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
+                                            <span className="text-foreground font-mono text-xs font-black">
                                                 {order.codigo}
                                             </span>
                                             <span
-                                                className={`rounded-full border px-2 py-0.5 text-[9.5px] font-bold ${estadoMeta.bg} ${estadoMeta.text} ${estadoMeta.border}`}
+                                                className={`rounded-full border px-2 py-0.5 text-xs font-bold ${estadoMeta.bg} ${estadoMeta.text} ${estadoMeta.border}`}
                                             >
                                                 {estadoMeta.label}
                                             </span>
@@ -291,7 +291,7 @@ export default function EntregasIndex({
                                             {order.client?.razon_social}
                                         </h2>
                                         {order.client?.numero_documento && (
-                                            <span className="text-muted-foreground font-mono text-[11px]">
+                                            <span className="text-muted-foreground font-mono text-xs">
                                                 RUC / Doc:{' '}
                                                 {order.client.numero_documento}
                                             </span>
@@ -300,8 +300,8 @@ export default function EntregasIndex({
                                     <ChevronRight className="text-muted-foreground mt-1 size-5 shrink-0" />
                                 </div>
 
-                                <div className="text-muted-foreground mb-3 flex items-center gap-1 text-[11px]">
-                                    <MapPin className="size-3.5 shrink-0 text-sky-700 dark:text-sky-400" />
+                                <div className="text-muted-foreground mb-3 flex items-center gap-1 text-xs">
+                                    <MapPin className="text-foreground size-3.5 shrink-0" />
                                     <span className="line-clamp-1">
                                         {order.sede?.direccion ||
                                             order.client?.direccion_fiscal ||
@@ -310,7 +310,7 @@ export default function EntregasIndex({
                                 </div>
 
                                 <div className="border-border flex items-center justify-between border-t pt-2.5">
-                                    <div className="text-foreground flex items-center gap-1.5 text-[11px] font-medium">
+                                    <div className="text-foreground flex items-center gap-1.5 text-xs font-medium">
                                         <Flame className="text-warning-strong size-3.5" />
                                         <span>
                                             {order.equipments?.length || 0}{' '}
@@ -320,7 +320,7 @@ export default function EntregasIndex({
                                             listos
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-[11px] font-bold text-sky-700 dark:text-sky-400">
+                                    <div className="text-foreground flex items-center gap-1 text-xs font-bold">
                                         <span>Ver entrega & acta</span>
                                         <ArrowRight className="size-3.5" />
                                     </div>
@@ -337,7 +337,7 @@ export default function EntregasIndex({
                     {entregas.prev_page_url && (
                         <Link
                             href={entregas.prev_page_url}
-                            className="border-border bg-card text-foreground hover:bg-muted/60 rounded-[8px] border px-3 py-1.5 text-xs font-bold transition-colors"
+                            className="border-border bg-card text-foreground hover:bg-muted/60 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors"
                         >
                             Anterior
                         </Link>
@@ -348,7 +348,7 @@ export default function EntregasIndex({
                     {entregas.next_page_url && (
                         <Link
                             href={entregas.next_page_url}
-                            className="border-border bg-card text-foreground hover:bg-muted/60 rounded-[8px] border px-3 py-1.5 text-xs font-bold transition-colors"
+                            className="border-border bg-card text-foreground hover:bg-muted/60 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors"
                         >
                             Siguiente
                         </Link>

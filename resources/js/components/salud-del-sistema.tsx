@@ -70,7 +70,7 @@ export default function SaludDelSistema({
                 ))}
             </ul>
             {salud.revisadoAt && (
-                <p className="text-muted-foreground mt-2 text-[11px]">
+                <p className="text-muted-foreground mt-2 text-xs">
                     Revisión de datos del {fechaHora(salud.revisadoAt)}.
                 </p>
             )}

@@ -64,7 +64,7 @@ function FieldError({ message }: { message?: string }) {
     }
 
     return (
-        <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+        <p className="text-destructive-strong mt-1 text-xs font-semibold">
             {message}
         </p>
     );
@@ -113,7 +113,7 @@ function ClientFormFields({
                             event.target.value as 'ruc' | 'dni',
                         )
                     }
-                    className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                    className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                 >
                     <option value="ruc">RUC</option>
                     <option value="dni">DNI</option>
@@ -144,7 +144,7 @@ function ClientFormFields({
                                 ? '8 dígitos'
                                 : '11 dígitos'
                         }
-                        className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                        className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                     />
                     {lookupLoading && (
                         <Cargando className="text-muted-foreground absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2" />
@@ -152,7 +152,7 @@ function ClientFormFields({
                 </div>
                 <FieldError message={errors.numero_documento} />
                 {lookupMessage && !lookupLoading && (
-                    <p className="text-warning-strong mt-1 text-[11px] font-semibold">
+                    <p className="text-warning-strong mt-1 text-xs font-semibold">
                         {lookupMessage}
                     </p>
                 )}
@@ -173,7 +173,7 @@ function ClientFormFields({
                     onChange={(event) =>
                         setData('razon_social', event.target.value)
                     }
-                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                    className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                 />
                 <FieldError message={errors.razon_social} />
             </div>
@@ -195,7 +195,7 @@ function ClientFormFields({
                         onChange={(event) =>
                             setData('nombre_comercial', event.target.value)
                         }
-                        className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                        className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                     />
                     <FieldError message={errors.nombre_comercial} />
                 </div>
@@ -213,7 +213,7 @@ function ClientFormFields({
                     type="email"
                     value={data.email}
                     onChange={(event) => setData('email', event.target.value)}
-                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                    className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                 />
                 <FieldError message={errors.email} />
             </div>
@@ -235,7 +235,7 @@ function ClientFormFields({
                                 setData('whatsapp', data.telefono);
                             }
                         }}
-                        className="text-primary text-[10.5px] font-medium transition-colors hover:underline"
+                        className="text-primary text-xs font-medium transition-colors hover:underline"
                     >
                         {whatsappDiferente
                             ? 'Mismo número para ambos'
@@ -338,7 +338,7 @@ function ClientFormFields({
                             value={data.condicion_domicilio}
                             readOnly
                             disabled
-                            className="border-border bg-muted/40 mt-1 h-9 cursor-not-allowed rounded-[8px] text-[13px]"
+                            className="border-border bg-muted/40 mt-1 h-9 cursor-not-allowed rounded-lg text-[13px]"
                         />
                         <FieldError message={errors.condicion_domicilio} />
                     </div>
@@ -485,10 +485,10 @@ export default function ClientCreateDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="border-border bg-card max-h-[88vh] overflow-y-auto rounded-[16px] sm:max-w-2xl">
+            <DialogContent className="border-border bg-card max-h-[88vh] overflow-y-auto rounded-2xl sm:max-w-2xl">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
-                        <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
+                        <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-lg">
                             <UserRoundPlus className="size-5" />
                         </div>
                         <DialogTitle className="text-foreground font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
@@ -507,7 +507,7 @@ export default function ClientCreateDialog({
                     />
 
                     {duplicateClient && (
-                        <div className="rounded-[10px] border border-amber-500/30 bg-amber-500/10 p-3">
+                        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
                             <p className="text-foreground text-sm font-semibold">
                                 Ya está registrado:{' '}
                                 {duplicateClient.razon_social}
@@ -543,7 +543,7 @@ export default function ClientCreateDialog({
                             type="button"
                             variant="outline"
                             onClick={() => onOpenChange(false)}
-                            className="border-border bg-card text-foreground/80 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground/80 rounded-lg shadow-none"
                         >
                             Cancelar
                         </Button>
@@ -551,7 +551,7 @@ export default function ClientCreateDialog({
                             type="submit"
                             disabled={duplicateClient !== null}
                             loading={form.processing}
-                            className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 rounded-lg font-bold text-white shadow-none"
                         >
                             Guardar cliente
                         </Button>

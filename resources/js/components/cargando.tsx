@@ -110,7 +110,7 @@ export function CargaLarga({ activo, titulo, detalle }: CargaLargaProps) {
             <div
                 role="status"
                 aria-live="polite"
-                className="border-border bg-card motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 grid w-full max-w-[320px] justify-items-center gap-3 rounded-[16px] border px-6 py-6 text-center shadow-xl duration-200 ease-out"
+                className="border-border bg-card motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 grid w-full max-w-[320px] justify-items-center gap-3 rounded-2xl border px-6 py-6 text-center shadow-xl duration-200 ease-out"
             >
                 <div className="relative grid h-[104px] place-items-end">
                     <ChispaAvatar pose="corre" size={96} animado />
@@ -183,7 +183,7 @@ export function TarjetaCargando({ className }: { className?: string }) {
     return (
         <div
             className={cn(
-                'border-border bg-card grid gap-3 rounded-[16px] border p-5',
+                'border-border bg-card grid gap-3 rounded-2xl border p-5',
                 className,
             )}
         >

@@ -83,11 +83,11 @@ export default function TecnicoPlantaLayout({
                             <span className="text-foreground text-xs font-black tracking-tight">
                                 BRUCE FIRE
                             </span>
-                            <span className="py-0.2 text-warning-strong inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 text-[9.5px] font-black tracking-wide">
+                            <span className="py-0.2 text-warning-strong inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 text-xs font-black tracking-wide">
                                 PLANTA
                             </span>
                         </div>
-                        <p className="text-muted-foreground max-w-[140px] truncate text-[10px] leading-none font-medium">
+                        <p className="text-muted-foreground max-w-[140px] truncate text-xs leading-none font-medium">
                             {page.props.currentTeam?.name ?? 'Taller Principal'}
                         </p>
                     </div>
@@ -95,13 +95,13 @@ export default function TecnicoPlantaLayout({
 
                 {/* User badge + theme toggle + logout */}
                 <div className="flex items-center gap-2">
-                    <ThemeToggle className="size-8 rounded-[8px]" />
+                    <ThemeToggle className="size-8 rounded-lg" />
 
-                    <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-[8px] border px-2.5 py-1 text-xs">
-                        <div className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-full text-[9px] font-bold">
+                    <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs">
+                        <div className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-full text-xs font-bold">
                             {initials}
                         </div>
-                        <span className="text-foreground max-w-[90px] truncate text-[11px] font-semibold">
+                        <span className="text-foreground max-w-[90px] truncate text-xs font-semibold">
                             {user?.name?.split(' ')[0] ?? 'Técnico'}
                         </span>
                     </div>
@@ -110,7 +110,7 @@ export default function TecnicoPlantaLayout({
                         href="/logout"
                         method="post"
                         as="button"
-                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive-strong flex size-8 items-center justify-center rounded-[8px] border transition-colors"
+                        className="border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive-strong flex size-8 items-center justify-center rounded-lg border transition-colors"
                         title="Cerrar sesión"
                     >
                         <LogOut className="size-3.5" />
@@ -130,7 +130,7 @@ export default function TecnicoPlantaLayout({
                             aria-label={item.title}
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-2 rounded-[8px] px-3.5 py-1.5 text-xs font-bold transition-all ${
+                            className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
                                 isActive
                                     ? 'bg-primary text-primary-foreground shadow-xs'
                                     : 'text-muted-foreground hover:bg-accent hover:text-foreground'

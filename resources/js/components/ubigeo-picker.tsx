@@ -92,7 +92,7 @@ export default function UbigeoPicker({
                     <span className="flex min-w-0 items-center gap-2">
                         <MapPin className="text-muted-foreground size-3.5 shrink-0" />
                         <span className="truncate">{value.etiqueta}</span>
-                        <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                        <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                             {value.codigo}
                         </span>
                     </span>
@@ -144,7 +144,7 @@ export default function UbigeoPicker({
                                 <span className="truncate">
                                     {ubigeo.etiqueta}
                                 </span>
-                                <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                     {ubigeo.codigo}
                                 </span>
                             </button>

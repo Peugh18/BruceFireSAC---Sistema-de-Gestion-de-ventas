@@ -737,7 +737,7 @@ export default function ClienteShow({
             <div className="flex flex-col gap-6">
                 {dialogoConfirmacion}
                 {/* ================= CABECERA DEL CLIENTE ================= */}
-                <Card className="border-border bg-card rounded-[18px] p-6 shadow-xs">
+                <Card className="border-border bg-card rounded-2xl p-6 shadow-xs">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                         {/* Identidad */}
                         <div className="flex items-start gap-4">
@@ -786,7 +786,7 @@ export default function ClienteShow({
                                             size="sm"
                                             onClick={handleConsultarSunat}
                                             disabled={verificandoSunat}
-                                            className="border-border bg-card text-foreground/80 hover:bg-accent h-7 gap-1.5 rounded-full px-3 text-[11px] font-bold"
+                                            className="border-border bg-card text-foreground/80 hover:bg-accent h-7 gap-1.5 rounded-full px-3 text-xs font-bold"
                                         >
                                             <RefreshCw
                                                 className={`size-3 ${verificandoSunat ? 'animate-spin' : ''}`}
@@ -800,7 +800,7 @@ export default function ClienteShow({
                                     )}
 
                                     {sunat?.consultado_at && (
-                                        <span className="text-muted-foreground text-[11px]">
+                                        <span className="text-muted-foreground text-xs">
                                             Consultado el {sunat.consultado_at}
                                         </span>
                                     )}
@@ -880,7 +880,7 @@ export default function ClienteShow({
                 </Card>
 
                 {recompra && (
-                    <Card className="border-border bg-card rounded-[16px] p-4 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="text-foreground text-sm font-medium">
                                 Probabilidad de volver a comprar (6 meses)
@@ -911,13 +911,13 @@ export default function ClienteShow({
                             {/* KPI Cards */}
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                                 <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                                    <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                                    <div className="text-muted-foreground text-xs font-bold uppercase">
                                         Total comprado
                                     </div>
                                     <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
                                         {soles(resumen?.total_comprado)}
                                     </div>
-                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
+                                    <div className="text-muted-foreground mt-0.5 text-xs">
                                         Última compra:{' '}
                                         {fechaCorta(resumen?.ultima_compra) ||
                                             'Sin compras'}
@@ -925,7 +925,7 @@ export default function ClienteShow({
                                 </Card>
 
                                 <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                                    <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                                    <div className="text-muted-foreground text-xs font-bold uppercase">
                                         Deuda pendiente
                                     </div>
                                     <div
@@ -937,7 +937,7 @@ export default function ClienteShow({
                                     >
                                         {soles(resumen?.deuda_pendiente)}
                                     </div>
-                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
+                                    <div className="text-muted-foreground mt-0.5 text-xs">
                                         {resumen?.cuotas_vencidas &&
                                         resumen.cuotas_vencidas > 0 ? (
                                             <span className="text-destructive-strong font-bold">
@@ -954,14 +954,14 @@ export default function ClienteShow({
                                 </Card>
 
                                 <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                                    <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                                    <div className="text-muted-foreground text-xs font-bold uppercase">
                                         Extintores activos
                                     </div>
                                     <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
                                         {resumen?.extintores_activos ??
                                             extintores.length}
                                     </div>
-                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
+                                    <div className="text-muted-foreground mt-0.5 text-xs">
                                         {(resumen?.por_vencer_30_dias ?? 0) >
                                         0 ? (
                                             <span className="text-warning-strong font-bold">
@@ -975,7 +975,7 @@ export default function ClienteShow({
                                 </Card>
 
                                 <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                                    <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                                    <div className="text-muted-foreground text-xs font-bold uppercase">
                                         Cotizaciones abiertas
                                     </div>
                                     <div className="text-foreground mt-1 font-['Oswald',sans-serif] text-xl font-bold">
@@ -988,7 +988,7 @@ export default function ClienteShow({
                                                 ].includes(c.estado),
                                             ).length}
                                     </div>
-                                    <div className="text-muted-foreground mt-0.5 text-[11px]">
+                                    <div className="text-muted-foreground mt-0.5 text-xs">
                                         En negociación
                                     </div>
                                 </Card>
@@ -1040,7 +1040,7 @@ export default function ClienteShow({
                                                         >
                                                             {v.numero_interno}
                                                         </Link>
-                                                        <div className="text-muted-foreground text-[11px]">
+                                                        <div className="text-muted-foreground text-xs">
                                                             {v.fecha} ·{' '}
                                                             {v.comprobante ||
                                                                 'Nota de venta'}
@@ -1050,7 +1050,7 @@ export default function ClienteShow({
                                                         <span className="text-foreground font-bold">
                                                             {soles(v.total)}
                                                         </span>
-                                                        <div className="text-[10.5px]">
+                                                        <div className="text-xs">
                                                             {v.estado !==
                                                             'confirmada' ? (
                                                                 <span className="text-muted-foreground font-semibold">
@@ -1123,22 +1123,22 @@ export default function ClienteShow({
                                                                     ext.numero_serie
                                                                 }
                                                             </span>
-                                                            <div className="text-muted-foreground text-[11px]">
+                                                            <div className="text-muted-foreground text-xs">
                                                                 {ext.producto} ·{' '}
                                                                 {ext.capacidad}
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
                                                             {ext.vencido ? (
-                                                                <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-[10px]">
+                                                                <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-xs">
                                                                     Vencido
                                                                 </Badge>
                                                             ) : (
-                                                                <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-[10px]">
+                                                                <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-xs">
                                                                     Al día
                                                                 </Badge>
                                                             )}
-                                                            <div className="text-muted-foreground mt-0.5 text-[10.5px]">
+                                                            <div className="text-muted-foreground mt-0.5 text-xs">
                                                                 Próx:{' '}
                                                                 {ext.proxima_fecha_atencion ||
                                                                     'N/A'}
@@ -1223,7 +1223,7 @@ export default function ClienteShow({
                                     <div className="mt-4 overflow-x-auto">
                                         <Table className="w-full text-left text-xs">
                                             <TableHeader>
-                                                <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                <TableRow className="border-border text-muted-foreground border-b text-xs font-bold uppercase">
                                                     <TableHead>
                                                         N.º Venta
                                                     </TableHead>
@@ -1284,7 +1284,7 @@ export default function ClienteShow({
                                                             <TableCell className="py-3">
                                                                 {v.sunat_estado ? (
                                                                     <Badge
-                                                                        className={`text-[10px] ${
+                                                                        className={`text-xs ${
                                                                             v.sunat_estado ===
                                                                             'aceptado'
                                                                                 ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
@@ -1365,7 +1365,7 @@ export default function ClienteShow({
                                     <div className="mt-4 overflow-x-auto">
                                         <Table className="w-full text-left text-xs">
                                             <TableHeader>
-                                                <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                <TableRow className="border-border text-muted-foreground border-b text-xs font-bold uppercase">
                                                     <TableHead>
                                                         N.º Cotización
                                                     </TableHead>
@@ -1417,7 +1417,7 @@ export default function ClienteShow({
                                                             <TableCell className="py-3">
                                                                 <Badge
                                                                     variant="outline"
-                                                                    className="text-[10px] capitalize"
+                                                                    className="text-xs capitalize"
                                                                 >
                                                                     {c.estado}
                                                                 </Badge>
@@ -1515,7 +1515,7 @@ export default function ClienteShow({
                                     <div className="mt-4 overflow-x-auto">
                                         <Table className="w-full text-left text-xs">
                                             <TableHeader>
-                                                <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                <TableRow className="border-border text-muted-foreground border-b text-xs font-bold uppercase">
                                                     <TableHead>
                                                         Serie BF-EQ
                                                     </TableHead>
@@ -1595,12 +1595,12 @@ export default function ClienteShow({
                                                                 e.estado ===
                                                                     'usado' ? (
                                                                     <div className="inline-flex flex-col items-center gap-0.5">
-                                                                        <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-[10.5px] font-bold">
+                                                                        <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-xs font-bold">
                                                                             Descargado
                                                                             /
                                                                             Usado
                                                                         </Badge>
-                                                                        <span className="text-destructive text-[10px] font-medium">
+                                                                        <span className="text-destructive text-xs font-medium">
                                                                             Un
                                                                             solo
                                                                             uso
@@ -1611,26 +1611,26 @@ export default function ClienteShow({
                                                                     </div>
                                                                 ) : e.tipo_alerta ===
                                                                   'recarga_y_ph' ? (
-                                                                    <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-[10.5px] font-bold">
+                                                                    <Badge className="border-destructive/30 bg-destructive/15 text-destructive-strong text-xs font-bold">
                                                                         Recarga
                                                                         + P.H.
                                                                         Vencidas
                                                                     </Badge>
                                                                 ) : e.tipo_alerta ===
                                                                   'prueba_hidrostatica' ? (
-                                                                    <Badge className="border-purple-500/30 bg-purple-500/15 text-[10.5px] font-bold text-purple-700 dark:text-purple-300">
+                                                                    <Badge className="border-border bg-muted text-foreground text-xs font-bold">
                                                                         P.H.
                                                                         Vencida
                                                                         (5 años)
                                                                     </Badge>
                                                                 ) : e.vencido ? (
-                                                                    <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-[10.5px] font-bold">
+                                                                    <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong text-xs font-bold">
                                                                         Recarga
                                                                         Vencida
                                                                         (1 año)
                                                                     </Badge>
                                                                 ) : (
-                                                                    <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-[10.5px] font-semibold">
+                                                                    <Badge className="text-success-strong border-emerald-500/20 bg-emerald-500/10 text-xs font-semibold">
                                                                         Al día
                                                                         (Operativo)
                                                                     </Badge>
@@ -1651,7 +1651,7 @@ export default function ClienteShow({
                                                                                     e,
                                                                                 )
                                                                             }
-                                                                            className="border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary rounded border px-2 py-1 text-[11px] font-bold transition-colors"
+                                                                            className="border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary rounded border px-2 py-1 text-xs font-bold transition-colors"
                                                                             title="Generar cotización de recarga para este extintor"
                                                                         >
                                                                             +
@@ -1665,7 +1665,7 @@ export default function ClienteShow({
                                                                                     e,
                                                                                 )
                                                                             }
-                                                                            className="border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded border px-2 py-1 text-[11px] font-semibold transition-colors"
+                                                                            className="border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded border px-2 py-1 text-xs font-semibold transition-colors"
                                                                             title="Marcar como usado/descargado. Por ser equipo de un solo uso, requiere recarga inmediata."
                                                                         >
                                                                             Reportar
@@ -1684,7 +1684,7 @@ export default function ClienteShow({
                                     <div className="mt-4 overflow-x-auto">
                                         <Table className="w-full text-left text-xs">
                                             <TableHeader>
-                                                <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                                <TableRow className="border-border text-muted-foreground border-b text-xs font-bold uppercase">
                                                     <TableHead>
                                                         N.º Certificado
                                                     </TableHead>
@@ -1737,7 +1737,7 @@ export default function ClienteShow({
                                                             </TableCell>
                                                             <TableCell className="py-3">
                                                                 <Badge
-                                                                    className={`text-[10px] ${
+                                                                    className={`text-xs ${
                                                                         c.estado ===
                                                                         'vigente'
                                                                             ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
@@ -1837,7 +1837,7 @@ export default function ClienteShow({
                             <div className="mt-4 overflow-x-auto">
                                 <Table className="w-full text-left text-xs">
                                     <TableHeader>
-                                        <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                        <TableRow className="border-border text-muted-foreground border-b text-xs font-bold uppercase">
                                             <TableHead>Código OS</TableHead>
                                             <TableHead>Fecha</TableHead>
                                             <TableHead>Servicio</TableHead>
@@ -1876,11 +1876,11 @@ export default function ClienteShow({
                                                     </TableCell>
                                                     <TableCell className="py-3">
                                                         <Badge
-                                                            className={`text-[10.5px] uppercase ${
+                                                            className={`text-xs uppercase ${
                                                                 s.area ===
                                                                 'planta'
-                                                                    ? 'border-blue-500/20 bg-blue-500/10 text-blue-600'
-                                                                    : 'border-purple-500/20 bg-purple-500/10 text-purple-600'
+                                                                    ? 'border-border bg-muted text-foreground'
+                                                                    : 'border-border bg-muted text-foreground'
                                                             }`}
                                                         >
                                                             {s.area}
@@ -1889,7 +1889,7 @@ export default function ClienteShow({
                                                     <TableCell className="py-3">
                                                         <Badge
                                                             variant="outline"
-                                                            className="text-[11px]"
+                                                            className="text-xs"
                                                         >
                                                             {s.estado_texto ||
                                                                 s.estado}
@@ -1990,7 +1990,7 @@ export default function ClienteShow({
                                 <div className="mt-4 overflow-x-auto">
                                     <Table className="w-full text-left text-xs">
                                         <TableHeader>
-                                            <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                            <TableRow className="border-border text-muted-foreground border-b text-xs font-bold uppercase">
                                                 <TableHead>Venta</TableHead>
                                                 <TableHead>Cuota</TableHead>
                                                 <TableHead>Monto</TableHead>
@@ -2079,7 +2079,7 @@ export default function ClienteShow({
                                                                     {isVencido &&
                                                                         cuota.dias_vencido >
                                                                             0 && (
-                                                                            <span className="text-destructive-strong block text-[10px]">
+                                                                            <span className="text-destructive-strong block text-xs">
                                                                                 Hace{' '}
                                                                                 {
                                                                                     cuota.dias_vencido
@@ -2090,7 +2090,7 @@ export default function ClienteShow({
                                                                 </TableCell>
                                                                 <TableCell className="py-3">
                                                                     <Badge
-                                                                        className={`text-[10px] ${
+                                                                        className={`text-xs ${
                                                                             isVencido
                                                                                 ? 'border-destructive/20 bg-destructive/10 text-destructive-strong'
                                                                                 : 'text-warning-strong border-amber-500/20 bg-amber-500/10'
@@ -2107,13 +2107,13 @@ export default function ClienteShow({
                                                                             href={`https://wa.me/${phoneClean}?text=${waText}`}
                                                                             target="_blank"
                                                                             rel="noopener noreferrer"
-                                                                            className="text-success-strong inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-bold hover:bg-emerald-500/20 dark:text-emerald-400"
+                                                                            className="text-success-strong inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-xs font-bold hover:bg-emerald-500/20 dark:text-emerald-400"
                                                                         >
                                                                             <MessageSquare className="size-3" />
                                                                             WhatsApp
                                                                         </a>
                                                                     ) : (
-                                                                        <span className="text-muted-foreground text-[11px]">
+                                                                        <span className="text-muted-foreground text-xs">
                                                                             Sin
                                                                             teléfono
                                                                         </span>
@@ -2131,7 +2131,7 @@ export default function ClienteShow({
                                 <div className="mt-4 overflow-x-auto">
                                     <Table className="w-full text-left text-xs">
                                         <TableHeader>
-                                            <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold uppercase">
+                                            <TableRow className="border-border text-muted-foreground border-b text-xs font-bold uppercase">
                                                 <TableHead>Fecha</TableHead>
                                                 <TableHead>Venta</TableHead>
                                                 <TableHead>
@@ -2246,7 +2246,7 @@ export default function ClienteShow({
                                                     <div>
                                                         <Badge
                                                             variant="outline"
-                                                            className="text-[10px] uppercase"
+                                                            className="text-xs uppercase"
                                                         >
                                                             {s.tipo}
                                                         </Badge>
@@ -2281,7 +2281,7 @@ export default function ClienteShow({
                                                     {s.direccion}
                                                 </p>
                                                 {s.contacto && (
-                                                    <p className="text-muted-foreground mt-1 text-[11px]">
+                                                    <p className="text-muted-foreground mt-1 text-xs">
                                                         Contacto:{' '}
                                                         <span className="text-foreground">
                                                             {s.contacto}
@@ -2374,7 +2374,7 @@ export default function ClienteShow({
                                                         'Sin marca/modelo'}
                                                 </p>
                                                 {v.descripcion && (
-                                                    <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                                    <p className="text-muted-foreground mt-0.5 text-xs">
                                                         {v.descripcion}
                                                     </p>
                                                 )}
@@ -2410,7 +2410,7 @@ export default function ClienteShow({
                                                     <div className="text-foreground text-xs font-semibold">
                                                         {h.texto}
                                                     </div>
-                                                    <div className="text-muted-foreground text-[11px]">
+                                                    <div className="text-muted-foreground text-xs">
                                                         {h.fecha}{' '}
                                                         {h.usuario
                                                             ? `· Por ${h.usuario}`
@@ -2540,7 +2540,7 @@ export default function ClienteShow({
                                                         editForm.data.telefono,
                                                     )
                                                 }
-                                                className="text-primary text-[10px] font-medium hover:underline"
+                                                className="text-primary text-xs font-medium hover:underline"
                                             >
                                                 Igual al teléfono
                                             </button>

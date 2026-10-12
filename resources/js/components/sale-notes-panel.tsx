@@ -353,7 +353,7 @@ export function SaleNotesPanel({
     return (
         <Card
             id="notas-de-la-venta"
-            className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none"
+            className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none"
         >
             <div className="mb-3 flex flex-wrap items-center gap-3">
                 <h2 className="font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
@@ -365,7 +365,7 @@ export function SaleNotesPanel({
                     variant="outline"
                     disabled={anulada || !vigente}
                     onClick={() => openModal('nota_credito')}
-                    className="border-border h-9 rounded-[9px] shadow-none"
+                    className="border-border h-9 rounded-lg shadow-none"
                 >
                     <FilePlus2 className="size-4" />
                     Nota de crédito
@@ -375,7 +375,7 @@ export function SaleNotesPanel({
                     variant="outline"
                     disabled={anulada || !vigente}
                     onClick={() => openModal('nota_debito')}
-                    className="border-border h-9 rounded-[9px] shadow-none"
+                    className="border-border h-9 rounded-lg shadow-none"
                 >
                     <FilePlus2 className="size-4" />
                     Nota de débito
@@ -389,7 +389,7 @@ export function SaleNotesPanel({
                         baja.clearErrors();
                         setBajaOpen(true);
                     }}
-                    className="border-border h-9 rounded-[9px] shadow-none"
+                    className="border-border h-9 rounded-lg shadow-none"
                 >
                     <Ban className="size-4" />
                     Comunicar baja
@@ -476,7 +476,7 @@ export function SaleNotesPanel({
                                             )?.label ??
                                                 solicitud.motivo_catalogo}
                                             {solicitud.motivo_rechazo && (
-                                                <span className="text-destructive-strong block text-[11px]">
+                                                <span className="text-destructive-strong block text-xs">
                                                     Rechazada por el Gerente:{' '}
                                                     {solicitud.motivo_rechazo}
                                                 </span>
@@ -487,7 +487,7 @@ export function SaleNotesPanel({
                                         </TableCell>
                                         <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             <Badge
-                                                className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold shadow-none ${estadoClass(solicitud.estado)}`}
+                                                className={`rounded-full border-transparent px-2.5 py-1 text-xs font-bold shadow-none ${estadoClass(solicitud.estado)}`}
                                             >
                                                 {ESTADO_LABEL[
                                                     solicitud.estado
@@ -517,7 +517,7 @@ export function SaleNotesPanel({
                                         </TableCell>
                                         <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             <Badge
-                                                className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold capitalize shadow-none ${estadoClass(nota.sunat_estado)}`}
+                                                className={`rounded-full border-transparent px-2.5 py-1 text-xs font-bold capitalize shadow-none ${estadoClass(nota.sunat_estado)}`}
                                             >
                                                 {ESTADO_LABEL[
                                                     nota.sunat_estado ?? ''

@@ -116,7 +116,7 @@ export default function FirmaCanvas({
                 className="h-40 w-full rounded-xl border-2 border-dashed border-neutral-400 bg-white dark:border-neutral-500"
             />
             {!firmado && (
-                <p className="text-[11px] text-neutral-500">
+                <p className="text-xs text-neutral-500">
                     Firma dentro del recuadro con el dedo.
                 </p>
             )}

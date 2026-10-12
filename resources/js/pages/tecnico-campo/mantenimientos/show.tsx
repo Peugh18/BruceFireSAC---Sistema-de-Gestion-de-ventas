@@ -134,14 +134,14 @@ export default function MantenimientoShow({
                     <ArrowLeft className="size-4" />
                     Volver a mantenimientos
                 </Link>
-                <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
+                <span className="text-foreground font-mono text-xs font-black">
                     {order.codigo}
                 </span>
             </div>
 
             {flash?.success && (
                 <div
-                    className="mb-4 rounded-[10px] border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-medium"
+                    className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-medium"
                     role="status"
                 >
                     {flash.success}
@@ -151,7 +151,7 @@ export default function MantenimientoShow({
             <TomarOrden asignacion={asignacion} />
 
             <div className="space-y-5">
-                <section className="border-border bg-card rounded-[14px] border p-4 shadow-xs">
+                <section className="border-border bg-card rounded-2xl border p-4 shadow-xs">
                     <h1 className="text-foreground text-base font-black">
                         {order.client.razon_social}
                     </h1>
@@ -163,7 +163,7 @@ export default function MantenimientoShow({
                 </section>
 
                 {customerEquipments.length > 0 && (
-                    <section className="border-border bg-card space-y-2 rounded-[14px] border p-4 shadow-xs">
+                    <section className="border-border bg-card space-y-2 rounded-2xl border p-4 shadow-xs">
                         <h2 className="text-xs font-black tracking-wider uppercase">
                             Equipos registrados del cliente (
                             {customerEquipments.length})
@@ -172,7 +172,7 @@ export default function MantenimientoShow({
                             {customerEquipments.map((eq) => (
                                 <li
                                     key={eq.id}
-                                    className="border-border rounded-[8px] border p-2 text-[11px]"
+                                    className="border-border rounded-lg border p-2 text-xs"
                                 >
                                     <span className="block font-mono font-bold">
                                         {eq.numero_serie}
@@ -188,7 +188,7 @@ export default function MantenimientoShow({
                     </section>
                 )}
 
-                <section className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
+                <section className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
                     <h2 className="text-xs font-black tracking-wider uppercase">
                         1. Extintores revisados ({revisados}/
                         {order.equipments.length})
@@ -208,12 +208,12 @@ export default function MantenimientoShow({
                                 value={codigo}
                                 onChange={(e) => setCodigo(e.target.value)}
                                 placeholder="Escanea o escribe BF-EQ-..."
-                                className="border-border bg-card min-h-[44px] flex-1 rounded-[8px] border px-2 font-mono text-xs"
+                                className="border-border bg-card min-h-[44px] flex-1 rounded-lg border px-2 font-mono text-xs"
                             />
                             <button
                                 type="submit"
                                 disabled={agregar.processing}
-                                className="inline-flex min-h-[44px] items-center gap-1 rounded-[8px] bg-sky-700 px-4 text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
+                                className="bg-primary inline-flex min-h-[44px] items-center gap-1 rounded-lg px-4 text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
                             >
                                 <Plus className="size-4" />
                                 Agregar
@@ -224,7 +224,7 @@ export default function MantenimientoShow({
                         errores.equipment_id ||
                         errores.estado) && (
                         <p
-                            className="text-[11px] font-semibold text-red-600"
+                            className="text-xs font-semibold text-red-600"
                             role="alert"
                         >
                             {agregar.errors.numero_serie ??
@@ -273,14 +273,14 @@ export default function MantenimientoShow({
                                 <li
                                     key={eq.id}
                                     id={`revision-equipo-${eq.id}`}
-                                    className="border-border scroll-mt-4 rounded-[10px] border p-2.5"
+                                    className="border-border scroll-mt-4 rounded-lg border p-2.5"
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <div>
                                             <p className="font-mono text-xs font-black">
                                                 {eq.numero_serie}
                                             </p>
-                                            <p className="text-muted-foreground text-[11px]">
+                                            <p className="text-muted-foreground text-xs">
                                                 {eq.tipo_agente} {eq.capacidad}
                                                 {resultado &&
                                                     ` · ${resultado === 'conforme' ? 'Conforme' : 'Con observaciones'}`}
@@ -292,7 +292,7 @@ export default function MantenimientoShow({
                                                 onClick={() =>
                                                     setRevisando(eq.id)
                                                 }
-                                                className="min-h-[44px] rounded-[8px] border border-sky-600 px-3 text-xs font-bold text-sky-800 dark:text-sky-300"
+                                                className="border-border text-foreground min-h-[44px] rounded-lg border px-3 text-xs font-bold"
                                             >
                                                 {resultado
                                                     ? 'Revisar de nuevo'
@@ -320,7 +320,7 @@ export default function MantenimientoShow({
                     </ul>
                 </section>
 
-                <section className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
+                <section className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
                     <h2 className="text-xs font-black tracking-wider uppercase">
                         2. Fotos del trabajo
                     </h2>
@@ -341,7 +341,7 @@ export default function MantenimientoShow({
                 </section>
 
                 {finalizado ? (
-                    <section className="space-y-2 rounded-[14px] border border-emerald-500/30 bg-emerald-500/10 p-4">
+                    <section className="space-y-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
                         <p className="flex items-center gap-2 text-xs font-black">
                             <CheckCircle2 className="size-4 text-emerald-700" />
                             Mantenimiento finalizado.
@@ -359,12 +359,12 @@ export default function MantenimientoShow({
                 ) : (
                     <form
                         onSubmit={cerrar}
-                        className="bg-card space-y-3 rounded-[14px] border border-sky-500/30 p-4 shadow-sm"
+                        className="bg-card border-border space-y-3 rounded-2xl border p-4 shadow-sm"
                     >
                         <h2 className="text-xs font-black tracking-wider uppercase">
                             3. Conformidad y firma del cliente
                         </h2>
-                        <label className="block text-[11px] font-bold">
+                        <label className="block text-xs font-bold">
                             Nombre de quien recibe *
                             <input
                                 required
@@ -375,10 +375,10 @@ export default function MantenimientoShow({
                                         e.target.value,
                                     )
                                 }
-                                className="border-border bg-card mt-1 min-h-[44px] w-full rounded-[8px] border px-2 text-xs"
+                                className="border-border bg-card mt-1 min-h-[44px] w-full rounded-lg border px-2 text-xs"
                             />
                         </label>
-                        <label className="block text-[11px] font-bold">
+                        <label className="block text-xs font-bold">
                             Observaciones
                             <textarea
                                 rows={2}
@@ -389,7 +389,7 @@ export default function MantenimientoShow({
                                         e.target.value,
                                     )
                                 }
-                                className="border-border bg-card mt-1 w-full rounded-[8px] border p-2 text-xs"
+                                className="border-border bg-card mt-1 w-full rounded-lg border p-2 text-xs"
                             />
                         </label>
                         <FirmaCanvas
@@ -416,7 +416,7 @@ export default function MantenimientoShow({
                             errores.conformidad_nombre ||
                             errores.estado) && (
                             <p
-                                className="text-[11px] font-semibold text-red-600"
+                                className="text-xs font-semibold text-red-600"
                                 role="alert"
                             >
                                 {errores.checklist ??
@@ -495,7 +495,7 @@ export default function MantenimientoShow({
                                 !cierre.data.firma ||
                                 !cierre.data.conformidad_aceptada
                             }
-                            className="min-h-[48px] w-full rounded-[10px] bg-sky-700 text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
+                            className="bg-primary min-h-[48px] w-full rounded-lg text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
                         >
                             Finalizar mantenimiento y generar acta
                         </button>

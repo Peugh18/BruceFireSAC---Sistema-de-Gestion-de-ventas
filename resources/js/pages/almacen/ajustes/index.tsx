@@ -219,7 +219,7 @@ export default function AjustesIndex({
                         aria-expanded={showForm}
                         type="button"
                         onClick={() => setShowForm(!showForm)}
-                        className="bg-primary hover:bg-primary/90 h-9 gap-1.5 rounded-[9px] px-4 text-xs font-bold text-white"
+                        className="bg-primary hover:bg-primary/90 h-9 gap-1.5 rounded-lg px-4 text-xs font-bold text-white"
                     >
                         <Plus className="size-4" />
                         <span>
@@ -230,13 +230,13 @@ export default function AjustesIndex({
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <Card className="border-border bg-card rounded-[12px] border p-4 shadow-sm">
+                    <Card className="border-border bg-card rounded-2xl border p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="bg-muted/30 text-destructive-strong flex size-10 items-center justify-center rounded-[9px]">
+                            <div className="bg-muted/30 text-destructive-strong flex size-10 items-center justify-center rounded-lg">
                                 <RotateCcw className="size-5" />
                             </div>
                             <div>
-                                <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                                <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                                     Total Ajustes Históricos
                                 </span>
                                 <p className="text-foreground text-xl font-black">
@@ -246,13 +246,13 @@ export default function AjustesIndex({
                         </div>
                     </Card>
 
-                    <Card className="border-border bg-card rounded-[12px] border p-4 shadow-sm">
+                    <Card className="border-border bg-card rounded-2xl border p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[9px] bg-sky-500/10 text-blue-600 dark:text-blue-400">
+                            <div className="bg-muted text-foreground flex size-10 items-center justify-center rounded-lg">
                                 <Calendar className="size-5" />
                             </div>
                             <div>
-                                <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                                <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                                     Ajustes Este Mes
                                 </span>
                                 <p className="text-foreground text-xl font-black">
@@ -262,13 +262,13 @@ export default function AjustesIndex({
                         </div>
                     </Card>
 
-                    <Card className="border-border bg-card rounded-[12px] border p-4 shadow-sm">
+                    <Card className="border-border bg-card rounded-2xl border p-4 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <div className="bg-destructive/10 text-destructive-strong flex size-10 items-center justify-center rounded-[9px]">
+                            <div className="bg-destructive/10 text-destructive-strong flex size-10 items-center justify-center rounded-lg">
                                 <Trash2 className="size-5" />
                             </div>
                             <div>
-                                <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                                <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                                     Unidades Dadas de Baja
                                 </span>
                                 <p className="text-foreground text-xl font-black">
@@ -281,7 +281,7 @@ export default function AjustesIndex({
 
                 {/* Formulario de Nuevo Ajuste (Desplegable) */}
                 {showForm && (
-                    <Card className="border-destructive/20/30 bg-card rounded-[14px] border-2 p-6 shadow-md transition-all">
+                    <Card className="border-destructive/20/30 bg-card rounded-2xl border-2 p-6 shadow-md transition-all">
                         <div className="border-border mb-5 flex items-center justify-between border-b pb-3">
                             <div className="text-foreground flex items-center gap-2 text-sm font-bold">
                                 <ShieldAlert className="text-primary-strong size-5" />
@@ -296,7 +296,7 @@ export default function AjustesIndex({
                         </div>
 
                         {Object.keys(errors).length > 0 && (
-                            <div className="border-destructive/20 bg-destructive/10 text-primary-strong mb-4 flex items-start gap-2.5 rounded-[9px] border p-3 text-xs">
+                            <div className="border-destructive/20 bg-destructive/10 text-primary-strong mb-4 flex items-start gap-2.5 rounded-lg border p-3 text-xs">
                                 <AlertCircle className="mt-0.5 size-4 shrink-0" />
                                 <div>
                                     <p className="font-bold">
@@ -331,7 +331,7 @@ export default function AjustesIndex({
                                                 inventory_unit_id: '',
                                             }));
                                         }}
-                                        className="border-border bg-card text-foreground focus:border-primary w-full rounded-[8px] border px-3 py-2 text-xs font-medium focus:outline-none"
+                                        className="border-border bg-card text-foreground focus:border-primary w-full rounded-lg border px-3 py-2 text-xs font-medium focus:outline-none"
                                         required
                                     >
                                         {products.map((p) => (
@@ -361,7 +361,7 @@ export default function AjustesIndex({
                                                 inventory_unit_id: '',
                                             }));
                                         }}
-                                        className="border-border bg-card text-foreground focus:border-primary w-full rounded-[8px] border px-3 py-2 text-xs font-medium focus:outline-none"
+                                        className="border-border bg-card text-foreground focus:border-primary w-full rounded-lg border px-3 py-2 text-xs font-medium focus:outline-none"
                                         required
                                     >
                                         {sedes.map((s) => (
@@ -391,7 +391,7 @@ export default function AjustesIndex({
                                                     'decremento',
                                                 )
                                             }
-                                            className={`flex items-center justify-center gap-1.5 rounded-[8px] border py-2 text-xs font-bold transition-all ${
+                                            className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-bold transition-all ${
                                                 data.tipo_ajuste ===
                                                 'decremento'
                                                     ? 'border-destructive/20 bg-destructive/10 text-destructive-strong'
@@ -414,7 +414,7 @@ export default function AjustesIndex({
                                                     'incremento',
                                                 )
                                             }
-                                            className={`flex items-center justify-center gap-1.5 rounded-[8px] border py-2 text-xs font-bold transition-all ${
+                                            className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-bold transition-all ${
                                                 data.tipo_ajuste ===
                                                 'incremento'
                                                     ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
@@ -454,7 +454,7 @@ export default function AjustesIndex({
                                                         : d.cantidad,
                                                 }));
                                             }}
-                                            className="border-border bg-card text-foreground focus:border-primary w-full rounded-[8px] border px-3 py-2 text-xs font-medium focus:outline-none"
+                                            className="border-border bg-card text-foreground focus:border-primary w-full rounded-lg border px-3 py-2 text-xs font-medium focus:outline-none"
                                             required={
                                                 data.tipo_ajuste ===
                                                 'decremento'
@@ -474,7 +474,7 @@ export default function AjustesIndex({
                                             ))}
                                         </NativeSelect>
                                         {availableUnits.length === 0 && (
-                                            <p className="text-destructive-strong text-[11px]">
+                                            <p className="text-destructive-strong text-xs">
                                                 No hay unidades físicas
                                                 registradas en esta sede.
                                             </p>
@@ -495,7 +495,7 @@ export default function AjustesIndex({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="border-border bg-card text-foreground focus:border-primary w-full rounded-[8px] border px-3 py-2 text-xs font-medium focus:outline-none"
+                                            className="border-border bg-card text-foreground focus:border-primary w-full rounded-lg border px-3 py-2 text-xs font-medium focus:outline-none"
                                         >
                                             <option value="">
                                                 Lo que vence primero
@@ -562,7 +562,7 @@ export default function AjustesIndex({
                                         <Label className="text-foreground text-xs font-bold">
                                             Tipo de Producto
                                         </Label>
-                                        <div className="border-border bg-muted/30 text-muted-foreground rounded-[8px] border border-dashed px-3 py-2 text-xs">
+                                        <div className="border-border bg-muted/30 text-muted-foreground rounded-lg border border-dashed px-3 py-2 text-xs">
                                             Producto a granel (sin serie
                                             individual)
                                         </div>
@@ -593,7 +593,7 @@ export default function AjustesIndex({
                                         required
                                     />
                                     {Boolean(data.inventory_unit_id) && (
-                                        <p className="text-muted-foreground text-[10px]">
+                                        <p className="text-muted-foreground text-xs">
                                             Fijada en 1 por ser unidad
                                             serializada puntual.
                                         </p>
@@ -666,7 +666,7 @@ export default function AjustesIndex({
                 )}
 
                 {/* Tabla de Historial de Ajustes */}
-                <Card className="border-border bg-card overflow-hidden rounded-[12px] border shadow-sm">
+                <Card className="border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
                     <div className="border-border bg-muted/40 flex items-center justify-between border-b px-4 py-3">
                         <div className="text-foreground flex items-center gap-2 text-xs font-bold">
                             <History className="text-destructive-strong size-4" />
@@ -681,7 +681,7 @@ export default function AjustesIndex({
 
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/30/50 text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/30/50 text-muted-foreground border-b text-xs font-bold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Fecha y Hora</TableHead>
                                     <TableHead>Producto</TableHead>
@@ -713,7 +713,7 @@ export default function AjustesIndex({
                                                 key={m.id}
                                                 className="hover:bg-muted/40"
                                             >
-                                                <TableCell className="text-muted-foreground px-4 py-3 font-mono text-[11px]">
+                                                <TableCell className="text-muted-foreground px-4 py-3 font-mono text-xs">
                                                     {formatDate(m.created_at)}
                                                 </TableCell>
                                                 <TableCell className="text-foreground px-4 py-3 font-semibold">
@@ -721,7 +721,7 @@ export default function AjustesIndex({
                                                         [{m.product.codigo}]{' '}
                                                         {m.product.nombre}
                                                     </div>
-                                                    <div className="text-muted-foreground text-[10px]">
+                                                    <div className="text-muted-foreground text-xs">
                                                         {m.product.serializado
                                                             ? 'Serializado'
                                                             : 'A granel'}{' '}
@@ -738,7 +738,7 @@ export default function AjustesIndex({
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
                                                     <span
-                                                        className={`inline-flex items-center gap-1 rounded-[6px] border px-2 py-0.5 text-[11px] font-black ${
+                                                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-black ${
                                                             isPositive
                                                                 ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
                                                                 : 'border-destructive/20 bg-destructive/10 text-destructive-strong'
@@ -766,7 +766,7 @@ export default function AjustesIndex({
                                                                 'baja' && (
                                                                 <Badge
                                                                     variant="destructive"
-                                                                    className="ml-1.5 px-1 py-0 text-[9px]"
+                                                                    className="ml-1.5 px-1 py-0 text-xs"
                                                                 >
                                                                     Baja
                                                                 </Badge>
@@ -779,7 +779,7 @@ export default function AjustesIndex({
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-foreground max-w-xs px-4 py-3">
-                                                    <p className="line-clamp-2 text-[11.5px]">
+                                                    <p className="line-clamp-2 text-xs">
                                                         {m.observacion ?? '—'}
                                                     </p>
                                                 </TableCell>

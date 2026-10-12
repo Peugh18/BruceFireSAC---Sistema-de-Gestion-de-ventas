@@ -35,7 +35,7 @@ export default function TomarOrden({
 
     if (asignacion.tecnico) {
         return (
-            <div className="flex items-center gap-2 rounded-[12px] border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 text-[12.5px]">
+            <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 text-[12.5px]">
                 <UserCheck className="text-success-strong size-4" />
                 <span className="text-foreground">
                     {asignacion.es_mia
@@ -61,7 +61,7 @@ export default function TomarOrden({
 
     if (asignacion.area !== seccion) {
         return (
-            <div className="border-border bg-muted/40 text-muted-foreground rounded-[12px] border px-4 py-2.5 text-[12.5px]">
+            <div className="border-border bg-muted/40 text-muted-foreground rounded-2xl border px-4 py-2.5 text-[12.5px]">
                 Esta orden ya pasó a{' '}
                 {asignacion.area === 'planta' ? 'Planta' : 'Campo'}.
             </div>
@@ -92,7 +92,7 @@ export default function TomarOrden({
     }
 
     return (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-[12.5px]">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-[12.5px]">
             <div>
                 <p className="text-foreground font-bold">
                     Nadie tiene esta orden todavía
@@ -105,7 +105,7 @@ export default function TomarOrden({
                 type="button"
                 onClick={tomar}
                 disabled={tomando}
-                className="h-9 rounded-[9px] font-bold shadow-none"
+                className="h-9 rounded-lg font-bold shadow-none"
             >
                 <Hand className="size-4" />
                 {tomando ? 'Tomando…' : 'Tomar esta orden'}

@@ -137,7 +137,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
 
                 {/* Pagination */}
                 {deficiencies.links && deficiencies.links.length > 3 && (
-                    <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 pt-2 text-[11.5px]">
+                    <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 pt-2 text-xs">
                         <span>
                             Mostrando {deficiencies.from ?? 0}-
                             {deficiencies.to ?? 0} de {deficiencies.total}{' '}
@@ -150,7 +150,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                         key={idx}
                                         href={link.url}
                                         preserveScroll
-                                        className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
+                                        className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-md px-2 font-mono text-xs ${
                                             link.active
                                                 ? 'bg-foreground text-background font-bold shadow-xs'
                                                 : 'border-border bg-card text-foreground/80 hover:bg-background border'
@@ -162,7 +162,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                 ) : (
                                     <span
                                         key={idx}
-                                        className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs"
+                                        className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-md border border-transparent px-2 font-mono text-xs"
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}
@@ -174,7 +174,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                 )}
 
                 {/* Flow note banner */}
-                <div className="border-border bg-muted/30 text-muted-foreground rounded-[12px] border border-dashed p-3.5 text-xs">
+                <div className="border-border bg-muted/30 text-muted-foreground rounded-2xl border border-dashed p-3.5 text-xs">
                     <b>Flujo de deficiencias:</b> Detectada (técnico reporta en
                     Planta o Campo) &rarr; Si genera costo, pasa a{' '}
                     <b>Esperando autorización</b> (tú avisas al cliente y

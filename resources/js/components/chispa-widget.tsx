@@ -205,7 +205,7 @@ export default function ChispaWidget({
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20" />
                 <Dialog.Content
-                    className={`border-border bg-card fixed right-4 bottom-24 z-50 flex max-h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[16px] border shadow-2xl ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:max-h-[calc(100dvh-11rem)]' : ''}`}
+                    className={`border-border bg-card fixed right-4 bottom-24 z-50 flex max-h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border shadow-2xl ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:max-h-[calc(100dvh-11rem)]' : ''}`}
                 >
                     <div className="border-border flex items-center gap-2.5 border-b px-4 py-4">
                         <span className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
@@ -215,7 +215,7 @@ export default function ChispaWidget({
                             <Dialog.Title className="text-[15px] font-semibold">
                                 Chispa
                             </Dialog.Title>
-                            <Dialog.Description className="text-muted-foreground text-[11px]">
+                            <Dialog.Description className="text-muted-foreground text-xs">
                                 Te explico cómo usar el sistema, paso a paso
                             </Dialog.Description>
                         </div>
@@ -263,7 +263,7 @@ export default function ChispaWidget({
                                         key={s}
                                         type="button"
                                         onClick={() => void preguntar(s)}
-                                        className="border-border hover:bg-muted/50 block w-full rounded-[10px] border px-3 py-2 text-left text-[12.5px]"
+                                        className="border-border hover:bg-muted/50 block w-full rounded-lg border px-3 py-2 text-left text-[12.5px]"
                                     >
                                         {s}
                                     </button>
@@ -286,7 +286,7 @@ export default function ChispaWidget({
                                     />
                                 ) : null}
                                 <div
-                                    className={`max-w-[88%] rounded-[12px] px-3 py-2 leading-relaxed ${m.role === 'user' ? 'bg-primary text-white' : 'bg-muted text-foreground'}`}
+                                    className={`max-w-[88%] rounded-2xl px-3 py-2 leading-relaxed ${m.role === 'user' ? 'bg-primary text-white' : 'bg-muted text-foreground'}`}
                                 >
                                     <Formato texto={m.content} />
                                 </div>
@@ -324,12 +324,12 @@ export default function ChispaWidget({
                             onChange={(e) => setTexto(e.target.value)}
                             maxLength={500}
                             placeholder="Escribe tu duda…"
-                            className="border-border bg-muted/40 focus-visible:border-ring focus-visible:ring-ring/50 h-10 min-w-0 flex-1 rounded-[9px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                            className="border-border bg-muted/40 focus-visible:border-ring focus-visible:ring-ring/50 h-10 min-w-0 flex-1 rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                         />
                         <button
                             type="submit"
                             disabled={pensando || !texto.trim()}
-                            className="bg-primary flex size-10 items-center justify-center rounded-[9px] text-white transition hover:brightness-95 disabled:opacity-50"
+                            className="bg-primary flex size-10 items-center justify-center rounded-lg text-white transition hover:brightness-95 disabled:opacity-50"
                             aria-label="Enviar pregunta"
                         >
                             <Send className="size-4" />

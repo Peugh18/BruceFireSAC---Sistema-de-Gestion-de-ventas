@@ -198,7 +198,7 @@ export default function EjecucionShow({
                                 <span className="font-mono text-base font-extrabold text-neutral-900 dark:text-neutral-100">
                                     {order.codigo}
                                 </span>
-                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-900 uppercase dark:bg-amber-950/60 dark:text-amber-300">
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold text-amber-900 uppercase dark:bg-amber-950/60 dark:text-amber-300">
                                     {order.estado.replace('_', ' ')}
                                 </span>
                             </div>
@@ -249,17 +249,17 @@ export default function EjecucionShow({
                     }
 
                     return (
-                        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
-                            <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
-                                <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
+                        <div className="border-border bg-muted rounded-2xl border p-4">
+                            <div className="text-foreground flex items-center gap-2 text-xs font-bold">
+                                <MessageSquare className="text-foreground size-4" />
                                 <span>
                                     Indicaciones de Ventas y Coordinación
                                 </span>
                             </div>
 
                             {order.observaciones && (
-                                <p className="mt-2 text-xs text-blue-800 dark:text-blue-200">
-                                    <span className="font-semibold text-blue-950 dark:text-blue-100">
+                                <p className="text-foreground mt-2 text-xs">
+                                    <span className="text-foreground font-semibold">
                                         Observación inicial:{' '}
                                     </span>
                                     {order.observaciones}
@@ -268,20 +268,20 @@ export default function EjecucionShow({
 
                             {notasVendedor.length > 0 && (
                                 <div className="mt-3 space-y-2">
-                                    <span className="text-[11px] font-bold text-blue-900/70 uppercase dark:text-blue-300/70">
+                                    <span className="text-foreground text-xs font-bold uppercase">
                                         Notas dejadas por el Vendedor:
                                     </span>
                                     {notasVendedor.map((n) => (
                                         <div
                                             key={n.id}
-                                            className="rounded-xl border border-blue-100 bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:border-blue-800/40 dark:bg-neutral-900/80 dark:text-neutral-200"
+                                            className="border-border rounded-xl border bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:bg-neutral-900/80 dark:text-neutral-200"
                                         >
                                             <p className="font-medium">
                                                 {n.payload?.mensaje ||
                                                     n.payload?.descripcion ||
                                                     JSON.stringify(n.payload)}
                                             </p>
-                                            <span className="mt-1 block text-[10.5px] text-neutral-400">
+                                            <span className="mt-1 block text-xs text-neutral-400">
                                                 {n.created_at
                                                     ? new Date(
                                                           n.created_at,
@@ -465,12 +465,12 @@ export default function EjecucionShow({
                                         <div className="text-xs font-medium text-neutral-800 dark:text-neutral-200">
                                             {cert.tipo}
                                         </div>
-                                        <div className="text-muted-foreground text-[11px]">
+                                        <div className="text-muted-foreground text-xs">
                                             Vigente hasta:{' '}
                                             {cert.fecha_vigencia_hasta}
                                         </div>
                                     </div>
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 uppercase dark:bg-emerald-900/60 dark:text-emerald-300">
+                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 uppercase dark:bg-emerald-900/60 dark:text-emerald-300">
                                         {cert.estado}
                                     </span>
                                 </div>
@@ -513,9 +513,9 @@ export default function EjecucionShow({
                                             </p>
                                         </div>
                                         <span
-                                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                            className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                 d.estado === 'resuelta'
-                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                                                    ? 'bg-muted text-foreground '
                                                     : d.estado === 'autorizada'
                                                       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                                                       : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
@@ -526,14 +526,14 @@ export default function EjecucionShow({
                                     </div>
 
                                     {d.repuesto_sugerido && (
-                                        <div className="text-muted-foreground text-[11px]">
+                                        <div className="text-muted-foreground text-xs">
                                             <b>Repuesto requerido: </b>{' '}
                                             {d.repuesto_sugerido}
                                         </div>
                                     )}
 
                                     {d.resolucion ? (
-                                        <div className="rounded-lg bg-blue-50 p-2 text-xs text-blue-900 dark:bg-blue-950/30 dark:text-blue-300">
+                                        <div className="bg-muted text-foreground rounded-lg p-2 text-xs">
                                             <b>Solución: </b> {d.resolucion}
                                         </div>
                                     ) : (

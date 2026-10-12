@@ -11,7 +11,7 @@ import catalogo from '@/routes/vendedor/catalogo';
 
 /** Clases del marco de los diálogos de unidades (mismo aspecto en ambos). */
 export const UNIDADES_DIALOG_CLASES =
-    'border-border bg-card max-h-[85vh] overflow-y-auto rounded-[16px] sm:max-w-lg';
+    'border-border bg-card max-h-[85vh] overflow-y-auto rounded-2xl sm:max-w-lg';
 
 /** Clases del título de los diálogos de unidades. */
 export const UNIDADES_TITULO_CLASES =

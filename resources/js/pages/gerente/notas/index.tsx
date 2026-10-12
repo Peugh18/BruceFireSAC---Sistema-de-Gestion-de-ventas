@@ -110,7 +110,7 @@ function FilaSolicitud({
                             ))}
                         </ul>
                     )}
-                    <p className="text-muted-foreground mt-1 text-[11px]">
+                    <p className="text-muted-foreground mt-1 text-xs">
                         Pedida por {solicitud.solicitante}
                         {solicitud.fecha ? ` el ${solicitud.fecha}` : ''}
                     </p>

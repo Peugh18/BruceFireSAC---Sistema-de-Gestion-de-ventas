@@ -211,8 +211,8 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
             value: money(kpis.contado),
             detalle: 'Cobrado en caja',
             icon: ShoppingCart,
-            bg: 'bg-blue-500/10',
-            text: 'text-blue-600 dark:text-blue-400',
+            bg: 'bg-muted',
+            text: 'text-foreground ',
         },
         {
             label: 'A crédito',
@@ -244,7 +244,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                     actions={
                         <Button
                             asChild
-                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-10 rounded-lg px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             <Link href={ventas.create(teamSlug)}>
                                 <Plus className="size-3.5" />
@@ -263,7 +263,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                 className="border-border bg-card flex-row items-center gap-3.5 rounded-none border-0 border-r px-[18px] py-5 shadow-none last:border-r-0"
                             >
                                 <div
-                                    className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}
+                                    className={`flex size-[42px] shrink-0 items-center justify-center rounded-lg ${item.bg}`}
                                 >
                                     <Icon
                                         className={`size-5 ${item.text}`}
@@ -277,7 +277,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                     <div className="text-foreground text-[26px] leading-tight font-semibold tracking-tight tabular-nums">
                                         {item.value}
                                     </div>
-                                    <div className="text-muted-foreground text-[11px]">
+                                    <div className="text-muted-foreground text-xs">
                                         {item.detalle}
                                     </div>
                                 </div>
@@ -286,7 +286,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                     })}
                 </div>
 
-                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none">
                     <form
                         onSubmit={buscarVentas}
                         className="mb-4 flex flex-wrap items-end gap-3"
@@ -442,7 +442,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                 {fechaCorta(sale.fecha)}
                                             </TableCell>
                                             <TableCell className="border-border border-b px-2.5 py-[13px]">
-                                                <span className="bg-muted text-foreground/80 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">
+                                                <span className="bg-muted text-foreground/80 rounded-md px-2 py-1 font-['IBM_Plex_Mono',monospace] text-xs font-bold uppercase">
                                                     {sale.comprobante ??
                                                         sale.comprobante_tipo.replace(
                                                             '_',
@@ -451,7 +451,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                 </span>
                                                 {sale.sunat_estado ? (
                                                     <div
-                                                        className={`mt-1 text-[10.5px] font-bold ${estadoSunat(sale.sunat_estado).clase}`}
+                                                        className={`mt-1 text-xs font-bold ${estadoSunat(sale.sunat_estado).clase}`}
                                                     >
                                                         {
                                                             estadoSunat(
@@ -466,7 +466,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                             </TableCell>
                                             <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                 <Badge
-                                                    className={`rounded-full px-2.5 py-1 text-[10.5px] font-bold capitalize shadow-none ${statusBadge(sale.estado)}`}
+                                                    className={`rounded-full px-2.5 py-1 text-xs font-bold capitalize shadow-none ${statusBadge(sale.estado)}`}
                                                 >
                                                     <CheckCircle2 className="size-3" />
                                                     {sale.estado}
@@ -480,7 +480,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                         variant="outline"
                                                         size="icon"
                                                         title="Ver venta"
-                                                        className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
+                                                        className="border-border bg-card text-foreground/80 size-7 rounded-md shadow-none"
                                                     >
                                                         <Link
                                                             href={ventas.show({
@@ -499,7 +499,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                             variant="outline"
                                                             size="icon"
                                                             title="Editar"
-                                                            className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
+                                                            className="border-border bg-card text-foreground/80 size-7 rounded-md shadow-none"
                                                         >
                                                             <Link
                                                                 href={ventas.edit.url(
@@ -522,7 +522,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                             variant="outline"
                                                             size="icon"
                                                             title="Corregir con nota de crédito"
-                                                            className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
+                                                            className="border-border bg-card text-foreground/80 size-7 rounded-md shadow-none"
                                                         >
                                                             <Link
                                                                 href={ventas.show.url(
@@ -551,7 +551,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                         </Table>
                     </div>
 
-                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
                         <span>
                             Mostrando {sales.from ?? 0}-{sales.to ?? 0} de{' '}
                             {sales.total ?? sales.data.length} ventas
@@ -564,14 +564,14 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                         href={link.url}
                                         preserveScroll
                                         preserveState
-                                        className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                                        className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                     >
                                         {cleanLabel(link.label)}
                                     </Link>
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
-                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
+                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                                     >
                                         {cleanLabel(link.label)}
                                     </span>

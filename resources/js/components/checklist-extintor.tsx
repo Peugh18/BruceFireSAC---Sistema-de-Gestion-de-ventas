@@ -93,7 +93,7 @@ export default function ChecklistExtintor({
                 <button
                     type="button"
                     onClick={onCerrar}
-                    className="min-h-[44px] px-2 text-[11px] font-bold"
+                    className="min-h-[44px] px-2 text-xs font-bold"
                 >
                     Cerrar
                 </button>
@@ -139,7 +139,7 @@ export default function ChecklistExtintor({
                         key={clave}
                         className="space-y-1.5 rounded-lg border border-neutral-200 p-2 dark:border-neutral-700"
                     >
-                        <legend className="px-1 text-[11px] font-bold">
+                        <legend className="px-1 text-xs font-bold">
                             {nombre}
                         </legend>
                         <div className="grid grid-cols-3 gap-1">
@@ -152,7 +152,7 @@ export default function ChecklistExtintor({
                                         onClick={() =>
                                             cambiar(clave, { estado })
                                         }
-                                        className={`min-h-[44px] rounded-lg text-[11px] font-bold ${
+                                        className={`min-h-[44px] rounded-lg text-xs font-bold ${
                                             item.estado === estado
                                                 ? estado === 'observado'
                                                     ? 'bg-warning-strong text-background'
@@ -181,7 +181,7 @@ export default function ChecklistExtintor({
                                     placeholder="¿Qué le pasa?"
                                     className="min-h-[44px] w-full rounded-lg border border-neutral-300 bg-white px-2 text-xs dark:border-neutral-600 dark:bg-neutral-900"
                                 />
-                                <label className="flex min-h-[44px] items-center gap-2 text-[11px] font-semibold">
+                                <label className="flex min-h-[44px] items-center gap-2 text-xs font-semibold">
                                     <input
                                         type="checkbox"
                                         checked={item.requiere_autorizacion}
@@ -203,7 +203,7 @@ export default function ChecklistExtintor({
                                             cambiar(clave, { foto: f })
                                         }
                                     />
-                                    <span className="text-[11px]">
+                                    <span className="text-xs">
                                         {item.foto
                                             ? item.foto.name
                                             : 'La foto es obligatoria.'}
@@ -215,7 +215,7 @@ export default function ChecklistExtintor({
                 );
             })}
 
-            <label className="block text-[11px] font-semibold">
+            <label className="block text-xs font-semibold">
                 Observaciones
                 <textarea
                     value={form.data.observaciones}
@@ -228,7 +228,7 @@ export default function ChecklistExtintor({
             </label>
             {Object.values(form.errors)[0] && (
                 <p
-                    className="text-destructive-strong text-[11px] font-semibold"
+                    className="text-destructive-strong text-xs font-semibold"
                     role="alert"
                 >
                     {Object.values(form.errors)[0]}

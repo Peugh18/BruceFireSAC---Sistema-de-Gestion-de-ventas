@@ -233,7 +233,7 @@ export default function SedesIndex() {
 
                 <div className="grid grid-cols-2 gap-4 md:max-w-md">
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <p className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                        <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                             Total de sedes
                         </p>
                         <p className="text-foreground mt-1 text-2xl font-bold">
@@ -241,7 +241,7 @@ export default function SedesIndex() {
                         </p>
                     </div>
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <p className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                        <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                             Activas
                         </p>
                         <p className="text-foreground mt-1 text-2xl font-bold">
@@ -253,7 +253,7 @@ export default function SedesIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Sede</TableHead>
                                     <TableHead>Tipo</TableHead>
@@ -289,7 +289,7 @@ export default function SedesIndex() {
                                                 </span>
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
-                                                <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-bold text-zinc-700 uppercase">
+                                                <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-700 uppercase">
                                                     {TIPO_LABELS[sede.tipo]}
                                                 </span>
                                             </TableCell>
@@ -310,7 +310,7 @@ export default function SedesIndex() {
                                                         Propio
                                                         {sede.tiendas.length >
                                                         0 ? (
-                                                            <span className="block text-[11px]">
+                                                            <span className="block text-xs">
                                                                 Abastece y
                                                                 atiende a:{' '}
                                                                 {sede.tiendas.join(
@@ -326,7 +326,7 @@ export default function SedesIndex() {
                                                 0 ? (
                                                     <span>Nadie asignado</span>
                                                 ) : (
-                                                    <ul className="space-y-0.5 text-[11.5px]">
+                                                    <ul className="space-y-0.5 text-xs">
                                                         {sede.trabajadores.map(
                                                             (trabajador) => (
                                                                 <li
@@ -353,7 +353,7 @@ export default function SedesIndex() {
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
                                                 <span
-                                                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         sede.activo
                                                             ? 'bg-emerald-100 text-emerald-800'
                                                             : 'bg-zinc-200 text-zinc-600'

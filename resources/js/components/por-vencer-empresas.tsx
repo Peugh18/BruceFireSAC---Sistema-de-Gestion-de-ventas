@@ -184,7 +184,7 @@ export default function PorVencerEmpresas({
                 return (
                     <Card
                         key={empresa.client_id}
-                        className={`border-border bg-card gap-0 overflow-hidden rounded-[14px] p-0 shadow-none ${urgente ? 'border-l-destructive border-l-4' : empresa.por_vencer > 0 ? 'border-l-4 border-l-amber-500' : ''}`}
+                        className={`border-border bg-card gap-0 overflow-hidden rounded-2xl p-0 shadow-none ${urgente ? 'border-l-destructive border-l-4' : empresa.por_vencer > 0 ? 'border-l-4 border-l-amber-500' : ''}`}
                     >
                         <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center">
                             <button
@@ -197,14 +197,14 @@ export default function PorVencerEmpresas({
                                 className="flex min-w-0 flex-1 items-center gap-3 text-left"
                                 aria-expanded={estaAbierta}
                             >
-                                <div className="bg-muted text-foreground/80 flex size-10 shrink-0 items-center justify-center rounded-[11px]">
+                                <div className="bg-muted text-foreground/80 flex size-10 shrink-0 items-center justify-center rounded-lg">
                                     <Building2 className="size-5" />
                                 </div>
                                 <div className="min-w-0">
                                     <div className="text-foreground truncate text-[14px] font-bold">
                                         {empresa.cliente}
                                     </div>
-                                    <div className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                    <div className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                         {empresa.numero_documento} ·{' '}
                                         {empresa.extintores} extintor(es)
                                         {empresa.estimados > 0
@@ -229,7 +229,7 @@ export default function PorVencerEmpresas({
                                     </Badge>
                                 ) : null}
                                 <div className="text-right">
-                                    <div className="text-muted-foreground text-[10.5px] font-bold uppercase">
+                                    <div className="text-muted-foreground text-xs font-bold uppercase">
                                         Próximo vencimiento
                                     </div>
                                     <div className="text-foreground text-[12.5px] font-bold">
@@ -248,7 +248,7 @@ export default function PorVencerEmpresas({
                                         type="button"
                                         onClick={() => cotizarRecarga(empresa)}
                                         title="Una sola cotización con la recarga de todos sus extintores vencidos o por vencer"
-                                        className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-8 items-center gap-1.5 rounded-[8px] px-3 text-[11.5px] font-bold transition-colors"
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-colors"
                                     >
                                         <FilePlus2 className="size-3.5" />
                                         Cotizar recarga (
@@ -261,7 +261,7 @@ export default function PorVencerEmpresas({
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         title="Ofrecer la recarga por WhatsApp"
-                                        className="flex h-8 items-center gap-1.5 rounded-[8px] bg-green-700 px-3 text-[11.5px] font-bold text-white transition-colors hover:bg-green-800"
+                                        className="flex h-8 items-center gap-1.5 rounded-lg bg-green-700 px-3 text-xs font-bold text-white transition-colors hover:bg-green-800"
                                     >
                                         <MessageSquare className="size-3.5" />
                                         WhatsApp
@@ -273,7 +273,7 @@ export default function PorVencerEmpresas({
                                             setPidiendoNumero(empresa)
                                         }
                                         title="El cliente no tiene celular: agrégalo y se abre WhatsApp"
-                                        className="flex h-8 items-center gap-1.5 rounded-[8px] border border-green-700 bg-green-700/5 px-3 text-[11.5px] font-bold text-green-800 transition-colors hover:bg-green-700/10 dark:text-green-400"
+                                        className="flex h-8 items-center gap-1.5 rounded-lg border border-green-700 bg-green-700/5 px-3 text-xs font-bold text-green-800 transition-colors hover:bg-green-700/10 dark:text-green-400"
                                     >
                                         <MessageSquare className="size-3.5" />
                                         Agregar número
@@ -284,7 +284,7 @@ export default function PorVencerEmpresas({
                                         current_team: teamSlug,
                                         client: empresa.client_id,
                                     })}
-                                    className="border-border text-foreground/80 hover:text-foreground flex h-8 items-center rounded-[8px] border px-3 text-[11.5px] font-bold"
+                                    className="border-border text-foreground/80 hover:text-foreground flex h-8 items-center rounded-lg border px-3 text-xs font-bold"
                                 >
                                     Ver cliente
                                 </Link>
@@ -295,7 +295,7 @@ export default function PorVencerEmpresas({
                             <div className="border-border overflow-x-auto border-t">
                                 <Table className="w-full text-[12px]">
                                     <TableHeader>
-                                        <TableRow className="bg-muted/50 text-muted-foreground text-left text-[10.5px] uppercase">
+                                        <TableRow className="bg-muted/50 text-muted-foreground text-left text-xs uppercase">
                                             <TableHead>Serie</TableHead>
                                             <TableHead>Extintor</TableHead>
                                             <TableHead>Ubicación</TableHead>
@@ -315,7 +315,7 @@ export default function PorVencerEmpresas({
                                                 }
                                                 className="border-border border-t"
                                             >
-                                                <TableCell className="px-4 py-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]">
+                                                <TableCell className="px-4 py-2 font-['IBM_Plex_Mono',monospace] text-xs">
                                                     {equipo.numero_serie ?? (
                                                         <span
                                                             className="text-muted-foreground font-sans"
@@ -337,7 +337,7 @@ export default function PorVencerEmpresas({
                                                         ? ` · ${equipo.capacidad}`
                                                         : ''}
                                                     {equipo.estimado ? (
-                                                        <span className="ml-1.5 rounded-full bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-700 dark:text-sky-400">
+                                                        <span className="bg-muted text-foreground ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-bold">
                                                             estimado
                                                         </span>
                                                     ) : null}
@@ -361,7 +361,7 @@ export default function PorVencerEmpresas({
                                                 </TableCell>
                                                 <TableCell className="px-3 py-2">
                                                     <span
-                                                        className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${ESTADO[equipo.estado].clase}`}
+                                                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${ESTADO[equipo.estado].clase}`}
                                                     >
                                                         {
                                                             ESTADO[

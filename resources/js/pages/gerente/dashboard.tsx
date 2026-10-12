@@ -208,7 +208,7 @@ export default function GerenteDashboard({
                 )}
 
                 {metrics.notasPorAprobar > 0 && (
-                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-200">
+                    <div className="border-border bg-muted text-foreground flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 text-sm">
                         <FileCheck className="size-5 shrink-0" />
                         <p className="min-w-0 flex-1">
                             Tienes {metrics.notasPorAprobar} nota(s) de crédito
@@ -358,7 +358,7 @@ export default function GerenteDashboard({
                                         key={item.mes}
                                         className="flex flex-1 flex-col items-center gap-2"
                                     >
-                                        <span className="text-muted-foreground font-mono text-[10px]">
+                                        <span className="text-muted-foreground font-mono text-xs">
                                             {formatCurrency(item.monto)}
                                         </span>
                                         <div
@@ -367,7 +367,7 @@ export default function GerenteDashboard({
                                                 height: `${heightPercent}%`,
                                             }}
                                         />
-                                        <span className="text-foreground/80 font-mono text-[10px] font-semibold uppercase">
+                                        <span className="text-foreground/80 font-mono text-xs font-semibold uppercase">
                                             {item.mes}
                                         </span>
                                     </div>
@@ -567,7 +567,7 @@ export default function GerenteDashboard({
                                         className="flex items-center justify-between py-3"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="bg-foreground text-background flex size-6 items-center justify-center rounded-full font-mono text-[10px] font-bold shadow-xs">
+                                            <div className="bg-foreground text-background flex size-6 items-center justify-center rounded-full font-mono text-xs font-bold shadow-xs">
                                                 {idx + 1}
                                             </div>
                                             <span className="text-foreground text-xs font-medium">
@@ -654,7 +654,7 @@ export default function GerenteDashboard({
                                 <h2 className="text-foreground font-['Oswald',sans-serif] text-lg font-bold tracking-wide uppercase">
                                     Predicción de recompra
                                 </h2>
-                                <span className="border-primary/20 bg-primary/5 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
+                                <span className="border-primary/20 bg-primary/5 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold">
                                     <Sparkles className="size-3" />
                                     ML Local
                                 </span>
@@ -667,7 +667,7 @@ export default function GerenteDashboard({
                             </p>
                             {aiRetention &&
                                 aiRetention.modelo.historial.length > 0 && (
-                                    <p className="text-muted-foreground mt-1 text-[11px]">
+                                    <p className="text-muted-foreground mt-1 text-xs">
                                         Precisión por entrenamiento:{' '}
                                         {aiRetention.modelo.historial
                                             .map(
@@ -681,13 +681,13 @@ export default function GerenteDashboard({
 
                         {aiRetention && (
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium">
+                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-xs font-medium">
                                     Modelo:{' '}
                                     <b className="text-foreground">
                                         {aiRetention.modelo.nombre}
                                     </b>
                                 </span>
-                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium">
+                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-xs font-medium">
                                     ROC-AUC:{' '}
                                     <b className="text-success-strong font-bold">
                                         {Math.round(
@@ -696,7 +696,7 @@ export default function GerenteDashboard({
                                         %
                                     </b>
                                 </span>
-                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium">
+                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-xs font-medium">
                                     Accuracy:{' '}
                                     <b className="text-foreground">
                                         {Math.round(
@@ -705,7 +705,7 @@ export default function GerenteDashboard({
                                         %
                                     </b>
                                 </span>
-                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium">
+                                <span className="border-border bg-muted/40 text-foreground rounded-md border px-2.5 py-1 font-mono text-xs font-medium">
                                     Precision:{' '}
                                     <b className="text-foreground">
                                         {Math.round(
@@ -714,7 +714,7 @@ export default function GerenteDashboard({
                                         %
                                     </b>
                                 </span>
-                                <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2.5 py-1 font-mono text-[11px]">
+                                <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2.5 py-1 font-mono text-xs">
                                     {formatNumber(aiRetention.totalEvaluados)}{' '}
                                     evaluados
                                 </span>
@@ -748,7 +748,7 @@ export default function GerenteDashboard({
                                         <span className="text-xs font-semibold tracking-wider text-emerald-700 uppercase dark:text-emerald-400">
                                             Alta Oportunidad (P ≥ 60%)
                                         </span>
-                                        <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                                        <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-xs font-bold text-emerald-700 dark:text-emerald-300">
                                             {
                                                 aiRetention.distribucion.alta
                                                     .porcentaje
@@ -765,7 +765,7 @@ export default function GerenteDashboard({
                                             empresas
                                         </span>
                                     </div>
-                                    <p className="text-muted-foreground mt-1 text-[11px]">
+                                    <p className="text-muted-foreground mt-1 text-xs">
                                         Clientes con alta recurrencia y recencia
                                         óptima
                                     </p>
@@ -778,7 +778,7 @@ export default function GerenteDashboard({
                                             Media Probabilidad (35% ≤ P &lt;
                                             60%)
                                         </span>
-                                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs font-bold text-amber-700 dark:text-amber-300">
                                             {
                                                 aiRetention.distribucion.media
                                                     .porcentaje
@@ -795,7 +795,7 @@ export default function GerenteDashboard({
                                             empresas
                                         </span>
                                     </div>
-                                    <p className="text-muted-foreground mt-1 text-[11px]">
+                                    <p className="text-muted-foreground mt-1 text-xs">
                                         Requieren seguimiento comercial activo
                                     </p>
                                 </div>
@@ -806,7 +806,7 @@ export default function GerenteDashboard({
                                         <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                                             Baja Probabilidad (P &lt; 35%)
                                         </span>
-                                        <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-mono text-[11px] font-bold">
+                                        <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-mono text-xs font-bold">
                                             {
                                                 aiRetention.distribucion.baja
                                                     .porcentaje
@@ -823,7 +823,7 @@ export default function GerenteDashboard({
                                             empresas
                                         </span>
                                     </div>
-                                    <p className="text-muted-foreground mt-1 text-[11px]">
+                                    <p className="text-muted-foreground mt-1 text-xs">
                                         Inactividad prolongada o compras
                                         esporádicas
                                     </p>
@@ -837,7 +837,7 @@ export default function GerenteDashboard({
                                         Top Clientes Prioritarios para Gestión
                                         Comercial
                                     </h3>
-                                    <span className="text-muted-foreground text-[11px]">
+                                    <span className="text-muted-foreground text-xs">
                                         Ordenados por propensión matemática de
                                         recompra
                                     </span>
@@ -865,7 +865,7 @@ export default function GerenteDashboard({
                                                             >
                                                                 {c.cliente}
                                                             </h4>
-                                                            <p className="text-muted-foreground mt-0.5 font-mono text-[10px]">
+                                                            <p className="text-muted-foreground mt-0.5 font-mono text-xs">
                                                                 RUC/Doc:{' '}
                                                                 {c.documento}
                                                             </p>
@@ -890,7 +890,7 @@ export default function GerenteDashboard({
                                                     {/* Métricas del cliente */}
                                                     <div className="border-border/60 bg-muted/20 mt-3 grid grid-cols-3 gap-2 rounded border p-2 text-center">
                                                         <div>
-                                                            <div className="text-muted-foreground text-[10px]">
+                                                            <div className="text-muted-foreground text-xs">
                                                                 Recencia
                                                             </div>
                                                             <div className="text-foreground font-mono text-xs font-bold">
@@ -899,7 +899,7 @@ export default function GerenteDashboard({
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <div className="text-muted-foreground text-[10px]">
+                                                            <div className="text-muted-foreground text-xs">
                                                                 Compras
                                                             </div>
                                                             <div className="text-foreground font-mono text-xs font-bold">
@@ -907,7 +907,7 @@ export default function GerenteDashboard({
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <div className="text-muted-foreground text-[10px]">
+                                                            <div className="text-muted-foreground text-xs">
                                                                 Total S/
                                                             </div>
                                                             <div className="text-foreground font-mono text-xs font-bold">
@@ -922,7 +922,7 @@ export default function GerenteDashboard({
 
                                                     {/* Factores explicativos del modelo */}
                                                     <div className="mt-3 space-y-1.5">
-                                                        <div className="text-muted-foreground text-[10px] font-semibold uppercase">
+                                                        <div className="text-muted-foreground text-xs font-semibold uppercase">
                                                             Factores
                                                             determinantes:
                                                         </div>
@@ -935,7 +935,7 @@ export default function GerenteDashboard({
                                                                         key={
                                                                             idx
                                                                         }
-                                                                        className="flex items-center gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-400"
+                                                                        className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400"
                                                                     >
                                                                         <CheckCircle2 className="size-3 shrink-0" />
                                                                         <span className="truncate">
@@ -951,7 +951,7 @@ export default function GerenteDashboard({
                                                                 ),
                                                             )
                                                         ) : (
-                                                            <div className="text-muted-foreground text-[11px] italic">
+                                                            <div className="text-muted-foreground text-xs italic">
                                                                 Sin factores
                                                                 dominantes
                                                             </div>
@@ -968,7 +968,7 @@ export default function GerenteDashboard({
                                                                             key={
                                                                                 idx
                                                                             }
-                                                                            className="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400"
+                                                                            className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400"
                                                                         >
                                                                             <AlertTriangle className="size-3 shrink-0" />
                                                                             <span className="truncate">

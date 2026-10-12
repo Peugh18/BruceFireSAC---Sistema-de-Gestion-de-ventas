@@ -161,12 +161,12 @@ export default function CajasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Turnos Hoy
                             </span>
-                            <Clock className="size-4 text-blue-600" />
+                            <Clock className="text-foreground size-4" />
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.turnosHoy}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Aperturas registradas hoy
                         </p>
                     </div>
@@ -181,7 +181,7 @@ export default function CajasConsolidadasIndex() {
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
                             {kpis.turnosAbiertos}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Puntos de cobro activos
                         </p>
                     </div>
@@ -196,7 +196,7 @@ export default function CajasConsolidadasIndex() {
                         <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
                             {kpis.turnosConDescuadreMes}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Cierres con faltante o sobrante
                         </p>
                     </div>
@@ -217,7 +217,7 @@ export default function CajasConsolidadasIndex() {
                         >
                             {formatCurrency(kpis.faltantesMes)}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Faltantes del mes · sobrantes{' '}
                             {formatCurrency(kpis.sobrantesMes)} (no se
                             compensan)
@@ -364,7 +364,7 @@ export default function CajasConsolidadasIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Vendedor</TableHead>
                                     <TableHead>Sede</TableHead>
@@ -445,10 +445,10 @@ export default function CajasConsolidadasIndex() {
                                             <TableCell className="text-muted-foreground px-4 py-3">
                                                 {c.sede}
                                             </TableCell>
-                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-xs">
                                                 {c.fecha_apertura}
                                             </TableCell>
-                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-xs">
                                                 {c.fecha_cierre || '—'}
                                             </TableCell>
                                             <TableCell className="text-foreground px-4 py-3 text-right font-mono">
@@ -473,25 +473,25 @@ export default function CajasConsolidadasIndex() {
                                             </TableCell>
                                             <TableCell className="px-4 py-3 text-center">
                                                 {c.estado === 'abierto' ? (
-                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-blue-700">
+                                                    <span className="bg-muted text-foreground rounded-full px-2 py-0.5 font-mono text-xs font-semibold">
                                                         En curso
                                                     </span>
                                                 ) : c.tipo_diferencia ===
                                                   'cuadrado' ? (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-700">
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-xs font-bold text-emerald-700">
                                                         <CheckCircle2 className="size-3" />
                                                         Cuadra exacto
                                                     </span>
                                                 ) : c.tipo_diferencia ===
                                                   'faltante' ? (
-                                                    <span className="text-primary-strong inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 font-mono text-[11px] font-bold">
+                                                    <span className="text-primary-strong inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 font-mono text-xs font-bold">
                                                         <MinusCircle className="size-3" />
                                                         {formatCurrency(
                                                             c.diferencia!,
                                                         )}
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 font-mono text-[11px] font-bold text-amber-800">
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 font-mono text-xs font-bold text-amber-800">
                                                         <PlusCircle className="size-3" />
                                                         +
                                                         {formatCurrency(
@@ -502,7 +502,7 @@ export default function CajasConsolidadasIndex() {
                                             </TableCell>
                                             <TableCell className="px-4 py-3 text-center">
                                                 <span
-                                                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         c.estado === 'abierto'
                                                             ? 'bg-emerald-100 text-emerald-800'
                                                             : 'bg-zinc-100 text-zinc-700'
@@ -511,7 +511,7 @@ export default function CajasConsolidadasIndex() {
                                                     {c.estado}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
+                                            <TableCell className="text-muted-foreground max-w-xs truncate px-4 py-3 text-xs">
                                                 {c.observacion || '—'}
                                             </TableCell>
                                         </TableRow>

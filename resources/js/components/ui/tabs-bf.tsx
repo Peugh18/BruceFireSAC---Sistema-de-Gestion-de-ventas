@@ -114,7 +114,7 @@ export function TabsBf<T extends string = string>({
             aria-orientation="horizontal"
             onKeyDown={alTeclear}
             className={cn(
-                'bg-muted inline-flex max-w-full overflow-x-auto rounded-[9px] p-[3px]',
+                'bg-muted inline-flex max-w-full overflow-x-auto rounded-lg p-[3px]',
                 anchoCompleto ? 'w-full' : 'w-fit',
                 className,
             )}
@@ -125,7 +125,7 @@ export function TabsBf<T extends string = string>({
                 const esActiva = pestana.id === activa;
 
                 const clases = cn(
-                    'inline-flex items-center gap-2 rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all',
+                    'inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all',
                     anchoCompleto && 'flex-1 justify-center',
                     esActiva
                         ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
@@ -138,7 +138,7 @@ export function TabsBf<T extends string = string>({
                         <span>{pestana.titulo}</span>
                         {pestana.contador !== undefined &&
                         pestana.contador > 0 ? (
-                            <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px] font-extrabold">
+                            <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-xs font-extrabold">
                                 {pestana.contador}
                             </span>
                         ) : null}

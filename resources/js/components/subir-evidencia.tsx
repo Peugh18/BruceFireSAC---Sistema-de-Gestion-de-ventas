@@ -84,7 +84,7 @@ export default function SubirEvidencia({
                 )}
                 <BotonFoto onFoto={subir} etiqueta="Agregar foto" />
                 {subiendo && (
-                    <span className="text-[11px] text-neutral-500">
+                    <span className="text-xs text-neutral-500">
                         Subiendo...
                     </span>
                 )}

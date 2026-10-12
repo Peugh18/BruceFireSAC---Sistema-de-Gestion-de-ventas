@@ -85,7 +85,7 @@ function money(value: number) {
 function fieldError(errors: Partial<Record<string, string>>, key: string) {
     return errors[key] ? (
         <p
-            className="text-destructive-strong mt-1 text-[11px] font-semibold"
+            className="text-destructive-strong mt-1 text-xs font-semibold"
             role="alert"
         >
             {errors[key]}
@@ -237,7 +237,7 @@ export default function NuevaCotizacion({
                 />
             </div>
             {renovacion && (
-                <div className="text-foreground mb-4 rounded-[12px] border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+                <div className="text-foreground mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
                     Estás renovando la cotización {renovacion.numero}. Revisa
                     los datos y guarda la nueva cotización; tendrá 15 días de
                     vigencia.
@@ -248,7 +248,7 @@ export default function NuevaCotizacion({
                 className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]"
             >
                 <div className="flex min-w-0 flex-col gap-4">
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
                             <ClientPicker
                                 teamSlug={teamSlug}
@@ -269,19 +269,19 @@ export default function NuevaCotizacion({
                                 <Label className="text-foreground text-sm font-medium">
                                     Precio válido por
                                 </Label>
-                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                     {VIGENCIAS.map((dias) => (
                                         <button
                                             key={dias}
                                             type="button"
                                             onClick={() => elegirVigencia(dias)}
-                                            className={`flex-1 rounded-[7px] px-3 py-1.5 text-xs font-bold transition-all ${vigenciaDias === dias ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-all ${vigenciaDias === dias ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             {dias} días
                                         </button>
                                     ))}
                                 </div>
-                                <p className="text-muted-foreground mt-1.5 text-[11.5px]">
+                                <p className="text-muted-foreground mt-1.5 text-xs">
                                     Emitida hoy{' '}
                                     {new Date().toLocaleDateString('es-PE')}. Se
                                     respeta el precio hasta el{' '}
@@ -301,7 +301,7 @@ export default function NuevaCotizacion({
                                 <Label className="text-foreground text-sm font-medium">
                                     Para
                                 </Label>
-                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                     {(
                                         [
                                             [
@@ -319,7 +319,7 @@ export default function NuevaCotizacion({
                                                 setDestino(valor);
                                                 form.setData('referencia', '');
                                             }}
-                                            className={`flex flex-1 items-center justify-center gap-1 rounded-[7px] px-3 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex flex-1 items-center justify-center gap-1 rounded-md px-3 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             <Icono className="size-3" />
                                             {texto}
@@ -339,9 +339,9 @@ export default function NuevaCotizacion({
                         </div>
                     </Card>
 
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[11px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <div className="border-border bg-muted text-foreground flex size-10 items-center justify-center rounded-lg border">
                                 <Package className="size-5" />
                             </div>
                             <div>
@@ -401,13 +401,13 @@ export default function NuevaCotizacion({
                                                     <span className="text-foreground flex items-center gap-2 font-semibold">
                                                         {item.tipo ===
                                                         'service' ? (
-                                                            <Wrench className="size-3.5 text-blue-600 dark:text-blue-400" />
+                                                            <Wrench className="text-foreground size-3.5" />
                                                         ) : (
                                                             <Package className="text-muted-foreground size-3.5" />
                                                         )}
                                                         {item.nombre}
                                                     </span>
-                                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                                         {item.codigo ?? '—'}
                                                     </span>
                                                 </TableCell>
@@ -429,7 +429,7 @@ export default function NuevaCotizacion({
                                                                     },
                                                                 )
                                                             }
-                                                            className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                            className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                         >
                                                             <Minus className="size-3" />
                                                         </button>
@@ -457,7 +457,7 @@ export default function NuevaCotizacion({
                                                                     },
                                                                 )
                                                             }
-                                                            className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
+                                                            className="border-border h-8 w-14 rounded-md text-center text-[12px]"
                                                         />
                                                         <button
                                                             aria-label="Aumentar cantidad"
@@ -472,7 +472,7 @@ export default function NuevaCotizacion({
                                                                     },
                                                                 )
                                                             }
-                                                            className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                            className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                         >
                                                             <Plus className="size-3" />
                                                         </button>
@@ -500,7 +500,7 @@ export default function NuevaCotizacion({
                                                                 },
                                                             )
                                                         }
-                                                        className="border-border h-8 w-24 rounded-[7px] text-[12px]"
+                                                        className="border-border h-8 w-24 rounded-md text-[12px]"
                                                     />
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-2.5">
@@ -523,7 +523,7 @@ export default function NuevaCotizacion({
                                                                 },
                                                             )
                                                         }
-                                                        className="border-border h-8 w-20 rounded-[7px] text-[12px]"
+                                                        className="border-border h-8 w-20 rounded-md text-[12px]"
                                                     />
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
@@ -548,7 +548,7 @@ export default function NuevaCotizacion({
                                                                 ),
                                                             )
                                                         }
-                                                        className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
+                                                        className="border-border bg-card text-destructive-strong size-7 rounded-md shadow-none"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </Button>
@@ -563,9 +563,9 @@ export default function NuevaCotizacion({
                 </div>
 
                 <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="flex items-center gap-3">
-                            <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-lg">
                                 <ClipboardList className="size-5" />
                             </div>
                             <div className="min-w-0">
@@ -579,7 +579,7 @@ export default function NuevaCotizacion({
                             </div>
                         </div>
 
-                        <div className="bg-muted/40 space-y-2 rounded-[12px] p-4 text-[13px]">
+                        <div className="bg-muted/40 space-y-2 rounded-2xl p-4 text-[13px]">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
                                     Gravado
@@ -628,7 +628,7 @@ export default function NuevaCotizacion({
                                                 opcion,
                                             )
                                         }
-                                        className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-bold ${form.data.condicion_pago_propuesta === opcion ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                        className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${form.data.condicion_pago_propuesta === opcion ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
                                     >
                                         {opcion}
                                     </button>
@@ -656,14 +656,14 @@ export default function NuevaCotizacion({
                                         e.target.value,
                                     )
                                 }
-                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
+                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-lg border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
                             />
                         </div>
 
                         <Button
                             type="submit"
                             loading={form.processing}
-                            className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-11 rounded-lg px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             {form.processing ? (
                                 <Cargando className="size-4" />
@@ -678,7 +678,7 @@ export default function NuevaCotizacion({
                             onClick={() =>
                                 router.visit(cotizaciones.index.url(teamSlug))
                             }
-                            className="border-border bg-card text-foreground/80 h-10 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground/80 h-10 rounded-lg shadow-none"
                         >
                             Cancelar
                         </Button>

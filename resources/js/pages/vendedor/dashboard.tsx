@@ -353,7 +353,7 @@ export default function VendedorDashboard({
                                     <Link
                                         key={item.clave}
                                         href={item.href}
-                                        className={`border-border hover:bg-muted/50 flex items-center gap-3 rounded-[11px] border px-3 py-2.5 transition-colors ${item.urgente ? 'border-l-destructive border-l-4' : ''}`}
+                                        className={`border-border hover:bg-muted/50 flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${item.urgente ? 'border-l-destructive border-l-4' : ''}`}
                                     >
                                         <Icono
                                             className={`size-4 shrink-0 ${item.urgente ? 'text-destructive-strong' : 'text-warning-strong'}`}
@@ -432,7 +432,7 @@ export default function VendedorDashboard({
                                                         {cuota.cliente ||
                                                             'Cliente sin nombre'}
                                                     </p>
-                                                    <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed">
+                                                    <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
                                                         Cuota{' '}
                                                         {cuota.numero_cuota}
                                                         {cuota.sale_numero
@@ -708,10 +708,10 @@ export default function VendedorDashboard({
                                             className="bg-muted hover:bg-accent border-primary rounded-xl border-l-2 p-4"
                                         >
                                             <div className="flex flex-wrap items-center justify-between gap-2">
-                                                <span className="text-muted-foreground text-[11px]">
+                                                <span className="text-muted-foreground text-xs">
                                                     {orden.codigo}
                                                 </span>
-                                                <span className="text-[11px] font-medium">
+                                                <span className="text-xs font-medium">
                                                     {orden.estado.replaceAll(
                                                         '_',
                                                         ' ',
@@ -724,7 +724,7 @@ export default function VendedorDashboard({
                                             <p className="mt-1 text-xs">
                                                 {orden.cliente}
                                             </p>
-                                            <p className="text-muted-foreground mt-2 text-[11px]">
+                                            <p className="text-muted-foreground mt-2 text-xs">
                                                 {orden.tecnico ??
                                                     'Sin técnico asignado'}
                                                 {orden.prioridad === 'urgente'
@@ -774,7 +774,7 @@ export default function VendedorDashboard({
                                             <p className="text-[13px] font-semibold">
                                                 {alerta.titulo}
                                                 {alerta.urgencia === 'alta' && (
-                                                    <span className="text-warning-strong ml-2 text-[11px]">
+                                                    <span className="text-warning-strong ml-2 text-xs">
                                                         Urgente
                                                     </span>
                                                 )}
@@ -782,7 +782,7 @@ export default function VendedorDashboard({
                                             <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
                                                 {alerta.mensaje}
                                             </p>
-                                            <p className="text-muted-foreground mt-1 text-[11px]">
+                                            <p className="text-muted-foreground mt-1 text-xs">
                                                 {alerta.fecha}
                                             </p>
                                         </Link>

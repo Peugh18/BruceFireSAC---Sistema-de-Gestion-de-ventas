@@ -304,7 +304,7 @@ export default function CobranzasIndex({
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
                     {/* Columna Izquierda: Panel de Arqueo de Caja (5 cols) */}
                     <div className="flex flex-col gap-4 xl:col-span-5">
-                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Wallet className="text-muted-foreground size-4" />
@@ -313,7 +313,7 @@ export default function CobranzasIndex({
                                     </span>
                                 </div>
                                 {turno_actual?.sede && (
-                                    <span className="text-muted-foreground text-[11px] font-semibold">
+                                    <span className="text-muted-foreground text-xs font-semibold">
                                         {turno_actual.sede}
                                     </span>
                                 )}
@@ -323,7 +323,7 @@ export default function CobranzasIndex({
                             turno_actual.estado === 'abierto' ? (
                                 <div className="mt-4 flex flex-col">
                                     {/* Estado: Turno Abierto */}
-                                    <div className="text-success-strong flex items-center gap-2.5 rounded-[12px] bg-emerald-500/10 p-3.5">
+                                    <div className="text-success-strong flex items-center gap-2.5 rounded-2xl bg-emerald-500/10 p-3.5">
                                         <span className="relative flex size-2.5">
                                             <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-600 opacity-75" />
                                             <span className="relative inline-flex size-2.5 rounded-full bg-emerald-600" />
@@ -331,7 +331,7 @@ export default function CobranzasIndex({
                                         <span className="text-[12.5px] font-bold">
                                             Turno abierto
                                         </span>
-                                        <span className="text-muted-foreground ml-auto font-mono text-[11px]">
+                                        <span className="text-muted-foreground ml-auto font-mono text-xs">
                                             {turno_actual.fecha_apertura
                                                 ? new Date(
                                                       turno_actual.fecha_apertura,
@@ -385,7 +385,7 @@ export default function CobranzasIndex({
                                         {/* Arqueo ciego: el efectivo esperado
                                         se ve recién al cerrar, después de
                                         contar lo que hay en el cajón. */}
-                                        <p className="text-muted-foreground pt-2.5 text-[11.5px]">
+                                        <p className="text-muted-foreground pt-2.5 text-xs">
                                             El efectivo esperado se muestra al
                                             cerrar el turno, después de que
                                             cuentes el cajón.
@@ -398,14 +398,14 @@ export default function CobranzasIndex({
                                         onClick={() =>
                                             setCloseTurnoDialogOpen(true)
                                         }
-                                        className="bg-primary hover:bg-primary/90 mt-5 h-10 w-full rounded-[10px] text-[13px] font-bold text-white shadow-none transition-colors"
+                                        className="bg-primary hover:bg-primary/90 mt-5 h-10 w-full rounded-lg text-[13px] font-bold text-white shadow-none transition-colors"
                                     >
                                         <Lock className="mr-1.5 size-4" />
                                         <span>Cerrar turno (arqueo ciego)</span>
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="border-border bg-muted/40 mt-4 flex flex-col items-center justify-center gap-3 rounded-[12px] border border-dashed p-6 text-center">
+                                <div className="border-border bg-muted/40 mt-4 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-6 text-center">
                                     <div className="bg-muted text-muted-foreground flex size-11 items-center justify-center rounded-full">
                                         <Unlock className="size-5" />
                                     </div>
@@ -413,7 +413,7 @@ export default function CobranzasIndex({
                                         <p className="text-foreground text-[13px] font-bold">
                                             No hay un turno de caja abierto
                                         </p>
-                                        <p className="text-muted-foreground mt-1 text-[11.5px]">
+                                        <p className="text-muted-foreground mt-1 text-xs">
                                             Debes abrir un turno para registrar
                                             cobros en efectivo y ventas del día.
                                         </p>
@@ -422,7 +422,7 @@ export default function CobranzasIndex({
                                         aria-label="Abrir turno de caja"
                                         type="button"
                                         onClick={() => abrirDialogoApertura()}
-                                        className="mt-1 rounded-[9px] bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-none hover:bg-emerald-700"
+                                        className="mt-1 rounded-lg bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-none hover:bg-emerald-700"
                                     >
                                         <Unlock className="mr-1.5 size-3.5" />
                                         <span>Abrir turno de caja</span>
@@ -433,12 +433,12 @@ export default function CobranzasIndex({
 
                         {/* Historial de Cierres Recientes (si hay data) */}
                         {cierres && cierres.data.length > 0 && (
-                            <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                                 <div className="flex items-center justify-between">
                                     <span className="text-foreground text-[13px] font-bold">
                                         Cierres recientes
                                     </span>
-                                    <span className="text-muted-foreground text-[11px]">
+                                    <span className="text-muted-foreground text-xs">
                                         {cierres.total ?? cierres.data.length}{' '}
                                         cierres
                                     </span>
@@ -462,7 +462,7 @@ export default function CobranzasIndex({
                                                         )}
                                                     </span>
                                                 </div>
-                                                <div className="text-muted-foreground mt-0.5 flex items-center justify-between text-[11px]">
+                                                <div className="text-muted-foreground mt-0.5 flex items-center justify-between text-xs">
                                                     <span>
                                                         {cierre.fecha_cierre
                                                             ? new Date(
@@ -477,7 +477,7 @@ export default function CobranzasIndex({
                                                             dif === 0
                                                                 ? 'text-success-strong'
                                                                 : dif > 0
-                                                                  ? 'font-bold text-blue-600 dark:text-blue-400'
+                                                                  ? 'text-foreground font-bold'
                                                                   : 'text-destructive-strong font-bold'
                                                         }
                                                     >
@@ -498,13 +498,13 @@ export default function CobranzasIndex({
 
                     {/* Columna Derecha: Mis Cuentas por Cobrar (7 cols) */}
                     <div className="flex flex-col xl:col-span-7">
-                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <span className="text-foreground text-[13.5px] font-bold">
                                         Mis cuentas por cobrar
                                     </span>
-                                    <p className="text-muted-foreground mt-0.5 text-[11.5px]">
+                                    <p className="text-muted-foreground mt-0.5 text-xs">
                                         Cuotas por cobrar y pagos registrados
                                         hoy
                                     </p>
@@ -551,7 +551,7 @@ export default function CobranzasIndex({
                                                             No tienes cuotas
                                                             pendientes de cobro
                                                         </p>
-                                                        <p className="text-muted-foreground text-[11px]">
+                                                        <p className="text-muted-foreground text-xs">
                                                             Todos los clientes
                                                             de tus ventas están
                                                             al día con sus
@@ -579,7 +579,7 @@ export default function CobranzasIndex({
                                                                 {inst.cliente ||
                                                                     'Cliente'}
                                                             </div>
-                                                            <div className="text-muted-foreground font-mono text-[10.5px]">
+                                                            <div className="text-muted-foreground font-mono text-xs">
                                                                 Venta:{' '}
                                                                 {inst.sale_numero ||
                                                                     `#${inst.sale_id}`}
@@ -596,7 +596,7 @@ export default function CobranzasIndex({
                                                                     inst.saldo,
                                                                 )}
                                                             </div>
-                                                            <div className="text-muted-foreground text-[10px] font-normal">
+                                                            <div className="text-muted-foreground text-xs font-normal">
                                                                 Importe
                                                                 original:{' '}
                                                                 {soles(
@@ -642,7 +642,7 @@ export default function CobranzasIndex({
                                                                         key={
                                                                             anulado.id
                                                                         }
-                                                                        className="text-destructive-strong text-[10px] font-normal"
+                                                                        className="text-destructive-strong text-xs font-normal"
                                                                         title={
                                                                             anulado.motivo ??
                                                                             undefined
@@ -668,7 +668,7 @@ export default function CobranzasIndex({
 
                                                         <TableCell className="px-2.5 py-3.5">
                                                             <Badge
-                                                                className={`rounded-full border-none px-2 py-0.5 text-[10.5px] font-bold ${
+                                                                className={`rounded-full border-none px-2 py-0.5 text-xs font-bold ${
                                                                     pagada
                                                                         ? 'text-success-strong border border-emerald-500/20 bg-emerald-500/10'
                                                                         : isVencido
@@ -703,7 +703,7 @@ export default function CobranzasIndex({
                                                                                 pago,
                                                                             )
                                                                         }
-                                                                        className="text-destructive-strong mr-1 h-7 rounded-[7px] px-2 text-[11px]"
+                                                                        className="text-destructive-strong mr-1 h-7 rounded-md px-2 text-xs"
                                                                     >
                                                                         Anular
                                                                         cobro
@@ -722,7 +722,7 @@ export default function CobranzasIndex({
                                                                         inst.saldo,
                                                                     ) <= 0
                                                                 }
-                                                                className="bg-foreground text-background hover:bg-foreground/90 h-7 rounded-[7px] px-3 text-[11px] font-bold shadow-xs transition-colors"
+                                                                className="bg-foreground text-background hover:bg-foreground/90 h-7 rounded-md px-3 text-xs font-bold shadow-xs transition-colors"
                                                             >
                                                                 {Number(
                                                                     inst.saldo,
@@ -742,7 +742,7 @@ export default function CobranzasIndex({
                             {/* Paginación si existe */}
                             {installments?.links &&
                                 installments.links.length > 3 && (
-                                    <div className="border-border text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[11.5px]">
+                                    <div className="border-border text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs">
                                         <span>
                                             Mostrando {installments.from ?? 0}-
                                             {installments.to ?? 0} de{' '}
@@ -756,7 +756,7 @@ export default function CobranzasIndex({
                                                             key={idx}
                                                             href={link.url}
                                                             preserveScroll
-                                                            className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
+                                                            className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-md px-2 font-mono text-xs ${
                                                                 link.active
                                                                     ? 'bg-foreground text-background font-bold shadow-xs'
                                                                     : 'border-border bg-card text-foreground/80 hover:bg-background border'
@@ -768,7 +768,7 @@ export default function CobranzasIndex({
                                                     ) : (
                                                         <span
                                                             key={idx}
-                                                            className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs opacity-60"
+                                                            className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-md border border-transparent px-2 font-mono text-xs opacity-60"
                                                             dangerouslySetInnerHTML={{
                                                                 __html: link.label,
                                                             }}
@@ -788,10 +788,10 @@ export default function CobranzasIndex({
                 open={openTurnoDialogOpen}
                 onOpenChange={setOpenTurnoDialogOpen}
             >
-                <DialogContent className="border-border bg-card rounded-[16px] sm:max-w-md">
+                <DialogContent className="border-border bg-card rounded-2xl sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="text-success-strong flex size-9 items-center justify-center rounded-[10px] border border-emerald-500/20 bg-emerald-500/10">
+                            <div className="text-success-strong flex size-9 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10">
                                 <Unlock className="size-5" />
                             </div>
                             <div>
@@ -831,7 +831,7 @@ export default function CobranzasIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                 >
                                     {sedes.map((s) => (
                                         <option key={s.id} value={s.id}>
@@ -861,10 +861,10 @@ export default function CobranzasIndex({
                                     )
                                 }
                                 placeholder="0.00"
-                                className="border-border bg-card mt-1 h-9 rounded-[8px] font-mono text-[13px]"
+                                className="border-border bg-card mt-1 h-9 rounded-lg font-mono text-[13px]"
                             />
                             {openForm.errors.monto_apertura && (
-                                <p className="text-destructive-strong mt-1 text-[11px]">
+                                <p className="text-destructive-strong mt-1 text-xs">
                                     {openForm.errors.monto_apertura}
                                 </p>
                             )}
@@ -875,7 +875,7 @@ export default function CobranzasIndex({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setOpenTurnoDialogOpen(false)}
-                                className="border-border rounded-[8px] text-xs font-semibold"
+                                className="border-border rounded-lg text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
@@ -883,7 +883,7 @@ export default function CobranzasIndex({
                                 aria-label="Confirmar apertura"
                                 type="submit"
                                 loading={openForm.processing}
-                                className="rounded-[8px] bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
+                                className="rounded-lg bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
                             >
                                 Confirmar apertura
                             </Button>
@@ -897,10 +897,10 @@ export default function CobranzasIndex({
                 open={closeTurnoDialogOpen}
                 onOpenChange={setCloseTurnoDialogOpen}
             >
-                <DialogContent className="border-border bg-card rounded-[16px] sm:max-w-md">
+                <DialogContent className="border-border bg-card rounded-2xl sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="bg-destructive/10 text-destructive-strong border-destructive/20 flex size-9 items-center justify-center rounded-[10px] border">
+                            <div className="bg-destructive/10 text-destructive-strong border-destructive/20 flex size-9 items-center justify-center rounded-lg border">
                                 <Lock className="size-5" />
                             </div>
                             <div>
@@ -947,10 +947,10 @@ export default function CobranzasIndex({
                                     )
                                 }
                                 placeholder="0.00"
-                                className="border-border bg-card mt-1 h-9 rounded-[8px] font-mono text-[13px]"
+                                className="border-border bg-card mt-1 h-9 rounded-lg font-mono text-[13px]"
                             />
                             {closeForm.errors.monto_contado_cierre && (
-                                <p className="text-destructive-strong mt-1 text-[11px]">
+                                <p className="text-destructive-strong mt-1 text-xs">
                                     {closeForm.errors.monto_contado_cierre}
                                 </p>
                             )}
@@ -971,7 +971,7 @@ export default function CobranzasIndex({
                                     )
                                 }
                                 placeholder="Ej. Billetes deteriorados, diferencias..."
-                                className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                                className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                             />
                         </div>
 
@@ -980,14 +980,14 @@ export default function CobranzasIndex({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setCloseTurnoDialogOpen(false)}
-                                className="border-border rounded-[8px] text-xs font-semibold"
+                                className="border-border rounded-lg text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 loading={closeForm.processing}
-                                className="bg-primary hover:bg-primary/90 rounded-[8px] text-xs font-bold text-white"
+                                className="bg-primary hover:bg-primary/90 rounded-lg text-xs font-bold text-white"
                             >
                                 Confirmar y cerrar turno
                             </Button>
@@ -1003,10 +1003,10 @@ export default function CobranzasIndex({
                     if (!open) setSelectedInstallment(null);
                 }}
             >
-                <DialogContent className="border-border bg-card rounded-[16px] sm:max-w-md">
+                <DialogContent className="border-border bg-card rounded-2xl sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="flex size-9 items-center justify-center rounded-[10px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <div className="border-border bg-muted text-foreground flex size-9 items-center justify-center rounded-lg border">
                                 <CreditCard className="size-5" />
                             </div>
                             <div>
@@ -1064,7 +1064,7 @@ export default function CobranzasIndex({
                                         e.target.value,
                                     )
                                 }
-                                className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                             >
                                 <option value="efectivo">Efectivo</option>
                                 <option value="transferencia">
@@ -1095,10 +1095,10 @@ export default function CobranzasIndex({
                                 onChange={(e) =>
                                     paymentForm.setData('monto', e.target.value)
                                 }
-                                className="border-border bg-card mt-1 h-9 rounded-[8px] font-mono text-[13px]"
+                                className="border-border bg-card mt-1 h-9 rounded-lg font-mono text-[13px]"
                             />
                             {paymentForm.errors.monto && (
-                                <p className="text-destructive-strong mt-1 text-[11px]">
+                                <p className="text-destructive-strong mt-1 text-xs">
                                     {paymentForm.errors.monto}
                                 </p>
                             )}
@@ -1120,7 +1120,7 @@ export default function CobranzasIndex({
                                         )
                                     }
                                     placeholder="Ej. OP-983412"
-                                    className="border-border bg-card mt-1 h-9 rounded-[8px] font-mono text-[13px]"
+                                    className="border-border bg-card mt-1 h-9 rounded-lg font-mono text-[13px]"
                                 />
                             </div>
                         )}
@@ -1130,14 +1130,14 @@ export default function CobranzasIndex({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setSelectedInstallment(null)}
-                                className="border-border rounded-[8px] text-xs font-semibold"
+                                className="border-border rounded-lg text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 loading={paymentForm.processing}
-                                className="bg-foreground text-background hover:bg-foreground/90 rounded-[8px] text-xs font-bold shadow-xs transition-colors"
+                                className="bg-foreground text-background hover:bg-foreground/90 rounded-lg text-xs font-bold shadow-xs transition-colors"
                             >
                                 Registrar pago
                             </Button>
@@ -1152,7 +1152,7 @@ export default function CobranzasIndex({
                     if (!open) setSelectedPayment(null);
                 }}
             >
-                <DialogContent className="border-border bg-card rounded-[16px] sm:max-w-md">
+                <DialogContent className="border-border bg-card rounded-2xl sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
                             <XCircle className="text-destructive-strong size-6" />

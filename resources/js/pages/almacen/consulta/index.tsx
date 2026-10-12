@@ -98,35 +98,35 @@ function getEstadoBadge(estado: string) {
     switch (estado) {
         case 'disponible':
             return (
-                <span className="text-success-strong inline-flex items-center gap-1 rounded-[6px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold">
+                <span className="text-success-strong inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold">
                     <span className="size-2 rounded-full bg-emerald-600" />
                     Disponible en Stock
                 </span>
             );
         case 'reservado':
             return (
-                <span className="text-warning-strong inline-flex items-center gap-1 rounded-[6px] border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-bold">
+                <span className="text-warning-strong inline-flex items-center gap-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-bold">
                     <span className="size-2 rounded-full bg-amber-600" />
                     Reservado
                 </span>
             );
         case 'vendido':
             return (
-                <span className="inline-flex items-center gap-1 rounded-[6px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400">
-                    <span className="size-2 rounded-full bg-blue-600" />
+                <span className="border-border bg-muted text-foreground inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold">
+                    <span className="bg-primary size-2 rounded-full" />
                     Vendido (Equipo de Cliente)
                 </span>
             );
         case 'baja':
             return (
-                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex items-center gap-1 rounded-[6px] border px-2.5 py-1 text-xs font-bold">
+                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold">
                     <span className="bg-destructive size-2 rounded-full" />
                     Dado de Baja
                 </span>
             );
         default:
             return (
-                <span className="border-border bg-muted/30 text-muted-foreground inline-flex items-center gap-1 rounded-[6px] border px-2.5 py-1 text-xs font-bold">
+                <span className="border-border bg-muted/30 text-muted-foreground inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold">
                     {estado}
                 </span>
             );
@@ -189,7 +189,7 @@ export default function ConsultaIndex({
                 </div>
 
                 {/* Scanner / Search Input Box */}
-                <Card className="border-border bg-card rounded-[14px] border p-5 shadow-sm">
+                <Card className="border-border bg-card rounded-2xl border p-5 shadow-sm">
                     <form
                         onSubmit={handleSearch}
                         className="flex flex-col gap-3 md:flex-row"
@@ -222,7 +222,7 @@ export default function ConsultaIndex({
                                 aria-label="Filtrar por sede"
                                 value={sedeId}
                                 onChange={(e) => setSedeId(e.target.value)}
-                                className="border-border bg-card text-foreground focus:border-primary h-11 w-full rounded-[9px] border px-3 text-xs font-medium focus:outline-none"
+                                className="border-border bg-card text-foreground focus:border-primary h-11 w-full rounded-lg border px-3 text-xs font-medium focus:outline-none"
                             >
                                 <option value="">Todas las sedes</option>
                                 {sedes.map((s) => (
@@ -259,14 +259,14 @@ export default function ConsultaIndex({
                 {/* RESULTADO: UNIDAD SERIALIZADA */}
                 {unitResult && (
                     <div className="space-y-6">
-                        <Card className="border-border bg-card rounded-[14px] border-2 p-6 shadow-sm">
+                        <Card className="border-border bg-card rounded-2xl border-2 p-6 shadow-sm">
                             <div className="border-border mb-5 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-muted/30 text-destructive-strong flex size-11 items-center justify-center rounded-[10px]">
+                                    <div className="bg-muted/30 text-destructive-strong flex size-11 items-center justify-center rounded-lg">
                                         <Barcode className="size-6" />
                                     </div>
                                     <div>
-                                        <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
+                                        <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
                                             Unidad Física Serializada
                                         </span>
                                         <div className="text-foreground font-mono text-2xl font-black tracking-wider">
@@ -282,8 +282,8 @@ export default function ConsultaIndex({
 
                             {/* Detalles de la Unidad */}
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-                                <div className="border-border bg-muted/40 rounded-[9px] border p-3">
-                                    <span className="text-muted-foreground text-[10.5px] font-semibold uppercase">
+                                <div className="border-border bg-muted/40 rounded-lg border p-3">
+                                    <span className="text-muted-foreground text-xs font-semibold uppercase">
                                         Producto
                                     </span>
                                     <div className="text-foreground mt-0.5 text-xs font-bold">
@@ -292,8 +292,8 @@ export default function ConsultaIndex({
                                     </div>
                                 </div>
 
-                                <div className="border-border bg-muted/40 rounded-[9px] border p-3">
-                                    <span className="text-muted-foreground text-[10.5px] font-semibold uppercase">
+                                <div className="border-border bg-muted/40 rounded-lg border p-3">
+                                    <span className="text-muted-foreground text-xs font-semibold uppercase">
                                         Ubicación Actual
                                     </span>
                                     <div className="text-foreground mt-0.5 flex items-center gap-1 text-xs font-bold">
@@ -305,8 +305,8 @@ export default function ConsultaIndex({
                                     </div>
                                 </div>
 
-                                <div className="border-border bg-muted/40 rounded-[9px] border p-3">
-                                    <span className="text-muted-foreground text-[10.5px] font-semibold uppercase">
+                                <div className="border-border bg-muted/40 rounded-lg border p-3">
+                                    <span className="text-muted-foreground text-xs font-semibold uppercase">
                                         Marca & Año
                                     </span>
                                     <div className="text-foreground mt-0.5 text-xs font-bold">
@@ -315,8 +315,8 @@ export default function ConsultaIndex({
                                     </div>
                                 </div>
 
-                                <div className="border-border bg-muted/40 rounded-[9px] border p-3">
-                                    <span className="text-muted-foreground text-[10.5px] font-semibold uppercase">
+                                <div className="border-border bg-muted/40 rounded-lg border p-3">
+                                    <span className="text-muted-foreground text-xs font-semibold uppercase">
                                         Fecha de Ingreso
                                     </span>
                                     <div className="text-foreground mt-0.5 text-xs font-bold">
@@ -341,7 +341,7 @@ export default function ConsultaIndex({
                                         unidad.
                                     </p>
                                 ) : (
-                                    <div className="divide-border border-border divide-y overflow-hidden rounded-[9px] border text-xs">
+                                    <div className="divide-border border-border divide-y overflow-hidden rounded-lg border text-xs">
                                         {unitResult.movimientos.map((m) => (
                                             <div
                                                 key={m.id}
@@ -349,7 +349,7 @@ export default function ConsultaIndex({
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <span
-                                                        className={`inline-flex items-center gap-1 rounded-[5px] px-2 py-0.5 text-[10.5px] font-black ${
+                                                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-black ${
                                                             m.cantidad > 0
                                                                 ? 'text-success-strong bg-emerald-500/10'
                                                                 : 'bg-destructive/10 text-destructive-strong'
@@ -357,7 +357,7 @@ export default function ConsultaIndex({
                                                     >
                                                         {m.tipo.toUpperCase()}
                                                     </span>
-                                                    <span className="text-muted-foreground font-mono text-[11px]">
+                                                    <span className="text-muted-foreground font-mono text-xs">
                                                         {formatDate(m.fecha)}
                                                     </span>
                                                     <span className="text-foreground">
@@ -366,11 +366,11 @@ export default function ConsultaIndex({
                                                 </div>
 
                                                 <div className="flex items-center gap-3 text-right">
-                                                    <span className="text-muted-foreground max-w-xs truncate text-[11px]">
+                                                    <span className="text-muted-foreground max-w-xs truncate text-xs">
                                                         {m.observacion ||
                                                             'Sin observación'}
                                                     </span>
-                                                    <span className="text-muted-foreground text-[10.5px] font-semibold">
+                                                    <span className="text-muted-foreground text-xs font-semibold">
                                                         Por {m.usuario}
                                                     </span>
                                                 </div>
@@ -381,7 +381,7 @@ export default function ConsultaIndex({
                             </div>
 
                             {/* Banner Informativo de frontera de rol */}
-                            <div className="border-border bg-muted/40 text-muted-foreground mt-5 flex items-center gap-2 rounded-[8px] border p-3 text-[11.5px]">
+                            <div className="border-border bg-muted/40 text-muted-foreground mt-5 flex items-center gap-2 rounded-lg border p-3 text-xs">
                                 <Shield className="text-destructive-strong size-4 shrink-0" />
                                 <span>
                                     <b>Modo Consulta Auditora:</b> Esta pantalla
@@ -396,14 +396,14 @@ export default function ConsultaIndex({
 
                 {/* RESULTADO: PRODUCTO A GRANEL */}
                 {!unitResult && productResult && (
-                    <Card className="border-border bg-card rounded-[14px] border p-6 shadow-sm">
+                    <Card className="border-border bg-card rounded-2xl border p-6 shadow-sm">
                         <div className="border-border mb-4 flex items-center justify-between border-b pb-4">
                             <div className="flex items-center gap-3">
-                                <div className="flex size-10 items-center justify-center rounded-[9px] bg-sky-500/10 text-blue-600 dark:text-blue-400">
+                                <div className="bg-muted text-foreground flex size-10 items-center justify-center rounded-lg">
                                     <Package className="size-5" />
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
+                                    <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
                                         Producto / Repuesto a Granel
                                     </span>
                                     <h2 className="text-foreground text-lg font-black">
@@ -427,9 +427,9 @@ export default function ConsultaIndex({
                                 {sedes.map((s) => (
                                     <div
                                         key={s.id}
-                                        className="border-border bg-muted/40 rounded-[9px] border p-3 text-center"
+                                        className="border-border bg-muted/40 rounded-lg border p-3 text-center"
                                     >
-                                        <div className="text-muted-foreground truncate text-[11px] font-semibold">
+                                        <div className="text-muted-foreground truncate text-xs font-semibold">
                                             {s.nombre}
                                         </div>
                                         <div className="text-foreground mt-1 text-base font-black">
@@ -447,19 +447,19 @@ export default function ConsultaIndex({
                             <span className="text-foreground mb-2 block text-xs font-bold">
                                 Últimos Movimientos en Kardex:
                             </span>
-                            <div className="divide-border border-border divide-y overflow-hidden rounded-[9px] border text-xs">
+                            <div className="divide-border border-border divide-y overflow-hidden rounded-lg border text-xs">
                                 {productResult.movimientos.map((m) => (
                                     <div
                                         key={m.id}
                                         className="bg-card flex items-center justify-between p-2.5"
                                     >
                                         <div className="flex items-center gap-2">
-                                            <span className="text-muted-foreground font-mono text-[11px]">
+                                            <span className="text-muted-foreground font-mono text-xs">
                                                 {formatDate(m.fecha)}
                                             </span>
                                             <Badge
                                                 variant="secondary"
-                                                className="text-[10px]"
+                                                className="text-xs"
                                             >
                                                 {m.tipo}
                                             </Badge>
@@ -471,7 +471,7 @@ export default function ConsultaIndex({
                                                     ? `+${m.cantidad}`
                                                     : m.cantidad}
                                             </span>
-                                            <span className="text-[10.5px] text-gray-400">
+                                            <span className="text-xs text-gray-400">
                                                 {m.usuario}
                                             </span>
                                         </div>
@@ -484,7 +484,7 @@ export default function ConsultaIndex({
 
                 {/* EMPTY STATE */}
                 {!unitResult && !productResult && (
-                    <Card className="border-border bg-muted/40 rounded-[14px] border border-dashed p-12 text-center">
+                    <Card className="border-border bg-muted/40 rounded-2xl border border-dashed p-12 text-center">
                         <div className="border-border bg-card text-destructive-strong mx-auto mb-3 flex size-14 items-center justify-center rounded-full border shadow-sm">
                             <Scan className="size-7" />
                         </div>

@@ -284,8 +284,8 @@ export default function FacturacionIndex({
             label: 'Emitidos hoy',
             value: kpis.emitidos_hoy,
             icon: Send,
-            bg: 'bg-blue-500/10',
-            text: 'text-blue-600 dark:text-blue-400',
+            bg: 'bg-muted',
+            text: 'text-foreground ',
         },
         {
             label: 'Aceptados hoy',
@@ -322,15 +322,14 @@ export default function FacturacionIndex({
                     filters.plazo) && (
                     <div
                         role="alert"
-                        className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[14px] border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+                        className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
                     >
                         <AlertTriangle className="size-5 shrink-0" />
-                        <p className="min-w-0 flex-1">
+                        <p className="min-w-[14rem] flex-1">
                             <strong>Plazo de SUNAT:</strong>{' '}
-                            {plazoSunat.por_vencer} comprobante(s) sin enviar
-                            vencen hoy o mañana y {plazoSunat.vencidos} ya
-                            vencieron. Envíalos cuanto antes: pasado el plazo
-                            SUNAT los rechaza.
+                            {plazoSunat.por_vencer} sin enviar vencen hoy o
+                            mañana y {plazoSunat.vencidos} ya vencieron.
+                            Envíalos cuanto antes.
                         </p>
                         <div className="flex flex-wrap gap-3 font-semibold">
                             <Link
@@ -366,10 +365,10 @@ export default function FacturacionIndex({
                         return (
                             <Card
                                 key={item.label}
-                                className="border-border bg-card flex-row items-center gap-3.5 rounded-[14px] px-[18px] py-4 shadow-none"
+                                className="border-border bg-card flex-row items-center gap-3.5 rounded-2xl px-[18px] py-4 shadow-none"
                             >
                                 <div
-                                    className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}
+                                    className={`flex size-[42px] shrink-0 items-center justify-center rounded-lg ${item.bg}`}
                                 >
                                     <Icon
                                         className={`size-5 ${item.text}`}
@@ -377,7 +376,7 @@ export default function FacturacionIndex({
                                     />
                                 </div>
                                 <div>
-                                    <div className="text-muted-foreground text-[11px] font-bold tracking-[0.03em] uppercase">
+                                    <div className="text-muted-foreground text-xs font-bold tracking-[0.03em] uppercase">
                                         {item.label}
                                     </div>
                                     <div className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
@@ -389,7 +388,7 @@ export default function FacturacionIndex({
                     })}
                 </div>
 
-                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none">
                     <div className="mb-2 flex flex-wrap items-end gap-2.5">
                         <FiltroSelect
                             etiqueta="Tipo"
@@ -412,7 +411,7 @@ export default function FacturacionIndex({
                         <div className="flex-1" />
                         <form
                             onSubmit={submitSearch}
-                            className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex h-10 min-w-[230px] items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]"
+                            className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex h-10 min-w-[230px] items-center gap-2 rounded-lg border px-3 focus-within:ring-[3px]"
                         >
                             <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
@@ -436,7 +435,7 @@ export default function FacturacionIndex({
                         .
                     </p>
 
-                    <div className="border-border bg-muted/30 mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border px-3 py-2">
+                    <div className="border-border bg-muted/30 mb-3 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2">
                         <span className="text-foreground text-[12px] font-semibold">
                             {cantidadSeleccionada > 0
                                 ? `${cantidadSeleccionada} comprobante(s) seleccionado(s)`
@@ -490,7 +489,7 @@ export default function FacturacionIndex({
                                 )
                             }
                             size="sm"
-                            className="bg-primary hover:bg-primary/90 h-8 rounded-[8px] text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-8 rounded-lg text-white shadow-none"
                         >
                             {descargando === 'zip' ? (
                                 <Spinner />
@@ -515,7 +514,7 @@ export default function FacturacionIndex({
                             }
                             variant="outline"
                             size="sm"
-                            className="h-8 rounded-[8px] shadow-none"
+                            className="h-8 rounded-lg shadow-none"
                         >
                             {descargando === 'excel' ? (
                                 <Spinner />
@@ -597,7 +596,7 @@ export default function FacturacionIndex({
                                                     />
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-[13px]">
-                                                    <span className="bg-muted text-foreground/80 mr-1.5 rounded-[5px] px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase">
+                                                    <span className="bg-muted text-foreground/80 mr-1.5 rounded-md px-2 py-1 font-['IBM_Plex_Mono',monospace] text-xs font-bold uppercase">
                                                         {document.tipo}
                                                     </span>
                                                     {document.sale_id ? (
@@ -635,7 +634,7 @@ export default function FacturacionIndex({
                                                             document.sunat_mensaje ??
                                                             undefined
                                                         }
-                                                        className={`max-w-[240px] justify-start rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold ${sunatBadge(document.sunat_estado)}`}
+                                                        className={`max-w-[240px] justify-start rounded-full border-transparent px-2.5 py-1 text-xs font-bold ${sunatBadge(document.sunat_estado)}`}
                                                     >
                                                         <span className="truncate">
                                                             {sunatEstadoLabel(
@@ -644,7 +643,7 @@ export default function FacturacionIndex({
                                                         </span>
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-[11px] whitespace-nowrap tabular-nums">
+                                                <TableCell className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-xs whitespace-nowrap tabular-nums">
                                                     {document.sunat_codigo_respuesta ??
                                                         '-'}
                                                 </TableCell>
@@ -666,7 +665,7 @@ export default function FacturacionIndex({
                                                                 size="icon"
                                                                 aria-label="Reenviar a SUNAT"
                                                                 title="Reenviar a SUNAT"
-                                                                className="border-border bg-card text-warning-strong size-7 rounded-[7px] shadow-none"
+                                                                className="border-border bg-card text-warning-strong size-7 rounded-md shadow-none"
                                                             >
                                                                 {processingId ===
                                                                 document.id ? (
@@ -685,7 +684,7 @@ export default function FacturacionIndex({
                                                                         document.id,
                                                                 },
                                                             )}
-                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-[6px] border px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold no-underline"
+                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-md border px-2 font-['IBM_Plex_Mono',monospace] text-xs font-bold no-underline"
                                                         >
                                                             XML
                                                         </a>
@@ -698,7 +697,7 @@ export default function FacturacionIndex({
                                                                         document.id,
                                                                 },
                                                             )}
-                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-[6px] border px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold no-underline"
+                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-md border px-2 font-['IBM_Plex_Mono',monospace] text-xs font-bold no-underline"
                                                         >
                                                             CDR
                                                         </a>
@@ -711,7 +710,7 @@ export default function FacturacionIndex({
                                                                         document.id,
                                                                 },
                                                             )}
-                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center gap-1 rounded-[6px] border px-2 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold no-underline"
+                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center gap-1 rounded-md border px-2 font-['IBM_Plex_Mono',monospace] text-xs font-bold no-underline"
                                                         >
                                                             <FileDown className="size-3" />
                                                             PDF
@@ -726,7 +725,7 @@ export default function FacturacionIndex({
                         </Table>
                     </div>
 
-                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
                         <span>
                             Mostrando {documents.from ?? 0}-{documents.to ?? 0}{' '}
                             de {documents.total ?? documents.data.length}{' '}
@@ -740,14 +739,14 @@ export default function FacturacionIndex({
                                         href={link.url}
                                         preserveScroll
                                         preserveState
-                                        className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                                        className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                     >
                                         {cleanLabel(link.label)}
                                     </Link>
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
-                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
+                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                                     >
                                         {cleanLabel(link.label)}
                                     </span>

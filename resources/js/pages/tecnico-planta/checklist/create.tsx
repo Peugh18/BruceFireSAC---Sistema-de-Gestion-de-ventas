@@ -240,12 +240,12 @@ export default function ChecklistCreate({
                                             {previo.resultado_general}
                                         </span>
                                         {previo.observaciones ? (
-                                            <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                            <p className="text-muted-foreground mt-0.5 text-xs">
                                                 {previo.observaciones}
                                             </p>
                                         ) : null}
                                     </div>
-                                    <span className="text-muted-foreground shrink-0 text-[10px]">
+                                    <span className="text-muted-foreground shrink-0 text-xs">
                                         {previo.created_at
                                             ? new Date(
                                                   previo.created_at,
@@ -418,7 +418,7 @@ export default function ChecklistCreate({
                                         <div className="animate-in fade-in space-y-2 border-t border-amber-200 pt-2.5 duration-150 dark:border-amber-900/60">
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
-                                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                                    <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                         Condición / Falla *
                                                     </label>
                                                     <input
@@ -438,7 +438,7 @@ export default function ChecklistCreate({
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                                    <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                         Acción Recomendada
                                                     </label>
                                                     <input
@@ -462,7 +462,7 @@ export default function ChecklistCreate({
 
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
-                                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                                    <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                         Repuesto Sugerido
                                                     </label>
                                                     <input
@@ -520,7 +520,7 @@ export default function ChecklistCreate({
                                                         )
                                                     }
                                                 />
-                                                <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                                <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                     {item.foto
                                                         ? item.foto.name
                                                         : 'La foto es obligatoria en un componente observado.'}
@@ -529,7 +529,7 @@ export default function ChecklistCreate({
                                                     `items.${el.clave}.foto` as keyof typeof form.errors
                                                 ] && (
                                                     <span
-                                                        className="text-[11px] font-semibold text-red-600"
+                                                        className="text-xs font-semibold text-red-600"
                                                         role="alert"
                                                     >
                                                         {
@@ -542,7 +542,7 @@ export default function ChecklistCreate({
                                             </div>
 
                                             <div>
-                                                <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                                <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                                     Nota Técnica
                                                 </label>
                                                 <input
@@ -609,7 +609,7 @@ export default function ChecklistCreate({
                     </div>
                     {Object.values(form.errors)[0] ? (
                         <p
-                            className="text-destructive-strong text-center text-[11px] font-semibold"
+                            className="text-destructive-strong text-center text-xs font-semibold"
                             role="alert"
                         >
                             {Object.values(form.errors)[0]}

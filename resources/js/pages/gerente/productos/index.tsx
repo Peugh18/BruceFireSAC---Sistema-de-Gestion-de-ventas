@@ -546,7 +546,7 @@ export default function ProductosIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Código</TableHead>
                                     <TableHead>
@@ -598,7 +598,7 @@ export default function ProductosIndex() {
                                                 <TableCell className="text-foreground px-4 py-3 font-mono font-bold">
                                                     {p.codigo}
                                                     {p.codigo_barras ? (
-                                                        <div className="text-muted-foreground text-[10.5px] font-normal">
+                                                        <div className="text-muted-foreground text-xs font-normal">
                                                             ▮▮ {p.codigo_barras}
                                                         </div>
                                                     ) : null}
@@ -608,7 +608,7 @@ export default function ProductosIndex() {
                                                         {p.nombre}
                                                     </div>
                                                     {p.descripcion && (
-                                                        <div className="text-muted-foreground max-w-xs truncate text-[11px]">
+                                                        <div className="text-muted-foreground max-w-xs truncate text-xs">
                                                             {p.descripcion}
                                                         </div>
                                                     )}
@@ -625,7 +625,7 @@ export default function ProductosIndex() {
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
                                                     <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
+                                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-xs font-bold ${
                                                             isBajoMinimo
                                                                 ? 'text-primary-strong bg-red-100'
                                                                 : 'bg-background text-foreground'
@@ -643,7 +643,7 @@ export default function ProductosIndex() {
                                                         : '—'}
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
-                                                    <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
+                                                    <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-xs font-medium">
                                                         {p.serializado
                                                             ? 'Por serie'
                                                             : p.controla_lote
@@ -653,7 +653,7 @@ export default function ProductosIndex() {
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
                                                     <span
-                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                             p.activo
                                                                 ? 'bg-emerald-100 text-emerald-800'
                                                                 : 'bg-zinc-100 text-zinc-600'

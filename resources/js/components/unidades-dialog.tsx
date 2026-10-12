@@ -86,7 +86,7 @@ export default function UnidadesDialog({
                         title="No hay unidades disponibles de este producto en tu almacén."
                     />
                 ) : (
-                    <div className="border-border overflow-hidden rounded-[10px] border">
+                    <div className="border-border overflow-hidden rounded-lg border">
                         <button
                             type="button"
                             onClick={() =>
@@ -98,7 +98,7 @@ export default function UnidadesDialog({
                                           ),
                                 )
                             }
-                            className="border-border bg-muted/50 text-foreground/80 w-full border-b px-3 py-2 text-left text-[11.5px] font-bold"
+                            className="border-border bg-muted/50 text-foreground/80 w-full border-b px-3 py-2 text-left text-xs font-bold"
                         >
                             {marcadas.length === unidades.length
                                 ? 'Desmarcar todas'
@@ -130,7 +130,7 @@ export default function UnidadesDialog({
                         type="button"
                         variant="outline"
                         onClick={onClose}
-                        className="rounded-[9px] shadow-none"
+                        className="rounded-lg shadow-none"
                     >
                         Cancelar
                     </Button>
@@ -145,7 +145,7 @@ export default function UnidadesDialog({
                             );
                             onClose();
                         }}
-                        className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
+                        className="bg-primary hover:bg-primary/90 rounded-lg font-bold text-white shadow-none"
                     >
                         Agregar {marcadas.length || ''}
                     </Button>

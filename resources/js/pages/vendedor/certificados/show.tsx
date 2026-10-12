@@ -116,7 +116,7 @@ export default function CertificadosShow({ certificate }: Props) {
                     <Button
                         asChild
                         variant="outline"
-                        className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
+                        className="border-border bg-card text-foreground/80 h-9 rounded-lg shadow-none"
                     >
                         <Link href={certificados.index(teamSlug)}>
                             <ArrowLeft className="size-4" />
@@ -136,23 +136,23 @@ export default function CertificadosShow({ certificate }: Props) {
                     </div>
                     <div className="flex-1" />
                     <Badge
-                        className={`rounded-full border-transparent px-3 py-1 text-[10.5px] font-bold capitalize ${badgeClass(certificate.estado)}`}
+                        className={`rounded-full border-transparent px-3 py-1 text-xs font-bold capitalize ${badgeClass(certificate.estado)}`}
                     >
                         {certificate.estado}
                     </Badge>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-                    <Card className="border-border bg-card gap-3 overflow-hidden rounded-[16px] p-3 shadow-none">
+                    <Card className="border-border bg-card gap-3 overflow-hidden rounded-2xl p-3 shadow-none">
                         {certificate.participants.length > 0 ? (
                             <div className="flex flex-wrap items-center gap-1.5 px-1">
-                                <span className="text-muted-foreground text-[11.5px] font-bold uppercase">
+                                <span className="text-muted-foreground text-xs font-bold uppercase">
                                     Ver:
                                 </span>
                                 <button
                                     type="button"
                                     onClick={() => setParticipante(null)}
-                                    className={`rounded-full border px-2.5 py-1 text-[11.5px] font-bold ${participante === null ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground'}`}
+                                    className={`rounded-full border px-2.5 py-1 text-xs font-bold ${participante === null ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground'}`}
                                 >
                                     Todos
                                 </button>
@@ -161,7 +161,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                         key={p.id}
                                         type="button"
                                         onClick={() => setParticipante(p.id)}
-                                        className={`rounded-full border px-2.5 py-1 text-[11.5px] font-bold ${participante === p.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground'}`}
+                                        className={`rounded-full border px-2.5 py-1 text-xs font-bold ${participante === p.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground'}`}
                                     >
                                         {p.nombres}
                                     </button>
@@ -172,16 +172,16 @@ export default function CertificadosShow({ certificate }: Props) {
                             key={vistaUrl}
                             src={`${vistaUrl}#navpanes=0&view=FitH`}
                             title={`Vista previa de ${certificate.numero}`}
-                            className={`bg-muted w-full rounded-[10px] border-0 ${certificate.es_diploma ? 'aspect-[297/210]' : 'h-[78vh] min-h-[520px]'}`}
+                            className={`bg-muted w-full rounded-lg border-0 ${certificate.es_diploma ? 'aspect-[297/210]' : 'h-[78vh] min-h-[520px]'}`}
                         />
                     </Card>
 
                     <div className="flex flex-col gap-4">
-                        <Card className="border-border bg-card gap-2 rounded-[16px] p-4 shadow-none">
+                        <Card className="border-border bg-card gap-2 rounded-2xl p-4 shadow-none">
                             <div className="grid grid-cols-2 gap-2">
                                 <Button
                                     asChild
-                                    className="h-9 rounded-[9px] font-bold shadow-none"
+                                    className="h-9 rounded-lg font-bold shadow-none"
                                 >
                                     <a href={pdfUrl}>
                                         <FileDown className="size-4" />
@@ -191,7 +191,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                 <Button
                                     asChild
                                     variant="outline"
-                                    className="h-9 rounded-[9px] shadow-none"
+                                    className="h-9 rounded-lg shadow-none"
                                 >
                                     <a
                                         href={vistaUrl}
@@ -205,7 +205,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                 <Button
                                     asChild
                                     variant="outline"
-                                    className="h-9 rounded-[9px] shadow-none"
+                                    className="h-9 rounded-lg shadow-none"
                                 >
                                     <a href={wordUrl}>
                                         <FileText className="size-4 text-[#2b579a]" />
@@ -215,7 +215,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                 <Button
                                     asChild
                                     variant="outline"
-                                    className="h-9 rounded-[9px] shadow-none"
+                                    className="h-9 rounded-lg shadow-none"
                                 >
                                     <a
                                         href={certificate.verificar_url}
@@ -231,7 +231,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                 <Button
                                     asChild
                                     variant="outline"
-                                    className="h-9 rounded-[9px] shadow-none"
+                                    className="h-9 rounded-lg shadow-none"
                                 >
                                     <Link href={certificate.corregir_url}>
                                         <PencilLine className="size-4" />
@@ -240,14 +240,14 @@ export default function CertificadosShow({ certificate }: Props) {
                                 </Button>
                             ) : null}
                             {certificate.corregir_url ? (
-                                <p className="text-muted-foreground text-[11px]">
+                                <p className="text-muted-foreground text-xs">
                                     Al corregir se mantiene el mismo número y
                                     queda registrada la revisión.
                                 </p>
                             ) : null}
                         </Card>
 
-                        <Card className="border-border bg-card divide-border gap-0 divide-y rounded-[16px] px-4 py-2 shadow-none">
+                        <Card className="border-border bg-card divide-border gap-0 divide-y rounded-2xl px-4 py-2 shadow-none">
                             <Dato etiqueta="Cliente">
                                 {certificate.cliente ? (
                                     <Link
@@ -302,7 +302,7 @@ export default function CertificadosShow({ certificate }: Props) {
                         </Card>
 
                         {certificate.unidades.length > 0 ? (
-                            <Card className="border-border bg-card gap-2 rounded-[16px] p-4 shadow-none">
+                            <Card className="border-border bg-card gap-2 rounded-2xl p-4 shadow-none">
                                 <h2 className="text-[12px] font-bold uppercase">
                                     Extintores ({certificate.unidades.length})
                                 </h2>
@@ -310,7 +310,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                     {certificate.unidades.map((unidad) => (
                                         <div
                                             key={unidad.id}
-                                            className="bg-muted/50 flex items-center justify-between gap-2 rounded-[8px] px-2.5 py-1.5 text-[11.5px]"
+                                            className="bg-muted/50 flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs"
                                         >
                                             <span className="font-['IBM_Plex_Mono',monospace] font-bold">
                                                 {unidad.numero_cliente
@@ -334,7 +334,7 @@ export default function CertificadosShow({ certificate }: Props) {
                         ) : null}
 
                         {certificate.revisiones.length > 0 ? (
-                            <Card className="border-border bg-card gap-2 rounded-[16px] p-4 shadow-none">
+                            <Card className="border-border bg-card gap-2 rounded-2xl p-4 shadow-none">
                                 <h2 className="inline-flex items-center gap-1.5 text-[12px] font-bold uppercase">
                                     <History className="size-3.5" />
                                     Correcciones
@@ -342,7 +342,7 @@ export default function CertificadosShow({ certificate }: Props) {
                                 {certificate.revisiones.map((revision) => (
                                     <div
                                         key={revision.numero}
-                                        className="text-[11.5px]"
+                                        className="text-xs"
                                     >
                                         <span className="font-bold">
                                             Rev. {revision.numero}
