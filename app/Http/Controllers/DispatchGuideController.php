@@ -246,6 +246,18 @@ class DispatchGuideController extends Controller
             return back()->with('error', 'No se pudo enviar la guía a SUNAT: '.$e->getMessage());
         }
 
+        $guide->refresh();
+
+        if ($guide->estado_sunat === DispatchGuide::RECHAZADA) {
+            return back()->with('error', 'SUNAT rechazó la guía: '.($guide->sunat_mensaje ?: 'revisa los datos y vuelve a enviarla.'));
+        }
+
+        if ($guide->estado_sunat === DispatchGuide::ACEPTADA) {
+            return back()->with('success', str_contains((string) $guide->sunat_mensaje, 'SIMULADO')
+                ? 'Guía aceptada en modo de prueba: no se envió a SUNAT.'
+                : 'Guía aceptada por SUNAT: ya puede salir la mercadería.');
+        }
+
         return back()->with('success', 'Guía enviada a SUNAT. Consulta el ticket hasta ver el CDR aceptado.');
     }
 

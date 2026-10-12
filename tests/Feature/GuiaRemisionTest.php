@@ -386,3 +386,20 @@ test('en producción la guía simulada se ignora y se usa la API real', function
 
     expect(app(GreClientInterface::class))->toBeInstanceOf(GreApiClient::class);
 });
+
+test('el aviso al enviar una guía dice lo que realmente pasó', function (array $respuesta, string $clave, string $texto) {
+    $team = Team::factory()->create();
+    $this->user->update(['current_team_id' => $team->id]);
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $guia = app(CreateDispatchGuide::class)->handle(datosGuia(), $this->user);
+
+    $this->sunat->respuesta = $respuesta;
+
+    $this->actingAs($this->user)
+        ->post(route('guias.enviar', [$team, $guia]))
+        ->assertSessionHas($clave, fn (string $mensaje) => str_contains($mensaje, $texto));
+})->with([
+    'aceptada' => [['en_proceso' => false, 'aceptada' => true, 'cdr_zip' => 'cdr', 'codigo' => '0', 'mensaje' => 'ok'], 'success', 'ya puede salir la mercadería'],
+    'rechazada' => [['en_proceso' => false, 'aceptada' => false, 'cdr_zip' => null, 'codigo' => '99', 'mensaje' => 'Dato inválido'], 'error', 'SUNAT rechazó la guía'],
+    'pendiente' => [['en_proceso' => true, 'aceptada' => false, 'cdr_zip' => null, 'codigo' => '98', 'mensaje' => 'proceso'], 'success', 'Consulta el ticket'],
+]);

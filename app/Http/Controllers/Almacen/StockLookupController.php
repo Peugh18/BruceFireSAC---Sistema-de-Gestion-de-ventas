@@ -18,6 +18,7 @@ class StockLookupController extends Controller
     /**
      * Pantalla de consulta rápida por serie / código de barras (§84.12).
      * 100% solo lectura, auditoría completa (incluye unidades disponibles, vendidas, reservadas y de baja).
+     * Cada sede ve solo sus propios movimientos.
      */
     public function index(Request $request, Team $current_team): Response
     {
@@ -55,6 +56,7 @@ class StockLookupController extends Controller
                 // Cargar los últimos 5 movimientos de Kardex para auditoría de esta unidad
                 $ultimosMovimientos = InventoryMovement::query()
                     ->where('inventory_unit_id', $unit->id)
+                    ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
                     ->with(['sede:id,nombre', 'user:id,name'])
                     ->latest('id')
                     ->limit(5)
@@ -120,6 +122,7 @@ class StockLookupController extends Controller
 
                     $ultimosMovimientos = InventoryMovement::query()
                         ->where('product_id', $product->id)
+                        ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
                         ->with(['sede:id,nombre', 'user:id,name', 'inventoryUnit:id,numero_serie'])
                         ->latest('id')
                         ->limit(5)

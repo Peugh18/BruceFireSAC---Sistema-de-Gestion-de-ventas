@@ -4,8 +4,10 @@ namespace App\Services\Cobranzas;
 
 use App\Models\Installment;
 use App\Models\SalePayment;
+use App\Models\SaleRefund;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -42,6 +44,20 @@ class CarteraDeCobranzas
             (float) ($totales->monto_total ?? 0)
             - (float) ($totales->acreditado_total ?? 0)
             - (float) $pagado,
+            2
+        );
+    }
+
+    /**
+     * Lo cobrado entre dos fechas: los abonos recibidos menos lo devuelto a
+     * clientes. El panel del Gerente y Cobranzas usan este mismo cálculo para
+     * que muestren la misma cifra.
+     */
+    public static function cobrado(CarbonInterface $desde, CarbonInterface $hasta): float
+    {
+        return round(
+            (float) SalePayment::query()->whereBetween('fecha', [$desde, $hasta])->sum('monto')
+            - (float) SaleRefund::query()->whereBetween('fecha', [$desde, $hasta])->sum('monto'),
             2
         );
     }

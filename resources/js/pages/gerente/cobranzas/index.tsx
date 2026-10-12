@@ -248,7 +248,7 @@ export default function CobranzasConsolidadasIndex() {
                             {formatCurrency(kpis.cobradoEsteMes)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            Abonos ingresados en el mes
+                            Abonos del mes menos devoluciones
                         </p>
                     </div>
 

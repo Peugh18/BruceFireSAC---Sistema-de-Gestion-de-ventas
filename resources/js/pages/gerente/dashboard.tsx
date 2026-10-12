@@ -248,7 +248,7 @@ export default function GerenteDashboard({
                     <KpiCard
                         titulo="Monto cobrado"
                         valor={formatCurrency(metrics.montoCobrado)}
-                        detalle="Abonos ingresados este mes"
+                        detalle="Abonos del mes menos devoluciones"
                         icono={<CheckCircle2 className="size-4" />}
                     />
                     <KpiCard

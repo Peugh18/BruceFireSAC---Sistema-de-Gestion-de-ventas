@@ -218,3 +218,19 @@ test('usuario no autorizado no puede acceder al modulo de stock', function () {
         ->get(route('almacen.stock.index', ['current_team' => $vendedor->currentTeam]))
         ->assertForbidden();
 });
+
+test('la tarjeta de unidades disponibles suma equipos con serie y productos sin serie', function () {
+    $user = almacenUserForStockTest();
+    $sede = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
+
+    $conSerie = Product::factory()->create(['serializado' => true, 'activo' => true]);
+    InventoryUnit::factory()->count(2)->create(['product_id' => $conSerie->id, 'sede_almacen_id' => $sede->id, 'estado' => 'disponible']);
+
+    $sinSerie = Product::factory()->create(['serializado' => false, 'activo' => true]);
+    InventoryMovement::create(['product_id' => $sinSerie->id, 'sede_id' => $sede->id, 'tipo' => 'ingreso', 'cantidad' => 7, 'user_id' => $user->id]);
+    InventoryMovement::create(['product_id' => $sinSerie->id, 'sede_id' => $sede->id, 'tipo' => 'salida_venta', 'cantidad' => -3, 'user_id' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('almacen.stock.index', ['current_team' => $user->currentTeam]))
+        ->assertInertia(fn (Assert $page) => $page->where('kpis.unidades_en_stock', 6));
+});

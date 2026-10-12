@@ -141,7 +141,7 @@ test('el formulario de venta explica los bloqueos de emision y las unidades coti
         ->toContain('Define al menos una cuota antes de emitir.')
         ->toContain('Ajusta las cuotas: su suma debe coincidir con el total.')
         ->toContain('por escanear de ${unidadFaltante.nombre}.')
-        ->toContain('disabled={form.processing}');
+        ->toContain('loading={form.processing}');
 });
 
 test('la cotizacion presenta la condicion de pago solo como opciones cerradas', function () {

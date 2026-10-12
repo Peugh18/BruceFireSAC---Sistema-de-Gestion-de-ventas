@@ -117,9 +117,7 @@ class CollectionConsolidatedController extends Controller
         $vencidoTotal = CarteraDeCobranzas::saldo($deuda()->whereDate('fecha_vencimiento', '<', $hoy));
         $venceEstaSemana = CarteraDeCobranzas::saldo($deuda()->whereBetween('fecha_vencimiento', [$hoy, $hoy->copy()->endOfWeek()]));
 
-        $cobradoEsteMes = (float) SalePayment::query()
-            ->whereBetween('fecha', [now()->startOfMonth(), now()->endOfMonth()])
-            ->sum('monto');
+        $cobradoEsteMes = CarteraDeCobranzas::cobrado(now()->startOfMonth(), now()->endOfMonth());
 
         $clientesConDeuda = Installment::query()
             ->whereIn('installments.estado', CarteraDeCobranzas::DEBEN)

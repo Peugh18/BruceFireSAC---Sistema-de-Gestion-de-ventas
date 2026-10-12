@@ -145,3 +145,16 @@ test('non almacen user cannot access stock adjustments', function () {
         ->get(route('almacen.ajustes.index', ['current_team' => $user->currentTeam]))
         ->assertForbidden();
 });
+
+test('la tarjeta de bajas cuenta tambien los repuestos sin serie dados de baja', function () {
+    $user = almacenUserForAdjustmentTest();
+    $sede = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
+    $repuesto = Product::factory()->create(['serializado' => false, 'activo' => true]);
+
+    InventoryMovement::create(['product_id' => $repuesto->id, 'sede_id' => $sede->id, 'tipo' => 'ingreso', 'cantidad' => 10, 'user_id' => $user->id]);
+    InventoryMovement::create(['product_id' => $repuesto->id, 'sede_id' => $sede->id, 'tipo' => 'ajuste', 'cantidad' => -3, 'user_id' => $user->id, 'observacion' => 'Repuesto dañado en bodega']);
+
+    $this->actingAs($user)
+        ->get(route('almacen.ajustes.index', ['current_team' => $user->currentTeam]))
+        ->assertInertia(fn (Assert $page) => $page->where('kpis.unidades_dadas_de_baja', 3));
+});
