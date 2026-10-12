@@ -394,3 +394,32 @@ test('user without Almacen role cannot access recepciones', function () {
         ->get(route('almacen.recepciones.index', ['current_team' => $user->currentTeam]))
         ->assertForbidden();
 });
+
+test('una recepcion no acepta dos equipos con la misma serie de fabrica', function () {
+    $user = almacenUserForReceptionTest();
+    $sede = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
+    $producto = Product::factory()->create(['serializado' => true, 'activo' => true]);
+
+    $unidad = fn (string $serie) => [
+        'capacidad' => '6 kg',
+        'serie_fabricante' => $serie,
+        'marca' => 'Buckeye',
+        'anio_fabricacion' => 2026,
+    ];
+
+    $this->actingAs($user)
+        ->post(route('almacen.recepciones.store', ['current_team' => $user->currentTeam]), [
+            'proveedor' => 'Distribuidora Fuego SAC',
+            'fecha' => now()->toDateString(),
+            'sede_almacen_id' => $sede->id,
+            'items' => [[
+                'product_id' => $producto->id,
+                'cantidad' => 2,
+                'cantidad_conforme' => 2,
+                'unidades' => [$unidad('SN-REPETIDA'), $unidad('sn-repetida')],
+            ]],
+        ])
+        ->assertSessionHasErrors('items.0.unidades.0.serie_fabricante');
+
+    expect(Reception::count())->toBe(0);
+});

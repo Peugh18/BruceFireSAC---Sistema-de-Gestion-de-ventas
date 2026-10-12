@@ -114,7 +114,7 @@
             <td class="kpi-cell" width="25%">
                 <div class="kpi-title">Ventas netas</div>
                 <div class="kpi-value">S/ {{ number_format($totalVentas, 2) }}</div>
-                <div class="kpi-title">Originales {{ number_format($ventasOriginales, 2) }} − NC {{ number_format($notasCredito, 2) }} + ND {{ number_format($notasDebito, 2) }}</div>
+                <div class="kpi-title">Originales {{ number_format($ventasOriginales, 2) }} - NC {{ number_format($notasCredito, 2) }} + ND {{ number_format($notasDebito, 2) }}</div>
             </td>
             <td class="kpi-cell" width="25%">
                 <div class="kpi-title">Cantidad de Ventas</div>
