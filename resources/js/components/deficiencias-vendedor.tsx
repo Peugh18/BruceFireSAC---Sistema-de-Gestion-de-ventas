@@ -408,7 +408,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={authForm.processing}
+                                loading={authForm.processing}
                                 className={`rounded-[8px] text-xs font-bold text-white ${
                                     actionModal?.isApproving
                                         ? 'bg-emerald-600 hover:bg-emerald-700'
@@ -514,7 +514,8 @@ export function useAccionesDeficiencia(teamSlug: string) {
                         <DialogFooter>
                             <Button
                                 type="submit"
-                                disabled={cotizarForm.processing || !seleccion}
+                                disabled={!seleccion}
+                                loading={cotizarForm.processing}
                             >
                                 Guardar en cotización
                             </Button>

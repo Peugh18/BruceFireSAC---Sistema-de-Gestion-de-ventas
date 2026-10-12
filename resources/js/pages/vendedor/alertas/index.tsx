@@ -18,8 +18,8 @@ import PorVencerEmpresas, {
 import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
-import { Card } from '@/components/ui/card';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
+import { Empty } from '@/components/ui/empty';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import rutasAlertas from '@/routes/vendedor/alertas';
 import type { Team } from '@/types';
@@ -238,16 +238,15 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                 {...propsPanel('alertas-filtro', activeTab)}
                             >
                                 {currentList.length === 0 ? (
-                                    <Card className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-[16px] p-12 text-center shadow-none">
-                                        <CheckCircle2 className="text-success-strong size-10" />
-                                        <p className="text-foreground text-sm font-bold">
-                                            No hay alertas en esta categoría
-                                        </p>
-                                        <p className="text-muted-foreground text-xs">
-                                            {search
+                                    <Empty
+                                        icon={<CheckCircle2 />}
+                                        title="No hay alertas en esta categoría"
+                                        description={
+                                            search
                                                 ? 'No se encontraron resultados para tu búsqueda.'
-                                                : 'Todos los equipos de tus clientes en este segmento están al día.'}
-                                        </p>
+                                                : 'Todos los equipos de tus clientes en este segmento están al día.'
+                                        }
+                                    >
                                         {search && (
                                             <button
                                                 type="button"
@@ -258,7 +257,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                 <span>Limpiar búsqueda</span>
                                             </button>
                                         )}
-                                    </Card>
+                                    </Empty>
                                 ) : (
                                     currentList.map((item, idx) => {
                                         const isVencida =

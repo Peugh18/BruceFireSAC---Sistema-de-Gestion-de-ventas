@@ -732,7 +732,7 @@ export default function CotizacionesIndex({
                                                                             quote: quote.id,
                                                                         },
                                                                     )}
-                                                                    className="border-border focus-visible:ring-ring rounded-[7px] border px-2 py-1 text-xs font-bold focus-visible:ring-2"
+                                                                    className="border-border focus-visible:ring-ring hover:bg-muted/60 rounded-[7px] border px-2 py-1 text-xs font-bold transition-colors focus-visible:ring-2"
                                                                 >
                                                                     Editar
                                                                 </Link>
@@ -910,7 +910,7 @@ export default function CotizacionesIndex({
                                                                         },
                                                                     },
                                                                 )}
-                                                                className="bg-primary text-primary-foreground flex h-7 items-center gap-1.5 rounded-[7px] px-2.5 text-[11px] font-bold"
+                                                                className="bg-primary text-primary-foreground flex h-7 items-center gap-1.5 rounded-[7px] px-2.5 text-[11px] font-bold transition hover:brightness-95"
                                                             >
                                                                 <RotateCcw className="size-3" />
                                                                 Renovar

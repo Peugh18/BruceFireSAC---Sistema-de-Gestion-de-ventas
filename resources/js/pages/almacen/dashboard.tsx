@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
+import { Empty } from '@/components/ui/empty';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import recepcionesRutas from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
@@ -371,13 +372,10 @@ export default function AlmacenDashboard({
                             </div>
 
                             {movimientos_recientes.length === 0 ? (
-                                <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
-                                    <PackageCheck className="text-muted-foreground size-10" />
-                                    <p className="text-muted-foreground mt-2 text-sm font-medium">
-                                        Aún no se registran movimientos en el
-                                        Kardex.
-                                    </p>
-                                </div>
+                                <Empty
+                                    icon={<PackageCheck />}
+                                    title="Aún no se registran movimientos en el Kardex."
+                                />
                             ) : (
                                 <div className="divide-border divide-y overflow-x-auto">
                                     {movimientos_recientes.map((mov) => {
@@ -478,13 +476,10 @@ export default function AlmacenDashboard({
                             </div>
 
                             {productos_bajo_minimo.length === 0 ? (
-                                <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
-                                    <PackageCheck className="text-success-strong size-10 dark:text-emerald-400/40" />
-                                    <p className="text-success-strong mt-2 text-sm font-medium">
-                                        Todos los productos cumplen con el stock
-                                        mínimo.
-                                    </p>
-                                </div>
+                                <Empty
+                                    icon={<PackageCheck />}
+                                    title="Todos los productos cumplen con el stock mínimo."
+                                />
                             ) : (
                                 <div className="divide-border divide-y">
                                     {productos_bajo_minimo.map((prod) => (

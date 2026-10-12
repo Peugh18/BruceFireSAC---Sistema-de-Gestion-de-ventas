@@ -121,7 +121,7 @@ export default function Login({ status, canResetPassword }: Props) {
                             <Button
                                 type="submit"
                                 className="h-[50px] w-full gap-2 rounded-xl text-[15.5px] font-bold"
-                                disabled={processing}
+                                loading={processing}
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}

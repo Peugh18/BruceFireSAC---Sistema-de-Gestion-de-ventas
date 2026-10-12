@@ -1594,7 +1594,7 @@ export default function NuevaVenta({
 
                         <Button
                             type="submit"
-                            disabled={form.processing}
+                            loading={form.processing}
                             className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             {form.processing ? (
@@ -1634,7 +1634,7 @@ export default function NuevaVenta({
                                 type="submit"
                                 data-accion="borrador"
                                 variant="outline"
-                                disabled={form.processing}
+                                loading={form.processing}
                                 className="border-border bg-card text-foreground h-10 rounded-[9px] shadow-none"
                             >
                                 Guardar borrador

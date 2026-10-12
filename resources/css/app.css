@@ -235,6 +235,35 @@
         color-scheme: dark;
     }
 
+    /* Todo lo que se puede pulsar lo parece (Tailwind 4 deja el cursor normal). */
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    summary,
+    select:not(:disabled),
+    label[for],
+    a[href] {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [aria-disabled='true'] {
+        cursor: not-allowed;
+    }
+
+    /* Cargando: las listas se atenúan y no se pueden pulsar hasta que lleguen los datos. */
+    html[data-navegando] [data-slot='table-body'],
+    [aria-busy='true'] > [data-slot='table-container'] {
+        opacity: 0.55;
+        pointer-events: none;
+        transition: opacity 150ms ease-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html[data-navegando] [data-slot='table-body'] {
+            transition: none;
+        }
+    }
+
     body {
         @apply bg-background text-foreground;
         font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';

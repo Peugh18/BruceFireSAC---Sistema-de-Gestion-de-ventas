@@ -576,7 +576,7 @@ export default function EmpresaConfiguracion({
                         <div className="flex flex-wrap items-center gap-2">
                             <Button
                                 type="submit"
-                                disabled={form.processing}
+                                loading={form.processing}
                                 className="bg-foreground text-background hover:bg-foreground/90 h-10 rounded-[9px] px-4 text-[13px] font-bold shadow-xs transition-colors"
                             >
                                 {form.processing
@@ -699,7 +699,7 @@ export default function EmpresaConfiguracion({
                         />
                         <Button
                             type="submit"
-                            disabled={bankForm.processing}
+                            loading={bankForm.processing}
                             className="h-10 rounded-[9px] bg-emerald-600 text-white shadow-none hover:bg-emerald-700"
                         >
                             Agregar

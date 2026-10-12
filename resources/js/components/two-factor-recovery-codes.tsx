@@ -91,7 +91,7 @@ export default function TwoFactorRecoveryCodes({
                                 <Button
                                     variant="secondary"
                                     type="submit"
-                                    disabled={processing}
+                                    loading={processing}
                                     aria-describedby="regenerate-warning"
                                 >
                                     <RefreshCw /> Regenerar códigos

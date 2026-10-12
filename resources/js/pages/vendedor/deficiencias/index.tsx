@@ -9,7 +9,7 @@ import {
 } from '@/components/deficiencias-vendedor';
 import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
-import { Card } from '@/components/ui/card';
+import { Empty } from '@/components/ui/empty';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
 
@@ -114,16 +114,15 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                 {/* List of Deficiency Cards */}
                 <div className="flex flex-col gap-3">
                     {deficiencies.data.length === 0 ? (
-                        <Card className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-[16px] p-12 text-center shadow-none">
-                            <CheckCircle2 className="text-success-strong size-10" />
-                            <p className="text-foreground text-sm font-bold">
-                                No se encontraron deficiencias
-                            </p>
-                            <p className="text-muted-foreground max-w-sm text-xs">
-                                {currentEstado
+                        <Empty
+                            icon={<CheckCircle2 />}
+                            title="No se encontraron deficiencias"
+                            description={
+                                currentEstado
                                     ? 'No hay registros bajo el estado seleccionado.'
-                                    : 'No hay deficiencias ni adicionales pendientes reportados por los técnicos.'}
-                            </p>
+                                    : 'No hay deficiencias ni adicionales pendientes reportados por los técnicos.'
+                            }
+                        >
                             {currentEstado && (
                                 <button
                                     type="button"
@@ -134,7 +133,7 @@ export default function DeficienciasIndex({ deficiencies, filters }: Props) {
                                     <span>Ver todas las deficiencias</span>
                                 </button>
                             )}
-                        </Card>
+                        </Empty>
                     ) : (
                         deficiencies.data.map((item) => (
                             <DeficienciaCard

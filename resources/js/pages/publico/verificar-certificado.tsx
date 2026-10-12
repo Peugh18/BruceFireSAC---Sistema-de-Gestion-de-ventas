@@ -313,7 +313,7 @@ export default function VerificarCertificado({
                                 href={certificado.pdf_url}
                                 target="_blank"
                                 rel="noopener"
-                                className="bg-primary text-primary-foreground flex h-12 items-center justify-center gap-2 rounded-[12px] text-[14px] font-bold transition-transform duration-150 ease-out active:scale-[0.97]"
+                                className="bg-primary text-primary-foreground flex h-12 items-center justify-center gap-2 rounded-[12px] text-[14px] font-bold transition-transform duration-150 ease-out hover:brightness-95 active:scale-[0.97]"
                             >
                                 <FileText className="size-4" />
                                 Ver certificado original (PDF)

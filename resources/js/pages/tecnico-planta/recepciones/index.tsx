@@ -13,6 +13,7 @@ import {
     RotateCcw,
 } from 'lucide-react';
 import RecepcionesRoutes from '@/routes/tecnico-planta/recepciones';
+import { Empty } from '@/components/ui/empty';
 
 interface OrderItem {
     id: number;
@@ -136,7 +137,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
                         type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white dark:bg-neutral-700"
+                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
                     >
                         Buscar
                     </button>
@@ -145,16 +146,15 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                 {/* Orders List */}
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
-                        <div className="bg-card rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/50">
-                            <PackageOpen className="mx-auto mb-2 h-10 w-10 text-neutral-300 dark:text-neutral-600" />
-                            <p className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
-                                No hay órdenes en esta lista
-                            </p>
-                            <p className="mt-1 text-xs text-neutral-400">
-                                {search || filters.filter !== 'pendientes'
+                        <Empty
+                            icon={<PackageOpen />}
+                            title="No hay órdenes en esta lista"
+                            description={
+                                search || filters.filter !== 'pendientes'
                                     ? 'No se encontraron órdenes con los criterios aplicados.'
-                                    : 'Las órdenes asignadas a Planta aparecerán aquí para su recepción física.'}
-                            </p>
+                                    : 'Las órdenes asignadas a Planta aparecerán aquí para su recepción física.'
+                            }
+                        >
                             {(search || filters.filter !== 'pendientes') && (
                                 <button
                                     type="button"
@@ -173,7 +173,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                                     <span>Ver órdenes pendientes</span>
                                 </button>
                             )}
-                        </div>
+                        </Empty>
                     ) : (
                         orders.data.map((order) => {
                             const isPendiente =
@@ -189,7 +189,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                                 <Link
                                     key={order.id}
                                     href={url}
-                                    className="bg-card block rounded-2xl border border-neutral-200 p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
+                                    className="bg-card hover:bg-muted/60 block rounded-2xl border border-neutral-200 p-4 shadow-sm transition-transform active:scale-[0.99] dark:border-neutral-700/80 dark:bg-neutral-800"
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div>

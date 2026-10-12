@@ -201,7 +201,7 @@ export default function EntregaShow({
                     href={guias.create.url(teamSlug, {
                         query: { origen: 'entrega', id: order.id },
                     })}
-                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white"
+                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white transition hover:brightness-95"
                 >
                     Guía de remisión
                 </Link>
@@ -275,7 +275,7 @@ export default function EntregaShow({
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -525,7 +525,7 @@ export default function EntregaShow({
                         <button
                             type="submit"
                             disabled={cierre.processing}
-                            className="bg-primary min-h-11 rounded-lg px-4 text-sm font-semibold text-white disabled:opacity-50"
+                            className="bg-primary min-h-11 rounded-lg px-4 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
                         >
                             Cerrar orden
                         </button>

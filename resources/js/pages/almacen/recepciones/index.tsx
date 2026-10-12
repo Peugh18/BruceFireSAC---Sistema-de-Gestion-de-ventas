@@ -30,6 +30,7 @@ import AlmacenLayout from '@/layouts/almacen-layout';
 import recepciones from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
 import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 export type ReceptionRow = {
     id: number;
@@ -308,13 +309,10 @@ export default function RecepcionesIndex({
 
                     {/* Receptions Table */}
                     {receptions.data.length === 0 ? (
-                        <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
-                            <Truck className="text-muted-foreground size-10" />
-                            <p className="text-muted-foreground mt-2 text-sm font-medium">
-                                No se encontraron recepciones con los filtros
-                                indicados.
-                            </p>
-                        </div>
+                        <Empty
+                            icon={<Truck />}
+                            title="No se encontraron recepciones con los filtros indicados."
+                        />
                     ) : (
                         <div className="mt-4 overflow-x-auto">
                             <Table className="w-full text-left text-[12.5px]">

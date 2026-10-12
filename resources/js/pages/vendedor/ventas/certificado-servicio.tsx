@@ -572,7 +572,7 @@ export default function CertificadoServicio({
                 <div className="flex justify-end">
                     <Button
                         type="button"
-                        disabled={enviando}
+                        loading={enviando}
                         onClick={guardar}
                         className="bg-primary hover:bg-primary/90 rounded-[9px] px-5 font-bold text-white shadow-none"
                     >

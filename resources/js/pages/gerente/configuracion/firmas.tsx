@@ -531,7 +531,7 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
                 />
                 <Button
                     type="submit"
-                    disabled={form.processing}
+                    loading={form.processing}
                     className="h-10 rounded-[9px] px-4 font-bold shadow-none"
                 >
                     Agregar

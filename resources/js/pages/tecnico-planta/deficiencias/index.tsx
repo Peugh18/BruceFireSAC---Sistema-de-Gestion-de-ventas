@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import DeficienciasRoutes from '@/routes/tecnico-planta/deficiencias';
 import EjecucionRoutes from '@/routes/tecnico-planta/ejecucion';
+import { Empty } from '@/components/ui/empty';
 
 interface DeficiencyItem {
     id: number;
@@ -246,7 +247,7 @@ export default function DeficienciasIndex({
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
                         type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white dark:bg-neutral-700"
+                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
                     >
                         Buscar
                     </button>
@@ -255,16 +256,15 @@ export default function DeficienciasIndex({
                 {/* Deficiencies List */}
                 <div className="space-y-3">
                     {deficiencies.data.length === 0 ? (
-                        <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
-                            <ShieldAlert className="mx-auto h-8 w-8 text-neutral-400" />
-                            <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
-                                No se encontraron deficiencias en este filtro
-                            </p>
-                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                                {search || filters.estado !== 'todos'
+                        <Empty
+                            icon={<ShieldAlert />}
+                            title="No se encontraron deficiencias en este filtro"
+                            description={
+                                search || filters.estado !== 'todos'
                                     ? 'No hay registros que coincidan con la búsqueda o filtro aplicado.'
-                                    : 'No hay deficiencias registradas en este momento.'}
-                            </p>
+                                    : 'No hay deficiencias registradas en este momento.'
+                            }
+                        >
                             {(search || filters.estado !== 'todos') && (
                                 <button
                                     type="button"
@@ -283,7 +283,7 @@ export default function DeficienciasIndex({
                                     <span>Ver todas las deficiencias</span>
                                 </button>
                             )}
-                        </div>
+                        </Empty>
                     ) : (
                         deficiencies.data.map((d) => (
                             <div

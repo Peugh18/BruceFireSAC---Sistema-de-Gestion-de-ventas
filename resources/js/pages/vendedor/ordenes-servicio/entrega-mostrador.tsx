@@ -143,7 +143,7 @@ export default function CounterDelivery({
                                             {errors.conformidad_aceptada}
                                         </p>
                                     )}
-                                    <Button type="submit" disabled={processing}>
+                                    <Button type="submit" loading={processing}>
                                         Registrar entrega conforme
                                     </Button>
                                 </>

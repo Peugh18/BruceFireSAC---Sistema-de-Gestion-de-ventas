@@ -1179,7 +1179,7 @@ export default function ArmarCertificados({
                     </Button>
                     <Button
                         type="button"
-                        disabled={enviando}
+                        loading={enviando}
                         onClick={emitir}
                         className="bg-primary hover:bg-primary/90 rounded-[9px] px-5 font-bold text-white shadow-none"
                     >

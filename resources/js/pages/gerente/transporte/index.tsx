@@ -154,7 +154,7 @@ export default function Transporte({
                         <Button
                             type="submit"
                             className="self-end"
-                            disabled={vehiculo.processing}
+                            loading={vehiculo.processing}
                         >
                             Agregar vehículo
                         </Button>
@@ -264,7 +264,7 @@ export default function Transporte({
                         <Button
                             type="submit"
                             className="sm:col-span-2"
-                            disabled={conductor.processing}
+                            loading={conductor.processing}
                         >
                             Agregar conductor
                         </Button>

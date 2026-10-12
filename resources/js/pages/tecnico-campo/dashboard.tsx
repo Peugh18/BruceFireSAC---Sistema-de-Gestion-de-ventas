@@ -21,6 +21,7 @@ import InstalacionesRoutes from '@/routes/tecnico-campo/instalaciones';
 import MantenimientosRoutes from '@/routes/tecnico-campo/mantenimientos';
 import { KpiFiltro } from '@/components/kpi-filtro';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
+import { Empty } from '@/components/ui/empty';
 
 interface OrderItem {
     id: number;
@@ -283,7 +284,7 @@ export default function TecnicoCampoDashboard({
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                     <button
                         type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white dark:bg-neutral-700"
+                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
                     >
                         Buscar
                     </button>
@@ -292,12 +293,10 @@ export default function TecnicoCampoDashboard({
                 {/* Orders Cards List */}
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
-                        <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
-                            <Truck className="mx-auto h-8 w-8 text-neutral-400" />
-                            <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                                No hay servicios programados en esta cola
-                            </p>
-                        </div>
+                        <Empty
+                            icon={<Truck />}
+                            title="No hay servicios programados en esta cola"
+                        />
                     ) : (
                         orders.data.map((order) => {
                             const isFinished =

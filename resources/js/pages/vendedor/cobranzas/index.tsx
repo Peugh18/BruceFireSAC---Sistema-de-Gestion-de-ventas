@@ -882,7 +882,7 @@ export default function CobranzasIndex({
                             <Button
                                 aria-label="Confirmar apertura"
                                 type="submit"
-                                disabled={openForm.processing}
+                                loading={openForm.processing}
                                 className="rounded-[8px] bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
                             >
                                 Confirmar apertura
@@ -986,7 +986,7 @@ export default function CobranzasIndex({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={closeForm.processing}
+                                loading={closeForm.processing}
                                 className="bg-primary hover:bg-primary/90 rounded-[8px] text-xs font-bold text-white"
                             >
                                 Confirmar y cerrar turno
@@ -1136,7 +1136,7 @@ export default function CobranzasIndex({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={paymentForm.processing}
+                                loading={paymentForm.processing}
                                 className="bg-foreground text-background hover:bg-foreground/90 rounded-[8px] text-xs font-bold shadow-xs transition-colors"
                             >
                                 Registrar pago
@@ -1197,7 +1197,7 @@ export default function CobranzasIndex({
                             <Button
                                 type="submit"
                                 variant="destructive"
-                                disabled={cancelForm.processing}
+                                loading={cancelForm.processing}
                             >
                                 Anular cobro
                             </Button>

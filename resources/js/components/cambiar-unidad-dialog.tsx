@@ -124,7 +124,8 @@ export default function CambiarUnidadDialog({
                     </div>
                     <Button
                         type="submit"
-                        disabled={guardando || !serie.trim()}
+                        disabled={!serie.trim()}
+                        loading={guardando}
                         className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] text-white shadow-none"
                     >
                         {guardando ? (

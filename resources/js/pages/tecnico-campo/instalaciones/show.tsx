@@ -323,7 +323,7 @@ export default function InstalacionShow({
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Contactar
@@ -459,7 +459,7 @@ export default function InstalacionShow({
                                 <button
                                     type="button"
                                     onClick={escanear}
-                                    className="min-h-[44px] rounded-[8px] bg-sky-600 px-4 text-xs font-bold text-white"
+                                    className="min-h-[44px] rounded-[8px] bg-sky-600 px-4 text-xs font-bold text-white transition hover:brightness-95"
                                 >
                                     Agregar
                                 </button>
@@ -520,7 +520,7 @@ export default function InstalacionShow({
                             <button
                                 type="button"
                                 onClick={addEquipmentRow}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-sky-600 active:scale-95 dark:text-sky-400"
+                                className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-sky-600 transition hover:brightness-95 active:scale-95 dark:text-sky-400"
                             >
                                 <Plus className="size-3.5" />
                                 Agregar

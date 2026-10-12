@@ -402,7 +402,7 @@ export default function GuiaForm({
                     <Button asChild variant="outline">
                         <Link href={origen.url}>Cancelar</Link>
                     </Button>
-                    <Button type="submit" disabled={form.processing}>
+                    <Button type="submit" loading={form.processing}>
                         Crear guía sin enviar
                     </Button>
                 </div>

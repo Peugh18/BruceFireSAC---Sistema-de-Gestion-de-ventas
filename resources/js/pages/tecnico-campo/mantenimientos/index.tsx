@@ -1,11 +1,12 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Wrench } from 'lucide-react';
+import { Wrench, Inbox } from 'lucide-react';
 import { useState } from 'react';
 
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import mantenimientos from '@/routes/tecnico-campo/mantenimientos';
 import type { Team } from '@/types';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
+import { Empty } from '@/components/ui/empty';
 
 type Orden = {
     id: number;
@@ -54,16 +55,17 @@ export default function MantenimientosIndex({
                 />
                 <button
                     type="submit"
-                    className="min-h-[44px] rounded-[10px] bg-sky-600 px-4 text-xs font-bold text-white"
+                    className="min-h-[44px] rounded-[10px] bg-sky-600 px-4 text-xs font-bold text-white transition hover:brightness-95"
                 >
                     Buscar
                 </button>
             </form>
 
             {lista.data.length === 0 ? (
-                <p className="text-muted-foreground rounded-[14px] border border-dashed p-6 text-center text-xs">
-                    No hay mantenimientos en sitio asignados.
-                </p>
+                <Empty
+                    icon={<Inbox />}
+                    title="No hay mantenimientos en sitio asignados."
+                />
             ) : (
                 <ul className="space-y-2.5">
                     {lista.data.map((orden) => (
@@ -73,7 +75,7 @@ export default function MantenimientosIndex({
                                     current_team: equipo,
                                     service_order: orden.id,
                                 })}
-                                className="border-border bg-card flex min-h-[64px] items-center gap-3 rounded-[14px] border p-3.5 shadow-xs"
+                                className="border-border bg-card hover:bg-muted/60 flex min-h-[64px] items-center gap-3 rounded-[14px] border p-3.5 shadow-xs transition-colors"
                             >
                                 <Wrench className="size-5 shrink-0 text-sky-600 dark:text-sky-400" />
                                 <div className="min-w-0 flex-1">

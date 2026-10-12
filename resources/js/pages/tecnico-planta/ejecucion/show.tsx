@@ -29,6 +29,7 @@ import {
 import TecnicoPlantaRoutes from '@/routes/tecnico-planta';
 import EjecucionRoutes from '@/routes/tecnico-planta/ejecucion';
 import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 interface EquipmentItem {
     id: number;
@@ -491,12 +492,10 @@ export default function EjecucionShow({
                     </div>
 
                     {order.deficiencies.length === 0 ? (
-                        <div className="bg-card rounded-2xl border border-dashed border-neutral-200 p-6 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
-                            <ShieldCheck className="mx-auto mb-1.5 h-8 w-8 text-emerald-500" />
-                            <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                                No hay deficiencias registradas en esta orden
-                            </p>
-                        </div>
+                        <Empty
+                            icon={<ShieldCheck />}
+                            title="No hay deficiencias registradas en esta orden"
+                        />
                     ) : (
                         <div className="space-y-2.5">
                             {order.deficiencies.map((d) => (

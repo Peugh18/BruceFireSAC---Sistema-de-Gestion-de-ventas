@@ -14,8 +14,8 @@ import { FormEvent, useState } from 'react';
 
 import { KpiFiltro } from '@/components/kpi-filtro';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Empty } from '@/components/ui/empty';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import ejecucion from '@/routes/tecnico-planta/ejecucion';
 import recepciones from '@/routes/tecnico-planta/recepciones';
@@ -300,19 +300,15 @@ export default function TecnicoPlantaDashboard({
                 {/* Order List: Mobile Cards (Never horizontal tables) */}
                 <div className="space-y-3">
                     {orders.data.length === 0 ? (
-                        <Card className="border-border bg-card rounded-[14px] border border-dashed p-8 text-center">
-                            <div className="bg-muted/30 text-destructive-strong mx-auto mb-2 flex size-12 items-center justify-center rounded-full">
-                                <Wrench className="size-6" />
-                            </div>
-                            <h3 className="text-foreground text-sm font-bold">
-                                No hay órdenes en esta cola
-                            </h3>
-                            <p className="text-muted-foreground mt-1 text-xs">
-                                {search
+                        <Empty
+                            icon={<Wrench />}
+                            title="No hay órdenes en esta cola"
+                            description={
+                                search
                                     ? 'No se encontraron órdenes que coincidan con la búsqueda.'
-                                    : 'Todas las órdenes de esta cola están atendidas o en otra etapa.'}
-                            </p>
-                        </Card>
+                                    : 'Todas las órdenes de esta cola están atendidas o en otra etapa.'
+                            }
+                        />
                     ) : (
                         orders.data.map((order) => (
                             <Link

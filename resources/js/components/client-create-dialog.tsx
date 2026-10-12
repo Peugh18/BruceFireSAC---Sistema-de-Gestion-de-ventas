@@ -550,9 +550,8 @@ export default function ClientCreateDialog({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={
-                                form.processing || duplicateClient !== null
-                            }
+                            disabled={duplicateClient !== null}
+                            loading={form.processing}
                             className="bg-primary hover:bg-primary/90 rounded-[9px] font-bold text-white shadow-none"
                         >
                             Guardar cliente

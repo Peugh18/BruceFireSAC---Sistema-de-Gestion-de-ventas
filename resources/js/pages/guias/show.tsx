@@ -522,10 +522,7 @@ export default function GuiaShow({
                                 </>
                             )}
                             <div className="sm:col-span-2">
-                                <Button
-                                    type="submit"
-                                    disabled={form.processing}
-                                >
+                                <Button type="submit" loading={form.processing}>
                                     Guardar transporte
                                 </Button>
                                 <span className="text-muted-foreground ml-3">

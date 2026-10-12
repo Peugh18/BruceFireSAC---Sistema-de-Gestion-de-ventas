@@ -144,7 +144,8 @@ export default function WhatsappNumeroDialog({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={guardando || numero.trim().length < 9}
+                            disabled={numero.trim().length < 9}
+                            loading={guardando}
                             className="rounded-[9px] bg-green-700 font-bold text-white shadow-none hover:bg-green-800"
                         >
                             <MessageCircle className="size-4" />

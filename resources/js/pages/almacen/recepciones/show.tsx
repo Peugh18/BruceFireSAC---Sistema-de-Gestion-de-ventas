@@ -627,7 +627,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={processing}
+                                loading={processing}
                                 className="bg-primary hover:bg-primary/90 h-9 gap-1.5 text-xs font-bold text-white"
                             >
                                 <Check className="size-4" />

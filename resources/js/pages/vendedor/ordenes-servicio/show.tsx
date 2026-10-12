@@ -770,7 +770,7 @@ export default function ServiceOrderShow({
                                     )
                                 }
                             />
-                            <Button type="submit" disabled={equipo.processing}>
+                            <Button type="submit" loading={equipo.processing}>
                                 Agregar extintor
                             </Button>
                         </form>
@@ -980,10 +980,8 @@ export default function ServiceOrderShow({
                                         )}
                                         <Button
                                             type="submit"
-                                            disabled={
-                                                entrega.processing ||
-                                                !entrega.data.tecnico_id
-                                            }
+                                            disabled={!entrega.data.tecnico_id}
+                                            loading={entrega.processing}
                                         >
                                             Asignar entrega a Campo
                                         </Button>
@@ -1076,9 +1074,9 @@ export default function ServiceOrderShow({
                                         type="submit"
                                         size="sm"
                                         disabled={
-                                            nota.processing ||
                                             nota.data.mensaje.trim() === ''
                                         }
+                                        loading={nota.processing}
                                         className="h-9"
                                     >
                                         <Send className="size-3.5" />
@@ -1315,7 +1313,7 @@ export default function ServiceOrderShow({
                             >
                                 Cancelar
                             </Button>
-                            <Button type="submit" disabled={edicion.processing}>
+                            <Button type="submit" loading={edicion.processing}>
                                 {edicion.processing
                                     ? 'Guardando…'
                                     : 'Guardar cambios'}

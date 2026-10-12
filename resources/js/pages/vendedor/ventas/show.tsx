@@ -669,7 +669,7 @@ export default function VentasShow({
                                             </label>
                                             <Button
                                                 type="submit"
-                                                disabled={
+                                                loading={
                                                     constanciaForm.processing
                                                 }
                                             >

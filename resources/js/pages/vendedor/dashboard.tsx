@@ -228,7 +228,7 @@ export default function VendedorDashboard({
         {
             label: 'Ventas de hoy',
             value: soles(ventas_hoy.total),
-            detail: `${ventas_hoy.count} ventas emitidas · ticket promedio ${soles(ventas_hoy.ticket_promedio)} · sin descontar notas de crédito`,
+            detail: `${ventas_hoy.count} ventas · ticket promedio ${soles(ventas_hoy.ticket_promedio)}`,
         },
         {
             label: 'Cotizaciones del mes',

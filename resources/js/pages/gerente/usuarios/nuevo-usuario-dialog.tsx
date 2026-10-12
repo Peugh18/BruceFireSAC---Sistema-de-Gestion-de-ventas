@@ -195,7 +195,7 @@ export default function NuevoUsuarioDialog({
                         >
                             Cancelar
                         </Button>
-                        <Button type="submit" disabled={form.processing}>
+                        <Button type="submit" loading={form.processing}>
                             {form.processing ? 'Creando…' : 'Crear usuario'}
                         </Button>
                     </DialogFooter>

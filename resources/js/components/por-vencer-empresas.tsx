@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Empty } from '@/components/ui/empty';
 import {
     Table,
     TableBody,
@@ -151,16 +152,11 @@ export default function PorVencerEmpresas({
 
     if (empresas.length === 0) {
         return (
-            <Card className="border-border bg-card items-center gap-2 rounded-[16px] p-10 text-center shadow-none">
-                <Building2 className="text-muted-foreground size-8" />
-                <p className="text-foreground text-sm font-bold">
-                    No hay empresas en este plazo
-                </p>
-                <p className="text-muted-foreground text-xs">
-                    Prueba con «Todas» para ver el parque completo de tus
-                    clientes.
-                </p>
-            </Card>
+            <Empty
+                icon={<Building2 />}
+                title="No hay empresas en este plazo"
+                description="Prueba con «Todas» para ver el parque completo de tus clientes."
+            />
         );
     }
 

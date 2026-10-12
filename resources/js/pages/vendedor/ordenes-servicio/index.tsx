@@ -796,7 +796,7 @@ export default function ServiceOrdersIndex({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={createForm.processing}
+                                loading={createForm.processing}
                                 className="bg-primary hover:bg-primary/90 rounded-[8px] text-xs font-bold text-white"
                             >
                                 Crear orden

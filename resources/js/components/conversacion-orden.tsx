@@ -245,7 +245,7 @@ export default function ConversacionOrden({
                             form.processing ||
                             (!form.data.mensaje.trim() && !form.data.archivo)
                         }
-                        className="bg-primary text-primary-foreground ml-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-4 text-xs font-bold disabled:opacity-50"
+                        className="bg-primary text-primary-foreground ml-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition hover:brightness-95 disabled:opacity-50"
                     >
                         <Send className="h-4 w-4" />
                         Enviar

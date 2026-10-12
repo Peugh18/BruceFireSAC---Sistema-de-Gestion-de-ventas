@@ -31,6 +31,7 @@ import EquiposRoutes from '@/routes/tecnico-planta/equipos';
 import Equipos2Routes from '@/routes/tecnico-planta/recepciones/equipos';
 import ChecklistRoutes from '@/routes/tecnico-planta/checklist';
 import { NativeSelect } from '@/components/ui/native-select';
+import { Empty } from '@/components/ui/empty';
 
 interface EquipmentItem {
     id: number;
@@ -533,16 +534,11 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                     </div>
 
                     {order.equipments.length === 0 ? (
-                        <div className="bg-card space-y-2 rounded-2xl border border-dashed border-neutral-300 p-6 text-center dark:border-neutral-700 dark:bg-neutral-800/40">
-                            <QrCode className="mx-auto h-8 w-8 text-neutral-400" />
-                            <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                                Aún no hay equipos vinculados a esta orden
-                            </p>
-                            <p className="text-muted-foreground text-[11px]">
-                                Presione "Alta Rápida" para escanear un equipo
-                                existente o generar un sticker nuevo.
-                            </p>
-                        </div>
+                        <Empty
+                            icon={<QrCode />}
+                            title="Aún no hay equipos vinculados a esta orden"
+                            description='Presione "Alta Rápida" para escanear un equipo existente o generar un sticker nuevo.'
+                        />
                     ) : (
                         <div className="space-y-2.5">
                             {order.equipments.map((eq) => (
@@ -699,7 +695,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                                             onClick={handleSearchExisting}
                                             disabled={scanLoading}
                                             aria-label="Buscar equipo por código"
-                                            className="rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white dark:bg-neutral-700"
+                                            className="rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white transition hover:brightness-95 dark:bg-neutral-700"
                                         >
                                             <Search className="h-4 w-4" />
                                         </button>
