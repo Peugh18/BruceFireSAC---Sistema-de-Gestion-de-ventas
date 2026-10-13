@@ -39,11 +39,11 @@ class ExcelSimple
         $n = 1;
 
         foreach ($filas as $fila) {
-            $xmlFilas .= self::fila(++$n, array_values($fila), 0);
+            $xmlFilas .= self::fila(++$n, $fila, 0);
         }
 
         $cols = '';
-        foreach (array_values($anchos) as $i => $ancho) {
+        foreach ($anchos as $i => $ancho) {
             $cols .= '<col min="'.($i + 1).'" max="'.($i + 1).'" width="'.$ancho.'" customWidth="1"/>';
         }
 
@@ -83,7 +83,7 @@ class ExcelSimple
     {
         $xml = '';
 
-        foreach (array_values($celdas) as $i => $valor) {
+        foreach ($celdas as $i => $valor) {
             $texto = trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', (string) ($valor ?? '')));
 
             if ($texto === '') {
