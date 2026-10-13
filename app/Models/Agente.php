@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Enums\EquipmentType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -34,8 +34,8 @@ class Agente extends Model
      */
     public static function lista(): Collection
     {
-        return once(fn () => Schema::hasTable('agentes')
-            ? static::query()->orderBy('orden')->orderBy('nombre')->get()
+        return once(fn (): Collection => Schema::hasTable('agentes')
+            ? self::query()->orderBy('orden')->orderBy('nombre')->get()
             : new Collection);
     }
 
@@ -46,7 +46,7 @@ class Agente extends Model
      */
     public static function nombresActivos(): array
     {
-        return static::lista()->where('activo', true)->pluck('nombre')->values()->all();
+        return array_values(static::lista()->where('activo', true)->map(fn (self $agente): string => $agente->nombre)->all());
     }
 
     /** Tipo base de un agente por su nombre exacto (sin importar mayúsculas). */
