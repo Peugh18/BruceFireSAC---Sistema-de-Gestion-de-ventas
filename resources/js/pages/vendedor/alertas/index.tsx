@@ -17,6 +17,7 @@ import PorVencerEmpresas, {
 } from '@/components/por-vencer-empresas';
 import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import { Badge } from '@/components/ui/badge';
+import FiltroSelect from '@/components/filtro-select';
 import { PageHeader } from '@/components/page-header';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
 import { Empty } from '@/components/ui/empty';
@@ -160,18 +161,6 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                 <PageHeader
                     title="Por vencer"
                     description="Extintores de tus clientes por empresa, del vencimiento más próximo al más lejano. Ofrece la recarga o el mantenimiento antes de que venzan."
-                    actions={
-                        <div className="border-border bg-card focus-within:border-ring focus-within:ring-ring/50 flex h-9 w-[220px] items-center gap-2 rounded-lg border px-3 text-[12.5px] focus-within:ring-[3px]">
-                            <Search className="text-muted-foreground size-3.5" />
-                            <input
-                                aria-label="Buscar por empresa, RUC o serie"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Empresa, RUC o serie..."
-                                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
-                            />
-                        </div>
-                    }
                 />
 
                 {hoy ? (
@@ -183,7 +172,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                     </p>
                 ) : null}
 
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex flex-wrap items-end gap-3">
                     <TabsBf<'empresas' | 'avisos'>
                         pestanas={[
                             { id: 'empresas', titulo: 'Por empresa' },
@@ -195,48 +184,51 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                         idBase="alertas-vista"
                     />
                     {vista === 'empresas' ? (
-                        <TabsBf<PlazoEmpresa>
-                            pestanas={plazos.map((opcion) => ({
-                                id: opcion.id,
-                                titulo: opcion.label,
-                                contador: opcion.count,
+                        <FiltroSelect
+                            etiqueta="Plazo"
+                            valor={plazo}
+                            opciones={plazos.map((opcion) => ({
+                                value: opcion.id,
+                                label: `${opcion.label} (${opcion.count})`,
                             }))}
-                            activa={plazo}
-                            onCambiar={setPlazo}
-                            etiqueta="Filtro de empresas por plazo"
-                            idBase="alertas-plazos"
+                            onCambiar={(valor) =>
+                                setPlazo(valor as PlazoEmpresa)
+                            }
                         />
-                    ) : null}
+                    ) : (
+                        <FiltroSelect
+                            etiqueta="Vencimiento"
+                            valor={activeTab}
+                            opciones={tabs.map((tab) => ({
+                                value: tab.id,
+                                label: `${tab.label} (${tab.count})`,
+                            }))}
+                            onCambiar={(valor) =>
+                                setActiveTab(valor as FiltroAlerta)
+                            }
+                        />
+                    )}
+                    <div className="border-border bg-card focus-within:border-ring focus-within:ring-ring/50 flex h-11 min-w-[14rem] flex-1 items-center gap-2 rounded-lg border px-3 text-sm focus-within:ring-[3px] sm:h-9 sm:max-w-xs">
+                        <Search className="text-muted-foreground size-4 shrink-0" />
+                        <input
+                            aria-label="Buscar por empresa, RUC o serie"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Empresa, RUC o serie"
+                            className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
+                        />
+                    </div>
                 </div>
 
                 <div {...propsPanel('alertas-vista', vista)}>
                     {vista === 'empresas' ? (
-                        <div {...propsPanel('alertas-plazos', plazo)}>
-                            <PorVencerEmpresas
-                                empresas={empresasFiltradas}
-                                teamSlug={teamSlug}
-                            />
-                        </div>
+                        <PorVencerEmpresas
+                            empresas={empresasFiltradas}
+                            teamSlug={teamSlug}
+                        />
                     ) : (
                         <>
-                            {/* Filtros de avisos por vencimiento */}
-                            <TabsBf<FiltroAlerta>
-                                pestanas={tabs.map((tab) => ({
-                                    id: tab.id,
-                                    titulo: tab.label,
-                                    contador: tab.count,
-                                }))}
-                                activa={activeTab}
-                                onCambiar={setActiveTab}
-                                etiqueta="Filtro de avisos por vencimiento"
-                                idBase="alertas-filtro"
-                            />
-
-                            {/* List of Alerts */}
-                            <div
-                                className="flex flex-col gap-3"
-                                {...propsPanel('alertas-filtro', activeTab)}
-                            >
+                            <div className="flex flex-col gap-3">
                                 {currentList.length === 0 ? (
                                     <Empty
                                         icon={<CheckCircle2 />}
