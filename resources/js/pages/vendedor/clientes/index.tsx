@@ -386,7 +386,7 @@ export default function ClientesIndex({
                                             )}
                                         >
                                             <Download className="size-3.5" />
-                                            Exportar
+                                            Exportar a Excel
                                         </a>
                                     </Button>
                                 </div>

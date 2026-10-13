@@ -230,19 +230,25 @@ test('creating a client from the sale or quote modal returns it as json', functi
     ]);
 });
 
-test('exportar clientes descarga un csv con los clientes de la busqueda actual', function () {
+test('exportar clientes descarga un Excel con los clientes de la busqueda actual', function () {
     $user = vendedorUser();
-    Client::factory()->create(['razon_social' => 'EXTINTORES DEL NORTE S.A.C.', 'numero_documento' => '20600000001']);
+    Client::factory()->create(['razon_social' => 'EXTINTORES DEL NORTE S.A.C. & HIJOS', 'numero_documento' => '20600000001']);
     Client::factory()->create(['razon_social' => 'OTRA EMPRESA S.A.C.']);
 
     $response = $this->actingAs($user)
         ->get(route('vendedor.clientes.export', ['current_team' => $user->currentTeam, 'search' => 'norte']))
         ->assertOk()
-        ->assertDownload('clientes-'.now()->format('Y-m-d').'.csv');
+        ->assertDownload('clientes-'.now()->format('Y-m-d').'.xlsx');
 
-    $csv = $response->streamedContent();
+    $ruta = tempnam(sys_get_temp_dir(), 'xlsx');
+    file_put_contents($ruta, $response->streamedContent());
+    $zip = new ZipArchive;
+    expect($zip->open($ruta))->toBeTrue();
+    $hoja = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+    $zip->close();
+    unlink($ruta);
 
-    expect($csv)->toContain('EXTINTORES DEL NORTE S.A.C.')
+    expect($hoja)->toContain('EXTINTORES DEL NORTE S.A.C. &amp; HIJOS')
         ->toContain('20600000001')
         ->not->toContain('OTRA EMPRESA');
 });
