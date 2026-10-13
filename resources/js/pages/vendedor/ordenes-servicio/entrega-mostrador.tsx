@@ -55,7 +55,7 @@ export default function CounterDelivery({
                 {!isPaid && (
                     <div
                         role="alert"
-                        className="rounded-xl border border-amber-400 bg-amber-50 p-4 text-sm font-semibold text-amber-900"
+                        className="text-warning-strong rounded-xl border border-amber-400 bg-amber-50 p-4 text-sm font-semibold"
                     >
                         Esta orden todavía no tiene una venta vinculada. Puedes
                         entregarla, pero registra la venta pendiente.
@@ -65,7 +65,7 @@ export default function CounterDelivery({
                 <Card className="p-5">
                     {delivery ? (
                         <div className="space-y-4">
-                            <p className="font-medium text-emerald-700">
+                            <p className="text-success-strong font-medium">
                                 La entrega conforme ya fue registrada.
                             </p>
                             <Button asChild>

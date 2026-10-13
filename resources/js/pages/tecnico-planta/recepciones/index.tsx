@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
 import {
@@ -51,14 +52,14 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
     const [search, setSearch] = useState(filters.search || '');
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             RecepcionesRoutes.index.url({ current_team: teamSlug }),
             { search, filter: filters.filter },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleFilterChange = (newFilter: string) => {
         router.get(
@@ -92,7 +93,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                         onClick={() => handleFilterChange('pendientes')}
                         className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all ${
                             filters.filter === 'pendientes'
-                                ? 'bg-card text-amber-700 shadow-sm dark:bg-neutral-700 dark:text-amber-400'
+                                ? 'bg-card text-warning-strong shadow-sm dark:bg-neutral-700 dark:text-amber-400'
                                 : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400'
                         }`}
                     >
@@ -104,7 +105,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                         onClick={() => handleFilterChange('recibidas')}
                         className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all ${
                             filters.filter === 'recibidas'
-                                ? 'bg-card text-emerald-700 shadow-sm dark:bg-neutral-700 dark:text-emerald-400'
+                                ? 'bg-card text-success-strong shadow-sm dark:bg-neutral-700 dark:text-emerald-400'
                                 : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400'
                         }`}
                     >
@@ -132,15 +133,9 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar por orden, cliente, serie BF-EQ..."
-                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-4 pl-9 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
-                    <button
-                        type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
-                    >
-                        Buscar
-                    </button>
                 </form>
 
                 {/* Orders List */}
@@ -198,12 +193,12 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                                                     {order.codigo}
                                                 </span>
                                                 {isPendiente ? (
-                                                    <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                                                    <span className="text-warning-strong flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold dark:bg-amber-950/60 dark:text-amber-300">
                                                         <AlertCircle className="h-2.5 w-2.5" />
                                                         Por Recibir
                                                     </span>
                                                 ) : (
-                                                    <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                                    <span className="text-success-strong flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold dark:bg-emerald-950/60 dark:text-emerald-300">
                                                         <CheckCircle2 className="h-2.5 w-2.5" />
                                                         Recibido en Planta
                                                     </span>

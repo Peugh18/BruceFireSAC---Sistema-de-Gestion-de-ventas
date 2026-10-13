@@ -16,6 +16,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { InputCorreo } from '@/components/ui/input-correo';
 import { Label } from '@/components/ui/label';
 import UsuariosRoutes from '@/routes/gerente/usuarios';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -102,9 +103,8 @@ export default function NuevoUsuarioDialog({
 
                     <div className="space-y-1.5">
                         <Label htmlFor="nuevo-correo">Correo</Label>
-                        <Input
+                        <InputCorreo
                             id="nuevo-correo"
-                            type="email"
                             value={form.data.email}
                             onChange={(e) =>
                                 form.setData('email', e.target.value)

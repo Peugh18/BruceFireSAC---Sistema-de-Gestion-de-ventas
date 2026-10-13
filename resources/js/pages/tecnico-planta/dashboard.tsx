@@ -10,8 +10,9 @@ import {
     Wrench,
     X,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { KpiFiltro } from '@/components/kpi-filtro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,14 +71,14 @@ function getEstadoBadge(estado: string) {
     switch (estado) {
         case 'pendiente_recepcion':
             return (
-                <span className="text-warning-strong inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10.5px] font-bold">
+                <span className="text-warning-strong inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-xs font-bold">
                     <Clock className="size-3" />
                     Pendiente Recepción
                 </span>
             );
         case 'recibido_planta':
             return (
-                <span className="border-primary/20 bg-primary/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-bold">
+                <span className="border-primary/20 bg-primary/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold">
                     <PackageCheck className="size-3" />
                     Recibido en Planta
                 </span>
@@ -85,21 +86,21 @@ function getEstadoBadge(estado: string) {
         case 'en_revision':
         case 'en_proceso':
             return (
-                <span className="text-warning-strong inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10.5px] font-bold">
+                <span className="text-warning-strong inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-xs font-bold">
                     <Wrench className="size-3" />
                     En Trabajo
                 </span>
             );
         case 'esperando_autorizacion':
             return (
-                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-bold">
+                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold">
                     <AlertTriangle className="size-3" />
                     Esperando Autorización
                 </span>
             );
         case 'autorizado':
             return (
-                <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold">
+                <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-bold">
                     <CheckCircle2 className="size-3" />
                     Autorizado
                 </span>
@@ -108,14 +109,14 @@ function getEstadoBadge(estado: string) {
         case 'listo_certificado':
         case 'listo_entrega':
             return (
-                <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold">
+                <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-bold">
                     <CheckCircle2 className="size-3" />
                     Listo / Terminado
                 </span>
             );
         default:
             return (
-                <span className="border-border bg-muted/40 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold">
+                <span className="border-border bg-muted/40 text-muted-foreground inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold">
                     {estado.replace('_', ' ')}
                 </span>
             );
@@ -125,20 +126,20 @@ function getEstadoBadge(estado: string) {
 function getPrioridadBadge(prioridad: string) {
     if (prioridad === 'urgente') {
         return (
-            <span className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-[6px] border px-1.5 py-0.5 text-[9.5px] font-black uppercase">
+            <span className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-md border px-1.5 py-0.5 text-xs font-black uppercase">
                 Urgente
             </span>
         );
     }
     if (prioridad === 'alta') {
         return (
-            <span className="text-warning-strong rounded-[6px] border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[9.5px] font-bold uppercase dark:text-amber-400">
+            <span className="text-warning-strong rounded-md border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-xs font-bold uppercase dark:text-amber-400">
                 Alta
             </span>
         );
     }
     return (
-        <span className="border-border bg-muted/40 text-muted-foreground rounded-[6px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase">
+        <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-1.5 py-0.5 text-xs font-semibold uppercase">
             Normal
         </span>
     );
@@ -155,14 +156,14 @@ export default function TecnicoPlantaDashboard({
     const [search, setSearch] = useState(filters.search || '');
     const currentTab = filters.tab || 'todas';
 
-    const handleSearch = (e: FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             TecnicoPlantaRoutes.dashboard.url({ current_team: teamSlug }),
             { tab: currentTab, search: search.trim() },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const changeTab = (newTab: string) => {
         router.get(
@@ -183,7 +184,7 @@ export default function TecnicoPlantaDashboard({
                         <h1 className="text-foreground text-lg font-black tracking-tight">
                             Cola Operativa de Taller
                         </h1>
-                        <p className="text-muted-foreground text-[11px]">
+                        <p className="text-muted-foreground text-xs">
                             Órdenes de servicio asignadas al departamento de
                             planta.
                         </p>
@@ -191,7 +192,7 @@ export default function TecnicoPlantaDashboard({
 
                     <Link
                         href={recepciones.index.url(teamSlug)}
-                        className="bg-primary hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all active:scale-95"
+                        className="bg-primary hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all active:scale-95"
                     >
                         <PackageCheck className="size-4" />
                         <span>Recepción</span>
@@ -271,7 +272,7 @@ export default function TecnicoPlantaDashboard({
                         placeholder="Buscar por código OS o nombre de cliente..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="bg-card h-10 rounded-[10px] pr-8 pl-9 text-xs"
+                        className="bg-card h-10 rounded-lg pr-8 pl-9 text-xs"
                     />
                     {search && (
                         <button
@@ -330,7 +331,7 @@ export default function TecnicoPlantaDashboard({
                                               order.id,
                                           ])
                                 }
-                                className="border-border bg-card hover:border-destructive/20/40 block rounded-[14px] border p-4 shadow-xs transition-all hover:shadow-sm active:scale-[0.99]"
+                                className="border-border bg-card hover:border-destructive/20/40 block rounded-2xl border p-4 shadow-xs transition-all hover:shadow-sm active:scale-[0.99]"
                             >
                                 <div className="border-border mb-2.5 flex items-start justify-between gap-2 border-b pb-2.5">
                                     <div>
@@ -348,7 +349,7 @@ export default function TecnicoPlantaDashboard({
                                     <div>{getEstadoBadge(order.estado)}</div>
                                 </div>
 
-                                <div className="text-muted-foreground grid grid-cols-2 gap-2 text-[11px]">
+                                <div className="text-muted-foreground grid grid-cols-2 gap-2 text-xs">
                                     <div className="flex items-center gap-1.5 truncate">
                                         <Wrench className="size-3.5 shrink-0 text-gray-400" />
                                         <span className="truncate capitalize">
@@ -364,7 +365,7 @@ export default function TecnicoPlantaDashboard({
 
                                 {/* Banner condicional si requiere autorización */}
                                 {order.requiere_autorizacion_count > 0 && (
-                                    <div className="border-destructive/20 bg-destructive/10 text-destructive-strong mt-3 flex items-center justify-between rounded-[8px] border px-2.5 py-1.5 text-[11px]">
+                                    <div className="border-destructive/20 bg-destructive/10 text-destructive-strong mt-3 flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs">
                                         <div className="flex items-center gap-1.5 font-bold">
                                             <AlertTriangle className="size-3.5 shrink-0" />
                                             <span>

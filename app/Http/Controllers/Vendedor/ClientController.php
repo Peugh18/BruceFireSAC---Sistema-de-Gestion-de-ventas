@@ -18,7 +18,9 @@ use App\Models\Sale;
 use App\Models\Team;
 use App\Services\AuditLogger;
 use App\Services\Ml\RetentionModel;
+use App\Services\Sunat\DocumentoNoEncontrado;
 use App\Services\Sunat\RucLookupService;
+use App\Support\ExcelSimple;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,37 +106,38 @@ class ClientController extends Controller
      * Descarga en CSV (abre directo en Excel) los clientes que coinciden con
      * la búsqueda actual del listado, o todos si no hay búsqueda.
      */
+    /** Lista de clientes en Excel (.xlsx), con la búsqueda que tenga puesta el usuario. */
     public function export(Request $request): StreamedResponse
     {
         $search = $request->string('search')->toString();
 
-        return response()->streamDownload(function () use ($search) {
-            $salida = fopen('php://output', 'w');
-            fwrite($salida, "\xEF\xBB\xBF");
-            fputcsv($salida, ['Código', 'Tipo doc.', 'Número', 'Razón social / Nombre', 'Nombre comercial', 'Teléfono', 'Email', 'Dirección fiscal', 'Estado SUNAT', 'Condición', 'Última compra', 'Activo'], ';');
+        $filas = Client::query()
+            ->withMax('sales', 'fecha')
+            ->buscar($search)
+            ->orderBy('razon_social')
+            ->lazy()
+            ->map(fn (Client $client) => [
+                $client->codigo_interno,
+                strtoupper($client->tipo_documento),
+                $client->numero_documento,
+                $client->razon_social,
+                $client->nombre_comercial,
+                $client->telefono ?? $client->whatsapp,
+                $client->email,
+                $client->direccion_fiscal,
+                $client->estado_contribuyente,
+                $client->condicion_domicilio,
+                $client->sales_max_fecha ? Carbon::parse($client->sales_max_fecha)->toDateString() : '',
+                $client->activo ? 'Sí' : 'No',
+            ]);
 
-            Client::query()
-                ->withMax('sales', 'fecha')
-                ->buscar($search)
-                ->orderBy('razon_social')
-                ->lazy()
-                ->each(fn (Client $client) => fputcsv($salida, [
-                    $client->codigo_interno,
-                    strtoupper($client->tipo_documento),
-                    $client->numero_documento,
-                    $client->razon_social,
-                    $client->nombre_comercial,
-                    $client->telefono ?? $client->whatsapp,
-                    $client->email,
-                    $client->direccion_fiscal,
-                    $client->estado_contribuyente,
-                    $client->condicion_domicilio,
-                    $client->sales_max_fecha ? Carbon::parse($client->sales_max_fecha)->toDateString() : '',
-                    $client->activo ? 'Sí' : 'No',
-                ], ';'));
-
-            fclose($salida);
-        }, 'clientes-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return ExcelSimple::descargar(
+            'clientes-'.now()->format('Y-m-d').'.xlsx',
+            'Clientes',
+            ['Código', 'Tipo doc.', 'Número', 'Razón social / Nombre', 'Nombre comercial', 'Teléfono', 'Email', 'Dirección fiscal', 'Estado SUNAT', 'Condición', 'Última compra', 'Activo'],
+            $filas,
+            [12, 10, 14, 42, 28, 14, 30, 50, 14, 12, 14, 8],
+        );
     }
 
     public function store(StoreClientRequest $request, CreateClient $createClient): RedirectResponse|JsonResponse
@@ -315,7 +318,12 @@ class ClientController extends Controller
     {
         abort_unless($client->tieneRuc(), 422, 'La consulta SUNAT solo aplica a clientes con RUC.');
 
-        $data = $lookupService->lookup($client->numero_documento, refresh: true);
+        try {
+            $data = $lookupService->lookup($client->numero_documento, refresh: true);
+        } catch (DocumentoNoEncontrado) {
+            return back()->with('error', 'SUNAT ya no encuentra este RUC. Revisa que esté bien escrito.');
+        }
+
         $client->update([
             'estado_contribuyente' => $data['estado_contribuyente'],
             'condicion_domicilio' => $data['condicion_domicilio'],
@@ -380,7 +388,8 @@ class ClientController extends Controller
         ]);
 
         $antes = $client->whatsapp;
-        $client->update(['whatsapp' => substr($data['whatsapp'], -9)]);
+        $celular = substr($data['whatsapp'], -9);
+        $client->update(['whatsapp' => $celular, 'telefono' => $client->telefono ?: $celular]);
 
         AuditLogger::log(
             action: 'cliente.actualizado',

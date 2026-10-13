@@ -60,7 +60,7 @@ export function KpiFiltro({
                     tonos[tono].texto,
                 )}
             >
-                <span className="text-[10.5px] font-bold tracking-wider uppercase">
+                <span className="text-xs font-bold tracking-wider uppercase">
                     {titulo}
                 </span>
                 {icono && <span aria-hidden="true">{icono}</span>}
@@ -68,7 +68,7 @@ export function KpiFiltro({
             <span className="text-foreground mt-2 text-2xl font-black tabular-nums">
                 {valor}
             </span>
-            <span className="text-muted-foreground text-[10px]">{detalle}</span>
+            <span className="text-muted-foreground text-xs">{detalle}</span>
         </button>
     );
 }

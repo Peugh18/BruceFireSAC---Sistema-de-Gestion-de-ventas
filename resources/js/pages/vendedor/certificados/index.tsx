@@ -11,9 +11,9 @@ import {
     Search,
     Users,
 } from 'lucide-react';
-import type { FormEvent } from 'react';
 import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -87,7 +87,7 @@ function badgeClass(estado: string) {
 }
 
 const accion =
-    'border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none';
+    'border-border bg-card text-foreground/80 size-7 rounded-md shadow-none';
 
 export default function CertificadosIndex({
     certificates,
@@ -125,10 +125,10 @@ export default function CertificadosIndex({
         );
     }
 
-    const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const aplicarBusqueda = () => {
         buscar({});
     };
+    const submitSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const verCertificado = (id: number) =>
         certificados.show.url({ current_team: teamSlug, certificate: id });
@@ -141,7 +141,7 @@ export default function CertificadosIndex({
                     description="Todos los certificados emitidos, con la venta de la que salieron. Toca uno para verlo."
                 />
 
-                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none">
                     {/* Filtro por estado: Todos · Vigentes · Vencidos · Anulados */}
                     <div className="border-border mb-4 flex flex-wrap items-center gap-1.5 border-b pb-3">
                         {[
@@ -170,7 +170,7 @@ export default function CertificadosIndex({
                     <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
                         <form
                             onSubmit={submitSearch}
-                            className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]"
+                            className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 focus-within:ring-[3px]"
                         >
                             <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
@@ -184,7 +184,7 @@ export default function CertificadosIndex({
                             />
                         </form>
                         {tipos.length > 1 ? (
-                            <div className="border-border bg-card text-foreground/80 focus-within:border-ring focus-within:ring-ring/50 flex h-10 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
+                            <div className="border-border bg-card text-foreground/80 focus-within:border-ring focus-within:ring-ring/50 flex h-10 items-center gap-2 rounded-lg border px-3 focus-within:ring-[3px]">
                                 <Filter className="size-3.5" />
                                 <NativeSelect
                                     aria-label="Filtrar por tipo de certificado"
@@ -209,7 +209,7 @@ export default function CertificadosIndex({
                     </div>
 
                     {certificates.data.length === 0 ? (
-                        <div className="border-border flex flex-col items-center gap-2 rounded-[12px] border border-dashed px-6 py-12 text-center">
+                        <div className="border-border flex flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-12 text-center">
                             <Award className="text-muted-foreground size-8" />
                             <div className="text-foreground text-[14px] font-bold">
                                 {filtrando
@@ -282,7 +282,7 @@ export default function CertificadosIndex({
                                             <TableCell className="border-border border-b px-2.5 py-[11px]">
                                                 <div className="flex items-center gap-2">
                                                     <div
-                                                        className={`flex size-[30px] shrink-0 items-center justify-center rounded-[8px] ${certificate.estado === 'vigente' ? 'bg-destructive/10 text-primary-strong' : 'bg-muted text-muted-foreground'}`}
+                                                        className={`flex size-[30px] shrink-0 items-center justify-center rounded-lg ${certificate.estado === 'vigente' ? 'bg-destructive/10 text-primary-strong' : 'bg-muted text-muted-foreground'}`}
                                                     >
                                                         <Award className="size-4" />
                                                     </div>
@@ -290,7 +290,7 @@ export default function CertificadosIndex({
                                                         <div className="font-['IBM_Plex_Mono',monospace] font-bold">
                                                             {certificate.numero}
                                                         </div>
-                                                        <div className="text-muted-foreground max-w-[220px] truncate text-[11px]">
+                                                        <div className="text-muted-foreground max-w-[220px] truncate text-xs">
                                                             {certificate.tipo ??
                                                                 certificate.tipo_codigo}
                                                         </div>
@@ -318,7 +318,7 @@ export default function CertificadosIndex({
                                                     '-'
                                                 )}
                                                 {certificate.referencia ? (
-                                                    <div className="text-muted-foreground text-[11px]">
+                                                    <div className="text-muted-foreground text-xs">
                                                         {certificate.referencia}
                                                     </div>
                                                 ) : null}
@@ -345,7 +345,7 @@ export default function CertificadosIndex({
                                                         </span>
                                                         {certificate.venta
                                                             .comprobante ? (
-                                                            <span className="text-muted-foreground text-[11px]">
+                                                            <span className="text-muted-foreground text-xs">
                                                                 {
                                                                     certificate
                                                                         .venta
@@ -355,7 +355,7 @@ export default function CertificadosIndex({
                                                         ) : null}
                                                     </Link>
                                                 ) : (
-                                                    <span className="text-muted-foreground text-[11.5px]">
+                                                    <span className="text-muted-foreground text-xs">
                                                         Orden de servicio
                                                     </span>
                                                 )}
@@ -363,7 +363,7 @@ export default function CertificadosIndex({
                                             <TableCell className="border-border border-b px-2.5 py-[11px]">
                                                 {certificate.participantes >
                                                 0 ? (
-                                                    <span className="text-foreground/80 inline-flex items-center gap-1 text-[11.5px]">
+                                                    <span className="text-foreground/80 inline-flex items-center gap-1 text-xs">
                                                         <Users className="size-3.5" />
                                                         {
                                                             certificate.participantes
@@ -378,14 +378,14 @@ export default function CertificadosIndex({
                                                             .map((unit) => (
                                                                 <span
                                                                     key={unit}
-                                                                    className="bg-muted text-foreground/80 rounded-[5px] px-1.5 py-0.5 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold"
+                                                                    className="bg-muted text-foreground/80 rounded-md px-1.5 py-0.5 font-['IBM_Plex_Mono',monospace] text-xs font-bold"
                                                                 >
                                                                     {unit}
                                                                 </span>
                                                             ))}
                                                         {certificate.unidades
                                                             .length > 4 ? (
-                                                            <span className="text-muted-foreground px-1 text-[10.5px] font-bold">
+                                                            <span className="text-muted-foreground px-1 text-xs font-bold">
                                                                 +
                                                                 {certificate
                                                                     .unidades
@@ -408,7 +408,7 @@ export default function CertificadosIndex({
                                             </TableCell>
                                             <TableCell className="border-border border-b px-2.5 py-[11px]">
                                                 <Badge
-                                                    className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold capitalize ${badgeClass(certificate.estado)}`}
+                                                    className={`rounded-full border-transparent px-2.5 py-1 text-xs font-bold capitalize ${badgeClass(certificate.estado)}`}
                                                 >
                                                     {certificate.estado}
                                                 </Badge>
@@ -515,7 +515,7 @@ export default function CertificadosIndex({
                         </div>
                     )}
 
-                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
                         <span>
                             Mostrando {certificates.from ?? 0}-
                             {certificates.to ?? 0} de{' '}
@@ -530,14 +530,14 @@ export default function CertificadosIndex({
                                         href={link.url}
                                         preserveScroll
                                         preserveState
-                                        className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                                        className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                     >
                                         {cleanLabel(link.label)}
                                     </Link>
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
-                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
+                                        className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                                     >
                                         {cleanLabel(link.label)}
                                     </span>

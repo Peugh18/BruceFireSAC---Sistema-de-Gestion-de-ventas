@@ -137,6 +137,8 @@ type QuoteOption = {
     items: QuoteLine[];
     referencia: string | null;
     condicion_pago: PaymentCondition;
+    /** Días de crédito propuestos en la cotización («Crédito 15 días» → 15). */
+    plazo_dias?: number | null;
     observaciones: string | null;
     vehicle_id: number | null;
     destino: Destination;
@@ -158,6 +160,7 @@ type VentaPrefill = {
     fecha?: string | null;
     client: ClientOption;
     sede_id: number | null;
+    vehicle_id: number | null;
     destino: Destination;
     referencia: string | null;
     condicion_pago: PaymentCondition;
@@ -200,7 +203,7 @@ function money(value: number) {
 function fieldError(errors: Partial<Record<string, string>>, key: string) {
     return errors[key] ? (
         <p
-            className="text-destructive-strong mt-1 text-[11px] font-semibold"
+            className="text-destructive-strong mt-1 text-xs font-semibold"
             role="alert"
         >
             {errors[key]}
@@ -227,7 +230,7 @@ function SegmentButton({
             onClick={onClick}
             disabled={disabled}
             title={title}
-            className={`flex-1 rounded-[7px] px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+            className={`flex-1 rounded-md px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                 active
                     ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                     : 'text-muted-foreground hover:text-foreground'
@@ -301,7 +304,7 @@ export default function NuevaVenta({
         client_id: clienteInicial?.id ?? '',
         sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
         quote_id: quote?.id ?? venta?.quote_id ?? '',
-        vehicle_id: quote?.vehicle_id ?? '',
+        vehicle_id: venta?.vehicle_id ?? quote?.vehicle_id ?? '',
         iniciado_at: new Date().toISOString(),
         fecha: venta?.fecha ?? today(),
         destino: venta?.destino ?? quote?.destino ?? 'local_cliente',
@@ -474,6 +477,18 @@ export default function NuevaVenta({
             form.data.items.map((l) => {
                 if (l.key !== key) return l;
                 const updated = { ...l, ...cambio };
+                // No se deja pedir más de lo que hay en el almacén.
+                if (
+                    l.tipo_linea === 'producto' &&
+                    typeof l.stock === 'number' &&
+                    l.stock >= 1 &&
+                    updated.cantidad > l.stock
+                ) {
+                    updated.cantidad = l.stock;
+                    setAviso(
+                        `Solo hay ${l.stock} de ${l.nombre} en el almacén de esta sede.`,
+                    );
+                }
                 const maxDescuento = updated.cantidad * updated.precio_unitario;
                 if (updated.descuento > maxDescuento) {
                     updated.descuento = Math.max(0, maxDescuento);
@@ -674,8 +689,7 @@ export default function NuevaVenta({
 
         form.transform(({ vehicle_id, ...data }) => ({
             ...data,
-            // Solo se envía si viene de la cotización: editar no lo borra.
-            ...(vehicle_id ? { vehicle_id } : {}),
+            vehicle_id: data.destino === 'vehiculo' ? vehicle_id || null : null,
             emitir,
             cuotas: data.condicion_pago === 'credito' ? data.cuotas : [],
             medio_pago:
@@ -754,7 +768,7 @@ export default function NuevaVenta({
             >
                 <div className="flex min-w-0 flex-col gap-4">
                     {venta ? (
-                        <Card className="flex-row items-start gap-3 rounded-[16px] border-amber-500/30 bg-amber-500/5 p-4 shadow-none">
+                        <Card className="flex-row items-start gap-3 rounded-2xl border-amber-500/30 bg-amber-500/5 p-4 shadow-none">
                             <FileText className="text-warning-strong mt-0.5 size-5 shrink-0" />
                             <div className="text-[12.5px]">
                                 <p className="text-foreground font-bold">
@@ -794,9 +808,9 @@ export default function NuevaVenta({
                         </Card>
                     ) : null}
                     {quote ? (
-                        <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card gap-3 rounded-2xl p-5 shadow-none">
                             <div className="flex flex-wrap items-center gap-3">
-                                <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
+                                <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-lg">
                                     <FileText className="size-5" />
                                 </div>
                                 <div className="min-w-0">
@@ -811,7 +825,7 @@ export default function NuevaVenta({
                                     </p>
                                 </div>
                             </div>
-                            <div className="border-border overflow-hidden rounded-[10px] border">
+                            <div className="border-border overflow-hidden rounded-lg border">
                                 {quote.items.map((line, index) => {
                                     const agregadas = line.serializado
                                         ? form.data.items.filter(
@@ -835,7 +849,7 @@ export default function NuevaVenta({
                                                 <span className="text-foreground block truncate text-[13px] font-bold">
                                                     {line.nombre}
                                                 </span>
-                                                <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                                     {line.cantidad} ×{' '}
                                                     {money(
                                                         line.precio_unitario,
@@ -843,7 +857,7 @@ export default function NuevaVenta({
                                                 </span>
                                             </div>
                                             <Badge
-                                                className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold ${completa ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10' : 'text-warning-strong border-amber-500/20 bg-amber-500/10'}`}
+                                                className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${completa ? 'text-success-strong border-emerald-500/20 bg-emerald-500/10' : 'text-warning-strong border-amber-500/20 bg-amber-500/10'}`}
                                             >
                                                 {agregadas === null
                                                     ? 'Agregado'
@@ -857,7 +871,7 @@ export default function NuevaVenta({
                         </Card>
                     ) : null}
 
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
                             <ClientPicker
                                 teamSlug={teamSlug}
@@ -877,7 +891,7 @@ export default function NuevaVenta({
                                                     sedes: [],
                                                 })
                                             }
-                                            className="border-border text-muted-foreground hover:text-foreground rounded-full border px-2.5 py-0.5 text-[11px] font-bold transition-colors"
+                                            className="border-border text-muted-foreground hover:text-foreground rounded-full border px-2.5 py-0.5 text-xs font-bold transition-colors"
                                         >
                                             Clientes varios
                                         </button>
@@ -890,7 +904,7 @@ export default function NuevaVenta({
                                     <Label className="text-foreground text-sm font-medium">
                                         Comprobante
                                     </Label>
-                                    <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                    <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                         <SegmentButton
                                             disabled={clienteSinRuc}
                                             title={
@@ -941,13 +955,13 @@ export default function NuevaVenta({
                                         </SegmentButton>
                                     </div>
                                     {clienteSinRuc && !esClientesVarios ? (
-                                        <p className="text-muted-foreground mt-1 text-[11px]">
+                                        <p className="text-muted-foreground mt-1 text-xs">
                                             Cliente con DNI: se emite boleta.
                                         </p>
                                     ) : null}
                                     {esClientesVarios ? (
                                         <p
-                                            className={`mt-1 text-[11px] font-semibold ${boletaSuperaLimite ? 'text-destructive-strong' : 'text-muted-foreground'}`}
+                                            className={`mt-1 text-xs font-semibold ${boletaSuperaLimite ? 'text-destructive-strong' : 'text-muted-foreground'}`}
                                         >
                                             {boletaSuperaLimite
                                                 ? `Supera S/ ${limiteBoletaSinIdentificar.toFixed(2)}: registra el DNI del cliente.`
@@ -967,12 +981,12 @@ export default function NuevaVenta({
                             </div>
                         </div>
                         {facturaSinDireccion ? (
-                            <div className="border-destructive/40 bg-destructive/5 rounded-[12px] border p-3">
+                            <div className="border-destructive/40 bg-destructive/5 rounded-2xl border p-3">
                                 <div className="text-destructive-strong flex items-center gap-2 text-[12.5px] font-bold">
                                     <MapPin className="size-4 shrink-0" />
                                     Falta la dirección fiscal del cliente
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11.5px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     La factura la imprime y no se emite sin
                                     ella. Se guarda en la ficha del cliente.
                                 </p>
@@ -986,7 +1000,7 @@ export default function NuevaVenta({
                                             )
                                         }
                                         placeholder="Ej. Av. España 1234, Trujillo - La Libertad"
-                                        className="h-9 flex-1 rounded-[9px] text-[13px]"
+                                        className="h-9 flex-1 rounded-lg text-[13px]"
                                     />
                                     <Button
                                         type="button"
@@ -995,7 +1009,7 @@ export default function NuevaVenta({
                                             direccionNueva.trim().length < 5
                                         }
                                         onClick={() => void guardarDireccion()}
-                                        className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] text-[12.5px] font-bold text-white shadow-none"
+                                        className="bg-primary hover:bg-primary/90 h-9 rounded-lg text-[12.5px] font-bold text-white shadow-none"
                                     >
                                         {guardandoDireccion
                                             ? 'Guardando…'
@@ -1004,7 +1018,7 @@ export default function NuevaVenta({
                                 </div>
                                 {errorDireccion ? (
                                     <p
-                                        className="text-destructive-strong mt-1 text-[11px] font-semibold"
+                                        className="text-destructive-strong mt-1 text-xs font-semibold"
                                         role="alert"
                                     >
                                         {errorDireccion}
@@ -1016,13 +1030,13 @@ export default function NuevaVenta({
 
                     {cliente ? (
                         <>
-                            <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                            <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                                 <div className="grid gap-4">
                                     <div>
                                         <Label className="text-foreground text-sm font-medium">
                                             Dónde van los equipos
                                         </Label>
-                                        <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                        <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                             <SegmentButton
                                                 active={
                                                     form.data.destino ===
@@ -1069,7 +1083,7 @@ export default function NuevaVenta({
                                         <Label className="text-foreground text-sm font-medium">
                                             Condición de pago
                                         </Label>
-                                        <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                        <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                             <SegmentButton
                                                 active={
                                                     form.data.condicion_pago ===
@@ -1101,7 +1115,7 @@ export default function NuevaVenta({
                                                 onClick={() =>
                                                     setCreditoAbierto(true)
                                                 }
-                                                className={`mt-1 text-left text-[11.5px] font-semibold underline-offset-2 hover:underline ${creditoIncompleto || cuotasDesactualizadas ? 'text-destructive-strong' : 'text-primary-strong'}`}
+                                                className={`mt-1 text-left text-xs font-semibold underline-offset-2 hover:underline ${creditoIncompleto || cuotasDesactualizadas ? 'text-destructive-strong' : 'text-primary-strong'}`}
                                             >
                                                 {creditoIncompleto
                                                     ? 'Define las cuotas del crédito'
@@ -1164,7 +1178,7 @@ export default function NuevaVenta({
                                         {caja_abierta === false &&
                                             form.data.medio_pago ===
                                                 'efectivo' && (
-                                                <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-800 dark:text-amber-300">
+                                                <div className="text-warning-strong flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] dark:text-amber-300">
                                                     <AlertCircle className="text-warning-strong mt-0.5 size-4 shrink-0" />
                                                     <div>
                                                         <p className="font-bold">
@@ -1197,7 +1211,7 @@ export default function NuevaVenta({
                                             )}
                                         {form.data.medio_pago === 'efectivo' &&
                                         total >= LIMITE_BANCARIZACION ? (
-                                            <p className="text-[11.5px] font-semibold text-amber-700 dark:text-amber-400">
+                                            <p className="text-warning-strong text-xs font-semibold dark:text-amber-400">
                                                 Desde S/ 2,000 el pago debe ir
                                                 por banco (transferencia,
                                                 depósito o tarjeta): en efectivo
@@ -1216,7 +1230,7 @@ export default function NuevaVenta({
                                 {productoSueltoConDetraccion ? (
                                     <p
                                         role="alert"
-                                        className="rounded-[7px] border border-amber-300 bg-amber-50 px-3 py-2 text-[11.5px] font-semibold text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200"
+                                        className="text-warning-strong rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200"
                                     >
                                         Este producto no es parte del servicio:
                                         emítelo en una factura aparte. La
@@ -1230,10 +1244,17 @@ export default function NuevaVenta({
                                     cliente={cliente}
                                     destino={form.data.destino}
                                     value={form.data.referencia}
-                                    onChange={(valor) =>
-                                        form.setData('referencia', valor)
+                                    onChange={(valor, vehicleId) =>
+                                        form.setData((data) => ({
+                                            ...data,
+                                            referencia: valor,
+                                            vehicle_id: vehicleId ?? '',
+                                        }))
                                     }
-                                    error={form.errors.referencia}
+                                    error={
+                                        form.errors.referencia ??
+                                        form.errors.vehicle_id
+                                    }
                                 />
                                 {sedeFija ? (
                                     <div className="text-muted-foreground flex items-center gap-1.5 text-[12px]">
@@ -1262,7 +1283,7 @@ export default function NuevaVenta({
                                                         : '',
                                                 )
                                             }
-                                            className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-10 w-full rounded-[9px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                            className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-10 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                         >
                                             <option value="">
                                                 Selecciona una sede...
@@ -1281,9 +1302,9 @@ export default function NuevaVenta({
                                 )}
                             </Card>
 
-                            <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                            <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <div className="flex size-10 items-center justify-center rounded-[11px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                    <div className="border-border bg-muted text-foreground flex size-10 items-center justify-center rounded-lg border">
                                         <ScanLine className="size-5" />
                                     </div>
                                     <div>
@@ -1306,7 +1327,7 @@ export default function NuevaVenta({
                                     placeholder="Serie BF-EQ, código de barras o nombre del producto o servicio..."
                                 />
                                 {aviso ? (
-                                    <div className="text-warning-strong flex items-center gap-2 rounded-[10px] bg-amber-500/10 px-3 py-2 text-[12px] font-semibold">
+                                    <div className="text-warning-strong flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[12px] font-semibold">
                                         <AlertCircle className="size-4" />
                                         {aviso}
                                     </div>
@@ -1356,7 +1377,7 @@ export default function NuevaVenta({
                                                             <span className="text-foreground block font-semibold">
                                                                 {item.nombre}
                                                             </span>
-                                                            <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                            <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                                                 {item.tipo_linea ===
                                                                 'unidad_nueva'
                                                                     ? `Serie ${item.numero_serie}${item.detalle ? ` · ${item.detalle}` : ''}`
@@ -1391,7 +1412,7 @@ export default function NuevaVenta({
                                                                                 },
                                                                             )
                                                                         }
-                                                                        className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                                        className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                                     >
                                                                         <Minus className="size-3" />
                                                                     </button>
@@ -1421,7 +1442,7 @@ export default function NuevaVenta({
                                                                                 },
                                                                             )
                                                                         }
-                                                                        className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
+                                                                        className="border-border h-8 w-14 rounded-md text-center text-[12px]"
                                                                     />
                                                                     <button
                                                                         aria-label="Aumentar cantidad"
@@ -1436,7 +1457,7 @@ export default function NuevaVenta({
                                                                                 },
                                                                             )
                                                                         }
-                                                                        className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                                        className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                                     >
                                                                         <Plus className="size-3" />
                                                                     </button>
@@ -1467,7 +1488,7 @@ export default function NuevaVenta({
                                                                         },
                                                                     )
                                                                 }
-                                                                className="border-border h-8 w-24 rounded-[7px] text-[12px]"
+                                                                className="border-border h-8 w-24 rounded-md text-[12px]"
                                                             />
                                                         </TableCell>
                                                         <TableCell className="border-border border-b px-2.5 py-2.5">
@@ -1506,7 +1527,7 @@ export default function NuevaVenta({
                                                                         },
                                                                     )
                                                                 }
-                                                                className="border-border h-8 w-20 rounded-[7px] text-[12px]"
+                                                                className="border-border h-8 w-20 rounded-md text-[12px]"
                                                             />
                                                         </TableCell>
                                                         <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
@@ -1533,7 +1554,7 @@ export default function NuevaVenta({
                                                                         ),
                                                                     )
                                                                 }
-                                                                className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
+                                                                className="border-border bg-card text-destructive-strong size-7 rounded-md shadow-none"
                                                             >
                                                                 <Trash2 className="size-3.5" />
                                                             </Button>
@@ -1547,7 +1568,7 @@ export default function NuevaVenta({
                             </Card>
                         </>
                     ) : (
-                        <Card className="border-border bg-card rounded-[16px] border-dashed p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl border-dashed p-5 shadow-none">
                             <Empty
                                 icon={<UserSearch />}
                                 title="Elige un cliente para continuar"
@@ -1558,9 +1579,9 @@ export default function NuevaVenta({
                 </div>
 
                 <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="flex items-center gap-3">
-                            <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-lg">
                                 <FileText className="size-5" />
                             </div>
                             <div className="min-w-0">
@@ -1574,7 +1595,7 @@ export default function NuevaVenta({
                             </div>
                         </div>
 
-                        <div className="bg-muted/40 space-y-2 rounded-[12px] p-4 text-[13px]">
+                        <div className="bg-muted/40 space-y-2 rounded-2xl p-4 text-[13px]">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
                                     Gravado
@@ -1617,7 +1638,7 @@ export default function NuevaVenta({
                                     )
                                 }
                                 placeholder="Sale en el comprobante como Obs."
-                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
+                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-lg border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
                             />
                         </div>
 
@@ -1628,7 +1649,7 @@ export default function NuevaVenta({
                         {errorDeOperacion ? (
                             <p
                                 role="alert"
-                                className="border-destructive-strong/30 bg-destructive-strong/10 text-destructive-strong rounded-[9px] border px-3 py-2 text-[12px] font-semibold"
+                                className="border-destructive-strong/30 bg-destructive-strong/10 text-destructive-strong rounded-lg border px-3 py-2 text-[12px] font-semibold"
                             >
                                 {errorDeOperacion}
                             </p>
@@ -1637,7 +1658,7 @@ export default function NuevaVenta({
                         <Button
                             type="submit"
                             loading={form.processing}
-                            className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-11 rounded-lg px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             {form.processing ? null : (
                                 <FileText className="size-4" />
@@ -1648,7 +1669,7 @@ export default function NuevaVenta({
                         </Button>
                         {aviso ? (
                             <p
-                                className="text-destructive-strong text-[11.5px] font-semibold"
+                                className="text-destructive-strong text-xs font-semibold"
                                 role="alert"
                             >
                                 {aviso}
@@ -1659,7 +1680,7 @@ export default function NuevaVenta({
                             creditoIncompleto ||
                             cuotasDesactualizadas) ? (
                             <p
-                                className="text-destructive-strong text-[11.5px] font-semibold"
+                                className="text-destructive-strong text-xs font-semibold"
                                 role="alert"
                             >
                                 {boletaSuperaLimite
@@ -1675,7 +1696,7 @@ export default function NuevaVenta({
                                 data-accion="borrador"
                                 variant="outline"
                                 loading={form.processing}
-                                className="border-border bg-card text-foreground h-10 rounded-[9px] shadow-none"
+                                className="border-border bg-card text-foreground h-10 rounded-lg shadow-none"
                             >
                                 Guardar borrador
                             </Button>
@@ -1693,7 +1714,7 @@ export default function NuevaVenta({
                                         : ventas.index.url(teamSlug),
                                 )
                             }
-                            className="border-border bg-card text-foreground/80 h-10 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground/80 h-10 rounded-lg shadow-none"
                         >
                             Cancelar
                         </Button>
@@ -1722,6 +1743,7 @@ export default function NuevaVenta({
                 }}
                 total={total}
                 fecha={form.data.fecha}
+                plazoInicial={quote?.plazo_dias ?? 30}
                 cuotas={form.data.cuotas}
                 onSave={(cuotas) => form.setData('cuotas', cuotas)}
             />

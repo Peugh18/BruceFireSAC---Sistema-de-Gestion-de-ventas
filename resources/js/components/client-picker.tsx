@@ -144,8 +144,8 @@ export default function ClientPicker({
                             <div className="text-foreground text-[14px] font-bold">
                                 {value.razon_social}
                             </div>
-                            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11.5px]">
-                                <span className="bg-muted text-foreground/80 rounded-[5px] px-1.5 py-0.5 font-['IBM_Plex_Mono',monospace] font-bold uppercase">
+                            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs">
+                                <span className="bg-muted text-foreground/80 rounded-md px-1.5 py-0.5 font-['IBM_Plex_Mono',monospace] font-bold uppercase">
                                     {value.tipo_documento === 'varios'
                                         ? 'Sin doc.'
                                         : value.tipo_documento}{' '}
@@ -153,7 +153,7 @@ export default function ClientPicker({
                                 </span>
                                 {tieneRuc && value.estado_contribuyente ? (
                                     <span
-                                        className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${rucHabido ? 'text-success-strong bg-emerald-500/10' : 'bg-destructive/10 text-destructive-strong'}`}
+                                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${rucHabido ? 'text-success-strong bg-emerald-500/10' : 'bg-destructive/10 text-destructive-strong'}`}
                                     >
                                         {value.estado_contribuyente} ·{' '}
                                         {value.condicion_domicilio}
@@ -171,7 +171,7 @@ export default function ClientPicker({
                             {tieneRuc &&
                             value.estado_contribuyente &&
                             !rucHabido ? (
-                                <div className="text-destructive-strong mt-1 text-[11.5px] font-semibold">
+                                <div className="text-destructive-strong mt-1 text-xs font-semibold">
                                     RUC no Activo y Habido: no se le puede
                                     emitir factura.
                                 </div>
@@ -183,7 +183,7 @@ export default function ClientPicker({
                                     asChild
                                     variant="outline"
                                     size="sm"
-                                    className="border-border bg-card h-8 rounded-[8px] shadow-none"
+                                    className="border-border bg-card h-8 rounded-lg shadow-none"
                                 >
                                     <a
                                         href={clientes.show.url({
@@ -210,7 +210,7 @@ export default function ClientPicker({
                                         0,
                                     );
                                 }}
-                                className="border-border bg-card text-destructive-strong h-8 rounded-[8px] shadow-none"
+                                className="border-border bg-card text-destructive-strong h-8 rounded-lg shadow-none"
                                 title="Quitar cliente"
                             >
                                 <X className="size-3.5" />
@@ -222,7 +222,7 @@ export default function ClientPicker({
             ) : (
                 <div className="relative mt-1">
                     <div className="flex items-stretch gap-2">
-                        <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
+                        <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 focus-within:ring-[3px]">
                             <Search className="text-muted-foreground size-3.5 shrink-0" />
                             <input
                                 aria-label="Buscar cliente"
@@ -244,7 +244,7 @@ export default function ClientPicker({
                             <Button
                                 type="button"
                                 onClick={() => setCreando(true)}
-                                className="bg-primary hover:bg-primary/90 h-auto shrink-0 rounded-[9px] px-3.5 text-[12.5px] font-bold text-white shadow-none"
+                                className="bg-primary hover:bg-primary/90 h-auto shrink-0 rounded-lg px-3.5 text-[12.5px] font-bold text-white shadow-none"
                             >
                                 <UserRoundPlus className="size-3.5" />
                                 Agregar cliente
@@ -253,7 +253,7 @@ export default function ClientPicker({
                     </div>
 
                     {resultados && resultados.length > 0 ? (
-                        <div className="border-border bg-card absolute inset-x-0 top-full z-30 mt-1 max-h-[260px] overflow-y-auto rounded-[10px] border shadow-lg">
+                        <div className="border-border bg-card absolute inset-x-0 top-full z-30 mt-1 max-h-[260px] overflow-y-auto rounded-lg border shadow-lg">
                             {resultados.map((cliente, index) => (
                                 <button
                                     key={cliente.id}
@@ -265,7 +265,7 @@ export default function ClientPicker({
                                     <span className="text-foreground truncate text-[13px] font-bold">
                                         {cliente.razon_social}
                                     </span>
-                                    <span className="text-muted-foreground shrink-0 font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                    <span className="text-muted-foreground shrink-0 font-['IBM_Plex_Mono',monospace] text-xs">
                                         {cliente.numero_documento}
                                     </span>
                                 </button>
@@ -274,7 +274,7 @@ export default function ClientPicker({
                     ) : null}
 
                     {noEncontrado ? (
-                        <p className="text-muted-foreground mt-1 text-[11.5px]">
+                        <p className="text-muted-foreground mt-1 text-xs">
                             No está registrado.{' '}
                             {esDocumento
                                 ? 'Agrégalo: se autocompletan sus datos desde RENIEC/SUNAT.'
@@ -286,7 +286,7 @@ export default function ClientPicker({
 
             {error ? (
                 <p
-                    className="text-destructive-strong mt-1 text-[11px] font-semibold"
+                    className="text-destructive-strong mt-1 text-xs font-semibold"
                     role="alert"
                 >
                     {error}

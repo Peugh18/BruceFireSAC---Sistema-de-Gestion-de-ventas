@@ -10,6 +10,7 @@ use App\Models\CertificateParticipant;
 use App\Models\CertificateRevision;
 use App\Models\CertificateType;
 use App\Models\CertificateUnit;
+use App\Models\Sale;
 use App\Models\Team;
 use App\Services\Certificates\CertificatePdfService;
 use App\Services\Certificates\CertificateWordService;
@@ -35,7 +36,7 @@ class CertificateController extends Controller
         $estado = $request->string('estado')->toString();
 
         $certificates = $this->certificadosDeMiSede(Certificate::query())
-            ->with(['certificateType', 'client', 'certificateUnits', 'sale.electronicDocuments'])
+            ->with(['certificateType', 'client', 'certificateUnits', 'sale' => fn ($query) => $query->visiblePara(request()->user()), 'sale.electronicDocuments'])
             ->withCount(['participants' => fn ($query) => $query->whereNull('anulado_at')])
             ->when($tipo !== '', fn ($query) => $query->whereHas('certificateType', fn ($q) => $q->where('codigo', $tipo)))
             ->when($estado !== '', fn ($query) => $query->where('estado', $estado))
@@ -44,7 +45,7 @@ class CertificateController extends Controller
                     $q->where('numero', 'like', "%{$search}%")
                         ->orWhere('referencia', 'like', "%{$search}%")
                         ->orWhereHas('client', fn ($cq) => $cq->where('razon_social', 'like', "%{$search}%")->orWhere('numero_documento', 'like', "%{$search}%"))
-                        ->orWhereHas('sale', fn ($sq) => $sq->where('numero_interno', 'like', "%{$search}%")->orWhere('numero_nota_venta', 'like', "%{$search}%"))
+                        ->orWhereHas('sale', fn ($sq) => $sq->visiblePara(request()->user())->whereColumn('sales.client_id', 'certificates.client_id')->where(fn ($venta) => $venta->where('numero_interno', 'like', "%{$search}%")->orWhere('numero_nota_venta', 'like', "%{$search}%")))
                         ->orWhereHas('certificateUnits', fn ($uq) => $uq->where('numero_serie_snapshot', 'like', "%{$search}%"));
                 });
             })
@@ -91,7 +92,7 @@ class CertificateController extends Controller
     {
         $this->asegurarSedeDeCertificado($certificate);
 
-        $certificate->load(['certificateType', 'client', 'certificateUnits', 'participants', 'revisions.user', 'sale.electronicDocuments']);
+        $certificate->load(['certificateType', 'client', 'certificateUnits', 'participants', 'revisions.user', 'sale' => fn ($query) => $query->visiblePara(request()->user()), 'sale.electronicDocuments']);
         $tipo = $certificate->certificateType;
 
         return Inertia::render('vendedor/certificados/show', [
@@ -198,7 +199,7 @@ class CertificateController extends Controller
     {
         $sale = $certificate->sale;
 
-        return $sale ? [
+        return $sale && $sale->client_id === $certificate->client_id && Sale::query()->visiblePara(request()->user())->whereKey($sale->id)->exists() ? [
             'id' => $sale->id,
             'numero' => $sale->numero_interno,
             'comprobante' => $sale->numeroComprobante(),
@@ -213,6 +214,10 @@ class CertificateController extends Controller
     protected function corregirUrl(Team $team, Certificate $certificate): ?string
     {
         if (! $certificate->sale_id || $certificate->estado !== 'vigente' || ! $certificate->certificateType) {
+            return null;
+        }
+
+        if (! Sale::query()->visiblePara(request()->user())->whereKey($certificate->sale_id)->where('client_id', $certificate->client_id)->exists()) {
             return null;
         }
 

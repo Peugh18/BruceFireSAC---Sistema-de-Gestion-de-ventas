@@ -12,8 +12,9 @@ import {
     Search,
     Truck,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -107,8 +108,7 @@ export default function RecepcionesIndex({
     const [fechaDesde, setFechaDesde] = useState(filters.fecha_desde || '');
     const [fechaHasta, setFechaHasta] = useState(filters.fecha_hasta || '');
 
-    const handleFilter = (e: FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             recepciones.index.url(teamSlug),
             {
@@ -120,6 +120,7 @@ export default function RecepcionesIndex({
             { preserveState: true, preserveScroll: true },
         );
     };
+    const handleFilter = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleReset = () => {
         setSearch('');
@@ -148,7 +149,7 @@ export default function RecepcionesIndex({
 
                     <Link
                         href={recepciones.create.url(teamSlug)}
-                        className="bg-primary hover:bg-primary/90 inline-flex items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors"
+                        className="bg-primary hover:bg-primary/90 inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors"
                     >
                         <Plus className="size-4" />
                         <span>Nueva Recepción</span>
@@ -157,7 +158,7 @@ export default function RecepcionesIndex({
 
                 {/* 3 KPI Cards */}
                 <div className="grid gap-4 sm:grid-cols-3">
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Total recepciones
@@ -167,12 +168,12 @@ export default function RecepcionesIndex({
                         <div className="text-foreground mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.total_recepciones}
                         </div>
-                        <div className="text-muted-foreground mt-1 text-[11.5px]">
+                        <div className="text-muted-foreground mt-1 text-xs">
                             Historial completo acumulado
                         </div>
                     </Card>
 
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Recepciones de hoy
@@ -182,29 +183,29 @@ export default function RecepcionesIndex({
                         <div className="text-success-strong mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.recepciones_hoy}
                         </div>
-                        <div className="text-muted-foreground mt-1 text-[11.5px]">
+                        <div className="text-muted-foreground mt-1 text-xs">
                             Ingresos registrados en la fecha
                         </div>
                     </Card>
 
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Unidades conformes (mes)
                             </span>
-                            <Package className="size-4 text-blue-600 dark:text-blue-400" />
+                            <Package className="text-foreground size-4" />
                         </div>
-                        <div className="mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold text-blue-600 dark:text-blue-400">
+                        <div className="text-foreground mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.unidades_recibidas_mes}
                         </div>
-                        <div className="text-muted-foreground mt-1 text-[11.5px]">
+                        <div className="text-muted-foreground mt-1 text-xs">
                             Incorporadas al stock disponible este mes
                         </div>
                     </Card>
                 </div>
 
                 {/* Table Card */}
-                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                     {/* Filters Form */}
                     <form
                         onSubmit={handleFilter}
@@ -317,7 +318,7 @@ export default function RecepcionesIndex({
                         <div className="mt-4 overflow-x-auto">
                             <Table className="w-full text-left text-[12.5px]">
                                 <TableHeader>
-                                    <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                    <TableRow className="border-border text-muted-foreground border-b text-xs font-bold tracking-wider uppercase">
                                         <TableHead>N° Doc.</TableHead>
                                         <TableHead>Fecha</TableHead>
                                         <TableHead>Proveedor</TableHead>
@@ -346,13 +347,13 @@ export default function RecepcionesIndex({
                                             <TableCell className="text-foreground py-3 pr-3 font-mono font-bold">
                                                 #{rec.id}
                                             </TableCell>
-                                            <TableCell className="text-foreground/80 px-3 py-3 font-mono text-[11.5px] whitespace-nowrap">
+                                            <TableCell className="text-foreground/80 px-3 py-3 font-mono text-xs whitespace-nowrap">
                                                 {formatDate(rec.fecha)}
                                             </TableCell>
                                             <TableCell className="text-foreground px-4 py-3 font-bold">
                                                 {rec.proveedor}
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground px-3 py-3 font-mono text-[11.5px]">
+                                            <TableCell className="text-muted-foreground px-3 py-3 font-mono text-xs">
                                                 {rec.documento_referencia ||
                                                     '—'}
                                             </TableCell>
@@ -370,7 +371,7 @@ export default function RecepcionesIndex({
                                             </TableCell>
                                             <TableCell className="px-3 py-3 text-center">
                                                 {rec.tiene_no_conforme ? (
-                                                    <span className="border-destructive/20 bg-destructive/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold">
+                                                    <span className="border-destructive/20 bg-destructive/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-bold">
                                                         <AlertTriangle className="size-3" />
                                                         <span>
                                                             {
@@ -380,7 +381,7 @@ export default function RecepcionesIndex({
                                                         </span>
                                                     </span>
                                                 ) : (
-                                                    <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold">
+                                                    <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold">
                                                         <CheckCircle2 className="size-3" />
                                                         <span>
                                                             100% Conforme

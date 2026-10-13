@@ -30,11 +30,11 @@ export type PorRegistrarData = {
 const colores: Record<Recompra['categoria'], { pill: string; barra: string }> =
     {
         alta: {
-            pill: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+            pill: 'bg-emerald-500/10 text-success-strong dark:text-emerald-400',
             barra: 'bg-emerald-500',
         },
         media: {
-            pill: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+            pill: 'bg-amber-500/10 text-warning-strong dark:text-amber-400',
             barra: 'bg-amber-500',
         },
         baja: {
@@ -151,7 +151,7 @@ export default function ClientesPorRegistrar({
                 })}
                 <form
                     onSubmit={buscarAhora}
-                    className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 ml-auto flex h-9 w-full items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px] sm:w-[240px]"
+                    className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 ml-auto flex h-9 w-full items-center gap-2 rounded-lg border px-3 focus-within:ring-[3px] sm:w-[240px]"
                 >
                     <Search className="text-muted-foreground size-3.5 shrink-0" />
                     <input
@@ -164,8 +164,8 @@ export default function ClientesPorRegistrar({
                 </form>
             </div>
 
-            <div className="border-border overflow-hidden rounded-[12px] border">
-                <div className="text-muted-foreground hidden grid-cols-[minmax(0,2.2fr)_1.3fr_1fr_1fr_120px] gap-3 px-4 py-2.5 font-['IBM_Plex_Mono',monospace] text-[9.5px] font-bold tracking-[0.05em] uppercase md:grid">
+            <div className="border-border overflow-hidden rounded-2xl border">
+                <div className="text-muted-foreground hidden grid-cols-[minmax(0,2.2fr)_1.3fr_1fr_1fr_120px] gap-3 px-4 py-2.5 font-['IBM_Plex_Mono',monospace] text-xs font-bold tracking-[0.05em] uppercase md:grid">
                     <span>Cliente</span>
                     <span>Probabilidad de volver</span>
                     <span>Última compra</span>
@@ -210,14 +210,14 @@ export default function ClientesPorRegistrar({
                                     className="grid cursor-pointer grid-cols-1 items-center gap-3 px-4 py-3 md:grid-cols-[minmax(0,2.2fr)_1.3fr_1fr_1fr_120px]"
                                 >
                                     <div className="flex min-w-0 items-center gap-2.5">
-                                        <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
+                                        <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-xs font-bold">
                                             {iniciales(cliente.nombre)}
                                         </div>
                                         <div className="min-w-0">
                                             <div className="text-foreground truncate text-[13px] font-bold">
                                                 {cliente.nombre}
                                             </div>
-                                            <div className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                            <div className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                                 {cliente.documento}
                                             </div>
                                         </div>
@@ -227,7 +227,7 @@ export default function ClientesPorRegistrar({
                                     </div>
                                     <div>
                                         <span
-                                            className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${color.pill}`}
+                                            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${color.pill}`}
                                         >
                                             {etiquetaNivel[cliente.categoria]} ·{' '}
                                             {cliente.porcentaje}%
@@ -254,7 +254,7 @@ export default function ClientesPorRegistrar({
                                             event.stopPropagation();
                                             onRegistrar(cliente.documento);
                                         }}
-                                        className="border-border bg-card text-foreground/80 hover:bg-muted inline-flex h-8 items-center justify-center gap-1.5 rounded-[8px] border px-3 text-[12px] font-semibold"
+                                        className="border-border bg-card text-foreground/80 hover:bg-muted inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border px-3 text-[12px] font-semibold"
                                     >
                                         <UserRoundPlus className="size-3.5" />
                                         Registrar
@@ -272,7 +272,7 @@ export default function ClientesPorRegistrar({
                 )}
             </div>
 
-            <div className="text-muted-foreground flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-muted-foreground flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
                 <span>
                     Mostrando {datos.clientes.from ?? 0}-
                     {datos.clientes.to ?? 0} de{' '}
@@ -287,7 +287,7 @@ export default function ClientesPorRegistrar({
                                 href={link.url}
                                 preserveScroll
                                 preserveState
-                                className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px] ${
+                                className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs ${
                                     link.active
                                         ? 'bg-primary font-bold text-white'
                                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -300,7 +300,7 @@ export default function ClientesPorRegistrar({
                         ) : (
                             <span
                                 key={`${link.label}-${index}`}
-                                className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
+                                className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                             >
                                 {link.label
                                     .replace('&laquo;', '<')

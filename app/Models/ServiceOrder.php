@@ -210,6 +210,7 @@ class ServiceOrder extends Model
         return $this->equipments()
             ->wherePivot('recibido', true)
             ->whereNotIn('equipment.id', $rechazados)
+            ->where('equipment.estado', '!=', 'baja')
             ->get();
     }
 
@@ -245,6 +246,17 @@ class ServiceOrder extends Model
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
+    }
+
+    /** @return Collection<int, Certificate> */
+    public function certificadosParaEntrega(): Collection
+    {
+        return Certificate::query()
+            ->with('certificateType')
+            ->where('client_id', $this->client_id)
+            ->where(fn (Builder $query) => $query->where('service_order_id', $this->id)
+                ->orWhereHas('ordenesReutilizadas', fn (Builder $orders) => $orders->where('service_orders.id', $this->id)))
+            ->orderBy('id')->get();
     }
 
     /** @param Builder<ServiceOrder> $query */

@@ -13,8 +13,15 @@ import ChispaAvatar from '@/components/chispa-avatar';
 import ChispaSprite, { type ChispaEstado } from '@/components/chispa-sprite';
 import { leerCookie } from '@/lib/cookies';
 import { asistente } from '@/routes';
+import { valorar } from '@/routes/asistente';
 
-type Mensaje = { role: 'user' | 'assistant'; content: string };
+type Mensaje = {
+    role: 'user' | 'assistant';
+    content: string;
+    /** Registro de la respuesta, para marcar si sirvió. */
+    id?: number;
+    util?: boolean;
+};
 
 const CLAVE = 'chispa-conversacion';
 /** El globo "¿Te ayudo?" se muestra solo una vez por sesión; después, al pasar el mouse. */
@@ -28,7 +35,10 @@ const SUGERENCIAS: Record<string, string[]> = {
     ],
     gerente: ['¿Cómo creo un servicio?', '¿Cómo asigno la sede a un usuario?'],
     almacen: ['¿Cómo registro una recepción?', '¿Cómo ajusto el stock?'],
-    tecnico: ['¿Cómo registro una deficiencia?', '¿Qué hago en una entrega?'],
+    tecnico: [
+        '¿Qué necesito para cerrar una entrega?',
+        '¿Cómo registro una deficiencia?',
+    ],
 };
 
 /**
@@ -163,6 +173,7 @@ export default function ChispaWidget({
             const data = (await response.json()) as {
                 respuesta?: string;
                 message?: string;
+                id?: number;
             };
             const respuestaValida =
                 response.ok &&
@@ -174,6 +185,7 @@ export default function ChispaWidget({
                 ...historial,
                 {
                     role: 'assistant',
+                    id: respuestaValida ? data.id : undefined,
                     content:
                         (respuestaValida ? data.respuesta : undefined) ??
                         (response.status === 429
@@ -195,6 +207,32 @@ export default function ChispaWidget({
         }
     };
 
+    const marcar = async (indice: number, util: boolean) => {
+        const id = mensajes[indice]?.id;
+
+        if (!id) {
+            return;
+        }
+
+        setMensajes((actuales) =>
+            actuales.map((m, i) => (i === indice ? { ...m, util } : m)),
+        );
+
+        try {
+            await fetch(valorar.url(id), {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-XSRF-TOKEN': leerCookie('XSRF-TOKEN'),
+                },
+                body: JSON.stringify({ util }),
+            });
+        } catch {
+            // Si no hay conexión, la marca queda solo en pantalla.
+        }
+    };
+
     const enviar = (event: FormEvent) => {
         event.preventDefault();
         void preguntar(texto);
@@ -205,7 +243,7 @@ export default function ChispaWidget({
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20" />
                 <Dialog.Content
-                    className={`border-border bg-card fixed right-4 bottom-24 z-50 flex max-h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[16px] border shadow-2xl ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:max-h-[calc(100dvh-11rem)]' : ''}`}
+                    className={`border-border bg-card fixed right-4 bottom-24 z-50 flex max-h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border shadow-2xl ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:max-h-[calc(100dvh-11rem)]' : ''}`}
                 >
                     <div className="border-border flex items-center gap-2.5 border-b px-4 py-4">
                         <span className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
@@ -215,7 +253,7 @@ export default function ChispaWidget({
                             <Dialog.Title className="text-[15px] font-semibold">
                                 Chispa
                             </Dialog.Title>
-                            <Dialog.Description className="text-muted-foreground text-[11px]">
+                            <Dialog.Description className="text-muted-foreground text-xs">
                                 Te explico cómo usar el sistema, paso a paso
                             </Dialog.Description>
                         </div>
@@ -263,7 +301,7 @@ export default function ChispaWidget({
                                         key={s}
                                         type="button"
                                         onClick={() => void preguntar(s)}
-                                        className="border-border hover:bg-muted/50 block w-full rounded-[10px] border px-3 py-2 text-left text-[12.5px]"
+                                        className="border-border hover:bg-muted/50 block w-full rounded-lg border px-3 py-2 text-left text-[12.5px]"
                                     >
                                         {s}
                                     </button>
@@ -286,9 +324,44 @@ export default function ChispaWidget({
                                     />
                                 ) : null}
                                 <div
-                                    className={`max-w-[88%] rounded-[12px] px-3 py-2 leading-relaxed ${m.role === 'user' ? 'bg-primary text-white' : 'bg-muted text-foreground'}`}
+                                    className={`max-w-[88%] rounded-2xl px-3 py-2 leading-relaxed ${m.role === 'user' ? 'bg-primary text-white' : 'bg-muted text-foreground'}`}
                                 >
                                     <Formato texto={m.content} />
+                                    {m.role === 'assistant' && m.id ? (
+                                        <div className="mt-1.5 flex items-center gap-1 text-[12px]">
+                                            {m.util === undefined ? (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            void marcar(i, true)
+                                                        }
+                                                        className="text-muted-foreground hover:text-foreground min-h-9 rounded-md px-2 font-medium underline-offset-2 hover:underline"
+                                                    >
+                                                        Me sirvió
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            void marcar(
+                                                                i,
+                                                                false,
+                                                            )
+                                                        }
+                                                        className="text-muted-foreground hover:text-foreground min-h-9 rounded-md px-2 font-medium underline-offset-2 hover:underline"
+                                                    >
+                                                        No me sirvió
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <span className="text-muted-foreground px-2">
+                                                    {m.util
+                                                        ? 'Gracias. Me alegra haber ayudado.'
+                                                        : 'Gracias. El Gerente verá tu duda para mejorar la ayuda.'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : null}
                                 </div>
                             </div>
                         ))}
@@ -324,12 +397,12 @@ export default function ChispaWidget({
                             onChange={(e) => setTexto(e.target.value)}
                             maxLength={500}
                             placeholder="Escribe tu duda…"
-                            className="border-border bg-muted/40 focus-visible:border-ring focus-visible:ring-ring/50 h-10 min-w-0 flex-1 rounded-[9px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                            className="border-border bg-muted/40 focus-visible:border-ring focus-visible:ring-ring/50 h-10 min-w-0 flex-1 rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                         />
                         <button
                             type="submit"
                             disabled={pensando || !texto.trim()}
-                            className="bg-primary flex size-10 items-center justify-center rounded-[9px] text-white transition hover:brightness-95 disabled:opacity-50"
+                            className="bg-primary flex size-10 items-center justify-center rounded-lg text-white transition hover:brightness-95 disabled:opacity-50"
                             aria-label="Enviar pregunta"
                         >
                             <Send className="size-4" />

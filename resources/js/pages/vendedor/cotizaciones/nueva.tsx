@@ -14,7 +14,6 @@ import {
 import { FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Cargando } from '@/components/cargando';
 import CatalogPicker, { type CatalogItem } from '@/components/catalog-picker';
 import ClientPicker, { type ClientFicha } from '@/components/client-picker';
 import ReferenciaField from '@/components/referencia-field';
@@ -51,6 +50,8 @@ type QuoteItemForm = {
 
 type QuoteFormData = {
     client_id: number | '';
+    destino: 'local_cliente' | 'vehiculo';
+    vehicle_id: number | '';
     fecha: string;
     vigencia_hasta: string;
     referencia: string;
@@ -62,17 +63,29 @@ type QuoteFormData = {
 type Renovacion = {
     numero: string;
     client: ClientFicha;
+    destino: 'local_cliente' | 'vehiculo';
+    vehicle_id: number | null;
     referencia: string | null;
     condicion_pago_propuesta: string | null;
     observaciones: string | null;
     items: Omit<QuoteItemForm, 'key'>[];
 };
 
-function sumarDias(dias: number) {
-    const date = new Date();
+/** Fecha `dias` después de `desde` (hoy si no se indica), en formato AAAA-MM-DD. */
+function sumarDias(dias: number, desde?: string) {
+    const date = desde ? new Date(`${desde}T00:00:00`) : new Date();
     date.setDate(date.getDate() + dias);
 
     return fechaLocal(date);
+}
+
+/** Días entre dos fechas AAAA-MM-DD. */
+function diasEntre(desde: string, hasta: string) {
+    return Math.round(
+        (new Date(`${hasta}T00:00:00`).getTime() -
+            new Date(`${desde}T00:00:00`).getTime()) /
+            86_400_000,
+    );
 }
 
 function money(value: number) {
@@ -85,7 +98,7 @@ function money(value: number) {
 function fieldError(errors: Partial<Record<string, string>>, key: string) {
     return errors[key] ? (
         <p
-            className="text-destructive-strong mt-1 text-[11px] font-semibold"
+            className="text-destructive-strong mt-1 text-xs font-semibold"
             role="alert"
         >
             {errors[key]}
@@ -119,6 +132,8 @@ export default function NuevaCotizacion({
 
     const form = useForm<QuoteFormData>({
         client_id: renovacion?.client.id ?? clientePrecargado?.id ?? '',
+        destino: renovacion?.destino ?? 'local_cliente',
+        vehicle_id: renovacion?.vehicle_id ?? '',
         fecha: edicion?.fecha ?? sumarDias(0),
         vigencia_hasta: edicion?.vigencia_hasta ?? sumarDias(15),
         referencia: renovacion?.referencia ?? '',
@@ -135,9 +150,9 @@ export default function NuevaCotizacion({
     const [cliente, setCliente] = useState<ClientFicha | null>(
         renovacion?.client ?? clientePrecargado ?? null,
     );
-    const [vigenciaDias, setVigenciaDias] = useState(15);
-    const [destino, setDestino] = useState<'local_cliente' | 'vehiculo'>(
-        'local_cliente',
+    // Al editar, se marca la vigencia y el destino que ya tenía la cotización.
+    const [vigenciaDias, setVigenciaDias] = useState(
+        edicion ? diasEntre(edicion.fecha, edicion.vigencia_hasta) : 15,
     );
 
     const setItems = (items: QuoteItemForm[]) => form.setData('items', items);
@@ -179,7 +194,7 @@ export default function NuevaCotizacion({
 
     const elegirVigencia = (dias: number) => {
         setVigenciaDias(dias);
-        form.setData('vigencia_hasta', sumarDias(dias));
+        form.setData('vigencia_hasta', sumarDias(dias, form.data.fecha));
     };
 
     // Precios con IGV incluido: se separa la base línea por línea.
@@ -236,11 +251,11 @@ export default function NuevaCotizacion({
                     description="Elige el cliente y los productos. Al guardarla, queda lista para descargar en PDF o enviar por WhatsApp."
                 />
             </div>
-            {renovacion && (
-                <div className="text-foreground mb-4 rounded-[12px] border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
-                    Estás renovando la cotización {renovacion.numero}. Revisa
-                    los datos y guarda la nueva cotización; tendrá 15 días de
-                    vigencia.
+            {renovacionOriginal && !edicion && (
+                <div className="text-foreground mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+                    Estás renovando la cotización {renovacionOriginal.numero}.
+                    Revisa los datos y guarda la nueva cotización; tendrá 15
+                    días de vigencia.
                 </div>
             )}
             <form
@@ -248,7 +263,7 @@ export default function NuevaCotizacion({
                 className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]"
             >
                 <div className="flex min-w-0 flex-col gap-4">
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
                             <ClientPicker
                                 teamSlug={teamSlug}
@@ -258,7 +273,14 @@ export default function NuevaCotizacion({
                                     form.setData((data) => ({
                                         ...data,
                                         client_id: ficha?.id ?? '',
-                                        referencia: '',
+                                        referencia:
+                                            ficha?.id === data.client_id
+                                                ? data.referencia
+                                                : '',
+                                        vehicle_id:
+                                            ficha?.id === data.client_id
+                                                ? data.vehicle_id
+                                                : '',
                                     }));
                                 }}
                                 error={form.errors.client_id}
@@ -269,22 +291,24 @@ export default function NuevaCotizacion({
                                 <Label className="text-foreground text-sm font-medium">
                                     Precio válido por
                                 </Label>
-                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                     {VIGENCIAS.map((dias) => (
                                         <button
                                             key={dias}
                                             type="button"
                                             onClick={() => elegirVigencia(dias)}
-                                            className={`flex-1 rounded-[7px] px-3 py-1.5 text-xs font-bold transition-all ${vigenciaDias === dias ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-all ${vigenciaDias === dias ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             {dias} días
                                         </button>
                                     ))}
                                 </div>
-                                <p className="text-muted-foreground mt-1.5 text-[11.5px]">
-                                    Emitida hoy{' '}
-                                    {new Date().toLocaleDateString('es-PE')}. Se
-                                    respeta el precio hasta el{' '}
+                                <p className="text-muted-foreground mt-1.5 text-xs">
+                                    Emitida el{' '}
+                                    {new Date(
+                                        `${form.data.fecha}T00:00:00`,
+                                    ).toLocaleDateString('es-PE')}
+                                    . Se respeta el precio hasta el{' '}
                                     <b className="text-foreground">
                                         {new Date(
                                             `${form.data.vigencia_hasta}T00:00:00`,
@@ -301,7 +325,7 @@ export default function NuevaCotizacion({
                                 <Label className="text-foreground text-sm font-medium">
                                     Para
                                 </Label>
-                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                     {(
                                         [
                                             [
@@ -316,32 +340,48 @@ export default function NuevaCotizacion({
                                             key={valor}
                                             type="button"
                                             onClick={() => {
-                                                setDestino(valor);
-                                                form.setData('referencia', '');
+                                                if (
+                                                    form.data.destino !== valor
+                                                ) {
+                                                    form.setData((data) => ({
+                                                        ...data,
+                                                        destino: valor,
+                                                        referencia: '',
+                                                        vehicle_id: '',
+                                                    }));
+                                                }
                                             }}
-                                            className={`flex flex-1 items-center justify-center gap-1 rounded-[7px] px-3 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex flex-1 items-center justify-center gap-1 rounded-md px-3 py-1.5 text-xs font-bold transition-all ${form.data.destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             <Icono className="size-3" />
                                             {texto}
                                         </button>
                                     ))}
                                 </div>
+                                {fieldError(form.errors, 'destino')}
                             </div>
                             <ReferenciaField
                                 cliente={cliente}
-                                destino={destino}
+                                destino={form.data.destino}
                                 value={form.data.referencia}
-                                onChange={(valor) =>
-                                    form.setData('referencia', valor)
+                                onChange={(valor, vehicleId) =>
+                                    form.setData((data) => ({
+                                        ...data,
+                                        referencia: valor,
+                                        vehicle_id: vehicleId ?? '',
+                                    }))
                                 }
-                                error={form.errors.referencia}
+                                error={
+                                    form.errors.referencia ??
+                                    form.errors.vehicle_id
+                                }
                             />
                         </div>
                     </Card>
 
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-[11px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <div className="border-border bg-muted text-foreground flex size-10 items-center justify-center rounded-lg border">
                                 <Package className="size-5" />
                             </div>
                             <div>
@@ -401,13 +441,13 @@ export default function NuevaCotizacion({
                                                     <span className="text-foreground flex items-center gap-2 font-semibold">
                                                         {item.tipo ===
                                                         'service' ? (
-                                                            <Wrench className="size-3.5 text-blue-600 dark:text-blue-400" />
+                                                            <Wrench className="text-foreground size-3.5" />
                                                         ) : (
                                                             <Package className="text-muted-foreground size-3.5" />
                                                         )}
                                                         {item.nombre}
                                                     </span>
-                                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                    <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                                         {item.codigo ?? '—'}
                                                     </span>
                                                 </TableCell>
@@ -429,7 +469,7 @@ export default function NuevaCotizacion({
                                                                     },
                                                                 )
                                                             }
-                                                            className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                            className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                         >
                                                             <Minus className="size-3" />
                                                         </button>
@@ -457,7 +497,7 @@ export default function NuevaCotizacion({
                                                                     },
                                                                 )
                                                             }
-                                                            className="border-border h-8 w-14 rounded-[7px] text-center text-[12px]"
+                                                            className="border-border h-8 w-14 rounded-md text-center text-[12px]"
                                                         />
                                                         <button
                                                             aria-label="Aumentar cantidad"
@@ -472,7 +512,7 @@ export default function NuevaCotizacion({
                                                                     },
                                                                 )
                                                             }
-                                                            className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                            className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                         >
                                                             <Plus className="size-3" />
                                                         </button>
@@ -500,7 +540,7 @@ export default function NuevaCotizacion({
                                                                 },
                                                             )
                                                         }
-                                                        className="border-border h-8 w-24 rounded-[7px] text-[12px]"
+                                                        className="border-border h-8 w-24 rounded-md text-[12px]"
                                                     />
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-2.5">
@@ -523,7 +563,7 @@ export default function NuevaCotizacion({
                                                                 },
                                                             )
                                                         }
-                                                        className="border-border h-8 w-20 rounded-[7px] text-[12px]"
+                                                        className="border-border h-8 w-20 rounded-md text-[12px]"
                                                     />
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
@@ -548,7 +588,7 @@ export default function NuevaCotizacion({
                                                                 ),
                                                             )
                                                         }
-                                                        className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
+                                                        className="border-border bg-card text-destructive-strong size-7 rounded-md shadow-none"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                     </Button>
@@ -563,9 +603,9 @@ export default function NuevaCotizacion({
                 </div>
 
                 <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="flex items-center gap-3">
-                            <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-lg">
                                 <ClipboardList className="size-5" />
                             </div>
                             <div className="min-w-0">
@@ -579,7 +619,7 @@ export default function NuevaCotizacion({
                             </div>
                         </div>
 
-                        <div className="bg-muted/40 space-y-2 rounded-[12px] p-4 text-[13px]">
+                        <div className="bg-muted/40 space-y-2 rounded-2xl p-4 text-[13px]">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
                                     Gravado
@@ -628,7 +668,7 @@ export default function NuevaCotizacion({
                                                 opcion,
                                             )
                                         }
-                                        className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-bold ${form.data.condicion_pago_propuesta === opcion ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                        className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${form.data.condicion_pago_propuesta === opcion ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
                                     >
                                         {opcion}
                                     </button>
@@ -656,20 +696,16 @@ export default function NuevaCotizacion({
                                         e.target.value,
                                     )
                                 }
-                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-[9px] border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
+                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[70px] w-full rounded-lg border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
                             />
                         </div>
 
                         <Button
                             type="submit"
                             loading={form.processing}
-                            className="bg-primary hover:bg-primary/90 h-11 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-11 rounded-lg px-4 text-[13px] font-bold text-white shadow-none"
                         >
-                            {form.processing ? (
-                                <Cargando className="size-4" />
-                            ) : (
-                                <FileText className="size-4" />
-                            )}
+                            <FileText className="size-4" />
                             Guardar cotización
                         </Button>
                         <Button
@@ -678,7 +714,7 @@ export default function NuevaCotizacion({
                             onClick={() =>
                                 router.visit(cotizaciones.index.url(teamSlug))
                             }
-                            className="border-border bg-card text-foreground/80 h-10 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground/80 h-10 rounded-lg shadow-none"
                         >
                             Cancelar
                         </Button>

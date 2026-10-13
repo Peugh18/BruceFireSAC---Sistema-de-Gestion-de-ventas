@@ -73,7 +73,7 @@ export default function DeficienciaSuelta({
             <button
                 type="button"
                 onClick={() => setAbierto(true)}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-amber-500 px-3 text-xs font-bold text-amber-800 dark:text-amber-300"
+                className="text-warning-strong inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-amber-500 px-3 text-xs font-bold dark:text-amber-300"
             >
                 <AlertTriangle className="h-4 w-4" />
                 Registrar una deficiencia
@@ -89,7 +89,7 @@ export default function DeficienciaSuelta({
             <h3 className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
                 Nueva deficiencia
             </h3>
-            <label className="block text-[11px] font-semibold">
+            <label className="block text-xs font-semibold">
                 Extintor
                 <NativeSelect
                     value={form.data.equipment_id}
@@ -105,7 +105,7 @@ export default function DeficienciaSuelta({
                     ))}
                 </NativeSelect>
             </label>
-            <label className="block text-[11px] font-semibold">
+            <label className="block text-xs font-semibold">
                 Componente *
                 <input
                     required
@@ -115,7 +115,7 @@ export default function DeficienciaSuelta({
                     className={campo}
                 />
             </label>
-            <label className="block text-[11px] font-semibold">
+            <label className="block text-xs font-semibold">
                 ¿Qué le pasa? *
                 <input
                     required
@@ -125,7 +125,7 @@ export default function DeficienciaSuelta({
                     className={campo}
                 />
             </label>
-            <label className="block text-[11px] font-semibold">
+            <label className="block text-xs font-semibold">
                 Qué se recomienda
                 <input
                     value={form.data.accion_recomendada}
@@ -135,7 +135,7 @@ export default function DeficienciaSuelta({
                     className={campo}
                 />
             </label>
-            <label className="block text-[11px] font-semibold">
+            <label className="block text-xs font-semibold">
                 Repuesto sugerido
                 <input
                     value={form.data.repuesto_sugerido}
@@ -163,14 +163,14 @@ export default function DeficienciaSuelta({
                     etiqueta="Tomar foto *"
                 />
                 {form.data.foto && (
-                    <span className="text-[11px] text-neutral-700 dark:text-neutral-300">
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">
                         {form.data.foto.name}
                     </span>
                 )}
             </div>
             {Object.values(form.errors)[0] && (
                 <p
-                    className="text-[11px] font-semibold text-red-600"
+                    className="text-destructive-strong text-xs font-semibold"
                     role="alert"
                 >
                     {Object.values(form.errors)[0]}

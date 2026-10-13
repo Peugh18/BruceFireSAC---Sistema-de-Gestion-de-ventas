@@ -28,3 +28,14 @@
 - En **Stock** cada producto muestra sus lotes; en **Inicio** ves los lotes vencidos o que vencen en 60 días.
 - Un lote vencido se da de baja en **Ajustes**: elige el producto y el lote.
 - Si te equivocaste en el vencimiento, corrígelo editando la recepción.
+
+## Guía de remisión
+
+- **Guías de remisión**: arma la guía de un traslado. Transporte privado: vehículo y conductor de la lista; público: RUC y razón social del transportista. El peso debe ser mayor que cero.
+
+## Errores comunes
+
+- «No hay suficiente stock»: no se traslada, ajusta ni da de baja más de lo que hay en tu almacén.
+- «El código … no está registrado»: pide al Gerente que lo agregue al producto.
+- Una serie de fábrica repetida en la misma recepción se rechaza: revisa que cada unidad tenga su propia serie.
+- Un ajuste necesita motivo de al menos 10 caracteres.

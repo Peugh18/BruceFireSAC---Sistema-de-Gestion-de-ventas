@@ -107,7 +107,7 @@ const ESLABONES_MAP: Record<
     recojo_campo: {
         label: 'Recojo en Campo',
         icon: Truck,
-        color: 'text-sky-700 dark:text-sky-400 bg-sky-500/10',
+        color: 'text-foreground  bg-muted',
     },
     recepcion_planta: {
         label: 'Recepción en Planta',
@@ -127,7 +127,7 @@ const ESLABONES_MAP: Record<
     inspeccion_campo: {
         label: 'Inspección en Sitio',
         icon: CheckCircle2,
-        color: 'text-sky-700 dark:text-sky-400 bg-sky-500/10',
+        color: 'text-foreground  bg-muted',
     },
     entrega_campo: {
         label: 'Entrega al Cliente',
@@ -205,22 +205,22 @@ export default function EntregaShow({
                 >
                     Guía de remisión
                 </Link>
-                <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
+                <span className="text-foreground font-mono text-xs font-black">
                     {order.codigo}
                 </span>
             </div>
 
             {flash?.success && (
-                <div className="text-success-strong mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
+                <div className="text-success-strong mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
                     {flash.success}
                 </div>
             )}
 
             {/* Header Data Card (§22.3) */}
-            <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
                 <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
                     <div>
-                        <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
+                        <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
                             Cliente Receptor
                         </span>
                         <h1 className="text-foreground text-base leading-snug font-black">
@@ -233,7 +233,7 @@ export default function EntregaShow({
                         )}
                     </div>
                     <span
-                        className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${
+                        className={`rounded-full border px-2.5 py-1 text-xs font-black ${
                             isCerrada
                                 ? 'border-border bg-muted text-muted-foreground'
                                 : 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
@@ -252,7 +252,7 @@ export default function EntregaShow({
 
                 <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2">
-                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-700 dark:text-sky-400" />
+                        <MapPin className="text-foreground mt-0.5 size-4 shrink-0" />
                         <div>
                             <span className="text-foreground font-semibold">
                                 Lugar de Entrega:{' '}
@@ -275,7 +275,7 @@ export default function EntregaShow({
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -294,7 +294,7 @@ export default function EntregaShow({
                             })}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-sky-500/20 bg-sky-500/10 text-xs font-black text-sky-700 shadow-2xs transition-all hover:bg-sky-500/10 dark:text-sky-400"
+                            className="border-border bg-muted text-foreground hover:bg-muted flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border text-xs font-black shadow-2xs transition-all"
                         >
                             <FileText className="size-4" />
                             <span>
@@ -326,15 +326,15 @@ export default function EntregaShow({
                 }
 
                 return (
-                    <div className="mb-5 rounded-[14px] border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
-                        <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
-                            <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
+                    <div className="border-border bg-muted mb-5 rounded-2xl border p-4">
+                        <div className="text-foreground flex items-center gap-2 text-xs font-bold">
+                            <MessageSquare className="text-foreground size-4" />
                             <span>Indicaciones de Ventas y Coordinación</span>
                         </div>
 
                         {order.observaciones && (
-                            <p className="mt-2 text-xs text-blue-800 dark:text-blue-200">
-                                <span className="font-semibold text-blue-950 dark:text-blue-100">
+                            <p className="text-foreground mt-2 text-xs">
+                                <span className="text-foreground font-semibold">
                                     Observación inicial:{' '}
                                 </span>
                                 {order.observaciones}
@@ -343,20 +343,20 @@ export default function EntregaShow({
 
                         {notasVendedor.length > 0 && (
                             <div className="mt-3 space-y-2">
-                                <span className="text-[11px] font-bold text-blue-900/70 uppercase dark:text-blue-300/70">
+                                <span className="text-foreground text-xs font-bold uppercase">
                                     Notas de Ventas:
                                 </span>
                                 {notasVendedor.map((n) => (
                                     <div
                                         key={n.id}
-                                        className="rounded-xl border border-blue-100 bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:border-blue-800/40 dark:bg-neutral-900/80 dark:text-neutral-200"
+                                        className="border-border rounded-xl border bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:bg-neutral-900/80 dark:text-neutral-200"
                                     >
                                         <p className="font-medium">
                                             {n.payload?.mensaje ||
                                                 n.payload?.descripcion ||
                                                 JSON.stringify(n.payload)}
                                         </p>
-                                        <span className="mt-1 block text-[10.5px] text-neutral-400">
+                                        <span className="mt-1 block text-xs text-neutral-400">
                                             {n.created_at
                                                 ? new Date(
                                                       n.created_at,
@@ -372,9 +372,9 @@ export default function EntregaShow({
             })()}
 
             {/* Custody Chain Trail (§22.4, §85.6.3) */}
-            <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
                 <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                    <Truck className="size-4 text-sky-700 dark:text-sky-400" />
+                    <Truck className="text-foreground size-4" />
                     Cadena de Custodia del Servicio
                 </h2>
 
@@ -404,7 +404,7 @@ export default function EntregaShow({
                                             {meta.label}
                                         </span>
                                         {evt.fecha && (
-                                            <span className="text-muted-foreground font-mono text-[10px]">
+                                            <span className="text-muted-foreground font-mono text-xs">
                                                 {new Date(
                                                     evt.fecha,
                                                 ).toLocaleDateString('es-PE', {
@@ -416,7 +416,7 @@ export default function EntregaShow({
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                    <p className="text-muted-foreground mt-0.5 text-xs">
                                         Responsable:{' '}
                                         <span className="text-foreground font-semibold">
                                             {evt.responsable}
@@ -430,7 +430,7 @@ export default function EntregaShow({
             </div>
 
             {/* Equipments Table/Cards (§23) */}
-            <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
                 <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                     <Flame className="text-warning-strong size-4" />
                     {entregaRealizada
@@ -443,7 +443,7 @@ export default function EntregaShow({
                     {order.equipments.map((eq, _idx) => (
                         <div
                             key={eq.id}
-                            className="border-border bg-muted/40 flex items-center justify-between rounded-[8px] border p-2.5 text-xs"
+                            className="border-border bg-muted/40 flex items-center justify-between rounded-lg border p-2.5 text-xs"
                         >
                             <div>
                                 <div className="flex items-center gap-2">
@@ -452,21 +452,21 @@ export default function EntregaShow({
                                             current_team: teamSlug,
                                             equipment: eq.id,
                                         })}
-                                        className="font-mono font-black text-sky-700 underline dark:text-sky-400"
+                                        className="text-foreground font-mono font-black underline"
                                     >
                                         {eq.numero_serie}
                                     </Link>
-                                    <span className="py-0.2 border-border bg-card rounded border px-1.5 text-[9.5px] font-bold">
+                                    <span className="py-0.2 border-border bg-card rounded border px-1.5 text-xs font-bold">
                                         {eq.tipo_agente} {eq.capacidad}
                                     </span>
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[10.5px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     {eq.marca || 'Bruce Fire'} •{' '}
                                     {eq.ubicacion_actual || 'Sede cliente'}
                                 </p>
                             </div>
                             <span
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                className={`rounded-full px-2 py-0.5 text-xs font-bold ${
                                     eq.checklists?.[0]?.resultado_general ===
                                     'conforme'
                                         ? 'text-success-strong bg-emerald-500/10'
@@ -535,12 +535,12 @@ export default function EntregaShow({
 
             {/* Delivery Confirmation Form (§22.3, §85.6.2) */}
             {!isCerrada && !entregaRealizada && (
-                <div className="bg-card rounded-[14px] border border-sky-500/20 p-4 shadow-sm">
-                    <h2 className="mb-1 flex items-center gap-2 text-sm font-black text-sky-700 dark:text-sky-400">
-                        <UserCheck className="size-4 text-sky-700 dark:text-sky-400" />
+                <div className="bg-card border-border rounded-2xl border p-4 shadow-sm">
+                    <h2 className="text-foreground mb-1 flex items-center gap-2 text-sm font-black">
+                        <UserCheck className="text-foreground size-4" />
                         Confirmar Entrega y Acta de Conformidad
                     </h2>
-                    <p className="text-muted-foreground mb-4 text-[11px]">
+                    <p className="text-muted-foreground mb-4 text-xs">
                         Cierre final del servicio en sitio con firma/conformidad
                         del receptor.
                     </p>
@@ -548,7 +548,7 @@ export default function EntregaShow({
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                             <div>
-                                <label className="text-foreground mb-1 block text-[11px] font-bold">
+                                <label className="text-foreground mb-1 block text-xs font-bold">
                                     Nombre del Receptor / Encargado en Sede{' '}
                                     <span className="text-red-500">*</span>
                                 </label>
@@ -564,17 +564,17 @@ export default function EntregaShow({
                                         )
                                     }
                                     placeholder="Nombre de quien recibe los extintores"
-                                    className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
+                                    className="border-border bg-card w-full rounded-lg border p-2 text-xs"
                                 />
                                 {form.errors.receptor_nombre && (
-                                    <p className="mt-0.5 text-[10px] text-red-500">
+                                    <p className="mt-0.5 text-xs text-red-500">
                                         {form.errors.receptor_nombre}
                                     </p>
                                 )}
                             </div>
 
                             <div>
-                                <label className="text-foreground mb-1 block text-[11px] font-bold">
+                                <label className="text-foreground mb-1 block text-xs font-bold">
                                     DNI / Cargo del Receptor
                                 </label>
                                 <input
@@ -588,13 +588,13 @@ export default function EntregaShow({
                                         )
                                     }
                                     placeholder="ej. DNI 45892147 / Jefe de Almacén"
-                                    className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
+                                    className="border-border bg-card w-full rounded-lg border p-2 text-xs"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="text-foreground mb-1 block text-[11px] font-bold">
+                            <label className="text-foreground mb-1 block text-xs font-bold">
                                 Observaciones de Entrega
                             </label>
                             <textarea
@@ -608,12 +608,12 @@ export default function EntregaShow({
                                     )
                                 }
                                 placeholder="Notas de colocación, tarjetas selladas entregadas..."
-                                className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
+                                className="border-border bg-card w-full rounded-lg border p-2 text-xs"
                             />
                         </div>
 
                         {/* Checkbox de Conformidad en Sitio (§85.6.2) */}
-                        <div className="rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3">
+                        <div className="border-border bg-muted rounded-lg border p-3">
                             <label className="flex cursor-pointer items-start gap-2.5">
                                 <input
                                     type="checkbox"
@@ -625,9 +625,9 @@ export default function EntregaShow({
                                             e.target.checked,
                                         )
                                     }
-                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-700 dark:text-sky-400"
+                                    className="border-border text-foreground mt-0.5 size-4 rounded"
                                 />
-                                <span className="text-xs leading-tight font-semibold text-sky-700 dark:text-sky-400">
+                                <span className="text-foreground text-xs leading-tight font-semibold">
                                     Conformidad en sitio: El receptor declara
                                     recibir los extintores detallados
                                     debidamente inspeccionados, cargados y
@@ -635,7 +635,7 @@ export default function EntregaShow({
                                 </span>
                             </label>
                             {form.errors.conformidad_aceptada && (
-                                <p className="mt-1 text-[10px] text-red-500">
+                                <p className="mt-1 text-xs text-red-500">
                                     {form.errors.conformidad_aceptada}
                                 </p>
                             )}
@@ -664,7 +664,7 @@ export default function EntregaShow({
                                         e.target.checked,
                                     )
                                 }
-                                className="size-4 rounded border-sky-500/20 text-sky-700 dark:text-sky-400"
+                                className="border-border text-foreground size-4 rounded"
                             />
                             <span>
                                 Cerrar la Orden de Servicio definitivamente
@@ -675,7 +675,7 @@ export default function EntregaShow({
                         <button
                             type="submit"
                             disabled={form.processing || !form.data.firma}
-                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-700 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="bg-primary hover:bg-primary/90 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg text-xs font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
                             <span>
@@ -686,7 +686,7 @@ export default function EntregaShow({
                         </button>
                         {!form.data.conformidad_aceptada ? (
                             <p
-                                className="text-center text-[11px] font-semibold text-red-500"
+                                className="text-center text-xs font-semibold text-red-500"
                                 role="alert"
                             >
                                 Marca la conformidad del receptor antes de

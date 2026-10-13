@@ -74,7 +74,7 @@ export default function ErrorPage({ status }: Props) {
     const conSesion = Boolean(auth?.user);
     const rol = auth?.roles?.map((nombre) => ROLES[nombre]).find(Boolean);
     const botonPrincipal =
-        'inline-flex h-10 items-center justify-center gap-2 rounded-[10px] px-5 text-[13px] font-bold transition-transform duration-150 ease-out active:scale-[0.97]';
+        'inline-flex h-10 items-center justify-center gap-2 rounded-lg px-5 text-[13px] font-bold transition-transform duration-150 ease-out active:scale-[0.97]';
 
     return (
         <>
@@ -150,7 +150,7 @@ export default function ErrorPage({ status }: Props) {
                     </div>
                 </div>
 
-                <p className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[0.06em] uppercase">
+                <p className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs tracking-[0.06em] uppercase">
                     Error {status}
                 </p>
             </main>

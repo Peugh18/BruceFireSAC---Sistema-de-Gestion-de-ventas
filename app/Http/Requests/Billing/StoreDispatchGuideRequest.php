@@ -22,6 +22,13 @@ class StoreDispatchGuideRequest extends FormRequest
             'destinatario_num_doc' => preg_replace('/[\s-]/', '', (string) $this->input('destinatario_num_doc')),
             'transportista_ruc' => DatosPeru::digitos($this->input('transportista_ruc')),
         ]);
+
+        // Lo que quedó escrito de la otra modalidad se descarta: no debe bloquear el envío.
+        if ($this->input('modalidad') === '02') {
+            $this->merge(['transportista_ruc' => null, 'transportista_razon' => null]);
+        } elseif ($this->input('modalidad') === '01') {
+            $this->merge(['transport_vehicle_id' => null, 'driver_id' => null]);
+        }
     }
 
     /**

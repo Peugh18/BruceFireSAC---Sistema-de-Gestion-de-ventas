@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import { Search, MapPin, Phone, Truck, ArrowRight, Car } from 'lucide-react';
@@ -70,14 +71,14 @@ export default function TecnicoCampoDashboard({
 
     const [search, setSearch] = useState(filters.search || '');
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             TecnicoCampoRoutes.dashboard.url({ current_team: teamSlug }),
             { ...filters, search: search.trim() },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleStatusTab = (tab: string) => {
         router.get(
@@ -221,15 +222,9 @@ export default function TecnicoCampoDashboard({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar cliente, dirección o código de orden..."
-                        className="bg-card focus:ring-primary w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card focus:ring-primary min-h-12 w-full rounded-xl border border-neutral-200 py-2.5 pr-4 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
                     />
-                    <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
-                    <button
-                        type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
-                    >
-                        Buscar
-                    </button>
+                    <Search className="absolute top-4 left-3 h-4 w-4 text-neutral-400" />
                 </form>
 
                 {/* Orders Cards List */}
@@ -257,13 +252,13 @@ export default function TecnicoCampoDashboard({
                                                     {order.codigo}
                                                 </span>
                                                 <span
-                                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                    className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         isFinished
-                                                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                                            ? 'text-success-strong bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300'
                                                             : order.estado ===
                                                                 'en_proceso'
                                                               ? 'bg-primary/10 text-primary-strong'
-                                                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                                              : 'text-warning-strong bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300'
                                                     }`}
                                                 >
                                                     {etiquetaEstadoOrden(
@@ -296,14 +291,14 @@ export default function TecnicoCampoDashboard({
                                                 <Phone className="text-success-strong h-3.5 w-3.5 flex-shrink-0" />
                                                 <a
                                                     href={`tel:${order.telefono}`}
-                                                    className="text-primary-strong font-medium hover:underline"
+                                                    className="text-primary-strong inline-flex min-h-11 items-center font-medium hover:underline"
                                                 >
                                                     {order.telefono}
                                                 </a>
                                             </div>
                                         )}
                                         {order.vehiculo && (
-                                            <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                                            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
                                                 <Car className="h-3 w-3 text-neutral-400" />
                                                 <span>
                                                     Vehículo: {order.vehiculo}
@@ -314,7 +309,7 @@ export default function TecnicoCampoDashboard({
 
                                     {/* Quick Touch Action Button */}
                                     <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-700/60">
-                                        <span className="text-[11px] text-neutral-500">
+                                        <span className="text-xs text-neutral-500">
                                             {order.equipos_count > 0
                                                 ? `${order.equipos_count} equipo(s)`
                                                 : 'Sin equipos registrados'}
@@ -322,7 +317,7 @@ export default function TecnicoCampoDashboard({
 
                                         <Link
                                             href={getActionRoute(order)}
-                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-transform active:scale-95"
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex min-h-11 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition-transform active:scale-95"
                                         >
                                             <span>{getActionLabel(order)}</span>
                                             <ArrowRight className="h-3.5 w-3.5" />

@@ -118,8 +118,7 @@ function getTipoMovimientoBadge(tipo: string): {
         case 'salida_servicio':
             return {
                 label: 'Consumo Taller',
-                className:
-                    'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+                className: 'bg-muted text-foreground  border-border',
             };
         case 'ajuste':
             return {
@@ -130,8 +129,7 @@ function getTipoMovimientoBadge(tipo: string): {
         case 'traslado':
             return {
                 label: 'Traslado',
-                className:
-                    'bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20',
+                className: 'bg-muted text-foreground  border-border',
             };
         default:
             return {
@@ -162,7 +160,7 @@ export default function AlmacenDashboard({
             <div className="flex flex-col gap-6">
                 {/* Banner de alerta si hay productos bajo el stock mínimo de almacén */}
                 {productos_bajo_minimo.length > 0 && (
-                    <div className="flex items-center gap-3 rounded-[14px] bg-gradient-to-r from-[#B9151A] to-[#E31E24] px-5 py-3.5 text-white shadow-xs">
+                    <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#B9151A] to-[#E31E24] px-5 py-3.5 text-white shadow-xs">
                         <AlertTriangle className="size-5 shrink-0 text-white" />
                         <span className="flex-1 text-[13px]">
                             Hay{' '}
@@ -174,7 +172,7 @@ export default function AlmacenDashboard({
                             href={StockRoutes.index.url({
                                 current_team: teamSlug,
                             })}
-                            className="inline-flex items-center gap-1.5 rounded-[8px] bg-white/20 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/30"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/30"
                         >
                             <span>Ver stock</span>
                             <ArrowRight className="size-3.5" />
@@ -184,7 +182,7 @@ export default function AlmacenDashboard({
 
                 {/* EPP y consumibles: lotes vencidos o por vencer (60 días) */}
                 {lotes_por_vencer.length > 0 && (
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="flex items-center justify-between">
                             <span className="text-foreground text-[13.5px] font-bold">
                                 Lotes vencidos o por vencer
@@ -198,7 +196,7 @@ export default function AlmacenDashboard({
                                 Dar de baja un vencido
                             </Link>
                         </div>
-                        <p className="text-muted-foreground mt-1 text-[11.5px]">
+                        <p className="text-muted-foreground mt-1 text-xs">
                             Los vencidos no se venden; los próximos salen
                             primero en cada venta.
                         </p>
@@ -212,13 +210,13 @@ export default function AlmacenDashboard({
                                         <div className="text-foreground font-bold">
                                             {lote.producto}
                                         </div>
-                                        <div className="text-muted-foreground text-[11px]">
+                                        <div className="text-muted-foreground text-xs">
                                             Lote {lote.lote} · {lote.saldo}{' '}
                                             {lote.unidad_medida} · {lote.sede}
                                         </div>
                                     </div>
                                     <span
-                                        className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${
+                                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${
                                             lote.vencido
                                                 ? 'bg-destructive/10 text-destructive-strong'
                                                 : 'text-warning-strong bg-amber-500/10'
@@ -239,12 +237,12 @@ export default function AlmacenDashboard({
                 {/* 3-Column Top Grid: Unidades en Stock, Recepciones de Hoy, Alerta Reabastecimiento */}
                 <div className="grid gap-4 md:grid-cols-3">
                     {/* 1. Unidades Disponibles */}
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="flex items-center justify-between">
                             <span className="text-foreground text-[13.5px] font-bold">
                                 Unidades disponibles
                             </span>
-                            <div className="bg-muted text-foreground flex size-7 items-center justify-center rounded-[8px]">
+                            <div className="bg-muted text-foreground flex size-7 items-center justify-center rounded-lg">
                                 <Boxes className="size-4" />
                             </div>
                         </div>
@@ -253,13 +251,13 @@ export default function AlmacenDashboard({
                             <div className="text-foreground font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
                                 {formatNumber(stock.total_disponible)}
                             </div>
-                            <div className="text-muted-foreground mt-2 text-[11.5px]">
+                            <div className="text-muted-foreground mt-2 text-xs">
                                 Unidades físicas serializadas en almacenes
                             </div>
                         </div>
 
                         <div className="border-border mt-4 border-t pt-3">
-                            <div className="text-muted-foreground text-[11px] font-bold tracking-wider uppercase">
+                            <div className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
                                 Por almacén
                             </div>
                             <div className="mt-2 flex flex-col gap-1.5">
@@ -284,12 +282,12 @@ export default function AlmacenDashboard({
                     </Card>
 
                     {/* 2. Recepciones de Hoy */}
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="flex items-center justify-between">
                             <span className="text-foreground text-[13.5px] font-bold">
                                 Recepciones de hoy
                             </span>
-                            <div className="text-success-strong flex size-7 items-center justify-center rounded-[8px] border border-emerald-500/20 bg-emerald-500/10">
+                            <div className="text-success-strong flex size-7 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10">
                                 <Truck className="size-4" />
                             </div>
                         </div>
@@ -298,8 +296,8 @@ export default function AlmacenDashboard({
                             <div className="text-foreground font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
                                 {formatNumber(recepciones_hoy)}
                             </div>
-                            <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-[11.5px]">
-                                <span className="text-success-strong inline-flex items-center gap-1 rounded-[6px] bg-emerald-500/10 px-2 py-0.5 font-bold">
+                            <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs">
+                                <span className="text-success-strong inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 font-bold">
                                     <Calendar className="size-3" />
                                     <span>Hoy</span>
                                 </span>
@@ -321,12 +319,12 @@ export default function AlmacenDashboard({
                     </Card>
 
                     {/* 3. Reabastecimiento de Almacén */}
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="flex items-center justify-between">
                             <span className="text-foreground text-[13.5px] font-bold">
                                 Bajo stock mínimo
                             </span>
-                            <div className="bg-destructive/10 text-primary-strong flex size-7 items-center justify-center rounded-[8px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-7 items-center justify-center rounded-lg">
                                 <TrendingDown className="size-4" />
                             </div>
                         </div>
@@ -335,7 +333,7 @@ export default function AlmacenDashboard({
                             <div className="text-primary-strong font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
                                 {formatNumber(productos_bajo_minimo.length)}
                             </div>
-                            <div className="text-muted-foreground mt-2 text-[11.5px]">
+                            <div className="text-muted-foreground mt-2 text-xs">
                                 Productos que requieren reposición
                             </div>
                         </div>
@@ -358,7 +356,7 @@ export default function AlmacenDashboard({
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Movimientos Recientes del Kardex (2 cols) */}
                     <div className="lg:col-span-2">
-                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                             <div className="border-border flex items-center justify-between border-b pb-4">
                                 <div className="flex items-center gap-2">
                                     <History className="text-muted-foreground size-4" />
@@ -366,7 +364,7 @@ export default function AlmacenDashboard({
                                         Últimos 10 movimientos del Kardex
                                     </span>
                                 </div>
-                                <span className="text-muted-foreground text-[11.5px] font-medium">
+                                <span className="text-muted-foreground text-xs font-medium">
                                     Tiempo real
                                 </span>
                             </div>
@@ -389,7 +387,7 @@ export default function AlmacenDashboard({
                                             >
                                                 <div className="flex min-w-0 items-start gap-3">
                                                     <span
-                                                        className={`inline-flex shrink-0 items-center rounded-[6px] border px-2 py-0.5 text-[10.5px] font-bold ${badge.className}`}
+                                                        className={`inline-flex shrink-0 items-center rounded-md border px-2 py-0.5 text-xs font-bold ${badge.className}`}
                                                     >
                                                         {badge.label}
                                                     </span>
@@ -401,7 +399,7 @@ export default function AlmacenDashboard({
                                                                     .nombre
                                                             }
                                                         </div>
-                                                        <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-[11px]">
+                                                        <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
                                                             <span>
                                                                 Cód:{' '}
                                                                 {
@@ -427,20 +425,20 @@ export default function AlmacenDashboard({
                                                     </div>
                                                 </div>
 
-                                                <div className="flex shrink-0 items-center justify-between gap-1 text-[11.5px] sm:flex-col sm:items-end">
+                                                <div className="flex shrink-0 items-center justify-between gap-1 text-xs sm:flex-col sm:items-end">
                                                     <span className="text-foreground font-mono font-bold">
                                                         {Number(mov.cantidad) <
                                                         0
                                                             ? `${mov.cantidad}`
                                                             : `+${mov.cantidad}`}{' '}
-                                                        <span className="text-muted-foreground text-[10px] font-normal">
+                                                        <span className="text-muted-foreground text-xs font-normal">
                                                             {
                                                                 mov.producto
                                                                     .unidad_medida
                                                             }
                                                         </span>
                                                     </span>
-                                                    <div className="text-muted-foreground flex items-center gap-1 text-[10.5px]">
+                                                    <div className="text-muted-foreground flex items-center gap-1 text-xs">
                                                         {mov.usuario && (
                                                             <span className="flex items-center gap-0.5">
                                                                 <User className="size-3" />
@@ -465,12 +463,12 @@ export default function AlmacenDashboard({
 
                     {/* Lista detallada de productos bajo stock mínimo (1 col) */}
                     <div className="lg:col-span-1">
-                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                             <div className="border-border flex items-center justify-between border-b pb-4">
                                 <span className="text-foreground text-[14px] font-bold">
                                     Stock en el mínimo o por debajo
                                 </span>
-                                <span className="bg-destructive/10 text-primary-strong rounded-full px-2 py-0.5 text-[11px] font-bold">
+                                <span className="bg-destructive/10 text-primary-strong rounded-full px-2 py-0.5 text-xs font-bold">
                                     {productos_bajo_minimo.length}
                                 </span>
                             </div>
@@ -491,13 +489,13 @@ export default function AlmacenDashboard({
                                                 <span className="text-foreground max-w-[180px] truncate font-bold">
                                                     {prod.nombre}
                                                 </span>
-                                                <span className="text-primary-strong font-mono text-[11px] font-bold">
+                                                <span className="text-primary-strong font-mono text-xs font-bold">
                                                     {prod.diferencia > 0
                                                         ? `Faltan ${prod.diferencia}`
                                                         : 'En el mínimo'}
                                                 </span>
                                             </div>
-                                            <div className="text-muted-foreground mt-1 flex items-center justify-between text-[11px]">
+                                            <div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
                                                 <span>Cód: {prod.codigo}</span>
                                             </div>
                                             <ProgresoConMarcador

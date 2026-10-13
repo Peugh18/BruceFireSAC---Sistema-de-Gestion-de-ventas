@@ -86,6 +86,19 @@ test('la cotizacion abre taller antes de vender y repetir no duplica la orden', 
         ->and($quote->sale()->exists())->toBeFalse();
 });
 
+test('la lista de cotizaciones dice si puede ir al taller y cuál es su orden', function () {
+    [$user, $orden, $quote] = adicionalPendiente();
+    $orden->deficiencies()->delete();
+    $orden->delete();
+    $this->actingAs($user)->post(route('vendedor.cotizaciones.orden-taller', [$user->currentTeam, $quote]));
+    $nueva = $quote->serviceOrders()->first();
+
+    $this->get(route('vendedor.cotizaciones.index', [$user->currentTeam]))
+        ->assertInertia(fn ($page) => $page
+            ->where('quotes.data.0.tiene_servicio', true)
+            ->where('quotes.data.0.orden.codigo', $nueva->codigo));
+});
+
 test('convertir la cotizacion exige el adicional autorizado y no lo cobra de nuevo', function () {
     [$user, $order, $quote, $deficiency, $product] = adicionalPendiente();
     $this->actingAs($user)->post(route('vendedor.deficiencias.cotizar', [$user->currentTeam, $deficiency]), ['product_id' => $product->id, 'cantidad' => 1]);

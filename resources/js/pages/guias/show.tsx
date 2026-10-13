@@ -173,7 +173,7 @@ export default function GuiaShow({
                 </div>
 
                 {flash?.success ? (
-                    <p role="status" className="text-sm text-emerald-700">
+                    <p role="status" className="text-success-strong text-sm">
                         {flash.success}
                     </p>
                 ) : null}

@@ -77,7 +77,7 @@ export default function GuiasIndex({
                     con la guía lista para trasladar (CDR aceptado por SUNAT).
                 </p>
                 {flash?.success ? (
-                    <p role="status" className="text-sm text-emerald-700">
+                    <p role="status" className="text-success-strong text-sm">
                         {flash.success}
                     </p>
                 ) : null}

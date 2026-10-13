@@ -102,7 +102,7 @@ export default function ConversacionOrden({
                                 : 'border border-amber-200 bg-amber-50 text-neutral-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-neutral-100'
                         }`}
                     >
-                        <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] font-semibold">
+                        <div className="flex flex-wrap items-center justify-between gap-1 text-xs font-semibold">
                             <span>
                                 {evento.es_sistema
                                     ? evento.titulo
@@ -113,7 +113,7 @@ export default function ConversacionOrden({
                             </span>
                         </div>
                         {evento.equipo && (
-                            <span className="mt-1 inline-block rounded bg-neutral-200 px-1.5 py-0.5 font-mono text-[10px] dark:bg-neutral-700">
+                            <span className="mt-1 inline-block rounded bg-neutral-200 px-1.5 py-0.5 font-mono text-xs dark:bg-neutral-700">
                                 {evento.equipo}
                             </span>
                         )}
@@ -252,13 +252,13 @@ export default function ConversacionOrden({
                     </button>
                 </div>
                 {form.data.archivo && (
-                    <p className="text-[11px] text-neutral-600 dark:text-neutral-300">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-300">
                         Adjunto: {form.data.archivo.name}
                     </p>
                 )}
                 {(form.errors.mensaje || form.errors.archivo) && (
                     <p
-                        className="text-[11px] font-semibold text-red-600"
+                        className="text-destructive-strong text-xs font-semibold"
                         role="alert"
                     >
                         {form.errors.mensaje ?? form.errors.archivo}

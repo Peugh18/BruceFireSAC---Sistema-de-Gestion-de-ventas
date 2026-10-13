@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChispaRegistro;
 use App\Services\Chispa\ChispaAssistant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,5 +20,15 @@ class ChispaController extends Controller
         ]);
 
         return response()->json($chispa->responder($request->user(), $datos['mensajes'], $datos['pagina'] ?? null));
+    }
+
+    /** El usuario marca si la respuesta le sirvió (solo la suya). */
+    public function valorar(Request $request, ChispaRegistro $registro): JsonResponse
+    {
+        abort_unless($registro->user_id === $request->user()->id, 404);
+
+        $registro->update($request->validate(['util' => ['required', 'boolean']]));
+
+        return response()->json(['ok' => true]);
     }
 }

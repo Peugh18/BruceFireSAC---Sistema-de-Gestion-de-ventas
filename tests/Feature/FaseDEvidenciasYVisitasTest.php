@@ -16,8 +16,6 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-const FIRMA_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-
 function usuarioDeVisita(string $rol, Team $team, array $extra = []): User
 {
     $user = User::factory()->create(['current_team_id' => $team->id, ...$extra]);
@@ -208,6 +206,16 @@ test('T4 la instalacion exige escanear cada unidad vendida', function () {
     $this->actingAs($campo)->post(($this->url)('tecnico-campo.instalaciones.store'), $datos([$vendida->id]))
         ->assertSessionHasErrors('equipos');
     expect($this->orden->fresh()->estado)->toBe('recibido_planta');
+
+    $this->actingAs($campo)->post(($this->url)('tecnico-campo.instalaciones.store'), $datos([$vendida->id, $otra->id]))
+        ->assertSessionHasErrors('fotos');
+
+    foreach (['antes', 'despues'] as $etapa) {
+        Evidencia::factory()->create(['service_order_id' => $this->orden->id, 'etapa' => $etapa]);
+    }
+
+    $this->actingAs($campo)->post(($this->url)('tecnico-campo.instalaciones.store'), [...$datos([$vendida->id, $otra->id]), 'firma' => FIRMA_EN_BLANCO])
+        ->assertSessionHasErrors('firma');
 
     $this->actingAs($campo)->post(($this->url)('tecnico-campo.instalaciones.store'), $datos([$vendida->id, $otra->id]))
         ->assertSessionHasNoErrors();

@@ -70,7 +70,27 @@ class GuardarEvidencia
             throw ValidationException::withMessages(['firma' => 'La firma no es válida. Vuelve a firmar.']);
         }
 
+        if (! $this->tieneTrazo($imagen)) {
+            throw ValidationException::withMessages(['firma' => 'La firma está vacía. Pide al cliente que firme dentro del recuadro.']);
+        }
+
         return $this->crear($orden, 'firma', $etapa, $user, $png, 'image/png', 'png', "firma-{$etapa}.png");
+    }
+
+    /** Un recuadro en blanco (o un solo toque) no es una firma: exige un trazo mínimo. */
+    private function tieneTrazo(GdImage $imagen): bool
+    {
+        $tinta = 0;
+
+        for ($y = 0, $alto = imagesy($imagen); $y < $alto; $y++) {
+            for ($x = 0, $ancho = imagesx($imagen); $x < $ancho; $x++) {
+                if (((imagecolorat($imagen, $x, $y) >> 24) & 0x7F) < 64 && ++$tinta >= 40) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     protected function crear(

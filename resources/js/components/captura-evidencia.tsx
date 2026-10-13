@@ -116,7 +116,7 @@ export function GrabadoraAudio({ onAudio, archivo }: AudioProps) {
             </button>
             {error && (
                 <span
-                    className="text-[11px] font-semibold text-red-600"
+                    className="text-destructive-strong text-xs font-semibold"
                     role="alert"
                 >
                     {error}

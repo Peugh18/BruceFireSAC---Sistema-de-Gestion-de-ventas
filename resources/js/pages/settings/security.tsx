@@ -35,7 +35,7 @@ export default function Security(props: Props) {
                 {debeCambiar && (
                     <div
                         role="alert"
-                        className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-[10px] border p-3 text-xs font-semibold"
+                        className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-lg border p-3 text-xs font-semibold"
                     >
                         Tu contraseña es temporal: debes cambiarla antes de
                         continuar usando el sistema.

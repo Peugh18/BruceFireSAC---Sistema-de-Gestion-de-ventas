@@ -32,3 +32,20 @@
 - Para desactivar una sede, primero traslada su stock.
 - En **Productos**, marca **Lote y vencimiento** para los EPP que vencen, y en **Se compra por** indica la caja y cuántas trae (1 CAJA = 100). La unidad de venta puede ser **PR (par)** para guantes y botas.
 - Un cobro anulado ya no se borra: queda tachado en Cobranzas con quién lo anuló y por qué.
+
+## Notas por aprobar
+
+- **Notas por aprobar** (menú Finanzas): las notas de crédito y débito que piden los vendedores. **Aprobar** las emite y envía a SUNAT; **Rechazar** pide un motivo que ve el vendedor. Si no hay ninguna, la pantalla lo dice.
+- Una nota de crédito no puede acreditar más de lo que queda del comprobante. Si quien la pide es Gerente, sale directo sin aprobación.
+
+## Guías de remisión
+
+- **Guías de remisión**: ves las de todas las sedes. Transporte privado exige vehículo y conductor; el público exige RUC y razón social del transportista.
+
+## Lo que ve cada rol (para apoyar al equipo)
+
+- **Vendedor**: clientes, cotizaciones, ventas, facturación, cobranzas, caja, órdenes de servicio y alertas de su sede.
+- **Almacén**: recepciones, stock, kardex, ajustes, traslados, stickers y consulta rápida de su almacén.
+- **Técnico de Planta**: recepción de equipos, checklist, deficiencias y certificados del taller.
+- **Técnico de Campo**: recojos, inspecciones, mantenimiento, instalación y entregas con firma del cliente.
+- Tú, como Gerente, eres el único rol que ve **todas las sedes y todos los módulos**. Para saber cómo opera cada rol, mira los manuales de abajo.

@@ -114,8 +114,7 @@ function getBadgeConfig(
         case 'en_proceso':
             return {
                 label: 'En proceso',
-                badgeClass:
-                    'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+                badgeClass: 'bg-muted text-foreground  border border-border',
             };
         case 'completada':
             return {
@@ -229,7 +228,7 @@ export default function ServiceOrdersIndex({
                             aria-label="Nueva orden"
                             type="button"
                             onClick={() => setDialogOpen(true)}
-                            className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] px-3.5 text-[12.5px] font-bold text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-9 rounded-lg px-3.5 text-[12.5px] font-bold text-white shadow-none"
                         >
                             <Plus className="mr-1.5 size-4" />
                             <span>Nueva orden</span>
@@ -238,7 +237,7 @@ export default function ServiceOrdersIndex({
                 />
 
                 {/* Filter Tabs */}
-                <div className="bg-muted flex w-fit max-w-full overflow-x-auto rounded-[9px] p-[3px]">
+                <div className="bg-muted flex w-fit max-w-full overflow-x-auto rounded-lg p-[3px]">
                     {TABS.map((tab) => {
                         const active = currentEstado === tab.id;
                         return (
@@ -248,7 +247,7 @@ export default function ServiceOrdersIndex({
                                 type="button"
                                 aria-pressed={active}
                                 onClick={() => handleFilterChange(tab.id)}
-                                className={`cursor-pointer rounded-[7px] px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                className={`cursor-pointer rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
                                     active
                                         ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                                         : 'text-muted-foreground hover:text-foreground'
@@ -261,7 +260,7 @@ export default function ServiceOrdersIndex({
                 </div>
 
                 {/* Table Card */}
-                <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                     <div className="overflow-x-auto">
                         <Table className="w-full border-collapse text-[12.5px]">
                             <TableHeader>
@@ -304,7 +303,7 @@ export default function ServiceOrdersIndex({
                                                     No se encontraron órdenes de
                                                     servicio
                                                 </p>
-                                                <p className="text-muted-foreground max-w-sm text-[11px]">
+                                                <p className="text-muted-foreground max-w-sm text-xs">
                                                     {currentEstado
                                                         ? 'No hay registros que coincidan con el estado seleccionado.'
                                                         : 'Aún no se han emitido órdenes de servicio en esta sede.'}
@@ -337,7 +336,7 @@ export default function ServiceOrdersIndex({
                                                         onClick={() =>
                                                             setDialogOpen(true)
                                                         }
-                                                        className="bg-primary hover:bg-primary/90 mt-2 h-8 gap-1.5 rounded-[8px] text-xs font-bold text-white shadow-xs"
+                                                        className="bg-primary hover:bg-primary/90 mt-2 h-8 gap-1.5 rounded-lg text-xs font-bold text-white shadow-xs"
                                                     >
                                                         <Plus className="size-3.5" />
                                                         <span>
@@ -390,7 +389,7 @@ export default function ServiceOrdersIndex({
                                                     <span className="line-clamp-1">
                                                         {order.tipo_servicio}
                                                     </span>
-                                                    <span className="text-muted-foreground font-mono text-[10px]">
+                                                    <span className="text-muted-foreground font-mono text-xs">
                                                         {fechaCorta(
                                                             order.fecha,
                                                         )}
@@ -403,7 +402,7 @@ export default function ServiceOrdersIndex({
                                                             'Por asignar'}
                                                     </div>
                                                     {order.departamento_tecnico && (
-                                                        <div className="text-muted-foreground font-mono text-[10px] capitalize">
+                                                        <div className="text-muted-foreground font-mono text-xs capitalize">
                                                             (
                                                             {
                                                                 order.departamento_tecnico
@@ -435,7 +434,7 @@ export default function ServiceOrdersIndex({
 
                                                 <TableCell className="px-2.5 py-3.5">
                                                     <Badge
-                                                        className={`rounded-full border-none px-2.5 py-0.5 text-[10.5px] font-bold ${badgeConfig.badgeClass}`}
+                                                        className={`rounded-full border-none px-2.5 py-0.5 text-xs font-bold ${badgeConfig.badgeClass}`}
                                                     >
                                                         {badgeConfig.label}
                                                     </Badge>
@@ -446,7 +445,7 @@ export default function ServiceOrdersIndex({
                                                         asChild
                                                         variant="outline"
                                                         size="icon"
-                                                        className="border-border bg-card text-foreground/80 hover:bg-background size-7 rounded-[7px] shadow-none"
+                                                        className="border-border bg-card text-foreground/80 hover:bg-background size-7 rounded-md shadow-none"
                                                     >
                                                         <Link
                                                             href={ServiceOrderController.show.url(
@@ -473,7 +472,7 @@ export default function ServiceOrdersIndex({
 
                     {/* Pagination */}
                     {orders.links && orders.links.length > 3 && (
-                        <div className="border-border text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[11.5px]">
+                        <div className="border-border text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs">
                             <span>
                                 Mostrando {orders.from ?? 0}-{orders.to ?? 0} de{' '}
                                 {orders.total} órdenes
@@ -485,7 +484,7 @@ export default function ServiceOrdersIndex({
                                             key={idx}
                                             href={link.url}
                                             preserveScroll
-                                            className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] px-2 font-mono text-xs ${
+                                            className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-md px-2 font-mono text-xs ${
                                                 link.active
                                                     ? 'bg-foreground text-background font-bold shadow-xs'
                                                     : 'border-border bg-card text-foreground/80 hover:bg-background border'
@@ -497,7 +496,7 @@ export default function ServiceOrdersIndex({
                                     ) : (
                                         <span
                                             key={idx}
-                                            className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-[6px] border border-transparent px-2 font-mono text-xs opacity-60"
+                                            className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-md border border-transparent px-2 font-mono text-xs opacity-60"
                                             dangerouslySetInnerHTML={{
                                                 __html: link.label,
                                             }}
@@ -512,10 +511,10 @@ export default function ServiceOrdersIndex({
 
             {/* Dialog: Nueva Orden de Servicio */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="border-border bg-card max-h-[90vh] overflow-y-auto rounded-[16px] sm:max-w-xl">
+                <DialogContent className="border-border bg-card max-h-[90vh] overflow-y-auto rounded-2xl sm:max-w-xl">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
-                            <div className="bg-destructive/10 text-primary-strong flex size-9 items-center justify-center rounded-[10px]">
+                            <div className="bg-destructive/10 text-primary-strong flex size-9 items-center justify-center rounded-lg">
                                 <Wrench className="size-5" />
                             </div>
                             <div>
@@ -551,7 +550,7 @@ export default function ServiceOrdersIndex({
                                 Tipo de servicio *
                             </Label>
                             {createForm.data.tipo_servicio ? (
-                                <div className="border-primary/40 bg-destructive/5 mt-1 flex items-center justify-between rounded-[9px] border px-3 py-2">
+                                <div className="border-primary/40 bg-destructive/5 mt-1 flex items-center justify-between rounded-lg border px-3 py-2">
                                     <span className="text-foreground text-[13px] font-bold">
                                         {createForm.data.tipo_servicio}
                                     </span>
@@ -564,7 +563,7 @@ export default function ServiceOrdersIndex({
                                                 tipo_servicio: '',
                                             }))
                                         }
-                                        className="text-muted-foreground hover:text-foreground text-[11.5px] font-semibold"
+                                        className="text-muted-foreground hover:text-foreground text-xs font-semibold"
                                     >
                                         Cambiar
                                     </button>
@@ -602,7 +601,7 @@ export default function ServiceOrdersIndex({
                                                             }),
                                                         )
                                                     }
-                                                    className="border-border bg-card text-foreground/80 hover:border-primary/40 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                                                    className="border-border bg-card text-foreground/80 hover:border-primary/40 rounded-full border px-2.5 py-1 text-xs font-semibold"
                                                 >
                                                     {servicio.nombre}
                                                 </button>
@@ -616,7 +615,7 @@ export default function ServiceOrdersIndex({
                             {createForm.errors.service_id && (
                                 <p
                                     role="alert"
-                                    className="text-destructive-strong mt-1 text-[11px]"
+                                    className="text-destructive-strong mt-1 text-xs"
                                 >
                                     {createForm.errors.service_id}
                                 </p>
@@ -628,7 +627,7 @@ export default function ServiceOrdersIndex({
                                 <Label className="text-foreground text-sm font-medium">
                                     Área
                                 </Label>
-                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                     {(
                                         [
                                             ['planta', 'Planta (taller)'],
@@ -645,7 +644,7 @@ export default function ServiceOrdersIndex({
                                                     tecnico_id: '',
                                                 }))
                                             }
-                                            className={`flex-1 rounded-[7px] px-2 py-1.5 text-xs font-bold transition-all ${createForm.data.departamento_tecnico === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex-1 rounded-md px-2 py-1.5 text-xs font-bold transition-all ${createForm.data.departamento_tecnico === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             {texto}
                                         </button>
@@ -665,7 +664,7 @@ export default function ServiceOrdersIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                 >
                                     <option value="">
                                         Todo el área (sin asignar)
@@ -680,7 +679,7 @@ export default function ServiceOrdersIndex({
                                     ))}
                                 </NativeSelect>
                                 {createForm.errors.tecnico_id && (
-                                    <p className="text-destructive-strong mt-1 text-[11px]">
+                                    <p className="text-destructive-strong mt-1 text-xs">
                                         {createForm.errors.tecnico_id}
                                     </p>
                                 )}
@@ -692,7 +691,7 @@ export default function ServiceOrdersIndex({
                                 <Label className="text-foreground text-sm font-medium">
                                     Para
                                 </Label>
-                                <div className="bg-muted mt-1 flex rounded-[9px] p-[3px]">
+                                <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
                                     {(
                                         [
                                             ['local_cliente', 'Local'],
@@ -709,7 +708,7 @@ export default function ServiceOrdersIndex({
                                                     '',
                                                 );
                                             }}
-                                            className={`flex-1 rounded-[7px] px-2 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex-1 rounded-md px-2 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             {texto}
                                         </button>
@@ -742,7 +741,7 @@ export default function ServiceOrdersIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                                    className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                                 />
                             </div>
                             <div>
@@ -758,7 +757,7 @@ export default function ServiceOrdersIndex({
                                             e.target.value,
                                         )
                                     }
-                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                 >
                                     <option value="normal">Normal</option>
                                     <option value="alta">Alta</option>
@@ -781,7 +780,7 @@ export default function ServiceOrdersIndex({
                                     )
                                 }
                                 placeholder="Ej. 7 extintores PQS 6 kg enumerados del 1 al 7, recoger en recepción."
-                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[60px] w-full rounded-[8px] border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
+                                className="border-border bg-card focus-visible:border-ring focus-visible:ring-ring/50 mt-1 min-h-[60px] w-full rounded-lg border px-3 py-2 text-[13px] outline-none focus-visible:ring-[3px]"
                             />
                         </div>
 
@@ -790,14 +789,14 @@ export default function ServiceOrdersIndex({
                                 type="button"
                                 variant="outline"
                                 onClick={() => setDialogOpen(false)}
-                                className="border-border rounded-[8px] text-xs font-semibold"
+                                className="border-border rounded-lg text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 loading={createForm.processing}
-                                className="bg-primary hover:bg-primary/90 rounded-[8px] text-xs font-bold text-white"
+                                className="bg-primary hover:bg-primary/90 rounded-lg text-xs font-bold text-white"
                             >
                                 Crear orden
                             </Button>

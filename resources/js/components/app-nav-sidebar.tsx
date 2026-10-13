@@ -151,7 +151,7 @@ export function AppNavSidebar({
                     {groups.map((group, groupIndex) => (
                         <div key={group.label ?? `group-${groupIndex}`}>
                             {group.label && (
-                                <div className="bf-nav-label text-sidebar-foreground/50 px-3 pt-5 pb-1.5 font-['IBM_Plex_Mono',monospace] text-[9.5px] tracking-[0.08em] uppercase">
+                                <div className="bf-nav-label text-sidebar-foreground/50 px-3 pt-5 pb-1.5 font-['IBM_Plex_Mono',monospace] text-xs tracking-[0.08em] uppercase">
                                     {group.label}
                                 </div>
                             )}
@@ -207,7 +207,7 @@ export function AppNavSidebar({
                                         {countText && (
                                             <span
                                                 className={[
-                                                    'bf-nav-count rounded-full px-1.5 py-px text-[10px] font-mono',
+                                                    'bf-nav-count rounded-full px-1.5 py-px text-xs font-mono',
                                                     isActive
                                                         ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-200'
                                                         : 'bg-sidebar-accent text-sidebar-foreground/90',
@@ -225,14 +225,14 @@ export function AppNavSidebar({
 
                 <div className="border-sidebar-border bf-sidebar-footer flex shrink-0 items-center justify-between gap-2.5 border-t px-4 py-3.5">
                     <div className="flex min-w-0 items-center gap-2.5">
-                        <div className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-[10px] text-xs font-bold shadow-xs">
+                        <div className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold shadow-xs">
                             {getInitials(userName)}
                         </div>
                         <div className="bf-nav-text min-w-0">
                             <div className="text-sidebar-foreground truncate text-[12.5px] font-semibold whitespace-nowrap">
                                 {userName}
                             </div>
-                            <div className="text-sidebar-foreground/60 font-['IBM_Plex_Mono',monospace] text-[9.5px]">
+                            <div className="text-sidebar-foreground/60 font-['IBM_Plex_Mono',monospace] text-xs">
                                 {userRole}
                             </div>
                         </div>

@@ -17,6 +17,7 @@ import PorVencerEmpresas, {
 } from '@/components/por-vencer-empresas';
 import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import { Badge } from '@/components/ui/badge';
+import FiltroSelect from '@/components/filtro-select';
 import { PageHeader } from '@/components/page-header';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
 import { Empty } from '@/components/ui/empty';
@@ -160,22 +161,10 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                 <PageHeader
                     title="Por vencer"
                     description="Extintores de tus clientes por empresa, del vencimiento más próximo al más lejano. Ofrece la recarga o el mantenimiento antes de que venzan."
-                    actions={
-                        <div className="border-border bg-card focus-within:border-ring focus-within:ring-ring/50 flex h-9 w-[220px] items-center gap-2 rounded-[9px] border px-3 text-[12.5px] focus-within:ring-[3px]">
-                            <Search className="text-muted-foreground size-3.5" />
-                            <input
-                                aria-label="Buscar por empresa, RUC o serie"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Empresa, RUC o serie..."
-                                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
-                            />
-                        </div>
-                    }
                 />
 
                 {hoy ? (
-                    <p className="text-muted-foreground text-[11px] font-semibold">
+                    <p className="text-muted-foreground text-xs font-semibold">
                         Fecha de corte de las alertas:{' '}
                         {new Date(`${hoy}T00:00:00`).toLocaleDateString(
                             'es-PE',
@@ -183,7 +172,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                     </p>
                 ) : null}
 
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex flex-wrap items-end gap-3">
                     <TabsBf<'empresas' | 'avisos'>
                         pestanas={[
                             { id: 'empresas', titulo: 'Por empresa' },
@@ -195,48 +184,51 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                         idBase="alertas-vista"
                     />
                     {vista === 'empresas' ? (
-                        <TabsBf<PlazoEmpresa>
-                            pestanas={plazos.map((opcion) => ({
-                                id: opcion.id,
-                                titulo: opcion.label,
-                                contador: opcion.count,
+                        <FiltroSelect
+                            etiqueta="Plazo"
+                            valor={plazo}
+                            opciones={plazos.map((opcion) => ({
+                                value: opcion.id,
+                                label: `${opcion.label} (${opcion.count})`,
                             }))}
-                            activa={plazo}
-                            onCambiar={setPlazo}
-                            etiqueta="Filtro de empresas por plazo"
-                            idBase="alertas-plazos"
+                            onCambiar={(valor) =>
+                                setPlazo(valor as PlazoEmpresa)
+                            }
                         />
-                    ) : null}
+                    ) : (
+                        <FiltroSelect
+                            etiqueta="Vencimiento"
+                            valor={activeTab}
+                            opciones={tabs.map((tab) => ({
+                                value: tab.id,
+                                label: `${tab.label} (${tab.count})`,
+                            }))}
+                            onCambiar={(valor) =>
+                                setActiveTab(valor as FiltroAlerta)
+                            }
+                        />
+                    )}
+                    <div className="border-border bg-card focus-within:border-ring focus-within:ring-ring/50 flex h-11 min-w-[14rem] flex-1 items-center gap-2 rounded-lg border px-3 text-sm focus-within:ring-[3px] sm:h-9 sm:max-w-xs">
+                        <Search className="text-muted-foreground size-4 shrink-0" />
+                        <input
+                            aria-label="Buscar por empresa, RUC o serie"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Empresa, RUC o serie"
+                            className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
+                        />
+                    </div>
                 </div>
 
                 <div {...propsPanel('alertas-vista', vista)}>
                     {vista === 'empresas' ? (
-                        <div {...propsPanel('alertas-plazos', plazo)}>
-                            <PorVencerEmpresas
-                                empresas={empresasFiltradas}
-                                teamSlug={teamSlug}
-                            />
-                        </div>
+                        <PorVencerEmpresas
+                            empresas={empresasFiltradas}
+                            teamSlug={teamSlug}
+                        />
                     ) : (
                         <>
-                            {/* Filtros de avisos por vencimiento */}
-                            <TabsBf<FiltroAlerta>
-                                pestanas={tabs.map((tab) => ({
-                                    id: tab.id,
-                                    titulo: tab.label,
-                                    contador: tab.count,
-                                }))}
-                                activa={activeTab}
-                                onCambiar={setActiveTab}
-                                etiqueta="Filtro de avisos por vencimiento"
-                                idBase="alertas-filtro"
-                            />
-
-                            {/* List of Alerts */}
-                            <div
-                                className="flex flex-col gap-3"
-                                {...propsPanel('alertas-filtro', activeTab)}
-                            >
+                            <div className="flex flex-col gap-3">
                                 {currentList.length === 0 ? (
                                     <Empty
                                         icon={<CheckCircle2 />}
@@ -288,7 +280,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                         return (
                                             <div
                                                 key={`${item.equipment_id ?? 'hist'}-${item.client_id}-${item.fecha}-${idx}`}
-                                                className={`border-border bg-card flex flex-col gap-3 rounded-[14px] border p-4 shadow-none transition-all sm:flex-row sm:items-center sm:gap-4 ${
+                                                className={`border-border bg-card flex flex-col gap-3 rounded-2xl border p-4 shadow-none transition-all sm:flex-row sm:items-center sm:gap-4 ${
                                                     isVencida
                                                         ? 'border-l-[5px] border-l-[#B91C1C]'
                                                         : isEstaSemana
@@ -316,7 +308,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                             {item.cliente}
                                                         </span>
                                                         <Badge
-                                                            className={`rounded-full border-none px-2.5 py-0.5 text-[10.5px] font-bold ${
+                                                            className={`rounded-full border-none px-2.5 py-0.5 text-xs font-bold ${
                                                                 isVencida
                                                                     ? 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
                                                                     : isEstaSemana
@@ -338,7 +330,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                             'prueba_hidrostatica' && (
                                                             <Badge
                                                                 title="Prueba Hidrostática periódica cada 5 años (Norma Técnica Peruana NTP 350.043)"
-                                                                className="rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-purple-700 dark:text-purple-300"
+                                                                className="border-border bg-muted text-foreground rounded-full border px-2.5 py-0.5 text-xs font-bold"
                                                             >
                                                                 P.H. (5 años)
                                                             </Badge>
@@ -347,7 +339,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                             'recarga_y_ph' && (
                                                             <Badge
                                                                 title="Requiere tanto recarga anual (1 año) como Prueba Hidrostática (5 años)"
-                                                                className="rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-red-700 dark:text-red-300"
+                                                                className="text-destructive-strong rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-xs font-bold dark:text-red-300"
                                                             >
                                                                 Recarga (1 año)
                                                                 + P.H. (5 años)
@@ -357,7 +349,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                             'descargado_uso' && (
                                                             <Badge
                                                                 title="Extintor de un solo uso: al percutarse pierde presión y debe recargarse de inmediato"
-                                                                className="border-destructive/40 bg-destructive/15 text-destructive-strong rounded-full border px-2.5 py-0.5 text-[10.5px] font-bold"
+                                                                className="border-destructive/40 bg-destructive/15 text-destructive-strong rounded-full border px-2.5 py-0.5 text-xs font-bold"
                                                             >
                                                                 Un solo uso ·
                                                                 Recarga
@@ -375,7 +367,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                             'estimado_historico' && (
                                                             <Badge
                                                                 title="No hay un equipo con número de serie registrado para este cliente — la fecha se estima desde su historial de compras."
-                                                                className="rounded-full border-none bg-sky-500/10 px-2.5 py-0.5 text-[10.5px] font-bold text-sky-700 dark:text-sky-400"
+                                                                className="bg-muted text-foreground rounded-full border-none px-2.5 py-0.5 text-xs font-bold"
                                                             >
                                                                 Estimado por
                                                                 historial
@@ -423,7 +415,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                             href={`https://wa.me/${phoneClean}?text=${waText}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-success-strong inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-emerald-500/20 bg-emerald-500/10 px-3.5 text-[12px] font-bold transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
+                                                            className="text-success-strong inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3.5 text-[12px] font-bold transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
                                                         >
                                                             <MessageSquare className="size-3.5" />
                                                             <span>
@@ -438,7 +430,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                                         teamSlug,
                                                                 },
                                                             )}
-                                                            className="border-border bg-card text-foreground/80 hover:bg-background inline-flex h-9 items-center gap-1 rounded-[9px] border px-3 text-[12px] font-semibold"
+                                                            className="border-border bg-card text-foreground/80 hover:bg-background inline-flex h-9 items-center gap-1 rounded-lg border px-3 text-[12px] font-semibold"
                                                         >
                                                             <span>
                                                                 Ver cliente
@@ -479,7 +471,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                                 },
                                                             )
                                                         }
-                                                        className="bg-primary hover:bg-primary/90 inline-flex h-9 items-center gap-1.5 rounded-[9px] px-3.5 text-[12px] font-bold text-white shadow-none transition-colors"
+                                                        className="bg-primary hover:bg-primary/90 inline-flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[12px] font-bold text-white shadow-none transition-colors"
                                                     >
                                                         <FilePlus2 className="size-3.5" />
                                                         <span>
@@ -529,7 +521,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                                     },
                                                                 );
                                                             }}
-                                                            className="border-border bg-card text-foreground/80 hover:bg-background inline-flex h-9 items-center gap-1 rounded-[9px] border px-3 text-[12px] font-semibold"
+                                                            className="border-border bg-card text-foreground/80 hover:bg-background inline-flex h-9 items-center gap-1 rounded-lg border px-3 text-[12px] font-semibold"
                                                         >
                                                             Marcar contactado
                                                         </button>

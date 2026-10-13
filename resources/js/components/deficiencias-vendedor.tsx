@@ -195,11 +195,11 @@ export function useAccionesDeficiencia(teamSlug: string) {
                     if (!open) setActionModal(null);
                 }}
             >
-                <DialogContent className="border-border bg-card rounded-[16px] sm:max-w-md">
+                <DialogContent className="border-border bg-card rounded-2xl sm:max-w-md">
                     <DialogHeader>
                         <div className="flex items-center gap-2.5">
                             <div
-                                className={`flex size-9 items-center justify-center rounded-[10px] ${
+                                className={`flex size-9 items-center justify-center rounded-lg ${
                                     actionModal?.isApproving
                                         ? 'text-success-strong border-success-strong/20 bg-success-strong/10 border'
                                         : 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
@@ -246,10 +246,10 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                     )
                                 }
                                 placeholder="Nombre y cargo de contacto del cliente"
-                                className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                                className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                             />
                             {authForm.errors.autorizado_por && (
-                                <p className="text-destructive-strong mt-1 text-[11px]">
+                                <p className="text-destructive-strong mt-1 text-xs">
                                     {authForm.errors.autorizado_por}
                                 </p>
                             )}
@@ -271,7 +271,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                                 | 'presencial',
                                         )
                                     }
-                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                 >
                                     <option value="whatsapp">
                                         WhatsApp / Mensaje
@@ -297,7 +297,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                             e.target.value,
                                         )
                                     }
-                                    className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                                    className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                                 />
                             </div>
                         </div>
@@ -325,7 +325,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                                     : '',
                                             )
                                         }
-                                        className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-[8px] border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                        className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
                                     >
                                         <option value="">Sin cotización</option>
                                         {(
@@ -362,16 +362,16 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                             )
                                         }
                                         placeholder="Total de la cotización"
-                                        className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                                        className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                                     />
                                     {authForm.errors.importe && (
-                                        <p className="text-destructive-strong mt-1 text-[11px] font-semibold">
+                                        <p className="text-destructive-strong mt-1 text-xs font-semibold">
                                             {authForm.errors.importe}
                                         </p>
                                     )}
                                 </div>
                                 {actionModal.item.orden_cobrada && (
-                                    <p className="text-muted-foreground text-[11px] sm:col-span-2">
+                                    <p className="text-muted-foreground text-xs sm:col-span-2">
                                         El adicional se cotiza y se convierte a
                                         una venta aparte, vinculada a la orden.
                                     </p>
@@ -393,7 +393,7 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                     )
                                 }
                                 placeholder="Ej. Aprobó cotización adicional enviada por correo..."
-                                className="border-border bg-card mt-1 h-9 rounded-[8px] text-[13px]"
+                                className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                             />
                         </div>
 
@@ -402,14 +402,14 @@ export function useAccionesDeficiencia(teamSlug: string) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setActionModal(null)}
-                                className="border-border rounded-[8px] text-xs font-semibold"
+                                className="border-border rounded-lg text-xs font-semibold"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 loading={authForm.processing}
-                                className={`rounded-[8px] text-xs font-bold text-white ${
+                                className={`rounded-lg text-xs font-bold text-white ${
                                     actionModal?.isApproving
                                         ? 'bg-emerald-600 hover:bg-emerald-700'
                                         : 'bg-destructive hover:bg-destructive/90'
@@ -555,10 +555,10 @@ export function DeficienciaCard({
     return (
         <div
             key={item.id}
-            className={`border-border bg-card flex flex-col gap-3 rounded-[14px] border p-4.5 shadow-none transition-all sm:flex-row sm:items-start sm:gap-4 ${statusStyle.borderClass}`}
+            className={`border-border bg-card flex flex-col gap-3 rounded-2xl border p-4.5 shadow-none transition-all sm:flex-row sm:items-start sm:gap-4 ${statusStyle.borderClass}`}
         >
             {/* Icon Box */}
-            <div className="bg-muted text-muted-foreground flex size-11 shrink-0 items-center justify-center rounded-[10px]">
+            <div className="bg-muted text-muted-foreground flex size-11 shrink-0 items-center justify-center rounded-lg">
                 <Wrench className="size-5" />
             </div>
 
@@ -569,11 +569,11 @@ export function DeficienciaCard({
                         {item.cliente}
                     </span>
                     <Badge
-                        className={`rounded-full border-none px-2.5 py-0.5 text-[10.5px] font-bold ${statusStyle.badgeClass}`}
+                        className={`rounded-full border-none px-2.5 py-0.5 text-xs font-bold ${statusStyle.badgeClass}`}
                     >
                         {statusStyle.label}
                     </Badge>
-                    <Badge className="bg-muted text-foreground border-none text-[10.5px]">
+                    <Badge className="bg-muted text-foreground border-none text-xs">
                         {item.componente}
                     </Badge>
                 </div>
@@ -609,7 +609,7 @@ export function DeficienciaCard({
                     </a>
                 )}
 
-                <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-3 text-[11.5px]">
+                <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-3 text-xs">
                     {!enOrden && (
                         <span>
                             Orden de Servicio:{' '}
@@ -671,7 +671,7 @@ export function DeficienciaCard({
                             size="sm"
                             variant="outline"
                             onClick={() => acciones.abrirDecision(item, false)}
-                            className="border-destructive/20 bg-card text-destructive-strong hover:bg-destructive/10 h-8 rounded-[8px] text-xs font-bold"
+                            className="border-destructive/20 bg-card text-destructive-strong hover:bg-destructive/10 h-8 rounded-lg text-xs font-bold"
                         >
                             <X className="mr-1 size-3.5 stroke-[2.5]" />
                             <span>Rechazar</span>
@@ -682,7 +682,7 @@ export function DeficienciaCard({
                             type="button"
                             size="sm"
                             onClick={() => acciones.abrirDecision(item, true)}
-                            className="h-8 rounded-[8px] bg-emerald-600 text-xs font-bold text-white shadow-none hover:bg-emerald-700"
+                            className="h-8 rounded-lg bg-emerald-600 text-xs font-bold text-white shadow-none hover:bg-emerald-700"
                         >
                             <Check className="mr-1 size-3.5 stroke-[2.5]" />
                             <span>Aprobar</span>
@@ -693,7 +693,7 @@ export function DeficienciaCard({
                         asChild
                         variant="outline"
                         size="sm"
-                        className="border-border bg-card text-foreground/80 h-8 rounded-[8px] text-xs font-semibold"
+                        className="border-border bg-card text-foreground/80 h-8 rounded-lg text-xs font-semibold"
                     >
                         <Link
                             href={ServiceOrderController.show.url({

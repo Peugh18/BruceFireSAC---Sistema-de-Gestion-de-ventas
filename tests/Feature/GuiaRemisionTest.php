@@ -176,6 +176,17 @@ test('el transporte privado exige vehículo y conductor y el peso debe ser mayor
     expect(DispatchGuide::count())->toBe(0);
 });
 
+test('al pasar a transporte privado se ignora el RUC del transportista que quedó escrito', function () {
+    $team = Team::factory()->create();
+    $this->user->update(['current_team_id' => $team->id]);
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+
+    $this->actingAs($this->user)->post(route('guias.store', $team), datosGuia(['transportista_ruc' => '123', 'transportista_razon' => 'Dejado atrás']))
+        ->assertSessionHasNoErrors();
+
+    expect(DispatchGuide::sole()->transportista_ruc)->toBeNull();
+});
+
 test('un vendedor no ve ni envía guías de otra sede', function () {
     $team = Team::factory()->create();
     $this->user->update(['current_team_id' => $team->id]);

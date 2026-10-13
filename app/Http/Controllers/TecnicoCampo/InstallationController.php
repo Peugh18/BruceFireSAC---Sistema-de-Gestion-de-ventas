@@ -14,6 +14,7 @@ use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -121,17 +122,17 @@ class InstallationController extends Controller
         RegisterInstallation $registerInstallation
     ): RedirectResponse {
         $validated = $request->validate([
-            'area' => ['required', 'string', 'max:150'],
-            'ubicacion_instalada' => ['required', 'string', 'max:200'],
+            'area' => ['required', 'string', 'min:3', 'max:150', 'regex:/\p{L}{2}/u'],
+            'ubicacion_instalada' => ['required', 'string', 'min:3', 'max:200', 'regex:/\p{L}{2}/u'],
             'pruebas' => ['nullable', 'string', 'max:500'],
             'foto_antes_path' => ['nullable', 'string', 'max:255'],
             'foto_despues_path' => ['nullable', 'string', 'max:255'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
-            'conformidad_nombre' => ['required', 'string', 'max:150'],
+            'conformidad_nombre' => ['required', 'string', 'min:3', 'max:150', 'regex:/\p{L}{2}/u'],
             'conformidad_aceptada' => ['required', 'accepted'],
             'emitir_certificado' => ['nullable', 'boolean'],
             'tipo_certificado_codigo' => ['nullable', 'string', 'max:50'],
-            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
+            'firma' => ['required', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
             'equipos' => ['required', 'array', 'min:1'],
             'equipos.*.equipment_id' => ['nullable', 'integer', 'exists:equipment,id'],
             'equipos.*.numero_serie' => ['nullable', 'string', 'max:50'],
@@ -141,6 +142,14 @@ class InstallationController extends Controller
             'equipos.*.ubicacion_actual' => ['nullable', 'string', 'max:150'],
             'equipos.*.serie_fabricante' => ['nullable', 'string', 'max:50'],
             'equipos.*.anio_fabricacion' => ['nullable', 'integer', 'min:1970', 'max:'.(date('Y') + 1)],
+        ], [
+            'firma.required' => 'El cliente debe firmar en la pantalla.',
+            'conformidad_nombre.regex' => 'Escribe el nombre de quien recibe (nombre y apellido).',
+            'conformidad_nombre.min' => 'Escribe el nombre de quien recibe (nombre y apellido).',
+            'area.regex' => 'Escribe el área con letras, por ejemplo «Almacén».',
+            'area.min' => 'Escribe el área con letras, por ejemplo «Almacén».',
+            'ubicacion_instalada.regex' => 'Describe dónde quedó instalado, por ejemplo «Pared norte».',
+            'ubicacion_instalada.min' => 'Describe dónde quedó instalado, por ejemplo «Pared norte».',
         ]);
 
         // T4: cada unidad vendida se escanea; no se instala "a ojo".
@@ -153,12 +162,18 @@ class InstallationController extends Controller
             throw ValidationException::withMessages(['equipos' => 'Falta escanear: '.$faltantes->implode(', ').'.']);
         }
 
-        $serviceOrder->tomarSiLibre($request->user());
-        $registerInstallation->execute($serviceOrder, $request->user(), $validated);
-
-        if (filled($validated['firma'] ?? null)) {
-            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'instalacion', $request->user());
+        foreach (['antes' => 'antes', 'despues' => 'después'] as $etapa => $texto) {
+            if (! $serviceOrder->evidencias()->where('etapa', $etapa)->where('tipo', 'foto')->exists()) {
+                throw ValidationException::withMessages(['fotos' => "Falta al menos una foto de {$texto} de la instalación."]);
+            }
         }
+
+        // La firma se valida junto con el registro: si está vacía no queda la instalación a medias.
+        DB::transaction(function () use ($serviceOrder, $request, $registerInstallation, $validated): void {
+            $serviceOrder->tomarSiLibre($request->user());
+            $registerInstallation->execute($serviceOrder, $request->user(), $validated);
+            app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'instalacion', $request->user());
+        });
 
         return redirect()
             ->route('tecnico-campo.instalaciones.show', [

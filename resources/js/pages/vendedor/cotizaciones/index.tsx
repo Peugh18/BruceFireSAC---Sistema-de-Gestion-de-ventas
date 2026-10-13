@@ -37,6 +37,7 @@ import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import { Pasos, pasosCotizacion } from '@/components/progreso';
 import { soles } from '@/lib/utils';
+import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
@@ -52,6 +53,9 @@ export type QuoteItem = {
     puede_guardar_numero: boolean;
     enlace_pdf: string;
     venta: { id: number; numero: string } | null;
+    /** Tiene un servicio (recarga, mantenimiento): solo así va al taller. */
+    tiene_servicio: boolean;
+    orden: { id: number; codigo: string } | null;
 };
 
 /**
@@ -401,7 +405,7 @@ export default function CotizacionesIndex({
                     actions={
                         <Button
                             asChild
-                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-10 rounded-lg px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             <Link
                                 href={QuoteController.create.url({
@@ -417,12 +421,12 @@ export default function CotizacionesIndex({
                 {/* KPI Cards Row */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {/* Activas */}
-                    <div className="border-border bg-card flex items-center gap-3.5 rounded-[14px] border p-[16px_18px] shadow-xs">
-                        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    <div className="border-border bg-card flex items-center gap-3.5 rounded-2xl border p-[16px_18px] shadow-xs">
+                        <div className="border-border bg-muted text-foreground flex size-[42px] shrink-0 items-center justify-center rounded-lg border">
                             <FileText className="size-5 stroke-[2]" />
                         </div>
                         <div>
-                            <div className="text-muted-foreground text-[11px] font-semibold tracking-[0.03em] uppercase">
+                            <div className="text-muted-foreground text-xs font-semibold tracking-[0.03em] uppercase">
                                 Activas
                             </div>
                             <div className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
@@ -432,12 +436,12 @@ export default function CotizacionesIndex({
                     </div>
 
                     {/* Por vencer (7 días) */}
-                    <div className="border-border bg-card flex items-center gap-3.5 rounded-[14px] border p-[16px_18px] shadow-xs">
-                        <div className="text-warning-strong flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border border-amber-500/20 bg-amber-500/10">
+                    <div className="border-border bg-card flex items-center gap-3.5 rounded-2xl border p-[16px_18px] shadow-xs">
+                        <div className="text-warning-strong flex size-[42px] shrink-0 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10">
                             <Clock className="size-5 stroke-[2]" />
                         </div>
                         <div>
-                            <div className="text-muted-foreground text-[11px] font-semibold tracking-[0.03em] uppercase">
+                            <div className="text-muted-foreground text-xs font-semibold tracking-[0.03em] uppercase">
                                 Por vencer (7 días)
                             </div>
                             <div className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
@@ -447,12 +451,12 @@ export default function CotizacionesIndex({
                     </div>
 
                     {/* Aceptadas este mes */}
-                    <div className="border-border bg-card flex items-center gap-3.5 rounded-[14px] border p-[16px_18px] shadow-xs">
-                        <div className="text-success-strong flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border border-emerald-500/20 bg-emerald-500/10">
+                    <div className="border-border bg-card flex items-center gap-3.5 rounded-2xl border p-[16px_18px] shadow-xs">
+                        <div className="text-success-strong flex size-[42px] shrink-0 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10">
                             <CheckCircle2 className="size-5 stroke-[2]" />
                         </div>
                         <div>
-                            <div className="text-muted-foreground text-[11px] font-semibold tracking-[0.03em] uppercase">
+                            <div className="text-muted-foreground text-xs font-semibold tracking-[0.03em] uppercase">
                                 Aceptadas este mes
                             </div>
                             <div className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
@@ -462,12 +466,12 @@ export default function CotizacionesIndex({
                     </div>
 
                     {/* Vencidas */}
-                    <div className="border-border bg-card flex items-center gap-3.5 rounded-[14px] border p-[16px_18px] shadow-xs">
-                        <div className="bg-destructive/10 text-destructive-strong border-destructive/20 flex size-[42px] shrink-0 items-center justify-center rounded-[11px] border">
+                    <div className="border-border bg-card flex items-center gap-3.5 rounded-2xl border p-[16px_18px] shadow-xs">
+                        <div className="bg-destructive/10 text-destructive-strong border-destructive/20 flex size-[42px] shrink-0 items-center justify-center rounded-lg border">
                             <AlertTriangle className="size-5 stroke-[2]" />
                         </div>
                         <div>
-                            <div className="text-muted-foreground text-[11px] font-semibold tracking-[0.03em] uppercase">
+                            <div className="text-muted-foreground text-xs font-semibold tracking-[0.03em] uppercase">
                                 Vencidas
                             </div>
                             <div className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
@@ -478,7 +482,7 @@ export default function CotizacionesIndex({
                 </div>
 
                 {/* Main Content Card */}
-                <div className="border-border bg-card rounded-[16px] border p-5 shadow-xs">
+                <div className="border-border bg-card rounded-2xl border p-5 shadow-xs">
                     {/* Toolbar */}
                     <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2.5">
                         <FiltroSelect
@@ -645,7 +649,7 @@ export default function CotizacionesIndex({
                                                         {vigencia.label}
                                                     </span>
                                                     {vigencia.subLabel ? (
-                                                        <div className="text-muted-foreground font-mono text-[10px]">
+                                                        <div className="text-muted-foreground font-mono text-xs">
                                                             {vigencia.subLabel}
                                                         </div>
                                                     ) : null}
@@ -654,7 +658,7 @@ export default function CotizacionesIndex({
                                                 {/* Estado */}
                                                 <TableCell className="px-2.5 py-3.5">
                                                     <span
-                                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${badgeConfig.badgeClass}`}
+                                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${badgeConfig.badgeClass}`}
                                                     >
                                                         <span
                                                             className={`size-1.5 rounded-full ${badgeConfig.dotClass}`}
@@ -678,7 +682,35 @@ export default function CotizacionesIndex({
                                                 {/* Acciones */}
                                                 <TableCell className="px-2.5 py-3.5">
                                                     <div className="flex items-center gap-1.5">
-                                                        {!quote.venta &&
+                                                        {quote.orden ? (
+                                                            <Button
+                                                                asChild
+                                                                variant="outline"
+                                                                size="sm"
+                                                            >
+                                                                <Link
+                                                                    href={ordenesServicio.show.url(
+                                                                        {
+                                                                            current_team:
+                                                                                teamSlug,
+                                                                            service_order:
+                                                                                quote
+                                                                                    .orden
+                                                                                    .id,
+                                                                        },
+                                                                    )}
+                                                                >
+                                                                    Ver orden{' '}
+                                                                    {
+                                                                        quote
+                                                                            .orden
+                                                                            .codigo
+                                                                    }
+                                                                </Link>
+                                                            </Button>
+                                                        ) : (
+                                                            !quote.venta &&
+                                                            quote.tiene_servicio &&
                                                             [
                                                                 'borrador',
                                                                 'emitida',
@@ -691,6 +723,7 @@ export default function CotizacionesIndex({
                                                                     type="button"
                                                                     variant="outline"
                                                                     size="sm"
+                                                                    title="Manda los equipos al taller antes de cobrar la venta"
                                                                     onClick={() =>
                                                                         router.post(
                                                                             QuoteController.iniciarOrden.url(
@@ -700,13 +733,27 @@ export default function CotizacionesIndex({
                                                                                     quote: quote.id,
                                                                                 },
                                                                             ),
+                                                                            {},
+                                                                            {
+                                                                                onError:
+                                                                                    (
+                                                                                        errores,
+                                                                                    ) =>
+                                                                                        toast.error(
+                                                                                            Object.values(
+                                                                                                errores,
+                                                                                            )[0] ??
+                                                                                                'No se pudo abrir la orden de taller.',
+                                                                                        ),
+                                                                            },
                                                                         )
                                                                     }
                                                                 >
                                                                     Orden de
                                                                     taller
                                                                 </Button>
-                                                            )}
+                                                            )
+                                                        )}
                                                         {!quote.venta &&
                                                             [
                                                                 'borrador',
@@ -724,7 +771,7 @@ export default function CotizacionesIndex({
                                                                             quote: quote.id,
                                                                         },
                                                                     )}
-                                                                    className="border-border focus-visible:ring-ring hover:bg-muted/60 rounded-[7px] border px-2 py-1 text-xs font-bold transition-colors focus-visible:ring-2"
+                                                                    className="border-border focus-visible:ring-ring hover:bg-muted/60 rounded-md border px-2 py-1 text-xs font-bold transition-colors focus-visible:ring-2"
                                                                 >
                                                                     Editar
                                                                 </Link>
@@ -740,7 +787,7 @@ export default function CotizacionesIndex({
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             title="Ver o imprimir el PDF"
-                                                            className="border-border bg-card text-foreground/80 hover:border-primary/60 hover:text-primary-strong flex h-7 items-center gap-1 rounded-[7px] border px-2 text-[11px] font-bold shadow-xs transition-colors"
+                                                            className="border-border bg-card text-foreground/80 hover:border-primary/60 hover:text-primary-strong flex h-7 items-center gap-1 rounded-md border px-2 text-xs font-bold shadow-xs transition-colors"
                                                         >
                                                             <FileText className="size-3" />
                                                             <span>PDF</span>
@@ -767,7 +814,7 @@ export default function CotizacionesIndex({
                                                                         )
                                                                     }
                                                                     title="El cliente no tiene celular: agrégalo y se envía por WhatsApp"
-                                                                    className="flex h-7 items-center gap-1.5 rounded-[7px] border border-green-700 bg-green-700/5 px-2.5 text-[11px] font-bold text-green-800 shadow-xs transition-colors hover:bg-green-700/10 dark:text-green-400"
+                                                                    className="text-success-strong flex h-7 items-center gap-1.5 rounded-md border border-green-700 bg-green-700/5 px-2.5 text-xs font-bold shadow-xs transition-colors hover:bg-green-700/10 dark:text-green-400"
                                                                 >
                                                                     <MessageCircle className="size-3" />
                                                                     <span>
@@ -807,7 +854,7 @@ export default function CotizacionesIndex({
                                                                             ? 'Enviar por WhatsApp al cliente'
                                                                             : 'Clientes varios: elige el contacto en WhatsApp'
                                                                     }
-                                                                    className="flex h-7 items-center gap-1.5 rounded-[7px] bg-green-700 px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-green-800"
+                                                                    className="flex h-7 items-center gap-1.5 rounded-md bg-green-700 px-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-green-800"
                                                                 >
                                                                     {isSending ? (
                                                                         <Cargando className="size-3" />
@@ -833,7 +880,7 @@ export default function CotizacionesIndex({
                                                                     disabled={
                                                                         isRowProcessing
                                                                     }
-                                                                    className="flex h-7 cursor-pointer items-center gap-1 rounded-[7px] bg-emerald-600 px-2.5 text-[11px] font-bold text-white shadow-xs transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                                                                    className="flex h-7 cursor-pointer items-center gap-1 rounded-md bg-emerald-600 px-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-emerald-700 disabled:opacity-50"
                                                                 >
                                                                     {isAccepting ? (
                                                                         <Cargando className="size-3" />
@@ -855,7 +902,7 @@ export default function CotizacionesIndex({
                                                                     disabled={
                                                                         isRowProcessing
                                                                     }
-                                                                    className="border-border bg-card text-destructive-strong hover:bg-destructive/10 flex h-7 cursor-pointer items-center gap-1 rounded-[7px] border px-2.5 text-[11px] font-bold shadow-xs transition-colors disabled:opacity-50"
+                                                                    className="border-border bg-card text-destructive-strong hover:bg-destructive/10 flex h-7 cursor-pointer items-center gap-1 rounded-md border px-2.5 text-xs font-bold shadow-xs transition-colors disabled:opacity-50"
                                                                 >
                                                                     {isRejecting ? (
                                                                         <Cargando className="size-3" />
@@ -880,7 +927,7 @@ export default function CotizacionesIndex({
                                                                         },
                                                                     },
                                                                 )}
-                                                                className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-[7px] px-2.5 text-[11px] font-bold whitespace-nowrap shadow-xs transition-colors"
+                                                                className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-xs font-bold whitespace-nowrap shadow-xs transition-colors"
                                                             >
                                                                 <ShoppingCart className="size-3" />
                                                                 <span>
@@ -902,7 +949,7 @@ export default function CotizacionesIndex({
                                                                         },
                                                                     },
                                                                 )}
-                                                                className="bg-primary text-primary-foreground flex h-7 items-center gap-1.5 rounded-[7px] px-2.5 text-[11px] font-bold transition hover:brightness-95"
+                                                                className="bg-primary text-primary-foreground flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-bold transition hover:brightness-95"
                                                             >
                                                                 <RotateCcw className="size-3" />
                                                                 Renovar
@@ -920,7 +967,7 @@ export default function CotizacionesIndex({
                                                                             .id,
                                                                     },
                                                                 )}
-                                                                className="border-border bg-card text-foreground/80 hover:border-primary/60 hover:text-primary-strong flex h-7 items-center gap-1.5 rounded-[7px] border px-2.5 text-[11px] font-bold shadow-xs transition-colors"
+                                                                className="border-border bg-card text-foreground/80 hover:border-primary/60 hover:text-primary-strong flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-bold shadow-xs transition-colors"
                                                             >
                                                                 <Receipt className="size-3" />
                                                                 <span>
@@ -968,7 +1015,7 @@ export default function CotizacionesIndex({
                                         return (
                                             <span
                                                 key={index}
-                                                className="border-border bg-muted/40 text-muted-foreground inline-flex h-8 min-w-[32px] items-center justify-center rounded-[7px] border px-2.5 text-xs opacity-60"
+                                                className="border-border bg-muted/40 text-muted-foreground inline-flex h-8 min-w-[32px] items-center justify-center rounded-md border px-2.5 text-xs opacity-60"
                                             >
                                                 {renderPaginationLabel(
                                                     link.label,
@@ -983,7 +1030,7 @@ export default function CotizacionesIndex({
                                             href={link.url}
                                             preserveScroll
                                             preserveState
-                                            className={`inline-flex h-8 min-w-[32px] items-center justify-center rounded-[7px] px-2.5 text-xs font-semibold transition-colors ${
+                                            className={`inline-flex h-8 min-w-[32px] items-center justify-center rounded-md px-2.5 text-xs font-semibold transition-colors ${
                                                 link.active
                                                     ? 'bg-foreground text-background'
                                                     : 'border-border bg-card text-foreground/80 hover:bg-background hover:text-foreground border'

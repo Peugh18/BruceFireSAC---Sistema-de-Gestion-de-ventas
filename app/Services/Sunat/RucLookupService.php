@@ -45,11 +45,15 @@ class RucLookupService
             default => throw new RuntimeException('El documento debe tener 8 digitos para DNI o 11 digitos para RUC.'),
         };
 
-        $data = Http::connectTimeout(3)
+        $respuesta = Http::connectTimeout(3)
             ->timeout(8)
-            ->get($endpoint, ['token' => $token])
-            ->throw()
-            ->json();
+            ->get($endpoint, ['token' => $token]);
+
+        if (in_array($respuesta->status(), [404, 422], true)) {
+            throw new DocumentoNoEncontrado('El documento no existe.');
+        }
+
+        $data = $respuesta->throw()->json();
 
         if (! is_array($data)) {
             throw new RuntimeException('APIsPeru devolvio una respuesta invalida.');
@@ -58,6 +62,10 @@ class RucLookupService
         $resultado = mb_strlen($numeroDocumento) === 11
             ? $this->mapRucResponse($data)
             : $this->mapDniResponse($data);
+
+        if ($resultado['razon_social'] === '') {
+            throw new DocumentoNoEncontrado('El documento no existe.');
+        }
 
         // Se recuerda una hora: al guardar el cliente, su estado SUNAT sale
         // de esta consulta del servidor y no de lo que mande el formulario.

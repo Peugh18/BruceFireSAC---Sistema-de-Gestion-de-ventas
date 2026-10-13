@@ -12,7 +12,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
             <Head title="Verificación de correo" />
 
             {status === 'verification-link-sent' && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
+                <div className="text-success-strong mb-4 text-center text-sm font-medium">
                     Se envió un nuevo enlace de verificación al correo que diste
                     al registrarte.
                 </div>

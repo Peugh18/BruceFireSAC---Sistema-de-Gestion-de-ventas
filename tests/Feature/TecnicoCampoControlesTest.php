@@ -71,7 +71,7 @@ test('la entrega en campo es una sola y no reactiva un extintor descargado', fun
     $this->orden->equipments()->attach($descargado->id);
     $this->orden->update(['estado' => 'listo_entrega']);
 
-    $entregar = fn () => $this->actingAs($this->tecnico)->post(($this->ruta)('entregas.confirm'), ['receptor_nombre' => 'Cliente', 'conformidad_aceptada' => true]);
+    $entregar = fn () => $this->actingAs($this->tecnico)->post(($this->ruta)('entregas.confirm'), ['receptor_nombre' => 'Cliente', 'conformidad_aceptada' => true, 'firma' => FIRMA_PNG]);
     $entregar()->assertRedirect();
 
     expect($descargado->fresh()->estado)->toBe('descargado');

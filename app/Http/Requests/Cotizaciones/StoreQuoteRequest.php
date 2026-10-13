@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Cotizaciones;
 
+use App\Models\Quote;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,8 @@ class StoreQuoteRequest extends FormRequest
         return [
             'client_id' => ['required', 'integer', 'exists:clients,id'],
             'sede_id' => ['nullable', 'integer', 'exists:sedes,id'],
-            'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
+            'vehicle_id' => ['nullable', 'integer', Rule::exists('vehicles', 'id')->where('client_id', $this->input('client_id'))],
+            'destino' => ['required', Rule::in(['local_cliente', 'vehiculo'])],
             'fecha' => ['required', 'date'],
             'vigencia_hasta' => ['required', 'date', 'after_or_equal:fecha'],
             'condicion_pago_propuesta' => ['required', Rule::in([
@@ -44,6 +46,15 @@ class StoreQuoteRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (! $this->has('destino')) {
+            $quote = $this->route('quote');
+            $this->merge(['destino' => ($quote instanceof Quote ? $quote : new Quote($this->only(['vehicle_id', 'referencia'])))->destinoResuelto()]);
+        }
+
+        if ($this->input('destino') === 'local_cliente') {
+            $this->merge(['vehicle_id' => null]);
+        }
+
         if (! $this->filled('condicion_pago_propuesta')) {
             $this->merge(['condicion_pago_propuesta' => 'Contado']);
         }
@@ -66,6 +77,8 @@ class StoreQuoteRequest extends FormRequest
     {
         return [
             'items.*.precio_unitario.gt' => 'El precio debe ser mayor a cero.',
+            'destino.in' => 'Elige local o vehículo.',
+            'vehicle_id.exists' => 'El vehículo elegido no es de este cliente.',
             'condicion_pago_propuesta.in' => 'Elige una condición de pago válida.',
         ];
     }

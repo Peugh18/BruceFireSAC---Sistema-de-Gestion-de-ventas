@@ -118,3 +118,23 @@
 - **Por empresa** (vista principal): una tarjeta por cliente con cuántos extintores tiene, cuántos están vencidos o vencen en 30 días y su próximo vencimiento. Ábrela para ver cada extintor con su serie, recarga y prueba hidrostática. Botón **WhatsApp** para ofrecer la recarga; si el cliente no tiene celular sale **Agregar número**. También cuenta lo vendido **sin serie** (recargas y extintores por cantidad) y lo comprado en el sistema anterior: se marca _estimado_ y vence al año de la compra.
 - Filtra por **Todas, Con vencidos, Próximos 30 días o Próximos 3 meses**, y busca por empresa, RUC o serie.
 - **Avisos por extintor** es la lista de antes (vencidas, esta semana, este mes).
+
+## Datos que el sistema revisa por ti
+
+- **Celular**: 9 números y empieza con 9. Si pegas +51, el sistema lo quita solo. Un teléfono fijo lleva su código de ciudad.
+- **DNI**: 8 números. **RUC**: 11 números y debe ser un RUC válido; si un dígito está mal, avisa.
+- **Placa**: 6 letras o números (por ejemplo ABC-123).
+- Los campos de teléfono, DNI, RUC y placa **no dejan escribir letras ni símbolos** donde no corresponden. Al salir del campo, si quedó incompleto, aparece un aviso corto en rojo.
+- Una cuenta bancaria lleva solo números (8 a 20); el CCI lleva 20.
+
+## Notas de crédito y débito
+
+1. En la venta, abre **Nota de crédito** (o débito) sobre una factura o boleta que SUNAT ya aceptó.
+2. Elige el motivo, escribe el detalle y el importe. El importe **no puede superar** lo que queda por acreditar del comprobante.
+3. Tú solo la **pides**: queda «por aprobar» hasta que el Gerente la revise; recién entonces se emite.
+4. Si ya hay una solicitud igual esperando al Gerente, el sistema te avisa: espera su respuesta antes de pedir otra.
+
+## Guía de remisión
+
+- **Transporte privado**: elige el vehículo y el conductor de la lista. **Transporte público**: escribe el RUC y la razón social del transportista. Lo que quedó escrito de la otra modalidad se ignora.
+- El peso debe ser mayor que cero. El DNI o RUC del destinatario se revisa antes de guardar.

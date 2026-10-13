@@ -264,13 +264,13 @@ export default function InstalacionShow({
                     <ArrowLeft className="size-4" />
                     <span>Volver a instalaciones</span>
                 </Link>
-                <span className="font-mono text-xs font-black text-sky-700 dark:text-sky-400">
+                <span className="text-foreground font-mono text-xs font-black">
                     {order.codigo}
                 </span>
             </div>
 
             {flash?.success && (
-                <div className="text-success-strong mb-4 rounded-[10px] border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
+                <div className="text-success-strong mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
                     {flash.success}
                 </div>
             )}
@@ -278,10 +278,10 @@ export default function InstalacionShow({
             <TomarOrden asignacion={asignacion} />
 
             {/* Header Data Card (§25) */}
-            <div className="border-border bg-card mb-5 rounded-[14px] border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
                 <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
                     <div>
-                        <span className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
+                        <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
                             Cliente & Sede de Montaje
                         </span>
                         <h1 className="text-foreground text-base leading-snug font-black">
@@ -293,14 +293,14 @@ export default function InstalacionShow({
                             </span>
                         )}
                     </div>
-                    <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[10px] font-black text-sky-700 dark:text-sky-400">
+                    <span className="border-border bg-muted text-foreground rounded-full border px-2.5 py-1 text-xs font-black">
                         {etiquetaEstadoOrden(order.estado).toUpperCase()}
                     </span>
                 </div>
 
                 <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2">
-                        <MapPin className="mt-0.5 size-4 shrink-0 text-sky-700 dark:text-sky-400" />
+                        <MapPin className="text-foreground mt-0.5 size-4 shrink-0" />
                         <div>
                             <span className="text-foreground font-semibold">
                                 Lugar de Instalación:{' '}
@@ -323,7 +323,7 @@ export default function InstalacionShow({
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex items-center gap-1 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Contactar
@@ -335,7 +335,7 @@ export default function InstalacionShow({
 
             {/* Emitted Certificates if any */}
             {order.certificates && order.certificates.length > 0 && (
-                <div className="mb-5 rounded-[14px] border border-emerald-500/20 bg-emerald-500/10 p-4">
+                <div className="mb-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                     <h3 className="text-success-strong mb-2 flex items-center gap-1.5 text-xs font-black">
                         <FileCheck className="text-success-strong size-4" />
                         Certificados Emitidos
@@ -344,7 +344,7 @@ export default function InstalacionShow({
                         {order.certificates.map((cert) => (
                             <div
                                 key={cert.id}
-                                className="bg-card flex items-center justify-between rounded-[8px] border border-emerald-500/20 p-2.5 text-xs"
+                                className="bg-card flex items-center justify-between rounded-lg border border-emerald-500/20 p-2.5 text-xs"
                             >
                                 <span className="text-foreground font-bold">
                                     {cert.certificate_type?.nombre ||
@@ -362,15 +362,15 @@ export default function InstalacionShow({
             {/* Installation Form (§25) */}
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* 1. Datos del área y ubicación */}
-                <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
+                <div className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
                     <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                        <Wrench className="size-4 text-sky-700 dark:text-sky-400" />
+                        <Wrench className="text-foreground size-4" />
                         1. Ubicación y Área de Instalación
                     </h2>
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <div>
-                            <label className="text-foreground mb-1 block text-[11px] font-bold">
+                            <label className="text-foreground mb-1 block text-xs font-bold">
                                 Área / Sección en Instalación{' '}
                                 <span className="text-red-500">*</span>
                             </label>
@@ -384,12 +384,12 @@ export default function InstalacionShow({
                                     form.setData('area', e.target.value)
                                 }
                                 placeholder="ej. Almacén Central / Pasillo Oficinas"
-                                className="border-border bg-card disabled:bg-muted w-full rounded-[8px] border p-2 text-xs"
+                                className="border-border bg-card disabled:bg-muted w-full rounded-lg border p-2 text-xs"
                             />
                         </div>
 
                         <div>
-                            <label className="text-foreground mb-1 block text-[11px] font-bold">
+                            <label className="text-foreground mb-1 block text-xs font-bold">
                                 Punto Específico de Montaje{' '}
                                 <span className="text-red-500">*</span>
                             </label>
@@ -406,13 +406,13 @@ export default function InstalacionShow({
                                     )
                                 }
                                 placeholder="ej. Columna 3 junto al extintor / Pared este a 1.50m"
-                                className="border-border bg-card disabled:bg-muted w-full rounded-[8px] border p-2 text-xs"
+                                className="border-border bg-card disabled:bg-muted w-full rounded-lg border p-2 text-xs"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-foreground mb-1 block text-[11px] font-bold">
+                        <label className="text-foreground mb-1 block text-xs font-bold">
                             Pruebas y Verificación de Montaje
                         </label>
                         <textarea
@@ -423,13 +423,13 @@ export default function InstalacionShow({
                             onChange={(e) =>
                                 form.setData('pruebas', e.target.value)
                             }
-                            className="border-border bg-card disabled:bg-muted w-full rounded-[8px] border p-2 text-xs"
+                            className="border-border bg-card disabled:bg-muted w-full rounded-lg border p-2 text-xs"
                         />
                     </div>
                 </div>
 
                 {unidadesVendidas.length > 0 && (
-                    <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
+                    <div className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
                         <h2 className="text-foreground text-xs font-black tracking-wider uppercase">
                             Escanear unidades vendidas (
                             {unidadesVendidas.length - faltantes.length}/
@@ -454,12 +454,12 @@ export default function InstalacionShow({
                                         }
                                     }}
                                     placeholder="Escanea o escribe BF-EQ-..."
-                                    className="border-border bg-card min-h-[44px] flex-1 rounded-[8px] border p-2 font-mono text-xs"
+                                    className="border-border bg-card min-h-[44px] flex-1 rounded-lg border p-2 font-mono text-xs"
                                 />
                                 <button
                                     type="button"
                                     onClick={escanear}
-                                    className="min-h-[44px] rounded-[8px] bg-sky-700 px-4 text-xs font-bold text-white transition hover:brightness-95"
+                                    className="bg-primary min-h-[44px] rounded-lg px-4 text-xs font-bold text-white transition hover:brightness-95"
                                 >
                                     Agregar
                                 </button>
@@ -467,7 +467,7 @@ export default function InstalacionShow({
                         )}
                         {errorEscaneo && (
                             <p
-                                className="text-[11px] font-semibold text-red-600"
+                                className="text-destructive-strong text-xs font-semibold"
                                 role="alert"
                             >
                                 {errorEscaneo}
@@ -494,7 +494,7 @@ export default function InstalacionShow({
                             ))}
                         </ul>
                         {faltantes.length > 0 && (
-                            <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                            <p className="text-warning-strong text-xs font-semibold dark:text-amber-400">
                                 Faltan {faltantes.length} unidad(es) por
                                 escanear.
                             </p>
@@ -503,7 +503,7 @@ export default function InstalacionShow({
                 )}
 
                 {/* 2. Equipos Instalados -> Pasan a Equipos del Cliente (§25) */}
-                <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
+                <div className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
@@ -511,7 +511,7 @@ export default function InstalacionShow({
                                 2. Extintores / Unidades a Instalar (
                                 {equiposList.length})
                             </h2>
-                            <p className="text-muted-foreground text-[10.5px]">
+                            <p className="text-muted-foreground text-xs">
                                 Se registran en el historial de Equipos del
                                 Cliente (Equipment) sin duplicar tablas.
                             </p>
@@ -520,7 +520,7 @@ export default function InstalacionShow({
                             <button
                                 type="button"
                                 onClick={addEquipmentRow}
-                                className="inline-flex items-center gap-1 rounded-[8px] border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-sky-700 transition hover:brightness-95 active:scale-95 dark:text-sky-400"
+                                className="border-border bg-muted text-foreground inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95"
                             >
                                 <Plus className="size-3.5" />
                                 Agregar
@@ -532,7 +532,7 @@ export default function InstalacionShow({
                         {equiposList.map((item, idx) => (
                             <div
                                 key={idx}
-                                className="border-border bg-muted/40 relative space-y-2 rounded-[10px] border p-3 text-xs"
+                                className="border-border bg-muted/40 relative space-y-2 rounded-lg border p-3 text-xs"
                             >
                                 <div className="border-border flex items-center justify-between border-b pb-1.5">
                                     <span className="text-foreground font-bold">
@@ -557,7 +557,7 @@ export default function InstalacionShow({
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
+                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
                                             Agente Extintor
                                         </label>
                                         <NativeSelect
@@ -571,13 +571,13 @@ export default function InstalacionShow({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="border-border bg-card w-full rounded-[6px] border p-1.5 text-xs"
+                                            className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
                                         >
                                             <OpcionesAgente vacia="Sin registrar" />
                                         </NativeSelect>
                                     </div>
                                     <div>
-                                        <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
+                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
                                             Capacidad
                                         </label>
                                         <input
@@ -593,11 +593,11 @@ export default function InstalacionShow({
                                                 )
                                             }
                                             placeholder="ej. 6 kg"
-                                            className="border-border bg-card w-full rounded-[6px] border p-1.5 text-xs"
+                                            className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
+                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
                                             Serie Interna / Código
                                         </label>
                                         <input
@@ -613,11 +613,11 @@ export default function InstalacionShow({
                                                 )
                                             }
                                             placeholder="Auto-correlativo si vacío"
-                                            className="border-border bg-card w-full rounded-[6px] border p-1.5 font-mono text-xs"
+                                            className="border-border bg-card w-full rounded-md border p-1.5 font-mono text-xs"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
+                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
                                             Marca
                                         </label>
                                         <input
@@ -633,11 +633,11 @@ export default function InstalacionShow({
                                                 )
                                             }
                                             placeholder="Marca"
-                                            className="border-border bg-card w-full rounded-[6px] border p-1.5 text-xs"
+                                            className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="text-muted-foreground mb-0.5 block text-[10px] font-bold">
+                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
                                             Ubicación Exacta
                                         </label>
                                         <input
@@ -653,7 +653,7 @@ export default function InstalacionShow({
                                                 )
                                             }
                                             placeholder="ej. Pared norte frente a montacargas"
-                                            className="border-border bg-card w-full rounded-[6px] border p-1.5 text-xs"
+                                            className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
                                         />
                                     </div>
                                 </div>
@@ -663,7 +663,7 @@ export default function InstalacionShow({
                 </div>
 
                 {/* 3. Certificado Aplicable (§25) */}
-                <div className="border-border bg-card space-y-3 rounded-[14px] border p-4 shadow-xs">
+                <div className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
                     <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                         <FileCheck className="text-success-strong size-4" />
                         3. Certificado Aplicable
@@ -680,7 +680,7 @@ export default function InstalacionShow({
                                     e.target.checked,
                                 )
                             }
-                            className="size-4 rounded border-sky-500/20 text-sky-700 dark:text-sky-400"
+                            className="border-border text-foreground size-4 rounded"
                         />
                         <span>
                             Emitir certificado automático al registrar la
@@ -690,7 +690,7 @@ export default function InstalacionShow({
 
                     {form.data.emitir_certificado && (
                         <div>
-                            <label className="text-muted-foreground mb-1 block text-[10px] font-bold">
+                            <label className="text-muted-foreground mb-1 block text-xs font-bold">
                                 Tipo de Certificado
                             </label>
                             <NativeSelect
@@ -703,7 +703,7 @@ export default function InstalacionShow({
                                         e.target.value,
                                     )
                                 }
-                                className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
+                                className="border-border bg-card w-full rounded-lg border p-2 text-xs"
                             >
                                 {certificateTypes.map((ct) => (
                                     <option key={ct.id} value={ct.codigo}>
@@ -717,14 +717,14 @@ export default function InstalacionShow({
 
                 {/* 4. Conformidad del Cliente en Sitio (§25, §85.6.2) */}
                 {!isFinalizada && (
-                    <div className="bg-card space-y-3 rounded-[14px] border border-sky-500/20 p-4 shadow-sm">
-                        <h2 className="flex items-center gap-2 text-xs font-black tracking-wider text-sky-700 uppercase dark:text-sky-400">
-                            <UserCheck className="size-4 text-sky-700 dark:text-sky-400" />
+                    <div className="bg-card border-border space-y-3 rounded-2xl border p-4 shadow-sm">
+                        <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
+                            <UserCheck className="text-foreground size-4" />
                             4. Conformidad de Instalación en Sitio
                         </h2>
 
                         <div>
-                            <label className="text-foreground mb-1 block text-[11px] font-bold">
+                            <label className="text-foreground mb-1 block text-xs font-bold">
                                 Nombre del Receptor / Encargado en Sitio{' '}
                                 <span className="text-red-500">*</span>
                             </label>
@@ -740,10 +740,10 @@ export default function InstalacionShow({
                                     )
                                 }
                                 placeholder="Nombre completo de quien recibe la instalación"
-                                className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
+                                className="border-border bg-card w-full rounded-lg border p-2 text-xs"
                             />
                             {form.errors.conformidad_nombre && (
-                                <p className="mt-0.5 text-[10px] text-red-500">
+                                <p className="mt-0.5 text-xs text-red-500">
                                     {form.errors.conformidad_nombre}
                                 </p>
                             )}
@@ -768,16 +768,13 @@ export default function InstalacionShow({
                             onChange={(f) => form.setData('firma', f)}
                         />
                         {form.errors.firma && (
-                            <p
-                                className="text-[10px] text-red-500"
-                                role="alert"
-                            >
+                            <p className="text-xs text-red-500" role="alert">
                                 {form.errors.firma}
                             </p>
                         )}
 
                         <div>
-                            <label className="text-foreground mb-1 block text-[11px] font-bold">
+                            <label className="text-foreground mb-1 block text-xs font-bold">
                                 Observaciones Adicionales
                             </label>
                             <textarea
@@ -791,11 +788,11 @@ export default function InstalacionShow({
                                     )
                                 }
                                 placeholder="Detalles de señalética instalada, tarjetas de control entregadas..."
-                                className="border-border bg-card w-full rounded-[8px] border p-2 text-xs"
+                                className="border-border bg-card w-full rounded-lg border p-2 text-xs"
                             />
                         </div>
 
-                        <div className="rounded-[10px] border border-sky-500/20 bg-sky-500/10 p-3">
+                        <div className="border-border bg-muted rounded-lg border p-3">
                             <label className="flex cursor-pointer items-start gap-2.5">
                                 <input
                                     type="checkbox"
@@ -807,9 +804,9 @@ export default function InstalacionShow({
                                             e.target.checked,
                                         )
                                     }
-                                    className="mt-0.5 size-4 rounded border-sky-500/20 text-sky-700 dark:text-sky-400"
+                                    className="border-border text-foreground mt-0.5 size-4 rounded"
                                 />
-                                <span className="text-xs leading-tight font-semibold text-sky-700 dark:text-sky-400">
+                                <span className="text-foreground text-xs leading-tight font-semibold">
                                     Conformidad en sitio: El cliente valida la
                                     instalación física de los extintores y los
                                     soportes de montaje en las ubicaciones
@@ -817,7 +814,7 @@ export default function InstalacionShow({
                                 </span>
                             </label>
                             {form.errors.conformidad_aceptada && (
-                                <p className="mt-1 text-[10px] text-red-500">
+                                <p className="mt-1 text-xs text-red-500">
                                     {form.errors.conformidad_aceptada}
                                 </p>
                             )}
@@ -830,14 +827,14 @@ export default function InstalacionShow({
                                 !form.data.firma ||
                                 faltantes.length > 0
                             }
-                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-sky-700 text-xs font-bold text-white shadow-sm transition-all hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="bg-primary hover:bg-primary/90 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg text-xs font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Send className="size-4" />
                             <span>Registrar y Guardar Instalación Técnica</span>
                         </button>
                         {!form.data.conformidad_aceptada ? (
                             <p
-                                className="text-center text-[11px] font-semibold text-red-500"
+                                className="text-center text-xs font-semibold text-red-500"
                                 role="alert"
                             >
                                 Marca la conformidad del cliente antes de

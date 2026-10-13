@@ -99,6 +99,7 @@ class CarteraDeCobranzas
                     'id' => $inst->id,
                     'sale_id' => $inst->sale_id,
                     'sale_numero' => $inst->sale->numero_interno,
+                    'con_detraccion' => (float) ($inst->sale->monto_detraccion_snapshot ?? 0) > 0,
                     'numero_cuota' => $inst->numero_cuota,
                     'monto' => $inst->monto,
                     // V4/S11: lo rebajado por notas de crédito aceptadas.

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property string|null $destino
  * @property string|null $referencia
  * @property int $id
  * @property string $numero
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $fecha
  * @property Carbon $vigencia_hasta
  * @property string|null $condicion_pago_propuesta
+ * @property-read bool|null $tiene_servicio Solo cuando la consulta lo pide con withExists.
  * @property float $subtotal
  * @property float $igv
  * @property float $total
@@ -40,7 +42,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, QuoteItem> $items
  */
 #[Fillable([
-    'numero', 'vendedor_id', 'client_id', 'sede_id', 'vehicle_id', 'referencia', 'fecha', 'vigencia_hasta',
+    'numero', 'vendedor_id', 'client_id', 'sede_id', 'vehicle_id', 'destino', 'referencia', 'fecha', 'vigencia_hasta',
     'condicion_pago_propuesta', 'subtotal', 'igv', 'total', 'observaciones', 'estado',
     'emitida_at', 'origen_alerta_equipment_id',
 ])]
@@ -142,6 +144,24 @@ class Quote extends Model
     public function serviceOrders(): HasMany
     {
         return $this->hasMany(ServiceOrder::class);
+    }
+
+    /** Destino explícito; las cotizaciones antiguas conservan su placa o vehículo. */
+    public function destinoResuelto(): string
+    {
+        if ($this->destino !== null) {
+            return $this->destino;
+        }
+
+        if ($this->vehicle_id !== null) {
+            return 'vehiculo';
+        }
+
+        $referencia = trim((string) $this->referencia);
+        $esPlaca = preg_match('/^PLACA:\s*[a-z0-9]{3}-?[a-z0-9]{3}$/i', $referencia) === 1
+            || preg_match('/^(?=.*[a-z])(?=.*\d)[a-z0-9]{3}-?[a-z0-9]{3}$/i', $referencia) === 1;
+
+        return $esPlaca ? 'vehiculo' : 'local_cliente';
     }
 
     public function canTransitionTo(string $estado): bool

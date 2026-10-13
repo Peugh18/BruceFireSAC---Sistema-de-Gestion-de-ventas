@@ -132,3 +132,7 @@ function guardarXmlOriginalDePrueba(ElectronicDocument $documento): void
     Storage::disk('local')->put($path, $xml);
     $documento->update(['xml_path' => $path]);
 }
+
+const FIRMA_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAeCAYAAABwmH1PAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA0ElEQVRYhe2YwQ2AIAxF0Q24sYH7j+MG3hwBTyZGBQv0t2D6zsa+ZzUanTMMgwMflqgxd9IYeo/dt1XMQzQ4t1Wp6FliiHPfW5W6xUWuamksctvQ4JIQqWhYcE2ARDQkuFUcGc4efJVtEUVFswUjBBHnZAlGP3uc5+9yC8g53T1j6JlVkprfwq3zi0W1Y1s9qt+PWqFXaqJJ0r1sNUWJXxefexxQPbPyo8SeUHxfA0YLvZPzf4SMHnuS6pgpB40Iyd2HJWr9TUSSbPpjrGH8nAM0qaKjXVkUpgAAAABJRU5ErkJggg==';
+
+const FIRMA_EN_BLANCO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';

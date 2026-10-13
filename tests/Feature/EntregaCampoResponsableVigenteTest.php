@@ -22,7 +22,7 @@ test('confirmacion relee responsable cambiado despues del middleware', function 
     // Representa la orden resuelta por middleware antes del relevo concurrente.
     expect($ordenCapturada->atendiblePor($anterior))->toBeTrue();
     ServiceOrder::whereKey($ordenCapturada->id)->update(['tecnico_id' => $nuevo->id]);
-    $request = Request::create('/', 'POST', ['receptor_nombre' => 'Ficticio', 'conformidad_aceptada' => true, 'cerrar_orden' => true]);
+    $request = Request::create('/', 'POST', ['receptor_nombre' => 'Ficticio', 'conformidad_aceptada' => true, 'cerrar_orden' => true, 'firma' => FIRMA_PNG]);
     $request->setUserResolver(fn () => $anterior);
     $this->actingAs($anterior);
     try {

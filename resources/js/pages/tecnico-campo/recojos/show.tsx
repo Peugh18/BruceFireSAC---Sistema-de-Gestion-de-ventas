@@ -1,3 +1,4 @@
+import { InputPeru } from '@/components/ui/input-peru';
 import React from 'react';
 import ConversacionOrden, {
     type ConversacionProps,
@@ -148,11 +149,11 @@ export default function RecojoShow({
                                     {order.codigo}
                                 </span>
                                 {yaRecogido ? (
-                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                    <span className="text-success-strong rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold dark:bg-emerald-950/60 dark:text-emerald-300">
                                         Recojo Registrado
                                     </span>
                                 ) : (
-                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                                    <span className="text-warning-strong rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300">
                                         Pendiente de Recojo
                                     </span>
                                 )}
@@ -169,12 +170,12 @@ export default function RecojoShow({
                     <div className="space-y-2 border-t border-neutral-100 pt-2 text-xs text-neutral-600 dark:border-neutral-700/60 dark:text-neutral-400">
                         {order.cliente.direccion && (
                             <div className="flex items-start gap-1.5">
-                                <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
+                                <MapPin className="text-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
                                 <a
                                     href={`https://maps.google.com/?q=${encodeURIComponent(order.cliente.direccion)}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-blue-600 hover:underline dark:text-blue-400"
+                                    className="text-foreground hover:underline"
                                 >
                                     {order.cliente.direccion}
                                 </a>
@@ -192,7 +193,7 @@ export default function RecojoShow({
                             </div>
                         )}
                         {order.vehiculo && (
-                            <div className="text-[11px] text-neutral-500">
+                            <div className="text-xs text-neutral-500">
                                 🚗 Vehículo asignado: {order.vehiculo}
                             </div>
                         )}
@@ -209,17 +210,17 @@ export default function RecojoShow({
                     }
 
                     return (
-                        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
-                            <div className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-300">
-                                <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
+                        <div className="border-border bg-muted rounded-2xl border p-4">
+                            <div className="text-foreground flex items-center gap-2 text-xs font-bold">
+                                <MessageSquare className="text-foreground size-4" />
                                 <span>
                                     Indicaciones de Ventas y Coordinación
                                 </span>
                             </div>
 
                             {order.observaciones && (
-                                <p className="mt-2 text-xs text-blue-800 dark:text-blue-200">
-                                    <span className="font-semibold text-blue-950 dark:text-blue-100">
+                                <p className="text-foreground mt-2 text-xs">
+                                    <span className="text-foreground font-semibold">
                                         Observación inicial:{' '}
                                     </span>
                                     {order.observaciones}
@@ -228,18 +229,18 @@ export default function RecojoShow({
 
                             {notas.length > 0 && (
                                 <div className="mt-3 space-y-2">
-                                    <span className="text-[11px] font-bold text-blue-900/70 uppercase dark:text-blue-300/70">
+                                    <span className="text-foreground text-xs font-bold uppercase">
                                         Notas de Ventas:
                                     </span>
                                     {notas.map((n) => (
                                         <div
                                             key={n.id}
-                                            className="rounded-xl border border-blue-100 bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:border-blue-800/40 dark:bg-neutral-900/80 dark:text-neutral-200"
+                                            className="border-border rounded-xl border bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:bg-neutral-900/80 dark:text-neutral-200"
                                         >
                                             <p className="font-medium">
                                                 {n.mensaje}
                                             </p>
-                                            <span className="mt-1 block text-[10.5px] text-neutral-400">
+                                            <span className="mt-1 block text-xs text-neutral-400">
                                                 {n.fecha
                                                     ? new Date(
                                                           n.fecha,
@@ -257,7 +258,7 @@ export default function RecojoShow({
                 {/* Cadena de Custodia Timeline (§22.4) */}
                 <div className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
                     <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-neutral-700 uppercase dark:text-neutral-300">
-                        <ShieldCheck className="h-4 w-4 text-blue-600" />
+                        <ShieldCheck className="text-foreground h-4 w-4" />
                         <span>Cadena de Custodia</span>
                     </h3>
 
@@ -273,11 +274,11 @@ export default function RecojoShow({
                                     key={ev.id}
                                     className="relative space-y-1 pl-7"
                                 >
-                                    <div className="absolute top-1 left-1 h-3.5 w-3.5 rounded-full bg-blue-600 ring-4 ring-white dark:ring-neutral-800" />
+                                    <div className="bg-primary absolute top-1 left-1 h-3.5 w-3.5 rounded-full ring-4 ring-white dark:ring-neutral-800" />
                                     <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
                                         {ev.etapa || ev.eslabon}
                                     </div>
-                                    <div className="text-[11px] text-neutral-500">
+                                    <div className="text-xs text-neutral-500">
                                         Por: {ev.responsable} •{' '}
                                         {new Date(ev.fecha).toLocaleString(
                                             'es-PE',
@@ -288,13 +289,13 @@ export default function RecojoShow({
                                         )}
                                     </div>
                                     {ev.payload?.contacto_cliente && (
-                                        <div className="text-[11px] text-neutral-600 dark:text-neutral-400">
+                                        <div className="text-xs text-neutral-600 dark:text-neutral-400">
                                             Entregado por cliente:{' '}
                                             {ev.payload.contacto_cliente}
                                         </div>
                                     )}
                                     {ev.payload?.observaciones && (
-                                        <div className="rounded-lg bg-neutral-50 p-1.5 text-[11px] text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400">
+                                        <div className="rounded-lg bg-neutral-50 p-1.5 text-xs text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400">
                                             {ev.payload.observaciones}
                                         </div>
                                     )}
@@ -306,14 +307,14 @@ export default function RecojoShow({
 
                 {/* Recojo Form (§22.1, §85.6.2) */}
                 {!yaRecogido ? (
-                    <div className="space-y-3 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent p-4 dark:border-blue-900/40">
-                        <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-blue-900 uppercase dark:text-blue-300">
+                    <div className="border-border from-muted via-muted space-y-3 rounded-2xl border bg-gradient-to-br to-transparent p-4">
+                        <h3 className="text-foreground flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase">
                             <Truck className="h-4 w-4" />
                             <span>Registro de Recojo Físico en Sitio</span>
                         </h3>
 
                         <form
-                            className="space-y-2 rounded-xl border border-blue-200 bg-white/70 p-3 dark:border-blue-900/50 dark:bg-neutral-900/60"
+                            className="border-border space-y-2 rounded-xl border bg-white/70 p-3 dark:bg-neutral-900/60"
                             onSubmit={(event) => {
                                 event.preventDefault();
                                 equipmentForm.post(
@@ -416,7 +417,7 @@ export default function RecojoShow({
                             </button>
                             {equipmentForm.errors.numero_serie && (
                                 <p
-                                    className="text-xs text-red-600"
+                                    className="text-destructive-strong text-xs"
                                     role="alert"
                                 >
                                     {equipmentForm.errors.numero_serie}
@@ -431,12 +432,12 @@ export default function RecojoShow({
                             <AlertError errors={Object.values(form.errors)} />
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                    <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Teléfono Contacto
                                     </label>
-                                    <input
+                                    <InputPeru
+                                        tipo="telefono"
                                         aria-label="Teléfono Contacto"
-                                        type="text"
                                         value={form.data.contacto_telefono}
                                         onChange={(e) =>
                                             form.setData(
@@ -444,7 +445,6 @@ export default function RecojoShow({
                                                 e.target.value,
                                             )
                                         }
-                                        placeholder="Teléfono móvil"
                                         className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                     />
                                 </div>
@@ -457,13 +457,13 @@ export default function RecojoShow({
                                 })}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex text-xs font-bold text-blue-700 hover:underline dark:text-blue-300"
+                                className="text-foreground inline-flex text-xs font-bold hover:underline"
                             >
                                 Descargar constancia para firma
                             </a>
 
                             <div>
-                                <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                     Nombre del Responsable que Entrega (Cliente)
                                     *
                                 </label>
@@ -484,7 +484,7 @@ export default function RecojoShow({
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                                <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                     Observaciones de Estado en Recojo
                                 </label>
                                 <textarea
@@ -514,7 +514,7 @@ export default function RecojoShow({
                                                 e.target.checked,
                                             )
                                         }
-                                        className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                                        className="text-foreground focus:ring-ring mt-0.5 h-4 w-4 rounded border-neutral-300"
                                         required
                                     />
                                     <span>
@@ -542,7 +542,7 @@ export default function RecojoShow({
                             <button
                                 type="submit"
                                 disabled={form.processing || !form.data.firma}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
+                                className="bg-primary hover:bg-primary/90 active:bg-primary flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-xs font-bold text-white shadow-sm disabled:opacity-50"
                             >
                                 <CheckCircle2 className="h-4 w-4" />
                                 <span>
@@ -551,7 +551,7 @@ export default function RecojoShow({
                             </button>
                             {!form.data.conformidad_cliente ? (
                                 <p
-                                    className="text-center text-[11px] font-semibold text-red-500"
+                                    className="text-center text-xs font-semibold text-red-500"
                                     role="alert"
                                 >
                                     Marca la conformidad del cliente antes de
@@ -561,7 +561,7 @@ export default function RecojoShow({
                         </form>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+                    <div className="text-success-strong flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
                         <CheckCircle2 className="text-success-strong h-5 w-5 flex-shrink-0" />
                         <span>
                             Recojo formalizado. Los equipos se encuentran en

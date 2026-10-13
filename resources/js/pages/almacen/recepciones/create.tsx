@@ -344,7 +344,7 @@ export default function RecepcionesCreate({
 
                 {/* Error Banner General */}
                 {Object.keys(errors).length > 0 && (
-                    <div className="border-destructive/20 bg-destructive/10 text-primary-strong flex items-start gap-3 rounded-[12px] border p-4 text-[13px]">
+                    <div className="border-destructive/20 bg-destructive/10 text-primary-strong flex items-start gap-3 rounded-2xl border p-4 text-[13px]">
                         <AlertCircle className="mt-0.5 size-5 shrink-0" />
                         <div>
                             <b>
@@ -360,7 +360,7 @@ export default function RecepcionesCreate({
                 )}
 
                 {/* Card 1: Datos de Cabecera */}
-                <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
                     <div className="border-border flex items-center gap-2 border-b pb-4">
                         <Truck className="text-primary-strong size-4" />
                         <h2 className="text-foreground text-[14px] font-bold">
@@ -388,7 +388,7 @@ export default function RecepcionesCreate({
                                 required
                             />
                             {errors.proveedor && (
-                                <p className="text-primary-strong mt-1 text-[11px]">
+                                <p className="text-primary-strong mt-1 text-xs">
                                     {errors.proveedor}
                                 </p>
                             )}
@@ -435,7 +435,7 @@ export default function RecepcionesCreate({
                                 required
                             />
                             {errors.fecha && (
-                                <p className="text-primary-strong mt-1 text-[11px]">
+                                <p className="text-primary-strong mt-1 text-xs">
                                     {errors.fecha}
                                 </p>
                             )}
@@ -491,7 +491,7 @@ export default function RecepcionesCreate({
                 </Card>
 
                 {/* Card 2: Líneas de Mercadería Recibida */}
-                <Card className="border-border bg-card rounded-[16px] p-6 shadow-none">
+                <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
                     <div className="border-border flex items-center justify-between border-b pb-4">
                         <div className="flex items-center gap-2">
                             <Package className="text-primary-strong size-4" />
@@ -507,7 +507,7 @@ export default function RecepcionesCreate({
                                 onChange={(e) => setEscaneo(e.target.value)}
                                 onKeyDown={alEscanear}
                                 placeholder="Escanear código de barras..."
-                                className="border-border bg-muted/40 h-8 w-full max-w-[260px] rounded-[8px] border px-3 font-mono text-[12px] outline-none"
+                                className="border-border bg-muted/40 h-8 w-full max-w-[260px] rounded-lg border px-3 font-mono text-[12px] outline-none"
                             />
                         </div>
                         <Button
@@ -522,7 +522,7 @@ export default function RecepcionesCreate({
                         </Button>
                         {avisoEscaneo ? (
                             <p
-                                className="text-destructive-strong text-[11px] font-semibold"
+                                className="text-destructive-strong text-xs font-semibold"
                                 role="alert"
                             >
                                 {avisoEscaneo}
@@ -530,7 +530,7 @@ export default function RecepcionesCreate({
                         ) : null}
                         {Object.values(errors)[0] ? (
                             <p
-                                className="text-destructive-strong text-[11px] font-semibold"
+                                className="text-destructive-strong text-xs font-semibold"
                                 role="alert"
                             >
                                 {Object.values(errors)[0]}
@@ -561,7 +561,7 @@ export default function RecepcionesCreate({
                                     >
                                         <div className="flex flex-wrap items-start justify-between gap-3">
                                             <div className="flex items-center gap-2">
-                                                <span className="bg-foreground text-background flex size-6 items-center justify-center rounded-full text-[11px] font-bold shadow-xs">
+                                                <span className="bg-foreground text-background flex size-6 items-center justify-center rounded-full text-xs font-bold shadow-xs">
                                                     {index + 1}
                                                 </span>
                                                 <span className="text-foreground text-xs font-bold">
@@ -586,7 +586,7 @@ export default function RecepcionesCreate({
                                             <div className="sm:col-span-2 lg:col-span-3">
                                                 <Label
                                                     htmlFor={`recepcion-producto-${index}`}
-                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                    className="text-foreground/80 text-xs font-bold"
                                                 >
                                                     Producto{' '}
                                                     <span className="text-primary-strong">
@@ -625,7 +625,7 @@ export default function RecepcionesCreate({
                                             <div>
                                                 <Label
                                                     htmlFor={`recepcion-cant-recibida-${index}`}
-                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                    className="text-foreground/80 text-xs font-bold"
                                                 >
                                                     Cant. Recibida{' '}
                                                     <span className="text-primary-strong">
@@ -653,7 +653,7 @@ export default function RecepcionesCreate({
                                             <div>
                                                 <Label
                                                     htmlFor={`recepcion-cant-conforme-${index}`}
-                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                    className="text-foreground/80 text-xs font-bold"
                                                 >
                                                     Cant. Conforme{' '}
                                                     <span className="text-primary-strong">
@@ -684,7 +684,7 @@ export default function RecepcionesCreate({
                                             <div className="flex flex-col justify-end">
                                                 <div className="flex h-9 items-center">
                                                     {hasNoConforme ? (
-                                                        <span className="border-destructive/20 bg-destructive/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold">
+                                                        <span className="border-destructive/20 bg-destructive/10 text-primary-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold">
                                                             <AlertTriangle className="size-3" />
                                                             <span>
                                                                 {item.cantidad -
@@ -693,7 +693,7 @@ export default function RecepcionesCreate({
                                                             </span>
                                                         </span>
                                                     ) : (
-                                                        <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold">
+                                                        <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-bold">
                                                             <CheckCircle2 className="size-3" />
                                                             <span>
                                                                 100% Conforme
@@ -711,12 +711,12 @@ export default function RecepcionesCreate({
                                                 (prod.unidad_compra &&
                                                     prod.factor_compra >
                                                         1)) && (
-                                                <div className="border-border bg-muted/40 grid gap-3 rounded-[10px] border p-3 sm:grid-cols-3">
+                                                <div className="border-border bg-muted/40 grid gap-3 rounded-lg border p-3 sm:grid-cols-3">
                                                     {prod.unidad_compra &&
                                                         prod.factor_compra >
                                                             1 && (
                                                             <div>
-                                                                <Label className="text-foreground/80 text-[11px] font-bold">
+                                                                <Label className="text-foreground/80 text-xs font-bold">
                                                                     {
                                                                         prod.unidad_compra
                                                                     }{' '}
@@ -753,7 +753,7 @@ export default function RecepcionesCreate({
                                                                     }}
                                                                     className="mt-1 h-8 text-xs"
                                                                 />
-                                                                <p className="text-muted-foreground mt-0.5 text-[10px]">
+                                                                <p className="text-muted-foreground mt-0.5 text-xs">
                                                                     ={' '}
                                                                     {
                                                                         item.cantidad
@@ -770,7 +770,7 @@ export default function RecepcionesCreate({
                                                             <div>
                                                                 <Label
                                                                     htmlFor={`recepcion-lote-${index}`}
-                                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                                    className="text-foreground/80 text-xs font-bold"
                                                                 >
                                                                     Lote{' '}
                                                                     <span className="text-primary-strong">
@@ -799,7 +799,7 @@ export default function RecepcionesCreate({
                                                             <div>
                                                                 <Label
                                                                     htmlFor={`recepcion-vence-${index}`}
-                                                                    className="text-foreground/80 text-[11px] font-bold"
+                                                                    className="text-foreground/80 text-xs font-bold"
                                                                 >
                                                                     Vence{' '}
                                                                     <span className="text-primary-strong">
@@ -836,7 +836,7 @@ export default function RecepcionesCreate({
                                         <div>
                                             <Label
                                                 htmlFor={`recepcion-costo-${index}`}
-                                                className="text-[11px] font-bold"
+                                                className="text-xs font-bold"
                                             >
                                                 Costo de compra por unidad, sin
                                                 IGV (S/):
@@ -860,7 +860,7 @@ export default function RecepcionesCreate({
                                                 }}
                                                 className="border-border bg-card mt-1 h-8 w-40 text-xs"
                                             />
-                                            <p className="text-muted-foreground mt-1 text-[11px]">
+                                            <p className="text-muted-foreground mt-1 text-xs">
                                                 Si lo dejas vacío, el producto
                                                 no se valoriza en el reporte de
                                                 inventario.
@@ -880,10 +880,10 @@ export default function RecepcionesCreate({
 
                                         {/* Motivo de no conformidad (obligatorio si cantidad_conforme < cantidad) */}
                                         {hasNoConforme && (
-                                            <div className="rounded-[10px] border border-amber-500/20 bg-amber-500/10 p-3">
+                                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
                                                 <Label
                                                     htmlFor={`recepcion-motivo-no-conformidad-${index}`}
-                                                    className="text-warning-strong text-[11px] font-bold"
+                                                    className="text-warning-strong text-xs font-bold"
                                                 >
                                                     Motivo de no conformidad
                                                     (obligatorio para sustentar
@@ -910,7 +910,7 @@ export default function RecepcionesCreate({
                                         {/* Sub-formulario para unidades serializadas */}
                                         {isSerializado &&
                                             item.cantidad_conforme > 0 && (
-                                                <div className="border-border bg-muted/40 mt-1 rounded-[12px] border p-4">
+                                                <div className="border-border bg-muted/40 mt-1 rounded-2xl border p-4">
                                                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                                         <div className="text-foreground flex flex-wrap items-center gap-1.5 text-xs font-bold">
                                                             <ScanBarcode className="text-success-strong size-4" />
@@ -923,7 +923,7 @@ export default function RecepcionesCreate({
                                                                 }{' '}
                                                                 conformes)
                                                             </span>
-                                                            <span className="text-muted-foreground text-[11px] font-normal">
+                                                            <span className="text-muted-foreground text-xs font-normal">
                                                                 — El código
                                                                 interno
                                                                 BF-EQ-XXXXXX se
@@ -942,7 +942,7 @@ export default function RecepcionesCreate({
                                                                         index,
                                                                     )
                                                                 }
-                                                                className="h-7 text-[11px]"
+                                                                className="h-7 text-xs"
                                                             >
                                                                 <Copy className="size-3.5" />
                                                                 Copiar fila 1 a
@@ -954,7 +954,7 @@ export default function RecepcionesCreate({
                                                     <div className="border-border bg-card overflow-x-auto rounded-lg border">
                                                         <Table className="w-full min-w-[560px] text-xs">
                                                             <TableHeader>
-                                                                <TableRow className="bg-primary text-primary-foreground text-left text-[10px] font-bold tracking-wide uppercase">
+                                                                <TableRow className="bg-primary text-primary-foreground text-left text-xs font-bold tracking-wide uppercase">
                                                                     <TableHead className="w-12 text-center">
                                                                         Ítem
                                                                     </TableHead>
@@ -1008,7 +1008,7 @@ export default function RecepcionesCreate({
                                                                                                 .value,
                                                                                         )
                                                                                     }
-                                                                                    className="h-7 text-[11px]"
+                                                                                    className="h-7 text-xs"
                                                                                     required
                                                                                 />
                                                                             </TableCell>
@@ -1031,7 +1031,7 @@ export default function RecepcionesCreate({
                                                                                                 .value,
                                                                                         )
                                                                                     }
-                                                                                    className="h-7 text-[11px]"
+                                                                                    className="h-7 text-xs"
                                                                                 />
                                                                             </TableCell>
                                                                             <TableCell className="px-2 py-1.5">
@@ -1053,7 +1053,7 @@ export default function RecepcionesCreate({
                                                                                                 .value,
                                                                                         )
                                                                                     }
-                                                                                    className="h-7 text-[11px]"
+                                                                                    className="h-7 text-xs"
                                                                                     required
                                                                                 />
                                                                             </TableCell>
@@ -1083,7 +1083,7 @@ export default function RecepcionesCreate({
                                                                                             ),
                                                                                         )
                                                                                     }
-                                                                                    className="h-7 text-[11px]"
+                                                                                    className="h-7 text-xs"
                                                                                     required
                                                                                 />
                                                                             </TableCell>

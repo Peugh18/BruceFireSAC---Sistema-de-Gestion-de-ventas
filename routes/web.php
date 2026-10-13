@@ -46,6 +46,7 @@ Route::prefix('{current_team}')
 Route::middleware(['auth'])->group(function () {
     Route::get('ubigeos', UbigeoController::class)->name('ubigeos.buscar');
     Route::post('asistente', ChispaController::class)->middleware('throttle:20,1')->name('asistente');
+    Route::patch('asistente/{registro}', [ChispaController::class, 'valorar'])->middleware('throttle:60,1')->name('asistente.valorar');
 });
 
 require __DIR__.'/settings.php';

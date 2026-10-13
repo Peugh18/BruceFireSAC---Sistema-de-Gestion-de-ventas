@@ -271,6 +271,7 @@ class SaleController extends Controller
             'client' => $sale->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             'sede_id' => $sale->sede_id,
             'destino' => $sale->destino,
+            'vehicle_id' => $sale->vehicle_id,
             'referencia' => $sale->referencia,
             'condicion_pago' => $sale->esCredito() ? 'credito' : 'contado',
             'medio_pago' => $medioPago,
@@ -361,9 +362,11 @@ class SaleController extends Controller
             'referencia' => $quote->referencia,
             // La condición propuesta es texto libre ("Contado", "Crédito 30 días").
             'condicion_pago' => str_starts_with(mb_strtolower(trim((string) $quote->condicion_pago_propuesta)), 'cr') ? 'credito' : 'contado',
+            // "Crédito 15 días" → 15: el calendario de cuotas arranca con ese plazo.
+            'plazo_dias' => preg_match('/(\d+)\s*d/i', (string) $quote->condicion_pago_propuesta, $plazo) ? (int) $plazo[1] : null,
             'observaciones' => $quote->observaciones,
             'vehicle_id' => $quote->vehicle_id,
-            'destino' => $quote->vehicle_id ? 'vehiculo' : 'local_cliente',
+            'destino' => $quote->destinoResuelto(),
         ];
     }
 
@@ -461,7 +464,11 @@ class SaleController extends Controller
             ->map(fn ($deficiency): array => ['componente' => $deficiency->componente, 'importe' => (float) $deficiency->authorization->importe])
             ->values()->all();
 
-        return ['id' => null, 'quote_id' => $order->quote_id, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => 'local_cliente', 'referencia' => $order->codigo, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items, 'adicionales_sin_cotizacion' => $adicionalesSinCotizacion];
+        $vehicleId = $order->quote ? $order->quote->vehicle_id : $order->vehicle_id;
+        $destino = $order->quote?->destinoResuelto() ?? ($vehicleId ? 'vehiculo' : 'local_cliente');
+        $referencia = $order->quote ? $order->quote->referencia : $order->referencia;
+
+        return ['id' => null, 'quote_id' => $order->quote_id, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => $destino, 'vehicle_id' => $destino === 'vehiculo' ? $vehicleId : null, 'referencia' => $referencia, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items, 'adicionales_sin_cotizacion' => $adicionalesSinCotizacion];
     }
 
     public function show(Team $current_team, Sale $sale, Request $request): Response

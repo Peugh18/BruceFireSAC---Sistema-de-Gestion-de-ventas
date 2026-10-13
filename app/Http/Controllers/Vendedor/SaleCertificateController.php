@@ -13,6 +13,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Team;
 use App\Services\Certificates\CertificadosDeVenta;
+use App\Services\Certificates\PruebasHidrostaticas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -59,6 +60,11 @@ class SaleCertificateController extends Controller
                     'fecha_ultima_ph' => $pruebas->get($item->equipment->id)?->fecha_ultima_ph?->toDateString(),
                     'presion_ph' => $pruebas->get($item->equipment->id)?->presion_ph,
                     'tiempo_ph' => $pruebas->get($item->equipment->id)?->tiempo_ph,
+                    'ph_reutilizable' => ($ph = $pruebas->get($item->equipment->id)?->certificate) ? [
+                        'id' => $ph->id,
+                        'numero' => $ph->numero,
+                        'fecha_vigencia_hasta' => $ph->fecha_vigencia_hasta?->toDateString(),
+                    ] : null,
                 ])
                 ->values(),
             'tiposSugeridos' => EmitirCertificadosDeVenta::tiposPorDestino($sale->destino),
@@ -75,40 +81,37 @@ class SaleCertificateController extends Controller
      */
     protected function pruebasRegistradas(Sale $sale): Collection
     {
-        return Certificate::query()
-            ->with('certificateUnits')
-            ->where('sale_id', $sale->id)
-            ->whereIn('estado', ['vigente', 'vencido'])
-            ->whereHas('certificateType', fn ($query) => $query->where('codigo', 'prueba_hidrostatica'))
-            ->get()
-            ->flatMap(fn (Certificate $certificate) => $certificate->certificateUnits)
-            ->filter(fn (CertificateUnit $unit) => $unit->equipment_id !== null)
-            ->keyBy('equipment_id');
+        return PruebasHidrostaticas::vigentes($sale->client_id, array_values($sale->items->map(fn (SaleItem $item) => $item->equipment_id)->filter()->all()));
     }
 
     /**
      * Cómo están armados hoy los certificados vigentes de la venta (grupos,
      * orden y numeración del cliente), para ajustarlos en vez de empezar de cero.
      *
-     * @return list<array{referencia: string|null, direccion: string|null, tipos: list<string>, unidades: list<array{equipment_id: int, numero_cliente: string|null}>, capacitacion: array<string, mixed>|null}>
+     * @return list<array{destino: string, referencia: string|null, direccion: string|null, tipos: list<string>, unidades: list<array{equipment_id: int, numero_cliente: string|null}>, capacitacion: array<string, mixed>|null}>
      */
     protected function gruposActuales(Sale $sale): array
     {
-        return Certificate::query()
+        return array_values(Certificate::query()
             ->with(['certificateType', 'certificateUnits', 'participants'])
+            ->whereDoesntHave('certificateType', fn ($query) => $query->where('codigo', 'prueba_hidrostatica'))
             ->where('sale_id', $sale->id)
+            ->where('client_id', $sale->client_id)
             ->whereIn('estado', ['vigente', 'vencido'])
             ->orderBy('id')
             ->get()
             ->groupBy(fn (Certificate $certificate) => $certificate->referencia.'|'.$certificate->direccion)
-            ->map(function ($certificados) {
+            ->map(function ($certificados) use ($sale) {
                 $conUnidades = $certificados->first(fn (Certificate $certificate) => $certificate->certificateUnits->isNotEmpty());
                 $capacitacion = $certificados->first(fn (Certificate $certificate) => $certificate->certificateType->codigo === 'capacitacion');
 
+                $destino = $conUnidades?->datos['destino'] ?? ($capacitacion ? 'local_cliente' : $sale->destino);
+
                 return [
+                    'destino' => $destino,
                     'referencia' => $certificados->first()->referencia,
                     'direccion' => $certificados->first()->direccion,
-                    'tipos' => $certificados->map(fn (Certificate $certificate) => $certificate->certificateType->codigo)->unique()->values()->all(),
+                    'tipos' => $conUnidades?->datos['tipos'] ?? $certificados->map(fn (Certificate $certificate) => $certificate->certificateType->codigo)->unique()->values()->all(),
                     'unidades' => $conUnidades
                         ? $conUnidades->certificateUnits->sortBy('orden')->filter(fn ($unit) => $unit->equipment_id !== null)
                             ->map(fn ($unit) => ['equipment_id' => $unit->equipment_id, 'numero_cliente' => $unit->numero_cliente])
@@ -126,7 +129,7 @@ class SaleCertificateController extends Controller
                 ];
             })
             ->values()
-            ->all();
+            ->all());
     }
 
     public function store(Team $current_team, Sale $sale, EmitirCertificadosRequest $request, EmitirCertificadosDeVenta $emitir): RedirectResponse

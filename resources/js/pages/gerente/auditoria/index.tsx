@@ -122,12 +122,12 @@ export default function AuditoriaIndex() {
                             <span className="font-medium uppercase">
                                 Registros Totales
                             </span>
-                            <ShieldCheck className="size-4 text-blue-600" />
+                            <ShieldCheck className="text-foreground size-4" />
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.totalRegistros}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Eventos auditados desde el inicio
                         </p>
                     </div>
@@ -139,10 +139,10 @@ export default function AuditoriaIndex() {
                             </span>
                             <Activity className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.registrosHoy}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Acciones sensibles registradas hoy
                         </p>
                     </div>
@@ -251,7 +251,7 @@ export default function AuditoriaIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Fecha</TableHead>
                                     <TableHead>Acción</TableHead>
@@ -277,11 +277,11 @@ export default function AuditoriaIndex() {
                                             key={r.id}
                                             className="hover:bg-muted/40 transition-colors"
                                         >
-                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-[11px]">
+                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono text-xs">
                                                 {r.fecha}
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
-                                                <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 font-mono text-[10px] font-bold text-zinc-700 uppercase">
+                                                <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 font-mono text-xs font-bold text-zinc-700 uppercase">
                                                     {r.accion}
                                                 </span>
                                             </TableCell>
@@ -293,7 +293,7 @@ export default function AuditoriaIndex() {
                                                     ? `${r.entidad} #${r.entidad_id}`
                                                     : '—'}
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground max-w-xs truncate px-4 py-3 text-[11px]">
+                                            <TableCell className="text-muted-foreground max-w-xs truncate px-4 py-3 text-xs">
                                                 {formatValues(r.new_values) !==
                                                 '—'
                                                     ? formatValues(r.new_values)
@@ -301,7 +301,7 @@ export default function AuditoriaIndex() {
                                                           r.old_values,
                                                       )}
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground px-4 py-3 font-mono text-[11px]">
+                                            <TableCell className="text-muted-foreground px-4 py-3 font-mono text-xs">
                                                 {r.ip_address || '—'}
                                             </TableCell>
                                         </TableRow>

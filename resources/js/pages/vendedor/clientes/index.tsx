@@ -8,8 +8,10 @@ import {
     Search,
     UsersRound,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
+import { cn } from '@/lib/utils';
 import { FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
 import ClientCreateDialog from '@/components/client-create-dialog';
@@ -112,7 +114,7 @@ function renderSunatBadge(client: ClientRow) {
 
     if (esDni) {
         return (
-            <span className="text-muted-foreground text-[11.5px] font-medium">
+            <span className="text-muted-foreground text-xs font-medium">
                 No aplica (DNI)
             </span>
         );
@@ -120,7 +122,7 @@ function renderSunatBadge(client: ClientRow) {
 
     if (esVarios) {
         return (
-            <span className="text-muted-foreground text-[11.5px] font-medium">
+            <span className="text-muted-foreground text-xs font-medium">
                 No aplica
             </span>
         );
@@ -131,7 +133,7 @@ function renderSunatBadge(client: ClientRow) {
     // Sin verificar
     if (!estado_contribuyente && !condicion_domicilio) {
         return (
-            <Badge className="rounded-full border border-neutral-300 bg-neutral-100 px-2.5 py-1 text-[10.5px] font-bold text-neutral-600 shadow-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+            <Badge className="rounded-full border border-neutral-300 bg-neutral-100 px-2.5 py-1 text-xs font-bold text-neutral-600 shadow-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
                 Sin verificar
             </Badge>
         );
@@ -143,7 +145,7 @@ function renderSunatBadge(client: ClientRow) {
 
     if (isActivo && isHabido) {
         return (
-            <Badge className="text-success-strong rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10.5px] font-bold shadow-none dark:text-emerald-400">
+            <Badge className="text-success-strong rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold shadow-none dark:text-emerald-400">
                 Activo · Habido
             </Badge>
         );
@@ -151,7 +153,7 @@ function renderSunatBadge(client: ClientRow) {
 
     // Otro estado (rojo con el estado real)
     return (
-        <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-full border px-2.5 py-1 text-[10.5px] font-bold shadow-none">
+        <Badge className="border-destructive/20 bg-destructive/10 text-destructive-strong rounded-full border px-2.5 py-1 text-xs font-bold shadow-none">
             {estado_contribuyente || 'No activo'} ·{' '}
             {condicion_domicilio || 'No habido'}
         </Badge>
@@ -182,9 +184,7 @@ export default function ClientesIndex({
             { preserveScroll: true },
         );
     const recargando = useRecargando();
-    const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
+    const aplicarBusqueda = () => {
         router.get(
             clientes.index.url(currentTeam.slug, {
                 query: {
@@ -198,6 +198,7 @@ export default function ClientesIndex({
             },
         );
     };
+    const submitSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const rucClients = clients.data.filter(
         (c) => c.cliente.tipo_documento?.toLowerCase() === 'ruc',
@@ -224,8 +225,8 @@ export default function ClientesIndex({
             label: 'Total clientes',
             value: formatNumber(kpis.total_clientes),
             icon: UsersRound,
-            bg: 'bg-blue-500/10',
-            text: 'text-blue-600 dark:text-blue-400',
+            bg: 'bg-muted',
+            text: 'text-foreground ',
         },
         {
             label: 'Nuevos este mes',
@@ -263,7 +264,7 @@ export default function ClientesIndex({
                                 setDocumentoARegistrar('');
                                 setDialogOpen(true);
                             }}
-                            className="bg-primary hover:bg-primary/90 h-10 rounded-[9px] px-4 text-[13px] font-bold text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-10 rounded-lg px-4 text-[13px] font-bold text-white shadow-none"
                         >
                             <Plus className="size-3.5" />
                             Agregar cliente
@@ -277,10 +278,10 @@ export default function ClientesIndex({
                         return (
                             <Card
                                 key={item.label}
-                                className="border-border bg-card flex-row items-center gap-3.5 rounded-[14px] px-[18px] py-4 shadow-none"
+                                className="border-border bg-card flex-row items-center gap-3.5 rounded-2xl px-[18px] py-4 shadow-none"
                             >
                                 <div
-                                    className={`flex size-[42px] shrink-0 items-center justify-center rounded-[11px] ${item.bg}`}
+                                    className={`flex size-[42px] shrink-0 items-center justify-center rounded-lg ${item.bg}`}
                                 >
                                     <Icon
                                         className={`size-5 ${item.text}`}
@@ -288,7 +289,7 @@ export default function ClientesIndex({
                                     />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-muted-foreground text-[11px] font-bold tracking-[0.03em] uppercase">
+                                    <div className="text-muted-foreground text-xs font-bold tracking-[0.03em] uppercase">
                                         {item.label}
                                     </div>
                                     <div className="text-foreground font-['Oswald',sans-serif] text-[21px] leading-tight font-semibold">
@@ -300,7 +301,7 @@ export default function ClientesIndex({
                     })}
                 </div>
 
-                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none">
                     <TabsBf<'clientes' | 'por-registrar'>
                         pestanas={[
                             {
@@ -350,7 +351,7 @@ export default function ClientesIndex({
                                 <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
                                     <form
                                         onSubmit={submitSearch}
-                                        className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]"
+                                        className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 focus-within:ring-[3px]"
                                     >
                                         <Search
                                             className="text-muted-foreground size-3.5 shrink-0"
@@ -370,7 +371,7 @@ export default function ClientesIndex({
                                     <Button
                                         asChild
                                         variant="outline"
-                                        className="border-border bg-card text-foreground/80 h-10 rounded-[9px] px-3.5 text-[12.5px] font-semibold shadow-none"
+                                        className="border-border bg-card text-foreground/80 h-10 rounded-lg px-3.5 text-[12.5px] font-semibold shadow-none"
                                     >
                                         <a
                                             href={clientes.export.url(
@@ -385,7 +386,7 @@ export default function ClientesIndex({
                                             )}
                                         >
                                             <Download className="size-3.5" />
-                                            Exportar
+                                            Exportar a Excel
                                         </a>
                                     </Button>
                                 </div>
@@ -397,7 +398,15 @@ export default function ClientesIndex({
                                                 {columns.map((column) => (
                                                     <TableHead
                                                         key={column}
-                                                        className="text-left whitespace-nowrap"
+                                                        className={cn(
+                                                            'text-left whitespace-nowrap',
+                                                            column
+                                                                .toLowerCase()
+                                                                .startsWith(
+                                                                    'direc',
+                                                                ) &&
+                                                                'hidden xl:table-cell',
+                                                        )}
                                                     >
                                                         {column}
                                                     </TableHead>
@@ -418,7 +427,7 @@ export default function ClientesIndex({
                                                         >
                                                             <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                                 <div className="flex items-center gap-2.5">
-                                                                    <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
+                                                                    <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-xs font-bold">
                                                                         {initials(
                                                                             client
                                                                                 .cliente
@@ -428,7 +437,7 @@ export default function ClientesIndex({
                                                                                 .cliente
                                                                                 .avatar}
                                                                     </div>
-                                                                    <div className="min-w-[180px]">
+                                                                    <div className="min-w-[120px]">
                                                                         <div className="text-foreground flex items-center gap-1.5 font-bold">
                                                                             <Link
                                                                                 href={clientes.show(
@@ -447,12 +456,12 @@ export default function ClientesIndex({
                                                                                 }
                                                                             </Link>
                                                                             {!client.activo && (
-                                                                                <Badge className="bg-destructive/10 text-destructive-strong rounded-full border-transparent px-1.5 py-0 text-[9.5px] font-bold shadow-none">
+                                                                                <Badge className="bg-destructive/10 text-destructive-strong rounded-full border-transparent px-1.5 py-0 text-xs font-bold shadow-none">
                                                                                     Inactivo
                                                                                 </Badge>
                                                                             )}
                                                                         </div>
-                                                                        <div className="text-muted-foreground text-[11px]">
+                                                                        <div className="text-muted-foreground text-xs">
                                                                             {
                                                                                 client.codigo_interno
                                                                             }{' '}
@@ -467,7 +476,7 @@ export default function ClientesIndex({
                                                                     client.documento
                                                                 }
                                                             </TableCell>
-                                                            <TableCell className="border-border text-muted-foreground max-w-[280px] border-b px-2.5 py-[13px]">
+                                                            <TableCell className="border-border text-muted-foreground hidden max-w-[280px] border-b px-2.5 py-[13px] xl:table-cell">
                                                                 <span className="line-clamp-2">
                                                                     {client.direccion ??
                                                                         '-'}
@@ -489,7 +498,7 @@ export default function ClientesIndex({
                                                                         asChild
                                                                         variant="outline"
                                                                         size="icon"
-                                                                        className="border-border bg-card text-foreground/80 size-7 rounded-[7px] shadow-none"
+                                                                        className="border-border bg-card text-foreground/80 size-7 rounded-md shadow-none"
                                                                     >
                                                                         <Link
                                                                             href={clientes.show(
@@ -514,7 +523,7 @@ export default function ClientesIndex({
                                     </Table>
                                 </div>
 
-                                <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-[11.5px] sm:flex-row sm:items-center sm:justify-between">
+                                <div className="text-muted-foreground mt-3.5 flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
                                     <span>
                                         Mostrando {clients.from ?? 0}-
                                         {clients.to ?? 0} de{' '}
@@ -529,7 +538,7 @@ export default function ClientesIndex({
                                                     preserveScroll
                                                     preserveState
                                                     className={[
-                                                        'flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-["IBM_Plex_Mono",monospace] text-[11.5px] no-underline',
+                                                        'flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-["IBM_Plex_Mono",monospace] text-xs no-underline',
                                                         link.active
                                                             ? 'bg-primary font-bold text-white'
                                                             : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -542,7 +551,7 @@ export default function ClientesIndex({
                                             ) : (
                                                 <span
                                                     key={`${link.label}-${index}`}
-                                                    className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-[7px] px-2 font-['IBM_Plex_Mono',monospace] text-[11.5px]"
+                                                    className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                                                 >
                                                     {cleanPaginationLabel(
                                                         link.label,

@@ -94,7 +94,7 @@ export default function VendedorLayout({
                             aria-label="Abrir menú"
                             aria-expanded={sidebarOpen}
                             aria-controls="app-navigation-sidebar"
-                            className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground flex size-9 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 lg:hidden"
+                            className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground flex size-11 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95 lg:hidden"
                         >
                             <Menu className="size-4" strokeWidth={2} />
                         </button>
@@ -134,7 +134,7 @@ export default function VendedorLayout({
                                 </span>
                             )}
                             {caja_hoy && (
-                                <span className="text-success-strong ml-4 hidden items-center gap-1.5 text-[11px] sm:inline-flex">
+                                <span className="text-success-strong ml-4 hidden items-center gap-1.5 text-xs sm:inline-flex">
                                     <span className="size-1.5 rounded-full bg-current" />
                                     Turno abierto
                                     {caja_hoy.fecha_apertura
@@ -151,13 +151,13 @@ export default function VendedorLayout({
                             <button
                                 type="button"
                                 onClick={() => setNotifsOpen(!notifsOpen)}
-                                className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-[38px] shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95"
+                                className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-11 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95"
                                 aria-label="Notificaciones"
                                 aria-expanded={notifsOpen}
                             >
                                 <Bell className="size-4" strokeWidth={2} />
                                 {alertasTop.length > 0 && (
-                                    <span className="bg-destructive text-destructive-foreground animate-in zoom-in-75 absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold shadow-xs">
+                                    <span className="bg-destructive text-destructive-foreground animate-in zoom-in-75 absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-bold shadow-xs">
                                         {alertasTop.length}
                                     </span>
                                 )}
@@ -179,7 +179,7 @@ export default function VendedorLayout({
                                                     Avisos y Pendientes
                                                 </h4>
                                                 {alertasTop.length > 0 && (
-                                                    <span className="bg-primary/10 text-primary-strong rounded-full px-2 py-0.5 text-[10px] font-bold">
+                                                    <span className="bg-primary/10 text-primary-strong rounded-full px-2 py-0.5 text-xs font-bold">
                                                         {alertasTop.length}
                                                     </span>
                                                 )}
@@ -203,7 +203,7 @@ export default function VendedorLayout({
                                                     <p className="text-foreground text-xs font-semibold">
                                                         Todo al día
                                                     </p>
-                                                    <p className="mt-0.5 text-[11px]">
+                                                    <p className="mt-0.5 text-xs">
                                                         No tienes avisos
                                                         urgentes ni pendientes
                                                         de atención.
@@ -227,7 +227,7 @@ export default function VendedorLayout({
                                                                     : alerta.tipo ===
                                                                         'lista_entrega'
                                                                       ? 'text-success-strong bg-emerald-500/10'
-                                                                      : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                                                      : 'bg-muted text-foreground '
                                                             }`}
                                                         >
                                                             {alerta.urgencia ===
@@ -244,10 +244,10 @@ export default function VendedorLayout({
                                                             <p className="text-foreground group-hover:text-primary-strong text-xs font-bold transition-colors">
                                                                 {alerta.titulo}
                                                             </p>
-                                                            <p className="text-muted-foreground mt-0.5 line-clamp-2 text-[11px]">
+                                                            <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">
                                                                 {alerta.mensaje}
                                                             </p>
-                                                            <div className="text-muted-foreground/80 mt-1 flex items-center gap-1 text-[10px]">
+                                                            <div className="text-muted-foreground/80 mt-1 flex items-center gap-1 text-xs">
                                                                 <Clock className="size-3" />
                                                                 <span>
                                                                     {
@@ -269,7 +269,7 @@ export default function VendedorLayout({
                                                 onClick={() =>
                                                     setNotifsOpen(false)
                                                 }
-                                                className="text-primary-strong text-[11px] font-semibold hover:underline"
+                                                className="text-primary-strong text-xs font-semibold hover:underline"
                                             >
                                                 Ver todas las órdenes de
                                                 servicio →

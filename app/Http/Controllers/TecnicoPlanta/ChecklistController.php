@@ -91,7 +91,8 @@ class ChecklistController extends Controller
             'items.*.repuesto_sugerido' => ['nullable', 'string', 'max:255'],
             'items.*.requiere_autorizacion' => ['nullable', 'boolean'],
             'items.*.foto' => ['nullable', 'image', 'max:15360'],
-            'observaciones' => ['nullable', 'string', 'max:1000'],
+            'equipo_no_apto' => ['sometimes', 'boolean'],
+            'observaciones' => ['required_if:equipo_no_apto,1,true', 'nullable', 'string', 'max:1000'],
         ]);
 
         $checklist = $action->execute(
@@ -102,12 +103,15 @@ class ChecklistController extends Controller
                 'origen' => 'planta',
                 'items' => $validated['items'],
                 'observaciones' => $validated['observaciones'] ?? null,
+                'equipo_no_apto' => (bool) ($validated['equipo_no_apto'] ?? false),
             ]
         );
 
-        $msg = $checklist->resultado_general === 'observado'
-            ? 'Checklist registrado con observaciones. Se generaron las deficiencias correspondientes.'
-            : 'Checklist registrado exitosamente: Todos los componentes conformes.';
+        $msg = ! empty($validated['equipo_no_apto'])
+            ? 'Extintor declarado no apto. Sus certificados de PH y operatividad quedaron anulados.'
+            : ($checklist->resultado_general === 'observado'
+                ? 'Checklist registrado con observaciones. Se generaron las deficiencias correspondientes.'
+                : 'Checklist registrado exitosamente: Todos los componentes conformes.');
 
         // Con todos los extintores recibidos ya revisados, el siguiente paso es
         // terminar el trabajo: se lleva directo a la ejecución en vez de

@@ -186,3 +186,11 @@ test('la devolución por ítem pedida por el vendedor conserva las líneas y val
 
     expect(NoteRequest::sole()->nota_datos['lineas'])->toBe([['indice' => 0, 'cantidad' => 1]]);
 });
+
+test('una segunda solicitud igual se avisa en vez de fallar, y el importe no puede pasar del comprobante', function () {
+    pedirNota($this->vendedor, $this->factura)->assertSessionHasNoErrors();
+    pedirNota($this->vendedor, $this->factura)->assertSessionHasErrors('solicitud');
+    pedirNota($this->vendedor, $this->factura, 'credito', ['importe' => 999999])->assertSessionHasErrors();
+
+    expect(NoteRequest::count())->toBe(1);
+});

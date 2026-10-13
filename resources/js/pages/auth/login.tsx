@@ -108,7 +108,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     type="checkbox"
                                     name="remember"
                                     value="1"
-                                    className="border-input accent-primary size-4 shrink-0 cursor-pointer rounded-[4px] border"
+                                    className="border-input accent-primary size-4 shrink-0 cursor-pointer rounded-md border"
                                 />
                                 <Label
                                     htmlFor="remember"
@@ -150,7 +150,7 @@ export default function Login({ status, canResetPassword }: Props) {
             </p>
 
             {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
+                <div className="text-success-strong mb-4 text-center text-sm font-medium">
                     {status}
                 </div>
             )}

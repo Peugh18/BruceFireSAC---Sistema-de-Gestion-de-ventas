@@ -28,6 +28,7 @@ import {
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import GerenteLayout from '@/layouts/gerente-layout';
 import pagosRutas from '@/routes/gerente/cobranzas/pagos';
 import CobranzasRoutes from '@/routes/gerente/cobranzas';
@@ -162,6 +163,8 @@ export default function CobranzasConsolidadasIndex() {
         );
     };
 
+    useBusquedaDinamica(buscar, applyFilters);
+
     const resetFilters = () => {
         setBuscar('');
         setVendedorId('');
@@ -195,12 +198,12 @@ export default function CobranzasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Por Cobrar Total
                             </span>
-                            <Clock className="size-4 text-blue-600" />
+                            <Clock className="text-foreground size-4" />
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(kpis.totalPorCobrar)}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Saldo pendiente en cartera
                         </p>
                     </div>
@@ -217,7 +220,7 @@ export default function CobranzasConsolidadasIndex() {
                         >
                             {formatCurrency(kpis.vencidoTotal)}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Cuotas con fecha pasada
                         </p>
                     </div>
@@ -229,10 +232,10 @@ export default function CobranzasConsolidadasIndex() {
                             </span>
                             <Calendar className="text-warning-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-amber-700">
+                        <div className="text-warning-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(kpis.venceEstaSemana)}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Vencimientos hasta domingo
                         </p>
                     </div>
@@ -244,10 +247,10 @@ export default function CobranzasConsolidadasIndex() {
                             </span>
                             <TrendingUp className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {formatCurrency(kpis.cobradoEsteMes)}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Abonos del mes menos devoluciones
                         </p>
                     </div>
@@ -257,12 +260,12 @@ export default function CobranzasConsolidadasIndex() {
                             <span className="font-medium uppercase">
                                 Clientes con Deuda
                             </span>
-                            <Users className="size-4 text-purple-600" />
+                            <Users className="text-foreground size-4" />
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.clientesConDeuda}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        <p className="text-muted-foreground mt-0.5 text-xs">
                             Empresas en cartera activa
                         </p>
                     </div>
@@ -381,7 +384,7 @@ export default function CobranzasConsolidadasIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Venta / Cuota</TableHead>
                                     <TableHead>Cliente</TableHead>
@@ -429,7 +432,7 @@ export default function CobranzasConsolidadasIndex() {
                                                     <div className="text-foreground font-mono font-bold">
                                                         {c.sale_numero}
                                                     </div>
-                                                    <div className="text-muted-foreground text-[11px]">
+                                                    <div className="text-muted-foreground text-xs">
                                                         Cuota #{c.numero_cuota}
                                                     </div>
                                                 </TableCell>
@@ -437,7 +440,7 @@ export default function CobranzasConsolidadasIndex() {
                                                     <div className="text-foreground font-medium">
                                                         {c.cliente.razon_social}
                                                     </div>
-                                                    <div className="text-muted-foreground flex items-center gap-2 text-[11px]">
+                                                    <div className="text-muted-foreground flex items-center gap-2 text-xs">
                                                         {c.cliente
                                                             .numero_documento && (
                                                             <span>
@@ -463,13 +466,13 @@ export default function CobranzasConsolidadasIndex() {
                                                     {c.vendedor.name}
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3">
-                                                    <div className="text-foreground font-mono text-[11px]">
+                                                    <div className="text-foreground font-mono text-xs">
                                                         {c.fecha_vencimiento}
                                                     </div>
                                                     {isVencido &&
                                                         c.estado !==
                                                             'pagado' && (
-                                                            <div className="text-primary-strong text-[10px] font-bold">
+                                                            <div className="text-primary-strong text-xs font-bold">
                                                                 {c.dias_vencido}{' '}
                                                                 días de mora
                                                             </div>
@@ -478,7 +481,7 @@ export default function CobranzasConsolidadasIndex() {
                                                 <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                     {formatCurrency(c.monto)}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-right font-mono text-emerald-700">
+                                                <TableCell className="text-success-strong px-4 py-3 text-right font-mono">
                                                     {formatCurrency(
                                                         c.monto_pagado,
                                                     )}
@@ -490,17 +493,17 @@ export default function CobranzasConsolidadasIndex() {
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
                                                     <span
-                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                             c.estado ===
                                                             'pagado'
-                                                                ? 'bg-emerald-100 text-emerald-800'
+                                                                ? 'text-success-strong bg-emerald-100'
                                                                 : c.estado ===
                                                                     'vencido'
                                                                   ? 'text-primary-strong bg-red-100'
                                                                   : c.estado ===
                                                                       'parcial'
-                                                                    ? 'bg-amber-100 text-amber-800'
-                                                                    : 'bg-blue-100 text-blue-800'
+                                                                    ? 'text-warning-strong bg-amber-100'
+                                                                    : 'bg-muted text-foreground'
                                                         }`}
                                                     >
                                                         {c.estado}
@@ -516,7 +519,7 @@ export default function CobranzasConsolidadasIndex() {
                                                                 c,
                                                             )
                                                         }
-                                                        className="border-border bg-card text-foreground/80 hover:bg-background inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold"
+                                                        className="border-border bg-card text-foreground/80 hover:bg-background inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold"
                                                     >
                                                         <Eye className="text-muted-foreground size-3" />
                                                         <span>
@@ -624,7 +627,7 @@ export default function CobranzasConsolidadasIndex() {
                                         <span className="text-muted-foreground">
                                             Abonado:
                                         </span>
-                                        <p className="font-mono font-bold text-emerald-700">
+                                        <p className="text-success-strong font-mono font-bold">
                                             {formatCurrency(
                                                 viewingPayments.monto_pagado,
                                             )}
@@ -666,7 +669,7 @@ export default function CobranzasConsolidadasIndex() {
                                                             )}
                                                         </div>
                                                         {p.numero_operacion && (
-                                                            <div className="text-muted-foreground text-[10px]">
+                                                            <div className="text-muted-foreground text-xs">
                                                                 Op:{' '}
                                                                 {
                                                                     p.numero_operacion
@@ -676,13 +679,13 @@ export default function CobranzasConsolidadasIndex() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="font-mono font-bold text-emerald-700">
+                                                    <div className="text-success-strong font-mono font-bold">
                                                         +
                                                         {formatCurrency(
                                                             p.monto,
                                                         )}
                                                     </div>
-                                                    <div className="text-muted-foreground text-[10px]">
+                                                    <div className="text-muted-foreground text-xs">
                                                         {p.fecha}
                                                     </div>
                                                     {anulandoId === p.id ? (
@@ -697,7 +700,7 @@ export default function CobranzasConsolidadasIndex() {
                                                                     )
                                                                 }
                                                                 placeholder="Motivo"
-                                                                className="border-border w-32 rounded border px-2 py-0.5 text-[11px]"
+                                                                className="border-border w-32 rounded border px-2 py-0.5 text-xs"
                                                             />
                                                             <button
                                                                 type="button"
@@ -711,7 +714,7 @@ export default function CobranzasConsolidadasIndex() {
                                                                         p.id,
                                                                     )
                                                                 }
-                                                                className="rounded bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white disabled:opacity-40"
+                                                                className="rounded bg-red-600 px-2 py-0.5 text-xs font-semibold text-white disabled:opacity-40"
                                                             >
                                                                 Confirmar
                                                             </button>
@@ -722,7 +725,7 @@ export default function CobranzasConsolidadasIndex() {
                                                                         null,
                                                                     )
                                                                 }
-                                                                className="text-[11px] underline"
+                                                                className="text-xs underline"
                                                             >
                                                                 Cancelar
                                                             </button>
@@ -736,7 +739,7 @@ export default function CobranzasConsolidadasIndex() {
                                                                     p.id,
                                                                 );
                                                             }}
-                                                            className="mt-1 text-[11px] font-semibold text-red-600 underline"
+                                                            className="text-destructive-strong mt-1 text-xs font-semibold underline"
                                                         >
                                                             Anular pago
                                                         </button>

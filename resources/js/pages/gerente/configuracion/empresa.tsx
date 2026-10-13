@@ -74,7 +74,7 @@ const COLORES_SUGERIDOS = [
 
 function field(errors: Record<string, string>, name: string) {
     return errors[name] ? (
-        <p role="alert" className="text-destructive-strong mt-1 text-[11.5px]">
+        <p role="alert" className="text-destructive-strong mt-1 text-xs">
             {errors[name]}
         </p>
     ) : null;
@@ -228,7 +228,7 @@ export default function EmpresaConfiguracion({
                     firmasPendientes={firmasPendientes}
                 />
                 <div className="flex items-center gap-3">
-                    <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-[11px]">
+                    <div className="bg-destructive/10 text-primary-strong flex size-10 items-center justify-center rounded-lg">
                         <Building2 className="size-5" />
                     </div>
                     <div>
@@ -242,10 +242,10 @@ export default function EmpresaConfiguracion({
                     </div>
                 </div>
 
-                <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                     <form onSubmit={submit} className="flex flex-col gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="border-border bg-muted/40 flex size-20 items-center justify-center overflow-hidden rounded-[10px] border border-dashed">
+                            <div className="border-border bg-muted/40 flex size-20 items-center justify-center overflow-hidden rounded-lg border border-dashed">
                                 {logoPreview ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img
@@ -254,7 +254,7 @@ export default function EmpresaConfiguracion({
                                         className="max-h-full max-w-full object-contain"
                                     />
                                 ) : (
-                                    <span className="text-muted-foreground text-[10px]">
+                                    <span className="text-muted-foreground text-xs">
                                         Sin logo
                                     </span>
                                 )}
@@ -274,11 +274,11 @@ export default function EmpresaConfiguracion({
                                     onClick={() =>
                                         fileInputRef.current?.click()
                                     }
-                                    className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
+                                    className="border-border bg-card text-foreground/80 h-9 rounded-lg shadow-none"
                                 >
                                     <Upload className="size-3.5" /> Subir logo
                                 </Button>
-                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                <p className="text-muted-foreground mt-1 text-xs">
                                     PNG con fondo transparente (o JPG), de
                                     {` ${LOGO_MIN_ANCHO}×${LOGO_MIN_ALTO}`} a{' '}
                                     {LOGO_MAX_LADO} px, máx. 2MB. Ideal:
@@ -286,7 +286,7 @@ export default function EmpresaConfiguracion({
                                     comprobante se ajusta solo, sin deformarse.
                                 </p>
                                 {avisoLogo ? (
-                                    <p className="text-destructive-strong mt-1 text-[11.5px] font-semibold">
+                                    <p className="text-destructive-strong mt-1 text-xs font-semibold">
                                         {avisoLogo}
                                     </p>
                                 ) : null}
@@ -453,7 +453,7 @@ export default function EmpresaConfiguracion({
                                     }
                                     placeholder="00-000-000000"
                                 />
-                                <p className="text-muted-foreground mt-1 text-[11px]">
+                                <p className="text-muted-foreground mt-1 text-xs">
                                     Obligatoria en comprobantes con detracción
                                     (servicios sobre S/ 700).
                                 </p>
@@ -488,7 +488,7 @@ export default function EmpresaConfiguracion({
                                                 e.target.value.toUpperCase(),
                                             )
                                         }
-                                        className="border-border h-9 w-12 cursor-pointer rounded-[8px] border bg-transparent p-1"
+                                        className="border-border h-9 w-12 cursor-pointer rounded-lg border bg-transparent p-1"
                                     />
                                     {COLORES_SUGERIDOS.map((color) => (
                                         <button
@@ -577,7 +577,7 @@ export default function EmpresaConfiguracion({
                             <Button
                                 type="submit"
                                 loading={form.processing}
-                                className="bg-foreground text-background hover:bg-foreground/90 h-10 rounded-[9px] px-4 text-[13px] font-bold shadow-xs transition-colors"
+                                className="bg-foreground text-background hover:bg-foreground/90 h-10 rounded-lg px-4 text-[13px] font-bold shadow-xs transition-colors"
                             >
                                 {form.processing
                                     ? 'Guardando…'
@@ -586,7 +586,7 @@ export default function EmpresaConfiguracion({
                             <Button
                                 asChild
                                 variant="outline"
-                                className="border-border bg-card text-foreground h-10 rounded-[9px] shadow-none"
+                                className="border-border bg-card text-foreground h-10 rounded-lg shadow-none"
                             >
                                 <a
                                     href={empresa.vistaPrevia.url({
@@ -600,7 +600,7 @@ export default function EmpresaConfiguracion({
                                 </a>
                             </Button>
                             {form.isDirty ? (
-                                <span className="text-muted-foreground text-[11.5px]">
+                                <span className="text-muted-foreground text-xs">
                                     Guarda los cambios para verlos en la vista
                                     previa.
                                 </span>
@@ -609,7 +609,7 @@ export default function EmpresaConfiguracion({
                     </form>
                 </Card>
 
-                <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                     <div className="flex items-center gap-2">
                         <CreditCard className="text-success-strong size-4" />
                         <h2 className="font-['Oswald',sans-serif] text-[16px] font-semibold uppercase">
@@ -627,7 +627,7 @@ export default function EmpresaConfiguracion({
                             bankAccounts.map((account) => (
                                 <div
                                     key={account.id}
-                                    className="border-border flex items-center justify-between rounded-[9px] border px-3 py-2 text-[12px]"
+                                    className="border-border flex items-center justify-between rounded-lg border px-3 py-2 text-[12px]"
                                 >
                                     <div>
                                         <span className="font-bold">
@@ -647,7 +647,7 @@ export default function EmpresaConfiguracion({
                                         onClick={() =>
                                             deleteBankAccount(account.id)
                                         }
-                                        className="border-border bg-card text-destructive-strong size-7 rounded-[7px] shadow-none"
+                                        className="border-border bg-card text-destructive-strong size-7 rounded-md shadow-none"
                                     >
                                         <Trash2 className="size-3.5" />
                                     </Button>
@@ -700,7 +700,7 @@ export default function EmpresaConfiguracion({
                         <Button
                             type="submit"
                             loading={bankForm.processing}
-                            className="h-10 rounded-[9px] bg-emerald-600 text-white shadow-none hover:bg-emerald-700"
+                            className="h-10 rounded-lg bg-emerald-600 text-white shadow-none hover:bg-emerald-700"
                         >
                             Agregar
                         </Button>

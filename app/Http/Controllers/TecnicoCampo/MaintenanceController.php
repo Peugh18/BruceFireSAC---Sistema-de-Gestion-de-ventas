@@ -8,11 +8,13 @@ use App\Actions\Tecnico\ProcessChecklist;
 use App\Actions\TecnicoCampo\EquipoDeLaOrden;
 use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\CertificateType;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
+use App\Services\Certificates\PruebasHidrostaticas;
 use App\Services\Reports\ActaConformidadPdfService;
 use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Database\Eloquent\Builder;
@@ -61,6 +63,8 @@ class MaintenanceController extends Controller
             'deficiencies.equipment',
             'certificates.certificateType',
         ]);
+
+        $serviceOrder->setRelation('certificates', $serviceOrder->certificadosParaEntrega());
 
         return Inertia::render('tecnico-campo/mantenimientos/show', [
             'asignacion' => $serviceOrder->asignacionPara(request()->user()),
@@ -117,7 +121,8 @@ class MaintenanceController extends Controller
             'items.*.requiere_autorizacion' => ['nullable', 'boolean'],
             'items.*.descargado' => ['nullable', 'boolean'],
             'items.*.foto' => ['nullable', 'image', 'max:15360'],
-            'observaciones' => ['nullable', 'string', 'max:1000'],
+            'equipo_no_apto' => ['sometimes', 'boolean'],
+            'observaciones' => ['required_if:equipo_no_apto,1,true', 'nullable', 'string', 'max:1000'],
         ]);
 
         EquipoDeLaOrden::asegurarAbierta($serviceOrder);
@@ -126,6 +131,7 @@ class MaintenanceController extends Controller
             'origen' => 'campo',
             'items' => $validated['items'],
             'observaciones' => $validated['observaciones'] ?? null,
+            'equipo_no_apto' => (bool) ($validated['equipo_no_apto'] ?? false),
         ]);
 
         return back()->with('success', "Checklist guardado para {$equipment->numero_serie}.");
@@ -224,6 +230,9 @@ class MaintenanceController extends Controller
         }
 
         $serviceOrder->loadMissing('client');
+        PruebasHidrostaticas::vigentes($serviceOrder->client_id, array_values($conformes->map(fn (Equipment $equipment) => $equipment->id)->all()))
+            ->pluck('certificate')->unique('id')
+            ->each(fn (Certificate $certificate) => $certificate->ordenesReutilizadas()->syncWithoutDetaching([$serviceOrder->id]));
 
         app(IssueCertificate::class)->handle(
             $tipo,
@@ -251,7 +260,7 @@ class MaintenanceController extends Controller
     protected function equiposConformes(ServiceOrder $serviceOrder): EloquentCollection
     {
         return $serviceOrder->equipments()
-            ->where('equipment.estado', '!=', 'descargado')
+            ->whereNotIn('equipment.estado', ['descargado', 'baja'])
             ->whereRaw(
                 "(select c.resultado_general from technical_checklists c where c.service_order_id = ? and c.equipment_id = equipment.id order by c.id desc limit 1) = 'conforme'",
                 [$serviceOrder->id],

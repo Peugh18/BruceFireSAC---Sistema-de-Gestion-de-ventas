@@ -134,7 +134,7 @@ test('el error de la consulta de ruc no filtra el token de APIsPeru ni al navega
     Log::spy();
 
     $respuesta = $this->actingAs($user)
-        ->getJson(route('vendedor.ruc-lookup', ['current_team' => $user->currentTeam, 'numero_documento' => '20601111222']));
+        ->getJson(route('vendedor.ruc-lookup', ['current_team' => $user->currentTeam, 'numero_documento' => '20164113532']));
 
     $respuesta->assertStatus(422);
 
@@ -230,19 +230,25 @@ test('creating a client from the sale or quote modal returns it as json', functi
     ]);
 });
 
-test('exportar clientes descarga un csv con los clientes de la busqueda actual', function () {
+test('exportar clientes descarga un Excel con los clientes de la busqueda actual', function () {
     $user = vendedorUser();
-    Client::factory()->create(['razon_social' => 'EXTINTORES DEL NORTE S.A.C.', 'numero_documento' => '20600000001']);
+    Client::factory()->create(['razon_social' => 'EXTINTORES DEL NORTE S.A.C. & HIJOS', 'numero_documento' => '20600000001']);
     Client::factory()->create(['razon_social' => 'OTRA EMPRESA S.A.C.']);
 
     $response = $this->actingAs($user)
         ->get(route('vendedor.clientes.export', ['current_team' => $user->currentTeam, 'search' => 'norte']))
         ->assertOk()
-        ->assertDownload('clientes-'.now()->format('Y-m-d').'.csv');
+        ->assertDownload('clientes-'.now()->format('Y-m-d').'.xlsx');
 
-    $csv = $response->streamedContent();
+    $ruta = tempnam(sys_get_temp_dir(), 'xlsx');
+    file_put_contents($ruta, $response->streamedContent());
+    $zip = new ZipArchive;
+    expect($zip->open($ruta))->toBeTrue();
+    $hoja = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+    $zip->close();
+    unlink($ruta);
 
-    expect($csv)->toContain('EXTINTORES DEL NORTE S.A.C.')
+    expect($hoja)->toContain('EXTINTORES DEL NORTE S.A.C. &amp; HIJOS')
         ->toContain('20600000001')
         ->not->toContain('OTRA EMPRESA');
 });
@@ -305,4 +311,21 @@ test('no se cambia el documento de un cliente con ventas emitidas', function () 
         ->assertSessionHasErrors('numero_documento');
 
     expect($client->fresh()->numero_documento)->toBe('20603335717');
+});
+
+test('la consulta avisa si el RUC no es válido o SUNAT no lo encuentra', function () {
+    config(['services.apisperu.token' => 'test-token']);
+    $user = vendedorUser();
+    $consultar = fn (string $numero) => $this->actingAs($user)
+        ->getJson(route('vendedor.ruc-lookup', ['current_team' => $user->currentTeam, 'numero_documento' => $numero]));
+
+    Http::preventStrayRequests();
+
+    $consultar('20164113533')->assertStatus(422)->assertJsonPath('message', 'Ese RUC no es válido: revisa los números.');
+
+    Http::fake(['https://dniruc.apisperu.com/*' => Http::response(['success' => false, 'message' => 'no existe'], 404)]);
+    $consultar('20164113532')->assertNotFound()->assertJsonPath('message', 'No encontramos ese RUC. Revisa que esté bien escrito.');
+
+    Http::fake(['https://dniruc.apisperu.com/*' => Http::response([])]);
+    $consultar('12345678')->assertNotFound()->assertJsonPath('message', 'No encontramos ese DNI. Revisa que esté bien escrito.');
 });

@@ -107,7 +107,7 @@ test('una venta se reparte en dos locales con la numeracion y el orden del clien
 
     expect($chimbote->referencia)->toBe('SEDE: Planta Chimbote')
         ->and($chimbote->direccion)->toBe('AV. INDUSTRIAL 123 CHIMBOTE')
-        ->and($chimbote->tipo_atencion)->toBe('venta')
+        ->and($chimbote->tipo_atencion)->toBe('nuevo')
         ->and($unidades->pluck('numero_cliente')->all())->toBe(['01', '02'])
         ->and($unidades->first()->equipment_id)->toBe($equipos[2]->id)
         ->and($unidades->first()->capacidad)->toBe('9 Kg')

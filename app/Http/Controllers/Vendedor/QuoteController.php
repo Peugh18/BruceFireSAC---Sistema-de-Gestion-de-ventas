@@ -35,7 +35,8 @@ class QuoteController extends Controller
         $porSede = fn ($query) => $query->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId));
 
         $quotes = $porSede(Quote::query())
-            ->with('client', 'sale')
+            ->with(['client', 'sale', 'serviceOrders' => fn ($q) => $q->where('estado', '!=', 'anulada')->select('id', 'quote_id', 'codigo')])
+            ->withExists(['items as tiene_servicio' => fn ($q) => $q->whereNotNull('service_id')])
             ->when($estado !== '' && $estado !== 'todas', function ($query) use ($estado) {
                 return $estado === 'enviada'
                     ? $query->whereIn('estado', ['emitida', 'enviada', 'pendiente'])
@@ -56,6 +57,9 @@ class QuoteController extends Controller
                 'puede_guardar_numero' => ! $quote->client->esClientesVarios(),
                 'enlace_pdf' => $pdf->enlacePublico($quote),
                 'venta' => $quote->sale ? ['id' => $quote->sale->id, 'numero' => $quote->sale->numero_interno] : null,
+                // La orden de taller solo existe para cotizaciones con un servicio (recarga, mantenimiento).
+                'tiene_servicio' => (bool) $quote->tiene_servicio,
+                'orden' => ($orden = $quote->serviceOrders->first()) ? ['id' => $orden->id, 'codigo' => $orden->codigo] : null,
             ]);
 
         return Inertia::render('vendedor/cotizaciones/index', [
@@ -98,6 +102,8 @@ class QuoteController extends Controller
                 'numero' => $quote->numero,
                 'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
                 'referencia' => $quote->referencia,
+                'destino' => $quote->destinoResuelto(),
+                'vehicle_id' => $quote->vehicle_id,
                 'condicion_pago_propuesta' => $quote->condicion_pago_propuesta,
                 'observaciones' => $quote->observaciones,
                 'items' => $quote->items->map(fn ($item) => [
@@ -159,6 +165,7 @@ class QuoteController extends Controller
         return Inertia::render('vendedor/cotizaciones/nueva', ['edicion' => [
             'id' => $quote->id, 'numero' => $quote->numero, 'fecha' => $quote->fecha->toDateString(), 'vigencia_hasta' => $quote->vigencia_hasta->toDateString(),
             'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'referencia' => $quote->referencia,
+            'destino' => $quote->destinoResuelto(), 'vehicle_id' => $quote->vehicle_id,
             'condicion_pago_propuesta' => $quote->condicion_pago_propuesta, 'observaciones' => $quote->observaciones,
             'items' => $quote->items->map(fn ($item): array => ['deficiency_id' => $item->deficiency_id, 'tipo' => $item->product_id ? 'product' : 'service', 'product_id' => $item->product_id, 'service_id' => $item->service_id, 'codigo' => $item->product->codigo ?? $item->service?->codigo, 'nombre' => $item->product->nombre ?? $item->service?->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento])->values(),
         ]]);

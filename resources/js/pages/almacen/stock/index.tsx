@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
@@ -142,7 +143,7 @@ function formatDate(isoString: string | null): string {
 
 function getTipoBadge() {
     return (
-        <span className="inline-flex items-center gap-1 rounded-[6px] border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10.5px] font-bold text-blue-600 dark:text-blue-400">
+        <span className="border-border bg-muted text-foreground inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-bold">
             <Package className="size-3" /> Producto
         </span>
     );
@@ -168,8 +169,7 @@ function getTipoMovimientoBadge(tipo: string): {
         case 'salida_servicio':
             return {
                 label: 'Consumo Taller',
-                className:
-                    'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+                className: 'bg-muted text-foreground  border-border',
             };
         case 'ajuste':
             return {
@@ -180,8 +180,7 @@ function getTipoMovimientoBadge(tipo: string): {
         case 'traslado':
             return {
                 label: 'Traslado',
-                className:
-                    'bg-sky-500/10 text-blue-600 dark:text-blue-400 border-sky-500/20',
+                className: 'bg-muted text-foreground  border-border',
             };
         default:
             return {
@@ -222,8 +221,7 @@ export default function StockIndex({
     const [kTipo, setKTipo] = useState(kardex_filters.tipo || 'todos');
 
     // Búsqueda en Stock
-    const handleStockFilter = (e: FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             window.location.pathname,
             {
@@ -242,6 +240,7 @@ export default function StockIndex({
             { preserveState: true, preserveScroll: true },
         );
     };
+    const handleStockFilter = useBusquedaDinamica(stockSearch, aplicarBusqueda);
 
     const handleResetStock = () => {
         setStockSearch('');
@@ -303,7 +302,7 @@ export default function StockIndex({
             <div className="flex flex-col gap-6">
                 {/* 4 KPI Cards */}
                 <div className="grid gap-4 sm:grid-cols-3">
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Productos en catálogo
@@ -313,12 +312,12 @@ export default function StockIndex({
                         <div className="text-foreground mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.total_productos}
                         </div>
-                        <div className="text-muted-foreground mt-1 text-[11.5px]">
+                        <div className="text-muted-foreground mt-1 text-xs">
                             Productos físicos y repuestos
                         </div>
                     </Card>
 
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Unidades disponibles
@@ -328,12 +327,12 @@ export default function StockIndex({
                         <div className="text-success-strong mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.unidades_en_stock}
                         </div>
-                        <div className="text-muted-foreground mt-1 text-[11.5px]">
+                        <div className="text-muted-foreground mt-1 text-xs">
                             Total en todos los almacenes
                         </div>
                     </Card>
 
-                    <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                         <div className="text-muted-foreground flex items-center justify-between">
                             <span className="text-xs font-bold tracking-wider uppercase">
                                 Bajo stock mínimo
@@ -343,7 +342,7 @@ export default function StockIndex({
                         <div className="text-primary-strong mt-3 font-['Oswald',sans-serif] text-[28px] font-semibold">
                             {kpis.bajo_minimo}
                         </div>
-                        <div className="text-muted-foreground mt-1 text-[11.5px]">
+                        <div className="text-muted-foreground mt-1 text-xs">
                             Requieren reabastecimiento
                         </div>
                     </Card>
@@ -374,7 +373,7 @@ export default function StockIndex({
                 <div {...propsPanel('almacen-stock', activeTab)}>
                     {/* TAB 1: STOCK Y CATÁLOGO */}
                     {activeTab === 'stock' && (
-                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                             {/* Filters Bar */}
                             <form
                                 onSubmit={handleStockFilter}
@@ -476,7 +475,7 @@ export default function StockIndex({
                                 <div className="mt-4 overflow-x-auto">
                                     <Table className="w-full text-left text-[12.5px]">
                                         <TableHeader>
-                                            <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                            <TableRow className="border-border text-muted-foreground border-b text-xs font-bold tracking-wider uppercase">
                                                 <TableHead>Código</TableHead>
                                                 <TableHead>
                                                     Ítem / Descripción
@@ -529,7 +528,7 @@ export default function StockIndex({
                                                                 {item.nombre}
                                                             </div>
                                                             {item.serializado && (
-                                                                <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-[10.5px]">
+                                                                <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
                                                                     <ScanBarcode className="text-success-strong size-3" />
                                                                     <span>
                                                                         Unidad
@@ -546,7 +545,7 @@ export default function StockIndex({
                                                             ).map((lote) => (
                                                                 <div
                                                                     key={`${lote.sede}-${lote.lote}`}
-                                                                    className={`mt-0.5 text-[10.5px] ${
+                                                                    className={`mt-0.5 text-xs ${
                                                                         lote.vencido
                                                                             ? 'text-destructive-strong font-bold'
                                                                             : lote.por_vencer
@@ -642,7 +641,7 @@ export default function StockIndex({
                                                                     null &&
                                                                     item.stock_minimo >
                                                                         0 && (
-                                                                        <span className="text-muted-foreground mt-0.5 text-[10px]">
+                                                                        <span className="text-muted-foreground mt-0.5 text-xs">
                                                                             Mín:{' '}
                                                                             {
                                                                                 item.stock_minimo
@@ -708,7 +707,7 @@ export default function StockIndex({
 
                     {/* TAB 2: HISTORIAL DE KARDEX */}
                     {activeTab === 'kardex' && (
-                        <Card className="border-border bg-card rounded-[16px] p-5 shadow-none">
+                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
                             {/* Kardex Filters Bar */}
                             <form
                                 onSubmit={handleKardexFilter}
@@ -910,7 +909,7 @@ export default function StockIndex({
                                 <div className="mt-4 overflow-x-auto">
                                     <Table className="w-full text-left text-[12.5px]">
                                         <TableHeader>
-                                            <TableRow className="border-border text-muted-foreground border-b text-[11px] font-bold tracking-wider uppercase">
+                                            <TableRow className="border-border text-muted-foreground border-b text-xs font-bold tracking-wider uppercase">
                                                 <TableHead>Fecha</TableHead>
                                                 <TableHead>Tipo</TableHead>
                                                 <TableHead>Producto</TableHead>
@@ -941,14 +940,14 @@ export default function StockIndex({
                                                         key={mov.id}
                                                         className="hover:bg-muted/40 transition-colors"
                                                     >
-                                                        <TableCell className="text-foreground/80 py-3 pr-4 font-mono text-[11.5px] whitespace-nowrap">
+                                                        <TableCell className="text-foreground/80 py-3 pr-4 font-mono text-xs whitespace-nowrap">
                                                             {formatDate(
                                                                 mov.fecha,
                                                             )}
                                                         </TableCell>
                                                         <TableCell className="px-3 py-3">
                                                             <span
-                                                                className={`inline-flex items-center rounded-[6px] border px-2 py-0.5 text-[10.5px] font-bold ${badge.className}`}
+                                                                className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-bold ${badge.className}`}
                                                             >
                                                                 {badge.label}
                                                             </span>
@@ -960,7 +959,7 @@ export default function StockIndex({
                                                                         .nombre
                                                                 }
                                                             </div>
-                                                            <div className="text-muted-foreground font-mono text-[11px]">
+                                                            <div className="text-muted-foreground font-mono text-xs">
                                                                 Cód:{' '}
                                                                 {
                                                                     mov.producto
@@ -970,14 +969,14 @@ export default function StockIndex({
                                                         </TableCell>
                                                         <TableCell className="px-3 py-3">
                                                             {mov.unidad_serie ? (
-                                                                <span className="text-foreground flex items-center gap-1 font-mono text-[11.5px] font-bold">
+                                                                <span className="text-foreground flex items-center gap-1 font-mono text-xs font-bold">
                                                                     <ScanBarcode className="text-success-strong size-3" />
                                                                     {
                                                                         mov.unidad_serie
                                                                     }
                                                                 </span>
                                                             ) : (
-                                                                <span className="text-muted-foreground text-[11px]">
+                                                                <span className="text-muted-foreground text-xs">
                                                                     —
                                                                 </span>
                                                             )}
@@ -997,18 +996,18 @@ export default function StockIndex({
                                                                     ? `${mov.cantidad}`
                                                                     : `+${mov.cantidad}`}
                                                             </span>{' '}
-                                                            <span className="text-muted-foreground text-[10px] font-normal">
+                                                            <span className="text-muted-foreground text-xs font-normal">
                                                                 {
                                                                     mov.producto
                                                                         .unidad_medida
                                                                 }
                                                             </span>
                                                         </TableCell>
-                                                        <TableCell className="text-muted-foreground px-4 py-3 text-[11.5px]">
+                                                        <TableCell className="text-muted-foreground px-4 py-3 text-xs">
                                                             {mov.usuario ||
                                                                 'Sistema'}
                                                         </TableCell>
-                                                        <TableCell className="text-muted-foreground max-w-[200px] truncate py-3 pl-4 text-[11.5px]">
+                                                        <TableCell className="text-muted-foreground max-w-[200px] truncate py-3 pl-4 text-xs">
                                                             {mov.observacion ||
                                                                 '—'}
                                                         </TableCell>

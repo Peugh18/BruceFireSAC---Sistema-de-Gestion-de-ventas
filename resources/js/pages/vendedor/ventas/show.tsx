@@ -337,7 +337,7 @@ export default function VentasShow({
                     <Button
                         asChild
                         variant="outline"
-                        className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
+                        className="border-border bg-card text-foreground/80 h-9 rounded-lg shadow-none"
                     >
                         <Link href={ventas.index(teamSlug)}>
                             <ArrowLeft className="size-4" />
@@ -362,7 +362,7 @@ export default function VentasShow({
                             variant="outline"
                             disabled={descartando}
                             onClick={descartarVenta}
-                            className="border-border bg-card text-destructive-strong h-9 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-destructive-strong h-9 rounded-lg shadow-none"
                         >
                             <XCircle className="size-4" />
                             {sale.estado === 'borrador'
@@ -374,7 +374,7 @@ export default function VentasShow({
                         <Button
                             asChild
                             variant="outline"
-                            className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground h-9 rounded-lg shadow-none"
                         >
                             <Link
                                 href={guias.create.url(teamSlug, {
@@ -390,7 +390,7 @@ export default function VentasShow({
                         <Button
                             asChild
                             variant="outline"
-                            className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground h-9 rounded-lg shadow-none"
                         >
                             <Link href={urlEditar}>
                                 <PencilLine className="size-4" />
@@ -402,7 +402,7 @@ export default function VentasShow({
                         <Button
                             onClick={confirmarVenta}
                             disabled={confirmando}
-                            className="h-9 rounded-[9px] bg-emerald-600 text-white shadow-none hover:bg-emerald-700"
+                            className="h-9 rounded-lg bg-emerald-600 text-white shadow-none hover:bg-emerald-700"
                         >
                             {confirmando
                                 ? 'Emitiendo…'
@@ -414,7 +414,7 @@ export default function VentasShow({
                     {sale.estado === 'anulada' && (
                         <Button
                             asChild
-                            className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] text-white shadow-none"
+                            className="bg-primary hover:bg-primary/90 h-9 rounded-lg text-white shadow-none"
                         >
                             <Link
                                 href={ventas.create.url(teamSlug, {
@@ -426,14 +426,14 @@ export default function VentasShow({
                             </Link>
                         </Button>
                     )}
-                    <Badge className="text-success-strong rounded-full border-transparent bg-emerald-500/10 px-3 py-1 text-[10.5px] font-bold capitalize dark:text-emerald-400">
+                    <Badge className="text-success-strong rounded-full border-transparent bg-emerald-500/10 px-3 py-1 text-xs font-bold capitalize dark:text-emerald-400">
                         {sale.estado ?? 'registrada'}
                     </Badge>
                     {sale.numero_nota_venta && (
                         <Button
                             asChild
                             variant="outline"
-                            className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground/80 h-9 rounded-lg shadow-none"
                         >
                             <a
                                 href={ventas.notaVentaPdf.url({
@@ -448,7 +448,7 @@ export default function VentasShow({
                         </Button>
                     )}
                     {documento && (
-                        <Badge className="rounded-full border-transparent bg-blue-500/10 px-3 py-1 text-[10.5px] font-bold text-blue-600 capitalize dark:text-blue-400">
+                        <Badge className="bg-muted text-foreground rounded-full border-transparent px-3 py-1 text-xs font-bold capitalize">
                             SUNAT: {documento.serie}-{documento.correlativo} ·{' '}
                             {nice(documento.sunat_estado)}
                         </Badge>
@@ -457,7 +457,7 @@ export default function VentasShow({
                         <Button
                             asChild
                             variant="outline"
-                            className="border-border bg-card text-foreground/80 h-9 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground/80 h-9 rounded-lg shadow-none"
                         >
                             <a
                                 href={facturacion.pdf.url({
@@ -474,7 +474,7 @@ export default function VentasShow({
 
                 {documento && ventaActiva && (porEnviar || rechazado) ? (
                     <Card
-                        className={`flex flex-col gap-3 rounded-[14px] p-4 shadow-none sm:flex-row sm:items-center ${rechazado ? 'border-destructive/40 bg-destructive/5' : 'border-amber-500/40 bg-amber-500/5'}`}
+                        className={`flex flex-col gap-3 rounded-2xl p-4 shadow-none sm:flex-row sm:items-center ${rechazado ? 'border-destructive/40 bg-destructive/5' : 'border-amber-500/40 bg-amber-500/5'}`}
                     >
                         <div className="flex flex-1 items-start gap-3">
                             {rechazado ? (
@@ -503,7 +503,7 @@ export default function VentasShow({
                                         variant="outline"
                                         disabled={procesando !== null}
                                         onClick={() => accion('anular')}
-                                        className="border-border bg-card text-destructive-strong h-9 rounded-[9px] shadow-none"
+                                        className="border-border bg-card text-destructive-strong h-9 rounded-lg shadow-none"
                                     >
                                         <XCircle className="size-4" />
                                         Anular venta
@@ -512,7 +512,7 @@ export default function VentasShow({
                                         type="button"
                                         disabled={procesando !== null}
                                         onClick={() => accion('enviar')}
-                                        className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] text-white shadow-none"
+                                        className="bg-primary hover:bg-primary/90 h-9 rounded-lg text-white shadow-none"
                                     >
                                         <Send className="size-4" />
                                         {procesando === 'enviar'
@@ -526,7 +526,7 @@ export default function VentasShow({
                 ) : null}
 
                 {documento && ventaActiva && aceptado ? (
-                    <Card className="flex-row flex-wrap items-center justify-between gap-3 rounded-[14px] border-emerald-500/30 bg-emerald-500/5 p-4 shadow-none">
+                    <Card className="flex-row flex-wrap items-center justify-between gap-3 rounded-2xl border-emerald-500/30 bg-emerald-500/5 p-4 shadow-none">
                         <div className="flex items-start gap-3">
                             <ShieldCheck className="text-success-strong mt-0.5 size-5 shrink-0" />
                             <div>
@@ -547,7 +547,7 @@ export default function VentasShow({
                             type="button"
                             variant="outline"
                             onClick={() => setAbrirNotaCredito((n) => n + 1)}
-                            className="border-border bg-card text-foreground h-9 rounded-[9px] shadow-none"
+                            className="border-border bg-card text-foreground h-9 rounded-lg shadow-none"
                         >
                             <PencilLine className="size-4" />
                             Corregir con nota de crédito
@@ -556,35 +556,35 @@ export default function VentasShow({
                 ) : null}
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
+                    <Card className="border-border bg-card gap-1 rounded-2xl p-4 shadow-none">
                         <CalendarDays className="text-warning-strong size-5" />
-                        <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                        <div className="text-muted-foreground text-xs font-bold uppercase">
                             Fecha
                         </div>
                         <div className="font-['IBM_Plex_Mono',monospace] text-[13px] font-bold">
                             {sale.fecha ?? '-'}
                         </div>
                     </Card>
-                    <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
-                        <ReceiptText className="size-5 text-blue-600 dark:text-blue-400" />
-                        <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                    <Card className="border-border bg-card gap-1 rounded-2xl p-4 shadow-none">
+                        <ReceiptText className="text-foreground size-5" />
+                        <div className="text-muted-foreground text-xs font-bold uppercase">
                             Comprobante
                         </div>
                         <div className="font-['IBM_Plex_Mono',monospace] text-[13px] font-bold uppercase">
                             {nice(sale.comprobante_tipo)}
                         </div>
                     </Card>
-                    <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
+                    <Card className="border-border bg-card gap-1 rounded-2xl p-4 shadow-none">
                         <Banknote className="text-success-strong size-5" />
-                        <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                        <div className="text-muted-foreground text-xs font-bold uppercase">
                             Condición
                         </div>
                         <div className="text-[13px] font-bold capitalize">
                             {nice(sale.condicion_pago)}
                         </div>
                     </Card>
-                    <Card className="border-border bg-card gap-1 rounded-[14px] p-4 shadow-none">
-                        <div className="text-muted-foreground text-[11px] font-bold uppercase">
+                    <Card className="border-border bg-card gap-1 rounded-2xl p-4 shadow-none">
+                        <div className="text-muted-foreground text-xs font-bold uppercase">
                             Total
                         </div>
                         <div className="font-['Oswald',sans-serif] text-[25px] font-semibold">
@@ -593,7 +593,7 @@ export default function VentasShow({
                     </Card>
                 </div>
 
-                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none">
                     <h2 className="mb-3 font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                         Items
                     </h2>
@@ -747,7 +747,7 @@ export default function VentasShow({
                                                                 item.numero_serie!,
                                                         })
                                                     }
-                                                    className="text-primary-strong ml-2 font-sans text-[11.5px] font-semibold hover:underline"
+                                                    className="text-primary-strong ml-2 font-sans text-xs font-semibold hover:underline"
                                                 >
                                                     Cambiar
                                                 </button>
@@ -775,7 +775,7 @@ export default function VentasShow({
                     </div>
                 </Card>
 
-                <Card className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none">
+                <Card className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none">
                     <h2 className="mb-3 font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
                         Pagos
                     </h2>
@@ -849,7 +849,7 @@ export default function VentasShow({
                 {(sale.estado === 'confirmada' &&
                     (tieneEquipos || tiposServicio.length > 0)) ||
                 certificados.length > 0 ? (
-                    <Card className="border-border bg-card gap-3 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-3 rounded-2xl p-5 shadow-none">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                                 <Award className="text-primary-strong size-5" />
@@ -860,7 +860,7 @@ export default function VentasShow({
                             {sale.estado === 'confirmada' ? (
                                 <Button
                                     asChild
-                                    className="bg-primary hover:bg-primary/90 h-9 rounded-[9px] text-white shadow-none"
+                                    className="bg-primary hover:bg-primary/90 h-9 rounded-lg text-white shadow-none"
                                 >
                                     <Link
                                         href={ventas.certificados.create.url({
@@ -890,7 +890,7 @@ export default function VentasShow({
                                                 tipo: tipo.codigo,
                                             },
                                         )}
-                                        className="border-border hover:border-primary/60 hover:text-primary-strong rounded-full border px-2.5 py-1 text-[11.5px] font-bold transition-colors"
+                                        className="border-border hover:border-primary/60 hover:text-primary-strong rounded-full border px-2.5 py-1 text-xs font-bold transition-colors"
                                     >
                                         {tipo.nombre}
                                     </Link>
@@ -904,7 +904,7 @@ export default function VentasShow({
                                     : 'Aún no hay certificados emitidos. Los del servicio de taller se generan al cerrar el trabajo; la capacitación se registra con sus datos.'}
                             </p>
                         ) : (
-                            <div className="border-border overflow-hidden rounded-[10px] border">
+                            <div className="border-border overflow-hidden rounded-lg border">
                                 {certificados.map((c) => (
                                     <div
                                         key={c.id}
@@ -935,7 +935,7 @@ export default function VentasShow({
                                                 asChild
                                                 variant="outline"
                                                 size="sm"
-                                                className="border-border bg-card h-8 rounded-[8px] shadow-none"
+                                                className="border-border bg-card h-8 rounded-lg shadow-none"
                                             >
                                                 <a
                                                     href={CertificadosRoutes.pdf.url(
@@ -961,7 +961,7 @@ export default function VentasShow({
                                                 asChild
                                                 variant="outline"
                                                 size="sm"
-                                                className="border-border bg-card h-8 rounded-[8px] shadow-none"
+                                                className="border-border bg-card h-8 rounded-lg shadow-none"
                                                 title="Descargar Word editable"
                                             >
                                                 <a

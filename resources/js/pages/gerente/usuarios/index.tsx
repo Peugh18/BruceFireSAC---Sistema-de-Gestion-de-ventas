@@ -202,7 +202,7 @@ export default function UsuariosIndex() {
                 </div>
 
                 {flash?.success && (
-                    <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800">
+                    <div className="text-success-strong flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium">
                         <CheckCircle2 className="size-4" />
                         {flash.success}
                     </div>
@@ -232,7 +232,7 @@ export default function UsuariosIndex() {
                         <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                             <div className="overflow-x-auto">
                                 <Table className="w-full text-left text-xs">
-                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                         <TableRow>
                                             <TableHead>Nombre</TableHead>
                                             <TableHead>Email</TableHead>
@@ -280,10 +280,10 @@ export default function UsuariosIndex() {
                                                     </TableCell>
                                                     <TableCell className="px-4 py-3">
                                                         <span
-                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                                 u.role
                                                                     ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
-                                                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+                                                                    : 'text-warning-strong bg-amber-100 dark:bg-amber-950/50 dark:text-amber-300'
                                                             }`}
                                                         >
                                                             {roleLabel(u.role)}
@@ -368,7 +368,7 @@ export default function UsuariosIndex() {
                                                         </NativeSelect>
                                                         {u.role !== 'Gerente' &&
                                                         !u.sede_id ? (
-                                                            <p className="text-destructive-strong mt-1 text-[11px] font-bold">
+                                                            <p className="text-destructive-strong mt-1 text-xs font-bold">
                                                                 Sin sede: no
                                                                 puede entrar
                                                                 hasta que le
@@ -401,7 +401,7 @@ export default function UsuariosIndex() {
                                                 <span
                                                     key={permiso}
                                                     title={permiso}
-                                                    className="bg-background text-foreground/80 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
+                                                    className="bg-background text-foreground/80 rounded-full px-2 py-0.5 text-xs font-semibold"
                                                 >
                                                     {humanizePermission(
                                                         permiso,

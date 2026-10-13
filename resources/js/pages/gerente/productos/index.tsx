@@ -29,6 +29,7 @@ import {
     CategoriaSelect,
     type CategoriaItem,
 } from '@/components/categoria-select';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { toast } from 'sonner';
 import ProductosRoutes from '@/routes/gerente/productos';
@@ -329,15 +330,14 @@ export default function ProductosIndex() {
                 <p
                     id={`producto-${name}-error`}
                     role="alert"
-                    className="mt-1 text-sm text-red-700 dark:text-red-300"
+                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                 >
                     {form.errors[name]}
                 </p>
             )}
         </div>
     );
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             ProductosRoutes.index.url({ current_team: currentTeam.slug }),
             {
@@ -348,6 +348,7 @@ export default function ProductosIndex() {
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(buscar, aplicarBusqueda);
     const handleFilterEstado = (estado: string) => {
         router.get(
             ProductosRoutes.index.url({ current_team: currentTeam.slug }),
@@ -401,13 +402,13 @@ export default function ProductosIndex() {
                 {dialogoConfirmacion}
                 {/* Alertas Flash */}
                 {flash?.success && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <div className="text-success-strong flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
                         <CheckCircle2 className="text-success-strong size-4 shrink-0" />
                         <span>{flash.success}</span>
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <div className="text-destructive-strong flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm">
                         <AlertTriangle className="text-primary-strong size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
@@ -452,7 +453,7 @@ export default function ProductosIndex() {
                             </span>
                             <CheckCircle2 className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.totalActivos}
                         </div>
                     </div>
@@ -485,12 +486,6 @@ export default function ProductosIndex() {
                                 className="border-border bg-muted/40 text-foreground focus:border-primary w-full rounded-lg border py-2 pr-4 pl-9 text-sm focus:outline-none"
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="border-border bg-card text-foreground/80 hover:bg-background rounded-lg border px-3.5 py-2 text-xs font-semibold"
-                        >
-                            Buscar
-                        </button>
                     </form>
                     <div className="flex flex-wrap items-center gap-2">
                         <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
@@ -546,7 +541,7 @@ export default function ProductosIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Código</TableHead>
                                     <TableHead>
@@ -598,7 +593,7 @@ export default function ProductosIndex() {
                                                 <TableCell className="text-foreground px-4 py-3 font-mono font-bold">
                                                     {p.codigo}
                                                     {p.codigo_barras ? (
-                                                        <div className="text-muted-foreground text-[10.5px] font-normal">
+                                                        <div className="text-muted-foreground text-xs font-normal">
                                                             ▮▮ {p.codigo_barras}
                                                         </div>
                                                     ) : null}
@@ -608,7 +603,7 @@ export default function ProductosIndex() {
                                                         {p.nombre}
                                                     </div>
                                                     {p.descripcion && (
-                                                        <div className="text-muted-foreground max-w-xs truncate text-[11px]">
+                                                        <div className="text-muted-foreground max-w-xs truncate text-xs">
                                                             {p.descripcion}
                                                         </div>
                                                     )}
@@ -625,7 +620,7 @@ export default function ProductosIndex() {
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
                                                     <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
+                                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-xs font-bold ${
                                                             isBajoMinimo
                                                                 ? 'text-primary-strong bg-red-100'
                                                                 : 'bg-background text-foreground'
@@ -643,7 +638,7 @@ export default function ProductosIndex() {
                                                         : '—'}
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
-                                                    <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
+                                                    <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-xs font-medium">
                                                         {p.serializado
                                                             ? 'Por serie'
                                                             : p.controla_lote
@@ -653,9 +648,9 @@ export default function ProductosIndex() {
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
                                                     <span
-                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                             p.activo
-                                                                ? 'bg-emerald-100 text-emerald-800'
+                                                                ? 'text-success-strong bg-emerald-100'
                                                                 : 'bg-zinc-100 text-zinc-600'
                                                         }`}
                                                     >
@@ -806,7 +801,7 @@ export default function ProductosIndex() {
                                 {Object.keys(form.errors).length > 0 && (
                                     <p
                                         role="alert"
-                                        className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+                                        className="text-destructive-strong rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
                                     >
                                         {Object.values(form.errors)[0]} Tus
                                         datos se mantienen; corrige el campo
@@ -965,7 +960,7 @@ export default function ProductosIndex() {
                                             {form.errors.categoria && (
                                                 <p
                                                     role="alert"
-                                                    className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                 >
                                                     {form.errors.categoria}
                                                 </p>
@@ -1034,7 +1029,7 @@ export default function ProductosIndex() {
                                                 <p
                                                     id="producto-unidad-error"
                                                     role="alert"
-                                                    className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                 >
                                                     {form.errors.unidad_medida}
                                                 </p>
@@ -1091,7 +1086,7 @@ export default function ProductosIndex() {
                                         {form.errors.tipo_afectacion_igv && (
                                             <p
                                                 role="alert"
-                                                className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                             >
                                                 {
                                                     form.errors
@@ -1163,7 +1158,7 @@ export default function ProductosIndex() {
                                                 {form.errors.agente && (
                                                     <p
                                                         role="alert"
-                                                        className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                        className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                     >
                                                         {form.errors.agente}
                                                     </p>
@@ -1262,7 +1257,7 @@ export default function ProductosIndex() {
                                             form.errors.controla_lote) && (
                                             <p
                                                 role="alert"
-                                                className="text-sm text-red-700 dark:text-red-300"
+                                                className="text-destructive-strong text-sm dark:text-red-300"
                                             >
                                                 {form.errors.serializado ||
                                                     form.errors.controla_lote}
@@ -1353,7 +1348,7 @@ export default function ProductosIndex() {
                                             {form.errors.descripcion && (
                                                 <p
                                                     role="alert"
-                                                    className="mt-1 text-sm text-red-700 dark:text-red-300"
+                                                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                 >
                                                     {form.errors.descripcion}
                                                 </p>
@@ -1440,7 +1435,7 @@ export default function ProductosIndex() {
                                         {form.errors.activo && (
                                             <p
                                                 role="alert"
-                                                className="text-sm text-red-700 dark:text-red-300"
+                                                className="text-destructive-strong text-sm dark:text-red-300"
                                             >
                                                 {form.errors.activo}
                                             </p>

@@ -199,13 +199,13 @@ export default function SedesIndex() {
         <GerenteLayout title="Sedes">
             <div className="space-y-6">
                 {flash?.success && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <div className="text-success-strong flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
                         <CheckCircle2 className="text-success-strong size-4 shrink-0" />
                         <span>{flash.success}</span>
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <div className="text-destructive-strong flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm">
                         <AlertTriangle className="text-primary-strong size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
@@ -233,7 +233,7 @@ export default function SedesIndex() {
 
                 <div className="grid grid-cols-2 gap-4 md:max-w-md">
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <p className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                        <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                             Total de sedes
                         </p>
                         <p className="text-foreground mt-1 text-2xl font-bold">
@@ -241,7 +241,7 @@ export default function SedesIndex() {
                         </p>
                     </div>
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
-                        <p className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                        <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                             Activas
                         </p>
                         <p className="text-foreground mt-1 text-2xl font-bold">
@@ -253,7 +253,7 @@ export default function SedesIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Sede</TableHead>
                                     <TableHead>Tipo</TableHead>
@@ -289,7 +289,7 @@ export default function SedesIndex() {
                                                 </span>
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
-                                                <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-bold text-zinc-700 uppercase">
+                                                <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-700 uppercase">
                                                     {TIPO_LABELS[sede.tipo]}
                                                 </span>
                                             </TableCell>
@@ -310,7 +310,7 @@ export default function SedesIndex() {
                                                         Propio
                                                         {sede.tiendas.length >
                                                         0 ? (
-                                                            <span className="block text-[11px]">
+                                                            <span className="block text-xs">
                                                                 Abastece y
                                                                 atiende a:{' '}
                                                                 {sede.tiendas.join(
@@ -326,7 +326,7 @@ export default function SedesIndex() {
                                                 0 ? (
                                                     <span>Nadie asignado</span>
                                                 ) : (
-                                                    <ul className="space-y-0.5 text-[11.5px]">
+                                                    <ul className="space-y-0.5 text-xs">
                                                         {sede.trabajadores.map(
                                                             (trabajador) => (
                                                                 <li
@@ -353,9 +353,9 @@ export default function SedesIndex() {
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
                                                 <span
-                                                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         sede.activo
-                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            ? 'text-success-strong bg-emerald-100'
                                                             : 'bg-zinc-200 text-zinc-600'
                                                     }`}
                                                 >
@@ -453,7 +453,7 @@ export default function SedesIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 />
                                 {form.errors.nombre && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.nombre}
                                     </p>
                                 )}
@@ -486,7 +486,7 @@ export default function SedesIndex() {
                                     {TIPO_DESCRIPCION[form.data.tipo]}
                                 </p>
                                 {form.errors.tipo && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.tipo}
                                     </p>
                                 )}
@@ -519,7 +519,7 @@ export default function SedesIndex() {
                                         ))}
                                     </NativeSelect>
                                     {form.errors.almacen_id && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.almacen_id}
                                         </p>
                                     )}
@@ -564,7 +564,7 @@ export default function SedesIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 />
                                 {form.errors.direccion && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.direccion}
                                     </p>
                                 )}
@@ -595,7 +595,7 @@ export default function SedesIndex() {
                                     0000 es la sede principal.
                                 </p>
                                 {form.errors.cod_establecimiento_anexo && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.cod_establecimiento_anexo}
                                     </p>
                                 )}

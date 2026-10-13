@@ -9,11 +9,14 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property array<string, mixed>|null $datos
+ * @property string|null $tipo_atencion
  * @property string $numero
  * @property int $certificate_type_id
  * @property int $client_id
@@ -108,6 +111,18 @@ class Certificate extends Model
         return $this->belongsTo(Sale::class);
     }
 
+    /** @return BelongsToMany<Sale, $this> */
+    public function ventasReutilizadas(): BelongsToMany
+    {
+        return $this->belongsToMany(Sale::class, 'certificate_sale')->withTimestamps();
+    }
+
+    /** @return BelongsToMany<ServiceOrder, $this> */
+    public function ordenesReutilizadas(): BelongsToMany
+    {
+        return $this->belongsToMany(ServiceOrder::class, 'certificate_service_order')->withTimestamps();
+    }
+
     /**
      * @return HasMany<CertificateUnit, $this>
      */
@@ -161,7 +176,11 @@ class Certificate extends Model
         }
 
         $query->where(fn (Builder $query) => $query
-            ->whereHas('sale', fn (Builder $venta) => $venta->visiblePara($user))
-            ->orWhereHas('serviceOrder', fn (Builder $orden) => $orden->visiblePara($user)));
+            ->whereHas('sale', fn (Builder $venta) => $venta->visiblePara($user)->whereColumn('sales.client_id', 'certificates.client_id'))
+            ->orWhereHas('serviceOrder', fn (Builder $orden) => $orden->visiblePara($user)->whereColumn('service_orders.client_id', 'certificates.client_id'))
+            ->orWhereHas('ventasReutilizadas', fn (Builder $venta) => $venta
+                ->visiblePara($user)->whereColumn('sales.client_id', 'certificates.client_id'))
+            ->orWhereHas('ordenesReutilizadas', fn (Builder $orden) => $orden
+                ->visiblePara($user)->whereColumn('service_orders.client_id', 'certificates.client_id')));
     }
 }

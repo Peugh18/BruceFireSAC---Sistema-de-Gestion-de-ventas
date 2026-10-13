@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/dialog';
 import React, { useRef, useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import AlertError from '@/components/alert-error';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -89,14 +90,14 @@ export default function DeficienciasIndex({
         resolucion: '',
     });
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             DeficienciasRoutes.index.url({ current_team: teamSlug }),
             { estado: filters.estado, search: search.trim() },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleFilterChange = (nuevoEstado: string) => {
         router.get(
@@ -133,35 +134,35 @@ export default function DeficienciasIndex({
         switch (estado) {
             case 'esperando_autorizacion':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
+                    <span className="text-warning-strong inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300">
                         <Clock className="h-3 w-3" />
                         Por Autorizar
                     </span>
                 );
             case 'autorizada':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300">
+                    <span className="text-success-strong inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold dark:bg-emerald-950/60 dark:text-emerald-300">
                         <CheckCircle2 className="h-3 w-3" />
                         Autorizada
                     </span>
                 );
             case 'rechazada':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-900 dark:bg-rose-950/60 dark:text-rose-300">
+                    <span className="text-destructive-strong inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold dark:bg-rose-950/60 dark:text-rose-300">
                         <XCircle className="h-3 w-3" />
                         Rechazada
                     </span>
                 );
             case 'resuelta':
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-900 dark:bg-blue-950/60 dark:text-blue-300">
+                    <span className="bg-muted text-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold">
                         <PackageCheck className="h-3 w-3" />
                         Resuelta
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
                         {estado}
                     </span>
                 );
@@ -226,7 +227,7 @@ export default function DeficienciasIndex({
                         onClick={() => handleFilterChange('resuelta')}
                         className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
                             filters.estado === 'resuelta'
-                                ? 'bg-blue-600 text-white shadow-xs'
+                                ? 'bg-primary text-white shadow-xs'
                                 : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
                         }`}
                     >
@@ -242,15 +243,9 @@ export default function DeficienciasIndex({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar por componente, falla, orden, serie..."
-                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-4 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
-                    <button
-                        type="submit"
-                        className="absolute top-1.5 right-1.5 bottom-1.5 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
-                    >
-                        Buscar
-                    </button>
                 </form>
 
                 {/* Deficiencies List */}
@@ -315,7 +310,7 @@ export default function DeficienciasIndex({
                                                     current_team: teamSlug,
                                                     service_order: d.orden_id,
                                                 })}
-                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
+                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
                                                 title="Requiere repuesto: resuélvela desde Ejecución para descontar el Kardex de Almacén"
                                             >
                                                 <PackageCheck className="h-3 w-3" />
@@ -331,7 +326,7 @@ export default function DeficienciasIndex({
                                                 onClick={() =>
                                                     setResolveModalItem(d)
                                                 }
-                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
+                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
                                             >
                                                 <Wrench className="h-3 w-3" />
                                                 <span>Resolver</span>
@@ -353,7 +348,7 @@ export default function DeficienciasIndex({
                                 {/* Actions / Spare Parts */}
                                 {(d.accion_recomendada ||
                                     d.repuesto_sugerido) && (
-                                    <div className="grid grid-cols-2 gap-2 text-[11px] text-neutral-600 dark:text-neutral-400">
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
                                         {d.accion_recomendada && (
                                             <div>
                                                 <span className="text-neutral-400">
@@ -379,7 +374,7 @@ export default function DeficienciasIndex({
 
                                 {/* Authorization Banner from Vendedor (§17, §20) */}
                                 {d.authorization && (
-                                    <div className="space-y-1 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-900 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300">
+                                    <div className="text-success-strong space-y-1 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300">
                                         <div className="flex items-center gap-1.5 font-bold">
                                             <UserCheck className="text-success-strong h-3.5 w-3.5" />
                                             <span>
@@ -389,7 +384,7 @@ export default function DeficienciasIndex({
                                             </span>
                                         </div>
                                         {d.authorization.observacion && (
-                                            <p className="text-[11px] text-emerald-800 dark:text-emerald-400">
+                                            <p className="text-success-strong text-xs dark:text-emerald-400">
                                                 "{d.authorization.observacion}"
                                             </p>
                                         )}
@@ -398,7 +393,7 @@ export default function DeficienciasIndex({
 
                                 {/* Resolution Note if Resolved */}
                                 {d.resolucion && (
-                                    <div className="rounded-xl border border-blue-200 bg-blue-50 p-2.5 text-xs text-blue-900 dark:border-blue-800/60 dark:bg-blue-950/30 dark:text-blue-300">
+                                    <div className="border-border bg-muted text-foreground rounded-xl border p-2.5 text-xs">
                                         <span className="font-bold">
                                             Resolución:{' '}
                                         </span>

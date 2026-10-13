@@ -326,7 +326,7 @@ export default function ReportesIndex() {
                                         reporteComercial.totalVentas,
                                     )}
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     Originales{' '}
                                     {formatCurrency(
                                         reporteComercial.ventasOriginales,
@@ -348,12 +348,12 @@ export default function ReportesIndex() {
                                     <span className="font-medium uppercase">
                                         Total de Operaciones
                                     </span>
-                                    <FileText className="size-4 text-blue-600" />
+                                    <FileText className="text-foreground size-4" />
                                 </div>
                                 <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteComercial.cantidadVentas}
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     Ventas confirmadas en el período
                                 </p>
                             </div>
@@ -363,14 +363,14 @@ export default function ReportesIndex() {
                                     <span className="font-medium uppercase">
                                         Ticket Promedio
                                     </span>
-                                    <TrendingUp className="size-4 text-purple-600" />
+                                    <TrendingUp className="text-foreground size-4" />
                                 </div>
                                 <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {formatCurrency(
                                         reporteComercial.ticketPromedio,
                                     )}
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     Promedio por comprobante
                                 </p>
                             </div>
@@ -385,7 +385,7 @@ export default function ReportesIndex() {
                                 <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteComercial.tasaConversion}%
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     Efectividad de cierre comercial
                                 </p>
                             </div>
@@ -404,7 +404,7 @@ export default function ReportesIndex() {
 
                                 <div className="overflow-x-auto">
                                     <Table className="w-full text-left text-xs">
-                                        <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
+                                        <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs uppercase">
                                             <TableRow>
                                                 <TableHead>Vendedor</TableHead>
                                                 <TableHead className="text-center">
@@ -463,7 +463,7 @@ export default function ReportesIndex() {
 
                                 <div className="overflow-x-auto">
                                     <Table className="w-full text-left text-xs">
-                                        <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
+                                        <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs uppercase">
                                             <TableRow>
                                                 <TableHead>Cliente</TableHead>
                                                 <TableHead className="text-center">
@@ -526,7 +526,7 @@ export default function ReportesIndex() {
 
                             <div className="overflow-x-auto">
                                 <Table className="w-full text-left text-xs">
-                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[10px] uppercase">
+                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs uppercase">
                                         <TableRow>
                                             <TableHead>Ítem</TableHead>
                                             <TableHead className="text-center">
@@ -674,7 +674,7 @@ export default function ReportesIndex() {
                                         reporteInventario.valorizacionTotal,
                                     )}
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     Stock disponible × costo promedio de compra
                                 </p>
                             </div>
@@ -684,12 +684,12 @@ export default function ReportesIndex() {
                                     <span className="font-medium uppercase">
                                         Productos en Catálogo
                                     </span>
-                                    <Layers className="size-4 text-blue-600" />
+                                    <Layers className="text-foreground size-4" />
                                 </div>
                                 <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteInventario.totalProductos}
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     Productos activos registrados
                                 </p>
                             </div>
@@ -699,12 +699,12 @@ export default function ReportesIndex() {
                                     <span className="font-medium uppercase">
                                         Unidades Físicas
                                     </span>
-                                    <Boxes className="size-4 text-purple-600" />
+                                    <Boxes className="text-foreground size-4" />
                                 </div>
                                 <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteInventario.totalUnidades}
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     Disponibles para venta/operación
                                 </p>
                             </div>
@@ -719,7 +719,7 @@ export default function ReportesIndex() {
                                 <div className="text-primary-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                                     {reporteInventario.totalBajoMinimo}
                                 </div>
-                                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                                <p className="text-muted-foreground mt-0.5 text-xs">
                                     Requieren reposición urgente
                                 </p>
                             </div>
@@ -729,7 +729,7 @@ export default function ReportesIndex() {
                         <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                             <div className="overflow-x-auto">
                                 <Table className="w-full text-left text-xs">
-                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                                    <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                         <TableRow>
                                             <TableHead>Código</TableHead>
                                             <TableHead>Producto</TableHead>
@@ -781,7 +781,7 @@ export default function ReportesIndex() {
                                                             {p.nombre}
                                                         </TableCell>
                                                         <TableCell className="px-4 py-3 text-center">
-                                                            <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px]">
+                                                            <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-xs">
                                                                 {p.serializado
                                                                     ? 'Serializado'
                                                                     : 'A Granel'}
@@ -806,7 +806,7 @@ export default function ReportesIndex() {
                                                         </TableCell>
                                                         <TableCell className="px-4 py-3 text-center">
                                                             <span
-                                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
+                                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-xs font-bold ${
                                                                     p.bajo_minimo
                                                                         ? 'text-primary-strong bg-red-100'
                                                                         : 'bg-background text-foreground'
@@ -827,10 +827,10 @@ export default function ReportesIndex() {
                                                         </TableCell>
                                                         <TableCell className="px-4 py-3 text-center">
                                                             <span
-                                                                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                                     p.bajo_minimo
                                                                         ? 'text-primary-strong bg-red-100'
-                                                                        : 'bg-emerald-100 text-emerald-800'
+                                                                        : 'text-success-strong bg-emerald-100'
                                                                 }`}
                                                             >
                                                                 {p.bajo_minimo

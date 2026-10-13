@@ -29,6 +29,7 @@ import {
     CategoriaSelect,
     type CategoriaItem,
 } from '@/components/categoria-select';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { toast } from 'sonner';
 import ServiciosRoutes from '@/routes/gerente/servicios';
@@ -209,8 +210,7 @@ export default function ServiciosIndex() {
             );
         }
     };
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             ServiciosRoutes.index.url({ current_team: currentTeam.slug }),
             {
@@ -220,6 +220,7 @@ export default function ServiciosIndex() {
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(buscar, aplicarBusqueda);
     const handleFilterEstado = (estado: string) => {
         router.get(
             ServiciosRoutes.index.url({ current_team: currentTeam.slug }),
@@ -261,13 +262,13 @@ export default function ServiciosIndex() {
                 {dialogoConfirmacion}
                 {/* Alertas Flash */}
                 {flash?.success && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <div className="text-success-strong flex items-center gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
                         <CheckCircle2 className="text-success-strong size-4 shrink-0" />
                         <span>{flash.success}</span>
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <div className="text-destructive-strong flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm">
                         <AlertTriangle className="text-primary-strong size-4 shrink-0" />
                         <span>{flash.error}</span>
                     </div>
@@ -312,7 +313,7 @@ export default function ServiciosIndex() {
                             </span>
                             <CheckCircle2 className="text-success-strong size-4" />
                         </div>
-                        <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold text-emerald-700">
+                        <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
                             {kpis.totalActivos}
                         </div>
                     </div>
@@ -334,12 +335,6 @@ export default function ServiciosIndex() {
                                 className="border-border bg-muted/40 text-foreground focus:border-primary w-full rounded-lg border py-2 pr-4 pl-9 text-sm focus:outline-none"
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="border-border bg-card text-foreground/80 hover:bg-background rounded-lg border px-3.5 py-2 text-xs font-semibold"
-                        >
-                            Buscar
-                        </button>
                     </form>
                     <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
                         <button
@@ -381,7 +376,7 @@ export default function ServiciosIndex() {
                 <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xs">
                     <div className="overflow-x-auto">
                         <Table className="w-full text-left text-xs">
-                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-[11px] font-semibold tracking-wider uppercase">
+                            <TableHeader className="border-border bg-muted/40 text-muted-foreground border-b text-xs font-semibold tracking-wider uppercase">
                                 <TableRow>
                                     <TableHead>Código</TableHead>
                                     <TableHead>
@@ -426,7 +421,7 @@ export default function ServiciosIndex() {
                                                     {s.nombre}
                                                 </div>
                                                 {s.descripcion && (
-                                                    <div className="text-muted-foreground max-w-xs truncate text-[11px]">
+                                                    <div className="text-muted-foreground max-w-xs truncate text-xs">
                                                         {s.descripcion}
                                                     </div>
                                                 )}
@@ -438,7 +433,7 @@ export default function ServiciosIndex() {
                                                 {formatCurrency(s.precio_venta)}
                                             </TableCell>
                                             <TableCell className="px-4 py-3 text-center">
-                                                <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-[10px] font-medium">
+                                                <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-xs font-medium">
                                                     {s.igv_requiere_revision
                                                         ? 'Elegir afectación'
                                                         : s.tipo_afectacion_igv ===
@@ -452,9 +447,9 @@ export default function ServiciosIndex() {
                                             </TableCell>
                                             <TableCell className="px-4 py-3 text-center">
                                                 <span
-                                                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         s.activo
-                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            ? 'text-success-strong bg-emerald-100'
                                                             : 'bg-zinc-100 text-zinc-600'
                                                     }`}
                                                 >
@@ -605,7 +600,7 @@ export default function ServiciosIndex() {
                                         className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono uppercase focus:outline-none"
                                     />
                                     {form.errors.codigo && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.codigo}
                                         </p>
                                     )}
@@ -635,7 +630,7 @@ export default function ServiciosIndex() {
                                         ))}
                                     </NativeSelect>
                                     {form.errors.unidad_medida && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.unidad_medida}
                                         </p>
                                     )}
@@ -664,7 +659,7 @@ export default function ServiciosIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 />
                                 {form.errors.nombre && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.nombre}
                                     </p>
                                 )}
@@ -708,7 +703,7 @@ export default function ServiciosIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
                                 />
                                 {form.errors.precio_venta && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.precio_venta}
                                     </p>
                                 )}
@@ -754,7 +749,7 @@ export default function ServiciosIndex() {
                                         className="border-border rounded border p-2"
                                     />
                                     {form.errors.capacidad && (
-                                        <span className="text-red-600">
+                                        <span className="text-destructive-strong">
                                             {form.errors.capacidad}
                                         </span>
                                     )}
@@ -780,7 +775,10 @@ export default function ServiciosIndex() {
                                     ))}
                                 </NativeSelect>
                                 {form.errors.certificate_type_id && (
-                                    <span className="text-red-600" role="alert">
+                                    <span
+                                        className="text-destructive-strong"
+                                        role="alert"
+                                    >
                                         {form.errors.certificate_type_id}
                                     </span>
                                 )}
@@ -850,7 +848,7 @@ export default function ServiciosIndex() {
                                         <option value="30">Inafecto</option>
                                     </NativeSelect>
                                     {form.errors.tipo_afectacion_igv && (
-                                        <span className="text-red-600">
+                                        <span className="text-destructive-strong">
                                             {form.errors.tipo_afectacion_igv}
                                         </span>
                                     )}

@@ -83,18 +83,18 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                     {columnas.map((columna) => (
                         <div
                             key={columna.clave}
-                            className="bg-muted/40 flex min-h-[140px] flex-col gap-2 rounded-[14px] p-2.5"
+                            className="bg-muted/40 flex min-h-[140px] flex-col gap-2 rounded-2xl p-2.5"
                         >
                             <div className="flex items-center justify-between px-1">
-                                <span className="text-foreground/80 text-[11.5px] font-bold uppercase">
+                                <span className="text-foreground/80 text-xs font-bold uppercase">
                                     {columna.titulo}
                                 </span>
-                                <span className="bg-card rounded-full px-2 text-[11px] font-bold">
+                                <span className="bg-card rounded-full px-2 text-xs font-bold">
                                     {columna.ordenes.length}
                                 </span>
                             </div>
                             {columna.ordenes.length === 0 ? (
-                                <p className="text-muted-foreground px-1 text-[11.5px]">
+                                <p className="text-muted-foreground px-1 text-xs">
                                     Sin órdenes
                                 </p>
                             ) : null}
@@ -103,10 +103,10 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                     key={orden.id}
                                     type="button"
                                     onClick={() => abrir(orden.id)}
-                                    className={`bg-card hover:border-primary/60 rounded-[10px] border p-2.5 text-left transition-colors ${seleccionada?.id === orden.id ? 'border-primary' : 'border-border'}`}
+                                    className={`bg-card hover:border-primary/60 rounded-lg border p-2.5 text-left transition-colors ${seleccionada?.id === orden.id ? 'border-primary' : 'border-border'}`}
                                 >
                                     <div className="flex items-center justify-between gap-2">
-                                        <span className="font-['IBM_Plex_Mono',monospace] text-[11px] font-bold">
+                                        <span className="font-['IBM_Plex_Mono',monospace] text-xs font-bold">
                                             {orden.codigo}
                                         </span>
                                         {orden.por_autorizar ? (
@@ -116,10 +116,10 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                     <div className="text-foreground mt-0.5 truncate text-[12.5px] font-bold">
                                         {orden.cliente}
                                     </div>
-                                    <div className="text-muted-foreground truncate text-[11.5px]">
+                                    <div className="text-muted-foreground truncate text-xs">
                                         {orden.servicio}
                                     </div>
-                                    <div className="mt-1 flex flex-wrap gap-1 text-[10.5px]">
+                                    <div className="mt-1 flex flex-wrap gap-1 text-xs">
                                         <span className="bg-muted rounded px-1.5 py-0.5 capitalize">
                                             {orden.area}
                                         </span>
@@ -143,7 +143,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                 {recargando ? (
                     <TarjetaCargando />
                 ) : seleccionada ? (
-                    <Card className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none">
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                 {seleccionada.por_autorizar ? (
                                     <Button
                                         asChild
-                                        className="h-9 rounded-[9px] bg-amber-500 text-white shadow-none hover:bg-amber-600"
+                                        className="h-9 rounded-lg bg-amber-500 text-white shadow-none hover:bg-amber-600"
                                     >
                                         <Link
                                             href={deficiencias.index.url(
@@ -184,7 +184,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                 <Button
                                     asChild
                                     variant="outline"
-                                    className="h-9 rounded-[9px] shadow-none"
+                                    className="h-9 rounded-lg shadow-none"
                                 >
                                     <Link
                                         href={ordenesServicio.show.url({
@@ -201,7 +201,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                                     type="button"
                                     variant="outline"
                                     onClick={() => abrir(null)}
-                                    className="h-9 rounded-[9px] shadow-none"
+                                    className="h-9 rounded-lg shadow-none"
                                 >
                                     <X className="size-4" />
                                 </Button>
@@ -223,7 +223,7 @@ export default function SeguimientoTaller({ columnas, seleccionada }: Props) {
                             }))}
                         />
                         {seleccionada.observaciones ? (
-                            <p className="bg-muted/40 rounded-[10px] px-3 py-2 text-[12.5px]">
+                            <p className="bg-muted/40 rounded-lg px-3 py-2 text-[12.5px]">
                                 <b>Instrucciones:</b>{' '}
                                 {seleccionada.observaciones}
                             </p>

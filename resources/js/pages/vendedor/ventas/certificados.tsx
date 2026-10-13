@@ -45,6 +45,11 @@ type Unidad = {
     presion_ph: string | null;
     tiempo_ph: string | null;
     presion_ph_sugerida: string | null;
+    ph_reutilizable: {
+        id: number;
+        numero: string;
+        fecha_vigencia_hasta: string | null;
+    } | null;
 };
 
 type Emitido = {
@@ -58,6 +63,7 @@ type Emitido = {
 };
 
 type GrupoActual = {
+    destino: 'local_cliente' | 'vehiculo';
     referencia: string | null;
     direccion: string | null;
     tipos: string[];
@@ -188,9 +194,7 @@ export default function ArmarCertificados({
         }
 
         const armados = gruposActuales.map((actual) => {
-            const destino = actual.tipos.includes('prueba_hidrostatica')
-                ? 'vehiculo'
-                : 'local_cliente';
+            const destino = actual.destino;
 
             return {
                 ...nuevoGrupo(destino, actual.referencia ?? ''),
@@ -283,6 +287,7 @@ export default function ArmarCertificados({
             }),
             {
                 grupos: grupos.map((g) => ({
+                    destino: g.destino,
                     referencia: g.referencia || null,
                     direccion: g.direccion || null,
                     tipos: g.tipos,
@@ -291,7 +296,8 @@ export default function ArmarCertificados({
                         .map((f) => ({
                             equipment_id: f.equipment_id,
                             numero_cliente: f.numero_cliente || null,
-                            ...(g.tipos.includes('prueba_hidrostatica')
+                            ...(g.tipos.includes('prueba_hidrostatica') &&
+                            !f.ph_reutilizable
                                 ? {
                                       fecha_ultima_ph: f.ph_fecha || null,
                                       presion_ph: f.ph_presion || null,
@@ -328,7 +334,9 @@ export default function ArmarCertificados({
     const pendientes = TIPOS.filter(
         (t) =>
             tiposSugeridos.includes(t.codigo) &&
-            !vigentes.some((e) => e.tipo_codigo === t.codigo),
+            (t.codigo === 'prueba_hidrostatica'
+                ? unidades.some((u) => !u.ph_reutilizable)
+                : !vigentes.some((e) => e.tipo_codigo === t.codigo)),
     );
     const sinAgente = unidades.filter((u) => !u.agente_conocido);
 
@@ -349,7 +357,7 @@ export default function ArmarCertificados({
                     <Button
                         asChild
                         variant="outline"
-                        className="border-border bg-card h-9 rounded-[9px] shadow-none"
+                        className="border-border bg-card h-9 rounded-lg shadow-none"
                     >
                         <Link
                             href={ventas.show.url({
@@ -374,13 +382,12 @@ export default function ArmarCertificados({
                 </div>
 
                 {vigentes.length > 0 ? (
-                    <Card className="gap-3 rounded-[14px] border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
+                    <Card className="gap-3 rounded-2xl border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
                         <p>
-                            Estos certificados ya se emitieron al confirmar la
-                            venta. Al guardar se corrigen{' '}
-                            <b>los mismos, con el mismo número</b>, y queda
-                            registrada una revisión con el motivo. Solo un
-                            certificado nuevo recibe número nuevo.
+                            Al guardar se ajustan la operatividad y la
+                            capacitación con el mismo número. La PH vigente
+                            conserva su certificado original, sus fechas y
+                            unidades; la recarga no renueva su vencimiento.
                         </p>
                         <label className="text-foreground text-sm font-medium">
                             Motivo del ajuste (opcional)
@@ -389,29 +396,28 @@ export default function ArmarCertificados({
                                 maxLength={255}
                                 onChange={(e) => setMotivo(e.target.value)}
                                 placeholder="Ej. el cliente pidió su propia numeración"
-                                className="bg-card mt-1 h-9 rounded-[9px] text-[13px] normal-case"
+                                className="bg-card mt-1 h-9 rounded-lg text-[13px] normal-case"
                             />
                         </label>
                     </Card>
                 ) : null}
 
                 {pendientes.length > 0 ? (
-                    <Card className="gap-1 rounded-[14px] border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
+                    <Card className="gap-1 rounded-2xl border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
                         <p className="font-semibold">
                             Pendientes de datos técnicos:{' '}
                             {pendientes.map((t) => t.nombre).join(' y ')}.
                         </p>
                         <p className="text-muted-foreground">
-                            No salen al cobrar. Márcalos en el grupo cuando se
-                            hayan hecho y registra los datos reales (fecha,
-                            presión, tiempo y resultado de la prueba
-                            hidrostática).
+                            Registra los datos reales de la capacitación y de
+                            los extintores sin PH vigente. Una PH vigente se
+                            reutiliza hasta su vencimiento original.
                         </p>
                     </Card>
                 ) : null}
 
                 {sinAgente.length > 0 ? (
-                    <Card className="border-destructive/40 bg-destructive/5 rounded-[14px] p-4 text-[12.5px] shadow-none">
+                    <Card className="border-destructive/40 bg-destructive/5 rounded-2xl p-4 text-[12.5px] shadow-none">
                         Falta el agente extintor de{' '}
                         {sinAgente.map((u) => u.codigo_interno).join(', ')}.
                         Regístralo en el producto del catálogo o en el equipo:
@@ -420,7 +426,7 @@ export default function ArmarCertificados({
                 ) : null}
 
                 {unidades.length === 0 ? (
-                    <Card className="border-border text-muted-foreground rounded-[14px] p-4 text-[12.5px] shadow-none">
+                    <Card className="border-border text-muted-foreground rounded-2xl p-4 text-[12.5px] shadow-none">
                         Esta venta no tiene extintores con serie: solo se puede
                         emitir el certificado de capacitación.
                     </Card>
@@ -434,7 +440,7 @@ export default function ArmarCertificados({
                     return (
                         <Card
                             key={grupo.id}
-                            className="border-border bg-card gap-4 rounded-[16px] p-5 shadow-none"
+                            className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none"
                         >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <h2 className="flex items-center gap-2 font-['Oswald',sans-serif] text-[17px] font-semibold uppercase">
@@ -450,7 +456,7 @@ export default function ArmarCertificados({
                                         variant="outline"
                                         size="sm"
                                         onClick={() => quitarGrupo(grupo.id)}
-                                        className="text-destructive-strong rounded-[8px] shadow-none"
+                                        className="text-destructive-strong rounded-lg shadow-none"
                                     >
                                         <Trash2 className="size-3.5" />
                                         Quitar grupo
@@ -531,7 +537,7 @@ export default function ArmarCertificados({
                                         sale.client.direccion_fiscal ??
                                         'Dirección fiscal del cliente'
                                     }
-                                    className="mt-1 h-9 rounded-[9px] text-[13px]"
+                                    className="mt-1 h-9 rounded-lg text-[13px]"
                                 />
                             </div>
 
@@ -543,7 +549,7 @@ export default function ArmarCertificados({
                                     {TIPOS.map((tipo) => (
                                         <label
                                             key={tipo.codigo}
-                                            className="border-border flex cursor-pointer items-center gap-2 rounded-[9px] border px-3 py-1.5 text-[12.5px] font-semibold"
+                                            className="border-border flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold"
                                         >
                                             <input
                                                 type="checkbox"
@@ -618,7 +624,7 @@ export default function ArmarCertificados({
                                                             },
                                                         )
                                                     }
-                                                    className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
+                                                    className="mt-1 h-9 rounded-lg text-[13px] normal-case"
                                                 />
                                             </label>
                                             <label className="text-foreground text-sm font-medium">
@@ -638,7 +644,7 @@ export default function ArmarCertificados({
                                                             },
                                                         )
                                                     }
-                                                    className="mt-1 h-9 rounded-[9px] text-[13px]"
+                                                    className="mt-1 h-9 rounded-lg text-[13px]"
                                                 />
                                             </label>
                                             <label className="text-foreground text-sm font-medium">
@@ -655,13 +661,13 @@ export default function ArmarCertificados({
                                                             },
                                                         )
                                                     }
-                                                    className="mt-1 h-9 rounded-[9px] text-[13px] normal-case"
+                                                    className="mt-1 h-9 rounded-lg text-[13px] normal-case"
                                                 />
                                             </label>
                                         </div>
 
                                         {grupo.modo === 'con_fotos' ? (
-                                            <label className="border-border rounded-[10px] border border-dashed p-3 text-[12px]">
+                                            <label className="border-border rounded-lg border border-dashed p-3 text-[12px]">
                                                 <span className="font-bold">
                                                     Fotos de la capacitación
                                                 </span>
@@ -699,13 +705,13 @@ export default function ArmarCertificados({
                                         ) : null}
 
                                         {grupo.modo === 'por_trabajador' ? (
-                                            <div className="border-border grid gap-2 rounded-[10px] border p-3">
+                                            <div className="border-border grid gap-2 rounded-lg border p-3">
                                                 <div className="flex items-center justify-between gap-2">
                                                     <div>
                                                         <div className="text-[12px] font-bold">
                                                             Trabajadores
                                                         </div>
-                                                        <div className="text-muted-foreground text-[11px]">
+                                                        <div className="text-muted-foreground text-xs">
                                                             Cada persona tendrá
                                                             número y QR propios.
                                                         </div>
@@ -876,9 +882,9 @@ export default function ArmarCertificados({
                             ) : null}
 
                             {filasDelGrupo.length > 0 ? (
-                                <div className="border-border overflow-x-auto rounded-[10px] border">
+                                <div className="border-border overflow-x-auto rounded-lg border">
                                     <Table className="w-full min-w-[640px] text-[12.5px]">
-                                        <TableHeader className="bg-muted/50 text-muted-foreground text-left text-[10px] font-bold uppercase">
+                                        <TableHeader className="bg-muted/50 text-muted-foreground text-left text-xs font-bold uppercase">
                                             <TableRow>
                                                 <TableHead>Orden</TableHead>
                                                 <TableHead>
@@ -910,7 +916,7 @@ export default function ArmarCertificados({
                                                                             -1,
                                                                         )
                                                                     }
-                                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                                 >
                                                                     <ArrowUp className="size-3" />
                                                                 </button>
@@ -923,7 +929,7 @@ export default function ArmarCertificados({
                                                                             1,
                                                                         )
                                                                     }
-                                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-[7px] border"
+                                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
                                                                 >
                                                                     <ArrowDown className="size-3" />
                                                                 </button>
@@ -956,14 +962,14 @@ export default function ArmarCertificados({
                                                                         ),
                                                                     )
                                                                 }
-                                                                className="h-8 w-24 rounded-[7px] text-[12px]"
+                                                                className="h-8 w-24 rounded-md text-[12px]"
                                                             />
                                                         </TableCell>
                                                         <TableCell className="px-2.5 py-1.5">
                                                             <span className="block font-semibold">
                                                                 {fila.producto}
                                                             </span>
-                                                            <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                                            <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                                                 {
                                                                     fila.codigo_interno
                                                                 }
@@ -1006,7 +1012,7 @@ export default function ArmarCertificados({
                                                                         ),
                                                                     )
                                                                 }
-                                                                className="border-border bg-card h-8 rounded-[7px] border px-2 text-[12px]"
+                                                                className="border-border bg-card h-8 rounded-md border px-2 text-[12px]"
                                                             >
                                                                 {grupos.map(
                                                                     (g, i) => (
@@ -1039,114 +1045,146 @@ export default function ArmarCertificados({
                                                 Datos reales de la prueba
                                                 hidrostática
                                             </div>
-                                            {filasDelGrupo.map((fila) => (
-                                                <div
-                                                    key={fila.equipment_id}
-                                                    className="grid items-end gap-2 sm:grid-cols-[120px_repeat(4,minmax(0,1fr))]"
-                                                >
-                                                    <span className="font-['IBM_Plex_Mono',monospace] text-[11px]">
-                                                        {fila.codigo_interno}
-                                                    </span>
-                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
-                                                        Fecha
-                                                        <Input
-                                                            type="date"
-                                                            value={
-                                                                fila.ph_fecha
+                                            {filasDelGrupo
+                                                .filter(
+                                                    (fila) =>
+                                                        fila.ph_reutilizable,
+                                                )
+                                                .map((fila) => (
+                                                    <p
+                                                        key={fila.equipment_id}
+                                                        className="text-muted-foreground text-sm"
+                                                    >
+                                                        {fila.codigo_interno}:
+                                                        se reutiliza PH{' '}
+                                                        {
+                                                            fila.ph_reutilizable
+                                                                ?.numero
+                                                        }
+                                                        , vigente hasta{' '}
+                                                        {
+                                                            fila.ph_reutilizable
+                                                                ?.fecha_vigencia_hasta
+                                                        }
+                                                        . Conserva su fecha y
+                                                        certificado original.
+                                                    </p>
+                                                ))}
+                                            {filasDelGrupo
+                                                .filter(
+                                                    (fila) =>
+                                                        !fila.ph_reutilizable,
+                                                )
+                                                .map((fila) => (
+                                                    <div
+                                                        key={fila.equipment_id}
+                                                        className="grid items-end gap-2 sm:grid-cols-[120px_repeat(4,minmax(0,1fr))]"
+                                                    >
+                                                        <span className="font-['IBM_Plex_Mono',monospace] text-xs">
+                                                            {
+                                                                fila.codigo_interno
                                                             }
-                                                            onChange={(e) =>
-                                                                cambiarFila(
-                                                                    fila.equipment_id,
-                                                                    {
-                                                                        ph_fecha:
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                    },
-                                                                )
-                                                            }
-                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
-                                                        />
-                                                    </label>
-                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
-                                                        Presión
-                                                        <Input
-                                                            value={
-                                                                fila.ph_presion
-                                                            }
-                                                            maxLength={20}
-                                                            placeholder={
-                                                                fila.presion_ph_sugerida ??
-                                                                'Ej. 600 PSI'
-                                                            }
-                                                            onChange={(e) =>
-                                                                cambiarFila(
-                                                                    fila.equipment_id,
-                                                                    {
-                                                                        ph_presion:
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                    },
-                                                                )
-                                                            }
-                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
-                                                        />
-                                                    </label>
-                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
-                                                        Tiempo
-                                                        <Input
-                                                            value={
-                                                                fila.ph_tiempo
-                                                            }
-                                                            maxLength={20}
-                                                            placeholder="Ej. 60 SEG"
-                                                            onChange={(e) =>
-                                                                cambiarFila(
-                                                                    fila.equipment_id,
-                                                                    {
-                                                                        ph_tiempo:
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                    },
-                                                                )
-                                                            }
-                                                            className="mt-1 h-8 rounded-[7px] text-[12px]"
-                                                        />
-                                                    </label>
-                                                    <label className="text-muted-foreground text-[10px] font-bold uppercase">
-                                                        Resultado
-                                                        <NativeSelect
-                                                            value={
-                                                                fila.ph_resultado
-                                                            }
-                                                            onChange={(e) =>
-                                                                cambiarFila(
-                                                                    fila.equipment_id,
-                                                                    {
-                                                                        ph_resultado:
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                    },
-                                                                )
-                                                            }
-                                                            className="border-border bg-card mt-1 h-8 w-full rounded-[7px] border px-2 text-[12px] normal-case"
-                                                        >
-                                                            <option value="">
-                                                                Elegir
-                                                            </option>
-                                                            <option value="aprobado">
-                                                                Aprobado
-                                                            </option>
-                                                            <option value="desaprobado">
-                                                                No aprobado
-                                                            </option>
-                                                        </NativeSelect>
-                                                    </label>
-                                                </div>
-                                            ))}
+                                                        </span>
+                                                        <label className="text-muted-foreground text-xs font-bold uppercase">
+                                                            Fecha
+                                                            <Input
+                                                                type="date"
+                                                                value={
+                                                                    fila.ph_fecha
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiarFila(
+                                                                        fila.equipment_id,
+                                                                        {
+                                                                            ph_fecha:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="mt-1 h-8 rounded-md text-[12px]"
+                                                            />
+                                                        </label>
+                                                        <label className="text-muted-foreground text-xs font-bold uppercase">
+                                                            Presión
+                                                            <Input
+                                                                value={
+                                                                    fila.ph_presion
+                                                                }
+                                                                maxLength={20}
+                                                                placeholder={
+                                                                    fila.presion_ph_sugerida ??
+                                                                    'Ej. 600 PSI'
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiarFila(
+                                                                        fila.equipment_id,
+                                                                        {
+                                                                            ph_presion:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="mt-1 h-8 rounded-md text-[12px]"
+                                                            />
+                                                        </label>
+                                                        <label className="text-muted-foreground text-xs font-bold uppercase">
+                                                            Tiempo
+                                                            <Input
+                                                                value={
+                                                                    fila.ph_tiempo
+                                                                }
+                                                                maxLength={20}
+                                                                placeholder="Ej. 60 SEG"
+                                                                onChange={(e) =>
+                                                                    cambiarFila(
+                                                                        fila.equipment_id,
+                                                                        {
+                                                                            ph_tiempo:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="mt-1 h-8 rounded-md text-[12px]"
+                                                            />
+                                                        </label>
+                                                        <label className="text-muted-foreground text-xs font-bold uppercase">
+                                                            Resultado
+                                                            <NativeSelect
+                                                                value={
+                                                                    fila.ph_resultado
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiarFila(
+                                                                        fila.equipment_id,
+                                                                        {
+                                                                            ph_resultado:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="border-border bg-card mt-1 h-8 w-full rounded-md border px-2 text-[12px] normal-case"
+                                                            >
+                                                                <option value="">
+                                                                    Elegir
+                                                                </option>
+                                                                <option value="aprobado">
+                                                                    Aprobado
+                                                                </option>
+                                                                <option value="desaprobado">
+                                                                    No aprobado
+                                                                </option>
+                                                            </NativeSelect>
+                                                        </label>
+                                                    </div>
+                                                ))}
                                         </div>
                                     ) : null}
                                     <div className="border-border border-t p-2">
@@ -1155,7 +1193,7 @@ export default function ArmarCertificados({
                                             variant="outline"
                                             size="sm"
                                             onClick={() => numerar(grupo.id)}
-                                            className="rounded-[8px] shadow-none"
+                                            className="rounded-lg shadow-none"
                                         >
                                             <ListOrdered className="size-3.5" />
                                             Numerar 01, 02, 03… en este orden
@@ -1172,7 +1210,7 @@ export default function ArmarCertificados({
                         type="button"
                         variant="outline"
                         onClick={() => setGrupos([...grupos, nuevoGrupo()])}
-                        className="rounded-[9px] shadow-none"
+                        className="rounded-lg shadow-none"
                     >
                         <Plus className="size-4" />
                         Otro local o vehículo
@@ -1181,7 +1219,7 @@ export default function ArmarCertificados({
                         type="button"
                         loading={enviando}
                         onClick={emitir}
-                        className="bg-primary hover:bg-primary/90 rounded-[9px] px-5 font-bold text-white shadow-none"
+                        className="bg-primary hover:bg-primary/90 rounded-lg px-5 font-bold text-white shadow-none"
                     >
                         {enviando ? (
                             <Cargando className="size-4" />

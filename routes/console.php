@@ -9,6 +9,7 @@ Schedule::command('alerts:recompute')->daily();
 Schedule::command('ml:score-clients')->daily();
 Schedule::command('billing:enviar-programados')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('ventas:descartar-borradores')->dailyAt('03:00');
+Schedule::command('model:prune')->dailyAt('03:30');
 Schedule::command('backup:bd')->dailyAt('02:00')->withoutOverlapping();
 
 // Latido del programador: el panel del Gerente avisa si deja de correr

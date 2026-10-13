@@ -77,6 +77,7 @@ test('V3: la cotizacion pasa a la venta con descuento, condicion, observaciones 
         ->assertInertia(fn ($page) => $page
             ->where('quote.items.0.descuento', 20)
             ->where('quote.condicion_pago', 'credito')
+            ->where('quote.plazo_dias', 30)
             ->where('quote.observaciones', 'Entregar en almacén')
             ->where('quote.vehicle_id', $vehicle->id)
             ->where('quote.destino', 'vehiculo')

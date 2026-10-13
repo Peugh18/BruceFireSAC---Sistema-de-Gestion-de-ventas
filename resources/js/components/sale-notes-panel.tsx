@@ -353,7 +353,7 @@ export function SaleNotesPanel({
     return (
         <Card
             id="notas-de-la-venta"
-            className="border-border bg-card gap-0 rounded-[16px] p-5 shadow-none"
+            className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none"
         >
             <div className="mb-3 flex flex-wrap items-center gap-3">
                 <h2 className="font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
@@ -365,7 +365,7 @@ export function SaleNotesPanel({
                     variant="outline"
                     disabled={anulada || !vigente}
                     onClick={() => openModal('nota_credito')}
-                    className="border-border h-9 rounded-[9px] shadow-none"
+                    className="border-border h-9 rounded-lg shadow-none"
                 >
                     <FilePlus2 className="size-4" />
                     Nota de crédito
@@ -375,7 +375,7 @@ export function SaleNotesPanel({
                     variant="outline"
                     disabled={anulada || !vigente}
                     onClick={() => openModal('nota_debito')}
-                    className="border-border h-9 rounded-[9px] shadow-none"
+                    className="border-border h-9 rounded-lg shadow-none"
                 >
                     <FilePlus2 className="size-4" />
                     Nota de débito
@@ -389,7 +389,7 @@ export function SaleNotesPanel({
                         baja.clearErrors();
                         setBajaOpen(true);
                     }}
-                    className="border-border h-9 rounded-[9px] shadow-none"
+                    className="border-border h-9 rounded-lg shadow-none"
                 >
                     <Ban className="size-4" />
                     Comunicar baja
@@ -405,14 +405,14 @@ export function SaleNotesPanel({
             </p>
 
             {original.sunat_estado === 'baja_pendiente' && (
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="text-warning-strong mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs">
                     <AlertTriangle className="size-4 shrink-0" />
                     Baja enviada a SUNAT: esperando su respuesta. La venta se
                     anula cuando SUNAT la acepte.
                 </div>
             )}
             {vigente && original.baja_mensaje && (
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="text-warning-strong mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs">
                     <AlertTriangle className="size-4 shrink-0" />
                     {original.baja_mensaje}
                 </div>
@@ -421,7 +421,7 @@ export function SaleNotesPanel({
             {flash?.success && (
                 <div
                     role="status"
-                    className="mb-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800"
+                    className="text-success-strong mb-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs"
                 >
                     <CheckCircle2 className="size-4 shrink-0" />
                     {flash.success}
@@ -430,7 +430,7 @@ export function SaleNotesPanel({
             {flash?.error && (
                 <div
                     role="alert"
-                    className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                    className="text-warning-strong mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs"
                 >
                     <AlertTriangle className="size-4 shrink-0" />
                     {flash.error}
@@ -476,7 +476,7 @@ export function SaleNotesPanel({
                                             )?.label ??
                                                 solicitud.motivo_catalogo}
                                             {solicitud.motivo_rechazo && (
-                                                <span className="text-destructive-strong block text-[11px]">
+                                                <span className="text-destructive-strong block text-xs">
                                                     Rechazada por el Gerente:{' '}
                                                     {solicitud.motivo_rechazo}
                                                 </span>
@@ -487,7 +487,7 @@ export function SaleNotesPanel({
                                         </TableCell>
                                         <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             <Badge
-                                                className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold shadow-none ${estadoClass(solicitud.estado)}`}
+                                                className={`rounded-full border-transparent px-2.5 py-1 text-xs font-bold shadow-none ${estadoClass(solicitud.estado)}`}
                                             >
                                                 {ESTADO_LABEL[
                                                     solicitud.estado
@@ -517,7 +517,7 @@ export function SaleNotesPanel({
                                         </TableCell>
                                         <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             <Badge
-                                                className={`rounded-full border-transparent px-2.5 py-1 text-[10.5px] font-bold capitalize shadow-none ${estadoClass(nota.sunat_estado)}`}
+                                                className={`rounded-full border-transparent px-2.5 py-1 text-xs font-bold capitalize shadow-none ${estadoClass(nota.sunat_estado)}`}
                                             >
                                                 {ESTADO_LABEL[
                                                     nota.sunat_estado ?? ''
@@ -604,7 +604,7 @@ export function SaleNotesPanel({
                                     ))}
                                 </NativeSelect>
                                 {form.errors.motivo_catalogo && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.motivo_catalogo}
                                     </p>
                                 )}
@@ -628,7 +628,7 @@ export function SaleNotesPanel({
                                     className="border-border mt-1 w-full rounded-lg border px-3 py-2"
                                 />
                                 {form.errors.detalle && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {form.errors.detalle}
                                     </p>
                                 )}
@@ -796,7 +796,7 @@ export function SaleNotesPanel({
                                         </p>
                                     )}
                                     {form.errors.importe && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.importe}
                                         </p>
                                     )}
@@ -816,6 +816,16 @@ export function SaleNotesPanel({
                                         type="number"
                                         required
                                         min="0.01"
+                                        max={
+                                            kind === 'nota_credito' &&
+                                            lineasOriginal.length > 0
+                                                ? lineasOriginal.reduce(
+                                                      (suma, l) =>
+                                                          suma + l.total,
+                                                      0,
+                                                  )
+                                                : undefined
+                                        }
                                         step="0.01"
                                         value={form.data.importe}
                                         onChange={(e) =>
@@ -827,7 +837,7 @@ export function SaleNotesPanel({
                                         className="border-border mt-1 w-full rounded-lg border px-3 py-2 font-mono"
                                     />
                                     {form.errors.importe && (
-                                        <p className="mt-1 text-red-600">
+                                        <p className="text-destructive-strong mt-1">
                                             {form.errors.importe}
                                         </p>
                                     )}
@@ -871,7 +881,10 @@ export function SaleNotesPanel({
                                 )}
 
                             {form.errors.electronic_document_id && (
-                                <p className="text-red-600" role="alert">
+                                <p
+                                    className="text-destructive-strong"
+                                    role="alert"
+                                >
                                     {form.errors.electronic_document_id}
                                 </p>
                             )}
@@ -953,7 +966,7 @@ export function SaleNotesPanel({
                                     className="border-border mt-1 w-full rounded-lg border px-3 py-2"
                                 />
                                 {baja.errors.motivo && (
-                                    <p className="mt-1 text-red-600">
+                                    <p className="text-destructive-strong mt-1">
                                         {baja.errors.motivo}
                                     </p>
                                 )}
@@ -979,12 +992,18 @@ export function SaleNotesPanel({
                                 </span>
                             </label>
                             {baja.errors.no_entregado && (
-                                <p className="text-red-600" role="alert">
+                                <p
+                                    className="text-destructive-strong"
+                                    role="alert"
+                                >
                                     {baja.errors.no_entregado}
                                 </p>
                             )}
                             {errorBaja && (
-                                <p className="text-red-600" role="alert">
+                                <p
+                                    className="text-destructive-strong"
+                                    role="alert"
+                                >
                                     {errorBaja}
                                 </p>
                             )}

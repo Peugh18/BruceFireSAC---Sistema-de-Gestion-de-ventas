@@ -168,7 +168,7 @@ export default function CatalogPicker({
 
     return (
         <div className="relative">
-            <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex items-center gap-2 rounded-[9px] border px-3 focus-within:ring-[3px]">
+            <div className="border-border bg-muted/40 focus-within:border-ring focus-within:ring-ring/50 flex items-center gap-2 rounded-lg border px-3 focus-within:ring-[3px]">
                 <ScanLine className="text-muted-foreground size-4 shrink-0" />
                 <input
                     aria-label="Buscar en el catálogo"
@@ -186,7 +186,7 @@ export default function CatalogPicker({
             </div>
 
             {respuesta && (respuesta.unidad || items.length > 0) ? (
-                <div className="border-border bg-card absolute inset-x-0 top-full z-30 mt-1 max-h-[320px] overflow-y-auto rounded-[10px] border shadow-lg">
+                <div className="border-border bg-card absolute inset-x-0 top-full z-30 mt-1 max-h-[320px] overflow-y-auto rounded-lg border shadow-lg">
                     {respuesta.unidad && onPickUnidad ? (
                         <button
                             type="button"
@@ -197,7 +197,7 @@ export default function CatalogPicker({
                                 <span className="text-foreground block text-[13px] font-bold">
                                     {respuesta.unidad.nombre}
                                 </span>
-                                <span className="text-success-strong font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                <span className="text-success-strong font-['IBM_Plex_Mono',monospace] text-xs">
                                     Serie {respuesta.unidad.numero_serie}
                                     {respuesta.unidad.marca
                                         ? ` · ${respuesta.unidad.marca}`
@@ -225,7 +225,7 @@ export default function CatalogPicker({
                             >
                                 <span className="flex min-w-0 items-center gap-2.5">
                                     {item.tipo === 'service' ? (
-                                        <Wrench className="size-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                                        <Wrench className="text-foreground size-4 shrink-0" />
                                     ) : (
                                         <Box className="text-muted-foreground size-4 shrink-0" />
                                     )}
@@ -233,7 +233,7 @@ export default function CatalogPicker({
                                         <span className="text-foreground block truncate text-[13px] font-bold">
                                             {item.nombre}
                                         </span>
-                                        <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-[11px]">
+                                        <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                             {item.codigo ?? '—'}
                                             {item.tipo === 'service'
                                                 ? ' · Servicio'
@@ -246,7 +246,7 @@ export default function CatalogPicker({
                                 <span className="flex shrink-0 items-center gap-2">
                                     {item.stock !== null ? (
                                         <span
-                                            className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${sinStock ? 'bg-destructive/10 text-destructive-strong' : 'text-success-strong bg-emerald-500/10'}`}
+                                            className={`rounded-full px-2 py-0.5 text-xs font-bold ${sinStock ? 'bg-destructive/10 text-destructive-strong' : 'text-success-strong bg-emerald-500/10'}`}
                                         >
                                             Stock {item.stock}
                                         </span>
@@ -262,7 +262,7 @@ export default function CatalogPicker({
             ) : null}
 
             {sinResultados ? (
-                <p className="text-muted-foreground mt-1 text-[11.5px]">
+                <p className="text-muted-foreground mt-1 text-xs">
                     {/^\d{8,14}$/.test(busqueda.trim())
                         ? `El código ${busqueda.trim()} no está registrado: pide que lo agreguen al producto en Productos (Gerente) y vuelve a escanear.`
                         : `No hay productos, servicios ni series que coincidan con "${busqueda.trim()}".`}
