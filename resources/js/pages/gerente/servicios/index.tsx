@@ -29,6 +29,7 @@ import {
     CategoriaSelect,
     type CategoriaItem,
 } from '@/components/categoria-select';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { toast } from 'sonner';
 import ServiciosRoutes from '@/routes/gerente/servicios';
@@ -209,8 +210,7 @@ export default function ServiciosIndex() {
             );
         }
     };
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             ServiciosRoutes.index.url({ current_team: currentTeam.slug }),
             {
@@ -220,6 +220,7 @@ export default function ServiciosIndex() {
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(buscar, aplicarBusqueda);
     const handleFilterEstado = (estado: string) => {
         router.get(
             ServiciosRoutes.index.url({ current_team: currentTeam.slug }),

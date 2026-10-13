@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import EntregasRoutes from '@/routes/tecnico-campo/entregas';
@@ -116,14 +117,14 @@ export default function EntregasIndex({
     const teamSlug = currentTeam?.slug ?? '';
     const [searchTerm, setSearchTerm] = useState(search);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             EntregasRoutes.index.url({ current_team: teamSlug }),
             { tab: currentTab, q: searchTerm },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(searchTerm, aplicarBusqueda);
 
     const handleTabChange = (tab: string) => {
         router.get(

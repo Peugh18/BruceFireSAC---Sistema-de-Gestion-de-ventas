@@ -8,8 +8,9 @@ import {
     Search,
     UsersRound,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { cn } from '@/lib/utils';
 import { FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
@@ -183,9 +184,7 @@ export default function ClientesIndex({
             { preserveScroll: true },
         );
     const recargando = useRecargando();
-    const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
+    const aplicarBusqueda = () => {
         router.get(
             clientes.index.url(currentTeam.slug, {
                 query: {
@@ -199,6 +198,7 @@ export default function ClientesIndex({
             },
         );
     };
+    const submitSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const rucClients = clients.data.filter(
         (c) => c.cliente.tipo_documento?.toLowerCase() === 'ruc',

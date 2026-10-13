@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import {
@@ -46,14 +47,14 @@ export default function RecojosIndex({ recojos, filters }: Props) {
 
     const [search, setSearch] = useState(filters.search || '');
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             RecojosRoutes.index.url({ current_team: teamSlug }),
             { search: search.trim() },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     return (
         <TecnicoCampoLayout>

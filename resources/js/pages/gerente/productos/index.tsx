@@ -29,6 +29,7 @@ import {
     CategoriaSelect,
     type CategoriaItem,
 } from '@/components/categoria-select';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { toast } from 'sonner';
 import ProductosRoutes from '@/routes/gerente/productos';
@@ -336,8 +337,7 @@ export default function ProductosIndex() {
             )}
         </div>
     );
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             ProductosRoutes.index.url({ current_team: currentTeam.slug }),
             {
@@ -348,6 +348,7 @@ export default function ProductosIndex() {
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(buscar, aplicarBusqueda);
     const handleFilterEstado = (estado: string) => {
         router.get(
             ProductosRoutes.index.url({ current_team: currentTeam.slug }),

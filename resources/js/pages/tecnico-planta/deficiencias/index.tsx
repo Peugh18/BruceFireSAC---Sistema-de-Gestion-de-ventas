@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/dialog';
 import React, { useRef, useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import AlertError from '@/components/alert-error';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
@@ -89,14 +90,14 @@ export default function DeficienciasIndex({
         resolucion: '',
     });
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             DeficienciasRoutes.index.url({ current_team: teamSlug }),
             { estado: filters.estado, search: search.trim() },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleFilterChange = (nuevoEstado: string) => {
         router.get(

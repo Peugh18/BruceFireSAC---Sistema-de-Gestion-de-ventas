@@ -28,6 +28,7 @@ import {
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import GerenteLayout from '@/layouts/gerente-layout';
 import pagosRutas from '@/routes/gerente/cobranzas/pagos';
 import CobranzasRoutes from '@/routes/gerente/cobranzas';
@@ -161,6 +162,8 @@ export default function CobranzasConsolidadasIndex() {
             { preserveState: true },
         );
     };
+
+    useBusquedaDinamica(buscar, applyFilters);
 
     const resetFilters = () => {
         setBuscar('');

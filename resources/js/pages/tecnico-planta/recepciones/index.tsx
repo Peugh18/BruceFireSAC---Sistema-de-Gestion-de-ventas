@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import type { Team } from '@/types';
 import {
@@ -51,14 +52,14 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
     const [search, setSearch] = useState(filters.search || '');
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             RecepcionesRoutes.index.url({ current_team: teamSlug }),
             { search, filter: filters.filter },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleFilterChange = (newFilter: string) => {
         router.get(

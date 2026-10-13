@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Wrench, Inbox } from 'lucide-react';
 import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import mantenimientos from '@/routes/tecnico-campo/mantenimientos';
 import type { Team } from '@/types';
@@ -29,14 +30,14 @@ export default function MantenimientosIndex({
     const equipo = currentTeam?.slug ?? '';
     const [texto, setTexto] = useState(search ?? '');
 
-    const buscar = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             mantenimientos.index.url(equipo),
             { q: texto || undefined },
             { preserveState: true },
         );
     };
+    const buscar = useBusquedaDinamica(texto, aplicarBusqueda);
 
     return (
         <TecnicoCampoLayout title="Mantenimiento en sitio">

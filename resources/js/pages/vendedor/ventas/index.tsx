@@ -10,8 +10,9 @@ import {
     Search,
     ShoppingCart,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -190,10 +191,10 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
     const changeFilter = (estado: string, comprobante = currentComprobante) =>
         filtrar({ estado, comprobante });
 
-    const buscarVentas = (event: FormEvent) => {
-        event.preventDefault();
+    const aplicarBusqueda = () => {
         filtrar({ buscar: buscar.trim() });
     };
+    const buscarVentas = useBusquedaDinamica(buscar, aplicarBusqueda);
 
     const esHoy = filters.desde === hoy && filters.hasta === hoy;
 

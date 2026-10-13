@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
 import { Search, MapPin, Phone, Truck, ArrowRight, Car } from 'lucide-react';
@@ -70,14 +71,14 @@ export default function TecnicoCampoDashboard({
 
     const [search, setSearch] = useState(filters.search || '');
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             TecnicoCampoRoutes.dashboard.url({ current_team: teamSlug }),
             { ...filters, search: search.trim() },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleStatusTab = (tab: string) => {
         router.get(

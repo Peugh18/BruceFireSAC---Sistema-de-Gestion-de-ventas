@@ -11,9 +11,9 @@ import {
     Search,
     Users,
 } from 'lucide-react';
-import type { FormEvent } from 'react';
 import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -125,10 +125,10 @@ export default function CertificadosIndex({
         );
     }
 
-    const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const aplicarBusqueda = () => {
         buscar({});
     };
+    const submitSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const verCertificado = (id: number) =>
         certificados.show.url({ current_team: teamSlug, certificate: id });

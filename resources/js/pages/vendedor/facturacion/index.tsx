@@ -10,9 +10,10 @@ import {
     Send,
     XCircle,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import FiltroSelect from '@/components/filtro-select';
 import RangoFechas, { describirRango } from '@/components/rango-fechas';
 import { CargaLarga, Cargando, FilasCargando } from '@/components/cargando';
@@ -177,10 +178,10 @@ export default function FacturacionIndex({
 
     const changeType = (tipo: string) => filtrar({ tipo });
 
-    const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const aplicarBusqueda = () => {
         filtrar({ buscar: search.trim() });
     };
+    const submitSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const idsPagina = documents.data.map((d) => d.id);
     const paginaMarcada =

@@ -12,8 +12,9 @@ import {
     Search,
     Truck,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -107,8 +108,7 @@ export default function RecepcionesIndex({
     const [fechaDesde, setFechaDesde] = useState(filters.fecha_desde || '');
     const [fechaHasta, setFechaHasta] = useState(filters.fecha_hasta || '');
 
-    const handleFilter = (e: FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             recepciones.index.url(teamSlug),
             {
@@ -120,6 +120,7 @@ export default function RecepcionesIndex({
             { preserveState: true, preserveScroll: true },
         );
     };
+    const handleFilter = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleReset = () => {
         setSearch('');

@@ -10,8 +10,9 @@ import {
     Shield,
     X,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -147,8 +148,7 @@ export default function ConsultaIndex({
         filters.sede_id ? String(filters.sede_id) : '',
     );
 
-    const handleSearch = (e: FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             ConsultaRoutes.index.url({ current_team: teamSlug }),
             {
@@ -161,6 +161,7 @@ export default function ConsultaIndex({
             },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const handleClear = () => {
         setSearch('');

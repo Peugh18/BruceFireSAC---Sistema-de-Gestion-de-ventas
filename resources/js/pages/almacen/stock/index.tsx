@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TabsBf, propsPanel } from '@/components/ui/tabs-bf';
@@ -220,8 +221,7 @@ export default function StockIndex({
     const [kTipo, setKTipo] = useState(kardex_filters.tipo || 'todos');
 
     // Búsqueda en Stock
-    const handleStockFilter = (e: FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             window.location.pathname,
             {
@@ -240,6 +240,7 @@ export default function StockIndex({
             { preserveState: true, preserveScroll: true },
         );
     };
+    const handleStockFilter = useBusquedaDinamica(stockSearch, aplicarBusqueda);
 
     const handleResetStock = () => {
         setStockSearch('');

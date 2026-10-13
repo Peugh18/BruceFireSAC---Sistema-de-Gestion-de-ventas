@@ -10,8 +10,9 @@ import {
     Wrench,
     X,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import { KpiFiltro } from '@/components/kpi-filtro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -155,14 +156,14 @@ export default function TecnicoPlantaDashboard({
     const [search, setSearch] = useState(filters.search || '');
     const currentTab = filters.tab || 'todas';
 
-    const handleSearch = (e: FormEvent) => {
-        e.preventDefault();
+    const aplicarBusqueda = () => {
         router.get(
             TecnicoPlantaRoutes.dashboard.url({ current_team: teamSlug }),
             { tab: currentTab, search: search.trim() },
             { preserveState: true },
         );
     };
+    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
 
     const changeTab = (newTab: string) => {
         router.get(
