@@ -222,15 +222,9 @@ export default function TecnicoCampoDashboard({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar cliente, dirección o código de orden..."
-                        className="bg-card focus:ring-primary min-h-12 w-full rounded-xl border border-neutral-200 py-2.5 pr-24 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card focus:ring-primary min-h-12 w-full rounded-xl border border-neutral-200 py-2.5 pr-4 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
                     />
                     <Search className="absolute top-4 left-3 h-4 w-4 text-neutral-400" />
-                    <button
-                        type="submit"
-                        className="absolute top-0.5 right-0.5 bottom-0.5 min-w-11 rounded-lg bg-neutral-900 px-3 text-xs font-medium text-white transition hover:brightness-95 dark:bg-neutral-700"
-                    >
-                        Buscar
-                    </button>
                 </form>
 
                 {/* Orders Cards List */}

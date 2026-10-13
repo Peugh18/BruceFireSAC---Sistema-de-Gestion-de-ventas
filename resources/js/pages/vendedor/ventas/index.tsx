@@ -335,9 +335,6 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                 changeFilter(currentFilter, valor)
                             }
                         />
-                        <Button type="submit" className="h-9">
-                            Buscar
-                        </Button>
                     </form>
 
                     <div className="overflow-x-auto">

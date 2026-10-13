@@ -335,12 +335,6 @@ export default function ServiciosIndex() {
                                 className="border-border bg-muted/40 text-foreground focus:border-primary w-full rounded-lg border py-2 pr-4 pl-9 text-sm focus:outline-none"
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="border-border bg-card text-foreground/80 hover:bg-background rounded-lg border px-3.5 py-2 text-xs font-semibold"
-                        >
-                            Buscar
-                        </button>
                     </form>
                     <div className="border-border bg-muted/40 inline-flex rounded-lg border p-0.5 text-xs font-medium">
                         <button

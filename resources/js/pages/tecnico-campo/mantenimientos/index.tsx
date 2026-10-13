@@ -54,12 +54,6 @@ export default function MantenimientosIndex({
                     placeholder="Código o cliente"
                     className="border-border bg-card min-h-[44px] flex-1 rounded-lg border px-3 text-xs"
                 />
-                <button
-                    type="submit"
-                    className="bg-primary min-h-[44px] rounded-lg px-4 text-xs font-bold text-white transition hover:brightness-95"
-                >
-                    Buscar
-                </button>
             </form>
 
             {lista.data.length === 0 ? (
