@@ -478,15 +478,15 @@ class SaleController extends Controller
                 'product_id' => null,
                 'nombre' => $line->service?->nombre,
                 'cantidad' => (int) $line->cantidad,
-                'precio_unitario' => (float) ($line->quoteItem?->precio_unitario ?? $line->service?->precio_venta ?? 0),
-                'descuento' => (float) ($line->quoteItem?->descuento ?? 0),
+                'precio_unitario' => (float) ($line->quoteItem->precio_unitario ?? $line->service->precio_venta ?? 0),
+                'descuento' => (float) ($line->quoteItem->descuento ?? 0),
             ])
             : collect([[
                 'tipo_linea' => 'servicio',
                 'service_id' => $order->service_id,
                 'nombre' => $order->service?->nombre,
                 'cantidad' => max(1, $order->equipments->count()),
-                'precio_unitario' => (float) ($order->service?->precio_venta ?? 0),
+                'precio_unitario' => (float) ($order->service->precio_venta ?? 0),
                 'descuento' => 0,
             ]]);
         // V6: una misma cotización usada en varias autorizaciones se cobra una vez.

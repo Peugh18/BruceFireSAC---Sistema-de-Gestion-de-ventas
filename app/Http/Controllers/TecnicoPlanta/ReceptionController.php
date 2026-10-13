@@ -4,15 +4,18 @@ namespace App\Http\Controllers\TecnicoPlanta;
 
 use App\Actions\TecnicoPlanta\QuickRegisterEquipment;
 use App\Actions\TecnicoPlanta\ReceiveServiceOrder;
+use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Inventory\StickerPdfService;
+use App\Services\ServiceOrders\CasillerosDeLaOrden;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -112,6 +115,7 @@ class ReceptionController extends Controller
 
         return Inertia::render('tecnico-planta/recepciones/show', [
             'asignacion' => $service_order->asignacionPara(request()->user()),
+            'casilleros' => CasillerosDeLaOrden::paraPagina($service_order),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -251,6 +255,8 @@ class ReceptionController extends Controller
             'service_order_line_id' => ['nullable', 'integer', 'exists:service_order_lines,id'],
             'service_id' => ['nullable', 'integer', 'exists:services,id'],
             'adicional' => ['nullable', 'boolean'],
+            'tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
+            'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
             'anio_fabricacion' => ['nullable', 'string', 'max:100'],

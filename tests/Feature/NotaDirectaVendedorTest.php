@@ -4,6 +4,8 @@ use App\Contracts\SunatClientInterface;
 use App\Models\ElectronicDocument;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Fixtures\SunatSoloEnvio;
@@ -85,4 +87,31 @@ test('sin el permiso no se emiten notas ni se abre la pantalla', function () {
     ])->assertForbidden();
 
     expect(ElectronicDocument::whereIn('tipo', ['nota_credito', 'nota_debito'])->exists())->toBeFalse();
+});
+
+test('retirar la aprobacion conserva solicitudes pendientes y revisadas en el archivo', function () {
+    $migracion = require database_path('migrations/2026_10_12_225648_drop_note_requests_table.php');
+    $migracion->down();
+
+    try {
+        $ids = [];
+        foreach (['por_aprobar', 'aprobada', 'rechazada'] as $estado) {
+            $ids[] = DB::table('note_requests')->insertGetId([
+                'electronic_document_id' => $this->factura->id,
+                'tipo' => 'nota_credito', 'motivo_catalogo' => '01',
+                'detalle' => 'Solicitud anterior', 'importe' => $this->sale->total,
+                'estado' => $estado, 'solicitado_por' => $this->vendedor->id,
+            ]);
+        }
+
+        $migracion->up();
+
+        expect(Schema::hasTable('note_requests'))->toBeFalse()
+            ->and(DB::table('note_requests_archive')->whereIn('id', $ids)->orderBy('id')->pluck('estado')->all())
+            ->toBe(['por_aprobar', 'aprobada', 'rechazada']);
+    } finally {
+        if (Schema::hasTable('note_requests') && ! Schema::hasTable('note_requests_archive')) {
+            Schema::rename('note_requests', 'note_requests_archive');
+        }
+    }
 });

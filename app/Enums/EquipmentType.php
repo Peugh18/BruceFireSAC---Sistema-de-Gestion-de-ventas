@@ -72,6 +72,11 @@ enum EquipmentType: string
 
     public static function fromDescription(?string $description): self
     {
+        $registrado = Agente::tipoBaseDe($description);
+        if ($registrado !== null) {
+            return $registrado;
+        }
+
         $normalized = mb_strtolower(trim((string) $description));
 
         return match (true) {
@@ -82,8 +87,7 @@ enum EquipmentType: string
             str_contains($normalized, 'espuma') => self::Espuma,
             str_contains($normalized, 'agua') => self::Agua,
             str_contains($normalized, 'limpio') => self::AgenteLimpio,
-            // Un agente agregado en el sistema trae su propio tipo base.
-            default => Agente::tipoBaseDe($description) ?? self::Otro,
+            default => self::Otro,
         };
     }
 

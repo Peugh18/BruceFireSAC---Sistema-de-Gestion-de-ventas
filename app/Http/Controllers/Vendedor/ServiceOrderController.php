@@ -12,6 +12,7 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\ServiceOrders\CasillerosDeLaOrden;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -134,6 +135,7 @@ class ServiceOrderController extends Controller
 
         return Inertia::render('vendedor/ordenes-servicio/show', [
             'serviceOrder' => $service_order,
+            'casilleros' => CasillerosDeLaOrden::paraPagina($service_order),
             'tecnicos' => $this->tecnicosQueAtienden($service_order)->get(['id', 'name']),
             'tecnicosEntrega' => in_array($service_order->estado, ServiceOrder::ESTADOS_LISTOS, true)
                 ? $this->tecnicosDeEntrega($service_order)->get(['id', 'name'])

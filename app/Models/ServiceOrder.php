@@ -230,6 +230,8 @@ class ServiceOrder extends Model
     {
         return $this->belongsToMany(Equipment::class, 'service_order_equipment')
             ->withPivot(['service_order_line_id', 'recibido', 'observaciones', 'posicion'])
+            ->orderByRaw('COALESCE(service_order_equipment.posicion, 2147483647)')
+            ->orderBy('equipment.id')
             ->withTimestamps();
     }
 
@@ -237,7 +239,7 @@ class ServiceOrder extends Model
     {
         $this->loadMissing('service:id,nombre', 'lines.service:id,nombre');
 
-        $principal = $this->service?->nombre ?? $this->lines->first()?->service?->nombre ?? 'Servicio';
+        $principal = $this->service->nombre ?? $this->lines->first()?->service->nombre ?? 'Servicio';
         $otros = $this->lines
             ->filter(fn (ServiceOrderLine $line): bool => $line->service_id !== $this->service_id)
             ->pluck('service_id')

@@ -172,3 +172,63 @@ test('reordenar extintores cambia su posicion', function () {
     expect((int) DB::table('service_order_equipment')->where('equipment_id', $second->id)->value('posicion'))->toBe(1)
         ->and((int) DB::table('service_order_equipment')->where('equipment_id', $first->id)->value('posicion'))->toBe(2);
 });
+
+test('escanear conserva el agente y la capacidad originales del extintor', function () {
+    $user = vendedorUser();
+    $service = servicioOrdenLinea('Recarga PQS 6 kg', 'pqs', '6 kg');
+    $order = ServiceOrder::factory()->create(['service_id' => $service->id]);
+    $order->lines()->create(['service_id' => $service->id, 'cantidad' => 1]);
+    $equipment = Equipment::factory()->create(['client_id' => $order->client_id, 'tipo_agente' => 'PQS ABC 6 kg', 'capacidad' => '6,0 kgs']);
+
+    $this->actingAs($user)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $user->currentTeam, 'service_order' => $order]), ['numero_serie' => $equipment->numero_serie])
+        ->assertSessionHasNoErrors();
+
+    expect($equipment->fresh())->tipo_agente->toBe('PQS ABC 6 kg')->capacidad->toBe('6,0 kgs');
+});
+
+test('no se puede agregar otro extintor a un casillero lleno', function () {
+    $user = vendedorUser();
+    $service = servicioOrdenLinea('Recarga PQS 6 kg', 'pqs', '6 kg');
+    $order = ServiceOrder::factory()->create(['service_id' => $service->id]);
+    $line = $order->lines()->create(['service_id' => $service->id, 'cantidad' => 1]);
+    $equipment = Equipment::factory()->create(['client_id' => $order->client_id]);
+    $order->equipments()->attach($equipment->id, ['service_order_line_id' => $line->id]);
+
+    $this->actingAs($user)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $user->currentTeam, 'service_order' => $order]), ['service_order_line_id' => $line->id, 'marca' => 'Buckeye'])
+        ->assertSessionHasErrors('service_order_line_id');
+
+    expect($order->equipments()->count())->toBe(1)
+        ->and(Equipment::where('client_id', $order->client_id)->count())->toBe(1);
+});
+
+test('quitar un extintor adicional elimina su linea vacia sin borrar el equipo', function () {
+    $user = vendedorUser();
+    $service = servicioOrdenLinea('Recarga PQS 6 kg', 'pqs', '6 kg');
+    $order = ServiceOrder::factory()->create(['service_id' => $service->id]);
+    $line = $order->lines()->create(['service_id' => $service->id, 'cantidad' => 1, 'adicional' => true]);
+    $equipment = Equipment::factory()->create(['client_id' => $order->client_id]);
+    $order->equipments()->attach($equipment->id, ['service_order_line_id' => $line->id]);
+
+    $this->actingAs($user)->delete(route('vendedor.ordenes-servicio.equipos.destroy', ['current_team' => $user->currentTeam, 'service_order' => $order, 'equipment' => $equipment]))
+        ->assertSessionHasNoErrors();
+
+    expect($order->equipments()->count())->toBe(0)
+        ->and($order->lines()->count())->toBe(0)
+        ->and(Equipment::whereKey($equipment->id)->exists())->toBeTrue();
+});
+
+test('una orden cerrada no permite reordenar ni quitar sus extintores', function () {
+    $user = vendedorUser();
+    $order = ServiceOrder::factory()->create(['estado' => 'cerrado']);
+    $equipment = Equipment::factory()->create(['client_id' => $order->client_id]);
+    $order->equipments()->attach($equipment->id, ['posicion' => 1]);
+    $args = ['current_team' => $user->currentTeam, 'service_order' => $order];
+
+    $this->actingAs($user)->patch(route('vendedor.ordenes-servicio.equipos.reordenar', $args), ['equipos' => [$equipment->id]])
+        ->assertSessionHasErrors('equipo');
+    $this->delete(route('vendedor.ordenes-servicio.equipos.destroy', [...$args, 'equipment' => $equipment]))
+        ->assertSessionHasErrors('equipo');
+
+    expect($order->equipments()->count())->toBe(1)
+        ->and((int) DB::table('service_order_equipment')->where('service_order_id', $order->id)->value('posicion'))->toBe(1);
+});

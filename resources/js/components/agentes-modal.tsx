@@ -92,6 +92,7 @@ export default function BotonAgentes() {
 
     const agregar = async (event: FormEvent) => {
         event.preventDefault();
+        event.stopPropagation();
 
         if (
             await accion(

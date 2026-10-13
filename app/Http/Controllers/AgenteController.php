@@ -6,7 +6,10 @@ use App\Enums\EquipmentType;
 use App\Models\Agente;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Lista de agentes extintores que se eligen en los formularios. Se agrega,
@@ -26,21 +29,51 @@ class AgenteController extends Controller
     public function store(Request $request): JsonResponse
     {
         $datos = $this->validar($request);
-        $agente = Agente::query()->whereRaw('LOWER(nombre) = ?', [mb_strtolower($datos['nombre'])])->first();
+        $agente = DB::transaction(function () use ($datos): Agente {
+            $agentes = Agente::query()->lockForUpdate()->get();
+            $existente = $agentes->first(fn (Agente $agente): bool => $agente->coincideCon($datos['nombre']));
 
-        // Volver a agregar uno que se había quitado lo reactiva.
-        if ($agente) {
-            $agente->update([...$datos, 'activo' => true]);
-        } else {
-            $agente = Agente::create([...$datos, 'orden' => (int) Agente::max('orden') + 1]);
-        }
+            if ($existente) {
+                if ($existente->activo || Str::lower(Str::ascii($existente->nombre)) !== Str::lower(Str::ascii($datos['nombre']))) {
+                    throw ValidationException::withMessages(['nombre' => "Ese nombre ya pertenece al agente {$existente->nombre}."]);
+                }
+                if ($existente->tipo_base->value !== $datos['tipo_base']) {
+                    throw ValidationException::withMessages(['tipo_base' => 'Para reactivarlo elige su tipo original: '.$existente->tipo_base->etiqueta().'.']);
+                }
+                $existente->update(['activo' => true]);
+
+                return $existente;
+            }
+
+            return Agente::create([...$datos, 'orden' => (int) $agentes->max('orden') + 1]);
+        });
 
         return response()->json(['agente' => $agente], 201);
     }
 
     public function update(Request $request, Agente $agente): JsonResponse
     {
-        $agente->update($this->validar($request, $agente));
+        $datos = $this->validar($request, $agente);
+        $agente = DB::transaction(function () use ($datos, $agente): Agente {
+            $agentes = Agente::query()->lockForUpdate()->get();
+            $actual = $agentes->firstWhere('id', $agente->id);
+            abort_if($actual === null, 404);
+
+            if ($agentes->contains(fn (Agente $otro): bool => $otro->id !== $actual->id && $otro->coincideCon($datos['nombre']))) {
+                throw ValidationException::withMessages(['nombre' => 'Ese nombre ya pertenece a otro agente, aunque se haya renombrado o quitado.']);
+            }
+            if ($actual->tipo_base->value !== $datos['tipo_base']) {
+                throw ValidationException::withMessages(['tipo_base' => 'Renombrar conserva el tipo original. Para otro tipo, agrega un agente distinto.']);
+            }
+
+            $anteriores = $actual->nombres_anteriores ?? [];
+            if (mb_strtolower($actual->nombre) !== mb_strtolower($datos['nombre'])) {
+                $anteriores[] = $actual->nombre;
+            }
+            $actual->update(['nombre' => $datos['nombre'], 'nombres_anteriores' => array_values(array_unique($anteriores))]);
+
+            return $actual;
+        });
 
         return response()->json(['agente' => $agente]);
     }

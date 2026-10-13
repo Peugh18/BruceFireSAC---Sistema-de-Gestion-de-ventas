@@ -116,7 +116,7 @@ class DesgloseNota
             $resultado[] = $linea + ['cantidad' => $cantidad, 'precio_unitario' => round($monto / $cantidad, 2), 'valor_unitario' => round($partes['base'] / $cantidad, 2), 'base' => $partes['base'], 'igv' => $partes['igv'], 'subtotal' => $monto];
         }
 
-        if ($motivo !== '03' && abs($suma - $importe) > 0.011) {
+        if ($motivo !== '03' && abs($suma - $importe) > 0.001) {
             throw ValidationException::withMessages(['importe' => 'El importe de la nota debe ser igual a la suma de las líneas elegidas (S/ '.number_format($suma, 2).').']);
         }
 

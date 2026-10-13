@@ -23,12 +23,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import equiposRoutes from '@/routes/equipos';
 import comunicacion from '@/routes/vendedor/comunicacion';
 import ordenes from '@/routes/vendedor/ordenes-servicio';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import type { Team } from '@/types';
-import OpcionesAgente from '@/components/opciones-agente';
+import EquiposDeLaOrden, {
+    type Casilleros,
+} from '@/components/equipos-de-la-orden';
 import EntregaMostradorRoutes from '@/routes/vendedor/ordenes-servicio/entrega-mostrador';
 import {
     DeficienciaCard,
@@ -94,6 +95,7 @@ export type ServiceOrderDetails = {
 
 export type Props = {
     serviceOrder: ServiceOrderDetails;
+    casilleros: Casilleros;
     tecnicos: { id: number; name: string }[];
     tecnicosEntrega: { id: number; name: string }[];
     services: { id: number; nombre: string }[];
@@ -190,6 +192,7 @@ function fechaLegible(valor: string): string {
 
 export default function ServiceOrderShow({
     serviceOrder,
+    casilleros,
     tecnicos,
     tecnicosEntrega,
     services,
@@ -314,14 +317,6 @@ export default function ServiceOrderShow({
         observaciones: serviceOrder.observaciones ?? '',
     });
     const nota = useForm({ mensaje: '' });
-    const equipo = useForm({
-        numero_serie: '',
-        tipo_agente: '',
-        capacidad: '',
-        marca: '',
-        serie_fabricante: '',
-        observaciones_recepcion: '',
-    });
     const ruta = { current_team: teamSlug, service_order: serviceOrder.id };
 
     function asignar() {
@@ -368,25 +363,6 @@ export default function ServiceOrderShow({
             preserveScroll: true,
             onSuccess: () => nota.reset(),
         });
-    }
-
-    function agregarEquipo(event: React.FormEvent) {
-        event.preventDefault();
-        equipo.post(
-            EquiposRoutes.store.url({
-                current_team: teamSlug,
-                service_order: serviceOrder.id,
-            }),
-            {
-                onError: (errors) =>
-                    toast.error(
-                        Object.values(errors)[0] ??
-                            'No se pudo completar la acción.',
-                    ),
-                preserveScroll: true,
-                onSuccess: () => equipo.reset(),
-            },
-        );
     }
 
     return (
@@ -638,7 +614,9 @@ export default function ServiceOrderShow({
                 <Card className="space-y-4 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                            <h3 className="font-bold">Extintores recibidos</h3>
+                            <h3 className="font-bold">
+                                Extintores de la orden
+                            </h3>
                             <p className="text-muted-foreground text-xs">
                                 Escanea un BF-EQ existente o registra uno nuevo.
                             </p>
@@ -684,97 +662,18 @@ export default function ServiceOrderShow({
                             )}
                         </div>
                     </div>
-                    <div className="space-y-1 text-sm">
-                        {serviceOrder.equipments.length ? (
-                            serviceOrder.equipments.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="rounded-lg border p-2"
-                                >
-                                    <Link
-                                        href={equiposRoutes.show.url({
-                                            current_team: teamSlug,
-                                            equipment: item.id,
-                                        })}
-                                        className="font-bold underline"
-                                    >
-                                        {item.numero_serie}
-                                    </Link>{' '}
-                                    · {item.capacidad} · {item.tipo_agente} ·{' '}
-                                    {item.marca}
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-muted-foreground">
-                                Aún no hay extintores registrados.
-                            </p>
-                        )}
-                    </div>
-                    {editable && (
-                        <form
-                            onSubmit={agregarEquipo}
-                            className="grid gap-2 sm:grid-cols-3"
-                        >
-                            <input
-                                aria-label="Sticker BF-EQ (si existe)"
-                                className="rounded-md border p-2 text-sm"
-                                placeholder="Sticker BF-EQ (si existe)"
-                                value={equipo.data.numero_serie}
-                                onChange={(e) =>
-                                    equipo.setData(
-                                        'numero_serie',
-                                        e.target.value,
-                                    )
-                                }
-                            />
-                            <input
-                                aria-label="Capacidad"
-                                className="rounded-md border p-2 text-sm"
-                                placeholder="Capacidad"
-                                value={equipo.data.capacidad}
-                                onChange={(e) =>
-                                    equipo.setData('capacidad', e.target.value)
-                                }
-                            />
-                            <NativeSelect
-                                aria-label="Agente extintor"
-                                className="rounded-md border p-2 text-sm"
-                                value={equipo.data.tipo_agente}
-                                onChange={(e) =>
-                                    equipo.setData(
-                                        'tipo_agente',
-                                        e.target.value,
-                                    )
-                                }
-                            >
-                                <OpcionesAgente vacia="Agente" />
-                            </NativeSelect>
-                            <input
-                                aria-label="Marca"
-                                className="rounded-md border p-2 text-sm"
-                                placeholder="Marca"
-                                value={equipo.data.marca}
-                                onChange={(e) =>
-                                    equipo.setData('marca', e.target.value)
-                                }
-                            />
-                            <input
-                                aria-label="Serie fabricante"
-                                className="rounded-md border p-2 text-sm"
-                                placeholder="Serie fabricante"
-                                value={equipo.data.serie_fabricante}
-                                onChange={(e) =>
-                                    equipo.setData(
-                                        'serie_fabricante',
-                                        e.target.value,
-                                    )
-                                }
-                            />
-                            <Button type="submit" loading={equipo.processing}>
-                                Agregar extintor
-                            </Button>
-                        </form>
-                    )}
+                    <EquiposDeLaOrden
+                        casilleros={casilleros}
+                        rutas={{
+                            agregar: EquiposRoutes.store.url(ruta),
+                            reordenar: EquiposRoutes.reordenar.url(ruta),
+                            quitar: (equipment) =>
+                                EquiposRoutes.destroy.url({
+                                    ...ruta,
+                                    equipment,
+                                }),
+                        }}
+                    />
                 </Card>
 
                 <Card className="border-border bg-card rounded-2xl p-5 shadow-none">

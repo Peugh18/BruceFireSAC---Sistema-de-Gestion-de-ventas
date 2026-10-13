@@ -2,8 +2,10 @@
 
 use App\Actions\Billing\AplicarNotaAlSaldo;
 use App\Actions\Billing\IssueCreditNote;
+use App\Models\ElectronicDocument;
 use App\Models\InventoryMovement;
 use App\Services\Billing\DatosEmision;
+use App\Services\Billing\DesgloseNota;
 use App\Services\Billing\GreenterService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Validation\ValidationException;
@@ -69,4 +71,34 @@ test('recepción física total confirmada reintegra una sola vez', function () {
     app(IssueCreditNote::class)->aplicarSiFueAceptada($nota);
     expect($unit->fresh()->estado)->toBe('disponible')
         ->and(InventoryMovement::where('tipo', 'ingreso')->where('referencia_id', $sale->id)->count())->toBe(1);
+});
+
+test('devolucion parcial suma los montos redondeados por linea', function () {
+    $original = new ElectronicDocument;
+    $original->forceFill(['datos_emision' => [
+        'cliente' => [],
+        'lineas' => array_fill(0, 6, [
+            'codigo' => 'ITEM', 'nombre' => 'Producto', 'unidad_medida' => 'NIU',
+            'cantidad' => 3, 'base' => 1, 'igv' => 0, 'tipo_afectacion_igv' => '20',
+        ]),
+    ]]);
+    $seleccion = array_map(fn (int $indice) => ['indice' => $indice, 'cantidad' => 1], range(0, 5));
+
+    $desglose = app(DesgloseNota::class)->calcular($original, 'nota_credito', '07', 1.98, ['lineas' => $seleccion]);
+
+    expect(round(array_sum(array_column($desglose['lineas'], 'subtotal')), 2))->toBe(1.98);
+});
+
+test('no se admite una diferencia de un centavo entre el importe y sus lineas', function () {
+    $original = new ElectronicDocument;
+    $original->forceFill(['datos_emision' => [
+        'cliente' => [],
+        'lineas' => [[
+            'codigo' => 'ITEM', 'nombre' => 'Producto', 'unidad_medida' => 'NIU',
+            'cantidad' => 3, 'base' => 1, 'igv' => 0, 'tipo_afectacion_igv' => '20',
+        ]],
+    ]]);
+
+    expect(fn () => app(DesgloseNota::class)->calcular($original, 'nota_credito', '07', 0.34, ['lineas' => [['indice' => 0, 'cantidad' => 1]]]))
+        ->toThrow(ValidationException::class);
 });

@@ -10,6 +10,7 @@ use App\Models\ServiceOrderEvent;
 use App\Models\ServiceOrderLine;
 use App\Models\User;
 use App\Services\Inventory\InventorySequenceGenerator;
+use App\Services\ServiceOrders\CasillerosDeLaOrden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -28,9 +29,12 @@ class QuickRegisterEquipment
                 ->with(['lines.service'])
                 ->lockForUpdate()
                 ->findOrFail($serviceOrder->id);
+            if (! in_array($serviceOrder->estado, CasillerosDeLaOrden::ESTADOS_EDITABLES, true)) {
+                throw ValidationException::withMessages(['equipo' => 'Esta orden ya no admite cambios de extintores.']);
+            }
             $this->ensureDefaultLine($serviceOrder);
 
-            $search = trim((string) ($data['numero_serie'] ?? ''));
+            $search = trim((string) ($data['numero_serie'] ?? $data['serie_fabricante'] ?? ''));
             $equipment = $search !== ''
                 ? Equipment::query()
                     ->where(fn (Builder $query) => $query
@@ -38,6 +42,15 @@ class QuickRegisterEquipment
                         ->orWhere('serie_fabricante', $search))
                     ->first()
                 : null;
+
+            // Un sticker BF-EQ que no existe es un error de lectura; cualquier otro
+            // código no encontrado es la serie de fábrica de un extintor nuevo.
+            if ($search !== '' && ! $equipment) {
+                if (preg_match('/^BF-EQ-/i', $search) === 1) {
+                    throw ValidationException::withMessages(['numero_serie' => "No encontramos el sticker {$search}. Revisa el código o regístralo a mano."]);
+                }
+                $data['serie_fabricante'] = ($data['serie_fabricante'] ?? null) ?: $search;
+            }
 
             if ($equipment && $equipment->client_id !== $serviceOrder->client_id) {
                 throw ValidationException::withMessages(['numero_serie' => 'El extintor pertenece a otro cliente.']);
@@ -62,8 +75,8 @@ class QuickRegisterEquipment
 
             if ($equipment) {
                 $equipment->update(array_filter([
-                    'tipo_agente' => $data['tipo_agente'] ?? $this->agentLabel($service),
-                    'capacidad' => $data['capacidad'] ?? $this->capacityLabel($service),
+                    'tipo_agente' => $data['tipo_agente'] ?? null,
+                    'capacidad' => $data['capacidad'] ?? null,
                     'marca' => $data['marca'] ?? null,
                     'serie_fabricante' => $data['serie_fabricante'] ?? null,
                     'anio_fabricacion' => $data['anio_fabricacion'] ?? null,
@@ -136,8 +149,13 @@ class QuickRegisterEquipment
     {
         $lineId = (int) ($data['service_order_line_id'] ?? 0);
         if ($lineId > 0) {
-            return $serviceOrder->lines->firstWhere('id', $lineId)
+            $line = $serviceOrder->lines->firstWhere('id', $lineId)
                 ?? throw ValidationException::withMessages(['service_order_line_id' => 'El casillero no pertenece a esta orden.']);
+            if ($serviceOrder->equipments()->wherePivot('service_order_line_id', $line->id)->count() >= $line->cantidad) {
+                throw ValidationException::withMessages(['service_order_line_id' => 'Todos los casilleros de esta línea están ocupados.']);
+            }
+
+            return $line;
         }
 
         if ((bool) ($data['adicional'] ?? false)) {
@@ -153,29 +171,29 @@ class QuickRegisterEquipment
             ])->load('service');
         }
 
-        if (! $equipment) {
-            throw ValidationException::withMessages(['service_order_line_id' => 'Elige el casillero donde irá el extintor.']);
-        }
-
         $assignedByLine = DB::table('service_order_equipment')
             ->where('service_order_id', $serviceOrder->id)
             ->selectRaw('service_order_line_id, count(*) as total')
             ->groupBy('service_order_line_id')
             ->pluck('total', 'service_order_line_id');
 
+        // Un extintor nuevo sin casillero elegido va al primero libre; uno ya
+        // registrado, al primero libre que coincide en agente y capacidad.
         $line = $serviceOrder->lines
             ->first(fn (ServiceOrderLine $line): bool => $line->service
                 && (int) ($assignedByLine[$line->id] ?? 0) < $line->cantidad
-                && $line->service->incompatibilidadConEquipo($equipment) === null);
+                && ($equipment === null || $line->service->incompatibilidadConEquipo($equipment) === null));
 
         if (! $line) {
-            throw ValidationException::withMessages(['numero_serie' => 'No hay un casillero libre compatible para este extintor.']);
+            throw ValidationException::withMessages(['numero_serie' => $equipment
+                ? 'No hay un casillero libre para este extintor. Agrégalo como extintor no cotizado.'
+                : 'Ya no quedan casilleros libres. Agrégalo como extintor no cotizado.']);
         }
 
         return $line;
     }
 
-    private function agentLabel(Service $service): ?string
+    private function agentLabel(Service $service): string
     {
         return (EquipmentType::tryFrom((string) $service->agente) ?? EquipmentType::fromDescription($service->nombre))->etiqueta();
     }
