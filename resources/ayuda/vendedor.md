@@ -129,10 +129,11 @@
 
 ## Notas de crédito y débito
 
-1. En la venta, abre **Nota de crédito** (o débito) sobre una factura o boleta que SUNAT ya aceptó.
-2. Elige el motivo, escribe el detalle y el importe. El importe **no puede superar** lo que queda por acreditar del comprobante.
-3. Tú solo la **pides**: queda «por aprobar» hasta que el Gerente la revise; recién entonces se emite.
-4. Si ya hay una solicitud igual esperando al Gerente, el sistema te avisa: espera su respuesta antes de pedir otra.
+- Se hacen desde la venta, sobre una boleta o factura que SUNAT ya aceptó: botón **Nota de crédito** o **Nota de débito**. La emites tú directo; no espera al Gerente.
+- **Nota de crédito:** se abre la misma boleta o factura con sus ítems. Por defecto **anula todo** y el importe sale solo. Si ya recibiste los productos, marca **Ya recibí los productos** para que vuelvan al stock. Si solo devuelve una parte, pulsa **¿Solo devuelve una parte?** y escribe cuántos devuelve de cada ítem.
+- **Nota de débito:** cobra lo que se agregó después: **Cobro por pago tardío** (escribes el monto) o **Ajuste de precio** (eliges el ítem y su nuevo precio; la diferencia se calcula sola).
+- Pulsa **Aceptar y enviar a SUNAT**. Arriba aparecen **Imprimir**, **XML** y **CDR** (el CDR sale cuando SUNAT la acepta).
+- No se puede devolver más de lo que queda del comprobante.
 
 ## Guía de remisión
 

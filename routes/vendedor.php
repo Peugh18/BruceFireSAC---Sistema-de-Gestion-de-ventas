@@ -16,6 +16,7 @@ use App\Http\Controllers\Vendedor\DashboardController;
 use App\Http\Controllers\Vendedor\DebitNoteController;
 use App\Http\Controllers\Vendedor\DeficiencyAuthorizationController;
 use App\Http\Controllers\Vendedor\DeficiencyController;
+use App\Http\Controllers\Vendedor\NotaController;
 use App\Http\Controllers\Vendedor\QuoteController;
 use App\Http\Controllers\Vendedor\RucLookupController;
 use App\Http\Controllers\Vendedor\SaleCertificateController;
@@ -132,6 +133,7 @@ Route::prefix('vendedor')
         Route::get('facturacion/{electronic_document}/xml', [BillingController::class, 'downloadXml'])->name('facturacion.xml');
         Route::get('facturacion/{electronic_document}/cdr', [BillingController::class, 'downloadCdr'])->name('facturacion.cdr');
         Route::get('facturacion/{electronic_document}/pdf', [BillingController::class, 'downloadPdf'])->name('facturacion.pdf');
+        Route::get('ventas/{sale}/nota/{tipo}', [NotaController::class, 'create'])->middleware('can:billing.credit_note')->whereIn('tipo', ['credito', 'debito'])->name('ventas.nota');
         Route::post('notas-credito', [CreditNoteController::class, 'store'])->name('notas-credito.store');
         Route::post('notas-debito', [DebitNoteController::class, 'store'])->name('notas-debito.store');
 

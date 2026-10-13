@@ -33,10 +33,9 @@
 - En **Productos**, marca **Lote y vencimiento** para los EPP que vencen, y en **Se compra por** indica la caja y cuántas trae (1 CAJA = 100). La unidad de venta puede ser **PR (par)** para guantes y botas.
 - Un cobro anulado ya no se borra: queda tachado en Cobranzas con quién lo anuló y por qué.
 
-## Notas por aprobar
+## Notas de crédito y débito
 
-- **Notas por aprobar** (menú Finanzas): las notas de crédito y débito que piden los vendedores. **Aprobar** las emite y envía a SUNAT; **Rechazar** pide un motivo que ve el vendedor. Si no hay ninguna, la pantalla lo dice.
-- Una nota de crédito no puede acreditar más de lo que queda del comprobante. Si quien la pide es Gerente, sale directo sin aprobación.
+- Las emite el vendedor directo desde la venta, sin pasar por ti; quedan en **Auditoría** con quién las emitió y aparecen en **Comprobantes SUNAT**.
 
 ## Guías de remisión
 

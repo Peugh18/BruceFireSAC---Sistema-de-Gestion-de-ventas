@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\IssueCreditNote;
-use App\Actions\Billing\NotaPorAprobar;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\Billing\StoreCreditNoteRequest;
@@ -18,27 +17,13 @@ class CreditNoteController extends Controller
     use AcotaPorSede;
 
     /**
-     * Un vendedor solo la pide: queda por aprobar hasta que el Gerente la
-     * revise. Si quien la emite también es Gerente, sale directo.
+     * Quien tiene el permiso la emite directo y sale a SUNAT: no espera al
+     * Gerente. Queda en Auditoría con quién la emitió.
      */
-    public function store(Team $current_team, StoreCreditNoteRequest $request, IssueCreditNote $action, EmitElectronicDocument $emit, NotaPorAprobar $notaPorAprobar): RedirectResponse
+    public function store(Team $current_team, StoreCreditNoteRequest $request, IssueCreditNote $action, EmitElectronicDocument $emit): RedirectResponse
     {
         $original = ElectronicDocument::findOrFail($request->integer('electronic_document_id'));
         $this->asegurarVenta($original->sale);
-
-        if (! $request->user()->hasRole('Gerente')) {
-            $notaPorAprobar->solicitar(
-                $original,
-                'nota_credito',
-                $request->string('motivo_catalogo')->toString(),
-                $request->string('detalle')->toString(),
-                (float) $request->input('importe'),
-                $request->user()->id,
-                $request->validated('nota_datos', []),
-            );
-
-            return back()->with('success', 'Nota de crédito enviada al Gerente. Se emitirá cuando la apruebe.');
-        }
 
         $nota = $action->handle(
             $original,

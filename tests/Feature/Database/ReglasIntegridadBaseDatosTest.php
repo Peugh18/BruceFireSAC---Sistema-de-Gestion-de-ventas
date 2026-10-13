@@ -11,7 +11,6 @@ use App\Models\Client;
 use App\Models\Deficiency;
 use App\Models\DeficiencyAuthorization;
 use App\Models\DocumentSeries;
-use App\Models\ElectronicDocument;
 use App\Models\Equipment;
 use App\Models\Evidencia;
 use App\Models\Installment;
@@ -22,7 +21,6 @@ use App\Models\MlClienteHistorico;
 use App\Models\MlComprobanteHistorico;
 use App\Models\MlLineaHistorica;
 use App\Models\MlProductoHistorico;
-use App\Models\NoteRequest;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductLot;
@@ -357,22 +355,6 @@ it('un vendedor tiene un solo turno de caja abierto', function () {
     // Cerrado no cuenta: puede volver a abrir.
     CashRegister::factory()->create(['vendedor_id' => $vendedor->id, 'estado' => 'cerrado']);
     expect(CashRegister::where('vendedor_id', $vendedor->id)->count())->toBe(2);
-});
-
-it('una solicitud de nota pendiente no se duplica', function () {
-    $documento = ElectronicDocument::factory()->state(['sunat_estado' => 'aceptado'])->create();
-    NoteRequest::factory()->create(['electronic_document_id' => $documento->id, 'tipo' => 'nota_credito']);
-
-    expect(fn () => NoteRequest::factory()->create(['electronic_document_id' => $documento->id, 'tipo' => 'nota_credito']))
-        ->toThrow(QueryException::class);
-
-    // Una nota de débito sobre el mismo documento es otra solicitud.
-    NoteRequest::factory()->create(['electronic_document_id' => $documento->id, 'tipo' => 'nota_debito']);
-
-    // Y si la de crédito se aprueba o se rechaza, se puede pedir otra.
-    NoteRequest::query()->where('tipo', 'nota_credito')->update(['estado' => 'rechazada']);
-    NoteRequest::factory()->create(['electronic_document_id' => $documento->id, 'tipo' => 'nota_credito']);
-    expect(NoteRequest::where('electronic_document_id', $documento->id)->count())->toBe(3);
 });
 
 it('los estados de lista cerrada se validan en la base', function () {

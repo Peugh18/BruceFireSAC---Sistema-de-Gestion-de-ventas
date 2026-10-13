@@ -33,11 +33,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    type LineaOriginal,
-    SaleNotesPanel,
-    type SolicitudNota,
-} from '@/components/sale-notes-panel';
+import { SaleNotesPanel } from '@/components/sale-notes-panel';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import guias from '@/routes/guias';
 import facturacion from '@/routes/vendedor/facturacion';
@@ -136,8 +132,6 @@ type Props = {
     certificados: CertificadoVenta[];
     tieneEquipos: boolean;
     tiposServicio: { codigo: string; nombre: string }[];
-    solicitudesNota: SolicitudNota[];
-    lineasOriginal: LineaOriginal[];
 };
 
 function money(value?: number | string) {
@@ -186,8 +180,6 @@ export default function VentasShow({
     certificados,
     tieneEquipos,
     tiposServicio,
-    solicitudesNota,
-    lineasOriginal,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
@@ -220,7 +212,11 @@ export default function VentasShow({
     const aceptado =
         documento?.sunat_estado === 'aceptado' ||
         documento?.sunat_estado === 'observado';
-    const [abrirNotaCredito, setAbrirNotaCredito] = useState(0);
+    const urlNotaCredito = ventas.nota.url({
+        current_team: teamSlug,
+        sale: sale.id,
+        tipo: 'credito',
+    });
 
     const urlEditar = ventas.edit.url({
         current_team: teamSlug,
@@ -238,7 +234,7 @@ export default function VentasShow({
         }
 
         if (aceptado) {
-            setAbrirNotaCredito((n) => n + 1);
+            router.visit(urlNotaCredito, { replace: true });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -544,13 +540,14 @@ export default function VentasShow({
                             </div>
                         </div>
                         <Button
-                            type="button"
+                            asChild
                             variant="outline"
-                            onClick={() => setAbrirNotaCredito((n) => n + 1)}
                             className="border-border bg-card text-foreground h-9 rounded-lg shadow-none"
                         >
-                            <PencilLine className="size-4" />
-                            Corregir con nota de crédito
+                            <Link href={urlNotaCredito}>
+                                <PencilLine className="size-4" />
+                                Corregir con nota de crédito
+                            </Link>
                         </Button>
                     </Card>
                 ) : null}
@@ -988,10 +985,8 @@ export default function VentasShow({
                 <SaleNotesPanel
                     teamSlug={teamSlug}
                     documents={sale.electronic_documents ?? []}
+                    saleId={sale.id}
                     saleEstado={sale.estado}
-                    abrirNotaCredito={abrirNotaCredito}
-                    solicitudes={solicitudesNota}
-                    lineasOriginal={lineasOriginal}
                 />
             </div>
 

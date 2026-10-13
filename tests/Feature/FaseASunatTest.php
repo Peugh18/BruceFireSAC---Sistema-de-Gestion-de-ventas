@@ -9,7 +9,6 @@ use App\Models\Client;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryMovement;
 use App\Models\InventoryUnit;
-use App\Models\NoteRequest;
 use App\Models\Product;
 use App\Models\Sede;
 use App\Services\Billing\GreenterService;
@@ -134,8 +133,8 @@ test('S3: StoreDebitNoteRequest acepta el motivo 13', function () {
         ])
         ->assertSessionMissing('errors');
 
-    // El vendedor solo la pide: queda por aprobar del Gerente.
-    expect(NoteRequest::where('tipo', 'nota_debito')->where('motivo_catalogo', '13')->exists())->toBeTrue();
+    // El vendedor la emite directo, sin esperar al Gerente.
+    expect(ElectronicDocument::where('tipo', 'nota_debito')->where('motivo_catalogo', '13')->exists())->toBeTrue();
 });
 
 test('S3: la ND con motivo 13 usa afectacion inafecta 30 en el XML', function () {

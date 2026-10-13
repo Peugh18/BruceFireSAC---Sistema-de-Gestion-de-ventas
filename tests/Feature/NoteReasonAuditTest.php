@@ -2,7 +2,6 @@
 
 use App\Actions\Billing\AplicarNotaAlSaldo;
 use App\Actions\Billing\IssueCreditNote;
-use App\Actions\Billing\NotaPorAprobar;
 use App\Models\InventoryMovement;
 use App\Services\Billing\DatosEmision;
 use App\Services\Billing\GreenterService;
@@ -36,11 +35,10 @@ test('descuento por ítem exige líneas y no acepta reparto arbitrario', functio
     expect(fn () => app(IssueCreditNote::class)->handle($original, '05', 'Descuento', 10))->toThrow(ValidationException::class);
 });
 
-test('solicitud conserva descuento por línea al aprobar sin alterar inventario', function () {
-    [$sale, $original, $unit] = ventaConFactura();
+test('el descuento por línea se conserva en la nota sin alterar inventario', function () {
+    [, $original, $unit] = ventaConFactura();
     $payload = ['lineas' => [['indice' => 0, 'importe' => 11.8]]];
-    $solicitud = app(NotaPorAprobar::class)->solicitar($original, 'nota_credito', '05', 'Descuento por unidad', 11.8, $sale->vendedor_id, $payload);
-    $nota = app(NotaPorAprobar::class)->aprobar($solicitud->fresh(), $sale->vendedor_id);
+    $nota = app(IssueCreditNote::class)->handle($original, '05', 'Descuento por unidad', 11.8, $payload);
     expect($nota->nota_datos['opciones']['lineas'])->toBe($payload['lineas'])
         ->and((float) app(GreenterService::class)->buildNote($nota)->getMtoIGV())->toBe(1.8)
         ->and($unit->fresh()->estado)->toBe('vendido');

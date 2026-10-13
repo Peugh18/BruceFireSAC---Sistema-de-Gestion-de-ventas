@@ -21,14 +21,11 @@ import {
     Wrench,
 } from 'lucide-react';
 
-import { Link, usePage } from '@inertiajs/react';
-
 import SaludDelSistema, {
     type SaludDelSistemaData,
 } from '@/components/salud-del-sistema';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { fechaCorta } from '@/lib/utils';
-import notas from '@/routes/gerente/notas';
 
 type DashboardMetrics = {
     ventasDia: number;
@@ -43,7 +40,6 @@ type DashboardMetrics = {
     equiposProximosAtencion: number;
     stockCritico: number;
     documentosSunatError: number;
-    notasPorAprobar: number;
     /** S8: sin enviar a SUNAT que vencen hoy o mañana, y ya vencidos. */
     plazoSunat: { por_vencer: number; vencidos: number };
 };
@@ -142,7 +138,6 @@ export default function GerenteDashboard({
     sistema,
     kpisProyecto,
 }: GerenteDashboardProps) {
-    const { currentTeam } = usePage<{ currentTeam: { slug: string } }>().props;
     const maxVentaMensual = Math.max(
         ...charts.ventasMensuales.map((m) => m.monto),
         1,
@@ -204,22 +199,6 @@ export default function GerenteDashboard({
                             vendedor los ve y los reenvía desde su página de
                             Facturación.
                         </p>
-                    </div>
-                )}
-
-                {metrics.notasPorAprobar > 0 && (
-                    <div className="border-border bg-muted text-foreground flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 text-sm">
-                        <FileCheck className="size-5 shrink-0" />
-                        <p className="min-w-0 flex-1">
-                            Tienes {metrics.notasPorAprobar} nota(s) de crédito
-                            o débito esperando tu aprobación.
-                        </p>
-                        <Link
-                            href={notas.index.url(currentTeam.slug)}
-                            className="font-semibold underline underline-offset-2"
-                        >
-                            Revisar notas
-                        </Link>
                     </div>
                 )}
 

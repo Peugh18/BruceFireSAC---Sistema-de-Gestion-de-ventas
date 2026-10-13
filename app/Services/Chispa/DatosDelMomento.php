@@ -3,7 +3,6 @@
 namespace App\Services\Chispa;
 
 use App\Models\CashRegister;
-use App\Models\NoteRequest;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\User;
@@ -26,7 +25,6 @@ class DatosDelMomento
         if (in_array('Gerente', $roles, true)) {
             $emitidas = Sale::query()->where('estado', 'confirmada')->whereDate('fecha', today());
             $lineas[] = 'Ventas emitidas hoy en toda la empresa: '.$emitidas->count().' por S/ '.number_format((float) $emitidas->sum('total'), 2).'.';
-            $lineas[] = 'Notas de crédito o débito esperando tu aprobación: '.NoteRequest::query()->where('estado', 'por_aprobar')->count().'.';
         } elseif (in_array('Vendedor', $roles, true)) {
             $propias = Sale::query()->where('vendedor_id', $user->id)->where('estado', 'confirmada')->whereDate('fecha', today());
             $lineas[] = 'Tus ventas emitidas hoy: '.$propias->count().' por S/ '.number_format((float) $propias->sum('total'), 2).'.';
