@@ -14,7 +14,6 @@ import {
 import { FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Cargando } from '@/components/cargando';
 import CatalogPicker, { type CatalogItem } from '@/components/catalog-picker';
 import ClientPicker, { type ClientFicha } from '@/components/client-picker';
 import ReferenciaField from '@/components/referencia-field';
@@ -68,12 +67,26 @@ type Renovacion = {
     items: Omit<QuoteItemForm, 'key'>[];
 };
 
-function sumarDias(dias: number) {
-    const date = new Date();
+/** Fecha `dias` después de `desde` (hoy si no se indica), en formato AAAA-MM-DD. */
+function sumarDias(dias: number, desde?: string) {
+    const date = desde ? new Date(`${desde}T00:00:00`) : new Date();
     date.setDate(date.getDate() + dias);
 
     return fechaLocal(date);
 }
+
+/** Días entre dos fechas AAAA-MM-DD. */
+function diasEntre(desde: string, hasta: string) {
+    return Math.round(
+        (new Date(`${hasta}T00:00:00`).getTime() -
+            new Date(`${desde}T00:00:00`).getTime()) /
+            86_400_000,
+    );
+}
+
+/** Una referencia que es una placa (ABC-123 o «PLACA: ABC-123») es de un vehículo. */
+const esPlaca = (referencia: string | null | undefined) =>
+    /^(placa:\s*)?[a-z0-9]{3}-?[a-z0-9]{3}$/i.test((referencia ?? '').trim());
 
 function money(value: number) {
     return new Intl.NumberFormat('es-PE', {
@@ -135,9 +148,12 @@ export default function NuevaCotizacion({
     const [cliente, setCliente] = useState<ClientFicha | null>(
         renovacion?.client ?? clientePrecargado ?? null,
     );
-    const [vigenciaDias, setVigenciaDias] = useState(15);
+    // Al editar, se marca la vigencia y el destino que ya tenía la cotización.
+    const [vigenciaDias, setVigenciaDias] = useState(
+        edicion ? diasEntre(edicion.fecha, edicion.vigencia_hasta) : 15,
+    );
     const [destino, setDestino] = useState<'local_cliente' | 'vehiculo'>(
-        'local_cliente',
+        esPlaca(renovacion?.referencia) ? 'vehiculo' : 'local_cliente',
     );
 
     const setItems = (items: QuoteItemForm[]) => form.setData('items', items);
@@ -179,7 +195,7 @@ export default function NuevaCotizacion({
 
     const elegirVigencia = (dias: number) => {
         setVigenciaDias(dias);
-        form.setData('vigencia_hasta', sumarDias(dias));
+        form.setData('vigencia_hasta', sumarDias(dias, form.data.fecha));
     };
 
     // Precios con IGV incluido: se separa la base línea por línea.
@@ -236,11 +252,11 @@ export default function NuevaCotizacion({
                     description="Elige el cliente y los productos. Al guardarla, queda lista para descargar en PDF o enviar por WhatsApp."
                 />
             </div>
-            {renovacion && (
+            {renovacionOriginal && !edicion && (
                 <div className="text-foreground mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
-                    Estás renovando la cotización {renovacion.numero}. Revisa
-                    los datos y guarda la nueva cotización; tendrá 15 días de
-                    vigencia.
+                    Estás renovando la cotización {renovacionOriginal.numero}.
+                    Revisa los datos y guarda la nueva cotización; tendrá 15
+                    días de vigencia.
                 </div>
             )}
             <form
@@ -282,9 +298,11 @@ export default function NuevaCotizacion({
                                     ))}
                                 </div>
                                 <p className="text-muted-foreground mt-1.5 text-xs">
-                                    Emitida hoy{' '}
-                                    {new Date().toLocaleDateString('es-PE')}. Se
-                                    respeta el precio hasta el{' '}
+                                    Emitida el{' '}
+                                    {new Date(
+                                        `${form.data.fecha}T00:00:00`,
+                                    ).toLocaleDateString('es-PE')}
+                                    . Se respeta el precio hasta el{' '}
                                     <b className="text-foreground">
                                         {new Date(
                                             `${form.data.vigencia_hasta}T00:00:00`,
@@ -665,11 +683,7 @@ export default function NuevaCotizacion({
                             loading={form.processing}
                             className="bg-primary hover:bg-primary/90 h-11 rounded-lg px-4 text-[13px] font-bold text-white shadow-none"
                         >
-                            {form.processing ? (
-                                <Cargando className="size-4" />
-                            ) : (
-                                <FileText className="size-4" />
-                            )}
+                            <FileText className="size-4" />
                             Guardar cotización
                         </Button>
                         <Button
