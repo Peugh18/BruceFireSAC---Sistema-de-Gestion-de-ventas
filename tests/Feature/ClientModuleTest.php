@@ -134,7 +134,7 @@ test('el error de la consulta de ruc no filtra el token de APIsPeru ni al navega
     Log::spy();
 
     $respuesta = $this->actingAs($user)
-        ->getJson(route('vendedor.ruc-lookup', ['current_team' => $user->currentTeam, 'numero_documento' => '20601111222']));
+        ->getJson(route('vendedor.ruc-lookup', ['current_team' => $user->currentTeam, 'numero_documento' => '20164113532']));
 
     $respuesta->assertStatus(422);
 
@@ -305,4 +305,21 @@ test('no se cambia el documento de un cliente con ventas emitidas', function () 
         ->assertSessionHasErrors('numero_documento');
 
     expect($client->fresh()->numero_documento)->toBe('20603335717');
+});
+
+test('la consulta avisa si el RUC no es válido o SUNAT no lo encuentra', function () {
+    config(['services.apisperu.token' => 'test-token']);
+    $user = vendedorUser();
+    $consultar = fn (string $numero) => $this->actingAs($user)
+        ->getJson(route('vendedor.ruc-lookup', ['current_team' => $user->currentTeam, 'numero_documento' => $numero]));
+
+    Http::preventStrayRequests();
+
+    $consultar('20164113533')->assertStatus(422)->assertJsonPath('message', 'Ese RUC no es válido: revisa los números.');
+
+    Http::fake(['https://dniruc.apisperu.com/*' => Http::response(['success' => false, 'message' => 'no existe'], 404)]);
+    $consultar('20164113532')->assertNotFound()->assertJsonPath('message', 'No encontramos ese RUC. Revisa que esté bien escrito.');
+
+    Http::fake(['https://dniruc.apisperu.com/*' => Http::response([])]);
+    $consultar('12345678')->assertNotFound()->assertJsonPath('message', 'No encontramos ese DNI. Revisa que esté bien escrito.');
 });

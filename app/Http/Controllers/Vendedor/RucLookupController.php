@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Vendedor;
 
 use App\Http\Controllers\Controller;
+use App\Services\Sunat\DocumentoNoEncontrado;
 use App\Services\Sunat\RucLookupService;
+use App\Support\Ruc;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,8 +19,18 @@ class RucLookupController extends Controller
             'numero_documento' => ['required', 'string', 'regex:/^(\d{8}|\d{11})$/'],
         ]);
 
+        $numero = $validated['numero_documento'];
+
+        if (mb_strlen($numero) === 11 && ! Ruc::esValido($numero)) {
+            return response()->json(['message' => 'Ese RUC no es válido: revisa los números.'], 422);
+        }
+
         try {
-            return response()->json($lookupService->lookup($validated['numero_documento']));
+            return response()->json($lookupService->lookup($numero));
+        } catch (DocumentoNoEncontrado) {
+            $tipo = mb_strlen($numero) === 11 ? 'RUC' : 'DNI';
+
+            return response()->json(['message' => "No encontramos ese {$tipo}. Revisa que esté bien escrito."], 404);
         } catch (Throwable $exception) {
             // El mensaje del error puede traer la URL de la API con el token de
             // APIsPeru: al navegador solo un mensaje genérico, y al log sin

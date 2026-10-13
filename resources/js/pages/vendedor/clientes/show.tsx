@@ -63,6 +63,7 @@ import sitesRoutes from '@/routes/vendedor/clientes/sites';
 import vehiclesRoutes from '@/routes/vendedor/clientes/vehiculos';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
+import { correoValido, InputCorreo } from '@/components/ui/input-correo';
 import { InputPeru } from '@/components/ui/input-peru';
 
 // ==================== TIPOS CONTRATO BRIEF ====================
@@ -417,6 +418,15 @@ export default function ClienteShow({
     // Guardar Cliente
     const submitEditClient = (e: FormEvent) => {
         e.preventDefault();
+
+        if (!correoValido(editForm.data.email)) {
+            toast.error(
+                'Escribe un correo con @, por ejemplo nombre@empresa.com.',
+            );
+
+            return;
+        }
+
         editForm.put(
             clientes.update.url({ current_team: teamSlug, client: client.id }),
             {
@@ -2563,9 +2573,8 @@ export default function ClienteShow({
 
                         <div>
                             <Label>Correo electrónico</Label>
-                            <Input
+                            <InputCorreo
                                 aria-label="Correo electrónico"
-                                type="email"
                                 value={editForm.data.email}
                                 onChange={(e) =>
                                     editForm.setData('email', e.target.value)

@@ -18,6 +18,7 @@ use App\Models\Sale;
 use App\Models\Team;
 use App\Services\AuditLogger;
 use App\Services\Ml\RetentionModel;
+use App\Services\Sunat\DocumentoNoEncontrado;
 use App\Services\Sunat\RucLookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -315,7 +316,12 @@ class ClientController extends Controller
     {
         abort_unless($client->tieneRuc(), 422, 'La consulta SUNAT solo aplica a clientes con RUC.');
 
-        $data = $lookupService->lookup($client->numero_documento, refresh: true);
+        try {
+            $data = $lookupService->lookup($client->numero_documento, refresh: true);
+        } catch (DocumentoNoEncontrado) {
+            return back()->with('error', 'SUNAT ya no encuentra este RUC. Revisa que esté bien escrito.');
+        }
+
         $client->update([
             'estado_contribuyente' => $data['estado_contribuyente'],
             'condicion_domicilio' => $data['condicion_domicilio'],

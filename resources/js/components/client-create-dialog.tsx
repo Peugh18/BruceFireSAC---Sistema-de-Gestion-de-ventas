@@ -1,6 +1,6 @@
 import { useHttp } from '@inertiajs/react';
 import { UserRoundPlus } from 'lucide-react';
-import { FormEvent, useEffect, useId, useState } from 'react';
+import { FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Cargando } from '@/components/cargando';
@@ -58,6 +58,10 @@ const emptyClientForm: ClientFormData = {
     observaciones: '',
 };
 
+/** Vacío vale (el correo es opcional); si hay algo, debe tener @ y un dominio. */
+const correoValido = (correo: string) =>
+    correo === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+
 function FieldError({ message }: { message?: string }) {
     if (!message) {
         return null;
@@ -87,6 +91,7 @@ function ClientFormFields({
     lookupMessage: string | null;
 }) {
     const formId = useId();
+    const [emailTocado, setEmailTocado] = useState(false);
 
     const [whatsappDiferente, setWhatsappDiferente] = useState(
         Boolean(
@@ -152,7 +157,10 @@ function ClientFormFields({
                 </div>
                 <FieldError message={errors.numero_documento} />
                 {lookupMessage && !lookupLoading && (
-                    <p className="text-warning-strong mt-1 text-xs font-semibold">
+                    <p
+                        role="alert"
+                        className="text-destructive-strong mt-1 text-xs font-semibold"
+                    >
                         {lookupMessage}
                     </p>
                 )}
@@ -211,11 +219,25 @@ function ClientFormFields({
                 <Input
                     id={`${formId}-email`}
                     type="email"
+                    inputMode="email"
+                    autoComplete="off"
+                    placeholder="nombre@empresa.com"
                     value={data.email}
-                    onChange={(event) => setData('email', event.target.value)}
+                    onChange={(event) => {
+                        setData('email', event.target.value.trim());
+                        setEmailTocado(false);
+                    }}
+                    onBlur={() => setEmailTocado(true)}
                     className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                 />
-                <FieldError message={errors.email} />
+                <FieldError
+                    message={
+                        errors.email ??
+                        (emailTocado && !correoValido(data.email)
+                            ? 'Escribe un correo con @, por ejemplo nombre@empresa.com.'
+                            : undefined)
+                    }
+                />
             </div>
 
             <div>
@@ -369,6 +391,7 @@ export default function ClientCreateDialog({
     const form = useHttp<ClientFormData, CreatedClient>(emptyClientForm);
     const [lookupLoading, setLookupLoading] = useState(false);
     const [lookupMessage, setLookupMessage] = useState<string | null>(null);
+    const autocompletadoDe = useRef<string | null>(null);
     const [duplicateClient, setDuplicateClient] =
         useState<CreatedClient | null>(null);
 
@@ -397,6 +420,19 @@ export default function ClientCreateDialog({
         const expectedLength = form.data.tipo_documento === 'dni' ? 8 : 11;
         setLookupMessage(null);
         setDuplicateClient(null);
+
+        // Los datos que trajo la consulta de otro número ya no valen.
+        if (autocompletadoDe.current && autocompletadoDe.current !== numero) {
+            autocompletadoDe.current = null;
+            form.setData((previous) => ({
+                ...previous,
+                razon_social: '',
+                direccion_fiscal: '',
+                ubigeo: '',
+                estado_contribuyente: '',
+                condicion_domicilio: '',
+            }));
+        }
 
         if (!open || numero.length !== expectedLength) {
             return;
@@ -435,6 +471,7 @@ export default function ClientCreateDialog({
                     return;
                 }
 
+                autocompletadoDe.current = numero;
                 form.setData((previous) => ({
                     ...previous,
                     razon_social: payload.razon_social ?? '',
@@ -465,6 +502,14 @@ export default function ClientCreateDialog({
 
     const submitClient = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+
+        if (!correoValido(form.data.email)) {
+            toast.error(
+                'Escribe un correo con @, por ejemplo nombre@empresa.com.',
+            );
+
+            return;
+        }
 
         if (duplicateClient) {
             return;
