@@ -10,7 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { InputPeru } from '@/components/ui/input-peru';
 import { leerCookie } from '@/lib/cookies';
 import clientes from '@/routes/vendedor/clientes';
 
@@ -119,12 +119,12 @@ export default function WhatsappNumeroDialog({
                         <label className="text-foreground text-sm font-medium">
                             Celular (WhatsApp)
                         </label>
-                        <Input
+                        <InputPeru
+                            tipo="celular"
+                            aria-label="Celular (WhatsApp)"
                             autoFocus
-                            inputMode="tel"
                             value={numero}
                             onChange={(event) => setNumero(event.target.value)}
-                            placeholder="Ej. 987 654 321"
                             className="mt-1 h-10 rounded-lg text-[14px]"
                         />
                         {error ? (
@@ -144,7 +144,7 @@ export default function WhatsappNumeroDialog({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={numero.trim().length < 9}
+                            disabled={!/^9\d{8}$/.test(numero)}
                             loading={guardando}
                             className="rounded-lg bg-green-700 font-bold text-white shadow-none hover:bg-green-800"
                         >

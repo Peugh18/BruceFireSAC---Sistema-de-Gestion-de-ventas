@@ -9,6 +9,7 @@ use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Rules\TelefonoPeru;
 use App\Services\Reports\ServiceOrderReceiptPdfService;
 use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
@@ -160,7 +161,7 @@ class CollectionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'contacto_nombre' => ['required', 'string', 'max:150'],
-            'contacto_telefono' => ['nullable', 'string', 'max:50'],
+            'contacto_telefono' => ['nullable', new TelefonoPeru],
             'observaciones' => ['nullable', 'string', 'max:1000'],
             'conformidad_cliente' => ['required', 'accepted'],
             'foto_path' => ['nullable', 'string', 'max:255'],

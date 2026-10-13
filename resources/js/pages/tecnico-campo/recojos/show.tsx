@@ -1,3 +1,4 @@
+import { InputPeru } from '@/components/ui/input-peru';
 import React from 'react';
 import ConversacionOrden, {
     type ConversacionProps,
@@ -434,9 +435,9 @@ export default function RecojoShow({
                                     <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                                         Teléfono Contacto
                                     </label>
-                                    <input
+                                    <InputPeru
+                                        tipo="telefono"
                                         aria-label="Teléfono Contacto"
-                                        type="text"
                                         value={form.data.contacto_telefono}
                                         onChange={(e) =>
                                             form.setData(
@@ -444,7 +445,6 @@ export default function RecojoShow({
                                                 e.target.value,
                                             )
                                         }
-                                        placeholder="Teléfono móvil"
                                         className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                                     />
                                 </div>

@@ -388,7 +388,8 @@ class ClientController extends Controller
         ]);
 
         $antes = $client->whatsapp;
-        $client->update(['whatsapp' => substr($data['whatsapp'], -9)]);
+        $celular = substr($data['whatsapp'], -9);
+        $client->update(['whatsapp' => $celular, 'telefono' => $client->telefono ?: $celular]);
 
         AuditLogger::log(
             action: 'cliente.actualizado',

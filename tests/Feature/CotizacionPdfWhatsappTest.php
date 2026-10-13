@@ -95,6 +95,7 @@ test('sin celular la cotizacion pide agregar numero y al guardarlo queda en la f
         ->assertJson(['whatsapp' => '51987654321']);
 
     expect($quote->client->fresh()->whatsapp)->toBe('987654321');
+    expect($quote->client->fresh()->telefono)->not->toBeEmpty();
 });
 
 test('a CLIENTES VARIOS no se le guarda numero', function () {
