@@ -69,6 +69,7 @@ export default function CreditoDialog({
     cuotas,
     onSave,
     onCancel,
+    plazoInicial = 30,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -77,8 +78,10 @@ export default function CreditoDialog({
     cuotas: Cuota[];
     onSave: (cuotas: Cuota[]) => void;
     onCancel?: () => void;
+    /** Días de crédito con que arranca (el de la cotización, si lo trae). */
+    plazoInicial?: number;
 }) {
-    const [plazo, setPlazo] = useState(30);
+    const [plazo, setPlazo] = useState(plazoInicial);
     const [numero, setNumero] = useState(1);
     const [filas, setFilas] = useState<Cuota[]>([]);
 
@@ -88,7 +91,9 @@ export default function CreditoDialog({
         }
 
         setFilas(
-            cuotas.length > 0 ? cuotas : generarCuotas(total, fecha, 30, 1),
+            cuotas.length > 0
+                ? cuotas
+                : generarCuotas(total, fecha, plazoInicial, 1),
         );
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);

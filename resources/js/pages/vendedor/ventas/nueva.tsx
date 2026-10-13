@@ -137,6 +137,8 @@ type QuoteOption = {
     items: QuoteLine[];
     referencia: string | null;
     condicion_pago: PaymentCondition;
+    /** Días de crédito propuestos en la cotización («Crédito 15 días» → 15). */
+    plazo_dias?: number | null;
     observaciones: string | null;
     vehicle_id: number | null;
     destino: Destination;
@@ -1734,6 +1736,7 @@ export default function NuevaVenta({
                 }}
                 total={total}
                 fecha={form.data.fecha}
+                plazoInicial={quote?.plazo_dias ?? 30}
                 cuotas={form.data.cuotas}
                 onSave={(cuotas) => form.setData('cuotas', cuotas)}
             />

@@ -37,6 +37,7 @@ import { useRecargando } from '@/hooks/use-recargando';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import { Pasos, pasosCotizacion } from '@/components/progreso';
 import { soles } from '@/lib/utils';
+import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 
@@ -52,6 +53,9 @@ export type QuoteItem = {
     puede_guardar_numero: boolean;
     enlace_pdf: string;
     venta: { id: number; numero: string } | null;
+    /** Tiene un servicio (recarga, mantenimiento): solo así va al taller. */
+    tiene_servicio: boolean;
+    orden: { id: number; codigo: string } | null;
 };
 
 /**
@@ -678,7 +682,35 @@ export default function CotizacionesIndex({
                                                 {/* Acciones */}
                                                 <TableCell className="px-2.5 py-3.5">
                                                     <div className="flex items-center gap-1.5">
-                                                        {!quote.venta &&
+                                                        {quote.orden ? (
+                                                            <Button
+                                                                asChild
+                                                                variant="outline"
+                                                                size="sm"
+                                                            >
+                                                                <Link
+                                                                    href={ordenesServicio.show.url(
+                                                                        {
+                                                                            current_team:
+                                                                                teamSlug,
+                                                                            service_order:
+                                                                                quote
+                                                                                    .orden
+                                                                                    .id,
+                                                                        },
+                                                                    )}
+                                                                >
+                                                                    Ver orden{' '}
+                                                                    {
+                                                                        quote
+                                                                            .orden
+                                                                            .codigo
+                                                                    }
+                                                                </Link>
+                                                            </Button>
+                                                        ) : (
+                                                            !quote.venta &&
+                                                            quote.tiene_servicio &&
                                                             [
                                                                 'borrador',
                                                                 'emitida',
@@ -691,6 +723,7 @@ export default function CotizacionesIndex({
                                                                     type="button"
                                                                     variant="outline"
                                                                     size="sm"
+                                                                    title="Manda los equipos al taller antes de cobrar la venta"
                                                                     onClick={() =>
                                                                         router.post(
                                                                             QuoteController.iniciarOrden.url(
@@ -700,13 +733,27 @@ export default function CotizacionesIndex({
                                                                                     quote: quote.id,
                                                                                 },
                                                                             ),
+                                                                            {},
+                                                                            {
+                                                                                onError:
+                                                                                    (
+                                                                                        errores,
+                                                                                    ) =>
+                                                                                        toast.error(
+                                                                                            Object.values(
+                                                                                                errores,
+                                                                                            )[0] ??
+                                                                                                'No se pudo abrir la orden de taller.',
+                                                                                        ),
+                                                                            },
                                                                         )
                                                                     }
                                                                 >
                                                                     Orden de
                                                                     taller
                                                                 </Button>
-                                                            )}
+                                                            )
+                                                        )}
                                                         {!quote.venta &&
                                                             [
                                                                 'borrador',

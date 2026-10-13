@@ -361,6 +361,8 @@ class SaleController extends Controller
             'referencia' => $quote->referencia,
             // La condición propuesta es texto libre ("Contado", "Crédito 30 días").
             'condicion_pago' => str_starts_with(mb_strtolower(trim((string) $quote->condicion_pago_propuesta)), 'cr') ? 'credito' : 'contado',
+            // "Crédito 15 días" → 15: el calendario de cuotas arranca con ese plazo.
+            'plazo_dias' => preg_match('/(\d+)\s*d/i', (string) $quote->condicion_pago_propuesta, $plazo) ? (int) $plazo[1] : null,
             'observaciones' => $quote->observaciones,
             'vehicle_id' => $quote->vehicle_id,
             'destino' => $quote->vehicle_id ? 'vehiculo' : 'local_cliente',

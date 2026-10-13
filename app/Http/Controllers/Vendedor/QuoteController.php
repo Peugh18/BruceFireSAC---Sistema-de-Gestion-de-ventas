@@ -35,7 +35,8 @@ class QuoteController extends Controller
         $porSede = fn ($query) => $query->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId));
 
         $quotes = $porSede(Quote::query())
-            ->with('client', 'sale')
+            ->with(['client', 'sale', 'serviceOrders' => fn ($q) => $q->where('estado', '!=', 'anulada')->select('id', 'quote_id', 'codigo')])
+            ->withExists(['items as tiene_servicio' => fn ($q) => $q->whereNotNull('service_id')])
             ->when($estado !== '' && $estado !== 'todas', function ($query) use ($estado) {
                 return $estado === 'enviada'
                     ? $query->whereIn('estado', ['emitida', 'enviada', 'pendiente'])
@@ -56,6 +57,9 @@ class QuoteController extends Controller
                 'puede_guardar_numero' => ! $quote->client->esClientesVarios(),
                 'enlace_pdf' => $pdf->enlacePublico($quote),
                 'venta' => $quote->sale ? ['id' => $quote->sale->id, 'numero' => $quote->sale->numero_interno] : null,
+                // La orden de taller solo existe para cotizaciones con un servicio (recarga, mantenimiento).
+                'tiene_servicio' => (bool) $quote->tiene_servicio,
+                'orden' => ($orden = $quote->serviceOrders->first()) ? ['id' => $orden->id, 'codigo' => $orden->codigo] : null,
             ]);
 
         return Inertia::render('vendedor/cotizaciones/index', [
