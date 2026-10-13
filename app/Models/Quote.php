@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $fecha
  * @property Carbon $vigencia_hasta
  * @property string|null $condicion_pago_propuesta
+ * @property-read bool|null $tiene_servicio Solo cuando la consulta lo pide con withExists.
  * @property float $subtotal
  * @property float $igv
  * @property float $total
