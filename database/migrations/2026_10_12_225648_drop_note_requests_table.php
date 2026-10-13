@@ -3,19 +3,25 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Las notas de crédito y débito ya no esperan la aprobación del Gerente: el
- * vendedor las emite directo. La tabla de solicitudes deja de usarse.
- */
+/** Conserva las solicitudes antiguas para consulta; no las emite automáticamente. */
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::dropIfExists('note_requests');
+        if (! Schema::hasTable('note_requests')) {
+            return;
+        }
+        if (Schema::hasTable('note_requests_archive')) {
+            throw new RuntimeException('Existen solicitudes y un archivo anterior. Conserva ambas tablas y resuelve el archivo antes de migrar.');
+        }
+
+        Schema::rename('note_requests', 'note_requests_archive');
     }
 
     public function down(): void
     {
-        // Sin vuelta atrás: las solicitudes pendientes no se recrean.
+        if (Schema::hasTable('note_requests_archive') && ! Schema::hasTable('note_requests')) {
+            Schema::rename('note_requests_archive', 'note_requests');
+        }
     }
 };

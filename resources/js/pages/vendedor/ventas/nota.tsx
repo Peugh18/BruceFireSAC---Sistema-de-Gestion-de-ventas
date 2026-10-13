@@ -1,5 +1,13 @@
 import { Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, FileMinus2, FilePlus2 } from 'lucide-react';
+import {
+    AlertTriangle,
+    ArrowLeft,
+    CheckCircle2,
+    Clock,
+    FileMinus2,
+    FilePlus2,
+    XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -56,7 +64,8 @@ type Props = {
     notas: NotaEmitida[];
 };
 
-const redondear = (valor: number) => Math.round(valor * 100) / 100;
+const redondear = (valor: number) =>
+    Math.round((valor + Number.EPSILON) * 100) / 100;
 
 /**
  * La nota de crédito o débito sobre la misma boleta o factura: sus ítems ya
@@ -71,7 +80,10 @@ export default function NotaDeVenta({
     lineas,
     notas,
 }: Props) {
-    const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    const { currentTeam, flash } = usePage<{
+        currentTeam?: Team | null;
+        flash?: { success?: string; error?: string };
+    }>().props;
     const teamSlug = currentTeam?.slug ?? '';
     const esCredito = tipo === 'credito';
     const titulo = esCredito ? 'Nota de crédito' : 'Nota de débito';
@@ -98,8 +110,10 @@ export default function NotaDeVenta({
         lineas.reduce(
             (suma, l) =>
                 suma +
-                (l.total * Math.min(devueltas[l.indice] ?? 0, l.cantidad)) /
-                    l.cantidad,
+                redondear(
+                    (l.total * Math.min(devueltas[l.indice] ?? 0, l.cantidad)) /
+                        l.cantidad,
+                ),
             0,
         ),
     );
@@ -155,7 +169,13 @@ export default function NotaDeVenta({
             {
                 preserveScroll: true,
                 // Lo escrito se limpia: así no se emite otra nota por error.
-                onSuccess: () => {
+                onSuccess: (page) => {
+                    if (
+                        (page.props.flash as { error?: string } | undefined)
+                            ?.error
+                    ) {
+                        return;
+                    }
                     setMontoMora('');
                     setPrecioNuevo('');
                     setDevueltas({});
@@ -201,15 +221,53 @@ export default function NotaDeVenta({
                     }
                 />
 
+                {flash?.error ? (
+                    <div
+                        role="alert"
+                        className="border-border text-destructive-strong rounded-xl border p-4 text-sm break-words"
+                    >
+                        {flash.error}
+                    </div>
+                ) : null}
+                {flash?.success ? (
+                    <div
+                        role="status"
+                        className="border-border text-success-strong rounded-xl border p-4 text-sm break-words"
+                    >
+                        {flash.success}
+                    </div>
+                ) : null}
+
                 {ultima ? (
                     <Card className="border-border bg-card flex flex-col gap-3 rounded-2xl p-4 shadow-none sm:flex-row sm:items-center">
-                        <CheckCircle2 className="text-success-strong size-6 shrink-0" />
+                        {ultima.estado === 'aceptado' ? (
+                            <CheckCircle2
+                                className="text-success-strong size-6 shrink-0"
+                                aria-hidden="true"
+                            />
+                        ) : ultima.estado === 'rechazado' ? (
+                            <XCircle
+                                className="text-destructive-strong size-6 shrink-0"
+                                aria-hidden="true"
+                            />
+                        ) : ultima.estado === 'observado' ||
+                          ultima.estado === 'excepcion' ? (
+                            <AlertTriangle
+                                className="text-warning-strong size-6 shrink-0"
+                                aria-hidden="true"
+                            />
+                        ) : (
+                            <Clock
+                                className="text-muted-foreground size-6 shrink-0"
+                                aria-hidden="true"
+                            />
+                        )}
                         <div className="min-w-0 flex-1 text-sm">
                             <p className="text-foreground font-semibold">
                                 {titulo} {ultima.numero} ·{' '}
                                 {soles(ultima.importe)}
                             </p>
-                            <p className="text-muted-foreground text-xs">
+                            <p className="text-muted-foreground text-xs break-words">
                                 SUNAT: {ultima.estado}
                                 {ultima.mensaje ? ` · ${ultima.mensaje}` : ''}
                             </p>

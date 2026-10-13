@@ -71,7 +71,7 @@ class Equipment extends Model
     public function serviceOrders(): BelongsToMany
     {
         return $this->belongsToMany(ServiceOrder::class, 'service_order_equipment')
-            ->withPivot(['recibido', 'observaciones'])
+            ->withPivot(['service_order_line_id', 'recibido', 'observaciones', 'posicion'])
             ->withTimestamps();
     }
 

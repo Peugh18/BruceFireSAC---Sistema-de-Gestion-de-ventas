@@ -10,6 +10,7 @@ use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Inventory\StickerPdfService;
+use App\Services\ServiceOrders\CasillerosDeLaOrden;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,8 @@ class ReceptionController extends Controller
             ->with([
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento',
                 'sede:id,nombre',
+                'service',
+                'lines.service',
                 'equipments:id,numero_serie,tipo_agente,capacidad,marca',
             ])
             ->latest('id');
@@ -70,7 +73,7 @@ class ReceptionController extends Controller
                 'cliente_doc' => $order->client->numero_documento,
                 'telefono' => $order->client->telefono,
                 'sede' => $order->sede?->nombre,
-                'tipo_servicio' => $order->service->nombre,
+                'tipo_servicio' => $order->resumenServicios(),
                 'fecha' => $order->fecha->toDateString(),
                 'prioridad' => $order->prioridad,
                 'estado' => $order->estado,
@@ -104,12 +107,15 @@ class ReceptionController extends Controller
             'client',
             'sede',
             'tecnico',
+            'service',
+            'lines.service',
             'equipments',
             'events' => fn ($q) => $q->latest('id'),
         ]);
 
         return Inertia::render('tecnico-planta/recepciones/show', [
             'asignacion' => $service_order->asignacionPara(request()->user()),
+            'casilleros' => CasillerosDeLaOrden::paraPagina($service_order),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -121,7 +127,7 @@ class ReceptionController extends Controller
                     'direccion' => $service_order->client->direccion_fiscal,
                 ],
                 'sede' => $service_order->sede?->nombre,
-                'tipo_servicio' => $service_order->service->nombre,
+                'tipo_servicio' => $service_order->resumenServicios(),
                 'fecha' => $service_order->fecha->toDateString(),
                 'prioridad' => $service_order->prioridad,
                 'estado' => $service_order->estado,
@@ -246,8 +252,11 @@ class ReceptionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'numero_serie' => ['nullable', 'string', 'max:100'],
+            'service_order_line_id' => ['nullable', 'integer', 'exists:service_order_lines,id'],
+            'service_id' => ['nullable', 'integer', 'exists:services,id'],
+            'adicional' => ['nullable', 'boolean'],
             'tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
-            'capacidad' => ['nullable', 'string', 'max:100'],
+            'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
             'anio_fabricacion' => ['nullable', 'string', 'max:100'],

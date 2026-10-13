@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Models\Agente;
+
 /**
  * Agente extintor: una sola lista para el catálogo (products.agente, guarda
  * el valor), la unidad del almacén y el equipo del cliente (guarda la
@@ -24,10 +26,17 @@ enum EquipmentType: string
         return array_column(self::cases(), 'value');
     }
 
-    /** @return list<string> */
+    /**
+     * Agentes que se ofrecen en los formularios: los de la tabla `agentes`
+     * (se administran desde el sistema). Sin tabla, los de siempre.
+     *
+     * @return list<string>
+     */
     public static function etiquetas(): array
     {
-        return array_map(fn (self $tipo) => $tipo->etiqueta(), self::cases());
+        $activos = Agente::nombresActivos();
+
+        return $activos !== [] ? $activos : array_map(fn (self $tipo) => $tipo->etiqueta(), self::cases());
     }
 
     /** @return list<array{valor: string, etiqueta: string}> */
@@ -58,11 +67,16 @@ enum EquipmentType: string
     {
         $agente = trim((string) $agente);
 
-        return $agente !== '' && (in_array($agente, self::etiquetas(), true) || self::fromDescription($agente) !== self::Otro);
+        return $agente !== '' && (Agente::tipoBaseDe($agente) !== null || in_array($agente, self::etiquetas(), true) || self::fromDescription($agente) !== self::Otro);
     }
 
     public static function fromDescription(?string $description): self
     {
+        $registrado = Agente::tipoBaseDe($description);
+        if ($registrado !== null) {
+            return $registrado;
+        }
+
         $normalized = mb_strtolower(trim((string) $description));
 
         return match (true) {

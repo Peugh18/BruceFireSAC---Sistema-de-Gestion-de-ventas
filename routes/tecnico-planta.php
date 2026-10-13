@@ -6,6 +6,7 @@ use App\Http\Controllers\TecnicoPlanta\DashboardController;
 use App\Http\Controllers\TecnicoPlanta\DeficiencyController;
 use App\Http\Controllers\TecnicoPlanta\ExecutionController;
 use App\Http\Controllers\TecnicoPlanta\ReceptionController;
+use App\Http\Controllers\Vendedor\ServiceOrderEquipmentController;
 use App\Http\Middleware\EnsureTechnicalOrderAccess;
 use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,9 @@ Route::prefix('tecnico-planta')
         Route::post('recepciones/{service_order}/confirmar', [ReceptionController::class, 'confirmReception'])->name('recepciones.confirm');
         Route::get('equipos/buscar', [ReceptionController::class, 'searchEquipment'])->name('equipos.search');
         Route::post('recepciones/{service_order}/equipos', [ReceptionController::class, 'storeEquipment'])->name('recepciones.equipos.store');
+        // Ordenar y quitar extintores: la misma acción que usa el vendedor (una sola lista).
+        Route::patch('recepciones/{service_order}/equipos/reordenar', [ServiceOrderEquipmentController::class, 'reorder'])->name('recepciones.equipos.reordenar');
+        Route::delete('recepciones/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'destroy'])->name('recepciones.equipos.destroy');
         Route::get('recepciones/{service_order}/stickers', [ReceptionController::class, 'printStickers'])->name('recepciones.stickers');
 
         // Checklist Técnico Digital (§19)

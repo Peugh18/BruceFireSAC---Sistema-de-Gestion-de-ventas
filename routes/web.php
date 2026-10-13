@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgenteController;
 use App\Http\Controllers\ChispaController;
 use App\Http\Controllers\ConversacionOrdenController;
 use App\Http\Controllers\DashboardController;
@@ -47,6 +48,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('ubigeos', UbigeoController::class)->name('ubigeos.buscar');
     Route::post('asistente', ChispaController::class)->middleware('throttle:20,1')->name('asistente');
     Route::patch('asistente/{registro}', [ChispaController::class, 'valorar'])->middleware('throttle:60,1')->name('asistente.valorar');
+
+    // Agentes extintores: se agregan, renombran o quitan desde un modal en los formularios.
+    Route::middleware('role:Gerente|Vendedor|TecnicoPlanta|Almacen')->group(function () {
+        Route::get('agentes', [AgenteController::class, 'index'])->name('agentes.index');
+        Route::post('agentes', [AgenteController::class, 'store'])->name('agentes.store');
+        Route::patch('agentes/{agente}', [AgenteController::class, 'update'])->name('agentes.update');
+        Route::delete('agentes/{agente}', [AgenteController::class, 'destroy'])->name('agentes.destroy');
+    });
 });
 
 require __DIR__.'/settings.php';

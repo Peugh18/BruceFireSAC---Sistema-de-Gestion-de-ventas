@@ -1,12 +1,6 @@
 import InputError from '@/components/input-error';
 import { ProgresoConEtiqueta } from '@/components/progreso';
-import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    DialogDescription,
-} from '@/components/ui/dialog';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
@@ -15,24 +9,19 @@ import type { Team } from '@/types';
 import {
     ArrowLeft,
     CheckCircle2,
-    QrCode,
-    Plus,
     Printer,
     Building2,
     Calendar,
     AlertTriangle,
-    Search,
-    Sparkles,
     Wrench,
     MessageSquare,
 } from 'lucide-react';
-import OpcionesAgente from '@/components/opciones-agente';
+import EquiposDeLaOrden, {
+    type Casilleros,
+} from '@/components/equipos-de-la-orden';
 import RecepcionesRoutes from '@/routes/tecnico-planta/recepciones';
-import EquiposRoutes from '@/routes/tecnico-planta/equipos';
 import Equipos2Routes from '@/routes/tecnico-planta/recepciones/equipos';
 import ChecklistRoutes from '@/routes/tecnico-planta/checklist';
-import { NativeSelect } from '@/components/ui/native-select';
-import { Empty } from '@/components/ui/empty';
 
 interface EquipmentItem {
     id: number;
@@ -74,27 +63,20 @@ interface OrderDetail {
 interface Props {
     asignacion: AsignacionOrden;
     order: OrderDetail;
+    casilleros: Casilleros;
 }
 
-type EquipoEscaneado = {
-    numero_serie: string;
-    cliente?: string | null;
-    tipo_agente?: string | null;
-    capacidad?: string | null;
-    marca?: string | null;
-};
-
-export default function RecepcionShow({ asignacion, order }: Props) {
-    const modalTrigger = useRef<HTMLElement | null>(null);
+export default function RecepcionShow({
+    asignacion,
+    order,
+    casilleros,
+}: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
-
-    const [showRegisterModal, setShowRegisterModal] = useState(false);
-    const [registerTab, setRegisterTab] = useState<'scan' | 'new'>('new');
-    const [barcodeScanInput, setBarcodeScanInput] = useState('');
-    const [scanResult, setScanResult] = useState<EquipoEscaneado | null>(null);
-    const [scanLoading, setScanLoading] = useState(false);
-    const [scanError, setScanError] = useState<string | null>(null);
+    const ruta = { current_team: teamSlug, service_order: order.id };
+    const equiposAnteriores = useRef(
+        order.equipments.map((equipo) => equipo.id),
+    );
 
     // Form for Confirming Reception
     const confirmForm = useForm({
@@ -117,19 +99,6 @@ export default function RecepcionShow({ asignacion, order }: Props) {
         }));
     };
 
-    // Form for Alta Técnica Rápida (Caso A and B)
-    const equipmentForm = useForm({
-        numero_serie: '',
-        tipo_agente: '',
-        capacidad: '6 kg',
-        marca: '',
-        serie_fabricante: '',
-        anio_fabricacion: '',
-        ubicacion_actual: 'Planta - Taller',
-        notas: '',
-        observaciones_recepcion: '',
-    });
-
     const isPendiente = order.estado === 'pendiente_recepcion';
 
     const handleConfirmReception = (e: React.FormEvent) => {
@@ -150,50 +119,21 @@ export default function RecepcionShow({ asignacion, order }: Props) {
         );
     };
 
-    const handleSearchExisting = async () => {
-        if (!barcodeScanInput.trim()) return;
-        setScanLoading(true);
-        setScanError(null);
-        try {
-            const res = await fetch(
-                EquiposRoutes.search.url(
-                    { current_team: teamSlug },
-                    {
-                        query: {
-                            code: encodeURIComponent(barcodeScanInput.trim()),
-                        },
-                    },
-                ),
-            );
-            const data = await res.json();
-            if (data.found) {
-                setScanResult(data.equipment);
-            } else {
-                setScanResult(null);
-                setScanError(
-                    'No se encontró ningún equipo con este código Bruce Fire.',
-                );
-            }
-        } catch {
-            setScanError('Error de red al consultar el código.');
-        } finally {
-            setScanLoading(false);
-        }
-    };
-
-    const seleccionarEquiposRecienRecibidos = (actualizada: OrderDetail) => {
-        const nuevos = actualizada.equipments
+    useEffect(() => {
+        const anteriores = equiposAnteriores.current;
+        const ids = order.equipments.map((equipo) => equipo.id);
+        const nuevos = order.equipments
             .filter(
-                (equipo) =>
-                    equipo.recibido &&
-                    !order.equipments.some(
-                        (anterior) => anterior.id === equipo.id,
-                    ),
+                (equipo) => equipo.recibido && !anteriores.includes(equipo.id),
             )
             .map((equipo) => equipo.id);
+        equiposAnteriores.current = ids;
         confirmForm.setData((data) => {
             const recibidos = [
-                ...new Set([...data.equipos_recibidos, ...nuevos]),
+                ...new Set([
+                    ...data.equipos_recibidos.filter((id) => ids.includes(id)),
+                    ...nuevos,
+                ]),
             ];
             return {
                 ...data,
@@ -201,63 +141,7 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                 equipos_recibidos_count: recibidos.length,
             };
         });
-    };
-
-    const handleLinkExisting = () => {
-        if (!scanResult) return;
-        equipmentForm.setData('numero_serie', scanResult.numero_serie);
-        equipmentForm.post(
-            Equipos2Routes.store.url({
-                current_team: teamSlug,
-                service_order: order.id,
-            }),
-            {
-                onSuccess: (page) => {
-                    seleccionarEquiposRecienRecibidos(
-                        page.props.order as OrderDetail,
-                    );
-                    setShowRegisterModal(false);
-                    setScanResult(null);
-                    setBarcodeScanInput('');
-                },
-                onError: (errors) =>
-                    toast.error(
-                        Object.values(errors)[0] ??
-                            'No se pudo registrar el equipo.',
-                    ),
-            },
-        );
-    };
-
-    const handleCreateNew = (e: React.FormEvent) => {
-        e.preventDefault();
-        equipmentForm.post(
-            Equipos2Routes.store.url({
-                current_team: teamSlug,
-                service_order: order.id,
-            }),
-            {
-                onSuccess: (page) => {
-                    seleccionarEquiposRecienRecibidos(
-                        page.props.order as OrderDetail,
-                    );
-                    setShowRegisterModal(false);
-                    equipmentForm.reset();
-                },
-                onError: (errors) =>
-                    toast.error(
-                        Object.values(errors)[0] ??
-                            'No se pudo registrar el equipo.',
-                    ),
-            },
-        );
-    };
-
-    const setUnreadable = (
-        field: 'marca' | 'serie_fabricante' | 'anio_fabricacion',
-    ) => {
-        equipmentForm.setData(field, 'No legible / Pendiente de verificar');
-    };
+    }, [order.equipments]);
 
     return (
         <TecnicoPlantaLayout>
@@ -511,430 +395,35 @@ export default function RecepcionShow({ asignacion, order }: Props) {
                     max={order.equipments.length}
                     detalle="De los equipos vinculados a esta orden. La selección del formulario se registra al confirmar."
                 />
-                {/* Equipments Section */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="flex items-center gap-1.5 text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                                <QrCode className="text-warning-strong h-4 w-4" />
-                                <span>
-                                    Equipos en esta Orden (
-                                    {order.equipments.length})
-                                </span>
-                            </h3>
-                            <p className="text-muted-foreground text-xs">
-                                Identificación con código de barras Bruce Fire
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => setShowRegisterModal(true)}
-                            className="flex items-center gap-1.5 rounded-xl bg-neutral-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-transform active:scale-95 dark:bg-neutral-100 dark:text-neutral-900"
-                        >
-                            <Plus className="h-3.5 w-3.5" />
-                            <span>Alta Rápida</span>
-                        </button>
-                    </div>
-
-                    {order.equipments.length === 0 ? (
-                        <Empty
-                            icon={<QrCode />}
-                            title="Aún no hay equipos vinculados a esta orden"
-                            description='Presione "Alta Rápida" para escanear un equipo existente o generar un sticker nuevo.'
-                        />
-                    ) : (
-                        <div className="space-y-2.5">
-                            {order.equipments.map((eq) => (
-                                <div
-                                    key={eq.id}
-                                    className="bg-card space-y-2 rounded-2xl border border-neutral-200 p-3.5 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-warning-strong font-mono text-sm font-extrabold">
-                                                {eq.numero_serie}
-                                            </span>
-                                            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
-                                                {eq.tipo_agente || 'Extintor'}
-                                            </span>
-                                            {eq.capacidad && (
-                                                <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
-                                                    {eq.capacidad}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <Link
-                                            aria-label="Completar checklist del extintor"
-                                            href={ChecklistRoutes.create.url({
-                                                current_team: teamSlug,
-                                                service_order: order.id,
-                                                equipment: eq.id,
-                                            })}
-                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold shadow-xs"
-                                        >
-                                            <Wrench className="h-3.5 w-3.5" />
-                                            <span>Checklist</span>
-                                        </Link>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-                                        <div>
-                                            <span className="text-neutral-400">
-                                                Marca:{' '}
-                                            </span>
-                                            <span className="font-medium text-neutral-800 dark:text-neutral-200">
-                                                {eq.marca || 'N/A'}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span className="text-neutral-400">
-                                                Serie Fab:{' '}
-                                            </span>
-                                            <span className="font-mono font-medium text-neutral-800 dark:text-neutral-200">
-                                                {eq.serie_fabricante || 'N/A'}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span className="text-neutral-400">
-                                                Año Fab:{' '}
-                                            </span>
-                                            <span className="font-medium text-neutral-800 dark:text-neutral-200">
-                                                {eq.anio_fabricacion || 'N/A'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {eq.notas && (
-                                        <p className="text-muted-foreground rounded-lg bg-neutral-50 p-2 text-xs dark:bg-neutral-900/40">
-                                            {eq.notas}
-                                        </p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* MODAL: Alta Técnica Rápida (§18) */}
-                {showRegisterModal && (
-                    <Dialog
-                        open
-                        onOpenChange={(open) => {
-                            if (!open && !equipmentForm.processing)
-                                setShowRegisterModal(false);
+                <section className="border-border bg-card space-y-4 rounded-2xl border p-4">
+                    <h3 className="text-foreground text-sm font-bold">
+                        Extintores de la orden
+                    </h3>
+                    <EquiposDeLaOrden
+                        casilleros={casilleros}
+                        rutas={{
+                            agregar: Equipos2Routes.store.url(ruta),
+                            reordenar: Equipos2Routes.reordenar.url(ruta),
+                            quitar: (equipment) =>
+                                Equipos2Routes.destroy.url({
+                                    ...ruta,
+                                    equipment,
+                                }),
                         }}
-                    >
-                        <DialogContent
-                            onOpenAutoFocus={() => {
-                                modalTrigger.current =
-                                    document.activeElement as HTMLElement;
-                            }}
-                            onCloseAutoFocus={(event) => {
-                                event.preventDefault();
-                                modalTrigger.current?.focus();
-                            }}
-                            className="border-border bg-card max-h-[90dvh] space-y-4 overflow-y-auto overscroll-contain sm:max-w-lg"
-                        >
-                            <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
-                                <div>
-                                    <DialogTitle className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                                        Alta Técnica Rápida
-                                    </DialogTitle>
-                                    <DialogDescription className="text-muted-foreground text-xs">
-                                        Recepción de extintores en Planta
-                                    </DialogDescription>
-                                </div>
-                            </div>
-
-                            {/* Tabs: Caso A vs Caso B */}
-                            <div className="flex gap-2 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-800">
-                                <button
-                                    type="button"
-                                    onClick={() => setRegisterTab('new')}
-                                    className={`flex-1 rounded-lg py-2 text-xs font-bold transition-colors ${
-                                        registerTab === 'new'
-                                            ? 'bg-card text-warning-strong shadow-sm dark:bg-neutral-700 dark:text-amber-400'
-                                            : 'text-neutral-600 dark:text-neutral-400'
-                                    }`}
-                                >
-                                    Caso B: Equipo Nuevo
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setRegisterTab('scan')}
-                                    className={`flex-1 rounded-lg py-2 text-xs font-bold transition-colors ${
-                                        registerTab === 'scan'
-                                            ? 'bg-card text-warning-strong shadow-sm dark:bg-neutral-700 dark:text-amber-400'
-                                            : 'text-neutral-600 dark:text-neutral-400'
-                                    }`}
-                                >
-                                    Caso A: Ya tiene BF-EQ
-                                </button>
-                            </div>
-
-                            {/* Tab Content */}
-                            {registerTab === 'scan' ? (
-                                <div className="space-y-3">
-                                    <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                                        Escanee o ingrese el código de barras
-                                        existente (ej. BF-EQ-000123):
-                                    </p>
-                                    <div className="flex gap-2">
-                                        <input
-                                            aria-label="Código de barras del equipo existente"
-                                            type="text"
-                                            value={barcodeScanInput}
-                                            onChange={(e) =>
-                                                setBarcodeScanInput(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="BF-EQ-XXXXXX"
-                                            className="focus:ring-ring flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-3 py-2 font-mono text-xs uppercase focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleSearchExisting}
-                                            disabled={scanLoading}
-                                            aria-label="Buscar equipo por código"
-                                            className="rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white transition hover:brightness-95 dark:bg-neutral-700"
-                                        >
-                                            <Search className="h-4 w-4" />
-                                        </button>
-                                    </div>
-
-                                    {scanError && (
-                                        <p className="text-destructive-strong text-xs font-medium">
-                                            {scanError}
-                                        </p>
-                                    )}
-
-                                    {scanResult && (
-                                        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/60 dark:bg-amber-950/40">
-                                            <div className="text-warning-strong font-mono text-sm font-bold dark:text-amber-300">
-                                                {scanResult.numero_serie}
-                                            </div>
-                                            <div className="text-xs text-neutral-700 dark:text-neutral-300">
-                                                <p>
-                                                    <b>Cliente:</b>{' '}
-                                                    {scanResult.cliente}
-                                                </p>
-                                                <p>
-                                                    <b>Tipo/Capacidad:</b>{' '}
-                                                    {scanResult.tipo_agente} -{' '}
-                                                    {scanResult.capacidad}
-                                                </p>
-                                                <p>
-                                                    <b>Marca:</b>{' '}
-                                                    {scanResult.marca}
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={handleLinkExisting}
-                                                className="bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-xl py-2 text-xs font-bold"
-                                            >
-                                                Vincular a esta Orden
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <form
-                                    onSubmit={handleCreateNew}
-                                    className="space-y-3"
-                                >
-                                    <div className="rounded-xl bg-neutral-50 p-2.5 text-xs text-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-400">
-                                        💡 Se asignará un correlativo oficial{' '}
-                                        <b>BF-EQ-XXXXXX</b> de Bruce Fire. Si
-                                        algún dato no se puede leer, use el
-                                        botón de ayuda.
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                                Agente / Tipo *
-                                            </label>
-                                            <NativeSelect
-                                                aria-label="Agente / Tipo *"
-                                                value={
-                                                    equipmentForm.data
-                                                        .tipo_agente
-                                                }
-                                                onChange={(e) =>
-                                                    equipmentForm.setData(
-                                                        'tipo_agente',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
-                                            >
-                                                <OpcionesAgente vacia="Sin registrar" />
-                                            </NativeSelect>
-                                        </div>
-
-                                        <div>
-                                            <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                                Capacidad *
-                                            </label>
-                                            <input
-                                                aria-label="Capacidad *"
-                                                type="text"
-                                                value={
-                                                    equipmentForm.data.capacidad
-                                                }
-                                                onChange={(e) =>
-                                                    equipmentForm.setData(
-                                                        'capacidad',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Ej: 6 kg, 10 lbs..."
-                                                className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div className="mb-1 flex items-center justify-between">
-                                            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                                Marca del Cilindro
-                                            </label>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setUnreadable('marca')
-                                                }
-                                                className="text-warning-strong text-xs hover:underline"
-                                            >
-                                                No legible
-                                            </button>
-                                        </div>
-                                        <input
-                                            aria-label="Marca"
-                                            type="text"
-                                            value={equipmentForm.data.marca}
-                                            onChange={(e) =>
-                                                equipmentForm.setData(
-                                                    'marca',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Ej: Buckeye, Amerex, Badger..."
-                                            className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <div className="mb-1 flex items-center justify-between">
-                                                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                                    Serie Fab.
-                                                </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setUnreadable(
-                                                            'serie_fabricante',
-                                                        )
-                                                    }
-                                                    className="text-warning-strong text-xs hover:underline"
-                                                >
-                                                    No legible
-                                                </button>
-                                            </div>
-                                            <input
-                                                aria-label="Serie fabricante"
-                                                type="text"
-                                                value={
-                                                    equipmentForm.data
-                                                        .serie_fabricante
-                                                }
-                                                onChange={(e) =>
-                                                    equipmentForm.setData(
-                                                        'serie_fabricante',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Serie original"
-                                                className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 font-mono text-xs dark:border-neutral-700 dark:bg-neutral-800"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <div className="mb-1 flex items-center justify-between">
-                                                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                                    Año Fab.
-                                                </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setUnreadable(
-                                                            'anio_fabricacion',
-                                                        )
-                                                    }
-                                                    className="text-warning-strong text-xs hover:underline"
-                                                >
-                                                    No legible
-                                                </button>
-                                            </div>
-                                            <input
-                                                aria-label="Anio fabricacion"
-                                                type="text"
-                                                value={
-                                                    equipmentForm.data
-                                                        .anio_fabricacion
-                                                }
-                                                onChange={(e) =>
-                                                    equipmentForm.setData(
-                                                        'anio_fabricacion',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Ej: 2021"
-                                                className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                            Notas de Recepción / Ubicación
-                                        </label>
-                                        <input
-                                            aria-label="Notas de Recepción / Ubicación"
-                                            type="text"
-                                            value={equipmentForm.data.notas}
-                                            onChange={(e) =>
-                                                equipmentForm.setData(
-                                                    'notas',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Detalles visuales del equipo..."
-                                            className="w-full rounded-xl border border-neutral-300 bg-neutral-50 px-2.5 py-2 text-xs dark:border-neutral-700 dark:bg-neutral-800"
-                                        />
-                                    </div>
-
-                                    <button
-                                        aria-label="Generar Código BF-EQ y Registrar"
-                                        type="submit"
-                                        disabled={equipmentForm.processing}
-                                        className="bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold shadow-sm"
-                                    >
-                                        <Sparkles className="h-4 w-4" />
-                                        <span>
-                                            Generar Código BF-EQ y Registrar
-                                        </span>
-                                    </button>
-                                </form>
-                            )}
-                        </DialogContent>
-                    </Dialog>
-                )}
+                        accionesEquipo={(equipo) => (
+                            <Link
+                                href={ChecklistRoutes.create.url({
+                                    ...ruta,
+                                    equipment: equipo.id,
+                                })}
+                                className="bg-primary text-primary-foreground inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-xs font-semibold"
+                            >
+                                <Wrench className="size-4" />
+                                Checklist
+                            </Link>
+                        )}
+                    />
+                </section>
             </div>
         </TecnicoPlantaLayout>
     );
