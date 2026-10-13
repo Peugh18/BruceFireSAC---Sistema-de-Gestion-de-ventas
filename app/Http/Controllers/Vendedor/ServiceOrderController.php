@@ -38,7 +38,7 @@ class ServiceOrderController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         $orders = ServiceOrder::query()
-            ->with(['client', 'service', 'tecnico'])
+            ->with(['client', 'service', 'lines.service', 'tecnico'])
             ->visiblePara($request->user())
             ->when(isset($estadoMap[$estado]), fn ($query) => $query->whereIn('estado', $estadoMap[$estado]))
             ->orderByDesc('created_at')
@@ -49,7 +49,7 @@ class ServiceOrderController extends Controller
                 'codigo' => $order->codigo,
                 'cliente' => $order->client->razon_social,
                 'tecnico' => $order->tecnico?->name,
-                'tipo_servicio' => $order->service->nombre,
+                'tipo_servicio' => $order->resumenServicios(),
                 'fecha' => $order->fecha->toDateString(),
                 'estado' => $order->estado,
                 'coarse_label' => $order->coarseLabel(),
@@ -99,6 +99,10 @@ class ServiceOrderController extends Controller
             'prioridad' => $request->input('prioridad', 'normal'),
             'estado' => 'pendiente_recepcion',
         ]);
+        $order->lines()->create([
+            'service_id' => $order->service_id,
+            'cantidad' => 1,
+        ]);
 
         $order->events()->create([
             'tipo' => 'creada',
@@ -121,6 +125,7 @@ class ServiceOrderController extends Controller
             'tecnico',
             'events' => fn ($query) => $query->with('user')->orderBy('created_at'),
             'equipments',
+            'lines.service',
             'sale',
             'service',
             'quote:id,numero,estado',
@@ -304,6 +309,11 @@ class ServiceOrderController extends Controller
 
         $service_order->tecnico_id = $tecnico?->id;
         $service_order->save();
+        if ((int) $datos['service_id'] !== (int) ($antes['service_id'] ?? 0) && $service_order->estado === 'pendiente_recepcion') {
+            $service_order->lines()->where('adicional', false)->whereNull('quote_item_id')->oldest('id')->first()?->update([
+                'service_id' => $service_order->service_id,
+            ]);
+        }
 
         $cambios = collect([
             'fecha' => 'fecha',

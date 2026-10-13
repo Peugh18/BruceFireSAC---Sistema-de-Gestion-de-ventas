@@ -137,7 +137,8 @@ class QuoteController extends Controller
             if ($existente) {
                 return $existente;
             }
-            $servicio = $quote->items()->whereNotNull('service_id')->first();
+            $servicios = $quote->items()->with('service')->whereNotNull('service_id')->orderBy('id')->get();
+            $servicio = $servicios->first();
             if (! $servicio) {
                 throw ValidationException::withMessages(['quote_id' => 'La cotización debe incluir un servicio para abrir una orden de taller.']);
             }
@@ -147,13 +148,46 @@ class QuoteController extends Controller
                 'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'estado' => 'pendiente_recepcion',
                 'observaciones' => 'Trabajo cotizado en '.$quote->numero.'; pendiente de venta al terminar.',
             ]);
-            $orden->equipments()->sync($quote->equipments()->allRelatedIds()->all());
+            foreach ($servicios as $item) {
+                $orden->lines()->create([
+                    'service_id' => $item->service_id,
+                    'cantidad' => (int) $item->cantidad,
+                    'quote_item_id' => $item->id,
+                ]);
+            }
+            $this->attachQuotedEquipments($orden, $quote);
             $orden->events()->create(['tipo' => 'creada', 'user_id' => $request->user()->id, 'payload' => ['mensaje' => 'Orden iniciada desde cotización, sin generar venta ni cobro.', 'quote_id' => $quote->id]]);
 
             return $orden;
         });
 
         return redirect()->route('vendedor.ordenes-servicio.show', [$current_team, $orden]);
+    }
+
+    private function attachQuotedEquipments(ServiceOrder $orden, Quote $quote): void
+    {
+        $orden->load('lines.service');
+        $position = 1;
+        $assigned = [];
+
+        foreach ($quote->equipments()->get() as $equipment) {
+            $line = $orden->lines->first(function ($line) use ($equipment, $assigned): bool {
+                return $line->service
+                    && ($assigned[$line->id] ?? 0) < $line->cantidad
+                    && $line->service->incompatibilidadConEquipo($equipment) === null;
+            }) ?? $orden->lines->first();
+
+            if (! $line) {
+                continue;
+            }
+
+            $assigned[$line->id] = ($assigned[$line->id] ?? 0) + 1;
+            $orden->equipments()->attach($equipment->id, [
+                'service_order_line_id' => $line->id,
+                'posicion' => $position++,
+                'recibido' => false,
+            ]);
+        }
     }
 
     public function edit(Team $current_team, Quote $quote): Response

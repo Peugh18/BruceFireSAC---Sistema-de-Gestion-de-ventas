@@ -38,6 +38,7 @@ use Illuminate\Support\Carbon;
  * @property-read Client $client
  * @property-read Sede|null $sede
  * @property-read Service|null $service
+ * @property-read Collection<int, ServiceOrderLine> $lines
  * @property-read Vehicle|null $vehicle
  * @property-read Quote|null $quote
  * @property-read User|null $tecnico
@@ -197,6 +198,14 @@ class ServiceOrder extends Model
     }
 
     /**
+     * @return HasMany<ServiceOrderLine, $this>
+     */
+    public function lines(): HasMany
+    {
+        return $this->hasMany(ServiceOrderLine::class);
+    }
+
+    /**
      * Los extintores que se certifican y a los que se les renuevan las
      * fechas: los que llegaron al taller y cuya reparación el cliente no
      * rechazó (un extintor sin reparar no sale como operativo).
@@ -220,8 +229,22 @@ class ServiceOrder extends Model
     public function equipments(): BelongsToMany
     {
         return $this->belongsToMany(Equipment::class, 'service_order_equipment')
-            ->withPivot(['recibido', 'observaciones'])
+            ->withPivot(['service_order_line_id', 'recibido', 'observaciones', 'posicion'])
             ->withTimestamps();
+    }
+
+    public function resumenServicios(): string
+    {
+        $this->loadMissing('service:id,nombre', 'lines.service:id,nombre');
+
+        $principal = $this->service?->nombre ?? $this->lines->first()?->service?->nombre ?? 'Servicio';
+        $otros = $this->lines
+            ->filter(fn (ServiceOrderLine $line): bool => $line->service_id !== $this->service_id)
+            ->pluck('service_id')
+            ->unique()
+            ->count();
+
+        return $otros > 0 ? "{$principal} + {$otros} más" : $principal;
     }
 
     /**

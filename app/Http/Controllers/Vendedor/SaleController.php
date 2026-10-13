@@ -21,7 +21,6 @@ use App\Models\QuoteItem;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Sede;
-use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Services\Billing\ComprobantePdfService;
@@ -409,10 +408,18 @@ class SaleController extends Controller
                 if (! $quote) {
                     throw ValidationException::withMessages(['quote_id' => 'La cotización no es de tu sede.']);
                 }
-                $serviceItem = $quote->items->first(fn (QuoteItem $item): bool => $item->service_id !== null);
+                $serviceItems = $quote->items->whereNotNull('service_id')->values();
+                $serviceItem = $serviceItems->first();
                 if ($serviceItem?->service) {
                     $serviceOrder = ServiceOrder::create(['codigo' => $numberGenerator->next(), 'client_id' => $quote->client_id, 'sede_id' => $sale->sede_id, 'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'sale_id' => $sale->id, 'service_id' => $serviceItem->service_id, 'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'observaciones' => "Creada desde {$quote->numero}", 'estado' => 'pendiente_recepcion']);
-                    $serviceOrder->equipments()->sync($quote->equipments->modelKeys());
+                    foreach ($serviceItems as $item) {
+                        $serviceOrder->lines()->create([
+                            'service_id' => $item->service_id,
+                            'cantidad' => (int) $item->cantidad,
+                            'quote_item_id' => $item->id,
+                        ]);
+                    }
+                    $this->attachQuotedEquipments($serviceOrder, $quote);
                 }
             }
 
@@ -429,25 +436,59 @@ class SaleController extends Controller
         ]);
     }
 
+    private function attachQuotedEquipments(ServiceOrder $order, Quote $quote): void
+    {
+        $order->load('lines.service');
+        $position = 1;
+        $assigned = [];
+
+        foreach ($quote->equipments as $equipment) {
+            $line = $order->lines->first(function ($line) use ($equipment, $assigned): bool {
+                return $line->service
+                    && ($assigned[$line->id] ?? 0) < $line->cantidad
+                    && $line->service->incompatibilidadConEquipo($equipment) === null;
+            }) ?? $order->lines->first();
+
+            if (! $line) {
+                continue;
+            }
+
+            $assigned[$line->id] = ($assigned[$line->id] ?? 0) + 1;
+            $order->equipments()->attach($equipment->id, [
+                'service_order_line_id' => $line->id,
+                'posicion' => $position++,
+                'recibido' => false,
+            ]);
+        }
+    }
+
     /** @return array<string, mixed>|null */
     protected function ordenParaCobro(int $orderId, ?int $sedeId): ?array
     {
-        $order = ServiceOrder::with(['client', 'equipments', 'service', 'deficiencies.authorization.cotizacionAdicional.items.product', 'deficiencies.authorization.cotizacionAdicional.items.service', 'quote.items.product', 'quote.items.service'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($orderId);
+        $order = ServiceOrder::with(['client', 'equipments', 'service', 'lines.service', 'lines.quoteItem', 'deficiencies.authorization.cotizacionAdicional.items.product', 'deficiencies.authorization.cotizacionAdicional.items.service', 'quote.items.product', 'quote.items.service'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($orderId);
         if (! $order || $order->sale_id || $order->estado === 'anulada') {
             return null;
         }
 
-        $services = Service::where('activo', true)->get();
-        $orderService = $order->service ?? $services->first();
-        $equipments = $order->equipments->isEmpty() ? collect([null]) : $order->equipments;
-        $items = $equipments->map(function ($equipment) use ($services, $orderService): array {
-            $service = $orderService ?? $services->first(fn (Service $service): bool => str_contains(mb_strtolower($service->nombre.' '.$service->descripcion), mb_strtolower((string) $equipment?->capacidad)), $services->first());
-
-            return ['tipo_linea' => $equipment ? 'recarga_servicio' : 'servicio', 'numero_serie' => $equipment?->numero_serie, 'service_id' => $service->id, 'nombre' => $service->nombre, 'cantidad' => 1, 'precio_unitario' => (float) $service->precio_venta, 'descuento' => 0];
-        });
-        if ($order->quote && in_array($order->quote->estado, ['borrador', 'emitida', 'enviada', 'aceptada'], true)) {
-            $items = $order->quote->items->map(fn (QuoteItem $item): array => ['deficiency_id' => $item->deficiency_id, 'tipo_linea' => $item->service_id ? 'servicio' : 'producto', 'service_id' => $item->service_id, 'product_id' => $item->product_id, 'nombre' => $item->service->nombre ?? $item->product?->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
-        }
+        $items = $order->lines->isNotEmpty()
+            ? $order->lines->map(fn ($line): array => [
+                'deficiency_id' => $line->quoteItem?->deficiency_id,
+                'tipo_linea' => 'servicio',
+                'service_id' => $line->service_id,
+                'product_id' => null,
+                'nombre' => $line->service?->nombre,
+                'cantidad' => (int) $line->cantidad,
+                'precio_unitario' => (float) ($line->quoteItem?->precio_unitario ?? $line->service?->precio_venta ?? 0),
+                'descuento' => (float) ($line->quoteItem?->descuento ?? 0),
+            ])
+            : collect([[
+                'tipo_linea' => 'servicio',
+                'service_id' => $order->service_id,
+                'nombre' => $order->service?->nombre,
+                'cantidad' => max(1, $order->equipments->count()),
+                'precio_unitario' => (float) ($order->service?->precio_venta ?? 0),
+                'descuento' => 0,
+            ]]);
         // V6: una misma cotización usada en varias autorizaciones se cobra una vez.
         $additionalItems = $order->deficiencies->whereIn('estado', ['autorizada', 'resuelta'])
             ->map(fn ($deficiency) => $deficiency->authorization?->cotizacionAdicional)

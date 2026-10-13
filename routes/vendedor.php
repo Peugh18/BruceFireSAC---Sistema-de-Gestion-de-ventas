@@ -103,6 +103,7 @@ Route::prefix('vendedor')
         Route::post('ordenes-servicio/{service_order}/asignar-tecnico', [ServiceOrderController::class, 'assign'])->name('ordenes-servicio.asignar-tecnico');
         Route::post('ordenes-servicio/{service_order}/asignar-entrega', [ServiceOrderController::class, 'assignDelivery'])->name('ordenes-servicio.asignar-entrega');
         Route::post('ordenes-servicio/{service_order}/equipos', [ServiceOrderEquipmentController::class, 'store'])->name('ordenes-servicio.equipos.store');
+        Route::patch('ordenes-servicio/{service_order}/equipos/reordenar', [ServiceOrderEquipmentController::class, 'reorder'])->name('ordenes-servicio.equipos.reordenar');
         Route::get('ordenes-servicio/{service_order}/constancia-recepcion', ServiceOrderReceiptController::class)->name('ordenes-servicio.constancia-recepcion');
         Route::get('ordenes-servicio/{service_order}/entrega-mostrador', [CounterDeliveryController::class, 'show'])->name('ordenes-servicio.entrega-mostrador.show');
         Route::post('ordenes-servicio/{service_order}/entrega-mostrador', [CounterDeliveryController::class, 'store'])->name('ordenes-servicio.entrega-mostrador.store');

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\TecnicoPlanta;
 
 use App\Actions\TecnicoPlanta\QuickRegisterEquipment;
 use App\Actions\TecnicoPlanta\ReceiveServiceOrder;
-use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
@@ -14,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,6 +36,8 @@ class ReceptionController extends Controller
             ->with([
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento',
                 'sede:id,nombre',
+                'service',
+                'lines.service',
                 'equipments:id,numero_serie,tipo_agente,capacidad,marca',
             ])
             ->latest('id');
@@ -70,7 +70,7 @@ class ReceptionController extends Controller
                 'cliente_doc' => $order->client->numero_documento,
                 'telefono' => $order->client->telefono,
                 'sede' => $order->sede?->nombre,
-                'tipo_servicio' => $order->service->nombre,
+                'tipo_servicio' => $order->resumenServicios(),
                 'fecha' => $order->fecha->toDateString(),
                 'prioridad' => $order->prioridad,
                 'estado' => $order->estado,
@@ -104,6 +104,8 @@ class ReceptionController extends Controller
             'client',
             'sede',
             'tecnico',
+            'service',
+            'lines.service',
             'equipments',
             'events' => fn ($q) => $q->latest('id'),
         ]);
@@ -121,7 +123,7 @@ class ReceptionController extends Controller
                     'direccion' => $service_order->client->direccion_fiscal,
                 ],
                 'sede' => $service_order->sede?->nombre,
-                'tipo_servicio' => $service_order->service->nombre,
+                'tipo_servicio' => $service_order->resumenServicios(),
                 'fecha' => $service_order->fecha->toDateString(),
                 'prioridad' => $service_order->prioridad,
                 'estado' => $service_order->estado,
@@ -246,8 +248,9 @@ class ReceptionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'numero_serie' => ['nullable', 'string', 'max:100'],
-            'tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
-            'capacidad' => ['nullable', 'string', 'max:100'],
+            'service_order_line_id' => ['nullable', 'integer', 'exists:service_order_lines,id'],
+            'service_id' => ['nullable', 'integer', 'exists:services,id'],
+            'adicional' => ['nullable', 'boolean'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
             'anio_fabricacion' => ['nullable', 'string', 'max:100'],
