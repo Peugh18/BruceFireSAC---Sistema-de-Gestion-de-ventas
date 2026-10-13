@@ -101,6 +101,8 @@ class InspectionController extends Controller
             ->whereNotIn('id', $serviceOrder->equipments->pluck('id'))
             ->get();
 
+        $serviceOrder->setRelation('certificates', $serviceOrder->certificadosParaEntrega());
+
         return Inertia::render('tecnico-campo/inspecciones/show', [
             'asignacion' => $serviceOrder->asignacionPara(request()->user()),
             'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($serviceOrder),
@@ -176,7 +178,8 @@ class InspectionController extends Controller
             'items.*.requiere_autorizacion' => ['nullable', 'boolean'],
             'items.*.descargado' => ['nullable', 'boolean'],
             'items.*.foto' => ['nullable', 'image', 'max:15360'],
-            'observaciones' => ['nullable', 'string', 'max:1000'],
+            'equipo_no_apto' => ['sometimes', 'boolean'],
+            'observaciones' => ['required_if:equipo_no_apto,1,true', 'nullable', 'string', 'max:1000'],
         ]);
 
         EquipoDeLaOrden::asegurarAbierta($serviceOrder);
@@ -185,6 +188,7 @@ class InspectionController extends Controller
             'origen' => 'campo',
             'items' => $validated['items'],
             'observaciones' => $validated['observaciones'] ?? null,
+            'equipo_no_apto' => (bool) ($validated['equipo_no_apto'] ?? false),
         ]);
 
         return back()->with('success', "Checklist completado para extintor {$equipment->numero_serie}.");
@@ -295,7 +299,7 @@ class InspectionController extends Controller
     protected function equiposConformes(ServiceOrder $serviceOrder): EloquentCollection
     {
         return $serviceOrder->equipments()
-            ->where('equipment.estado', '!=', 'descargado')
+            ->whereNotIn('equipment.estado', ['descargado', 'baja'])
             ->whereRaw(
                 "(select c.resultado_general from technical_checklists c where c.service_order_id = ? and c.equipment_id = equipment.id order by c.id desc limit 1) = 'conforme'",
                 [$serviceOrder->id],

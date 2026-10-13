@@ -4,7 +4,6 @@ namespace App\Http\Controllers\TecnicoPlanta;
 
 use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Http\Controllers\Controller;
-use App\Models\Certificate;
 use App\Models\Deficiency;
 use App\Models\Product;
 use App\Models\ServiceOrder;
@@ -33,9 +32,7 @@ class ExecutionController extends Controller
             'events' => fn ($q) => $q->latest('created_at')->limit(10),
         ]);
 
-        $certificates = Certificate::where('service_order_id', $service_order->id)
-            ->with(['certificateType:id,codigo,nombre'])
-            ->get()
+        $certificates = $service_order->certificadosParaEntrega()
             ->map(fn ($c) => [
                 'id' => $c->id,
                 'numero' => $c->numero,

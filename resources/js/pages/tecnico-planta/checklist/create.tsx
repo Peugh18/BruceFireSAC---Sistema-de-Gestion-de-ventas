@@ -92,6 +92,7 @@ export default function ChecklistCreate({
     const form = useForm({
         items: initialItems,
         observaciones: '',
+        equipo_no_apto: false,
     });
 
     const handleEstadoChange = (
@@ -134,10 +135,11 @@ export default function ChecklistCreate({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.setData({
+        form.transform((data) => ({
+            ...data,
             items,
             observaciones: observacionesGenerales,
-        });
+        }));
         form.post(
             ChecklistRoutes.store.url({
                 current_team: teamSlug,
@@ -567,6 +569,26 @@ export default function ChecklistCreate({
                         );
                     })}
 
+                    <label className="border-border bg-card flex min-h-11 items-start gap-3 rounded-xl border p-3 text-sm">
+                        <input
+                            type="checkbox"
+                            checked={form.data.equipo_no_apto}
+                            onChange={(e) =>
+                                form.setData('equipo_no_apto', e.target.checked)
+                            }
+                            className="mt-1"
+                        />
+                        <span>
+                            <span className="font-semibold">
+                                Extintor no apto para uso
+                            </span>
+                            <span className="text-muted-foreground block text-xs">
+                                Lo da de baja y anula sus certificados de PH y
+                                operatividad. Explica el motivo en
+                                observaciones.
+                            </span>
+                        </span>
+                    </label>
                     {/* General Observations */}
                     <div className="bg-card space-y-1.5 rounded-2xl border border-neutral-200 p-3.5 dark:border-neutral-700 dark:bg-neutral-800">
                         <label className="block text-xs font-bold text-neutral-900 dark:text-neutral-100">

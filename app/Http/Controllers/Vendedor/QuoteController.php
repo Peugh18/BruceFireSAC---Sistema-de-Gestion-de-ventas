@@ -102,6 +102,8 @@ class QuoteController extends Controller
                 'numero' => $quote->numero,
                 'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
                 'referencia' => $quote->referencia,
+                'destino' => $quote->destinoResuelto(),
+                'vehicle_id' => $quote->vehicle_id,
                 'condicion_pago_propuesta' => $quote->condicion_pago_propuesta,
                 'observaciones' => $quote->observaciones,
                 'items' => $quote->items->map(fn ($item) => [
@@ -163,6 +165,7 @@ class QuoteController extends Controller
         return Inertia::render('vendedor/cotizaciones/nueva', ['edicion' => [
             'id' => $quote->id, 'numero' => $quote->numero, 'fecha' => $quote->fecha->toDateString(), 'vigencia_hasta' => $quote->vigencia_hasta->toDateString(),
             'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'referencia' => $quote->referencia,
+            'destino' => $quote->destinoResuelto(), 'vehicle_id' => $quote->vehicle_id,
             'condicion_pago_propuesta' => $quote->condicion_pago_propuesta, 'observaciones' => $quote->observaciones,
             'items' => $quote->items->map(fn ($item): array => ['deficiency_id' => $item->deficiency_id, 'tipo' => $item->product_id ? 'product' : 'service', 'product_id' => $item->product_id, 'service_id' => $item->service_id, 'codigo' => $item->product->codigo ?? $item->service?->codigo, 'nombre' => $item->product->nombre ?? $item->service?->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento])->values(),
         ]]);

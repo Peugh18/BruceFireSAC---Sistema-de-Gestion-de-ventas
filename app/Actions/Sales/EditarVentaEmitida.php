@@ -6,12 +6,14 @@ use App\Actions\Billing\ConsultarCdrSunat;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\ReserveNextCorrelativo;
 use App\Actions\Certificates\EmitirCertificadosDeVenta;
+use App\Actions\Certificates\IssueCertificate;
 use App\Models\CashRegister;
 use App\Models\Certificate;
 use App\Models\ElectronicDocument;
 use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Services\AuditLogger;
+use App\Services\Certificates\TipoAtencionExtintor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -38,6 +40,7 @@ class EditarVentaEmitida
         protected EmitElectronicDocument $emitElectronicDocument,
         protected ReserveNextCorrelativo $reserveNextCorrelativo,
         protected EmitirCertificadosDeVenta $emitirCertificados,
+        protected IssueCertificate $issueCertificate,
     ) {}
 
     /**
@@ -243,13 +246,16 @@ class EditarVentaEmitida
     /**
      * Los certificados siguen a la venta: si cambió el cliente pasan a su
      * nombre, y si cambiaron los extintores, el destino o la referencia se
-     * corrigen (conservan su número). Si ya no hay extintores, se anulan.
+     * corrigen (conservan su número). Si solo cambió la atención, se corrige
+     * el grupo operativo afectado conservando sus unidades técnicas. Si ya
+     * no hay extintores, se anulan.
      *
      * @param  array<string, mixed>  $antes
      */
     protected function actualizarCertificados(Sale $sale, array $antes, int $userId): void
     {
         $vigentes = Certificate::query()
+            ->whereDoesntHave('certificateType', fn ($query) => $query->where('codigo', 'prueba_hidrostatica'))
             ->where('sale_id', $sale->id)
             ->whereIn('estado', ['vigente', 'vencido']);
 
@@ -263,6 +269,28 @@ class EditarVentaEmitida
             || $sale->referencia !== $antes['referencia'];
 
         if (! $cambio) {
+            $operativos = (clone $vigentes)
+                ->whereHas('certificateType', fn ($query) => $query->where('codigo', 'operatividad_garantia'))
+                ->with('certificateUnits')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($operativos as $certificate) {
+                $tipoAtencion = TipoAtencionExtintor::deVenta($sale, array_values($certificate->certificateUnits->pluck('equipment_id')->filter()->all()));
+
+                if ($tipoAtencion === $certificate->tipo_atencion) {
+                    continue;
+                }
+
+                $this->issueCertificate->corregir(
+                    $certificate,
+                    null,
+                    ['tipo_atencion' => $tipoAtencion],
+                    'Atención actualizada al editar el servicio de la venta.',
+                    $userId,
+                );
+            }
+
             return;
         }
 

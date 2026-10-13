@@ -50,6 +50,8 @@ type QuoteItemForm = {
 
 type QuoteFormData = {
     client_id: number | '';
+    destino: 'local_cliente' | 'vehiculo';
+    vehicle_id: number | '';
     fecha: string;
     vigencia_hasta: string;
     referencia: string;
@@ -61,6 +63,8 @@ type QuoteFormData = {
 type Renovacion = {
     numero: string;
     client: ClientFicha;
+    destino: 'local_cliente' | 'vehiculo';
+    vehicle_id: number | null;
     referencia: string | null;
     condicion_pago_propuesta: string | null;
     observaciones: string | null;
@@ -83,10 +87,6 @@ function diasEntre(desde: string, hasta: string) {
             86_400_000,
     );
 }
-
-/** Una referencia que es una placa (ABC-123 o «PLACA: ABC-123») es de un vehículo. */
-const esPlaca = (referencia: string | null | undefined) =>
-    /^(placa:\s*)?[a-z0-9]{3}-?[a-z0-9]{3}$/i.test((referencia ?? '').trim());
 
 function money(value: number) {
     return new Intl.NumberFormat('es-PE', {
@@ -132,6 +132,8 @@ export default function NuevaCotizacion({
 
     const form = useForm<QuoteFormData>({
         client_id: renovacion?.client.id ?? clientePrecargado?.id ?? '',
+        destino: renovacion?.destino ?? 'local_cliente',
+        vehicle_id: renovacion?.vehicle_id ?? '',
         fecha: edicion?.fecha ?? sumarDias(0),
         vigencia_hasta: edicion?.vigencia_hasta ?? sumarDias(15),
         referencia: renovacion?.referencia ?? '',
@@ -151,9 +153,6 @@ export default function NuevaCotizacion({
     // Al editar, se marca la vigencia y el destino que ya tenía la cotización.
     const [vigenciaDias, setVigenciaDias] = useState(
         edicion ? diasEntre(edicion.fecha, edicion.vigencia_hasta) : 15,
-    );
-    const [destino, setDestino] = useState<'local_cliente' | 'vehiculo'>(
-        esPlaca(renovacion?.referencia) ? 'vehiculo' : 'local_cliente',
     );
 
     const setItems = (items: QuoteItemForm[]) => form.setData('items', items);
@@ -274,7 +273,14 @@ export default function NuevaCotizacion({
                                     form.setData((data) => ({
                                         ...data,
                                         client_id: ficha?.id ?? '',
-                                        referencia: '',
+                                        referencia:
+                                            ficha?.id === data.client_id
+                                                ? data.referencia
+                                                : '',
+                                        vehicle_id:
+                                            ficha?.id === data.client_id
+                                                ? data.vehicle_id
+                                                : '',
                                     }));
                                 }}
                                 error={form.errors.client_id}
@@ -334,25 +340,41 @@ export default function NuevaCotizacion({
                                             key={valor}
                                             type="button"
                                             onClick={() => {
-                                                setDestino(valor);
-                                                form.setData('referencia', '');
+                                                if (
+                                                    form.data.destino !== valor
+                                                ) {
+                                                    form.setData((data) => ({
+                                                        ...data,
+                                                        destino: valor,
+                                                        referencia: '',
+                                                        vehicle_id: '',
+                                                    }));
+                                                }
                                             }}
-                                            className={`flex flex-1 items-center justify-center gap-1 rounded-md px-3 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex flex-1 items-center justify-center gap-1 rounded-md px-3 py-1.5 text-xs font-bold transition-all ${form.data.destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             <Icono className="size-3" />
                                             {texto}
                                         </button>
                                     ))}
                                 </div>
+                                {fieldError(form.errors, 'destino')}
                             </div>
                             <ReferenciaField
                                 cliente={cliente}
-                                destino={destino}
+                                destino={form.data.destino}
                                 value={form.data.referencia}
-                                onChange={(valor) =>
-                                    form.setData('referencia', valor)
+                                onChange={(valor, vehicleId) =>
+                                    form.setData((data) => ({
+                                        ...data,
+                                        referencia: valor,
+                                        vehicle_id: vehicleId ?? '',
+                                    }))
                                 }
-                                error={form.errors.referencia}
+                                error={
+                                    form.errors.referencia ??
+                                    form.errors.vehicle_id
+                                }
                             />
                         </div>
                     </Card>

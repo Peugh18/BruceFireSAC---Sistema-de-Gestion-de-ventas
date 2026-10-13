@@ -16,6 +16,8 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\Certificates\PruebasHidrostaticas;
+use App\Services\Certificates\TipoAtencionExtintor;
 use App\Services\Inventory\StockPorLote;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -320,6 +322,12 @@ class ExecuteAndCloseServiceOrder
      */
     protected function triggerAutomaticCertificates(ServiceOrder $serviceOrder, EloquentCollection $aptos, array $conPh, array $extraData): void
     {
+        $reutilizados = PruebasHidrostaticas::vigentes($serviceOrder->client_id, array_values($aptos->whereNotIn('id', $conPh)->map(fn (Equipment $equipo) => $equipo->id)->all()))
+            ->pluck('certificate')->unique('id');
+        foreach ($reutilizados as $certificate) {
+            $certificate->ordenesReutilizadas()->syncWithoutDetaching([$serviceOrder->id]);
+        }
+
         // Evitar duplicar certificados si ya existen para esta orden
         if (Certificate::where('service_order_id', $serviceOrder->id)->exists()) {
             return;
@@ -327,10 +335,11 @@ class ExecuteAndCloseServiceOrder
 
         $serviceOrder->loadMissing(['client', 'service.certificateType']);
 
-        $unidades = $aptos->map(function (Equipment $eq) use ($conPh) {
+        $tipoAtencion = TipoAtencionExtintor::deOrden($serviceOrder);
+        $unidades = $aptos->map(function (Equipment $eq) use ($conPh, $tipoAtencion) {
             return [
                 'equipment_id' => $eq->id,
-                'fecha_ultima_recarga' => now()->toDateString(),
+                'fecha_ultima_recarga' => $tipoAtencion === 'recarga' ? now()->toDateString() : null,
                 'fecha_ultima_ph' => in_array($eq->id, $conPh, true) ? now()->toDateString() : null,
             ];
         })->values()->all();

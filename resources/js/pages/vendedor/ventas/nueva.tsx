@@ -160,6 +160,7 @@ type VentaPrefill = {
     fecha?: string | null;
     client: ClientOption;
     sede_id: number | null;
+    vehicle_id: number | null;
     destino: Destination;
     referencia: string | null;
     condicion_pago: PaymentCondition;
@@ -303,7 +304,7 @@ export default function NuevaVenta({
         client_id: clienteInicial?.id ?? '',
         sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
         quote_id: quote?.id ?? venta?.quote_id ?? '',
-        vehicle_id: quote?.vehicle_id ?? '',
+        vehicle_id: venta?.vehicle_id ?? quote?.vehicle_id ?? '',
         iniciado_at: new Date().toISOString(),
         fecha: venta?.fecha ?? today(),
         destino: venta?.destino ?? quote?.destino ?? 'local_cliente',
@@ -688,8 +689,7 @@ export default function NuevaVenta({
 
         form.transform(({ vehicle_id, ...data }) => ({
             ...data,
-            // Solo se envía si viene de la cotización: editar no lo borra.
-            ...(vehicle_id ? { vehicle_id } : {}),
+            vehicle_id: data.destino === 'vehiculo' ? vehicle_id || null : null,
             emitir,
             cuotas: data.condicion_pago === 'credito' ? data.cuotas : [],
             medio_pago:
@@ -1244,10 +1244,17 @@ export default function NuevaVenta({
                                     cliente={cliente}
                                     destino={form.data.destino}
                                     value={form.data.referencia}
-                                    onChange={(valor) =>
-                                        form.setData('referencia', valor)
+                                    onChange={(valor, vehicleId) =>
+                                        form.setData((data) => ({
+                                            ...data,
+                                            referencia: valor,
+                                            vehicle_id: vehicleId ?? '',
+                                        }))
                                     }
-                                    error={form.errors.referencia}
+                                    error={
+                                        form.errors.referencia ??
+                                        form.errors.vehicle_id
+                                    }
                                 />
                                 {sedeFija ? (
                                     <div className="text-muted-foreground flex items-center gap-1.5 text-[12px]">

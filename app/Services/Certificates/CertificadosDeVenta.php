@@ -20,12 +20,18 @@ class CertificadosDeVenta
         $certificados = Certificate::query()
             ->with('certificateType')
             ->withCount('certificateUnits')
+            ->where('client_id', $sale->client_id)
             ->where(fn ($query) => $query
                 ->where('sale_id', $sale->id)
+                ->orWhereHas('ventasReutilizadas', fn ($venta) => $venta->where('sales.id', $sale->id))
                 ->when($incluirOrdenes, fn ($query) => $query->orWhereHas('serviceOrder', fn ($order) => $order
                     ->where('sale_id', $sale->id)
                     ->where('client_id', $sale->client_id)
-                    ->where('sede_id', $sale->sede_id))))
+                    ->where('sede_id', $sale->sede_id))
+                    ->orWhereHas('ordenesReutilizadas', fn ($order) => $order
+                        ->where('sale_id', $sale->id)
+                        ->where('client_id', $sale->client_id)
+                        ->where('sede_id', $sale->sede_id))))
             ->orderBy('id')
             ->get();
 

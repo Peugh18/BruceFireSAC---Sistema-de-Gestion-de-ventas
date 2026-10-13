@@ -18,7 +18,7 @@ export default function ReferenciaField({
     cliente: ClientFicha | null;
     destino: 'local_cliente' | 'vehiculo';
     value: string;
-    onChange: (value: string) => void;
+    onChange: (value: string, vehicleId: number | null) => void;
     error?: string;
 }) {
     const esVehiculo = destino === 'vehiculo';
@@ -27,11 +27,13 @@ export default function ReferenciaField({
               key: `v-${v.id}`,
               texto: `PLACA: ${v.placa}`,
               etiqueta: v.placa,
+              vehicleId: v.id,
           }))
         : (cliente?.sedes ?? []).map((s) => ({
               key: `s-${s.id}`,
               texto: `SEDE: ${s.nombre}`,
               etiqueta: s.nombre,
+              vehicleId: null,
           }));
 
     return (
@@ -52,6 +54,9 @@ export default function ReferenciaField({
                             onClick={() =>
                                 onChange(
                                     value === opcion.texto ? '' : opcion.texto,
+                                    value === opcion.texto
+                                        ? null
+                                        : opcion.vehicleId,
                                 )
                             }
                             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold transition-colors ${value === opcion.texto ? 'border-primary bg-destructive/10 text-primary-strong' : 'border-border text-muted-foreground hover:text-foreground'}`}
@@ -69,7 +74,7 @@ export default function ReferenciaField({
             <Input
                 value={value}
                 maxLength={150}
-                onChange={(event) => onChange(event.target.value)}
+                onChange={(event) => onChange(event.target.value, null)}
                 placeholder={
                     esVehiculo
                         ? 'Ej. PLACA: AVR-833'

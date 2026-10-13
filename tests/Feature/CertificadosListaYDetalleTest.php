@@ -48,6 +48,7 @@ function certificadoDeLuces(string $razonSocial): array
 test('la lista muestra la venta y el comprobante de cada certificado y filtra en el servidor', function () {
     $user = vendedorDeCertificados();
     [$sale] = certificadoDeLuces('COMERCIAL LOS ANDES');
+    $sale->update(['vendedor_id' => $user->id]);
     certificadoDeLuces('OTRO CLIENTE');
 
     $this->actingAs($user)
@@ -67,6 +68,7 @@ test('la lista muestra la venta y el comprobante de cada certificado y filtra en
 test('el detalle trae la venta, el cliente y a donde ir para corregirlo', function () {
     $user = vendedorDeCertificados();
     [$sale, $certificado] = certificadoDeLuces('COMERCIAL LOS ANDES');
+    $sale->update(['vendedor_id' => $user->id]);
 
     $this->actingAs($user)
         ->get(route('vendedor.certificados.show', ['current_team' => $user->currentTeam, 'certificate' => $certificado]))

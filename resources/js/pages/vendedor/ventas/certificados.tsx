@@ -45,6 +45,11 @@ type Unidad = {
     presion_ph: string | null;
     tiempo_ph: string | null;
     presion_ph_sugerida: string | null;
+    ph_reutilizable: {
+        id: number;
+        numero: string;
+        fecha_vigencia_hasta: string | null;
+    } | null;
 };
 
 type Emitido = {
@@ -58,6 +63,7 @@ type Emitido = {
 };
 
 type GrupoActual = {
+    destino: 'local_cliente' | 'vehiculo';
     referencia: string | null;
     direccion: string | null;
     tipos: string[];
@@ -188,9 +194,7 @@ export default function ArmarCertificados({
         }
 
         const armados = gruposActuales.map((actual) => {
-            const destino = actual.tipos.includes('prueba_hidrostatica')
-                ? 'vehiculo'
-                : 'local_cliente';
+            const destino = actual.destino;
 
             return {
                 ...nuevoGrupo(destino, actual.referencia ?? ''),
@@ -283,6 +287,7 @@ export default function ArmarCertificados({
             }),
             {
                 grupos: grupos.map((g) => ({
+                    destino: g.destino,
                     referencia: g.referencia || null,
                     direccion: g.direccion || null,
                     tipos: g.tipos,
@@ -291,7 +296,8 @@ export default function ArmarCertificados({
                         .map((f) => ({
                             equipment_id: f.equipment_id,
                             numero_cliente: f.numero_cliente || null,
-                            ...(g.tipos.includes('prueba_hidrostatica')
+                            ...(g.tipos.includes('prueba_hidrostatica') &&
+                            !f.ph_reutilizable
                                 ? {
                                       fecha_ultima_ph: f.ph_fecha || null,
                                       presion_ph: f.ph_presion || null,
@@ -328,7 +334,9 @@ export default function ArmarCertificados({
     const pendientes = TIPOS.filter(
         (t) =>
             tiposSugeridos.includes(t.codigo) &&
-            !vigentes.some((e) => e.tipo_codigo === t.codigo),
+            (t.codigo === 'prueba_hidrostatica'
+                ? unidades.some((u) => !u.ph_reutilizable)
+                : !vigentes.some((e) => e.tipo_codigo === t.codigo)),
     );
     const sinAgente = unidades.filter((u) => !u.agente_conocido);
 
@@ -376,11 +384,10 @@ export default function ArmarCertificados({
                 {vigentes.length > 0 ? (
                     <Card className="gap-3 rounded-2xl border-amber-500/40 bg-amber-500/5 p-4 text-[12.5px] shadow-none">
                         <p>
-                            Estos certificados ya se emitieron al confirmar la
-                            venta. Al guardar se corrigen{' '}
-                            <b>los mismos, con el mismo número</b>, y queda
-                            registrada una revisión con el motivo. Solo un
-                            certificado nuevo recibe número nuevo.
+                            Al guardar se ajustan la operatividad y la
+                            capacitación con el mismo número. La PH vigente
+                            conserva su certificado original, sus fechas y
+                            unidades; la recarga no renueva su vencimiento.
                         </p>
                         <label className="text-foreground text-sm font-medium">
                             Motivo del ajuste (opcional)
@@ -402,10 +409,9 @@ export default function ArmarCertificados({
                             {pendientes.map((t) => t.nombre).join(' y ')}.
                         </p>
                         <p className="text-muted-foreground">
-                            No salen al cobrar. Márcalos en el grupo cuando se
-                            hayan hecho y registra los datos reales (fecha,
-                            presión, tiempo y resultado de la prueba
-                            hidrostática).
+                            Registra los datos reales de la capacitación y de
+                            los extintores sin PH vigente. Una PH vigente se
+                            reutiliza hasta su vencimiento original.
                         </p>
                     </Card>
                 ) : null}
@@ -1039,114 +1045,146 @@ export default function ArmarCertificados({
                                                 Datos reales de la prueba
                                                 hidrostática
                                             </div>
-                                            {filasDelGrupo.map((fila) => (
-                                                <div
-                                                    key={fila.equipment_id}
-                                                    className="grid items-end gap-2 sm:grid-cols-[120px_repeat(4,minmax(0,1fr))]"
-                                                >
-                                                    <span className="font-['IBM_Plex_Mono',monospace] text-xs">
-                                                        {fila.codigo_interno}
-                                                    </span>
-                                                    <label className="text-muted-foreground text-xs font-bold uppercase">
-                                                        Fecha
-                                                        <Input
-                                                            type="date"
-                                                            value={
-                                                                fila.ph_fecha
+                                            {filasDelGrupo
+                                                .filter(
+                                                    (fila) =>
+                                                        fila.ph_reutilizable,
+                                                )
+                                                .map((fila) => (
+                                                    <p
+                                                        key={fila.equipment_id}
+                                                        className="text-muted-foreground text-sm"
+                                                    >
+                                                        {fila.codigo_interno}:
+                                                        se reutiliza PH{' '}
+                                                        {
+                                                            fila.ph_reutilizable
+                                                                ?.numero
+                                                        }
+                                                        , vigente hasta{' '}
+                                                        {
+                                                            fila.ph_reutilizable
+                                                                ?.fecha_vigencia_hasta
+                                                        }
+                                                        . Conserva su fecha y
+                                                        certificado original.
+                                                    </p>
+                                                ))}
+                                            {filasDelGrupo
+                                                .filter(
+                                                    (fila) =>
+                                                        !fila.ph_reutilizable,
+                                                )
+                                                .map((fila) => (
+                                                    <div
+                                                        key={fila.equipment_id}
+                                                        className="grid items-end gap-2 sm:grid-cols-[120px_repeat(4,minmax(0,1fr))]"
+                                                    >
+                                                        <span className="font-['IBM_Plex_Mono',monospace] text-xs">
+                                                            {
+                                                                fila.codigo_interno
                                                             }
-                                                            onChange={(e) =>
-                                                                cambiarFila(
-                                                                    fila.equipment_id,
-                                                                    {
-                                                                        ph_fecha:
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                    },
-                                                                )
-                                                            }
-                                                            className="mt-1 h-8 rounded-md text-[12px]"
-                                                        />
-                                                    </label>
-                                                    <label className="text-muted-foreground text-xs font-bold uppercase">
-                                                        Presión
-                                                        <Input
-                                                            value={
-                                                                fila.ph_presion
-                                                            }
-                                                            maxLength={20}
-                                                            placeholder={
-                                                                fila.presion_ph_sugerida ??
-                                                                'Ej. 600 PSI'
-                                                            }
-                                                            onChange={(e) =>
-                                                                cambiarFila(
-                                                                    fila.equipment_id,
-                                                                    {
-                                                                        ph_presion:
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                    },
-                                                                )
-                                                            }
-                                                            className="mt-1 h-8 rounded-md text-[12px]"
-                                                        />
-                                                    </label>
-                                                    <label className="text-muted-foreground text-xs font-bold uppercase">
-                                                        Tiempo
-                                                        <Input
-                                                            value={
-                                                                fila.ph_tiempo
-                                                            }
-                                                            maxLength={20}
-                                                            placeholder="Ej. 60 SEG"
-                                                            onChange={(e) =>
-                                                                cambiarFila(
-                                                                    fila.equipment_id,
-                                                                    {
-                                                                        ph_tiempo:
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                    },
-                                                                )
-                                                            }
-                                                            className="mt-1 h-8 rounded-md text-[12px]"
-                                                        />
-                                                    </label>
-                                                    <label className="text-muted-foreground text-xs font-bold uppercase">
-                                                        Resultado
-                                                        <NativeSelect
-                                                            value={
-                                                                fila.ph_resultado
-                                                            }
-                                                            onChange={(e) =>
-                                                                cambiarFila(
-                                                                    fila.equipment_id,
-                                                                    {
-                                                                        ph_resultado:
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                    },
-                                                                )
-                                                            }
-                                                            className="border-border bg-card mt-1 h-8 w-full rounded-md border px-2 text-[12px] normal-case"
-                                                        >
-                                                            <option value="">
-                                                                Elegir
-                                                            </option>
-                                                            <option value="aprobado">
-                                                                Aprobado
-                                                            </option>
-                                                            <option value="desaprobado">
-                                                                No aprobado
-                                                            </option>
-                                                        </NativeSelect>
-                                                    </label>
-                                                </div>
-                                            ))}
+                                                        </span>
+                                                        <label className="text-muted-foreground text-xs font-bold uppercase">
+                                                            Fecha
+                                                            <Input
+                                                                type="date"
+                                                                value={
+                                                                    fila.ph_fecha
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiarFila(
+                                                                        fila.equipment_id,
+                                                                        {
+                                                                            ph_fecha:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="mt-1 h-8 rounded-md text-[12px]"
+                                                            />
+                                                        </label>
+                                                        <label className="text-muted-foreground text-xs font-bold uppercase">
+                                                            Presión
+                                                            <Input
+                                                                value={
+                                                                    fila.ph_presion
+                                                                }
+                                                                maxLength={20}
+                                                                placeholder={
+                                                                    fila.presion_ph_sugerida ??
+                                                                    'Ej. 600 PSI'
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiarFila(
+                                                                        fila.equipment_id,
+                                                                        {
+                                                                            ph_presion:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="mt-1 h-8 rounded-md text-[12px]"
+                                                            />
+                                                        </label>
+                                                        <label className="text-muted-foreground text-xs font-bold uppercase">
+                                                            Tiempo
+                                                            <Input
+                                                                value={
+                                                                    fila.ph_tiempo
+                                                                }
+                                                                maxLength={20}
+                                                                placeholder="Ej. 60 SEG"
+                                                                onChange={(e) =>
+                                                                    cambiarFila(
+                                                                        fila.equipment_id,
+                                                                        {
+                                                                            ph_tiempo:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="mt-1 h-8 rounded-md text-[12px]"
+                                                            />
+                                                        </label>
+                                                        <label className="text-muted-foreground text-xs font-bold uppercase">
+                                                            Resultado
+                                                            <NativeSelect
+                                                                value={
+                                                                    fila.ph_resultado
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiarFila(
+                                                                        fila.equipment_id,
+                                                                        {
+                                                                            ph_resultado:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="border-border bg-card mt-1 h-8 w-full rounded-md border px-2 text-[12px] normal-case"
+                                                            >
+                                                                <option value="">
+                                                                    Elegir
+                                                                </option>
+                                                                <option value="aprobado">
+                                                                    Aprobado
+                                                                </option>
+                                                                <option value="desaprobado">
+                                                                    No aprobado
+                                                                </option>
+                                                            </NativeSelect>
+                                                        </label>
+                                                    </div>
+                                                ))}
                                         </div>
                                     ) : null}
                                     <div className="border-border border-t p-2">

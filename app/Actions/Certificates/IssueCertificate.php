@@ -15,6 +15,7 @@ use App\Models\ServiceOrder;
 use App\Services\AuditLogger;
 use App\Services\Certificates\CertificateDateCalculator;
 use App\Services\Certificates\CertificateNumberGenerator;
+use App\Services\Certificates\TipoAtencionExtintor;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
@@ -67,6 +68,8 @@ class IssueCertificate
             $fechaEmision = now()->toDateString();
             $fechaVigenciaHasta = $this->calcularVigenciaHasta($tipo, $unidades);
 
+            $orden = $serviceOrderId ? ServiceOrder::find($serviceOrderId) : null;
+
             $certificate = Certificate::create([
                 'numero' => $numero,
                 'certificate_type_id' => $tipo->id,
@@ -74,9 +77,9 @@ class IssueCertificate
                 'client_id' => $client->id,
                 'fecha_emision' => $fechaEmision,
                 'fecha_vigencia_hasta' => $fechaVigenciaHasta?->toDateString(),
-                'referencia' => $extra['referencia'] ?? ($serviceOrderId ? ServiceOrder::find($serviceOrderId)?->referencia : null),
+                'referencia' => $extra['referencia'] ?? $orden?->referencia,
                 'direccion' => $extra['direccion'] ?? $client->direccion_fiscal,
-                'tipo_atencion' => $extra['tipo_atencion'] ?? ($serviceOrderId ? 'recarga' : null),
+                'tipo_atencion' => $extra['tipo_atencion'] ?? ($orden ? TipoAtencionExtintor::deOrden($orden) : null),
                 'datos' => $extra['datos'] ?? null,
                 'estado' => 'vigente',
                 'qr_token' => (string) Str::uuid(),
@@ -104,15 +107,18 @@ class IssueCertificate
     /**
      * Corrige un certificado ya emitido sin cambiarle el número: reemplaza sus
      * extintores (orden, numeración del cliente, grupo), su referencia y su
-     * dirección, y deja una revisión con el motivo y lo que cambió. Si no
-     * cambió nada, no crea revisión.
+     * dirección y atención, y deja una revisión con el motivo y lo que cambió. Si no
+     * cambió nada, no crea revisión. Con unidades null conserva las unidades
+     * técnicas originales y corrige únicamente los metadatos.
      *
-     * @param  array<int, array<string, mixed>>  $unidades
-     * @param  array{referencia?: string|null, direccion?: string|null, datos?: array<string, mixed>|null}  $extra
+     * @param  array<int, array<string, mixed>>|null  $unidades
+     * @param  array{referencia?: string|null, direccion?: string|null, tipo_atencion?: string|null, datos?: array<string, mixed>|null}  $extra
      */
-    public function corregir(Certificate $certificate, array $unidades, array $extra, string $motivo, ?int $userId = null): Certificate
+    public function corregir(Certificate $certificate, ?array $unidades, array $extra, string $motivo, ?int $userId = null): Certificate
     {
-        $this->exigirAgente($certificate->certificateType, $unidades);
+        if ($unidades !== null) {
+            $this->exigirAgente($certificate->certificateType, $unidades);
+        }
 
         return DB::transaction(function () use ($certificate, $unidades, $extra, $motivo, $userId) {
             $antes = $this->resumen($certificate->load('certificateUnits'));
@@ -120,11 +126,14 @@ class IssueCertificate
             $certificate->update([
                 'referencia' => $extra['referencia'] ?? $certificate->referencia,
                 'direccion' => $extra['direccion'] ?? $certificate->direccion,
+                'tipo_atencion' => $extra['tipo_atencion'] ?? $certificate->tipo_atencion,
                 'datos' => array_key_exists('datos', $extra) ? $extra['datos'] : $certificate->datos,
             ]);
 
-            $certificate->certificateUnits()->delete();
-            $this->crearUnidades($certificate, $unidades);
+            if ($unidades !== null) {
+                $certificate->certificateUnits()->delete();
+                $this->crearUnidades($certificate, $unidades);
+            }
 
             $despues = $this->resumen($certificate->load('certificateUnits'));
 
@@ -201,7 +210,7 @@ class IssueCertificate
 
     /**
      * Un certificado de extintores no se emite si alguno no tiene su agente
-     * registrado: nunca se asume PQS (C1).
+     * registrado o está dado de baja: nunca se asume PQS (C1).
      *
      * @param  array<int, array<string, mixed>>  $unidades
      */
@@ -215,6 +224,12 @@ class IssueCertificate
             ->whereIn('id', array_filter(array_column($unidades, 'equipment_id')))
             ->get()
             ->keyBy('id');
+
+        if ($equipos->contains(fn (Equipment $equipo) => $equipo->estado === 'baja')) {
+            throw ValidationException::withMessages([
+                'unidades' => 'Un extintor dado de baja no puede recibir un certificado técnico.',
+            ]);
+        }
 
         $sinAgente = collect($unidades)
             ->map(fn (array $u) => [$u, $equipos->get($u['equipment_id'] ?? 0)])
@@ -231,23 +246,23 @@ class IssueCertificate
     /**
      * Lo que se compara y se guarda en cada revisión.
      *
-     * @return array{referencia: string|null, direccion: string|null, datos: array<string, mixed>|null, unidades: list<array{orden: int|null, numero_cliente: string|null, serie: string|null}>}
+     * @return array{referencia: string|null, direccion: string|null, tipo_atencion: string|null, datos: array<string, mixed>|null, unidades: list<array{orden: int|null, numero_cliente: string|null, serie: string|null}>}
      */
     protected function resumen(Certificate $certificate): array
     {
         return [
             'referencia' => $certificate->referencia,
             'direccion' => $certificate->direccion,
+            'tipo_atencion' => $certificate->tipo_atencion,
             'datos' => $certificate->datos,
-            'unidades' => $certificate->certificateUnits
+            'unidades' => array_values($certificate->certificateUnits
                 ->sortBy('orden')
                 ->map(fn (CertificateUnit $unit) => [
                     'orden' => $unit->orden,
                     'numero_cliente' => $unit->numero_cliente,
                     'serie' => $unit->numero_serie_snapshot,
                 ])
-                ->values()
-                ->all(),
+                ->all()),
         ];
     }
 
@@ -334,8 +349,10 @@ class IssueCertificate
             $fechaBase = null;
             foreach ($unidades as $u) {
                 if (! empty($u['fecha_ultima_ph'])) {
-                    $fechaBase = Carbon::parse($u['fecha_ultima_ph']);
-                    break;
+                    $fecha = Carbon::parse($u['fecha_ultima_ph']);
+                    if ($fechaBase === null || $fecha->lessThan($fechaBase)) {
+                        $fechaBase = $fecha;
+                    }
                 }
             }
 

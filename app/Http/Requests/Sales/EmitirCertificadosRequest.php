@@ -20,6 +20,7 @@ class EmitirCertificadosRequest extends FormRequest
     {
         return [
             'grupos' => ['required', 'array', 'min:1', 'max:30'],
+            'grupos.*.destino' => ['nullable', Rule::in(['local_cliente', 'vehiculo'])],
             'grupos.*.referencia' => ['nullable', 'string', 'max:150'],
             'grupos.*.direccion' => ['nullable', 'string', 'max:255'],
             'grupos.*.tipos' => ['required', 'array', 'min:1'],

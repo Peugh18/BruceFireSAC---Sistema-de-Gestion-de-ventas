@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tecnico;
 
+use App\Actions\Certificates\AnularCertificadosDeEquipo;
 use App\Enums\EquipmentType;
 use App\Models\Deficiency;
 use App\Models\Equipment;
@@ -15,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class ProcessChecklist
 {
-    public function __construct(protected GuardarEvidencia $guardarEvidencia) {}
+    public function __construct(protected GuardarEvidencia $guardarEvidencia, protected AnularCertificadosDeEquipo $anularCertificados) {}
 
     /**
      * Elementos estándar del checklist técnico (§19.1).
@@ -52,6 +53,7 @@ class ProcessChecklist
      * @param  array{
      *     origen?: string,
      *     equipo_descargado?: bool|null,
+     *     equipo_no_apto?: bool,
      *     items: array<string, array{
      *         estado: 'conforme'|'observado'|'no_aplica',
      *         condicion?: string|null,
@@ -147,11 +149,15 @@ class ProcessChecklist
                 }
             }
 
-            if ($esDescargadoOUsado) {
+            if ($esDescargadoOUsado && $equipment->estado !== 'baja') {
                 $equipment->update(['estado' => 'descargado']);
             }
 
-            $resultadoGeneral = count($deficienciesCreated) > 0 ? 'observado' : 'conforme';
+            if (! empty($data['equipo_no_apto'])) {
+                $this->anularCertificados->handle($equipment, (string) ($data['observaciones'] ?? ''), $user->id);
+            }
+
+            $resultadoGeneral = count($deficienciesCreated) > 0 || ! empty($data['equipo_no_apto']) ? 'observado' : 'conforme';
 
             $checklist = TechnicalChecklist::create([
                 'service_order_id' => $serviceOrder->id,

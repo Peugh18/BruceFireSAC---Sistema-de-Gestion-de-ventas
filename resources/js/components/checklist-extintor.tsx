@@ -54,9 +54,11 @@ export default function ChecklistExtintor({
     const form = useForm<{
         items: Record<string, Item>;
         observaciones: string;
+        equipo_no_apto: boolean;
     }>({
         items: inicial,
         observaciones: '',
+        equipo_no_apto: false,
     });
 
     const cambiar = (clave: string, cambios: Partial<Item>) =>
@@ -99,6 +101,25 @@ export default function ChecklistExtintor({
                 </button>
             </div>
 
+            <label className="border-border bg-card flex min-h-11 items-start gap-3 rounded-lg border p-3 text-sm">
+                <input
+                    type="checkbox"
+                    checked={form.data.equipo_no_apto}
+                    onChange={(e) =>
+                        form.setData('equipo_no_apto', e.target.checked)
+                    }
+                    className="mt-1"
+                />
+                <span>
+                    <span className="font-semibold">
+                        Extintor no apto para uso
+                    </span>
+                    <span className="text-muted-foreground block text-xs">
+                        Lo da de baja y anula sus certificados de PH y
+                        operatividad. Explica el motivo en observaciones.
+                    </span>
+                </span>
+            </label>
             <div className="border-border bg-card space-y-2 rounded-lg border p-3">
                 <p className="text-muted-foreground text-xs">
                     Borrador: clasificación actual. Los valores precargados no
