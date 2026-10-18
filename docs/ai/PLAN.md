@@ -93,7 +93,6 @@ El usuario pidió terminar los pendientes después de revisar el relevo. Se cons
 - Las personas que firman se registran una sola vez; el cargo depende del certificado.
 - Sin commit, push ni dependencias nuevas sin permiso. Las pruebas usan el certificado de `tests/Fixtures`.
 
-
 ## Integración en GitHub — 2026-10-18
 
 - Usuario autoriza commit, push y merge de todo el trabajo en main.
