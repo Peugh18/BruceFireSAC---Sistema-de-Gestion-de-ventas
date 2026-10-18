@@ -45,6 +45,7 @@ yarn-error.log
 /storage/app/ml/*.csv
 *.csv
 !database/data/*.csv
+!tests/Fixtures/*.csv
 # Excel oficial de SUNAT (trae macros): se versiona solo el CSV convertido.
 database/data/*.xlsm
 !/storage/app/ml/retention_model.json

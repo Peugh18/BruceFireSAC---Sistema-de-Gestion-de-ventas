@@ -132,7 +132,7 @@ test('rol y sede guardan el valor anterior y el nuevo en auditoría', function (
     $gerente = gerenteUsuariosYCaja();
     $miembro = miembroUsuariosYCaja($gerente);
     $miembro->assignRole('Almacen');
-    $sede = Sede::factory()->mixta()->create();
+    $sede = Sede::factory()->taller()->create();
     $params = ['current_team' => $gerente->currentTeam, 'user' => $miembro];
 
     $this->actingAs($gerente)->patch(route('gerente.usuarios.update-role', $params), ['role' => 'TecnicoCampo'])->assertSessionHasNoErrors();

@@ -121,3 +121,5 @@
 - Revisadas ramas y worktrees: cotizaciones ya está integrado; los cambios sin commit del worktree viejo de Claude son la implementación previa de órdenes multilínea y sus títulos de pruebas ya existen en la rama actual. Se preservan sin modificar. La rama de respaldo conserva historia anterior reescrita, no funciones nuevas que deban sobreescribir la implementación vigente.
 - Se incorpora PLAN.md a Git para compartir el avance del proyecto; se mantienen los archivos personales excluidos.
 - Antes de publicar: formato/lint y TypeScript aprobados; Pint aprobado y PHPStan 0. Suite completa local en ejecución; integración del PR condicionada a CI verde.
+
+- Primer CI del PR #36: 1348 aprobadas y 5 fallos (7654 aserciones). Causas: CSV de fixture excluido por `*.csv` (tres fallos), sede mixta en prueba que ahora requiere Taller y servicio de instalación con nombre ambiguo de mantenimiento excluido correctamente del listado. Se versiona el fixture y se ajustan los datos de esos dos casos, conservando sus aserciones de auditoría, aislamiento y KPI.

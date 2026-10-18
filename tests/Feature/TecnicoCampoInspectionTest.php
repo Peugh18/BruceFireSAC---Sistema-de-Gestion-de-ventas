@@ -194,7 +194,11 @@ test('los listados de campo excluyen anuladas y ordenes ajenas de lista y kpis',
     $sede = Sede::factory()->mixta()->create();
     $otra = Sede::factory()->mixta()->create();
     $this->user->update(['sede_id' => $sede->id]);
-    $service = Service::factory()->create(['nombre' => 'Mantenimiento e inspección e instalación']);
+    $service = Service::factory()->create(['nombre' => match ($modulo) {
+        'instalaciones' => 'Instalación de pozo a tierra',
+        'mantenimientos' => 'Mantenimiento de extintores',
+        default => 'Inspección de extintores',
+    }]);
     $base = ['sede_id' => $sede->id, 'service_id' => $service->id, 'departamento_tecnico' => 'campo', 'estado' => 'recibido_planta'];
     $mia = ServiceOrder::factory()->create([...$base, 'tecnico_id' => $this->user->id]);
     ServiceOrder::factory()->create([...$base, 'estado' => 'anulada']);
