@@ -99,5 +99,8 @@ El usuario pidió terminar los pendientes después de revisar el relevo. Se cons
 - PR #36 reúne el código acumulado; suite completa local en ejecución y CI obligatorio antes del merge.
 - PR #37 (GitHub Actions) integrado tras comprobar CI aprobado.
 - Worktree de cotizaciones limpio y ya integrado en main; worktree antiguo de Claude conserva una versión previa de órdenes multilínea ya cubierta por el código y los mismos casos de prueba actuales. Se preservan ambos worktrees.
-- Recuperar la referencia de factura de `diseno-gpt`; el respaldo anterior contiene historia reemplazada y funciones ya incorporadas, no se restaura código obsoleto.
-- Siguiente paso: comprobar suite completa, publicar PR #36, esperar CI verde, fusionar y verificar origin/main.
+- Referencia de factura de `diseno-gpt` recuperada; el respaldo anterior contiene historia reemplazada y funciones ya incorporadas, no se restaura código obsoleto.
+- Todo el trabajo está publicado en [PR #36](https://github.com/Peugh18/BruceFireSAC---Sistema-de-Gestion-de-ventas/pull/36), que concentra el estado de CI y fusión. El cierre exige CI verde y comprobar origin/main; no hay despliegue incluido.
+- Primer CI: 1348 aprobadas y 5 fallos por un fixture CSV excluido y dos datos de pruebas antiguos. Corregidos en `070a0f3`, sin relajar las aserciones ni cambiar código de negocio.
+- Verificaciones adicionales: 15/15 pruebas TypeScript, pruebas del script PowerShell, build, formato/lint, TypeScript, Pint y PHPStan aprobados.
+- Pendiente de producto: revisión visual móvil/oscuro/axe al habilitar el navegador y evaluar por separado las dependencias con alertas preexistentes.

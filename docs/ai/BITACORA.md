@@ -123,3 +123,5 @@
 - Antes de publicar: formato/lint y TypeScript aprobados; Pint aprobado y PHPStan 0. Suite completa local en ejecución; integración del PR condicionada a CI verde.
 
 - Primer CI del PR #36: 1348 aprobadas y 5 fallos (7654 aserciones). Causas: CSV de fixture excluido por `*.csv` (tres fallos), sede mixta en prueba que ahora requiere Taller y servicio de instalación con nombre ambiguo de mantenimiento excluido correctamente del listado. Se versiona el fixture y se ajustan los datos de esos dos casos, conservando sus aserciones de auditoría, aislamiento y KPI.
+
+- Trabajo acumulado publicado en PR #36; referencia de factura recuperada y PR #37 integrado. Build de producción repetido con éxito, 15/15 pruebas TypeScript y pruebas del runner PowerShell aprobadas. El PR enlazado conserva la evidencia definitiva de CI y merge; no se incluyen despliegue ni actualización de dependencias adicionales.
