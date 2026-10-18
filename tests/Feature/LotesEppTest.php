@@ -15,7 +15,6 @@ use App\Models\User;
 use App\Services\Inventory\StockPorLote;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Validation\ValidationException;
-use Tests\Support\TransferGuide;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -127,7 +126,6 @@ test('el traslado lleva el lote con su vencimiento al otro almacen', function ()
 
     app(TransferInventory::class)->handle($this->almacen->id, ['destination_sede_id' => $destino->id, 'product_id' => $this->guantes->id, 'quantity' => 4], $gerente);
     $traslado = InventoryTransfer::query()->sole();
-    TransferGuide::accepted($traslado, $gerente);
     app(TransferInventory::class)->despachar($traslado, $gerente);
     app(TransferInventory::class)->confirmar($traslado, $gerente);
 
@@ -187,7 +185,7 @@ test('un producto con serie no se controla por lote y la caja guarda su equivale
         ->post(route('gerente.productos.store', $team), [...$base, 'controla_lote' => true, 'unidad_compra' => 'caja', 'factor_compra' => 20])
         ->assertSessionHasNoErrors();
 
-    expect(Product::where('codigo', 'EPP-01')->sole())
+    expect(Product::query()->where('nombre', 'Mascarilla N95')->sole())
         ->controla_lote->toBeTrue()
         ->unidad_compra->toBe('CAJA')
         ->factor_compra->toBe(20);

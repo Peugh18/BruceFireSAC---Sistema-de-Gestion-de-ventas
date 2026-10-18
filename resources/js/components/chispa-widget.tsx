@@ -1,4 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
+import { usePage } from '@inertiajs/react';
 import { RotateCcw, Send, X } from 'lucide-react';
 import {
     FormEvent,
@@ -76,6 +77,10 @@ export default function ChispaWidget({
 }: {
     rol?: keyof typeof SUGERENCIAS;
 }) {
+    const { url } = usePage();
+    const enOrden =
+        url.includes('/ordenes-servicio/') ||
+        url.includes('/tecnico-planta/ordenes/');
     const [abierto, setAbierto] = useState(false);
     const [mensajes, setMensajes] = useState<Mensaje[]>(() => {
         try {
@@ -243,7 +248,7 @@ export default function ChispaWidget({
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20" />
                 <Dialog.Content
-                    className={`border-border bg-card fixed right-4 bottom-24 z-50 flex max-h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border shadow-2xl ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:max-h-[calc(100dvh-11rem)]' : ''}`}
+                    className={`border-border bg-card fixed right-4 ${enOrden ? 'bottom-48' : 'bottom-24'} z-50 flex max-h-[min(560px,calc(100dvh-7rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border shadow-2xl ${conBarraInferior ? `${enOrden ? 'max-md:bottom-[calc(14rem+env(safe-area-inset-bottom))]' : 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))]'} max-md:max-h-[calc(100dvh-15rem)]` : ''}`}
                 >
                     <div className="border-border flex items-center gap-2.5 border-b px-4 py-4">
                         <span className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
@@ -415,7 +420,7 @@ export default function ChispaWidget({
                     type="button"
                     aria-label="Abrir la ayuda de Chispa"
                     data-globo={globo && !abierto ? '' : undefined}
-                    className={`bf-chispa-launcher chispa-boton border-border bg-card fixed right-5 bottom-5 z-40 flex size-16 items-center justify-center rounded-2xl border shadow-lg ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:size-11' : ''}`}
+                    className={`bf-chispa-launcher chispa-boton border-border bg-card fixed right-5 ${enOrden ? 'bottom-28' : 'bottom-5'} z-40 flex size-16 items-center justify-center rounded-2xl border shadow-lg ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:size-11' : ''}`}
                 >
                     <span
                         aria-hidden

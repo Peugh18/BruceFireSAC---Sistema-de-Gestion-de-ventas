@@ -45,7 +45,7 @@ class CasillerosDeLaOrden
 
             return [
                 'id' => $linea->id,
-                'servicio' => $servicio->nombre,
+                'servicio' => $servicio->nombre ?? 'Por cotizar',
                 'agente' => $servicio ? self::agente($servicio) : null,
                 'capacidad' => $servicio ? Service::capacidadDelTexto($servicio->capacidad ?: $servicio->nombre) : null,
                 'cantidad' => $linea->cantidad,
@@ -57,8 +57,8 @@ class CasillerosDeLaOrden
         return [
             'lineas' => array_values($lineas->all()),
             'equipos' => array_values($equipos->all()),
-            'esperados' => (int) $lineas->sum('cantidad'),
-            'identificados' => $equipos->whereNotNull('linea_id')->count(),
+            'esperados' => $orden->cantidadEquiposEsperada(),
+            'identificados' => $equipos->count(),
             'editable' => in_array($orden->estado, self::ESTADOS_EDITABLES, true),
             'servicios' => array_values(Service::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre'])
                 ->map(fn (Service $s) => ['id' => $s->id, 'nombre' => $s->nombre])->all()),
@@ -67,8 +67,8 @@ class CasillerosDeLaOrden
 
     private static function agente(Service $servicio): ?string
     {
-        $tipo = EquipmentType::tryFrom((string) $servicio->agente) ?? EquipmentType::fromDescription($servicio->nombre);
+        $tipo = EquipmentType::deAgente($servicio->agente, $servicio->nombre);
 
-        return $tipo === EquipmentType::Otro ? null : $tipo->etiqueta();
+        return $tipo === EquipmentType::Otro ? null : (EquipmentType::nombreDe($servicio->agente) ?? $tipo->etiqueta());
     }
 }

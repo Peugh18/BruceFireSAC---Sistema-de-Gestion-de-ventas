@@ -14,12 +14,14 @@ class DatosEmision
     /** @return array<string, mixed>|null */
     public function recuperar(ElectronicDocument $document): ?array
     {
-        if ($document->datos_emision !== null) {
+        if ($document->datos_emision !== null
+            && (! ($document->datos_emision['detraccion']['aplica'] ?? false)
+                || array_key_exists('medio_pago', $document->datos_emision['detraccion']))) {
             return $document->datos_emision;
         }
 
         if (! $document->xml_path || ! Storage::disk('local')->exists($document->xml_path)) {
-            return null;
+            return $document->datos_emision;
         }
 
         $datos = $this->desdeXml((string) Storage::disk('local')->get($document->xml_path));
@@ -117,6 +119,8 @@ class DatosEmision
                 'codigo_bien' => $get("cac:PaymentTerms[cbc:ID='Detraccion']/cbc:PaymentMeansID"),
                 'monto' => (float) $get("cac:PaymentTerms[cbc:ID='Detraccion']/cbc:Amount"),
                 'cuenta' => $get("cac:PaymentMeans[cbc:ID='Detraccion']/cac:PayeeFinancialAccount/cbc:ID"),
+                'medio_pago' => $get("cac:PaymentMeans[cbc:ID='Detraccion']/cbc:PaymentMeansCode"),
+                'porcentaje' => (float) $get("cac:PaymentTerms[cbc:ID='Detraccion']/cbc:PaymentPercent"),
             ],
         ];
     }

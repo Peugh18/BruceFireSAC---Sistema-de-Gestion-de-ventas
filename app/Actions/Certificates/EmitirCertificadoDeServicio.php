@@ -101,7 +101,7 @@ class EmitirCertificadoDeServicio
      * @param  list<array<string, mixed>>  $filas
      * @return list<array<string, mixed>>
      */
-    protected function filas(CertificateType $tipo, array $filas): array
+    public function filas(CertificateType $tipo, array $filas): array
     {
         if ($filas === []) {
             throw ValidationException::withMessages(['filas' => 'Agrega al menos una fila al certificado.']);
@@ -154,7 +154,7 @@ class EmitirCertificadoDeServicio
      * @param  list<array{estado?: string, valor?: string|null}>  $pruebas
      * @return list<array{estado: string, valor: string|null}>
      */
-    protected function pruebas(CertificateType $tipo, array $pruebas): array
+    public function pruebas(CertificateType $tipo, array $pruebas): array
     {
         return collect($tipo->checklist ?? [])
             ->values()

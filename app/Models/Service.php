@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\EquipmentType;
+use App\Models\Concerns\AuditaElCatalogo;
+use App\Models\Concerns\TieneCodigoCorrelativo;
 use Database\Factories\ServiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,8 +35,12 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, QuoteItem> $quoteItems
  * @property-read Collection<int, SaleItem> $saleItems
  * @property-read ProductCategory|null $categoriaDelCatalogo
+ * @property int|null $tipo_de_servicio_id
+ * @property string|null $estado_detraccion
+ * @property-read TipoDeServicio|null $tipoDeServicio
  */
 #[Fillable([
+    'tipo_de_servicio_id',
     'codigo',
     'nombre',
     'descripcion',
@@ -42,15 +48,38 @@ use Illuminate\Support\Carbon;
     'unidad_medida',
     'agente',
     'capacidad',
-    'precio_venta', 'codigo_detraccion',
+    'precio_venta', 'codigo_detraccion', 'estado_detraccion',
     'aplica_igv', 'igv_revisado_at', 'tipo_afectacion_igv',
     'certificate_type_id',
     'activo',
 ])]
 class Service extends Model
 {
+    public const PREFIJO_CODIGO = 'SRV';
+
+    public const AUDITORIA_PREFIJO = 'servicio';
+
     /** @use HasFactory<ServiceFactory> */
-    use HasFactory;
+    use AuditaElCatalogo, HasFactory, TieneCodigoCorrelativo;
+
+    protected static function booted(): void
+    {
+        // El tipo define el certificado y la detracción: el servicio los toma de él.
+        static::saving(function (Service $servicio): void {
+            if ($servicio->tipo_de_servicio_id !== null && $servicio->isDirty('tipo_de_servicio_id')) {
+                $tipo = TipoDeServicio::query()->find($servicio->tipo_de_servicio_id);
+                $servicio->codigo_detraccion = $tipo?->codigo_detraccion;
+                $servicio->estado_detraccion = $tipo?->estado_detraccion;
+                $servicio->certificate_type_id = $tipo?->certificate_type_id;
+            }
+        });
+    }
+
+    /** @return BelongsTo<TipoDeServicio, $this> */
+    public function tipoDeServicio(): BelongsTo
+    {
+        return $this->belongsTo(TipoDeServicio::class);
+    }
 
     protected function casts(): array
     {
@@ -103,8 +132,17 @@ class Service extends Model
 
     public function codigoDetraccion(): ?string
     {
+        // Revisado como no sujeto: nunca se deduce un código por su nombre o categoría.
+        if ($this->estado_detraccion === 'no_sujeto') {
+            return null;
+        }
+
         if ($this->codigo_detraccion !== null) {
             return $this->codigo_detraccion;
+        }
+
+        if ($this->estado_detraccion !== null) {
+            return null;
         }
 
         if (preg_match('/recarga.*(?:mantenimiento|reparaci)|(?:mantenimiento|reparaci).*recarga/iu', $this->nombre) === 1) {
@@ -155,8 +193,7 @@ class Service extends Model
 
     public function incompatibilidadConEquipo(Equipment $equipment): ?string
     {
-        $agenteServicio = EquipmentType::tryFrom((string) $this->agente)
-            ?? EquipmentType::fromDescription($this->nombre);
+        $agenteServicio = EquipmentType::deAgente($this->agente, $this->nombre);
         $agenteEquipo = EquipmentType::fromDescription($equipment->tipo_agente);
 
         if ($agenteServicio !== EquipmentType::Otro && $agenteEquipo !== EquipmentType::Otro && $agenteServicio !== $agenteEquipo) {
@@ -171,5 +208,11 @@ class Service extends Model
         }
 
         return null;
+    }
+
+    /** Código de producto SUNAT (catálogo 25) que va en el XML, si aplica. */
+    public function codigoSunat(): ?string
+    {
+        return $this->tipoDeServicio?->codigo_sunat;
     }
 }

@@ -62,7 +62,7 @@ type Props = {
     currentTeam?: Team | null;
     instalaciones: PaginatedData<ServiceOrder>;
     currentTab: 'todos' | 'pendientes' | 'en_proceso' | 'finalizadas';
-    search?: string;
+    search?: string | null;
     stats: {
         total: number;
         pendientes: number;
@@ -127,7 +127,7 @@ export default function InstalacionesIndex({
     stats,
 }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
-    const [searchTerm, setSearchTerm] = useState(search);
+    const [searchTerm, setSearchTerm] = useState(search ?? '');
 
     const aplicarBusqueda = () => {
         router.get(
@@ -166,7 +166,7 @@ export default function InstalacionesIndex({
             <div className="mb-4 grid grid-cols-4 gap-2">
                 <button
                     onClick={() => handleTabChange('todos')}
-                    className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    className={`rounded-3xl border p-2.5 text-left transition-all ${
                         currentTab === 'todos'
                             ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
@@ -179,7 +179,7 @@ export default function InstalacionesIndex({
                 </button>
                 <button
                     onClick={() => handleTabChange('pendientes')}
-                    className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    className={`rounded-3xl border p-2.5 text-left transition-all ${
                         currentTab === 'pendientes'
                             ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
@@ -194,7 +194,7 @@ export default function InstalacionesIndex({
                 </button>
                 <button
                     onClick={() => handleTabChange('en_proceso')}
-                    className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    className={`rounded-3xl border p-2.5 text-left transition-all ${
                         currentTab === 'en_proceso'
                             ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
@@ -209,7 +209,7 @@ export default function InstalacionesIndex({
                 </button>
                 <button
                     onClick={() => handleTabChange('finalizadas')}
-                    className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    className={`rounded-3xl border p-2.5 text-left transition-all ${
                         currentTab === 'finalizadas'
                             ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
@@ -286,7 +286,7 @@ export default function InstalacionesIndex({
                                     current_team: teamSlug,
                                     service_order: order.id,
                                 })}
-                                className="border-border bg-card hover:border-border block rounded-2xl border p-4 shadow-xs transition-all active:scale-[0.99]"
+                                className="border-border bg-card hover:border-border block rounded-3xl border p-4 shadow-xs transition-all active:scale-[0.99]"
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div>
@@ -335,7 +335,12 @@ export default function InstalacionesIndex({
                                     </div>
                                     <div className="text-foreground flex items-center gap-1 text-xs font-bold">
                                         <span>
-                                            {order.estado === 'cerrado'
+                                            {[
+                                                'listo_certificado',
+                                                'listo_entrega',
+                                                'entregado',
+                                                'cerrado',
+                                            ].includes(order.estado)
                                                 ? 'Ver instalación'
                                                 : 'Registrar instalación'}
                                         </span>

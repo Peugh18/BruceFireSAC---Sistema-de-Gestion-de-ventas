@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\TecnicoCampo;
 
+use App\Actions\Certificates\EmitirCertificadoDeServicio;
+use App\Actions\Certificates\IssueCertificate;
 use App\Actions\Tecnico\GuardarEvidencia;
+use App\Actions\TecnicoCampo\EquipoDeLaOrden;
 use App\Actions\TecnicoCampo\RegisterInstallation;
 use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
@@ -10,7 +13,9 @@ use App\Models\CertificateType;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Tecnico\CertificadosDeCampo;
 use App\Services\Tecnico\ConversacionDeLaOrden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -28,14 +33,19 @@ class InstallationController extends Controller
     public function index(Request $request, Team $current_team): Response
     {
         $tab = $request->query('tab', 'todos');
-        $search = $request->query('q');
+        $search = trim((string) $request->query('q', ''));
+
+        $servicioInstalable = fn (Builder $service) => $service
+            ->where('nombre', 'not like', '%mantenim%')
+            ->where(fn (Builder $servicio) => $servicio->where('nombre', 'like', '%instalac%')->orWhere('nombre', 'like', '%pozo%')
+                ->orWhereHas('certificateType', fn (Builder $tipo) => $tipo->whereNotIn('codigo', EmitirCertificadoDeServicio::TIPOS_DE_EXTINTORES)->whereNotNull('columnas')));
 
         $query = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
             ->where('estado', '!=', 'anulada')
             ->with(['client', 'sede', 'equipments'])
             ->where('departamento_tecnico', 'campo')
-            ->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%instalac%'))
+            ->where(fn (Builder $orden) => $orden->whereHas('service', $servicioInstalable)->orWhereHas('lines.service', $servicioInstalable))
             ->latest('id');
 
         $baseStatsQuery = clone $query;
@@ -93,6 +103,7 @@ class InstallationController extends Controller
             ->get();
 
         $certificateTypes = CertificateType::query()
+            ->whereIn('codigo', IssueCertificate::TIPOS_DE_EXTINTOR)
             ->orderBy('nombre')
             ->get(['id', 'codigo', 'nombre']);
 
@@ -109,6 +120,7 @@ class InstallationController extends Controller
             'evidencias' => $serviceOrder->evidencias()->whereIn('etapa', ['antes', 'despues'])->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($serviceOrder),
             'certificateTypes' => $certificateTypes,
+            'formulariosCertificado' => app(CertificadosDeCampo::class)->formularios($serviceOrder),
         ]);
     }
 
@@ -122,6 +134,7 @@ class InstallationController extends Controller
         RegisterInstallation $registerInstallation
     ): RedirectResponse {
         $validated = $request->validate([
+            ...CertificadosDeCampo::reglas(),
             'area' => ['required', 'string', 'min:3', 'max:150', 'regex:/\p{L}{2}/u'],
             'ubicacion_instalada' => ['required', 'string', 'min:3', 'max:200', 'regex:/\p{L}{2}/u'],
             'pruebas' => ['nullable', 'string', 'max:500'],
@@ -131,9 +144,9 @@ class InstallationController extends Controller
             'conformidad_nombre' => ['required', 'string', 'min:3', 'max:150', 'regex:/\p{L}{2}/u'],
             'conformidad_aceptada' => ['required', 'accepted'],
             'emitir_certificado' => ['nullable', 'boolean'],
-            'tipo_certificado_codigo' => ['nullable', 'string', 'max:50'],
+            'tipo_certificado_codigo' => ['nullable', Rule::in(IssueCertificate::TIPOS_DE_EXTINTOR)],
             'firma' => ['required', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
-            'equipos' => ['required', 'array', 'min:1'],
+            'equipos' => [app(CertificadosDeCampo::class)->tipos($serviceOrder)->isEmpty() ? 'required' : 'sometimes', 'array'],
             'equipos.*.equipment_id' => ['nullable', 'integer', 'exists:equipment,id'],
             'equipos.*.numero_serie' => ['nullable', 'string', 'max:50'],
             'equipos.*.tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
@@ -152,8 +165,13 @@ class InstallationController extends Controller
             'ubicacion_instalada.min' => 'Describe dónde quedó instalado, por ejemplo «Pared norte».',
         ]);
 
+        $validated['certificados_servicio'] = app(CertificadosDeCampo::class)->validar($serviceOrder, $validated['certificados_servicio'] ?? []);
+        if (empty($validated['equipos']) && $validated['certificados_servicio'] === []) {
+            throw ValidationException::withMessages(['equipos' => 'Agrega al menos un extintor.']);
+        }
+
         // T4: cada unidad vendida se escanea; no se instala "a ojo".
-        $escaneados = array_map(fn (array $linea) => (int) ($linea['equipment_id'] ?? 0), $validated['equipos']);
+        $escaneados = array_map(fn (array $linea) => (int) ($linea['equipment_id'] ?? 0), $validated['equipos'] ?? []);
         $faltantes = $this->unidadesVendidas($serviceOrder)
             ->reject(fn (Equipment $unidad) => in_array($unidad->id, $escaneados, true))
             ->pluck('numero_serie');
@@ -170,6 +188,9 @@ class InstallationController extends Controller
 
         // La firma se valida junto con el registro: si está vacía no queda la instalación a medias.
         DB::transaction(function () use ($serviceOrder, $request, $registerInstallation, $validated): void {
+            $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            abort_unless($serviceOrder->atendiblePor($request->user()), 404);
+            EquipoDeLaOrden::asegurarAbierta($serviceOrder);
             $serviceOrder->tomarSiLibre($request->user());
             $registerInstallation->execute($serviceOrder, $request->user(), $validated);
             app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'instalacion', $request->user());

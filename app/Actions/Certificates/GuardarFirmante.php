@@ -29,6 +29,7 @@ class GuardarFirmante
         return DB::transaction(function () use ($signer, $datos, $firmaNueva, $selloNuevo, $userId) {
             $signer ??= new Signer(['activo' => true]);
             $antes = $signer->exists ? $signer->only(['nombre', 'cargo', 'cip', 'activo', 'firma_path', 'sello_path']) : null;
+            $tiposAnteriores = $signer->exists ? $signer->certificateTypes()->pluck('certificate_types.id')->all() : [];
 
             $signer->fill([
                 'nombre' => trim($datos['nombre']),
@@ -41,12 +42,13 @@ class GuardarFirmante
             $signer->sello_path = $this->reemplazar($signer->sello_path, $selloNuevo, $datos['quitar_sello'] ?? false);
             $signer->save();
 
-            if ($firmaNueva) {
-                $this->compartirFirma($signer);
-            }
-
             if (array_key_exists('tipos', $datos)) {
                 $this->sincronizarTipos($signer, $datos['tipos'] ?? []);
+            }
+
+            if ($antes !== null && $antes !== $signer->only(['nombre', 'cargo', 'cip', 'activo', 'firma_path', 'sello_path'])) {
+                $siguen = $signer->certificateTypes()->whereIn('certificate_types.id', $tiposAnteriores)->pluck('certificate_types.id');
+                CertificateType::query()->whereIn('id', $siguen)->increment('version');
             }
 
             AuditLogger::log(
@@ -69,24 +71,6 @@ class GuardarFirmante
         }
 
         return $nueva ?? ($quitar ? null : $actual);
-    }
-
-    /**
-     * La misma persona puede firmar con dos cargos (por ejemplo administrador
-     * e instructor): si el otro registro aún no tiene firma, usa esta.
-     */
-    protected function compartirFirma(Signer $signer): void
-    {
-        Signer::query()
-            ->whereKeyNot($signer->id)
-            ->where('nombre', $signer->nombre)
-            ->whereNull('firma_path')
-            ->get()
-            ->each(function (Signer $otro) use ($signer) {
-                $copia = preg_replace('/\.png$/', '', $signer->firma_path).'-'.$otro->id.'.png';
-                Storage::disk('local')->copy($signer->firma_path, $copia);
-                $otro->update(['firma_path' => $copia]);
-            });
     }
 
     /**

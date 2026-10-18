@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Certificates\EmitirCertificadoDeServicio;
+use App\Actions\Certificates\IssueCertificate;
 use App\Models\CertificateType;
 use App\Models\Client;
 use App\Models\Sale;
@@ -17,6 +18,13 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->seed(CertificateTypeSeeder::class);
     $this->luces = CertificateType::where('codigo', 'luces_emergencia')->firstOrFail();
+});
+
+test('un cliente de recojo con documento pendiente no puede emitir certificados', function () {
+    $cliente = Client::factory()->create(['numero_documento' => '']);
+    expect(fn () => app(IssueCertificate::class)->handle($this->luces, $cliente, []))
+        ->toThrow(ValidationException::class, 'Completa el DNI/RUC del cliente antes de emitir el certificado.');
+    expect($cliente->certificates()->count())->toBe(0);
 });
 
 if (! function_exists('vendedorUser')) {

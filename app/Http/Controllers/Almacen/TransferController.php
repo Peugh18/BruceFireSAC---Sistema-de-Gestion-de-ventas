@@ -31,9 +31,9 @@ class TransferController extends Controller
                 ? Sede::query()->whereIn('tipo', ['almacen', 'mixta'])->where('activo', true)->whereKeyNot($sourceSede->id)->orderBy('nombre')->get(['id', 'nombre'])
                 : collect(),
             'enTransito' => InventoryTransfer::query()
-                ->whereIn('estado', [InventoryTransfer::PENDIENTE_GUIA, InventoryTransfer::EN_TRANSITO])
+                ->whereIn('estado', [InventoryTransfer::PENDIENTE_DESPACHO, InventoryTransfer::EN_TRANSITO])
                 ->when($request->user()->almacenRestringidoId(), fn ($query, int $almacen) => $query->where(fn ($q) => $q->where('origen_sede_id', $almacen)->orWhere('destino_sede_id', $almacen)))
-                ->with('origen:id,nombre', 'destino:id,nombre', 'guia:dispatch_guides.id,dispatch_guides.inventory_transfer_id,dispatch_guides.estado_sunat,dispatch_guides.cdr_path', 'items')
+                ->with('origen:id,nombre', 'destino:id,nombre', 'items')
                 ->latest('id')
                 ->get()
                 ->map(fn (InventoryTransfer $t) => [
@@ -42,11 +42,8 @@ class TransferController extends Controller
                     'destino' => $t->destino->nombre,
                     'bienes' => (int) $t->items->sum('cantidad'),
                     'estado' => $t->estado,
-                    'puede_despachar' => $t->estado === InventoryTransfer::PENDIENTE_GUIA && ($request->user()->almacenRestringidoId() ?? $t->origen_sede_id) === $t->origen_sede_id,
+                    'puede_despachar' => $t->estado === InventoryTransfer::PENDIENTE_DESPACHO && ($request->user()->almacenRestringidoId() ?? $t->origen_sede_id) === $t->origen_sede_id,
                     'puede_confirmar' => $t->estaEnTransito() && ($request->user()->almacenRestringidoId() ?? $t->destino_sede_id) === $t->destino_sede_id,
-                    'guia_aceptada' => $t->guia?->estaListaParaTrasladar() === true,
-                    'puede_emitir_guia' => $t->estado === InventoryTransfer::PENDIENTE_GUIA && ($t->guia === null || $t->guia->estado_sunat === 'rechazada') && ($request->user()->almacenRestringidoId() ?? $t->origen_sede_id) === $t->origen_sede_id,
-                    'tiene_guia' => $t->guia !== null,
                 ]),
             'bulkProducts' => Product::query()->where('activo', true)->where('serializado', false)->orderBy('nombre')->get(['id', 'codigo', 'nombre']),
         ]);
@@ -65,7 +62,7 @@ class TransferController extends Controller
             'observation' => $request->filled('observation') ? $request->string('observation')->toString() : null,
         ], fn ($valor) => $valor !== null), $request->user());
 
-        return redirect()->route('guias.create', ['current_team' => $current_team, 'origen' => 'traslado', 'id' => $traslado->id])->with('success', 'Traslado preparado sin mover stock. Emite y envía la GRE; despacha cuando SUNAT la acepte con CDR.')
+        return redirect()->route('almacen.traslados.index', ['current_team' => $current_team])->with('success', 'Traslado preparado sin mover stock. Despáchalo cuando salga del almacén.')
             ->with('traslado_id', $traslado->id);
     }
 
@@ -73,7 +70,7 @@ class TransferController extends Controller
     {
         $transfer->despachar($traslado, $request->user());
 
-        return back()->with('success', 'Despacho registrado con GRE aceptada: el stock queda en tránsito.');
+        return back()->with('success', 'Despacho registrado: el stock queda en tránsito.');
     }
 
     public function confirm(Team $current_team, Request $request, InventoryTransfer $traslado, TransferInventory $transfer): RedirectResponse

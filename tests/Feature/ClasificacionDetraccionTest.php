@@ -17,7 +17,7 @@ function facturaClasificada(string $codigo, float $total = 1180): Sale
 test('factura usa la clasificacion especifica del servicio y no el codigo global', function (string $codigo) {
     config(['billing.detraccion.codigo_bien' => '020']);
     $resultado = app(DetraccionCalculator::class)->paraVenta(facturaClasificada($codigo));
-    expect($resultado)->toBe(['aplica' => true, 'monto' => 141.6, 'codigo_bien' => $codigo]);
+    expect($resultado)->toBe(['aplica' => true, 'monto' => 141.6, 'codigo_bien' => $codigo, 'porcentaje' => 12.0]);
 })->with(['022', '020', '037']);
 
 test('solo supera setecientos y las boletas quedan exceptuadas', function () {

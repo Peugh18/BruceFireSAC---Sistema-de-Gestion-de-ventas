@@ -79,11 +79,13 @@ class ReceptionController extends Controller
                 'fecha_desde' => $fechaDesde ?: null,
                 'fecha_hasta' => $fechaHasta ?: null,
             ],
+            // Los indicadores con el mismo alcance que la tabla: el almacén propio.
             'kpis' => [
-                'total_recepciones' => Reception::count(),
-                'recepciones_hoy' => Reception::whereDate('fecha', today())->count(),
+                'total_recepciones' => Reception::query()->when($almacenId, fn ($q, $id) => $q->where('sede_almacen_id', $id))->count(),
+                'recepciones_hoy' => Reception::query()->when($almacenId, fn ($q, $id) => $q->where('sede_almacen_id', $id))->whereDate('fecha', today())->count(),
                 'unidades_recibidas_mes' => (int) \DB::table('reception_items')
                     ->join('receptions', 'reception_items.reception_id', '=', 'receptions.id')
+                    ->when($almacenId, fn ($q, $id) => $q->where('receptions.sede_almacen_id', $id))
                     ->whereBetween('receptions.fecha', [now()->startOfMonth(), now()->endOfMonth()])
                     ->sum('reception_items.cantidad_conforme'),
             ],

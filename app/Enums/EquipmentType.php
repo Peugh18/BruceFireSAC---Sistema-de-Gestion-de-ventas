@@ -70,6 +70,26 @@ enum EquipmentType: string
         return $agente !== '' && (Agente::tipoBaseDe($agente) !== null || in_array($agente, self::etiquetas(), true) || self::fromDescription($agente) !== self::Otro);
     }
 
+    /**
+     * Tipo de un agente guardado en un producto o servicio: el nombre de la
+     * lista administrable o un valor antiguo del enum ("pqs"). Sin agente,
+     * se deduce del respaldo (por ejemplo, el nombre del servicio).
+     */
+    public static function deAgente(?string $agente, ?string $respaldo = null): self
+    {
+        $agente = trim((string) $agente);
+
+        return self::tryFrom($agente) ?? self::fromDescription($agente !== '' ? $agente : $respaldo);
+    }
+
+    /** Nombre legible del agente guardado: el de la lista, o la etiqueta de un valor antiguo. */
+    public static function nombreDe(?string $agente): ?string
+    {
+        $agente = trim((string) $agente);
+
+        return $agente === '' ? null : (self::tryFrom($agente)?->etiqueta() ?? $agente);
+    }
+
     public static function fromDescription(?string $description): self
     {
         $registrado = Agente::tipoBaseDe($description);

@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Billing;
 
+use App\Models\TransportVehicle;
+use App\Rules\LicenciaPeru;
+use App\Rules\PlacaPeru;
 use App\Support\DatosPeru;
 use App\Support\Ruc;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -13,7 +16,7 @@ class StoreDispatchGuideRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('guias_remision.create') ?? false;
+        return $this->user()?->hasRole('Vendedor') && $this->user()->can('guias_remision.create');
     }
 
     protected function prepareForValidation(): void
@@ -21,6 +24,9 @@ class StoreDispatchGuideRequest extends FormRequest
         $this->merge([
             'destinatario_num_doc' => preg_replace('/[\s-]/', '', (string) $this->input('destinatario_num_doc')),
             'transportista_ruc' => DatosPeru::digitos($this->input('transportista_ruc')),
+            'nuevo_vehiculo_placa' => mb_strtoupper(preg_replace('/[\s-]+/', '', (string) $this->input('nuevo_vehiculo_placa')) ?? ''),
+            'nuevo_conductor_dni' => DatosPeru::digitos($this->input('nuevo_conductor_dni')),
+            'nuevo_conductor_licencia' => DatosPeru::licencia($this->input('nuevo_conductor_licencia')),
         ]);
 
         // Lo que quedó escrito de la otra modalidad se descarta: no debe bloquear el envío.
@@ -37,10 +43,10 @@ class StoreDispatchGuideRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sale_id' => ['nullable', 'integer', 'exists:sales,id'],
-            'service_order_id' => ['nullable', 'integer', 'exists:service_orders,id'],
-            'inventory_transfer_id' => ['nullable', 'integer', 'exists:inventory_transfers,id'],
-            'motivo' => ['required', Rule::in(['01', '04', '13'])],
+            'sale_id' => ['required', 'integer', 'exists:sales,id'],
+            'service_order_id' => ['prohibited'],
+            'inventory_transfer_id' => ['prohibited'],
+            'motivo' => ['required', Rule::in(['01'])],
             'motivo_descripcion' => ['nullable', 'required_if:motivo,13', 'string', 'max:250'],
             'modalidad' => ['required', Rule::in(['01', '02'])],
             'fecha_traslado' => ['required', 'date', 'after_or_equal:today'],
@@ -54,8 +60,14 @@ class StoreDispatchGuideRequest extends FormRequest
             'llegada_direccion' => ['required', 'string', 'max:255'],
             'llegada_cod_establecimiento' => ['nullable', 'string', 'regex:/^\d{4}$/'],
             'peso_bruto' => ['required', 'numeric', 'gt:0', 'max:9999999'],
-            'transport_vehicle_id' => ['nullable', 'required_if:modalidad,02', Rule::exists('transport_vehicles', 'id')->where('activo', true)],
-            'driver_id' => ['nullable', 'required_if:modalidad,02', Rule::exists('drivers', 'id')->where('activo', true)],
+            'transport_vehicle_id' => ['nullable', Rule::requiredIf(fn () => $this->input('modalidad') === '02' && ! $this->filled('nuevo_vehiculo_placa')), Rule::exists('transport_vehicles', 'id')->where('activo', true)],
+            'driver_id' => ['nullable', Rule::requiredIf(fn () => $this->input('modalidad') === '02' && ! $this->filled('nuevo_conductor_dni')), Rule::exists('drivers', 'id')->where('activo', true)],
+            'nuevo_vehiculo_placa' => ['exclude_unless:modalidad,02', 'nullable', new PlacaPeru, 'unique:transport_vehicles,placa'],
+            'nuevo_vehiculo_categoria' => ['exclude_unless:modalidad,02', 'required_with:nuevo_vehiculo_placa', 'nullable', Rule::in(array_keys(TransportVehicle::CATEGORIAS))],
+            'nuevo_conductor_dni' => ['exclude_unless:modalidad,02', 'nullable', 'digits:8', 'unique:drivers,dni'],
+            'nuevo_conductor_nombres' => ['exclude_unless:modalidad,02', 'required_with:nuevo_conductor_dni', 'nullable', 'string', 'max:255'],
+            'nuevo_conductor_apellidos' => ['exclude_unless:modalidad,02', 'required_with:nuevo_conductor_dni', 'nullable', 'string', 'max:255'],
+            'nuevo_conductor_licencia' => ['exclude_unless:modalidad,02', 'required_with:nuevo_conductor_dni', 'nullable', new LicenciaPeru],
             'transportista_ruc' => ['nullable', 'required_if:modalidad,01', 'digits:11'],
             'transportista_razon' => ['nullable', 'required_if:modalidad,01', 'string', 'max:255'],
             'doc_relacionado_tipo' => ['nullable', Rule::in(['01', '03'])],
@@ -103,6 +115,9 @@ class StoreDispatchGuideRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'sale_id.required' => 'Selecciona una venta con boleta o factura para crear la guía.',
+            'inventory_transfer_id.prohibited' => 'Las guías se emiten solo para ventas a clientes.',
+            'service_order_id.prohibited' => 'Crea la guía desde la venta con boleta o factura.',
             'motivo_descripcion.required_if' => 'Describe el motivo del traslado.',
             'transport_vehicle_id.required_if' => 'El transporte privado necesita el vehículo.',
             'driver_id.required_if' => 'El transporte privado necesita el conductor.',

@@ -81,6 +81,15 @@ class QuoteController extends Controller
     public function create(Team $current_team, Request $request): Response
     {
         $quote = null;
+        $ordenOrigen = null;
+
+        if ($request->filled('service_order_id')) {
+            $request->validate(['service_order_id' => ['required', 'integer']]);
+            $ordenOrigen = ServiceOrder::query()->visiblePara($request->user())
+                ->with(['client', 'lines.service', 'service', 'equipments'])
+                ->findOrFail($request->integer('service_order_id'));
+            abort_if($ordenOrigen->quote_id !== null || $ordenOrigen->sale_id !== null || $ordenOrigen->estado === 'anulada', 422, 'Esta orden ya tiene un documento comercial o está anulada.');
+        }
 
         if ($request->filled('renovar')) {
             $quote = Quote::query()
@@ -91,6 +100,16 @@ class QuoteController extends Controller
         }
 
         return Inertia::render('vendedor/cotizaciones/nueva', [
+            'ordenOrigen' => $ordenOrigen ? [
+                'id' => $ordenOrigen->id, 'codigo' => $ordenOrigen->codigo,
+                'tipo_servicio' => $ordenOrigen->resumenServicios(),
+                'client' => $ordenOrigen->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento', 'telefono']),
+                'referencia' => $ordenOrigen->referencia, 'destino' => $ordenOrigen->vehicle_id ? 'vehiculo' : 'local_cliente',
+                'vehicle_id' => $ordenOrigen->vehicle_id, 'observaciones' => $ordenOrigen->observaciones,
+                'items' => $ordenOrigen->lines->isNotEmpty()
+                    ? $ordenOrigen->lines->map(fn ($line) => ['tipo' => 'service', 'service_id' => $line->service_id, 'codigo' => $line->service?->codigo, 'nombre' => $line->service?->nombre, 'cantidad' => (int) $line->cantidad, 'precio_unitario' => (float) $line->service?->precio_venta, 'descuento' => 0])->values()
+                    : ($ordenOrigen->service ? [['tipo' => 'service', 'service_id' => $ordenOrigen->service_id, 'codigo' => $ordenOrigen->service->codigo, 'nombre' => $ordenOrigen->service->nombre, 'cantidad' => max(1, $ordenOrigen->equipments->count()), 'precio_unitario' => (float) $ordenOrigen->service->precio_venta, 'descuento' => 0]] : []),
+            ] : null,
             // Precarga desde el enlace "Nueva cotización" de la ficha del cliente (?client_id=).
             'cliente' => $request->filled('client_id')
                 // El cliente se comparte entre sedes: no hay clients.sede_id que filtrar.
@@ -208,7 +227,32 @@ class QuoteController extends Controller
     public function update(Team $current_team, Quote $quote, StoreQuoteRequest $request, CreateQuote $action): RedirectResponse
     {
         $this->asegurarSede($quote->sede_id);
-        $action->actualizar($quote, $request->safe()->except('items'), $request->safe()->input('items'), $request->user()->id);
+        $items = $request->safe()->input('items');
+        DB::transaction(function () use ($quote, $request, $items, $action): void {
+            // La orden de recojo nace con la cantidad de extintores esperada.
+            $ordenRecojo = $quote->serviceOrders()
+                ->whereHas('events', fn ($evento) => $evento->where('tipo', 'creada')->whereNotNull('payload->cantidad_esperada'))
+                ->where('quote_id', $quote->id)
+                ->lockForUpdate()
+                ->first();
+            $actualizaServicios = $ordenRecojo !== null
+                && $ordenRecojo->lines()->whereNull('quote_item_id')->doesntExist();
+
+            if ($actualizaServicios) {
+                if (! in_array($ordenRecojo->estado, ['pendiente_recepcion', 'recibido_planta'], true)
+                    || $ordenRecojo->checklists()->exists()) {
+                    throw ValidationException::withMessages(['items' => 'La orden ya empezó el trabajo técnico; no se puede cambiar el servicio cotizado.']);
+                }
+
+                $this->validarItemsDeOrden($ordenRecojo, $items, true);
+            }
+
+            $action->actualizar($quote, $request->safe()->except('items'), $items, $request->user()->id);
+
+            if ($actualizaServicios) {
+                $this->crearLineasDesdeCotizacion($ordenRecojo, $quote->fresh(), true);
+            }
+        }, 3);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cotización corregida; historial conservado.']);
 
         return redirect()->route('vendedor.cotizaciones.index', [$current_team]);
@@ -243,7 +287,7 @@ class QuoteController extends Controller
 
     public function store(StoreQuoteRequest $request, CreateQuote $createQuote): RedirectResponse
     {
-        $data = $request->safe()->except('items');
+        $data = $request->safe()->except(['items', 'service_order_id']);
         $items = $request->safe()->input('items');
         foreach ($items as $item) {
             abort_if(! empty($item['deficiency_id']), 422);
@@ -253,13 +297,173 @@ class QuoteController extends Controller
             $data['sede_id'] = $sedeId;
         }
 
-        $quote = $createQuote->handle($data, $items, $request->user()->id);
+        $quote = DB::transaction(function () use ($request, $data, $items, $createQuote): Quote {
+            $orden = $request->filled('service_order_id')
+                ? ServiceOrder::query()->visiblePara($request->user())->lockForUpdate()->findOrFail($request->integer('service_order_id'))
+                : null;
+            if ($orden) {
+                if ($orden->quote_id !== null || $orden->sale_id !== null || $orden->estado === 'anulada') {
+                    throw ValidationException::withMessages(['service_order_id' => 'La orden ya tiene cotización o venta, o está anulada. Abre su documento existente.']);
+                }
+                if ((int) $data['client_id'] !== $orden->client_id) {
+                    throw ValidationException::withMessages(['client_id' => 'Conserva el cliente de la orden; corrige sus datos en el mismo registro.']);
+                }
+                $this->validarItemsDeOrden($orden, $items);
+                $data['sede_id'] = $orden->sede_id;
+                $data['referencia'] = $orden->referencia;
+                $data['vehicle_id'] = $orden->vehicle_id;
+                $data['destino'] = $orden->vehicle_id ? 'vehiculo' : 'local_cliente';
+                $data['observaciones'] = implode("\n", array_unique(array_filter([
+                    $orden->observaciones,
+                    $data['observaciones'] ?? null,
+                ])));
+            }
+            $quote = $createQuote->handle($data, $items, $request->user()->id);
+            if ($orden) {
+                $this->crearLineasDesdeCotizacion($orden, $quote);
+                $orden->update(['quote_id' => $quote->id]);
+                $quote->equipments()->sync($orden->equipments()->pluck('equipment.id')->all());
+                $orden->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'payload' => ['accion' => 'recojo_cotizado', 'quote_id' => $quote->id, 'mensaje' => 'Cotización vinculada al mismo servicio; vendedor responsable asignado.']]);
+            }
+
+            return $quote;
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} creada. Pulsa Enviar cuando se la mandes al cliente."]);
 
         return redirect()->route('vendedor.cotizaciones.index', [
             'current_team' => $request->route('current_team'),
         ]);
+    }
+
+    /**
+     * Los precios de una cotización pueden variar, pero las líneas de un
+     * recojo ya pertenecen a la orden que Campo llevó a Planta. No se deben
+     * omitir, duplicar ni reemplazar al formalizarla comercialmente.
+     *
+     * @param  list<array<string, mixed>>  $items
+     */
+    private function validarItemsDeOrden(ServiceOrder $orden, array $items, bool $redefinirServicios = false): void
+    {
+        $lineas = $orden->lines()->get(['service_id', 'cantidad']);
+
+        if (($lineas->isEmpty() && $orden->service_id === null) || $redefinirServicios) {
+            $servicios = collect($items)
+                ->filter(fn (array $item): bool => ! empty($item['service_id']) && empty($item['product_id']))
+                ->values();
+            $cantidadCotizada = (int) $servicios->sum('cantidad');
+            $cantidadEsperada = $orden->cantidadEquiposEsperada();
+
+            if ($servicios->count() !== count($items) || $cantidadEsperada < 1 || $cantidadCotizada !== $cantidadEsperada) {
+                throw ValidationException::withMessages([
+                    'items' => 'Agrega servicios que cubran la cantidad de extintores registrada en el recojo.',
+                ]);
+            }
+
+            $catalogo = Service::query()
+                ->whereIn('id', $servicios->pluck('service_id')->unique())
+                ->get()
+                ->keyBy('id');
+            $cupos = $servicios->map(fn (array $item): array => [
+                'service' => $catalogo->get((int) $item['service_id']),
+                'cantidad' => (int) $item['cantidad'],
+                'asignados' => 0,
+            ])->all();
+
+            foreach ($orden->equipments()->get() as $equipment) {
+                $asignado = false;
+                foreach ($cupos as &$cupo) {
+                    if ($cupo['service'] !== null
+                        && $cupo['asignados'] < $cupo['cantidad']
+                        && $cupo['service']->incompatibilidadConEquipo($equipment) === null) {
+                        $cupo['asignados']++;
+                        $asignado = true;
+                        break;
+                    }
+                }
+                unset($cupo);
+
+                if (! $asignado) {
+                    throw ValidationException::withMessages([
+                        'items' => "No hay un servicio compatible con el extintor {$equipment->numero_serie}.",
+                    ]);
+                }
+            }
+
+            return;
+        }
+
+        $esperados = $lineas
+            ->groupBy('service_id')
+            ->map(fn ($lineas): int => $lineas->sum('cantidad'))
+            ->all();
+
+        if ($esperados === [] && $orden->service_id !== null) {
+            $esperados[$orden->service_id] = max(1, $orden->equipments()->count());
+        }
+
+        $recibidos = collect($items)
+            ->filter(fn (array $item): bool => ! empty($item['service_id']) && empty($item['product_id']))
+            ->groupBy('service_id')
+            ->map(fn ($lineas): int => $lineas->sum('cantidad'))
+            ->all();
+
+        ksort($esperados);
+        ksort($recibidos);
+
+        if (count($recibidos) !== count($items) || $esperados !== $recibidos) {
+            throw ValidationException::withMessages([
+                'items' => 'Conserva los servicios y cantidades registrados en la orden. Solo puedes ajustar los precios y descuentos.',
+            ]);
+        }
+    }
+
+    private function crearLineasDesdeCotizacion(ServiceOrder $orden, Quote $quote, bool $reemplazar = false): void
+    {
+        if (! $reemplazar && ($orden->lines()->exists() || $orden->service_id !== null)) {
+            return;
+        }
+
+        $items = $quote->items()->whereNotNull('service_id')->orderBy('id')->get();
+        $servicioPrincipal = $items->first();
+
+        if ($servicioPrincipal === null) {
+            return;
+        }
+
+        if ($reemplazar) {
+            $orden->lines()->delete();
+        }
+
+        $orden->update(['service_id' => $servicioPrincipal->service_id]);
+        foreach ($items as $item) {
+            $orden->lines()->create([
+                'service_id' => $item->service_id,
+                'cantidad' => (int) $item->cantidad,
+                'quote_item_id' => $item->id,
+            ]);
+        }
+
+        $orden->load('lines.service');
+        $asignados = [];
+        foreach ($orden->equipments()->get() as $equipment) {
+            $line = $orden->lines->first(function ($line) use ($equipment, &$asignados): bool {
+                if (($asignados[$line->id] ?? 0) >= $line->cantidad) {
+                    return false;
+                }
+
+                return $line->service->incompatibilidadConEquipo($equipment) === null;
+            });
+
+            if ($line === null) {
+                continue;
+            }
+
+            $asignados[$line->id] = ($asignados[$line->id] ?? 0) + 1;
+            $orden->equipments()->updateExistingPivot($equipment->id, [
+                'service_order_line_id' => $line->id,
+            ]);
+        }
     }
 
     /**

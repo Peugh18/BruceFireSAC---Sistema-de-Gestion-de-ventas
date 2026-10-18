@@ -23,3 +23,18 @@ test('la ficha de la orden trae sus hallazgos para decidir el adicional ahí mis
             ->where('deficiencias.0.estado', 'esperando_autorizacion')
         );
 });
+
+test('la ficha de la orden muestra el mismo paso que ve el taller y el chat de la orden', function () {
+    $vendedor = vendedorUser();
+    $orden = ServiceOrder::factory()->create(['sede_id' => $vendedor->sede_id, 'estado' => 'esperando_autorizacion']);
+    Deficiency::factory()->create(['service_order_id' => $orden->id, 'estado' => 'esperando_autorizacion']);
+    $orden->events()->create(['tipo' => 'otro', 'payload' => ['accion' => 'mensaje', 'mensaje' => 'Revisa la base', 'origen' => 'planta']]);
+
+    $this->actingAs($vendedor)
+        ->get(route('vendedor.ordenes-servicio.show', ['current_team' => $vendedor->currentTeam, 'service_order' => $orden]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('paso.numero', 2)
+            ->where('conversacion.eventos.0.mensaje', 'Revisa la base')
+            ->where('conversacion.no_leidos', 1)
+        );
+});

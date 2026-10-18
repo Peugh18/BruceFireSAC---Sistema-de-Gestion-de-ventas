@@ -5,8 +5,10 @@ use App\Models\AuditLog;
 use App\Models\Client;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
 beforeEach(function () {
@@ -66,7 +68,86 @@ test('el visor de auditoría filtra por tipo de acción', function () {
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
-        ->where('registros.data', fn ($registros) => collect($registros)->every(fn ($r) => $r['accion'] === 'stock.ajuste'))
+        ->where('registros.data', fn ($registros) => collect($registros)->every(fn ($r) => $r['accion'] === 'Ajuste de inventario registrado'))
+    );
+});
+
+test('el visor muestra el rol registrado y filtra sin reinterpretar los eventos antiguos', function () {
+    $gerente = createGerenteUserForAuditTest();
+
+    AuditLog::factory()->create([
+        'action' => 'orden.entregada',
+        'actor_role' => 'Técnico de Campo',
+    ]);
+    AuditLog::factory()->create([
+        'action' => 'venta.creada',
+        'actor_role' => 'Vendedor',
+    ]);
+    $antiguo = AuditLog::factory()->create([
+        'action' => 'cliente.actualizado',
+        'actor_role' => null,
+    ]);
+
+    $response = $this->actingAs($gerente)
+        ->get(route('gerente.auditoria.index', [
+            'current_team' => $gerente->currentTeam,
+            'rol' => 'Técnico de Campo',
+        ]));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('registros.data.0.accion', 'Entrega confirmada')
+        ->where('registros.data.0.rol', 'Técnico de Campo')
+        ->where('filters.rol', 'Técnico de Campo')
+        ->where('roles', ['Técnico de Campo', 'Vendedor'])
+    );
+
+    $sinRol = $this->actingAs($gerente)
+        ->get(route('gerente.auditoria.index', [
+            'current_team' => $gerente->currentTeam,
+            'rol' => 'sin_rol_registrado',
+        ]));
+
+    $sinRol->assertInertia(fn ($page) => $page
+        ->where('registros.data.0.id', $antiguo->id)
+        ->where('registros.data.0.rol', 'Sin rol registrado')
+    );
+});
+
+test('el logger conserva el rol que tenía el actor al registrar la acción', function () {
+    $tecnico = User::factory()->create();
+    $tecnico->assignRole('TecnicoCampo');
+
+    $this->actingAs($tecnico);
+
+    $registro = AuditLogger::log(action: 'orden.recojo_confirmado', userId: $tecnico->id);
+
+    expect($registro)
+        ->not->toBeNull()
+        ->actor_role->toBe('Técnico de Campo');
+});
+
+test('el visor enlaza una venta a la consulta permitida para gerencia', function () {
+    $gerente = createGerenteUserForAuditTest();
+    $registro = AuditLog::factory()->create([
+        'action' => 'venta.creada',
+        'auditable_type' => Sale::class,
+        'auditable_id' => 123,
+    ]);
+
+    $response = $this->actingAs($gerente)
+        ->get(route('gerente.auditoria.index', ['current_team' => $gerente->currentTeam]));
+
+    $response->assertInertia(fn ($page) => $page
+        ->where('registros.data.0.id', $registro->id)
+        ->where('registros.data.0.accion', 'Venta creada')
+        ->where('registros.data.0.enlace', [
+            'etiqueta' => 'Ver venta',
+            'url' => route('gerente.consulta.venta', [
+                'current_team' => $gerente->currentTeam,
+                'sale' => 123,
+            ]),
+        ])
     );
 });
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TeamRole;
+use App\Models\AuditLog;
 use App\Models\Client;
 use App\Models\Deficiency;
 use App\Models\Equipment;
@@ -36,16 +37,15 @@ test('tecnico planta can view checklist form with tailored elements', function (
     $order->equipments()->attach($equipment->id);
 
     $this->actingAs($this->tecnicoPlanta)
-        ->get(route('tecnico-planta.checklist.create', [
+        ->get(route('tecnico-planta.ordenes.show', [
             'current_team' => $this->team,
             'service_order' => $order,
-            'equipment' => $equipment,
         ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('tecnico-planta/checklist/create')
-            ->where('equipment.numero_serie', 'BF-EQ-000200')
-            ->has('elementos')
+            ->component('tecnico-planta/orden/show')
+            ->where('revision.0.numero_serie', 'BF-EQ-000200')
+            ->where('revision.0.es_co2', true)
         );
 });
 
@@ -78,7 +78,7 @@ test('checklist all conforme advances order to en_proceso', function () {
             'items' => $items,
             'observaciones' => 'Todo en óptimas condiciones',
         ])
-        ->assertRedirect(route('tecnico-planta.ejecucion.show', [
+        ->assertRedirect(route('tecnico-planta.ordenes.show', [
             'current_team' => $this->team,
             'service_order' => $order,
         ]));
@@ -140,16 +140,35 @@ test('checklist with observed element creates deficiency and advances order to e
     // Eventos inmutables de auditoría
     expect(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'deficiencia_detectada')->exists())->toBeTrue()
         ->and(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'notificacion_vendedor')->exists())->toBeTrue();
+
+    expect(AuditLog::query()
+        ->where('action', 'checklist.completado')
+        ->where('auditable_type', $order->getMorphClass())
+        ->where('auditable_id', $order->id)
+        ->where('actor_role', 'Técnico de Planta')
+        ->exists())->toBeTrue()
+        ->and(AuditLog::query()
+            ->where('action', 'deficiencia.detectada')
+            ->where('auditable_type', $deficiency->getMorphClass())
+            ->where('auditable_id', $deficiency->id)
+            ->exists())->toBeTrue();
 });
 
-test('al revisar el último extintor recibido el checklist lleva directo a terminar el trabajo', function () {
+test('la pantalla de la orden abre el paso que falta: revisar y, con todo revisado, el cierre', function () {
     $order = ServiceOrder::factory()->create(['estado' => 'recibido_planta']);
     $equipments = Equipment::factory()->count(2)->create(['client_id' => $order->client_id, 'tipo_agente' => 'PQS ABC']);
     $order->equipments()->attach($equipments->modelKeys(), ['recibido' => true]);
+    $ruta = route('tecnico-planta.ordenes.show', ['current_team' => $this->team, 'service_order' => $order]);
     $guardar = fn (Equipment $equipment) => $this->actingAs($this->tecnicoPlanta)->post(route('tecnico-planta.checklist.store', [
         'current_team' => $this->team, 'service_order' => $order, 'equipment' => $equipment,
     ]), ['items' => ['cilindro' => ['estado' => 'conforme']]]);
 
-    $guardar($equipments[0])->assertRedirect(route('tecnico-planta.recepciones.show', ['current_team' => $this->team, 'service_order' => $order]));
-    $guardar($equipments[1])->assertRedirect(route('tecnico-planta.ejecucion.show', ['current_team' => $this->team, 'service_order' => $order]));
+    $guardar($equipments[0])->assertRedirect($ruta);
+    $this->get($ruta)->assertInertia(fn ($page) => $page
+        ->component('tecnico-planta/orden/show')
+        ->where('paso.clave', 'revisar')
+        ->where('paso.detalle', 'faltan 1 de 2 extintores'));
+
+    $guardar($equipments[1])->assertRedirect($ruta);
+    $this->get($ruta)->assertInertia(fn ($page) => $page->where('paso.clave', 'cierre'));
 });

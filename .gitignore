@@ -45,13 +45,13 @@ yarn-error.log
 /storage/app/ml/*.csv
 *.csv
 !database/data/*.csv
+# Excel oficial de SUNAT (trae macros): se versiona solo el CSV convertido.
+database/data/*.xlsm
 !/storage/app/ml/retention_model.json
 /.codex
 /skills-lock.json
 /cootiz.html
 
 # Apuntes personales de tesis: no pertenecen al proyecto
-/docs/ai/DECISIONES.md
-/docs/ai/PLAN.md
 /docs/ai/PLAN_INSTRUMENTOS_SEMANA8.md
 /docs/ai/PROMPT_AUDITOR.md

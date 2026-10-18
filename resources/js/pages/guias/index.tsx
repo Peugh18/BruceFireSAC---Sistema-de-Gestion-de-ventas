@@ -1,4 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import PestanasSunat from '@/components/pestanas-sunat';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +71,7 @@ export default function GuiasIndex({
         >
             <Head title="Guías de remisión" />
             <div className="mx-auto max-w-5xl space-y-4 p-4">
+                <PestanasSunat actual="guias" />
                 <h1 className="text-xl font-bold">Guías de remisión</h1>
                 <p className="text-muted-foreground text-sm">
                     Crea la guía desde una venta, una orden de recojo o entrega,

@@ -26,7 +26,8 @@ test('vendedor registra un extintor existente y uno nuevo sin duplicarlos en pla
     $order = ServiceOrder::factory()->create(['client_id' => $client->id, 'sede_id' => $seller->sede_id, 'service_id' => Service::factory()->create(['nombre' => 'Servicio general', 'agente' => null, 'capacidad' => null])->id]);
     $existing = Equipment::factory()->create(['client_id' => $client->id, 'numero_serie' => 'BF-EQ-004200']);
 
-    foreach ([['numero_serie' => $existing->numero_serie], ['tipo_agente' => 'PQS ABC', 'capacidad' => '6 kg']] as $payload) {
+    // La orden trae un casillero: el segundo extintor, que no estaba cotizado, entra como adicional.
+    foreach ([['numero_serie' => $existing->numero_serie], ['tipo_agente' => 'PQS ABC', 'capacidad' => '6 kg', 'adicional' => true, 'service_id' => $order->service_id]] as $payload) {
         $this->actingAs($seller)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $seller->currentTeam, 'service_order' => $order]), $payload)->assertRedirect();
     }
     expect($order->equipments()->count())->toBe(2);

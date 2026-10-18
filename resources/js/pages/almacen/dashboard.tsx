@@ -1,3 +1,6 @@
+import GraficosDashboard, {
+    type DatosGraficos,
+} from '@/components/graficos-dashboard';
 import { ProgresoConMarcador } from '@/components/progreso';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
@@ -21,6 +24,7 @@ import recepcionesRutas from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
 import StockRoutes from '@/routes/almacen/stock';
 import AjustesRoutes from '@/routes/almacen/ajustes';
+import TrasladosRoutes from '@/routes/almacen/traslados';
 
 export type SedeStock = {
     sede_id: number;
@@ -64,11 +68,21 @@ export type ProductoBajoMinimo = {
 };
 
 export type AlmacenDashboardProps = {
+    graficos: DatosGraficos;
     stock: StockKpis;
     recepciones_hoy: number;
+    recepciones_de_hoy: ReceptionToday[];
+    traslados_pendientes: number;
     movimientos_recientes: MovimientoReciente[];
     productos_bajo_minimo: ProductoBajoMinimo[];
     lotes_por_vencer: LotePorVencer[];
+};
+
+export type ReceptionToday = {
+    id: number;
+    proveedor: string;
+    documento_referencia: string | null;
+    sede: string | null;
 };
 
 export type LotePorVencer = {
@@ -140,8 +154,11 @@ function getTipoMovimientoBadge(tipo: string): {
 }
 
 export default function AlmacenDashboard({
+    graficos,
     stock,
     recepciones_hoy,
+    recepciones_de_hoy,
+    traslados_pendientes,
     movimientos_recientes,
     productos_bajo_minimo,
     lotes_por_vencer,
@@ -158,6 +175,57 @@ export default function AlmacenDashboard({
             <Head title="Dashboard Almacén" />
 
             <div className="flex flex-col gap-6">
+                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h1 className="text-foreground text-lg font-bold">
+                                Prioridades de hoy
+                            </h1>
+                            <p className="text-muted-foreground text-sm">
+                                Recibe mercadería, atiende alertas de stock y
+                                confirma traslados.
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <Link
+                                href={recepcionesRutas.create.url(teamSlug)}
+                                className="bg-primary text-primary-foreground focus-visible:ring-ring inline-flex min-h-10 items-center rounded-md px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                            >
+                                Recibir hoy ({recepciones_hoy})
+                            </Link>
+                            <Link
+                                href={TrasladosRoutes.index.url(teamSlug)}
+                                className="border-border bg-background text-foreground focus-visible:ring-ring inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                            >
+                                Traslados ({traslados_pendientes})
+                            </Link>
+                        </div>
+                    </div>
+                    {recepciones_de_hoy.length > 0 ? (
+                        <ul className="divide-border mt-4 divide-y border-t text-sm">
+                            {recepciones_de_hoy.map((reception) => (
+                                <li
+                                    key={reception.id}
+                                    className="flex flex-wrap justify-between gap-1 py-2"
+                                >
+                                    <span className="font-medium">
+                                        {reception.proveedor}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        {reception.documento_referencia ??
+                                            'Sin documento'}{' '}
+                                        · {reception.sede ?? 'Almacén'}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-muted-foreground mt-3 text-sm">
+                            Aún no hay recepciones registradas hoy.
+                        </p>
+                    )}
+                </Card>
+                <GraficosDashboard rol="almacen" datos={graficos} />
                 {/* Banner de alerta si hay productos bajo el stock mínimo de almacén */}
                 {productos_bajo_minimo.length > 0 && (
                     <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#B9151A] to-[#E31E24] px-5 py-3.5 text-white shadow-xs">

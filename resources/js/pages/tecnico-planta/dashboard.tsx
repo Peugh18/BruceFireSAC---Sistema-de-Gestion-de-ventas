@@ -1,10 +1,13 @@
-﻿import { Head, Link, router, usePage } from '@inertiajs/react';
+import GraficosDashboard, {
+    type DatosGraficos,
+} from '@/components/graficos-dashboard';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
-    ArrowRight,
-    Calendar,
+    ChevronRight,
     CheckCircle2,
     Clock,
+    MessageSquare,
     PackageCheck,
     Search,
     Wrench,
@@ -13,12 +16,12 @@ import {
 import { useState } from 'react';
 
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
-import { KpiFiltro } from '@/components/kpi-filtro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Empty } from '@/components/ui/empty';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
-import ejecucion from '@/routes/tecnico-planta/ejecucion';
+import { BarraPasos, type PasoTaller } from '@/components/pasos-taller';
+import ordenes from '@/routes/tecnico-planta/ordenes';
 import recepciones from '@/routes/tecnico-planta/recepciones';
 import type { Team } from '@/types';
 import TecnicoPlantaRoutes from '@/routes/tecnico-planta';
@@ -39,6 +42,8 @@ export type OrderItem = {
     deficiencias_count: number;
     requiere_autorizacion_count: number;
     ultimo_evento?: string | null;
+    paso: PasoTaller;
+    no_leidos: number;
 };
 
 export type PaginationLink = {
@@ -48,6 +53,7 @@ export type PaginationLink = {
 };
 
 export type Props = {
+    graficos: DatosGraficos;
     orders: {
         data: OrderItem[];
         links: PaginationLink[];
@@ -59,11 +65,13 @@ export type Props = {
         pendientes_recepcion: number;
         en_taller: number;
         esperando_autorizacion: number;
-        listas: number;
+        atrasadas: number;
     };
     filters: {
         tab: string;
         search: string;
+        fecha: string;
+        hoy: string;
     };
 };
 
@@ -139,13 +147,33 @@ function getPrioridadBadge(prioridad: string) {
         );
     }
     return (
-        <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-1.5 py-0.5 text-xs font-semibold uppercase">
+        <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-1 text-xs font-medium">
             Normal
         </span>
     );
 }
 
+function formatOrderDate(value: string): string {
+    const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!dateOnly) {
+        return value;
+    }
+
+    const date = new Date(
+        Number(dateOnly[1]),
+        Number(dateOnly[2]) - 1,
+        Number(dateOnly[3]),
+    );
+
+    return new Intl.DateTimeFormat('es-PE', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    }).format(date);
+}
+
 export default function TecnicoPlantaDashboard({
+    graficos,
     orders,
     kpis,
     filters,
@@ -159,7 +187,7 @@ export default function TecnicoPlantaDashboard({
     const aplicarBusqueda = () => {
         router.get(
             TecnicoPlantaRoutes.dashboard.url({ current_team: teamSlug }),
-            { tab: currentTab, search: search.trim() },
+            { tab: currentTab, search: search.trim(), fecha: filters.fecha },
             { preserveState: true },
         );
     };
@@ -168,7 +196,7 @@ export default function TecnicoPlantaDashboard({
     const changeTab = (newTab: string) => {
         router.get(
             TecnicoPlantaRoutes.dashboard.url({ current_team: teamSlug }),
-            { tab: newTab, search },
+            { tab: newTab, search, fecha: filters.fecha },
             { preserveState: true },
         );
     };
@@ -177,102 +205,175 @@ export default function TecnicoPlantaDashboard({
         <TecnicoPlantaLayout title="Taller y Planta">
             <Head title="Taller Principal - Planta" />
 
-            <div className="space-y-4">
-                {/* Greeting & Quick Action */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-foreground text-lg font-black tracking-tight">
-                            Cola Operativa de Taller
+            <div className="space-y-4 sm:space-y-5">
+                <GraficosDashboard rol="planta" datos={graficos} />
+                <div className="flex items-center justify-between gap-4 pb-1">
+                    <div className="min-w-0">
+                        <p className="text-primary-strong mb-1 text-xs font-bold tracking-wider uppercase">
+                            Planta
+                        </p>
+                        <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">
+                            Cola de taller
                         </h1>
-                        <p className="text-muted-foreground text-xs">
-                            Órdenes de servicio asignadas al departamento de
-                            planta.
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            Pendientes de hoy y días anteriores. Urgentes
+                            primero.
                         </p>
                     </div>
 
                     <Link
                         href={recepciones.index.url(teamSlug)}
-                        className="bg-primary hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all active:scale-95"
+                        className="focus-visible:ring-ring flex shrink-0 flex-col items-center gap-1.5 rounded-2xl text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
                     >
-                        <PackageCheck className="size-4" />
-                        <span>Recepción</span>
+                        <span className="bg-primary text-primary-foreground flex size-12 items-center justify-center rounded-full shadow-sm sm:size-14">
+                            <PackageCheck
+                                className="size-6"
+                                aria-hidden="true"
+                            />
+                        </span>
+                        Recepción
                     </Link>
                 </div>
 
-                {/* Mobile-First KPI Grid (2x2 on phone) */}
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                    <KpiFiltro
-                        titulo="Pendientes"
-                        valor={kpis.pendientes_recepcion}
-                        detalle="Por recibir"
-                        tono="warning"
-                        icono={<Clock className="size-4" />}
-                        activo={currentTab === 'pendientes'}
-                        onClick={() =>
-                            changeTab(
-                                currentTab === 'pendientes'
-                                    ? 'todas'
-                                    : 'pendientes',
-                            )
-                        }
-                    />
-                    <KpiFiltro
-                        titulo="En taller"
-                        valor={kpis.en_taller}
-                        detalle="En proceso"
-                        tono="primary"
-                        icono={<Wrench className="size-4" />}
-                        activo={currentTab === 'en_taller'}
-                        onClick={() =>
-                            changeTab(
-                                currentTab === 'en_taller'
-                                    ? 'todas'
-                                    : 'en_taller',
-                            )
-                        }
-                    />
-                    <KpiFiltro
-                        titulo="Por autorizar"
-                        valor={kpis.esperando_autorizacion}
-                        detalle="Deficiencias"
-                        tono="destructive"
-                        icono={<AlertTriangle className="size-4" />}
-                        activo={currentTab === 'esperando_autorizacion'}
-                        onClick={() =>
-                            changeTab(
-                                currentTab === 'esperando_autorizacion'
-                                    ? 'todas'
-                                    : 'esperando_autorizacion',
-                            )
-                        }
-                    />
-                    <KpiFiltro
-                        titulo="Listas"
-                        valor={kpis.listas}
-                        detalle="Certificado o entrega"
-                        tono="success"
-                        icono={<CheckCircle2 className="size-4" />}
-                        activo={currentTab === 'por_entregar'}
-                        onClick={() =>
-                            changeTab(
-                                currentTab === 'por_entregar'
-                                    ? 'todas'
-                                    : 'por_entregar',
-                            )
-                        }
-                    />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label
+                        htmlFor="fecha-cola"
+                        className="text-sm font-semibold"
+                    >
+                        {filters.fecha === filters.hoy
+                            ? 'Hoy y atrasadas'
+                            : 'Consultar día'}
+                    </label>
+                    <div className="flex items-center gap-2">
+                        <input
+                            id="fecha-cola"
+                            type="date"
+                            aria-label="Fecha de la cola de trabajo"
+                            value={filters.fecha}
+                            onChange={(event) =>
+                                router.get(
+                                    TecnicoPlantaRoutes.dashboard.url({
+                                        current_team: teamSlug,
+                                    }),
+                                    {
+                                        tab: currentTab,
+                                        search,
+                                        fecha:
+                                            event.target.value || filters.hoy,
+                                    },
+                                    { preserveState: true },
+                                )
+                            }
+                            className="border-input bg-background min-h-11 min-w-0 rounded-xl border px-3 text-base"
+                        />
+                        {filters.fecha !== filters.hoy && (
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    router.get(
+                                        TecnicoPlantaRoutes.dashboard.url({
+                                            current_team: teamSlug,
+                                        }),
+                                        {
+                                            tab: 'todas',
+                                            search,
+                                            fecha: filters.hoy,
+                                        },
+                                        { preserveState: true },
+                                    )
+                                }
+                            >
+                                Hoy
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                <div
+                    className="border-border bg-card grid grid-cols-2 overflow-hidden rounded-3xl border shadow-xs sm:grid-cols-4"
+                    aria-label="Filtrar órdenes por estado"
+                >
+                    {[
+                        {
+                            tab: 'pendientes',
+                            label: 'Pendientes',
+                            value: kpis.pendientes_recepcion,
+                            detail: 'Por recibir',
+                            icon: Clock,
+                            tone: 'bg-amber-500/10 text-warning-strong',
+                        },
+                        {
+                            tab: 'en_taller',
+                            label: 'En taller',
+                            value: kpis.en_taller,
+                            detail: 'En proceso',
+                            icon: Wrench,
+                            tone: 'bg-primary/10 text-primary-strong',
+                        },
+                        {
+                            tab: 'esperando_autorizacion',
+                            label: 'Por autorizar',
+                            value: kpis.esperando_autorizacion,
+                            detail: 'Deficiencias',
+                            icon: AlertTriangle,
+                            tone: 'bg-destructive/10 text-destructive-strong',
+                        },
+                        {
+                            tab: 'atrasadas',
+                            label: 'Atrasadas',
+                            value: kpis.atrasadas,
+                            detail: 'Pendientes anteriores',
+                            icon: Clock,
+                            tone: 'bg-amber-500/10 text-warning-strong',
+                        },
+                    ].map((filter, index) => (
+                        <button
+                            key={filter.tab}
+                            type="button"
+                            role="checkbox"
+                            aria-checked={currentTab === filter.tab}
+                            onClick={() =>
+                                changeTab(
+                                    currentTab === filter.tab
+                                        ? 'todas'
+                                        : filter.tab,
+                                )
+                            }
+                            className={`border-border focus-visible:ring-ring hover:bg-muted/40 flex items-start gap-3 p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset ${index % 2 === 0 ? 'border-r' : ''} ${index < 2 ? 'border-b sm:border-b-0' : ''} ${index === 1 ? 'sm:border-r' : ''} ${currentTab === filter.tab ? 'bg-primary/5 ring-primary/30 ring-2 ring-inset' : ''}`}
+                        >
+                            <span
+                                className={`flex size-10 shrink-0 items-center justify-center rounded-full ${filter.tone}`}
+                            >
+                                <filter.icon
+                                    className="size-5"
+                                    aria-hidden="true"
+                                />
+                            </span>
+                            <span className="flex min-w-0 flex-col gap-0.5">
+                                <span className="text-foreground text-2xl leading-none font-bold tabular-nums">
+                                    {filter.value}
+                                </span>
+                                <span className="text-foreground text-sm font-semibold">
+                                    {filter.label}
+                                </span>
+                                <span className="text-muted-foreground text-xs leading-relaxed">
+                                    {filter.detail}
+                                </span>
+                            </span>
+                        </button>
+                    ))}
                 </div>
 
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="relative">
-                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
+                    <Search className="text-muted-foreground absolute top-1/2 left-4 size-4 -translate-y-1/2" />
                     <Input
                         aria-label="Buscar"
                         type="text"
-                        placeholder="Buscar por código OS o nombre de cliente..."
+                        placeholder="Buscar orden o cliente..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="bg-card h-10 rounded-lg pr-8 pl-9 text-xs"
+                        className="bg-card h-12 rounded-2xl pr-12 pl-11 text-sm shadow-xs"
                     />
                     {search && (
                         <button
@@ -283,10 +384,10 @@ export default function TecnicoPlantaDashboard({
                                     TecnicoPlantaRoutes.dashboard.url({
                                         current_team: teamSlug,
                                     }),
-                                    { tab: currentTab },
+                                    { tab: currentTab, fecha: filters.fecha },
                                 );
                             }}
-                            className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 flex size-11 -translate-y-1/2 items-center justify-center rounded-xl"
                         >
                             <X className="size-4" />
                             <span className="sr-only">Limpiar búsqueda</span>
@@ -320,65 +421,53 @@ export default function TecnicoPlantaDashboard({
                         orders.data.map((order) => (
                             <Link
                                 key={order.id}
-                                href={
-                                    order.estado === 'pendiente_recepcion'
-                                        ? recepciones.show.url([
-                                              teamSlug,
-                                              order.id,
-                                          ])
-                                        : ejecucion.show.url([
-                                              teamSlug,
-                                              order.id,
-                                          ])
-                                }
-                                className="border-border bg-card hover:border-destructive/20/40 block rounded-2xl border p-4 shadow-xs transition-all hover:shadow-sm active:scale-[0.99]"
+                                href={ordenes.show.url([teamSlug, order.id])}
+                                className="border-border bg-card hover:border-primary/30 focus-visible:ring-ring block rounded-3xl border p-4 shadow-xs transition-colors focus-visible:ring-2 focus-visible:outline-none sm:p-5"
                             >
-                                <div className="border-border mb-2.5 flex items-start justify-between gap-2 border-b pb-2.5">
-                                    <div>
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="text-destructive-strong font-mono text-xs font-black">
-                                                {order.codigo}
-                                            </span>
-                                            {getPrioridadBadge(order.prioridad)}
-                                        </div>
-                                        <h3 className="text-foreground mt-0.5 line-clamp-1 text-sm leading-snug font-bold">
-                                            {order.cliente}
-                                        </h3>
-                                    </div>
-
-                                    <div>{getEstadoBadge(order.estado)}</div>
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                                    <span className="text-primary-strong text-xs font-bold">
+                                        {order.codigo}
+                                    </span>
+                                    {getPrioridadBadge(order.prioridad)}
+                                    <span className="text-muted-foreground ml-auto text-xs">
+                                        {formatOrderDate(order.fecha)}
+                                    </span>
                                 </div>
-
-                                <div className="text-muted-foreground grid grid-cols-2 gap-2 text-xs">
-                                    <div className="flex items-center gap-1.5 truncate">
-                                        <Wrench className="size-3.5 shrink-0 text-gray-400" />
-                                        <span className="truncate capitalize">
+                                <h3 className="text-foreground mt-2 line-clamp-2 text-base leading-snug font-bold break-words">
+                                    {order.cliente}
+                                </h3>
+                                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                                    <span className="bg-muted/70 text-muted-foreground inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1.5 text-xs">
+                                        <Wrench
+                                            className="size-3.5 shrink-0"
+                                            aria-hidden="true"
+                                        />
+                                        <span className="break-words capitalize">
                                             {order.tipo_servicio}
                                         </span>
-                                    </div>
-
-                                    <div className="flex items-center justify-end gap-1.5 truncate">
-                                        <Calendar className="size-3.5 shrink-0 text-gray-400" />
-                                        <span>{order.fecha}</span>
-                                    </div>
+                                    </span>
+                                    {getEstadoBadge(order.estado)}
                                 </div>
-
-                                {/* Banner condicional si requiere autorización */}
-                                {order.requiere_autorizacion_count > 0 && (
-                                    <div className="border-destructive/20 bg-destructive/10 text-destructive-strong mt-3 flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs">
-                                        <div className="flex items-center gap-1.5 font-bold">
-                                            <AlertTriangle className="size-3.5 shrink-0" />
-                                            <span>
-                                                {
-                                                    order.requiere_autorizacion_count
-                                                }{' '}
-                                                deficiencia(s) esperando
-                                                autorización
-                                            </span>
-                                        </div>
-                                        <ArrowRight className="size-3" />
-                                    </div>
+                                {order.no_leidos > 0 && (
+                                    <span className="bg-primary/10 text-primary-strong mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
+                                        <MessageSquare
+                                            className="size-3.5"
+                                            aria-hidden="true"
+                                        />
+                                        {order.no_leidos === 1
+                                            ? '1 mensaje nuevo'
+                                            : `${order.no_leidos} mensajes nuevos`}
+                                    </span>
                                 )}
+                                <div className="mt-4 flex items-end gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <BarraPasos paso={order.paso} />
+                                    </div>
+                                    <ChevronRight
+                                        className="text-muted-foreground size-5 shrink-0"
+                                        aria-hidden="true"
+                                    />
+                                </div>
                             </Link>
                         ))
                     )}
@@ -386,11 +475,11 @@ export default function TecnicoPlantaDashboard({
 
                 {/* Pagination */}
                 {orders.links.length > 3 && (
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                         <span className="text-muted-foreground text-xs">
                             {orders.total} órdenes totales
                         </span>
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
                             {orders.links.map((link, i) => (
                                 <Button
                                     key={i}
@@ -402,7 +491,7 @@ export default function TecnicoPlantaDashboard({
                                     onClick={() =>
                                         link.url && router.get(link.url)
                                     }
-                                    className="h-7 px-2.5 text-xs"
+                                    className="min-h-11 min-w-11 px-2.5 text-xs"
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}

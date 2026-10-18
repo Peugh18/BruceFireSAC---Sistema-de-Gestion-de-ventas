@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, CertificateType> $certificateTypes
+ * @property-read CertificateTypeSigner $pivot cuando se carga desde un certificado
  */
 #[Fillable(['nombre', 'cargo', 'cip', 'especialidad', 'firma_path', 'sello_path', 'activo'])]
 class Signer extends Model
@@ -40,10 +41,10 @@ class Signer extends Model
     }
 
     /**
-     * @return BelongsToMany<CertificateType, $this>
+     * @return BelongsToMany<CertificateType, $this, CertificateTypeSigner>
      */
     public function certificateTypes(): BelongsToMany
     {
-        return $this->belongsToMany(CertificateType::class)->withPivot('orden')->withTimestamps();
+        return $this->belongsToMany(CertificateType::class)->using(CertificateTypeSigner::class)->withPivot('orden', 'cargo')->withTimestamps();
     }
 }

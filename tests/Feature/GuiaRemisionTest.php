@@ -8,14 +8,14 @@ use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\DispatchGuide;
 use App\Models\Driver;
-use App\Models\Equipment;
+use App\Models\ElectronicDocument;
 use App\Models\InventoryMovement;
 use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Sede;
-use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\TransportVehicle;
 use App\Models\User;
@@ -27,7 +27,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia;
-use Tests\Support\TransferGuide;
 
 /**
  * Fase H. SUNAT se simula siempre: nunca se llama a la red real.
@@ -94,6 +93,15 @@ function datosGuia(array $extra = []): array
         'items' => [['codigo' => 'EXT-6', 'descripcion' => 'Extintor PQS 6 kg', 'unidad' => 'NIU', 'cantidad' => 2, 'peso_kg' => 12.5]],
         ...$extra,
     ];
+}
+
+function ventaConBienesParaGuia(): Sale
+{
+    $sale = Sale::factory()->create(['estado' => 'confirmada', 'sede_id' => test()->sede->id, 'vendedor_id' => test()->user->id]);
+    ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'sunat_estado' => 'aceptado', 'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 15]);
+    SaleItem::factory()->create(['sale_id' => $sale->id]);
+
+    return $sale;
 }
 
 test('la guía nace con serie T001, tipo 09 y correlativo consecutivo', function () {
@@ -181,7 +189,7 @@ test('al pasar a transporte privado se ignora el RUC del transportista que qued�
     $this->user->update(['current_team_id' => $team->id]);
     $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
 
-    $this->actingAs($this->user)->post(route('guias.store', $team), datosGuia(['transportista_ruc' => '123', 'transportista_razon' => 'Dejado atrás']))
+    $this->actingAs($this->user)->post(route('guias.store', $team), datosGuia(['sale_id' => ventaConBienesParaGuia()->id, 'transportista_ruc' => '123', 'transportista_razon' => 'Dejado atrás']))
         ->assertSessionHasNoErrors();
 
     expect(DispatchGuide::sole()->transportista_ruc)->toBeNull();
@@ -210,7 +218,6 @@ test('el traslado entre sedes queda en tránsito hasta que el destino confirma',
     app(TransferInventory::class)->handle($origen->id, ['destination_sede_id' => $destino->id, 'product_id' => $producto->id, 'quantity' => 4], $almacenero);
 
     foreach (InventoryTransfer::query()->get() as $preparado) {
-        TransferGuide::accepted($preparado, $almacenero);
         app(TransferInventory::class)->despachar($preparado, $almacenero);
     }
     $traslado->refresh();
@@ -257,24 +264,11 @@ test('la guía guarda el cliente de la venta u orden que la sustenta', function 
     $this->assertDatabaseHas('clients', ['id' => $soloGuia->id]);
 });
 
-test('GRE permite equipos técnicos sin producto en recojo y entrega', function () {
+test('GRE rechaza recojos y entregas sin venta vinculada', function () {
     $team = Team::factory()->create();
-    $this->user->update(['current_team_id' => $team->id]);
     $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
-    $orden = ServiceOrder::factory()->create(['sede_id' => $this->sede->id]);
-    $equipo = Equipment::factory()->create([
-        'client_id' => $orden->client_id, 'product_id' => null,
-        'tipo_agente' => 'PQS ABC', 'capacidad' => '6 kg', 'numero_serie' => 'BF-EQ-000009',
-    ]);
-    $orden->equipments()->attach($equipo);
-
     foreach (['recojo', 'entrega'] as $origen) {
-        $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => $origen, 'id' => $orden->id]))
-            ->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('datos.items.0.product_id', null)
-            ->where('datos.items.0.codigo', 'BF-EQ-000009')
-            ->where('datos.items.0.descripcion', 'Extintor PQS ABC 6 kg (serie BF-EQ-000009)')
-            ->where('datos.items.0.peso_kg', 0));
+        $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => $origen, 'id' => 1]))->assertNotFound();
     }
 });
 
@@ -302,39 +296,19 @@ test('GRE desde venta conserva contexto y regreso a la venta autorizada', functi
     $team = Team::factory()->create();
     $this->user->update(['current_team_id' => $team->id]);
     $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
-    $venta = Sale::factory()->create(['sede_id' => $this->sede->id, 'vendedor_id' => $this->user->id]);
+    $venta = ventaConBienesParaGuia();
     $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => 'venta', 'id' => $venta->id]))
         ->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
         ->where('origen.descripcion', 'Venta '.$venta->numero_interno)
         ->where('origen.url', route('vendedor.ventas.show', ['current_team' => $team, 'sale' => $venta])));
 });
 
-test('GRE de campo regresa al recojo o entrega a su cargo', function () {
+test('GRE bloquea al técnico de campo y al gerente', function (string $rol) {
     $team = Team::factory()->create();
-    $this->user->update(['current_team_id' => $team->id]);
     $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
-    $this->user->syncRoles(['TecnicoCampo']);
-    $orden = ServiceOrder::factory()->create(['sede_id' => $this->sede->id, 'tecnico_id' => $this->user->id, 'departamento_tecnico' => 'campo']);
-    foreach (['recojo' => 'recojos', 'entrega' => 'entregas'] as $origen => $ruta) {
-        $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => $origen, 'id' => $orden->id]))
-            ->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('origen.url', route('tecnico-campo.'.$ruta.'.show', ['current_team' => $team, 'service_order' => $orden])));
-    }
-});
-
-test('GRE gerente sin rol operativo recibe regreso a ruta accesible', function () {
-    $team = Team::factory()->create();
-    $this->user->update(['current_team_id' => $team->id]);
-    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
-    $this->user->syncRoles(['Gerente']);
-    $venta = Sale::factory()->create(['sede_id' => $this->sede->id]);
-    $orden = ServiceOrder::factory()->create(['sede_id' => $this->sede->id]);
-    foreach (['venta' => $venta, 'entrega' => $orden] as $origen => $fuente) {
-        $response = $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => $origen, 'id' => $fuente->id]))->assertOk();
-        $regreso = $response->viewData('page')['props']['origen']['url'];
-        $this->get($regreso)->assertOk();
-    }
-});
+    $this->user->syncRoles([$rol]);
+    $this->actingAs($this->user)->get(route('guias.create', ['current_team' => $team, 'origen' => 'venta', 'id' => 1]))->assertForbidden();
+})->with(['TecnicoCampo', 'Gerente']);
 
 test('ficha GRE consulta origen bienes transporte documentos y permisos por estado', function (string $estado) {
     $team = Team::factory()->create();
@@ -402,7 +376,7 @@ test('el aviso al enviar una guía dice lo que realmente pasó', function (array
     $team = Team::factory()->create();
     $this->user->update(['current_team_id' => $team->id]);
     $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
-    $guia = app(CreateDispatchGuide::class)->handle(datosGuia(), $this->user);
+    $guia = app(CreateDispatchGuide::class)->handle(datosGuia(['sale_id' => ventaConBienesParaGuia()->id]), $this->user);
 
     $this->sunat->respuesta = $respuesta;
 

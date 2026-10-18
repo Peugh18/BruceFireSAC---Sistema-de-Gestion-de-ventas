@@ -8,6 +8,9 @@ import mantenimientos from '@/routes/tecnico-campo/mantenimientos';
 import type { Team } from '@/types';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 import { Empty } from '@/components/ui/empty';
+import PaginacionOrdenes, {
+    type PaginasOrdenes,
+} from '@/components/paginacion-ordenes';
 
 type Orden = {
     id: number;
@@ -18,7 +21,7 @@ type Orden = {
 };
 
 type Props = {
-    mantenimientos: { data: Orden[] };
+    mantenimientos: PaginasOrdenes & { data: Orden[] };
     search: string | null;
 };
 
@@ -42,6 +45,18 @@ export default function MantenimientosIndex({
     return (
         <TecnicoCampoLayout title="Mantenimiento en sitio">
             <Head title="Mantenimiento en sitio - Técnico de Campo" />
+
+            <div className="mb-5">
+                <p className="text-primary-strong mb-1 text-xs font-bold tracking-wider uppercase">
+                    Campo
+                </p>
+                <h1 className="text-2xl font-bold tracking-tight">
+                    Mantenimiento en sitio
+                </h1>
+                <p className="text-muted-foreground mt-1 text-sm">
+                    Equipos, revisión y conformidad del cliente.
+                </p>
+            </div>
 
             <form onSubmit={buscar} className="mb-4 flex gap-2">
                 <label htmlFor="buscar-mantenimiento" className="sr-only">
@@ -70,7 +85,7 @@ export default function MantenimientosIndex({
                                     current_team: equipo,
                                     service_order: orden.id,
                                 })}
-                                className="border-border bg-card hover:bg-muted/60 flex min-h-[64px] items-center gap-3 rounded-2xl border p-3.5 shadow-xs transition-colors"
+                                className="border-border bg-card hover:bg-muted/60 flex min-h-[64px] items-center gap-3 rounded-3xl border p-3.5 shadow-xs transition-colors"
                             >
                                 <Wrench className="text-foreground size-5 shrink-0" />
                                 <div className="min-w-0 flex-1">
@@ -92,6 +107,7 @@ export default function MantenimientosIndex({
                     ))}
                 </ul>
             )}
+            <PaginacionOrdenes paginas={lista} />
         </TecnicoCampoLayout>
     );
 }

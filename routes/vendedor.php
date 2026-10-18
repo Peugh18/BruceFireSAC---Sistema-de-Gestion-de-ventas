@@ -16,6 +16,7 @@ use App\Http\Controllers\Vendedor\DashboardController;
 use App\Http\Controllers\Vendedor\DebitNoteController;
 use App\Http\Controllers\Vendedor\DeficiencyAuthorizationController;
 use App\Http\Controllers\Vendedor\DeficiencyController;
+use App\Http\Controllers\Vendedor\FormalizarNotaVentaController;
 use App\Http\Controllers\Vendedor\NotaController;
 use App\Http\Controllers\Vendedor\QuoteController;
 use App\Http\Controllers\Vendedor\RucLookupController;
@@ -85,6 +86,7 @@ Route::prefix('vendedor')
         Route::put('ventas/{sale}', [SaleController::class, 'update'])->middleware('can:sales.create')->name('ventas.update');
         Route::get('ventas/{sale}/nota-venta-pdf', [SaleController::class, 'notaVentaPdf'])->name('ventas.nota-venta-pdf');
         Route::post('ventas/{sale}/confirmar', [SaleController::class, 'confirm'])->middleware('can:sales.create')->name('ventas.confirmar');
+        Route::post('ventas/{sale}/formalizar-nv', FormalizarNotaVentaController::class)->middleware('can:sales.create')->name('ventas.formalizar-nv');
         Route::post('ventas/{sale}/enviar-sunat', [SaleController::class, 'enviarSunat'])->middleware('can:sales.create')->name('ventas.enviar-sunat');
         Route::post('ventas/{sale}/anular', [SaleController::class, 'anular'])->middleware('can:sales.create')->name('ventas.anular');
         Route::post('ventas/{sale}/descartar', [SaleController::class, 'descartar'])->middleware('can:sales.create')->name('ventas.descartar');
@@ -92,6 +94,7 @@ Route::prefix('vendedor')
         Route::post('ventas/{sale}/certificado-servicio/{tipo:codigo}', [ServiceCertificateController::class, 'store'])->middleware('can:certificates.print')->name('ventas.certificado-servicio.store')->withoutScopedBindings();
         Route::post('ventas/{sale}/items/{item}/cambiar-unidad', [SaleController::class, 'cambiarUnidad'])->middleware('can:sales.create')->name('ventas.cambiar-unidad');
         Route::post('ventas/{sale}/detraccion', [ConstanciaDetraccionController::class, 'store'])->middleware('can:collections.register_payment')->name('ventas.detraccion.store');
+        Route::get('ventas/{sale}/detraccion/{payment}/evidencia', [ConstanciaDetraccionController::class, 'evidencia'])->middleware('can:collections.register_payment')->name('ventas.detraccion.evidencia');
         Route::get('ventas/{sale}/certificados', [SaleCertificateController::class, 'create'])->middleware('can:certificates.print')->name('ventas.certificados.create');
         Route::post('ventas/{sale}/certificados', [SaleCertificateController::class, 'store'])->middleware('can:certificates.print')->name('ventas.certificados.store');
 
@@ -105,6 +108,7 @@ Route::prefix('vendedor')
         Route::post('ordenes-servicio/{service_order}/equipos', [ServiceOrderEquipmentController::class, 'store'])->name('ordenes-servicio.equipos.store');
         Route::patch('ordenes-servicio/{service_order}/equipos/reordenar', [ServiceOrderEquipmentController::class, 'reorder'])->name('ordenes-servicio.equipos.reordenar');
         Route::delete('ordenes-servicio/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'destroy'])->name('ordenes-servicio.equipos.destroy');
+        Route::patch('ordenes-servicio/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'update'])->name('ordenes-servicio.equipos.update');
         Route::get('ordenes-servicio/{service_order}/constancia-recepcion', ServiceOrderReceiptController::class)->name('ordenes-servicio.constancia-recepcion');
         Route::get('ordenes-servicio/{service_order}/entrega-mostrador', [CounterDeliveryController::class, 'show'])->name('ordenes-servicio.entrega-mostrador.show');
         Route::post('ordenes-servicio/{service_order}/entrega-mostrador', [CounterDeliveryController::class, 'store'])->name('ordenes-servicio.entrega-mostrador.store');
@@ -125,6 +129,7 @@ Route::prefix('vendedor')
         Route::get('certificados', [CertificateController::class, 'index'])->name('certificados.index');
         Route::get('certificados/{certificate}', [CertificateController::class, 'show'])->name('certificados.show');
         Route::get('certificados/{certificate}/pdf', [CertificateController::class, 'pdf'])->middleware('can:certificates.print')->name('certificados.pdf');
+        Route::patch('certificados/{certificate}/corregir', [CertificateController::class, 'corregir'])->middleware('can:certificates.print')->name('certificados.corregir');
         Route::get('certificados/{certificate}/word', [CertificateController::class, 'word'])->middleware('can:certificates.print')->name('certificados.word');
 
         Route::get('facturacion', [BillingController::class, 'index'])->name('facturacion.index');
@@ -142,6 +147,7 @@ Route::prefix('vendedor')
         Route::get('caja', [CashRegisterController::class, 'show'])->name('caja.index');
         Route::post('caja/abrir', [CashRegisterController::class, 'open'])->middleware('can:cashregister.open')->name('caja.abrir');
         Route::post('caja/{cash_register}/cerrar', [CashRegisterController::class, 'close'])->middleware('can:cashregister.close')->name('caja.cerrar');
+        Route::post('caja/{cash_register}/salidas', [CashRegisterController::class, 'salida'])->middleware('can:cashregister.close')->name('caja.salidas.store');
 
         Route::get('cobranzas', [CollectionController::class, 'index'])->name('cobranzas.index');
         Route::post('cobranzas/cuotas/{installment}/pagar', [CollectionController::class, 'registerPayment'])->middleware('can:collections.register_payment')->name('cobranzas.pagar');

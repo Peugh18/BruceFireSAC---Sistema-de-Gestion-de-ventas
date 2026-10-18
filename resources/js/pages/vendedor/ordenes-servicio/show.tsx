@@ -1,60 +1,47 @@
-import { Pasos, pasosOrdenAtencion } from '@/components/progreso';
-import DeficienciaSuelta from '@/components/deficiencia-suelta';
 import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { toast } from 'sonner';
-import {
-    ArrowLeft,
-    CheckCircle2,
-    Clock,
-    MessageCircle,
-    PencilLine,
-    Send,
-} from 'lucide-react';
-import { useState } from 'react';
-
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
+import ChatFlotante, { marcarLeido } from '@/components/chat-flotante';
+import ConversacionOrden, {
+    type ConversacionProps,
+} from '@/components/conversacion-orden';
+import DeficienciaSuelta from '@/components/deficiencia-suelta';
+import {
+    DeficienciaCard,
+    type DeficiencyItem,
+    useAccionesDeficiencia,
+} from '@/components/deficiencias-vendedor';
+import EquiposDeLaOrden, {
+    type Casilleros,
+} from '@/components/equipos-de-la-orden';
+import { NOMBRES_PASOS, type PasoTaller } from '@/components/pasos-taller';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import comunicacion from '@/routes/vendedor/comunicacion';
-import ordenes from '@/routes/vendedor/ordenes-servicio';
-import VendedorLayout from '@/layouts/vendedor-layout';
-import type { Team } from '@/types';
-import EquiposDeLaOrden, {
-    type Casilleros,
-} from '@/components/equipos-de-la-orden';
-import EntregaMostradorRoutes from '@/routes/vendedor/ordenes-servicio/entrega-mostrador';
 import {
-    DeficienciaCard,
-    type DeficiencyItem,
-    useAccionesDeficiencia,
-} from '@/components/deficiencias-vendedor';
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { NativeSelect } from '@/components/ui/native-select';
+import VendedorLayout from '@/layouts/vendedor-layout';
+import CertificadosRoutes from '@/routes/vendedor/certificados';
+import comunicacion from '@/routes/vendedor/comunicacion';
+import CotizacionesRoutes from '@/routes/vendedor/cotizaciones';
+import ordenes from '@/routes/vendedor/ordenes-servicio';
+import EntregaMostradorRoutes from '@/routes/vendedor/ordenes-servicio/entrega-mostrador';
 import EquiposRoutes from '@/routes/vendedor/ordenes-servicio/equipos';
 import VentasRoutes from '@/routes/vendedor/ventas';
-import CotizacionesRoutes from '@/routes/vendedor/cotizaciones';
-import CertificadosRoutes from '@/routes/vendedor/certificados';
-import { NativeSelect } from '@/components/ui/native-select';
-
-export type ServiceOrderEvent = {
-    id: number;
-    tipo: string;
-    payload?: {
-        mensaje?: string;
-        resultado?: string;
-        [key: string]: unknown;
-    };
-    created_at: string;
-    user?: {
-        name: string;
-    };
-};
+import type { Team } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { ArrowLeft, Check, Download, MoreHorizontal } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export type ServiceOrderDetails = {
     id: number;
@@ -90,15 +77,15 @@ export type ServiceOrderDetails = {
         tipo_agente?: string;
         marca?: string;
     }>;
-    events: ServiceOrderEvent[];
 };
 
 export type Props = {
     serviceOrder: ServiceOrderDetails;
     casilleros: Casilleros;
+    paso: PasoTaller;
+    conversacion: ConversacionProps;
     tecnicos: { id: number; name: string }[];
     tecnicosEntrega: { id: number; name: string }[];
-    services: { id: number; nombre: string }[];
     deficiencias: DeficiencyItem[];
 };
 
@@ -139,39 +126,7 @@ const PRIORIDADES: Record<string, string> = {
     urgente: 'Urgente',
 };
 
-/** Título del evento de la bitácora en palabras simples. */
-function tituloDeEvento(evt: ServiceOrderEvent): string {
-    const accion =
-        typeof evt.payload?.accion === 'string' ? evt.payload.accion : '';
-    const porAccion: Record<string, string> = {
-        tecnico_asignado: 'Técnico asignado',
-        entrega_asignada: 'Entrega asignada a Campo',
-        orden_cerrada: 'Orden cerrada',
-        orden_tomada: 'El técnico tomó la orden',
-        orden_editada: 'Orden editada por ventas',
-        entrega_final_realizada: 'Entregado al cliente',
-        consumo_repuesto_kardex: 'Repuesto instalado',
-        alta_tecnica_rapida: 'Extintor registrado',
-    };
-    const porTipo: Record<string, string> = {
-        creada: 'Orden creada',
-        recibida: 'Recibida en taller',
-        deficiencia_detectada: 'El técnico encontró un problema',
-        autorizacion_pendiente: 'Espera tu autorización',
-        notificacion_vendedor: 'Aviso para ventas',
-        trabajo_completado: 'Trabajo terminado',
-    };
-
-    if (porAccion[accion]) {
-        return porAccion[accion];
-    }
-
-    if (evt.payload?.origen === 'vendedor') {
-        return 'Indicación de ventas';
-    }
-
-    return porTipo[evt.tipo] ?? 'Avance del técnico';
-}
+const LISTOS = ['listo_certificado', 'listo_entrega', 'entregado', 'cerrado'];
 
 function soloFecha(valor: string): string {
     return valor ? valor.slice(0, 10) : '';
@@ -185,17 +140,70 @@ function fechaLegible(valor: string): string {
               weekday: 'long',
               day: 'numeric',
               month: 'long',
-              year: 'numeric',
           })
         : '—';
 }
 
+type Tramo = { nombre: string; estado: 'hecho' | 'actual' | 'pendiente' };
+
+/**
+ * Los pasos del taller (los mismos que ve planta) más la entrega, con lo que
+ * falta ahora y quién lo hace.
+ */
+function avanceDe(
+    orden: ServiceOrderDetails,
+    paso: PasoTaller,
+): { tramos: Tramo[]; ahora: string; quien: string } {
+    const entregada = ['entregado', 'cerrado'].includes(orden.estado);
+    const enEntrega = orden.estado === 'listo_entrega';
+    const actual = entregada ? 7 : enEntrega ? 6 : paso.numero;
+    const tramos = [...NOMBRES_PASOS, 'Entrega'].map((nombre, i) => ({
+        nombre,
+        estado:
+            i + 1 < actual
+                ? ('hecho' as const)
+                : i + 1 === actual
+                  ? ('actual' as const)
+                  : ('pendiente' as const),
+    }));
+    const tecnico =
+        orden.tecnico?.name ??
+        (orden.departamento_tecnico === 'campo'
+            ? 'el técnico de campo'
+            : 'el técnico de planta');
+
+    if (entregada) {
+        return { tramos, ahora: 'Orden entregada al cliente.', quien: '' };
+    }
+
+    if (enEntrega) {
+        return {
+            tramos,
+            ahora: 'Coordina la entrega con el cliente.',
+            quien: 'Tú o el técnico de campo',
+        };
+    }
+
+    return {
+        tramos,
+        ahora: `${NOMBRES_PASOS[paso.numero - 1]}: ${paso.detalle}.`,
+        quien:
+            paso.clave === 'hallazgos'
+                ? 'Tú: registra la respuesta del cliente'
+                : `Lo hace ${tecnico}`,
+    };
+}
+
+const chip =
+    'bg-muted text-foreground inline-flex min-h-11 items-center rounded-full px-2.5 text-xs font-semibold lg:min-h-7 lg:text-[11px]';
+
 export default function ServiceOrderShow({
     serviceOrder,
     casilleros,
+    paso,
+    conversacion,
     tecnicos,
     tecnicosEntrega,
-    services,
     deficiencias,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
@@ -206,82 +214,31 @@ export default function ServiceOrderShow({
             : '');
 
     const acciones = useAccionesDeficiencia(teamSlug);
-
-    const nextSteps: Record<string, { responsable: string; texto: string }> = {
-        pendiente_recepcion: {
-            responsable:
-                serviceOrder.departamento_tecnico === 'campo'
-                    ? 'Técnico de campo'
-                    : 'Recepción de taller',
-            texto:
-                serviceOrder.departamento_tecnico === 'campo'
-                    ? 'Coordinar la visita y revisar los equipos de esta orden.'
-                    : 'Confirmar los equipos que llegaron antes de iniciar su revisión.',
-        },
-        recibido_planta: {
-            responsable: 'Técnico de planta',
-            texto: 'Revisar cada equipo y registrar los hallazgos del checklist.',
-        },
-        en_revision: {
-            responsable: 'Técnico',
-            texto: 'Completar la revisión y comunicar los adicionales que requieran autorización.',
-        },
-        esperando_autorizacion: {
-            responsable: 'Vendedor',
-            texto: 'Revisar los adicionales y registrar la decisión del cliente antes de continuar el trabajo autorizado.',
-        },
-        autorizado: {
-            responsable: 'Técnico',
-            texto: 'Continuar únicamente con el trabajo autorizado y registrar los repuestos utilizados.',
-        },
-        en_proceso: {
-            responsable: 'Técnico',
-            texto: 'Completar el trabajo y registrar su resultado. Revisa los eventos para conocer los pendientes.',
-        },
-        trabajo_terminado: {
-            responsable: 'Técnico / Vendedor',
-            texto: 'Revisar los datos técnicos y los requisitos pendientes para el cierre y el certificado.',
-        },
-        pendiente_datos: {
-            responsable: 'Técnico / Vendedor',
-            texto: 'Completar los datos requeridos del certificado sin inventar fechas ni resultados.',
-        },
-        datos_completos: {
-            responsable: 'Responsable del certificado',
-            texto: 'Revisar los equipos aptos y emitir el certificado cuando se cumplan los requisitos.',
-        },
-        listo_certificado: {
-            responsable: 'Vendedor / Entrega',
-            texto: 'Comprobar el certificado y coordinar la entrega con la conformidad del cliente.',
-        },
-        listo_entrega: {
-            responsable: 'Vendedor / Técnico de campo',
-            texto: 'Coordinar la entrega y registrar el acta o conformidad correspondiente.',
-        },
-        entregado: {
-            responsable: 'Vendedor / Técnico de campo',
-            texto: 'Revisar el acta y la conformidad antes del cierre administrativo.',
-        },
-        cerrado: {
-            responsable: 'Orden cerrada',
-            texto: 'Consulta los documentos y el historial. El cierre técnico no confirma por sí solo que la venta esté pagada.',
-        },
-        anulada: {
-            responsable: 'Orden anulada',
-            texto: 'Consulta el motivo y el historial de la anulación.',
-        },
-    };
-    const nextStep = nextSteps[serviceOrder.estado];
-    const pasosAtencion = pasosOrdenAtencion(
-        serviceOrder.estado,
-        Boolean(serviceOrder.tecnico),
-    );
+    const avance = avanceDe(serviceOrder, paso);
+    const anulada = serviceOrder.estado === 'anulada';
     const editable = !['entregado', 'cerrado', 'anulada'].includes(
         serviceOrder.estado,
+    );
+    const enEspera = deficiencias.filter(
+        (d) => d.estado === 'esperando_autorizacion',
+    );
+    const otrosHallazgos = deficiencias.filter(
+        (d) => d.estado !== 'esperando_autorizacion',
     );
     const [anulando, setAnulando] = useState(false);
     const [motivoAnulacion, setMotivoAnulacion] = useState('');
     const [errorAnulacion, setErrorAnulacion] = useState<string | null>(null);
+
+    // En escritorio el chat está a la vista: abrir la orden lo deja leído.
+    useEffect(() => {
+        if (
+            (conversacion.no_leidos ?? 0) > 0 &&
+            window.matchMedia('(min-width: 1024px)').matches
+        ) {
+            marcarLeido(teamSlug, serviceOrder.id);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [serviceOrder.id]);
 
     const anularOrden = () => {
         router.post(
@@ -301,32 +258,19 @@ export default function ServiceOrderShow({
             },
         );
     };
-    const [editando, setEditando] = useState(false);
     const [tecnicoElegido, setTecnicoElegido] = useState('');
     const entrega = useForm({ tecnico_id: '' });
-    const edicion = useForm({
-        service_id: serviceOrder.service_id
-            ? String(serviceOrder.service_id)
-            : '',
-        fecha: soloFecha(serviceOrder.fecha),
-        prioridad: serviceOrder.prioridad || 'normal',
-        departamento_tecnico: serviceOrder.departamento_tecnico || 'planta',
-        tecnico_id: serviceOrder.tecnico?.id
-            ? String(serviceOrder.tecnico.id)
-            : '',
-        observaciones: serviceOrder.observaciones ?? '',
-    });
-    const nota = useForm({ mensaje: '' });
     const ruta = { current_team: teamSlug, service_order: serviceOrder.id };
 
-    function asignar() {
-        if (!tecnicoElegido) {
+    function asignar(tecnicoId: string) {
+        if (!tecnicoId) {
             return;
         }
 
+        setTecnicoElegido(tecnicoId);
         router.post(
             ordenes.asignarTecnico.url(ruta),
-            { tecnico_id: tecnicoElegido },
+            { tecnico_id: tecnicoId },
             {
                 preserveScroll: true,
                 onSuccess: () => setTecnicoElegido(''),
@@ -339,501 +283,649 @@ export default function ServiceOrderShow({
         );
     }
 
-    function guardarEdicion(event: React.FormEvent) {
-        event.preventDefault();
-        edicion.put(ordenes.update.url(ruta), {
-            onError: (errors) =>
-                toast.error(
-                    Object.values(errors)[0] ??
-                        'No se pudo completar la acción.',
-                ),
-            preserveScroll: true,
-            onSuccess: () => setEditando(false),
-        });
+    /** Cambia un dato de la orden desde la cabecera, sin abrir un formulario. */
+    function cambiarDato(
+        campo: 'fecha' | 'prioridad' | 'departamento_tecnico',
+        valor: string,
+    ) {
+        router.put(
+            ordenes.update.url(ruta),
+            {
+                service_id: serviceOrder.service_id,
+                fecha: soloFecha(serviceOrder.fecha),
+                prioridad: serviceOrder.prioridad || 'normal',
+                departamento_tecnico:
+                    serviceOrder.departamento_tecnico || 'planta',
+                tecnico_id:
+                    campo === 'departamento_tecnico'
+                        ? ''
+                        : (serviceOrder.tecnico?.id ?? ''),
+                observaciones: serviceOrder.observaciones ?? '',
+                [campo]: valor,
+            },
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors)[0] ?? 'No se pudo guardar.',
+                    ),
+            },
+        );
     }
 
-    function enviarNota(event: React.FormEvent) {
-        event.preventDefault();
-        nota.post(comunicacion.nota.url(ruta), {
-            onError: (errors) =>
-                toast.error(
-                    Object.values(errors)[0] ??
-                        'No se pudo completar la acción.',
-                ),
-            preserveScroll: true,
-            onSuccess: () => nota.reset(),
-        });
-    }
+    const dato =
+        'border-input bg-card text-foreground h-9 rounded-lg border px-2 text-xs';
+
+    const puedeRegistrarHallazgo = ![
+        'anulada',
+        'cerrado',
+        'entregado',
+        'listo_certificado',
+        'listo_entrega',
+    ].includes(serviceOrder.estado);
 
     return (
         <VendedorLayout title={`Orden ${serviceOrder.codigo}`}>
             <Head title={`Orden ${serviceOrder.codigo}`} />
 
-            <div className="flex flex-col gap-4">
-                {![
-                    'anulada',
-                    'cerrado',
-                    'entregado',
-                    'listo_certificado',
-                    'listo_entrega',
-                ].includes(serviceOrder.estado) && (
-                    <DeficienciaSuelta
-                        ordenId={serviceOrder.id}
-                        equipos={serviceOrder.equipments.map((item) => ({
-                            id: item.id,
-                            serie: item.numero_serie,
-                        }))}
-                        destino={DeficiencyController.store.url({
-                            current_team: teamSlug,
-                            service_order: serviceOrder.id,
-                        })}
-                    />
-                )}
-                {/* Header Back & Info */}
-                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                    <div className="flex items-center gap-3">
-                        <Button
-                            asChild
-                            variant="outline"
-                            size="icon"
-                            className="border-border bg-card text-foreground/80 size-8 rounded-lg shadow-none"
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+                <aside
+                    aria-label="Chat con el taller"
+                    className="sticky top-0 hidden h-[calc(100dvh-7rem)] min-h-0 min-w-0 flex-col gap-2 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:flex"
+                >
+                    <div className="flex items-center justify-between gap-2 px-1">
+                        <h2 className="text-foreground text-base font-bold">
+                            Chat con el taller
+                        </h2>
+                        <span className="text-muted-foreground text-xs">
+                            Ventas, planta y campo ven lo mismo
+                        </span>
+                    </div>
+                    <div className="min-h-0 flex-1">
+                        <ConversacionOrden
+                            ordenId={serviceOrder.id}
+                            conversacion={conversacion}
+                            nota={serviceOrder.observaciones}
+                            panel
+                        />
+                    </div>
+                </aside>
+                <header className="flex flex-wrap items-center gap-3 lg:col-start-1">
+                    <Button
+                        asChild
+                        variant="outline"
+                        size="icon"
+                        className="border-border bg-card size-11 shrink-0 rounded-xl"
+                    >
+                        <Link
+                            href={ServiceOrderController.index.url(teamSlug)}
+                            aria-label="Volver a órdenes de servicio"
                         >
-                            <Link
-                                href={ServiceOrderController.index.url(
-                                    teamSlug,
-                                )}
-                                aria-label="Volver a órdenes de servicio"
-                            >
-                                <ArrowLeft className="size-4" />
-                            </Link>
-                        </Button>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
-                                    {serviceOrder.codigo}
-                                </h2>
-                                <Badge className="border-border bg-muted text-foreground border">
-                                    {ESTADOS[serviceOrder.estado] ??
-                                        serviceOrder.estado.replace(/_/g, ' ')}
-                                </Badge>
-                            </div>
-                            <p className="text-muted-foreground text-[12px]">
-                                Creada el{' '}
+                            <ArrowLeft className="size-4" />
+                        </Link>
+                    </Button>
+                    <div className="min-w-0 flex-[1_1_260px]">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="text-foreground font-['Oswald',sans-serif] text-[26px] leading-tight font-semibold">
+                                {serviceOrder.codigo}
+                            </h1>
+                            <Badge className="border-border bg-muted text-foreground border">
+                                {ESTADOS[serviceOrder.estado] ??
+                                    serviceOrder.estado.replace(/_/g, ' ')}
+                            </Badge>
+                        </div>
+                        <p className="text-foreground truncate text-sm font-semibold">
+                            {serviceOrder.client?.razon_social ?? 'Sin cliente'}
+                            <span className="text-muted-foreground font-normal">
+                                {[
+                                    serviceOrder.client?.numero_documento &&
+                                        ` · RUC/DNI ${serviceOrder.client.numero_documento}`,
+                                    serviceOrder.client?.telefono &&
+                                        ` · ${serviceOrder.client.telefono}`,
+                                ]
+                                    .filter(Boolean)
+                                    .join('')}
+                            </span>
+                        </p>
+                        <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                            {editable ? (
+                                <input
+                                    type="date"
+                                    aria-label="Fecha programada"
+                                    value={soloFecha(serviceOrder.fecha)}
+                                    onChange={(e) =>
+                                        e.target.value &&
+                                        cambiarDato('fecha', e.target.value)
+                                    }
+                                    className={dato}
+                                />
+                            ) : (
+                                <span className="capitalize">
+                                    {fechaLegible(serviceOrder.fecha)}
+                                </span>
+                            )}
+                            {editable ? (
+                                <NativeSelect
+                                    aria-label="Prioridad"
+                                    value={serviceOrder.prioridad || 'normal'}
+                                    onChange={(e) =>
+                                        cambiarDato('prioridad', e.target.value)
+                                    }
+                                    className={dato}
+                                >
+                                    {Object.entries(PRIORIDADES).map(
+                                        ([valor, texto]) => (
+                                            <option key={valor} value={valor}>
+                                                Prioridad {texto.toLowerCase()}
+                                            </option>
+                                        ),
+                                    )}
+                                </NativeSelect>
+                            ) : (
+                                <span>
+                                    Prioridad{' '}
+                                    {PRIORIDADES[serviceOrder.prioridad] ??
+                                        serviceOrder.prioridad}
+                                </span>
+                            )}
+                            {editable &&
+                            serviceOrder.estado === 'pendiente_recepcion' ? (
+                                <NativeSelect
+                                    aria-label="Área"
+                                    value={
+                                        serviceOrder.departamento_tecnico ||
+                                        'planta'
+                                    }
+                                    onChange={(e) =>
+                                        cambiarDato(
+                                            'departamento_tecnico',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className={dato}
+                                >
+                                    <option value="planta">
+                                        Planta (taller)
+                                    </option>
+                                    <option value="campo">
+                                        Campo (local del cliente)
+                                    </option>
+                                </NativeSelect>
+                            ) : (
+                                <span>
+                                    {serviceOrder.departamento_tecnico ===
+                                    'campo'
+                                        ? 'Campo'
+                                        : 'Planta'}
+                                </span>
+                            )}
+                            <span>
+                                · creada el{' '}
                                 {new Date(
                                     serviceOrder.created_at,
                                 ).toLocaleDateString('es-PE')}
-                            </p>
+                            </span>
                         </div>
                     </div>
-
                     <div className="flex flex-wrap items-center gap-2">
-                        {ANULABLES.includes(serviceOrder.estado) ? (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => {
-                                    setErrorAnulacion(null);
-                                    setAnulando(true);
-                                }}
-                                className="border-destructive/40 text-destructive-strong rounded-lg text-xs font-semibold"
+                        <Button asChild variant="outline" className="h-11">
+                            <a
+                                href={ordenes.constanciaRecepcion.url({
+                                    current_team: teamSlug,
+                                    service_order: serviceOrder.id,
+                                })}
                             >
-                                Anular orden
-                            </Button>
-                        ) : null}
-                        {editable ? (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setEditando(true)}
-                                className="border-border bg-card text-foreground rounded-lg text-xs font-semibold"
-                            >
-                                <PencilLine className="mr-1.5 size-3.5" />
-                                Editar orden
-                            </Button>
-                        ) : null}
-                        {[
-                            'listo_certificado',
-                            'listo_entrega',
-                            'entregado',
-                            'cerrado',
-                        ].includes(serviceOrder.estado) && (
-                            <Button asChild size="sm">
-                                <Link
-                                    href={EntregaMostradorRoutes.show.url({
-                                        current_team: teamSlug,
-                                        service_order: serviceOrder.id,
-                                    })}
-                                >
-                                    Entrega en mostrador
-                                </Link>
-                            </Button>
-                        )}
-                        <Button
-                            asChild
-                            variant="outline"
-                            className="border-border bg-card text-foreground/80 rounded-lg text-xs font-semibold"
-                        >
-                            <Link
-                                href={comunicacion.index.url(
-                                    { current_team: teamSlug },
-                                    { query: { orden: serviceOrder.id } },
-                                )}
-                            >
-                                <MessageCircle className="mr-1.5 size-3.5" />
-                                <span>Ver en Seguimiento de taller</span>
-                            </Link>
+                                Constancia PDF
+                            </a>
                         </Button>
-                    </div>
-                </div>
-
-                <section
-                    aria-labelledby="orden-continuar-titulo"
-                    className="bg-card space-y-4 rounded-xl border p-4"
-                >
-                    <div>
-                        <h3
-                            id="orden-continuar-titulo"
-                            className="font-semibold"
-                        >
-                            Para continuar esta orden
-                        </h3>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                            {nextStep?.texto ??
-                                'Revisa el estado y los eventos de esta orden.'}
-                        </p>
-                        {nextStep && (
-                            <p className="mt-2 text-sm">
-                                <strong>Responsable del siguiente paso:</strong>{' '}
-                                {nextStep.responsable}
-                            </p>
-                        )}
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-lg border p-3">
-                            <p className="text-muted-foreground text-xs">
-                                Cotización vinculada
-                            </p>
-                            {serviceOrder.quote ? (
-                                <a
-                                    className="inline-flex min-h-11 items-center text-sm font-medium underline"
-                                    href={CotizacionesRoutes.pdf.url({
-                                        current_team: teamSlug,
-                                        quote: serviceOrder.quote.id,
-                                    })}
-                                    target="_blank"
-                                    rel="noreferrer"
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    aria-label="Más acciones"
+                                    className="size-11"
                                 >
-                                    {serviceOrder.quote.numero} · Ver PDF
-                                </a>
-                            ) : (
-                                <p className="mt-2 text-sm">
-                                    Sin cotización vinculada
-                                </p>
-                            )}
-                        </div>
-                        <div className="rounded-lg border p-3">
-                            <p className="text-muted-foreground text-xs">
-                                Venta vinculada
-                            </p>
-                            {serviceOrder.sale ? (
-                                <Link
-                                    className="inline-flex min-h-11 items-center text-sm font-medium underline"
-                                    href={VentasRoutes.show.url({
-                                        current_team: teamSlug,
-                                        sale: serviceOrder.sale.id,
-                                    })}
-                                >
-                                    {serviceOrder.sale.numero_interno} · Ver
-                                    venta
-                                </Link>
-                            ) : (
-                                <p className="mt-2 text-sm">
-                                    Sin venta vinculada
-                                </p>
-                            )}
-                            <p className="text-muted-foreground mt-1 text-xs">
-                                Consulta el saldo y los pagos desde la venta.
-                            </p>
-                        </div>
-                        <div className="rounded-lg border p-3">
-                            <p className="text-muted-foreground text-xs">
-                                Certificados de esta orden
-                            </p>
-                            {serviceOrder.certificates?.length ? (
-                                serviceOrder.certificates.map((certificate) => (
-                                    <Link
-                                        key={certificate.id}
-                                        className="flex min-h-11 items-center text-sm font-medium underline"
-                                        href={CertificadosRoutes.show.url({
-                                            current_team: teamSlug,
-                                            certificate: certificate.id,
-                                        })}
-                                    >
-                                        {certificate.numero} ·{' '}
-                                        {certificate.estado}
-                                    </Link>
-                                ))
-                            ) : (
-                                <p className="mt-2 text-sm">
-                                    Sin certificado emitido
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                        Trabajo, documentos, entrega y pago tienen avances
-                        distintos. Usa la venta para comprobar el cobro y los
-                        eventos para comprobar la entrega.
-                    </p>
-                </section>
-                {deficiencias.length > 0 && (
-                    <section
-                        aria-label="Hallazgos de la orden"
-                        className="space-y-3"
-                    >
-                        <div>
-                            <h3 className="font-bold">
-                                Hallazgos y adicionales de esta orden
-                            </h3>
-                            <p className="text-muted-foreground text-xs">
-                                Cotiza el adicional y registra la decisión del
-                                cliente aquí mismo.
-                            </p>
-                        </div>
-                        {deficiencias.map((item) => (
-                            <DeficienciaCard
-                                key={item.id}
-                                item={item}
-                                teamSlug={teamSlug}
-                                acciones={acciones}
-                                enOrden
-                            />
-                        ))}
-                    </section>
-                )}
-                <Card className="space-y-4 p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                            <h3 className="font-bold">
-                                Extintores de la orden
-                            </h3>
-                            <p className="text-muted-foreground text-xs">
-                                Escanea un BF-EQ existente o registra uno nuevo.
-                            </p>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button asChild variant="outline">
-                                <a
-                                    href={ordenes.constanciaRecepcion.url({
-                                        current_team: teamSlug,
-                                        service_order: serviceOrder.id,
-                                    })}
-                                >
-                                    Constancia PDF
-                                </a>
-                            </Button>
-                            {serviceOrder.sale_id ? (
-                                <Button asChild variant="outline">
-                                    <Link
-                                        href={VentasRoutes.show.url({
-                                            current_team: teamSlug,
-                                            sale: serviceOrder.sale_id,
-                                        })}
-                                    >
-                                        Ver venta
-                                    </Link>
+                                    <MoreHorizontal className="size-4" />
                                 </Button>
-                            ) : serviceOrder.estado === 'anulada' ? null : (
-                                <Button asChild>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
                                     <Link
-                                        href={VentasRoutes.create.url(
+                                        href={comunicacion.index.url(
                                             { current_team: teamSlug },
                                             {
                                                 query: {
-                                                    orden_servicio:
-                                                        serviceOrder.id,
+                                                    orden: serviceOrder.id,
                                                 },
                                             },
                                         )}
                                     >
-                                        Cobrar
+                                        Ver en Seguimiento de taller
                                     </Link>
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                    <EquiposDeLaOrden
-                        casilleros={casilleros}
-                        rutas={{
-                            agregar: EquiposRoutes.store.url(ruta),
-                            reordenar: EquiposRoutes.reordenar.url(ruta),
-                            quitar: (equipment) =>
-                                EquiposRoutes.destroy.url({
-                                    ...ruta,
-                                    equipment,
-                                }),
-                        }}
-                    />
-                </Card>
-
-                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                    <h3 className="text-sm font-semibold">
-                        Progreso de atención
-                    </h3>
-                    {pasosAtencion.length > 0 ? (
-                        <Pasos
-                            pasos={pasosAtencion}
-                            label="Etapas de atención de la orden"
-                            variante="cheuron"
-                        />
-                    ) : (
-                        <p className="text-muted-foreground text-sm">
-                            {ESTADOS[serviceOrder.estado] ??
-                                'Estado sin etapa de progreso disponible'}
-                        </p>
-                    )}
-                    {!serviceOrder.tecnico &&
-                        serviceOrder.estado !== 'anulada' && (
-                            <p className="text-warning-strong text-sm">
-                                La orden todavía no tiene un técnico asignado.
-                            </p>
-                        )}
-                </Card>
-
-                {/* 2-Column Info & Bitácora */}
-                <div className="grid gap-4 xl:grid-cols-12">
-                    {/* Left Column: Detalle del Servicio & Cliente (5 cols) */}
-                    <div className="flex flex-col gap-4 xl:col-span-5">
-                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                            <div className="text-foreground text-[13.5px] font-bold">
-                                Detalles del servicio
-                            </div>
-                            <div className="divide-border mt-3 divide-y text-[12.5px]">
-                                <div className="py-2">
-                                    <div className="text-muted-foreground text-xs">
-                                        Tipo de servicio
-                                    </div>
-                                    <div className="text-foreground font-semibold">
-                                        {serviceOrder.service?.nombre ?? '—'}
-                                    </div>
-                                </div>
-                                <div className="py-2">
-                                    <div className="text-muted-foreground text-xs">
-                                        Fecha programada
-                                    </div>
-                                    <div className="text-foreground capitalize">
-                                        {fechaLegible(serviceOrder.fecha)}
-                                    </div>
-                                </div>
-                                <div className="py-2">
-                                    <div className="text-muted-foreground text-xs">
-                                        Departamento / Prioridad
-                                    </div>
-                                    <div className="text-foreground capitalize">
-                                        {serviceOrder.departamento_tecnico ||
-                                            'General'}{' '}
-                                        · Prioridad{' '}
-                                        {PRIORIDADES[serviceOrder.prioridad] ??
-                                            serviceOrder.prioridad}
-                                    </div>
-                                </div>
-                                <div className="py-2">
-                                    <div className="text-muted-foreground text-xs">
-                                        Técnico asignado
-                                    </div>
-                                    <div className="text-foreground font-semibold">
-                                        {serviceOrder.tecnico?.name ||
-                                            'Pendiente de asignación'}
-                                    </div>
-                                    {editable && tecnicos.length > 0 ? (
-                                        <div className="mt-2 flex gap-2">
-                                            <NativeSelect
-                                                aria-label="Técnico asignado"
-                                                value={tecnicoElegido}
-                                                onChange={(event) =>
-                                                    setTecnicoElegido(
-                                                        event.target.value,
-                                                    )
-                                                }
-                                                className="border-input bg-background h-9 flex-1 rounded-md border px-3 text-sm"
-                                            >
-                                                <option value="">
-                                                    {serviceOrder.tecnico
-                                                        ? 'Cambiar de técnico…'
-                                                        : 'Elegir técnico…'}
-                                                </option>
-                                                {tecnicos
-                                                    .filter(
-                                                        (tecnico) =>
-                                                            tecnico.id !==
-                                                            serviceOrder.tecnico
-                                                                ?.id,
-                                                    )
-                                                    .map((tecnico) => (
-                                                        <option
-                                                            key={tecnico.id}
-                                                            value={tecnico.id}
-                                                        >
-                                                            {tecnico.name}
-                                                        </option>
-                                                    ))}
-                                            </NativeSelect>
-                                            <Button
-                                                type="button"
-                                                size="sm"
-                                                disabled={!tecnicoElegido}
-                                                onClick={asignar}
-                                                className="h-9"
-                                            >
-                                                {serviceOrder.tecnico
-                                                    ? 'Cambiar'
-                                                    : 'Asignar'}
-                                            </Button>
-                                        </div>
-                                    ) : null}
-                                    {editable && tecnicos.length === 0 ? (
-                                        <p className="text-warning-strong mt-1 text-xs dark:text-amber-400">
-                                            No hay técnicos de{' '}
-                                            {serviceOrder.departamento_tecnico ===
-                                            'campo'
-                                                ? 'campo'
-                                                : 'planta'}{' '}
-                                            para esta sede. Pídele al Gerente
-                                            que asigne uno en Usuarios.
-                                        </p>
-                                    ) : null}
-                                </div>
-                                {[
-                                    'listo_certificado',
-                                    'listo_entrega',
-                                ].includes(serviceOrder.estado) && (
-                                    <form
-                                        className="border-border mt-3 space-y-2 border-t pt-3"
-                                        onSubmit={(event) => {
-                                            event.preventDefault();
-                                            entrega.post(
-                                                ordenes.asignarEntrega.url(
-                                                    ruta,
-                                                ),
+                                </DropdownMenuItem>
+                                {LISTOS.includes(serviceOrder.estado) ? (
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href={EntregaMostradorRoutes.show.url(
                                                 {
-                                                    preserveScroll: true,
-                                                    onSuccess: () =>
-                                                        entrega.reset(),
+                                                    current_team: teamSlug,
+                                                    service_order:
+                                                        serviceOrder.id,
                                                 },
-                                            );
+                                            )}
+                                        >
+                                            Entrega en mostrador
+                                        </Link>
+                                    </DropdownMenuItem>
+                                ) : null}
+                                {ANULABLES.includes(serviceOrder.estado) ? (
+                                    <DropdownMenuItem
+                                        className="text-destructive-strong"
+                                        onSelect={() => {
+                                            setErrorAnulacion(null);
+                                            setAnulando(true);
                                         }}
                                     >
-                                        <label
-                                            htmlFor="entrega-tecnico"
-                                            className="text-foreground block text-xs font-semibold"
+                                        Anular orden
+                                    </DropdownMenuItem>
+                                ) : null}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        {serviceOrder.sale_id ? (
+                            <Button asChild variant="outline" className="h-11">
+                                <Link
+                                    href={VentasRoutes.show.url({
+                                        current_team: teamSlug,
+                                        sale: serviceOrder.sale_id,
+                                    })}
+                                >
+                                    Ver venta
+                                </Link>
+                            </Button>
+                        ) : anulada ? null : (
+                            <Button asChild className="h-11 px-5">
+                                <Link
+                                    href={VentasRoutes.create.url(
+                                        { current_team: teamSlug },
+                                        {
+                                            query: {
+                                                orden_servicio: serviceOrder.id,
+                                            },
+                                        },
+                                    )}
+                                >
+                                    Cobrar
+                                </Link>
+                            </Button>
+                        )}
+                    </div>
+                </header>
+
+                <section
+                    aria-label="Avance de la orden"
+                    className="bg-card border-border space-y-2 rounded-2xl border p-3 sm:p-4 lg:col-start-1"
+                >
+                    {anulada ? (
+                        <p className="text-destructive-strong text-sm font-semibold">
+                            Orden anulada. Revisa el motivo en el chat.
+                        </p>
+                    ) : (
+                        <>
+                            <ol className="grid grid-cols-6 gap-1.5">
+                                {avance.tramos.map((tramo) => (
+                                    <li
+                                        key={tramo.nombre}
+                                        aria-current={
+                                            tramo.estado === 'actual'
+                                                ? 'step'
+                                                : undefined
+                                        }
+                                        className="flex flex-col gap-1"
+                                    >
+                                        <span
+                                            className={`h-1.5 rounded-full ${
+                                                tramo.estado === 'hecho'
+                                                    ? 'bg-success-strong'
+                                                    : tramo.estado === 'actual'
+                                                      ? 'bg-primary'
+                                                      : 'bg-muted'
+                                            }`}
+                                        />
+                                        <span
+                                            className={`flex items-center gap-1 truncate text-xs font-semibold ${
+                                                tramo.estado === 'hecho'
+                                                    ? 'text-success-strong'
+                                                    : tramo.estado === 'actual'
+                                                      ? 'text-destructive-strong'
+                                                      : 'text-muted-foreground'
+                                            }`}
                                         >
-                                            Responsable de la entrega en Campo
-                                        </label>
-                                        <p className="text-muted-foreground text-xs">
-                                            El técnico elegido podrá registrar
-                                            la entrega. Se conserva el área y el
-                                            historial del trabajo realizado.
-                                        </p>
+                                            {tramo.estado === 'hecho' ? (
+                                                <Check
+                                                    className="size-3.5 shrink-0"
+                                                    aria-label="hecho"
+                                                />
+                                            ) : null}
+                                            <span className="hidden sm:inline">
+                                                {tramo.nombre}
+                                            </span>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+                            {(() => {
+                                const indice = avance.tramos.findIndex(
+                                    (t) => t.estado === 'actual',
+                                );
+
+                                return indice >= 0 ? (
+                                    <p className="text-destructive-strong text-xs font-bold sm:hidden">
+                                        Paso {indice + 1} de 6 ·{' '}
+                                        {avance.tramos[indice].nombre}
+                                    </p>
+                                ) : null;
+                            })()}
+                            <div className="border-border flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-2">
+                                <p className="text-foreground min-w-0 flex-[1_1_280px] text-sm">
+                                    <strong>Ahora:</strong> {avance.ahora}{' '}
+                                    {avance.quien ? (
+                                        <span className="text-muted-foreground">
+                                            {avance.quien}
+                                        </span>
+                                    ) : null}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {serviceOrder.quote ? (
+                                        <a
+                                            className={`${chip} hover:bg-muted/70`}
+                                            href={CotizacionesRoutes.pdf.url({
+                                                current_team: teamSlug,
+                                                quote: serviceOrder.quote.id,
+                                            })}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                        >
+                                            Cotización{' '}
+                                            {serviceOrder.quote.numero} · PDF
+                                        </a>
+                                    ) : !serviceOrder.sale &&
+                                      serviceOrder.estado !== 'anulada' ? (
+                                        <Link
+                                            className={`${chip} hover:bg-muted/70`}
+                                            href={CotizacionesRoutes.create.url(
+                                                { current_team: teamSlug },
+                                                {
+                                                    query: {
+                                                        service_order_id:
+                                                            serviceOrder.id,
+                                                    },
+                                                },
+                                            )}
+                                        >
+                                            Cotizar este servicio
+                                        </Link>
+                                    ) : null}
+                                    {serviceOrder.sale ? (
+                                        <Link
+                                            className={`${chip} hover:bg-muted/70`}
+                                            href={VentasRoutes.show.url({
+                                                current_team: teamSlug,
+                                                sale: serviceOrder.sale.id,
+                                            })}
+                                        >
+                                            Venta{' '}
+                                            {serviceOrder.sale.numero_interno}
+                                        </Link>
+                                    ) : (
+                                        <span
+                                            className={`${chip} text-warning-strong bg-amber-500/15`}
+                                        >
+                                            Venta: falta cobrar
+                                        </span>
+                                    )}
+                                    {serviceOrder.certificates?.length ? (
+                                        serviceOrder.certificates.map(
+                                            (certificado) => (
+                                                <a
+                                                    key={certificado.id}
+                                                    className={`${chip} text-success-strong gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25`}
+                                                    href={CertificadosRoutes.pdf.url(
+                                                        {
+                                                            current_team:
+                                                                teamSlug,
+                                                            certificate:
+                                                                certificado.id,
+                                                        },
+                                                    )}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    <Download className="size-3.5" />
+                                                    Certificado{' '}
+                                                    {certificado.numero} · PDF
+                                                </a>
+                                            ),
+                                        )
+                                    ) : (
+                                        <span
+                                            className={`${chip} text-muted-foreground`}
+                                        >
+                                            Certificados: salen cuando el taller
+                                            cierre la orden
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div
+                                className={`flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-3 py-2 ${
+                                    serviceOrder.tecnico
+                                        ? 'bg-muted/50'
+                                        : 'border border-amber-500/40 bg-amber-500/10'
+                                }`}
+                            >
+                                <p className="text-foreground min-w-0 flex-[1_1_220px] text-sm">
+                                    <span className="text-muted-foreground font-semibold">
+                                        Técnico de{' '}
+                                        {serviceOrder.departamento_tecnico ===
+                                        'campo'
+                                            ? 'campo'
+                                            : 'planta'}
+                                        :
+                                    </span>{' '}
+                                    <strong
+                                        className={
+                                            serviceOrder.tecnico
+                                                ? ''
+                                                : 'text-warning-strong'
+                                        }
+                                    >
+                                        {serviceOrder.tecnico?.name ??
+                                            'Falta asignar'}
+                                    </strong>
+                                </p>
+                                {editable && tecnicos.length > 0 ? (
+                                    <NativeSelect
+                                        aria-label={
+                                            serviceOrder.tecnico
+                                                ? 'Cambiar de técnico'
+                                                : 'Asignar técnico'
+                                        }
+                                        value={tecnicoElegido}
+                                        onChange={(event) =>
+                                            asignar(event.target.value)
+                                        }
+                                        className="h-11 w-full text-sm sm:w-64"
+                                    >
+                                        <option value="">
+                                            {serviceOrder.tecnico
+                                                ? 'Cambiar de técnico…'
+                                                : 'Elegir técnico…'}
+                                        </option>
+                                        {tecnicos
+                                            .filter(
+                                                (tecnico) =>
+                                                    tecnico.id !==
+                                                    serviceOrder.tecnico?.id,
+                                            )
+                                            .map((tecnico) => (
+                                                <option
+                                                    key={tecnico.id}
+                                                    value={tecnico.id}
+                                                >
+                                                    {tecnico.name}
+                                                </option>
+                                            ))}
+                                    </NativeSelect>
+                                ) : null}
+                                {editable && tecnicos.length === 0 ? (
+                                    <p className="text-warning-strong text-xs">
+                                        No hay técnicos de esta área en la sede.
+                                        Pídele al Gerente que asigne uno en
+                                        Usuarios.
+                                    </p>
+                                ) : null}
+                            </div>
+                        </>
+                    )}
+                </section>
+
+                <div className="flex flex-wrap items-start gap-4 lg:col-start-1">
+                    <div className="flex min-w-0 flex-[999_1_520px] flex-col gap-4">
+                        {enEspera.length > 0 && (
+                            <section
+                                aria-label="Hallazgos que esperan al cliente"
+                                className="space-y-3 rounded-2xl border-2 border-amber-500 bg-amber-500/10 p-4"
+                            >
+                                <h2 className="text-foreground text-base font-bold">
+                                    Te toca:{' '}
+                                    {enEspera.length === 1
+                                        ? '1 hallazgo espera la respuesta del cliente'
+                                        : `${enEspera.length} hallazgos esperan la respuesta del cliente`}
+                                </h2>
+                                {enEspera.map((item) => (
+                                    <DeficienciaCard
+                                        key={item.id}
+                                        item={item}
+                                        teamSlug={teamSlug}
+                                        acciones={acciones}
+                                        enOrden
+                                    />
+                                ))}
+                            </section>
+                        )}
+
+                        {(otrosHallazgos.length > 0 ||
+                            puedeRegistrarHallazgo) && (
+                            <section
+                                aria-label="Hallazgos de la orden"
+                                className="bg-card border-border space-y-2 rounded-2xl border p-3 sm:p-4 lg:col-start-1"
+                            >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <h2 className="text-foreground text-base font-bold">
+                                        Hallazgos
+                                        {otrosHallazgos.length > 0
+                                            ? ` · ${otrosHallazgos.length}`
+                                            : ''}
+                                    </h2>
+                                    {puedeRegistrarHallazgo ? (
+                                        <DeficienciaSuelta
+                                            ordenId={serviceOrder.id}
+                                            equipos={serviceOrder.equipments.map(
+                                                (item) => ({
+                                                    id: item.id,
+                                                    serie: item.numero_serie,
+                                                }),
+                                            )}
+                                            destino={DeficiencyController.store.url(
+                                                {
+                                                    current_team: teamSlug,
+                                                    service_order:
+                                                        serviceOrder.id,
+                                                },
+                                            )}
+                                        />
+                                    ) : null}
+                                </div>
+                                {otrosHallazgos.length === 0 ? (
+                                    <p className="text-muted-foreground text-sm">
+                                        Sin hallazgos por ahora.
+                                    </p>
+                                ) : (
+                                    otrosHallazgos.map((item) => (
+                                        <DeficienciaCard
+                                            key={item.id}
+                                            item={item}
+                                            teamSlug={teamSlug}
+                                            acciones={acciones}
+                                            enOrden
+                                        />
+                                    ))
+                                )}
+                            </section>
+                        )}
+
+                        <section
+                            aria-label="Extintores de la orden"
+                            className="bg-card border-border space-y-2 rounded-2xl border p-3 sm:p-4 lg:col-start-1"
+                        >
+                            <h2 className="text-foreground text-base font-bold">
+                                Extintores
+                            </h2>
+                            <EquiposDeLaOrden
+                                casilleros={casilleros}
+                                rutas={{
+                                    agregar: EquiposRoutes.store.url(ruta),
+                                    reordenar:
+                                        EquiposRoutes.reordenar.url(ruta),
+                                    editar: (equipment) =>
+                                        EquiposRoutes.update.url({
+                                            ...ruta,
+                                            equipment,
+                                        }),
+                                    quitar: (equipment) =>
+                                        EquiposRoutes.destroy.url({
+                                            ...ruta,
+                                            equipment,
+                                        }),
+                                }}
+                            />
+                        </section>
+
+                        {['listo_certificado', 'listo_entrega'].includes(
+                            serviceOrder.estado,
+                        ) && (
+                            <section
+                                aria-label="Entrega de la orden"
+                                className="bg-card border-border rounded-2xl border p-4 sm:p-5"
+                            >
+                                <form
+                                    className="space-y-2"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        entrega.post(
+                                            ordenes.asignarEntrega.url(ruta),
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () =>
+                                                    entrega.reset(),
+                                            },
+                                        );
+                                    }}
+                                >
+                                    <label
+                                        htmlFor="entrega-tecnico"
+                                        className="text-foreground block text-sm font-semibold"
+                                    >
+                                        Responsable de la entrega en Campo
+                                    </label>
+                                    <p className="text-muted-foreground text-xs">
+                                        El técnico elegido podrá registrar la
+                                        entrega. Se conserva el área y el
+                                        historial del trabajo realizado.
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
                                         <NativeSelect
                                             id="entrega-tecnico"
                                             value={entrega.data.tecnico_id}
@@ -847,7 +939,7 @@ export default function ServiceOrderShow({
                                                     event.target.value,
                                                 )
                                             }
-                                            className="border-border bg-card h-10 w-full rounded-lg border px-3 text-xs"
+                                            className="h-11 min-w-0 flex-1 text-sm"
                                         >
                                             <option value="">
                                                 Selecciona un técnico de Campo…
@@ -861,366 +953,45 @@ export default function ServiceOrderShow({
                                                 </option>
                                             ))}
                                         </NativeSelect>
-                                        {entrega.errors.tecnico_id && (
-                                            <p
-                                                role="alert"
-                                                className="text-destructive text-xs"
-                                            >
-                                                {entrega.errors.tecnico_id}
-                                            </p>
-                                        )}
-                                        {tecnicosEntrega.length === 0 && (
-                                            <p className="text-muted-foreground text-xs">
-                                                No hay técnicos de Campo para
-                                                esta sede. Puedes registrar la
-                                                entrega en mostrador o pedir al
-                                                Gerente que asigne uno.
-                                            </p>
-                                        )}
                                         <Button
                                             type="submit"
                                             disabled={!entrega.data.tecnico_id}
                                             loading={entrega.processing}
+                                            className="h-11"
                                         >
                                             Asignar entrega a Campo
                                         </Button>
-                                    </form>
-                                )}
-                                {serviceOrder.observaciones && (
-                                    <div className="py-2">
-                                        <div className="text-muted-foreground text-xs">
-                                            Observaciones
-                                        </div>
-                                        <div className="text-foreground/80">
-                                            {serviceOrder.observaciones}
-                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </Card>
-
-                        {serviceOrder.client && (
-                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                                <div className="text-foreground text-[13.5px] font-bold">
-                                    Datos del cliente
-                                </div>
-                                <div className="mt-3 space-y-1.5 text-[12.5px]">
-                                    <div className="text-foreground font-bold">
-                                        {serviceOrder.client.razon_social}
-                                    </div>
-                                    {serviceOrder.client.numero_documento && (
-                                        <div className="text-muted-foreground font-mono text-xs">
-                                            RUC/DNI:{' '}
-                                            {
-                                                serviceOrder.client
-                                                    .numero_documento
-                                            }
-                                        </div>
-                                    )}
-                                    {serviceOrder.client.direccion_fiscal && (
-                                        <div className="text-foreground/80 text-xs">
-                                            {
-                                                serviceOrder.client
-                                                    .direccion_fiscal
-                                            }
-                                        </div>
-                                    )}
-                                    {serviceOrder.client.telefono && (
-                                        <div className="text-muted-foreground text-xs">
-                                            Teléfono:{' '}
-                                            {serviceOrder.client.telefono}
-                                        </div>
-                                    )}
-                                </div>
-                            </Card>
-                        )}
-                    </div>
-
-                    {/* Right Column: Bitácora de Eventos (7 cols) */}
-                    <div className="flex flex-col xl:col-span-7">
-                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Clock className="text-muted-foreground size-4" />
-                                    <span className="text-foreground text-[13.5px] font-bold">
-                                        Bitácora y eventos de orden
-                                    </span>
-                                </div>
-                                <span className="text-muted-foreground text-xs">
-                                    {serviceOrder.events?.length ?? 0} eventos
-                                </span>
-                            </div>
-
-                            {editable ? (
-                                <form
-                                    onSubmit={enviarNota}
-                                    className="mt-3 flex gap-2"
-                                >
-                                    <input
-                                        aria-label="Mensaje"
-                                        value={nota.data.mensaje}
-                                        onChange={(event) =>
-                                            nota.setData(
-                                                'mensaje',
-                                                event.target.value,
-                                            )
-                                        }
-                                        maxLength={500}
-                                        placeholder="Escribe una indicación para el técnico (la verá en su pantalla)…"
-                                        className="border-input bg-background h-9 min-w-0 flex-1 rounded-md border px-3 text-sm"
-                                    />
-                                    <Button
-                                        type="submit"
-                                        size="sm"
-                                        disabled={
-                                            nota.data.mensaje.trim() === ''
-                                        }
-                                        loading={nota.processing}
-                                        className="h-9"
-                                    >
-                                        <Send className="size-3.5" />
-                                        Enviar
-                                    </Button>
-                                </form>
-                            ) : null}
-
-                            <div className="mt-4 space-y-4">
-                                {serviceOrder.events &&
-                                serviceOrder.events.length > 0 ? (
-                                    serviceOrder.events.map((evt) => (
-                                        <div
-                                            key={evt.id}
-                                            className="flex gap-3 text-[12.5px]"
+                                    {entrega.errors.tecnico_id && (
+                                        <p
+                                            role="alert"
+                                            className="text-destructive-strong text-xs"
                                         >
-                                            <div className="bg-muted text-muted-foreground mt-1 flex size-6 shrink-0 items-center justify-center rounded-full">
-                                                <CheckCircle2 className="size-3.5" />
-                                            </div>
-                                            <div className="border-border bg-muted/40 flex-1 rounded-lg border p-3">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-foreground font-bold capitalize">
-                                                        {tituloDeEvento(evt)}
-                                                    </span>
-                                                    <span className="text-muted-foreground font-mono text-xs">
-                                                        {new Date(
-                                                            evt.created_at,
-                                                        ).toLocaleString(
-                                                            'es-PE',
-                                                            {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit',
-                                                            },
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                <div className="text-foreground/80 mt-1">
-                                                    {evt.payload?.mensaje ||
-                                                        (typeof evt.payload
-                                                            ?.numero_serie ===
-                                                        'string'
-                                                            ? `Extintor ${evt.payload.numero_serie}`
-                                                            : null) ||
-                                                        (evt.payload?.resultado
-                                                            ? `Resultado: ${evt.payload.resultado}`
-                                                            : 'Evento registrado en orden de servicio')}
-                                                </div>
-                                                {evt.user?.name && (
-                                                    <div className="text-muted-foreground mt-1 text-xs">
-                                                        Registrado por:{' '}
-                                                        <b>{evt.user.name}</b>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-muted-foreground py-8 text-center text-xs">
-                                        No se han registrado eventos adicionales
-                                        en esta orden.
-                                    </div>
-                                )}
-                            </div>
-                        </Card>
+                                            {entrega.errors.tecnico_id}
+                                        </p>
+                                    )}
+                                    {tecnicosEntrega.length === 0 && (
+                                        <p className="text-muted-foreground text-xs">
+                                            No hay técnicos de Campo para esta
+                                            sede. Puedes registrar la entrega en
+                                            mostrador o pedir al Gerente que
+                                            asigne uno.
+                                        </p>
+                                    )}
+                                </form>
+                            </section>
+                        )}
                     </div>
                 </div>
             </div>
-            <Dialog open={editando} onOpenChange={setEditando}>
-                <DialogContent className="sm:max-w-[480px]">
-                    <DialogHeader>
-                        <DialogTitle>Editar {serviceOrder.codigo}</DialogTitle>
-                    </DialogHeader>
-                    <form
-                        onSubmit={guardarEdicion}
-                        className="flex flex-col gap-3 text-[13px]"
-                    >
-                        <label className="flex flex-col gap-1">
-                            <span className="text-muted-foreground text-xs font-bold uppercase">
-                                Servicio del catálogo
-                            </span>
-                            <NativeSelect
-                                aria-label="Servicio del catálogo"
-                                value={edicion.data.service_id}
-                                onChange={(event) =>
-                                    edicion.setData(
-                                        'service_id',
-                                        event.target.value,
-                                    )
-                                }
-                                className="border-input bg-background h-9 rounded-md border px-3"
-                                required
-                            >
-                                <option value="">Seleccionar servicio</option>
-                                {services.map((service) => (
-                                    <option key={service.id} value={service.id}>
-                                        {service.nombre}
-                                    </option>
-                                ))}
-                            </NativeSelect>
-                        </label>
-                        <label className="flex flex-col gap-1">
-                            <span className="text-muted-foreground text-xs font-bold uppercase">
-                                Fecha programada
-                            </span>
-                            <input
-                                aria-label="Fecha programada"
-                                type="date"
-                                value={edicion.data.fecha}
-                                onChange={(event) =>
-                                    edicion.setData('fecha', event.target.value)
-                                }
-                                className="border-input bg-background h-9 rounded-md border px-3"
-                            />
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <label className="flex flex-col gap-1">
-                                <span className="text-muted-foreground text-xs font-bold uppercase">
-                                    Prioridad
-                                </span>
-                                <NativeSelect
-                                    aria-label="Prioridad"
-                                    value={edicion.data.prioridad}
-                                    onChange={(event) =>
-                                        edicion.setData(
-                                            'prioridad',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="border-input bg-background h-9 rounded-md border px-3"
-                                >
-                                    <option value="normal">Normal</option>
-                                    <option value="alta">Alta</option>
-                                    <option value="urgente">Urgente</option>
-                                </NativeSelect>
-                            </label>
-                            <label className="flex flex-col gap-1">
-                                <span className="text-muted-foreground text-xs font-bold uppercase">
-                                    Área
-                                </span>
-                                <NativeSelect
-                                    aria-label="Área"
-                                    value={edicion.data.departamento_tecnico}
-                                    disabled={
-                                        serviceOrder.estado !==
-                                        'pendiente_recepcion'
-                                    }
-                                    onChange={(event) =>
-                                        edicion.setData((datos) => ({
-                                            ...datos,
-                                            departamento_tecnico:
-                                                event.target.value,
-                                            tecnico_id: '',
-                                        }))
-                                    }
-                                    className="border-input bg-background h-9 rounded-md border px-3 disabled:opacity-60"
-                                >
-                                    <option value="planta">
-                                        Planta (taller)
-                                    </option>
-                                    <option value="campo">
-                                        Campo (en el local del cliente)
-                                    </option>
-                                </NativeSelect>
-                            </label>
-                        </div>
-                        {edicion.data.departamento_tecnico ===
-                        serviceOrder.departamento_tecnico ? (
-                            <label className="flex flex-col gap-1">
-                                <span className="text-muted-foreground text-xs font-bold uppercase">
-                                    Técnico
-                                </span>
-                                <NativeSelect
-                                    aria-label="Técnico"
-                                    value={edicion.data.tecnico_id}
-                                    onChange={(event) =>
-                                        edicion.setData(
-                                            'tecnico_id',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="border-input bg-background h-9 rounded-md border px-3"
-                                >
-                                    <option value="">
-                                        Sin asignar (lo toma el primero libre)
-                                    </option>
-                                    {tecnicos.map((tecnico) => (
-                                        <option
-                                            key={tecnico.id}
-                                            value={tecnico.id}
-                                        >
-                                            {tecnico.name}
-                                        </option>
-                                    ))}
-                                </NativeSelect>
-                            </label>
-                        ) : (
-                            <p className="text-muted-foreground text-xs">
-                                Al cambiar de área, asigna el técnico después de
-                                guardar.
-                            </p>
-                        )}
-                        <label className="flex flex-col gap-1">
-                            <span className="text-muted-foreground text-xs font-bold uppercase">
-                                Indicaciones para el técnico
-                            </span>
-                            <textarea
-                                aria-label="Indicaciones para el técnico"
-                                value={edicion.data.observaciones}
-                                onChange={(event) =>
-                                    edicion.setData(
-                                        'observaciones',
-                                        event.target.value,
-                                    )
-                                }
-                                rows={3}
-                                className="border-input bg-background rounded-md border px-3 py-2"
-                            />
-                        </label>
-                        {Object.values(edicion.errors)[0] ? (
-                            <p
-                                className="text-destructive-strong text-xs"
-                                role="alert"
-                            >
-                                {Object.values(edicion.errors)[0]}
-                            </p>
-                        ) : null}
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setEditando(false)}
-                            >
-                                Cancelar
-                            </Button>
-                            <Button type="submit" loading={edicion.processing}>
-                                {edicion.processing
-                                    ? 'Guardando…'
-                                    : 'Guardar cambios'}
-                            </Button>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            <div className="lg:hidden">
+                <ChatFlotante
+                    ordenId={serviceOrder.id}
+                    codigo={serviceOrder.codigo}
+                    conversacion={conversacion}
+                    nota={serviceOrder.observaciones}
+                />
+            </div>
             <Dialog open={anulando} onOpenChange={setAnulando}>
                 <DialogContent>
                     <DialogHeader>

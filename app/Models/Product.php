@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditaElCatalogo;
+use App\Models\Concerns\TieneCodigoCorrelativo;
 use Closure;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,6 +21,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $id
  * @property string $codigo
  * @property string|null $codigo_barras
+ * @property string|null $codigo_sunat
  * @property string $nombre
  * @property string|null $categoria clave de product_categories (FK real sobre product_categories.clave); NULL = sin categoría
  * @property string|null $agente
@@ -48,6 +51,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read ProductCategory|null $categoriaDelCatalogo
  */
 #[Fillable([
+    'codigo_sunat',
     'codigo',
     'codigo_barras',
     'nombre',
@@ -69,8 +73,12 @@ use Illuminate\Support\Facades\DB;
 ])]
 class Product extends Model
 {
+    public const PREFIJO_CODIGO = 'PRD';
+
+    public const AUDITORIA_PREFIJO = 'producto';
+
     /** @use HasFactory<ProductFactory> */
-    use HasFactory;
+    use AuditaElCatalogo, HasFactory, TieneCodigoCorrelativo;
 
     protected function casts(): array
     {
@@ -240,5 +248,15 @@ class Product extends Model
     public function esServicio(): bool
     {
         return false;
+    }
+
+    /** Código de producto SUNAT (catálogo 25) que va en el XML, si aplica. */
+    public function codigoSunat(): ?string
+    {
+        if (filled($this->codigo_sunat)) {
+            return $this->codigo_sunat;
+        }
+
+        return $this->categoria === 'extintor' || $this->agente !== null ? '46191601' : null;
     }
 }

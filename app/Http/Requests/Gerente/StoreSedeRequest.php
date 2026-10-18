@@ -23,7 +23,7 @@ class StoreSedeRequest extends FormRequest
 
         return [
             'nombre' => ['required', 'string', 'max:255', Rule::unique('sedes', 'nombre')->ignore($sedeId)],
-            'tipo' => ['required', Rule::in(['tienda', 'almacen', 'mixta'])],
+            'tipo' => ['required', Rule::in(['tienda', 'almacen', 'mixta', 'taller'])],
             'ubigeo' => ['nullable', 'string', 'size:6', 'exists:ubigeos,codigo'],
             'direccion' => ['nullable', 'string', 'max:255'],
             'cod_establecimiento_anexo' => ['sometimes', 'required', 'string', 'regex:/^\d{4}$/'],
@@ -64,5 +64,11 @@ class StoreSedeRequest extends FormRequest
         }
 
         return $key === null ? $data : data_get($data, $key, $default);
+    }
+
+    /** Cada sede vende y guarda su propio stock: si no dice otra cosa, es "mixta". */
+    protected function prepareForValidation(): void
+    {
+        $this->mergeIfMissing(['tipo' => 'mixta']);
     }
 }

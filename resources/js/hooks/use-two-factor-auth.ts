@@ -52,10 +52,15 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
                 svg: string;
                 url: string;
             };
-
+            if (!svg) {
+                throw new Error('QR no disponible');
+            }
             setQrCodeSvg(svg);
         } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch QR code']);
+            setErrors((prev) => [
+                ...prev,
+                'No se pudo cargar el QR. Cierra la ventana e inicia la configuración de nuevo.',
+            ]);
             setQrCodeSvg(null);
         }
     }, [submit]);
@@ -65,10 +70,15 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
             const { secretKey: key } = (await submit(secretKey())) as {
                 secretKey: string;
             };
-
+            if (!key) {
+                throw new Error('Clave no disponible');
+            }
             setManualSetupKey(key);
         } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch a setup key']);
+            setErrors((prev) => [
+                ...prev,
+                'No se pudo cargar la clave de configuración. Vuelve a iniciar la configuración.',
+            ]);
             setManualSetupKey(null);
         }
     }, [submit]);
@@ -79,7 +89,10 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
             const codes = (await submit(recoveryCodes())) as string[];
             setRecoveryCodesList(codes);
         } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch recovery codes']);
+            setErrors((prev) => [
+                ...prev,
+                'No se pudieron cargar los códigos de recuperación. Inténtalo de nuevo.',
+            ]);
             setRecoveryCodesList([]);
         }
     }, [submit]);
@@ -87,7 +100,8 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
     const fetchSetupData = useCallback(async (): Promise<void> => {
         try {
             setErrors([]);
-            await Promise.all([fetchQrCode(), fetchSetupKey()]);
+            await fetchQrCode();
+            await fetchSetupKey();
         } catch {
             setQrCodeSvg(null);
             setManualSetupKey(null);

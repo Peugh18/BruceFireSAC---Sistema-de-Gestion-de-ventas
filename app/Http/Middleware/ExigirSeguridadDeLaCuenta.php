@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -39,6 +41,25 @@ class ExigirSeguridadDeLaCuenta
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
+
+        // Una cuenta suspendida tampoco puede conservar una sesión recordada
+        // ni completar un desafío 2FA iniciado antes de la suspensión.
+        $pendiente = $user === null && $request->session()->has('login.id')
+            ? User::query()->whereKey($request->session()->get('login.id'))->first()
+            : null;
+        $cuenta = $user ?? $pendiente;
+        if ($cuenta !== null && ! (bool) ($cuenta->getAttribute('activo') ?? true)) {
+            Auth::guard(config('fortify.guard', 'web'))->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            $mensaje = 'Tu cuenta está desactivada. Consulta con el gerente.';
+
+            if ($request->expectsJson() && ! $request->header('X-Inertia')) {
+                return response()->json(['message' => $mensaje], 403);
+            }
+
+            return redirect()->route('login')->withErrors(['email' => $mensaje]);
+        }
 
         if ($user === null || $request->routeIs(...self::RUTAS_PERMITIDAS)) {
             return $next($request);

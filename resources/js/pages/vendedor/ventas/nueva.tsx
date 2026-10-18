@@ -51,6 +51,7 @@ import { fechaLocal } from '@/lib/utils';
 import CajaRoutes from '@/routes/vendedor/caja';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
+import { resumenDetraccion, type ReglasDetraccion } from '@/lib/detraccion';
 
 type SedeOption = { id: number; nombre: string };
 
@@ -173,6 +174,7 @@ type VentaPrefill = {
 };
 
 type Props = {
+    reglasDetraccion: ReglasDetraccion;
     clientesVarios: ClientOption;
     limiteBoletaSinIdentificar: number;
     sedes: SedeOption[];
@@ -270,6 +272,7 @@ function desglosar(lineas: SaleLine[]) {
 }
 
 export default function NuevaVenta({
+    reglasDetraccion,
     clientesVarios,
     limiteBoletaSinIdentificar,
     sedes,
@@ -357,6 +360,12 @@ export default function NuevaVenta({
     const [aviso, setAviso] = useState<string | null>(null);
 
     const { base, igv, total } = desglosar(form.data.items);
+    const detraccion = resumenDetraccion(
+        form.data.comprobante_tipo,
+        total,
+        form.data.items,
+        reglasDetraccion,
+    );
 
     const clienteSinRuc =
         cliente !== null &&
@@ -388,7 +397,7 @@ export default function NuevaVenta({
         line.service_id != null || line.tipo_linea === 'recarga_servicio';
     const productoSueltoConDetraccion =
         form.data.comprobante_tipo === 'factura' &&
-        total > 700 &&
+        total > reglasDetraccion.monto_minimo &&
         form.data.items.some(esServicioDeLinea) &&
         form.data.items.some(
             (line) =>
@@ -1623,6 +1632,79 @@ export default function NuevaVenta({
                                 </div>
                             </div>
                         </div>
+
+                        {detraccion.estado !== 'no_aplica' && (
+                            <div
+                                role="status"
+                                className="border-border bg-muted/50 space-y-2 rounded-lg border p-3 text-sm"
+                            >
+                                <p className="font-semibold">
+                                    {detraccion.estado === 'bajo_minimo'
+                                        ? 'Detracción: no supera el límite'
+                                        : detraccion.estado === 'revisar'
+                                          ? 'Revisar clasificación de detracción'
+                                          : 'Factura sujeta a detracción'}
+                                </p>
+                                {detraccion.estado === 'bajo_minimo' ? (
+                                    <p>
+                                        Para estos servicios, el total con IGV
+                                        debe superar{' '}
+                                        {money(reglasDetraccion.monto_minimo)}.
+                                        Un total igual al límite está
+                                        exceptuado.
+                                    </p>
+                                ) : detraccion.estado === 'revisar' ? (
+                                    <p>
+                                        Gerencia debe revisar el IGV y la
+                                        clasificación de los servicios. Si
+                                        tienen códigos distintos, separa los
+                                        conceptos según corresponda antes de
+                                        emitir.
+                                    </p>
+                                ) : (
+                                    <>
+                                        <p>
+                                            {detraccion.nombre} ·{' '}
+                                            {reglasDetraccion.porcentaje} %
+                                            sobre el total con IGV.
+                                        </p>
+                                        <dl className="space-y-1">
+                                            <div className="flex justify-between gap-2">
+                                                <dt>Detracción estimada</dt>
+                                                <dd className="font-mono font-semibold">
+                                                    {money(detraccion.monto)}
+                                                </dd>
+                                            </div>
+                                            <div className="flex justify-between gap-2">
+                                                <dt>Pago al proveedor</dt>
+                                                <dd className="font-mono font-semibold">
+                                                    {money(detraccion.neto)}
+                                                </dd>
+                                            </div>
+                                        </dl>
+                                        <p>
+                                            Destino: cuenta de detracciones del
+                                            Banco de la Nación. El depósito se
+                                            acredita por separado; no es
+                                            efectivo de caja.
+                                        </p>
+                                        {detraccion.estado === 'sin_cuenta' && (
+                                            <p className="text-destructive-strong font-semibold">
+                                                Falta la cuenta del Banco de la
+                                                Nación. Gerencia debe
+                                                registrarla antes de emitir.
+                                            </p>
+                                        )}
+                                        <p className="text-muted-foreground text-xs">
+                                            La validación definitiva se realiza
+                                            al emitir. La información de
+                                            detracción figurará en la factura y
+                                            en el XML enviado a SUNAT.
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        )}
 
                         <div>
                             <Label className="text-foreground text-sm font-medium">

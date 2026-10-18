@@ -9,6 +9,7 @@ use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Models\Sede;
 use App\Models\Service;
+use App\Models\TipoDeServicio;
 use App\Models\User;
 use App\Services\Billing\GreenterService;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -89,10 +90,11 @@ test('productos y servicios solo aceptan categorias activas', function () {
         ->assertSessionHasNoErrors();
 
     $this->actingAs($gerente)->post(route('gerente.servicios.store', $team), [
+        'tipo_de_servicio_id' => TipoDeServicio::query()->create(['nombre' => 'Servicio general'])->id,
         'codigo' => 'SRV-E-1', 'nombre' => 'Servicio E', 'unidad_medida' => 'ZZ', 'precio_venta' => 50,
         'aplica_igv' => true, 'categoria' => 'otro', 'activo' => true,
     ])->assertSessionHasNoErrors();
-    expect(Service::where('codigo', 'SRV-E-1')->sole()->categoria)->toBe('otro');
+    expect(Service::query()->where('nombre', 'Servicio E')->sole()->categoria)->toBe('otro');
 });
 
 // A3 unidad de medida
@@ -176,7 +178,7 @@ test('la recepcion calcula el costo promedio y el reporte valoriza al costo y av
     expect((float) $producto->refresh()->costo_promedio)->toBe(15.0)
         ->and($sinCosto->refresh()->costo_promedio)->toBeNull();
 
-    $this->actingAs($gerente)->get(route('gerente.reportes.index', [...$team, 'tipo' => 'inventario']))
+    $this->actingAs($gerente)->get(route('gerente.dashboard', $team))
         ->assertInertia(fn (Assert $page) => $page
             ->where('reporteInventario.valorizacionTotal', 300)
             ->where('reporteInventario.productosSinCosto', 1)
@@ -186,7 +188,7 @@ test('la recepcion calcula el costo promedio y el reporte valoriza al costo y av
 
 // Stickers
 
-test('los stickers salen en hoja de 20 y se puede empezar en una posicion o reimprimir uno', function () {
+test('un sticker se reimprime por su serie en el rollo de 80 mm', function () {
     $gerente = gerenteFaseE();
     $sede = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
     $producto = Product::factory()->create(['serializado' => true]);
@@ -196,10 +198,8 @@ test('los stickers salen en hoja de 20 y se puede empezar en una posicion o reim
     ]);
     $team = ['current_team' => $gerente->currentTeam];
 
-    $this->actingAs($gerente)->get(route('almacen.stickers.unidad', [...$team, 'serie' => 'bf-eq-000777', 'inicio' => 6]))
+    $this->actingAs($gerente)->get(route('almacen.stickers.unidad', [...$team, 'serie' => 'bf-eq-000777']))
         ->assertOk()->assertHeader('Content-Type', 'application/pdf');
-    $this->actingAs($gerente)->get(route('almacen.stickers.unidad', [...$team, 'serie' => 'BF-EQ-000777', 'inicio' => 21]))
-        ->assertSessionHasErrors('inicio');
     $this->actingAs($gerente)->get(route('almacen.stickers.unidad', [...$team, 'serie' => 'BF-EQ-NO-EXISTE']))
         ->assertNotFound();
 });

@@ -81,7 +81,7 @@ class User extends Authenticatable implements PasskeyUser
 
     /**
      * Dónde puede trabajar cada rol: el vendedor atiende en una tienda (o
-     * sede mixta); almacén y técnicos trabajan donde hay stock y taller. El
+     * sede mixta); almacén trabaja donde hay stock y los técnicos en Taller. El
      * Gerente puede estar en cualquiera o en ninguna.
      *
      * @var array<string, list<string>>
@@ -89,8 +89,8 @@ class User extends Authenticatable implements PasskeyUser
     public const TIPOS_DE_SEDE_POR_ROL = [
         'Vendedor' => ['tienda', 'mixta'],
         'Almacen' => ['almacen', 'mixta'],
-        'TecnicoPlanta' => ['almacen', 'mixta'],
-        'TecnicoCampo' => ['almacen', 'mixta'],
+        'TecnicoPlanta' => ['taller'],
+        'TecnicoCampo' => ['taller'],
     ];
 
     /**

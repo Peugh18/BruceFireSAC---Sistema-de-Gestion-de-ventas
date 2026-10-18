@@ -3,10 +3,13 @@
 namespace App\Http\Middleware;
 
 use App\Enums\EquipmentType;
+use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\Deficiency;
 use App\Models\Equipment;
+use App\Models\Marca;
 use App\Models\Quote;
+use App\Models\Sede;
 use App\Models\Team;
 use App\Services\Avisos\AvisosDelVendedor;
 use Illuminate\Http\Request;
@@ -60,6 +63,7 @@ class HandleInertiaRequests extends Middleware
             ],
             // Lista única de agentes extintores para los formularios (C1).
             'agentesExtintor' => fn () => $user ? EquipmentType::etiquetas() : [],
+            'marcasExtintor' => fn () => $user ? Marca::nombresActivos() : [],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
             'teams' => fn () => $user?->toUserTeams(includeCurrent: true) ?? [],
@@ -67,6 +71,7 @@ class HandleInertiaRequests extends Middleware
             // se resuelve completamente cuando el selector de Sede se construya.
             'currentSedeId' => fn () => $request->session()->get('current_sede_id'),
             'currentSede' => fn () => $user?->sede?->only(['id', 'nombre']),
+            'puedeTrasladar' => fn (): bool => $user !== null && $user->hasAnyRole(['Almacen', 'Gerente']) && Sede::hayVariosAlmacenes(),
             // Contadores del sidebar del Vendedor. Solo se calculan si el
             // usuario tiene ese rol (evita las consultas en páginas de otros
             // roles); antes eran placeholders fijos en el componente React.
@@ -82,6 +87,15 @@ class HandleInertiaRequests extends Middleware
                     ->count(),
                 'servicios_alertas' => app(AvisosDelVendedor::class)->contar($user),
             ] : null,
+            // Campana del gerente: cierres de caja de la última semana en los
+            // que faltó o sobró dinero.
+            'cierresConDiferencia' => fn () => $user?->hasRole('Gerente')
+                ? CashRegister::query()
+                    ->where('estado', 'cerrado')
+                    ->where('fecha_cierre', '>=', now()->subDays(7))
+                    ->whereRaw('ROUND(monto_contado_cierre - monto_esperado_calculado, 2) <> 0')
+                    ->count()
+                : 0,
             'alertasTop' => fn () => $user?->hasRole('Vendedor')
                 ? app(AvisosDelVendedor::class)->lista($user, self::slugDelEquipo($request))
                 : [],

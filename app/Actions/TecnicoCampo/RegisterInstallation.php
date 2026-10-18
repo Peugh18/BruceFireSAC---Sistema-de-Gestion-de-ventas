@@ -8,6 +8,8 @@ use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
+use App\Services\AuditLogger;
+use App\Services\Tecnico\CertificadosDeCampo;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -33,6 +35,7 @@ class RegisterInstallation
      *     conformidad_nombre: string,
      *     conformidad_aceptada: bool,
      *     emitir_certificado?: bool|null,
+     *     certificados_servicio?: list<array<string, mixed>>,
      *     tipo_certificado_codigo?: string|null,
      *     equipos: array<int, array{
      *         equipment_id?: int|null,
@@ -59,6 +62,10 @@ class RegisterInstallation
         EquipoDeLaOrden::asegurarAbierta($serviceOrder);
 
         return DB::transaction(function () use ($serviceOrder, $user, $data) {
+            $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            abort_unless($serviceOrder->atendiblePor($user), 404);
+            EquipoDeLaOrden::asegurarAbierta($serviceOrder);
+            $mediciones = app(CertificadosDeCampo::class)->validar($serviceOrder, $data['certificados_servicio'] ?? []);
             $equiposCreados = [];
 
             if (! empty($data['equipos']) && is_array($data['equipos'])) {
@@ -104,10 +111,11 @@ class RegisterInstallation
             ]);
 
             // Emisión de certificado aplicable si se solicitó (§25)
+            app(CertificadosDeCampo::class)->emitir($serviceOrder, $mediciones, 'instalación', $data['observaciones'] ?? null);
             if (! empty($data['emitir_certificado'])) {
                 $codigoCert = $data['tipo_certificado_codigo'] ?? 'operatividad_garantia';
-                $tipoCert = CertificateType::where('codigo', $codigoCert)->first()
-                    ?? CertificateType::where('codigo', 'operatividad_garantia')->first();
+                $tipoCert = CertificateType::where('codigo', $codigoCert)
+                    ->whereIn('codigo', IssueCertificate::TIPOS_DE_EXTINTOR)->first();
 
                 if ($tipoCert && count($equiposCreados) > 0) {
                     $unidades = array_map(fn (Equipment $eq) => [
@@ -130,6 +138,17 @@ class RegisterInstallation
             $serviceOrder->update([
                 'estado' => 'listo_entrega',
             ]);
+
+            AuditLogger::log(
+                action: 'instalacion.registrada',
+                entity: $serviceOrder,
+                newValues: [
+                    'area' => $data['area'],
+                    'ubicacion' => $data['ubicacion_instalada'],
+                    'equipos_instalados' => count($equiposCreados),
+                ],
+                userId: $user->id,
+            );
 
             return $serviceOrder->refresh();
         });

@@ -1,13 +1,11 @@
 import { InputPeru } from '@/components/ui/input-peru';
-import React from 'react';
-import ConversacionOrden, {
-    type ConversacionProps,
-} from '@/components/conversacion-orden';
+import React, { useState } from 'react';
+import BarraOrdenCampo from '@/components/barra-orden-campo';
+import type { ConversacionProps } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
-import guias from '@/routes/guias';
 import recojos from '@/routes/tecnico-campo/recojos';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
@@ -27,6 +25,7 @@ import OpcionesAgente from '@/components/opciones-agente';
 import { toast } from 'sonner';
 import EquiposRoutes from '@/routes/tecnico-campo/recojos/equipos';
 import { NativeSelect } from '@/components/ui/native-select';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 
 interface CustodyEventItem {
     id: number;
@@ -70,6 +69,8 @@ interface Props {
     custodyEvents: CustodyEventItem[];
     conversacion: ConversacionProps;
     evidencias: EvidenciaListada[];
+    requiereFotoRecojo: boolean;
+    cantidadEsperada: number;
 }
 
 export default function RecojoShow({
@@ -78,9 +79,13 @@ export default function RecojoShow({
     custodyEvents,
     conversacion,
     evidencias,
+    requiereFotoRecojo,
+    cantidadEsperada,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
+    const [dejarDatosTecnicosPendientes, setDejarDatosTecnicosPendientes] =
+        useState(false);
 
     const form = useForm({
         contacto_nombre: '',
@@ -117,35 +122,44 @@ export default function RecojoShow({
     };
 
     const yaRecogido = custodyEvents.some((e) => e.eslabon === 'recojo_campo');
+    const puedeRegistrar =
+        !yaRecogido && order.estado === 'pendiente_recepcion';
+    const fotosRecojo = evidencias.filter((e) => e.tipo === 'foto').length;
+    const faltanFotos = requiereFotoRecojo && fotosRecojo === 0;
+    const faltanEquipos =
+        requiereFotoRecojo && order.equipments.length !== cantidadEsperada;
+    const puedeConfirmar =
+        !form.processing &&
+        Boolean(form.data.firma) &&
+        form.data.conformidad_cliente &&
+        !faltanFotos &&
+        !faltanEquipos;
 
     return (
         <TecnicoCampoLayout>
             <Head title={`Recojo ${order.codigo} - Técnico de Campo`} />
+            <BarraOrdenCampo
+                ordenId={order.id}
+                codigo={order.codigo}
+                conversacion={conversacion}
+            />
 
-            <div className="space-y-4 pb-16">
+            <div className="space-y-4">
                 {/* Back Link */}
                 <Link
                     href={recojos.index.url({ current_team: teamSlug })}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
+                    className="dark:text-muted-foreground inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Volver a Lista de Recojos</span>
                 </Link>
-                <Link
-                    href={guias.create.url(teamSlug, {
-                        query: { origen: 'recojo', id: order.id },
-                    })}
-                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white transition hover:brightness-95"
-                >
-                    Emitir guía de remisión (antes de salir)
-                </Link>
 
                 {/* Client & Service Info Card */}
-                <div className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
+                <div className="bg-card border-border space-y-3 rounded-3xl border p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <div className="flex items-center gap-2">
-                                <span className="font-mono text-base font-extrabold text-neutral-900 dark:text-neutral-100">
+                                <span className="text-foreground font-mono text-base font-extrabold">
                                     {order.codigo}
                                 </span>
                                 {yaRecogido ? (
@@ -154,20 +168,22 @@ export default function RecojoShow({
                                     </span>
                                 ) : (
                                     <span className="text-warning-strong rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300">
-                                        Pendiente de Recojo
+                                        {puedeRegistrar
+                                            ? 'Pendiente de recojo'
+                                            : etiquetaEstadoOrden(order.estado)}
                                     </span>
                                 )}
                             </div>
-                            <h2 className="mt-1 text-base font-bold text-neutral-900 dark:text-neutral-100">
+                            <h2 className="text-foreground mt-1 text-base font-bold">
                                 {order.cliente.nombre}
                             </h2>
-                            <p className="font-mono text-xs text-neutral-500">
+                            <p className="text-muted-foreground font-mono text-xs">
                                 RUC/DNI: {order.cliente.documento}
                             </p>
                         </div>
                     </div>
 
-                    <div className="space-y-2 border-t border-neutral-100 pt-2 text-xs text-neutral-600 dark:border-neutral-700/60 dark:text-neutral-400">
+                    <div className="border-border/70 dark:text-muted-foreground space-y-2 border-t pt-2 text-xs text-neutral-600">
                         {order.cliente.direccion && (
                             <div className="flex items-start gap-1.5">
                                 <MapPin className="text-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -186,14 +202,14 @@ export default function RecojoShow({
                                 <Phone className="text-success-strong h-4 w-4 flex-shrink-0" />
                                 <a
                                     href={`tel:${order.cliente.telefono}`}
-                                    className="font-medium text-neutral-800 dark:text-neutral-200"
+                                    className="text-foreground font-medium"
                                 >
                                     {order.cliente.telefono}
                                 </a>
                             </div>
                         )}
                         {order.vehiculo && (
-                            <div className="text-xs text-neutral-500">
+                            <div className="text-muted-foreground text-xs">
                                 🚗 Vehículo asignado: {order.vehiculo}
                             </div>
                         )}
@@ -204,13 +220,15 @@ export default function RecojoShow({
 
                 {/* Indicaciones de Ventas / Notas de Coordinación */}
                 {(() => {
-                    const notas = order.notas_vendedor || [];
+                    const notas = (order.notas_vendedor || []).filter(
+                        (nota) => nota.mensaje.trim() !== '',
+                    );
                     if (!order.observaciones && notas.length === 0) {
                         return null;
                     }
 
                     return (
-                        <div className="border-border bg-muted rounded-2xl border p-4">
+                        <div className="border-border bg-muted rounded-3xl border p-4">
                             <div className="text-foreground flex items-center gap-2 text-xs font-bold">
                                 <MessageSquare className="text-foreground size-4" />
                                 <span>
@@ -240,7 +258,7 @@ export default function RecojoShow({
                                             <p className="font-medium">
                                                 {n.mensaje}
                                             </p>
-                                            <span className="mt-1 block text-xs text-neutral-400">
+                                            <span className="text-muted-foreground mt-1 block text-xs">
                                                 {n.fecha
                                                     ? new Date(
                                                           n.fecha,
@@ -256,14 +274,14 @@ export default function RecojoShow({
                 })()}
 
                 {/* Cadena de Custodia Timeline (§22.4) */}
-                <div className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800">
+                <div className="bg-card border-border space-y-3 rounded-3xl border p-4 shadow-sm">
                     <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-neutral-700 uppercase dark:text-neutral-300">
                         <ShieldCheck className="text-foreground h-4 w-4" />
                         <span>Cadena de Custodia</span>
                     </h3>
 
                     {custodyEvents.length === 0 ? (
-                        <p className="text-xs text-neutral-400 italic">
+                        <p className="text-muted-foreground text-xs italic">
                             Aún no se han registrado eslabones de custodia para
                             esta orden.
                         </p>
@@ -275,10 +293,10 @@ export default function RecojoShow({
                                     className="relative space-y-1 pl-7"
                                 >
                                     <div className="bg-primary absolute top-1 left-1 h-3.5 w-3.5 rounded-full ring-4 ring-white dark:ring-neutral-800" />
-                                    <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                    <div className="text-foreground text-xs font-bold">
                                         {ev.etapa || ev.eslabon}
                                     </div>
-                                    <div className="text-xs text-neutral-500">
+                                    <div className="text-muted-foreground text-xs">
                                         Por: {ev.responsable} •{' '}
                                         {new Date(ev.fecha).toLocaleString(
                                             'es-PE',
@@ -289,13 +307,13 @@ export default function RecojoShow({
                                         )}
                                     </div>
                                     {ev.payload?.contacto_cliente && (
-                                        <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                                        <div className="text-muted-foreground text-xs">
                                             Entregado por cliente:{' '}
                                             {ev.payload.contacto_cliente}
                                         </div>
                                     )}
                                     {ev.payload?.observaciones && (
-                                        <div className="rounded-lg bg-neutral-50 p-1.5 text-xs text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400">
+                                        <div className="dark:text-muted-foreground rounded-lg bg-neutral-50 p-1.5 text-xs text-neutral-600 dark:bg-neutral-900">
                                             {ev.payload.observaciones}
                                         </div>
                                     )}
@@ -306,8 +324,8 @@ export default function RecojoShow({
                 </div>
 
                 {/* Recojo Form (§22.1, §85.6.2) */}
-                {!yaRecogido ? (
-                    <div className="border-border from-muted via-muted space-y-3 rounded-2xl border bg-gradient-to-br to-transparent p-4">
+                {puedeRegistrar ? (
+                    <div className="border-border from-muted via-muted space-y-3 rounded-3xl border bg-gradient-to-br to-transparent p-4">
                         <h3 className="text-foreground flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase">
                             <Truck className="h-4 w-4" />
                             <span>Registro de Recojo Físico en Sitio</span>
@@ -317,6 +335,19 @@ export default function RecojoShow({
                             className="border-border space-y-2 rounded-xl border bg-white/70 p-3 dark:bg-neutral-900/60"
                             onSubmit={(event) => {
                                 event.preventDefault();
+                                if (
+                                    requiereFotoRecojo &&
+                                    !equipmentForm.data.numero_serie.trim() &&
+                                    !dejarDatosTecnicosPendientes &&
+                                    (!equipmentForm.data.tipo_agente ||
+                                        !equipmentForm.data.capacidad.trim())
+                                ) {
+                                    toast.error(
+                                        'Elige agente y capacidad, o marca que Planta completará los datos.',
+                                    );
+                                    return;
+                                }
+
                                 equipmentForm.post(
                                     EquiposRoutes.store.url({
                                         current_team: teamSlug,
@@ -337,7 +368,7 @@ export default function RecojoShow({
                             <AlertError
                                 errors={Object.values(equipmentForm.errors)}
                             />
-                            <p className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                            <p className="text-foreground text-xs font-bold">
                                 Extintores recogidos ({order.equipments.length})
                             </p>
                             {order.equipments.length > 0 && (
@@ -364,10 +395,29 @@ export default function RecojoShow({
                                     ))}
                                 </ul>
                             )}
+                            {requiereFotoRecojo && (
+                                <label className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
+                                    <input
+                                        type="checkbox"
+                                        checked={dejarDatosTecnicosPendientes}
+                                        onChange={(event) =>
+                                            setDejarDatosTecnicosPendientes(
+                                                event.target.checked,
+                                            )
+                                        }
+                                        className="mt-0.5 size-4 shrink-0 accent-current"
+                                    />
+                                    <span>
+                                        Aún no puedo identificar este extintor.
+                                        Planta completará sus datos antes del
+                                        certificado.
+                                    </span>
+                                </label>
+                            )}
                             <p className="text-muted-foreground text-xs">
-                                Si el equipo ya está registrado, escribe su
-                                código BF-EQ. Para uno nuevo, elige agente y
-                                capacidad; se generará su código interno.
+                                Si ya está registrado, escanea el código BF-EQ.
+                                Para un equipo nuevo, escribe lo que sepas; si
+                                faltan datos, quedarán pendientes para Planta.
                             </p>
                             <input
                                 aria-label="Numero serie"
@@ -379,7 +429,7 @@ export default function RecojoShow({
                                     )
                                 }
                                 placeholder="Escanear BF-EQ existente"
-                                className="w-full rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                className="border-input w-full rounded-xl border bg-white p-2.5 text-xs dark:bg-neutral-900"
                             />
                             <div className="grid grid-cols-2 gap-2">
                                 <NativeSelect
@@ -391,7 +441,7 @@ export default function RecojoShow({
                                             event.target.value,
                                         )
                                     }
-                                    className="rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                    className="border-input rounded-xl border bg-white p-2.5 text-xs dark:bg-neutral-900"
                                 >
                                     <OpcionesAgente vacia="Agente (alta nueva)" />
                                 </NativeSelect>
@@ -405,7 +455,7 @@ export default function RecojoShow({
                                         )
                                     }
                                     placeholder="Capacidad"
-                                    className="rounded-xl border border-neutral-300 bg-white p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                    className="border-input rounded-xl border bg-white p-2.5 text-xs dark:bg-neutral-900"
                                 />
                             </div>
                             <button
@@ -445,7 +495,7 @@ export default function RecojoShow({
                                                 e.target.value,
                                             )
                                         }
-                                        className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                        className="bg-card border-input w-full rounded-xl border p-2.5 text-xs dark:bg-neutral-900"
                                     />
                                 </div>
                             </div>
@@ -478,7 +528,7 @@ export default function RecojoShow({
                                         )
                                     }
                                     placeholder="Nombre completo de quien entrega en el local"
-                                    className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                    className="bg-card border-input w-full rounded-xl border p-2.5 text-xs dark:bg-neutral-900"
                                     required
                                 />
                             </div>
@@ -498,13 +548,13 @@ export default function RecojoShow({
                                     }
                                     placeholder="Detalles sobre el estado físico de los extintores al retirarlos..."
                                     rows={2}
-                                    className="bg-card w-full rounded-xl border border-neutral-300 p-2.5 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+                                    className="bg-card border-input w-full rounded-xl border p-2.5 text-xs dark:bg-neutral-900"
                                 />
                             </div>
 
                             {/* Conformidad / Firma por defecto (§85.6.2) */}
-                            <div className="bg-card space-y-1 rounded-xl border border-neutral-200 p-3 dark:border-neutral-700 dark:bg-neutral-900">
-                                <label className="flex cursor-pointer items-start gap-2.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+                            <div className="bg-card border-border space-y-1 rounded-xl border p-3 dark:bg-neutral-900">
+                                <label className="text-foreground flex cursor-pointer items-start gap-2.5 text-xs font-semibold">
                                     <input
                                         type="checkbox"
                                         checked={form.data.conformidad_cliente}
@@ -514,7 +564,7 @@ export default function RecojoShow({
                                                 e.target.checked,
                                             )
                                         }
-                                        className="text-foreground focus:ring-ring mt-0.5 h-4 w-4 rounded border-neutral-300"
+                                        className="text-foreground focus:ring-ring border-input mt-0.5 h-4 w-4 rounded"
                                         required
                                     />
                                     <span>
@@ -533,6 +583,17 @@ export default function RecojoShow({
                                 evidencias={evidencias}
                                 equipos={conversacion.equipos}
                             />
+                            {requiereFotoRecojo &&
+                            (faltanFotos || faltanEquipos) ? (
+                                <p
+                                    className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+                                    role="alert"
+                                >
+                                    {faltanEquipos
+                                        ? `Registra los ${cantidadEsperada} extintores recogidos antes de confirmar.`
+                                        : 'Agrega al menos una foto de cómo se recogieron los extintores antes de confirmar.'}
+                                </p>
+                            ) : null}
 
                             <FirmaCanvas
                                 etiqueta="Firma de quien entrega"
@@ -541,7 +602,7 @@ export default function RecojoShow({
 
                             <button
                                 type="submit"
-                                disabled={form.processing || !form.data.firma}
+                                disabled={!puedeConfirmar}
                                 className="bg-primary hover:bg-primary/90 active:bg-primary flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-xs font-bold text-white shadow-sm disabled:opacity-50"
                             >
                                 <CheckCircle2 className="h-4 w-4" />
@@ -561,19 +622,15 @@ export default function RecojoShow({
                         </form>
                     </div>
                 ) : (
-                    <div className="text-success-strong flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+                    <div className="text-success-strong flex items-center gap-2 rounded-3xl border border-emerald-200 bg-emerald-50 p-4 text-xs dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
                         <CheckCircle2 className="text-success-strong h-5 w-5 flex-shrink-0" />
                         <span>
-                            Recojo formalizado. Los equipos se encuentran en
-                            custodia rumbo a Planta.
+                            {yaRecogido
+                                ? 'Recojo formalizado. Los equipos se encuentran en custodia rumbo a Planta.'
+                                : 'Esta orden ya no admite recojos. Puedes consultar sus datos y conversar con el equipo.'}
                         </span>
                     </div>
                 )}
-
-                <ConversacionOrden
-                    ordenId={order.id}
-                    conversacion={conversacion}
-                />
             </div>
         </TecnicoCampoLayout>
     );

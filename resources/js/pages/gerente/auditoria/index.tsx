@@ -19,12 +19,13 @@ type AuditLogItem = {
     id: number;
     accion: string;
     usuario: string;
+    rol: string;
     entidad: string | null;
     entidad_id: number | null;
-    old_values: Record<string, unknown> | null;
-    new_values: Record<string, unknown> | null;
+    cambios: { campo: string; antes: string; despues: string }[];
     ip_address: string | null;
     fecha: string | null;
+    enlace: { url: string; etiqueta: string } | null;
 };
 
 type PaginationLink = {
@@ -44,6 +45,7 @@ type PaginatedLogs = {
 type AuditFilters = {
     accion: string;
     user_id: string | null;
+    rol: string;
     fecha_desde: string | null;
     fecha_hasta: string | null;
 };
@@ -52,28 +54,20 @@ type PageProps = {
     currentTeam: { slug: string };
     registros: PaginatedLogs;
     filters: AuditFilters;
-    acciones: string[];
+    acciones: Array<{ valor: string; etiqueta: string }>;
     usuarios: Array<{ id: number; name: string }>;
+    roles: string[];
     kpis: { totalRegistros: number; registrosHoy: number };
     [key: string]: unknown;
 };
 
-function formatValues(values: Record<string, unknown> | null): string {
-    if (!values) {
-        return '—';
-    }
-
-    return Object.entries(values)
-        .map(([key, value]) => `${key}: ${String(value)}`)
-        .join(', ');
-}
-
 export default function AuditoriaIndex() {
-    const { currentTeam, registros, filters, acciones, usuarios, kpis } =
+    const { currentTeam, registros, filters, acciones, usuarios, roles, kpis } =
         usePage<PageProps>().props;
 
     const [accion, setAccion] = useState(filters.accion || 'todas');
     const [userId, setUserId] = useState(filters.user_id || '');
+    const [rol, setRol] = useState(filters.rol || 'todos');
     const [fechaDesde, setFechaDesde] = useState(filters.fecha_desde || '');
     const [fechaHasta, setFechaHasta] = useState(filters.fecha_hasta || '');
 
@@ -83,6 +77,7 @@ export default function AuditoriaIndex() {
             {
                 accion,
                 user_id: userId || undefined,
+                rol: rol === 'todos' ? undefined : rol,
                 fecha_desde: fechaDesde || undefined,
                 fecha_hasta: fechaHasta || undefined,
             },
@@ -93,6 +88,7 @@ export default function AuditoriaIndex() {
     const resetFilters = () => {
         setAccion('todas');
         setUserId('');
+        setRol('todos');
         setFechaDesde('');
         setFechaHasta('');
         router.get(
@@ -166,9 +162,12 @@ export default function AuditoriaIndex() {
                                 <option value="todas">
                                     Todas las acciones
                                 </option>
-                                {acciones.map((a) => (
-                                    <option key={a} value={a}>
-                                        {a}
+                                {acciones.map((accion) => (
+                                    <option
+                                        key={accion.valor}
+                                        value={accion.valor}
+                                    >
+                                        {accion.etiqueta}
                                     </option>
                                 ))}
                             </NativeSelect>
@@ -193,6 +192,31 @@ export default function AuditoriaIndex() {
                                         {u.name}
                                     </option>
                                 ))}
+                            </NativeSelect>
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="gerente-auditoria-rol"
+                                className="text-foreground/80 block font-semibold"
+                            >
+                                Rol registrado
+                            </label>
+                            <NativeSelect
+                                id="gerente-auditoria-rol"
+                                value={rol}
+                                onChange={(e) => setRol(e.target.value)}
+                                className="border-border bg-muted/40 focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 text-xs focus:outline-none"
+                            >
+                                <option value="todos">Todos los roles</option>
+                                {roles.map((item) => (
+                                    <option key={item} value={item}>
+                                        {item}
+                                    </option>
+                                ))}
+                                <option value="sin_rol_registrado">
+                                    Sin rol registrado
+                                </option>
                             </NativeSelect>
                         </div>
 
@@ -256,6 +280,7 @@ export default function AuditoriaIndex() {
                                     <TableHead>Fecha</TableHead>
                                     <TableHead>Acción</TableHead>
                                     <TableHead>Usuario</TableHead>
+                                    <TableHead>Rol</TableHead>
                                     <TableHead>Entidad</TableHead>
                                     <TableHead>Detalle</TableHead>
                                     <TableHead>IP</TableHead>
@@ -264,7 +289,7 @@ export default function AuditoriaIndex() {
                             <TableBody className="divide-border divide-y">
                                 {registros.data.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6}>
+                                        <TableCell colSpan={7}>
                                             <Empty
                                                 icon={<Inbox />}
                                                 title="No se encontraron registros de auditoría con estos filtros."
@@ -281,7 +306,7 @@ export default function AuditoriaIndex() {
                                                 {r.fecha}
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
-                                                <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 font-mono text-xs font-bold text-zinc-700 uppercase">
+                                                <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-700">
                                                     {r.accion}
                                                 </span>
                                             </TableCell>
@@ -289,17 +314,42 @@ export default function AuditoriaIndex() {
                                                 {r.usuario}
                                             </TableCell>
                                             <TableCell className="text-muted-foreground px-4 py-3">
-                                                {r.entidad
-                                                    ? `${r.entidad} #${r.entidad_id}`
-                                                    : '—'}
+                                                {r.rol}
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground max-w-xs truncate px-4 py-3 text-xs">
-                                                {formatValues(r.new_values) !==
-                                                '—'
-                                                    ? formatValues(r.new_values)
-                                                    : formatValues(
-                                                          r.old_values,
-                                                      )}
+                                            <TableCell className="text-muted-foreground px-4 py-3">
+                                                {r.enlace ? (
+                                                    <a
+                                                        href={r.enlace.url}
+                                                        className="text-primary hover:underline"
+                                                    >
+                                                        {r.enlace.etiqueta}
+                                                    </a>
+                                                ) : r.entidad ? (
+                                                    r.entidad
+                                                ) : (
+                                                    '—'
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground max-w-sm px-4 py-3 text-xs">
+                                                {r.cambios.length === 0 ? (
+                                                    '—'
+                                                ) : (
+                                                    <ul className="space-y-0.5">
+                                                        {r.cambios.map((c) => (
+                                                            <li
+                                                                key={c.campo}
+                                                                className="break-words"
+                                                            >
+                                                                <span className="text-foreground font-medium">
+                                                                    {c.campo}:
+                                                                </span>{' '}
+                                                                {c.antes === '—'
+                                                                    ? c.despues
+                                                                    : `${c.antes} → ${c.despues}`}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-muted-foreground px-4 py-3 font-mono text-xs">
                                                 {r.ip_address || '—'}

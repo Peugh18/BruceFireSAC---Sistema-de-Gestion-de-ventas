@@ -31,7 +31,7 @@ class UpdateReceptionRequest extends FormRequest
             'items.*.fecha_vencimiento' => ['nullable', 'date'],
             'items.*.unidades_nuevas' => ['nullable', 'array'],
             'items.*.unidades_nuevas.*.capacidad' => ['required_with:items.*.unidades_nuevas', 'string', 'max:50'],
-            'items.*.unidades_nuevas.*.serie_fabricante' => ['nullable', 'string', 'max:100'],
+            'items.*.unidades_nuevas.*.serie_fabricante' => ['nullable', 'string', 'max:100', 'distinct:ignore_case'],
             'items.*.unidades_nuevas.*.marca' => ['required_with:items.*.unidades_nuevas', 'string', 'max:100'],
             'items.*.unidades_nuevas.*.anio_fabricacion' => [
                 'required_with:items.*.unidades_nuevas',

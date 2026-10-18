@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Certificates\EmitirCertificadoDeServicio;
+use App\Actions\Certificates\IssueCertificate;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
+use App\Http\Requests\Certificates\CorregirCertificadoRequest;
 use App\Models\Certificate;
 use App\Models\CertificateParticipant;
 use App\Models\CertificateRevision;
@@ -14,8 +16,10 @@ use App\Models\Sale;
 use App\Models\Team;
 use App\Services\Certificates\CertificatePdfService;
 use App\Services\Certificates\CertificateWordService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -36,7 +40,7 @@ class CertificateController extends Controller
         $estado = $request->string('estado')->toString();
 
         $certificates = $this->certificadosDeMiSede(Certificate::query())
-            ->with(['certificateType', 'client', 'certificateUnits', 'sale' => fn ($query) => $query->visiblePara(request()->user()), 'sale.electronicDocuments'])
+            ->with(['certificateType', 'client', 'certificateUnits', 'serviceOrder:id,codigo', 'sale' => fn ($query) => $query->visiblePara(request()->user()), 'sale.electronicDocuments'])
             ->withCount(['participants' => fn ($query) => $query->whereNull('anulado_at')])
             ->when($tipo !== '', fn ($query) => $query->whereHas('certificateType', fn ($q) => $q->where('codigo', $tipo)))
             ->when($estado !== '', fn ($query) => $query->where('estado', $estado))
@@ -51,7 +55,9 @@ class CertificateController extends Controller
             })
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->paginate(15)
+            // ponytail: se agrupa en la pantalla por atención; un grupo grande
+            // puede partirse entre páginas. Agrupar en SQL si llega a pasar seguido.
+            ->paginate(30)
             ->withQueryString()
             ->through(fn (Certificate $c) => [
                 'id' => $c->id,
@@ -59,7 +65,10 @@ class CertificateController extends Controller
                 'tipo' => $c->certificateType?->nombre,
                 'tipo_codigo' => $c->certificateType?->codigo,
                 'cliente' => $c->client?->razon_social,
+                'documento' => $c->client->numero_documento,
                 'client_id' => $c->client_id,
+                'orden' => $c->serviceOrder?->codigo,
+                'codigos' => $c->certificateUnits->pluck('codigo_interno')->filter()->values()->all(),
                 'referencia' => $c->referencia,
                 'venta' => $this->venta($c),
                 'unidades' => $c->certificateUnits->pluck('numero_serie_snapshot')->all(),
@@ -104,6 +113,10 @@ class CertificateController extends Controller
                 'tipo_codigo' => $tipo?->codigo,
                 'es_diploma' => $tipo?->codigo === 'capacitacion',
                 'referencia' => $certificate->referencia,
+                'direccion' => $certificate->direccion,
+                'corregir_datos_url' => $certificate->estado === 'vigente' && request()->user()?->can('certificates.print')
+                    ? route('vendedor.certificados.corregir', ['current_team' => $current_team, 'certificate' => $certificate])
+                    : null,
                 'cliente' => $certificate->client ? [
                     'id' => $certificate->client->id,
                     'razon_social' => $certificate->client->razon_social,
@@ -122,6 +135,7 @@ class CertificateController extends Controller
                     'marca' => $unidad->marca,
                     'capacidad' => $unidad->capacidad,
                     'agente' => $unidad->tipo_agente,
+                    'anio_fabricacion' => $unidad->anio_fabricacion,
                 ])->values()->all(),
                 'participants' => $certificate->participants->whereNull('anulado_at')->map(fn (CertificateParticipant $participant) => [
                     'id' => $participant->id,
@@ -228,5 +242,53 @@ class CertificateController extends Controller
         }
 
         return route('vendedor.ventas.certificado-servicio.create', ['current_team' => $team, 'sale' => $certificate->sale_id, 'tipo' => $codigo]);
+    }
+
+    /**
+     * Corrige los datos de un certificado ya emitido (dirección, serie, marca,
+     * capacidad...) sin cambiar su número: queda una revisión con el motivo,
+     * el antes y el después, y el registro en auditoría.
+     */
+    public function corregir(
+        Team $current_team,
+        Certificate $certificate,
+        CorregirCertificadoRequest $request,
+        IssueCertificate $action
+    ): RedirectResponse {
+        $this->asegurarSedeDeCertificado($certificate);
+
+        if ($certificate->estado !== 'vigente') {
+            throw ValidationException::withMessages(['certificado' => 'Solo se corrige un certificado vigente.']);
+        }
+
+        $datos = $request->validated();
+        /** @var array<int, array<string, mixed>> $editadas */
+        $editadas = $request->array('unidades');
+        $cambios = collect($editadas)->keyBy('id');
+        $unidades = $certificate->certificateUnits()->orderBy('orden')->get()
+            ->map(fn (CertificateUnit $unidad) => [
+                'equipment_id' => $unidad->equipment_id,
+                'numero_cliente' => $unidad->numero_cliente,
+                'numero_serie' => $cambios->get($unidad->id)['numero_serie'] ?? $unidad->numero_serie_snapshot,
+                'marca' => $cambios->get($unidad->id)['marca'] ?? $unidad->marca,
+                'capacidad' => $cambios->get($unidad->id)['capacidad'] ?? $unidad->capacidad,
+                'tipo_agente' => $cambios->get($unidad->id)['tipo_agente'] ?? $unidad->tipo_agente,
+                'anio_fabricacion' => $cambios->get($unidad->id)['anio_fabricacion'] ?? $unidad->anio_fabricacion,
+                'fecha_ultima_ph' => $unidad->fecha_ultima_ph?->toDateString(),
+                'fecha_ultima_recarga' => $unidad->fecha_ultima_recarga?->toDateString(),
+                'presion_ph' => $unidad->presion_ph,
+                'tiempo_ph' => $unidad->tiempo_ph,
+                'presion_trabajo' => $unidad->presion_trabajo,
+            ])->all();
+
+        $action->corregir(
+            $certificate,
+            $unidades === [] ? null : $unidades,
+            ['direccion' => $datos['direccion'] ?? null, 'referencia' => $datos['referencia'] ?? null],
+            $datos['motivo'],
+            $request->user()->id,
+        );
+
+        return back()->with('success', "Certificado {$certificate->numero} corregido.");
     }
 }

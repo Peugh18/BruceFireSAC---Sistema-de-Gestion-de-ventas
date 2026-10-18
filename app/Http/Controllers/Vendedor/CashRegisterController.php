@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Cash\CloseCashRegister;
 use App\Actions\Cash\OpenCashRegister;
+use App\Actions\Cash\RegistrarSalidaDeCaja;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cash\StoreCloseCashRegisterRequest;
 use App\Http\Requests\Cash\StoreOpenCashRegisterRequest;
+use App\Http\Requests\Cash\StoreSalidaDeCajaRequest;
 use App\Models\CashRegister;
 use App\Models\Team;
 use App\Services\Caja\DatosDeCaja;
@@ -65,6 +67,24 @@ class CashRegisterController extends Controller
             (float) $request->validated('monto_contado_cierre'),
             $request->validated('observacion')
         );
+
+        return back();
+    }
+
+    /**
+     * Registra una salida de efectivo del turno abierto del vendedor.
+     */
+    public function salida(
+        Team $current_team,
+        CashRegister $cash_register,
+        StoreSalidaDeCajaRequest $request,
+        RegistrarSalidaDeCaja $action
+    ): RedirectResponse {
+        if ($cash_register->vendedor_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $action->handle($cash_register, $request->user(), (float) $request->validated('monto'), (string) $request->validated('motivo'));
 
         return back();
     }

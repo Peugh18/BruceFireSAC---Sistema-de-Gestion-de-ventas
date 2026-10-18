@@ -77,6 +77,22 @@ test('la atencion explicita prevalece sobre la deduccion de la orden', function 
     $this->assertDatabaseHas('certificates', ['id' => $certificate->id, 'tipo_atencion' => 'mantenimiento']);
 });
 
+test('la orden mixta conserva la atencion y la recarga correctas para cada equipo', function () {
+    $recarga = Service::factory()->create(['nombre' => 'Recarga CO2 5 lb']);
+    $mantenimiento = Service::factory()->create(['nombre' => 'Mantenimiento PQS 6 kg']);
+    $orden = ServiceOrder::factory()->create(['service_id' => $recarga->id]);
+    $lineaRecarga = $orden->lines()->create(['service_id' => $recarga->id, 'cantidad' => 1]);
+    $lineaMantenimiento = $orden->lines()->create(['service_id' => $mantenimiento->id, 'cantidad' => 1]);
+    $equipoCo2 = Equipment::factory()->create(['client_id' => $orden->client_id, 'tipo_agente' => 'CO2']);
+    $equipoPqs = Equipment::factory()->create(['client_id' => $orden->client_id, 'tipo_agente' => 'PQS ABC']);
+    $orden->equipments()->attach($equipoCo2->id, ['service_order_line_id' => $lineaRecarga->id]);
+    $orden->equipments()->attach($equipoPqs->id, ['service_order_line_id' => $lineaMantenimiento->id]);
+
+    expect(TipoAtencionExtintor::deOrden($orden))->toBe('recarga / mantenimiento')
+        ->and(TipoAtencionExtintor::deEquipoEnOrden($orden, $orden->equipments()->whereKey($equipoCo2->id)->firstOrFail()))->toBe('recarga')
+        ->and(TipoAtencionExtintor::deEquipoEnOrden($orden, $orden->equipments()->whereKey($equipoPqs->id)->firstOrFail()))->toBe('mantenimiento');
+});
+
 test('corregir solo la atencion crea una revision y conserva numero vigencia y datos de ph', function () {
     $this->travelTo('2026-10-12');
     $tipo = CertificateType::factory()->create(['codigo' => 'prueba_hidrostatica', 'vigencia_meses' => 60]);

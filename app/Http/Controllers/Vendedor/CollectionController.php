@@ -15,9 +15,11 @@ use App\Services\Cobranzas\CarteraDeCobranzas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class CollectionController extends Controller
 {
@@ -55,37 +57,61 @@ class CollectionController extends Controller
             CashRegister::exigirAbiertaParaEfectivo((int) $installment->sale->vendedor_id, 'forma_pago');
         }
 
-        DB::transaction(function () use ($installment, $request): void {
-            $sale = Sale::query()->lockForUpdate()->findOrFail($installment->sale_id);
-            $installment = Installment::query()->lockForUpdate()->findOrFail($installment->id);
-            $saldo = $installment->saldo();
-            $monto = (float) $request->validated('monto');
+        $path = null;
+        try {
+            DB::transaction(function () use ($installment, $request, &$path): void {
+                $sale = Sale::query()->lockForUpdate()->findOrFail($installment->sale_id);
+                $installment = Installment::query()->lockForUpdate()->findOrFail($installment->id);
+                $saldo = $installment->saldo();
+                $monto = (float) $request->validated('monto');
 
-            if ($monto > $saldo) {
-                throw ValidationException::withMessages([
-                    'monto' => 'El monto no puede superar el saldo de S/ '.number_format($saldo, 2).'.',
-                ]);
-            }
-
-            if ($request->boolean('es_detraccion')) {
-                if (! $installment->esDelComprobante()) {
-                    throw ValidationException::withMessages(['monto' => 'Registra esta constancia en una cuota del comprobante original.']);
+                if ($monto > $saldo) {
+                    throw ValidationException::withMessages([
+                        'monto' => 'El monto no puede superar el saldo de S/ '.number_format($saldo, 2).'.',
+                    ]);
                 }
-                SalePayment::validarDetraccion($sale, $monto, (string) $request->validated('forma_pago'), $request->validated('numero_operacion'), $installment->id);
+
+                if ($request->boolean('es_detraccion')) {
+                    if (! $installment->esDelComprobante()) {
+                        throw ValidationException::withMessages(['monto' => 'Registra esta constancia en una cuota del comprobante original.']);
+                    }
+                    SalePayment::validarDetraccion($sale, $monto, (string) $request->validated('forma_pago'), $request->validated('numero_operacion'), $installment->id);
+                } elseif ($installment->esDelComprobante()) {
+                    $saldos = CarteraDeCobranzas::saldosDelComprobante($sale);
+                    if ($monto > $saldos['comercial']) {
+                        throw ValidationException::withMessages(['monto' => 'El cobro comercial no puede incluir la detracción pendiente. Saldo comercial de la venta: S/ '.number_format($saldos['comercial'], 2).'.']);
+                    }
+                }
+
+                if ($request->boolean('es_detraccion') && $request->hasFile('evidencia')) {
+                    $path = $request->file('evidencia')->store('detracciones/'.$sale->id, 'local');
+                    if ($path === false) {
+                        throw ValidationException::withMessages(['evidencia' => 'No se pudo guardar la evidencia. Inténtalo nuevamente.']);
+                    }
+                }
+
+                $pago = SalePayment::create([
+                    'sale_id' => $installment->sale_id,
+                    'installment_id' => $installment->id,
+                    'forma_pago' => $request->validated('forma_pago'),
+                    'monto' => $monto,
+                    'es_detraccion' => $request->boolean('es_detraccion'),
+                    'numero_operacion' => $request->validated('numero_operacion'),
+                    'fecha' => $request->boolean('es_detraccion') ? $request->validated('fecha_deposito') : today(),
+                ]);
+                $pago->forceFill(['constancia_path' => $path])->save();
+                if ($pago->es_detraccion) {
+                    AuditLogger::log(action: 'detraccion.acreditada', entity: $pago, newValues: $pago->only(['sale_id', 'installment_id', 'monto', 'numero_operacion', 'fecha', 'constancia_path']), userId: $request->user()->id);
+                }
+
+                $installment->recalcularEstado();
+            });
+        } catch (Throwable $error) {
+            if (is_string($path)) {
+                Storage::disk('local')->delete($path);
             }
-
-            SalePayment::create([
-                'sale_id' => $installment->sale_id,
-                'installment_id' => $installment->id,
-                'forma_pago' => $request->validated('forma_pago'),
-                'monto' => $monto,
-                'es_detraccion' => $request->boolean('es_detraccion'),
-                'numero_operacion' => $request->validated('numero_operacion'),
-                'fecha' => today(),
-            ]);
-
-            $installment->recalcularEstado();
-        });
+            throw $error;
+        }
 
         return back();
     }

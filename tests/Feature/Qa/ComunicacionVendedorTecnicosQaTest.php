@@ -80,14 +80,14 @@ it('lleva la nota del vendedor a la pantalla de ejecución de planta', function 
         ->assertRedirect();
 
     $this->actingAs($tecnico)
-        ->get(route('tecnico-planta.ejecucion.show', [
+        ->get(route('tecnico-planta.ordenes.show', [
             'current_team' => $tecnico->currentTeam,
             'service_order' => $order,
         ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('order.events', fn ($events) => collect($events)->contains(
-                fn ($event) => data_get($event, 'payload.mensaje') === 'El cliente autorizó recoger después de las 4 p. m.'
+            ->where('conversacion.eventos', fn ($events) => collect($events)->contains(
+                fn ($event) => data_get($event, 'mensaje') === 'El cliente autorizó recoger después de las 4 p. m.'
             ))
         );
 });
@@ -249,7 +249,7 @@ it('debe impedir que un técnico opere una orden de otra sede', function () {
     ]);
 
     $this->actingAs($tecnico)
-        ->get(route('tecnico-planta.recepciones.show', [
+        ->get(route('tecnico-planta.ordenes.show', [
             'current_team' => $tecnico->currentTeam,
             'service_order' => $order,
         ]))

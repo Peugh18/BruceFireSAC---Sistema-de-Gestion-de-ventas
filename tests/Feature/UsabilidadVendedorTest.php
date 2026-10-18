@@ -183,6 +183,6 @@ test('los formularios de almacen planta y gerencia muestran errores anidados o n
         ->toContain('role="alert"');
 })->with([
     'recepcion de almacen' => ['js/pages/almacen/recepciones/create.tsx'],
-    'checklist de tecnico planta' => ['js/pages/tecnico-planta/checklist/create.tsx'],
+    'checklist de tecnico planta' => ['js/components/checklist-extintor.tsx'],
     'productos de gerente' => ['js/pages/gerente/productos/index.tsx'],
 ]);

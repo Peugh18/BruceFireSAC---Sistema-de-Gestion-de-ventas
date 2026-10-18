@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import ChecklistExtintor from '@/components/checklist-extintor';
-import ConversacionOrden, {
-    type ConversacionProps,
-} from '@/components/conversacion-orden';
+import MedicionesCertificadoCampo, {
+    iniciarMediciones,
+    type FormularioCertificadoCampo,
+} from '@/components/mediciones-certificado-campo';
+import BarraOrdenCampo from '@/components/barra-orden-campo';
+import type { ConversacionProps } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, {
     type EvidenciaListada,
@@ -31,6 +34,7 @@ type Equipo = {
 };
 
 type Props = {
+    formulariosCertificado: FormularioCertificadoCampo[];
     asignacion: AsignacionOrden;
     order: {
         id: number;
@@ -60,6 +64,7 @@ type EquipoCliente = {
 };
 
 export default function MantenimientoShow({
+    formulariosCertificado,
     asignacion,
     order,
     elementosChecklist,
@@ -78,6 +83,7 @@ export default function MantenimientoShow({
 
     const agregar = useForm({ numero_serie: '' });
     const cierre = useForm({
+        certificados_servicio: iniciarMediciones(formulariosCertificado),
         conformidad_nombre: '',
         conformidad_aceptada: false,
         observaciones_generales: '',
@@ -125,8 +131,13 @@ export default function MantenimientoShow({
     return (
         <TecnicoCampoLayout title={`Mantenimiento ${order.codigo}`}>
             <Head title={`Mantenimiento ${order.codigo} - Técnico de Campo`} />
+            <BarraOrdenCampo
+                ordenId={order.id}
+                codigo={order.codigo}
+                conversacion={conversacion}
+            />
 
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <Link
                     href={mantenimientos.index.url(equipo)}
                     className="text-muted-foreground hover:text-foreground inline-flex min-h-[44px] items-center gap-1.5 text-xs font-bold"
@@ -151,7 +162,7 @@ export default function MantenimientoShow({
             <TomarOrden asignacion={asignacion} />
 
             <div className="space-y-5">
-                <section className="border-border bg-card rounded-2xl border p-4 shadow-xs">
+                <section className="border-border bg-card rounded-3xl border p-4 shadow-xs">
                     <h1 className="text-foreground text-base font-black">
                         {order.client.razon_social}
                     </h1>
@@ -163,7 +174,7 @@ export default function MantenimientoShow({
                 </section>
 
                 {customerEquipments.length > 0 && (
-                    <section className="border-border bg-card space-y-2 rounded-2xl border p-4 shadow-xs">
+                    <section className="border-border bg-card space-y-2 rounded-3xl border p-4 shadow-xs">
                         <h2 className="text-xs font-black tracking-wider uppercase">
                             Equipos registrados del cliente (
                             {customerEquipments.length})
@@ -188,7 +199,7 @@ export default function MantenimientoShow({
                     </section>
                 )}
 
-                <section className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
+                <section className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
                     <h2 className="text-xs font-black tracking-wider uppercase">
                         1. Extintores revisados ({revisados}/
                         {order.equipments.length})
@@ -320,7 +331,7 @@ export default function MantenimientoShow({
                     </ul>
                 </section>
 
-                <section className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
+                <section className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
                     <h2 className="text-xs font-black tracking-wider uppercase">
                         2. Fotos del trabajo
                     </h2>
@@ -341,7 +352,7 @@ export default function MantenimientoShow({
                 </section>
 
                 {finalizado ? (
-                    <section className="space-y-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                    <section className="space-y-2 rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-4">
                         <p className="flex items-center gap-2 text-xs font-black">
                             <CheckCircle2 className="text-success-strong size-4" />
                             Mantenimiento finalizado.
@@ -359,11 +370,19 @@ export default function MantenimientoShow({
                 ) : (
                     <form
                         onSubmit={cerrar}
-                        className="bg-card border-border space-y-3 rounded-2xl border p-4 shadow-sm"
+                        className="bg-card border-border space-y-3 rounded-3xl border p-4 shadow-sm"
                     >
                         <h2 className="text-xs font-black tracking-wider uppercase">
                             3. Conformidad y firma del cliente
                         </h2>
+                        <MedicionesCertificadoCampo
+                            tipos={formulariosCertificado}
+                            value={cierre.data.certificados_servicio}
+                            onChange={(datos) =>
+                                cierre.setData('certificados_servicio', datos)
+                            }
+                            errors={errores}
+                        />
                         <label className="block text-xs font-bold">
                             Nombre de quien recibe *
                             <input
@@ -454,11 +473,13 @@ export default function MantenimientoShow({
                                     cerrar.
                                 </p>
                             )}
-                            {!revisados && (
-                                <p>
-                                    Falta el checklist de al menos un extintor.
-                                </p>
-                            )}
+                            {!revisados &&
+                                formulariosCertificado.length === 0 && (
+                                    <p>
+                                        Falta el checklist de al menos un
+                                        extintor.
+                                    </p>
+                                )}
                             {!fotosAntes && (
                                 <p>
                                     Falta al menos una foto de antes del
@@ -492,7 +513,9 @@ export default function MantenimientoShow({
                             type="submit"
                             disabled={
                                 cierre.processing ||
-                                !revisados ||
+                                (!revisados &&
+                                    (formulariosCertificado.length === 0 ||
+                                        order.equipments.length > 0)) ||
                                 !fotosAntes ||
                                 !fotosDespues ||
                                 !cierre.data.conformidad_nombre.trim() ||
@@ -505,11 +528,6 @@ export default function MantenimientoShow({
                         </button>
                     </form>
                 )}
-
-                <ConversacionOrden
-                    ordenId={order.id}
-                    conversacion={conversacion}
-                />
             </div>
         </TecnicoCampoLayout>
     );

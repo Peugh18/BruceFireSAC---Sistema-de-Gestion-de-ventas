@@ -9,7 +9,6 @@ use App\Http\Requests\Gerente\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Team;
-use App\Services\AuditLogger;
 use App\Services\Billing\AfectacionIgv;
 use App\Support\UnidadMedidaSunat;
 use Illuminate\Http\RedirectResponse;
@@ -48,8 +47,9 @@ class ProductController extends Controller
                 'id' => $p->id,
                 'codigo' => $p->codigo,
                 'codigo_barras' => $p->codigo_barras,
+                'codigo_sunat' => $p->codigo_sunat,
                 'categoria' => $p->categoria,
-                'agente' => $p->agente,
+                'agente' => EquipmentType::nombreDe($p->agente),
                 'capacidad' => $p->capacidad,
                 'peso_kg' => $p->peso_kg,
                 'nombre' => $p->nombre,
@@ -75,10 +75,9 @@ class ProductController extends Controller
         $totalBajoMinimo = Product::query()->bajoMinimo()->count();
 
         return Inertia::render('gerente/productos/index', [
-            'siguienteCodigo' => $this->siguienteCodigo(),
+            'siguienteCodigo' => Product::siguienteCodigo(),
             'categorias' => ProductCategory::conUsos(),
             'unidadesMedida' => UnidadMedidaSunat::opciones(),
-            'agentes' => EquipmentType::opciones(),
             'productos' => $productos,
             'filters' => [
                 'buscar' => $buscar,
@@ -124,16 +123,8 @@ class ProductController extends Controller
             ]);
         }
 
-        $antes = $producto->only(['nombre', 'precio_venta', 'serializado', 'activo', 'codigo_barras']);
+        // La auditoría (campos que cambian, antes y después) la deja el modelo.
         $producto->update($datos);
-
-        AuditLogger::log(
-            action: 'producto.actualizado',
-            entity: $producto,
-            oldValues: $antes,
-            newValues: $producto->only(array_keys($antes)),
-            userId: $request->user()?->id,
-        );
 
         return redirect()->route('gerente.productos.index', ['current_team' => $current_team])
             ->with('success', 'Producto actualizado exitosamente.');
@@ -154,19 +145,5 @@ class ProductController extends Controller
         $status = $producto->activo ? 'activado' : 'desactivado';
 
         return redirect()->back()->with('success', "Producto {$status} exitosamente.");
-    }
-
-    /**
-     * Código sugerido para el producto nuevo: el siguiente PRD-#### libre.
-     */
-    protected function siguienteCodigo(): string
-    {
-        $numero = (int) Product::query()->max('id') + 1;
-
-        do {
-            $codigo = sprintf('PRD-%04d', $numero++);
-        } while (Product::query()->where('codigo', $codigo)->exists());
-
-        return $codigo;
     }
 }

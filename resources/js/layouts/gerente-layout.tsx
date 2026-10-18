@@ -1,10 +1,12 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import ChispaWidget from '@/components/chispa-widget';
 import { Bell, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { GerenteSidebar } from '@/components/gerente-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
+import cajasRoutes from '@/routes/gerente/cajas';
+import type { Team } from '@/types';
 
 type GerenteLayoutProps = {
     children: ReactNode;
@@ -12,6 +14,10 @@ type GerenteLayoutProps = {
 };
 
 export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
+    const { currentTeam, cierresConDiferencia = 0 } = usePage<{
+        currentTeam?: Team | null;
+        cierresConDiferencia?: number;
+    }>().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -69,14 +75,27 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
 
                         <ThemeToggle />
 
-                        <button
-                            type="button"
+                        <Link
+                            href={`${cajasRoutes.index.url(currentTeam?.slug ?? '')}?con_diferencia=1`}
                             className="border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground relative flex size-11 shrink-0 items-center justify-center rounded-xl border transition-[color,background-color,transform] duration-150 active:scale-95"
-                            aria-label="Notificaciones"
+                            aria-label={
+                                cierresConDiferencia > 0
+                                    ? `${cierresConDiferencia} cierres de caja con dinero de más o de menos esta semana`
+                                    : 'Sin avisos: las cajas de esta semana cuadran'
+                            }
+                            title={
+                                cierresConDiferencia > 0
+                                    ? 'Cierres de caja con diferencia'
+                                    : 'Sin avisos'
+                            }
                         >
                             <Bell className="size-4" strokeWidth={2} />
-                            <span className="border-card bg-primary absolute top-[7px] right-[7px] size-[7px] rounded-full border-[1.5px]" />
-                        </button>
+                            {cierresConDiferencia > 0 && (
+                                <span className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-bold">
+                                    {cierresConDiferencia}
+                                </span>
+                            )}
+                        </Link>
                     </header>
 
                     {/* Único contenedor de scroll vertical: sidebar y header quedan estáticos */}

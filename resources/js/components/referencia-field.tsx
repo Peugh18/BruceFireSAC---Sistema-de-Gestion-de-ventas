@@ -14,12 +14,18 @@ export default function ReferenciaField({
     value,
     onChange,
     error,
+    label,
+    placeholder,
+    required = false,
 }: {
     cliente: ClientFicha | null;
     destino: 'local_cliente' | 'vehiculo';
     value: string;
     onChange: (value: string, vehicleId: number | null) => void;
     error?: string;
+    label?: string;
+    placeholder?: string;
+    required?: boolean;
 }) {
     const esVehiculo = destino === 'vehiculo';
     const opciones = esVehiculo
@@ -39,11 +45,13 @@ export default function ReferenciaField({
     return (
         <div>
             <div className="text-foreground text-sm font-medium">
-                Referencia{' '}
-                <span className="text-muted-foreground font-normal normal-case">
-                    ({esVehiculo ? 'placa' : 'sede u oficina'} · sale en el
-                    comprobante)
-                </span>
+                {label ?? 'Referencia'}{' '}
+                {!label && (
+                    <span className="text-muted-foreground font-normal normal-case">
+                        ({esVehiculo ? 'placa' : 'sede u oficina'} · sale en el
+                        comprobante)
+                    </span>
+                )}
             </div>
             {opciones.length > 0 ? (
                 <div className="mt-1 flex flex-wrap gap-1.5">
@@ -72,15 +80,18 @@ export default function ReferenciaField({
                 </div>
             ) : null}
             <Input
+                aria-label={label ?? 'Referencia'}
+                required={required}
                 value={value}
                 maxLength={150}
                 onChange={(event) => onChange(event.target.value, null)}
                 placeholder={
-                    esVehiculo
+                    placeholder ??
+                    (esVehiculo
                         ? 'Ej. PLACA: AVR-833'
-                        : 'Ej. SEDE: Oficina Chimbote (opcional)'
+                        : 'Ej. SEDE: Oficina Chimbote (opcional)')
                 }
-                className="border-border bg-card mt-1.5 h-10 rounded-lg text-[13px]"
+                className="border-border bg-card mt-1.5 min-h-11 rounded-xl text-base"
             />
             {error ? (
                 <p

@@ -14,6 +14,8 @@ use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\ServiceOrders\CasillerosDeLaOrden;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
+use App\Services\Tecnico\ConversacionDeLaOrden;
+use App\Services\Tecnico\PasoDelTaller;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -124,7 +126,6 @@ class ServiceOrderController extends Controller
             'client',
             'sede',
             'tecnico',
-            'events' => fn ($query) => $query->with('user')->orderBy('created_at'),
             'equipments',
             'lines.service',
             'sale',
@@ -136,11 +137,13 @@ class ServiceOrderController extends Controller
         return Inertia::render('vendedor/ordenes-servicio/show', [
             'serviceOrder' => $service_order,
             'casilleros' => CasillerosDeLaOrden::paraPagina($service_order),
+            // El mismo avance que ve el taller, y el chat de la orden.
+            'paso' => PasoDelTaller::de($service_order),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
             'tecnicos' => $this->tecnicosQueAtienden($service_order)->get(['id', 'name']),
             'tecnicosEntrega' => in_array($service_order->estado, ServiceOrder::ESTADOS_LISTOS, true)
                 ? $this->tecnicosDeEntrega($service_order)->get(['id', 'name'])
                 : [],
-            'services' => Service::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
             // Los hallazgos de la orden, para decidir el adicional sin salir de aquí.
             'deficiencias' => $service_order->deficiencies()->latest('id')->get()
                 ->map(fn (Deficiency $deficiency) => DeficiencyController::paraPantalla($deficiency, $current_team))

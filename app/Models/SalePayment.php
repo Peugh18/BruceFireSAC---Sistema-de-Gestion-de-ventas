@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\Billing\DetraccionCalculator;
 use Database\Factories\SalePaymentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,6 +44,17 @@ class SalePayment extends Model
     // Un cobro anulado queda tachado (deleted_at) y deja de contar en saldos
     // y caja, pero no se pierde.
     use SoftDeletes;
+
+    /** La ruta del archivo no sale al navegador: se descarga por su ruta protegida. */
+    protected $hidden = ['constancia_path'];
+
+    protected $appends = ['tiene_constancia'];
+
+    /** @return Attribute<bool, never> */
+    protected function tieneConstancia(): Attribute
+    {
+        return Attribute::get(fn () => filled($this->getAttribute('constancia_path')));
+    }
 
     protected static function booted(): void
     {

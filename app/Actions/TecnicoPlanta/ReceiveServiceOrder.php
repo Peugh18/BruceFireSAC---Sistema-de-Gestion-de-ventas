@@ -5,6 +5,7 @@ namespace App\Actions\TecnicoPlanta;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -67,6 +68,18 @@ class ReceiveServiceOrder
                     'fecha' => now()->toIso8601String(),
                 ],
             ]);
+
+            AuditLogger::log(
+                action: 'orden.recepcion_confirmada',
+                entity: $serviceOrder,
+                oldValues: ['estado' => $estadoAnterior],
+                newValues: [
+                    'estado' => 'recibido_planta',
+                    'equipos_recibidos' => $equiposRecibidosCount,
+                    'diferencias' => $diferencias,
+                ],
+                userId: $user->id,
+            );
 
             return $serviceOrder->refresh();
         });

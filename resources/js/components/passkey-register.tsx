@@ -33,13 +33,14 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
     });
 
     const [showForm, setShowForm] = useState(false);
-    const { register, isLoading, error, isSupported } = usePasskeyRegister({
-        onSuccess: () => {
-            setName('');
-            setShowForm(false);
-            onSuccess();
-        },
-    });
+    const { register, isLoading, error, errorInstance, isSupported } =
+        usePasskeyRegister({
+            onSuccess: () => {
+                setName('');
+                setShowForm(false);
+                onSuccess();
+            },
+        });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -56,10 +57,12 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
         setName('');
     };
 
-    if (!isSupported) {
+    if (!isSupported || !window.isSecureContext) {
         return (
             <div className="text-muted-foreground text-sm">
-                Este navegador no admite llaves de acceso.
+                Las llaves necesitan un navegador compatible y una conexión
+                HTTPS (o localhost para pruebas). Usa tu contraseña para entrar
+                desde este navegador.
             </div>
         );
     }
@@ -95,7 +98,26 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
                 </p>
             </div>
 
-            {error && <InputError message={error} />}
+            <p className="text-muted-foreground text-xs">
+                Al registrar, tu dispositivo pedirá huella, reconocimiento
+                facial, PIN o una llave física. El nombre de arriba solo
+                identifica la llave.
+            </p>
+            {error && (
+                <InputError
+                    message={
+                        errorInstance?.name === 'UserCancelledError'
+                            ? 'No se completó la verificación del dispositivo: se canceló o venció el tiempo. Vuelve a intentarlo y confirma con tu PIN, huella o llave física.'
+                            : errorInstance?.name === 'InvalidDomainError'
+                              ? 'Este dominio no admite el registro de llaves. Usa la dirección HTTPS oficial de Bruce Fire o localhost en pruebas.'
+                              : errorInstance?.name === 'PasskeyExistsError'
+                                ? 'Este dispositivo ya tiene una llave registrada para esta cuenta.'
+                                : errorInstance?.name === 'NotSupportedError'
+                                  ? 'Tu navegador o dispositivo no permite registrar esta llave. Puedes seguir usando tu contraseña.'
+                                  : 'No se pudo registrar la llave de acceso. Inténtalo de nuevo; si persiste, usa tu contraseña y comunica el problema.'
+                    }
+                />
+            )}
 
             <div className="flex gap-2">
                 <Button type="submit" disabled={isLoading || !name.trim()}>

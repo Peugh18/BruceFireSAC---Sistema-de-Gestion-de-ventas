@@ -40,9 +40,11 @@ test('tecnico planta dashboard renders kpis and default queue', function () {
                 ->where('pendientes_recepcion', 1)
                 ->where('en_taller', 1)
                 ->where('esperando_autorizacion', 0)
-                ->where('listas', 0)
+                ->has('atrasadas')
             )
             ->where('filters.tab', 'todas')
+            ->where('graficos.prioridades.2.valor', 2)
+            ->has('graficos.terminadas', 7)
             ->has('orders.data', 2)
         );
 });

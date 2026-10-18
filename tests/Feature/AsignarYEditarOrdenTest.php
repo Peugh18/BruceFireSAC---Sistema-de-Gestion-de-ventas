@@ -61,12 +61,12 @@ test('el tecnico del almacen ve la orden de la tienda y un tecnico de otra sede 
         ->assertInertia(fn ($page) => $page->where('orders.data.0.id', $this->orden->id));
 
     $this->actingAs($this->tecnico)
-        ->get(rutaDeOrden($this->tecnico, 'tecnico-planta.recepciones.show', $this->orden))
+        ->get(rutaDeOrden($this->tecnico, 'tecnico-planta.ordenes.show', $this->orden))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('asignacion.tecnico', null));
 
     $this->actingAs($this->tecnicoAjeno)
-        ->get(rutaDeOrden($this->tecnicoAjeno, 'tecnico-planta.recepciones.show', $this->orden))
+        ->get(rutaDeOrden($this->tecnicoAjeno, 'tecnico-planta.ordenes.show', $this->orden))
         ->assertNotFound();
 });
 

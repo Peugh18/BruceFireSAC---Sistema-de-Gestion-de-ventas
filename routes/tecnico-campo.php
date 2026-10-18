@@ -4,9 +4,11 @@ use App\Http\Controllers\TechnicalOrderAssignmentController;
 use App\Http\Controllers\TecnicoCampo\CollectionController;
 use App\Http\Controllers\TecnicoCampo\DashboardController;
 use App\Http\Controllers\TecnicoCampo\DeliveryController;
+use App\Http\Controllers\TecnicoCampo\IniciarRecojoController;
 use App\Http\Controllers\TecnicoCampo\InspectionController;
 use App\Http\Controllers\TecnicoCampo\InstallationController;
 use App\Http\Controllers\TecnicoCampo\MaintenanceController;
+use App\Http\Controllers\Vendedor\RucLookupController;
 use App\Http\Middleware\EnsureTechnicalOrderAccess;
 use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +24,11 @@ Route::prefix('tecnico-campo')
 
         // Recojo y Cadena de Custodia (§22.1, §22.4, Fase 7)
         Route::get('recojos', [CollectionController::class, 'index'])->name('recojos.index');
+        Route::get('recojos/nuevo', [IniciarRecojoController::class, 'create'])->name('recojos.create');
+        Route::post('recojos', [IniciarRecojoController::class, 'store'])->name('recojos.iniciar');
+        Route::get('clientes/buscar', [IniciarRecojoController::class, 'search'])->name('clientes.search');
+        Route::get('clientes/{client}/ficha', [IniciarRecojoController::class, 'ficha'])->name('clientes.ficha');
+        Route::get('documentos/consultar', [RucLookupController::class, 'show'])->middleware('throttle:20,1')->name('documentos.lookup');
         Route::get('recojos/{service_order}', [CollectionController::class, 'show'])->name('recojos.show');
         Route::post('ordenes/{service_order}/tomar', [TechnicalOrderAssignmentController::class, 'take'])->name('ordenes.tomar');
         Route::post('recojos/{service_order}', [CollectionController::class, 'store'])->name('recojos.store');

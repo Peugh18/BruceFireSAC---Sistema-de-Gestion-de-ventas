@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Gerente;
 
 use App\Http\Controllers\Controller;
 use App\Models\CashRegister;
+use App\Models\CashRegisterWithdrawal;
 use App\Models\Sede;
 use App\Models\Team;
 use App\Models\User;
@@ -116,6 +117,41 @@ class CashRegisterConsolidatedController extends Controller
 
         return Inertia::render('gerente/cajas/index', [
             'cajas' => $cajas,
+            'detalle' => function () use ($request): ?array {
+                if (! $request->filled('turno')) {
+                    return null;
+                }
+
+                $turno = CashRegister::query()
+                    ->with(['vendedor:id,name', 'sede:id,nombre'])
+                    ->where('estado', 'cerrado')
+                    ->findOrFail($request->integer('turno'));
+                $salidas = $turno->salidas()->orderBy('id')->get();
+                $diferencia = $turno->diferencia !== null ? round((float) $turno->diferencia, 2) : null;
+
+                return [
+                    'id' => $turno->id,
+                    'vendedor' => $turno->vendedor->name,
+                    'sede' => $turno->sede_id === null ? 'Sin sede' : $turno->sede->nombre,
+                    'fecha_apertura' => $turno->fecha_apertura->toDateTimeString(),
+                    'fecha_cierre' => $turno->fecha_cierre?->toDateTimeString(),
+                    'monto_apertura' => (float) $turno->monto_apertura,
+                    'cobros_por_forma_pago' => $turno->movimientosPorFormaDePago(),
+                    'salidas' => $salidas->map(fn (CashRegisterWithdrawal $salida) => [
+                        'id' => $salida->id,
+                        'monto' => (float) $salida->monto,
+                        'motivo' => $salida->motivo,
+                        'fecha' => $salida->created_at?->toDateTimeString(),
+                    ])->values(),
+                    'total_salidas' => round((float) $salidas->sum('monto'), 2),
+                    'monto_esperado_calculado' => $turno->monto_esperado_calculado !== null ? (float) $turno->monto_esperado_calculado : null,
+                    'monto_contado_cierre' => $turno->monto_contado_cierre !== null ? (float) $turno->monto_contado_cierre : null,
+                    'diferencia' => $diferencia === 0.0 ? 0.0 : $diferencia,
+                    'observacion' => blank($turno->observacion)
+                        ? ($diferencia !== null && $diferencia !== 0.0 ? 'Sin explicación (cierre anterior a la regla)' : 'Sin observación')
+                        : $turno->observacion,
+                ];
+            },
             'filters' => [
                 'vendedor_id' => $vendedorId,
                 'sede_id' => $sedeId,

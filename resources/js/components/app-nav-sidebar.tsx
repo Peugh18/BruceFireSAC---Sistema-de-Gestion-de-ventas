@@ -3,6 +3,7 @@ import { LogOut, X, type LucideIcon } from 'lucide-react';
 
 import { useInitials } from '@/hooks/use-initials';
 import { logout } from '@/routes';
+import { edit as editarPerfil } from '@/routes/profile';
 import type { Auth } from '@/types';
 
 type AppNavItem = {
@@ -224,7 +225,12 @@ export function AppNavSidebar({
                 </nav>
 
                 <div className="border-sidebar-border bf-sidebar-footer flex shrink-0 items-center justify-between gap-2.5 border-t px-4 py-3.5">
-                    <div className="flex min-w-0 items-center gap-2.5">
+                    <Link
+                        href={editarPerfil()}
+                        onClick={onClose}
+                        aria-label="Mi cuenta"
+                        className="focus-visible:ring-sidebar-ring flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+                    >
                         <div className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold shadow-xs">
                             {getInitials(userName)}
                         </div>
@@ -233,10 +239,10 @@ export function AppNavSidebar({
                                 {userName}
                             </div>
                             <div className="text-sidebar-foreground/60 font-['IBM_Plex_Mono',monospace] text-xs">
-                                {userRole}
+                                {userRole} · Mi cuenta
                             </div>
                         </div>
-                    </div>
+                    </Link>
                     <Link
                         href={logout()}
                         as="button"

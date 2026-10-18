@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TeamRole;
 use App\Models\AuditLog;
 use App\Models\Sede;
 use App\Models\User;
@@ -158,6 +159,7 @@ test('gerente asigna una única sede a un trabajador y no puede dejarlo sin sede
     $sede = Sede::factory()->mixta()->create();
     $trabajador = User::factory()->create();
     $trabajador->assignRole('Vendedor');
+    $gerente->currentTeam->members()->attach($trabajador, ['role' => TeamRole::Member->value]);
     $url = route('gerente.usuarios.update-sede', ['current_team' => $gerente->currentTeam, 'user' => $trabajador]);
 
     $this->actingAs($gerente)->patch($url, ['sede_id' => $sede->id])->assertSessionHasNoErrors();

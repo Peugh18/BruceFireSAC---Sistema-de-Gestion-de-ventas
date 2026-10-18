@@ -102,6 +102,7 @@ class ExecuteAndCloseServiceOrder
             $movement = $movimientos[0];
 
             // Marcar deficiencia como resuelta
+            $estadoAnterior = $deficiency->estado;
             $deficiency->update([
                 'estado' => 'resuelta',
                 'resolucion' => sprintf('Repuesto %s (x%d) instalado en taller. %s', $product->nombre, $cantidad, $observacion ?: ''),
@@ -123,6 +124,18 @@ class ExecuteAndCloseServiceOrder
                     'inventory_movement_ids' => array_map(fn (InventoryMovement $m) => $m->id, $movimientos),
                 ],
             ]);
+
+            AuditLogger::log(
+                action: 'deficiencia.reparada',
+                entity: $deficiency,
+                oldValues: ['estado' => $estadoAnterior],
+                newValues: [
+                    'estado' => 'resuelta',
+                    'repuesto' => $product->nombre,
+                    'cantidad' => $cantidad,
+                ],
+                userId: $user->id,
+            );
 
             $this->releaseFromAuthorizationHold($serviceOrder, $user);
 
@@ -211,6 +224,16 @@ class ExecuteAndCloseServiceOrder
                 // certifica igual; con extintores, alguno tiene que estar apto.
                 if ($aptos->isEmpty() && $serviceOrder->equipments()->exists()) {
                     throw new InvalidArgumentException('No hay extintores recibidos y aptos para certificar.');
+                }
+
+                // El certificado sale completo: cada extintor con su serie de
+                // fábrica y el cliente con su dirección.
+                $sinSerie = $aptos->filter(fn (Equipment $equipo) => blank($equipo->serie_fabricante) || str_starts_with((string) $equipo->serie_fabricante, 'No legible'));
+                if ($sinSerie->isNotEmpty() || blank($serviceOrder->client->direccion_fiscal)) {
+                    throw new InvalidArgumentException(trim(
+                        ($sinSerie->isNotEmpty() ? 'Falta la serie de fábrica de '.$sinSerie->pluck('numero_serie')->join(', ').'. ' : '')
+                        .(blank($serviceOrder->client->direccion_fiscal) ? 'Falta la dirección del cliente.' : '')
+                    ));
                 }
 
                 // Solo los aptos llevan P.H.: un id rechazado o ajeno no cuenta.
@@ -335,8 +358,10 @@ class ExecuteAndCloseServiceOrder
 
         $serviceOrder->loadMissing(['client', 'service.certificateType']);
 
-        $tipoAtencion = TipoAtencionExtintor::deOrden($serviceOrder);
-        $unidades = $aptos->map(function (Equipment $eq) use ($conPh, $tipoAtencion) {
+        $serviceOrder->loadMissing(['lines.service']);
+        $unidades = $aptos->map(function (Equipment $eq) use ($conPh, $serviceOrder) {
+            $tipoAtencion = TipoAtencionExtintor::deEquipoEnOrden($serviceOrder, $eq);
+
             return [
                 'equipment_id' => $eq->id,
                 'fecha_ultima_recarga' => $tipoAtencion === 'recarga' ? now()->toDateString() : null,

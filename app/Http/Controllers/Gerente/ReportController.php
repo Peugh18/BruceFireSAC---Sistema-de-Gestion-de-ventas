@@ -3,234 +3,56 @@
 namespace App\Http\Controllers\Gerente;
 
 use App\Http\Controllers\Controller;
-use App\Models\ElectronicDocument;
 use App\Models\Product;
-use App\Models\Quote;
-use App\Models\Sale;
-use App\Models\SaleItem;
 use App\Models\Sede;
 use App\Models\Team;
-use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\CarbonInterface;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class ReportController extends Controller
 {
-    /**
-     * Centro de reportes gerenciales de comercial e inventario (§34).
-     */
-    public function index(Team $current_team, Request $request): Response
+    /** La página de reportes se redirige al dashboard mensual. */
+    public function index(Team $current_team, Request $request): RedirectResponse
     {
-        $tipo = (string) $request->input('tipo', 'comercial');
-
-        $vendedores = User::role('Vendedor')
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
-
-        $sedes = Sede::query()
-            ->where('activo', true)
-            ->select('id', 'nombre')
-            ->orderBy('nombre')
-            ->get();
-
-        if ($tipo === 'inventario') {
-            $data = $this->getInventarioData($request);
-
-            return Inertia::render('gerente/reportes/index', [
-                'tipo' => 'inventario',
-                'reporteInventario' => $data,
-                'vendedores' => $vendedores,
-                'sedes' => $sedes,
-                'filters' => [
-                    'sede_id' => $request->input('sede_id'),
-                    'solo_bajo_minimo' => $request->boolean('solo_bajo_minimo', false),
-                ],
-            ]);
-        }
-
-        $data = $this->getComercialData($request);
-
-        return Inertia::render('gerente/reportes/index', [
-            'tipo' => 'comercial',
-            'reporteComercial' => $data,
-            'vendedores' => $vendedores,
-            'sedes' => $sedes,
-            'filters' => [
-                'fecha_desde' => $request->input('fecha_desde', now()->startOfMonth()->toDateString()),
-                'fecha_hasta' => $request->input('fecha_hasta', today()->toDateString()),
-                'vendedor_id' => $request->input('vendedor_id'),
-            ],
-        ]);
+        return redirect()->route('gerente.dashboard', array_filter([
+            'current_team' => $current_team,
+            'mes' => $request->input('mes'),
+            'sede' => $request->integer('sede') ?: null,
+        ]));
     }
 
     public function exportComercialPdf(Team $current_team, Request $request): HttpResponse
     {
-        $data = $this->getComercialData($request);
-
+        $data = (new DashboardController)->datosMensuales($request);
         $pdf = Pdf::loadView('pdf.reporte-comercial', $data)->setPaper('a4');
 
-        $filename = 'reporte-comercial-'.today()->toDateString().'.pdf';
-
-        return $pdf->download($filename);
+        return $pdf->download('reporte-mensual-'.$data['mes'].'-'.str($data['sedeNombre'])->slug().'.pdf');
     }
 
     public function exportInventarioPdf(Team $current_team, Request $request): HttpResponse
     {
-        $data = $this->getInventarioData($request, paginar: false);
-
+        $data = self::inventarioResumen($request->integer('sede_id') ?: null);
         $pdf = Pdf::loadView('pdf.reporte-inventario', $data)->setPaper('a4');
 
-        $filename = 'reporte-inventario-'.today()->toDateString().'.pdf';
-
-        return $pdf->download($filename);
+        return $pdf->download('reporte-inventario-'.today()->toDateString().'.pdf');
     }
 
     /**
-     * @return array<string, mixed>
-     */
-    protected function getComercialData(Request $request): array
-    {
-        $fechaDesdeInput = $request->input('fecha_desde', now()->startOfMonth()->toDateString());
-        $fechaHastaInput = $request->input('fecha_hasta', today()->toDateString());
-        $vendedorId = $request->input('vendedor_id');
-
-        // Una fecha mal escrita en la dirección no rompe el reporte: se usa
-        // el mes en curso.
-        $fecha = fn (mixed $valor, CarbonInterface $porDefecto): CarbonInterface => is_string($valor) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor) === 1 && checkdate((int) substr($valor, 5, 2), (int) substr($valor, 8, 2), (int) substr($valor, 0, 4))
-            ? Carbon::createFromFormat('Y-m-d', $valor)
-            : $porDefecto;
-        $fechaDesde = $fecha($fechaDesdeInput, now()->startOfMonth())->startOfDay();
-        $fechaHasta = $fecha($fechaHastaInput, today())->endOfDay();
-
-        $salesQuery = Sale::query()
-            ->where('estado', 'confirmada')
-            ->whereBetween('fecha', [$fechaDesde, $fechaHasta])
-            ->when($vendedorId, fn ($q) => $q->where('vendedor_id', $vendedorId));
-
-        // El comprobante original no se edita: las notas aceptadas u observadas
-        // se restan (crédito) o suman (débito) en el período de su emisión.
-        $ventasOriginales = (float) $salesQuery->sum('total');
-        $cantidadVentas = (int) $salesQuery->count();
-        $notas = ElectronicDocument::query()
-            ->whereIn('sale_id', Sale::query()->whereIn('estado', ['confirmada', 'anulada'])
-                ->when($vendedorId, fn ($q) => $q->where('vendedor_id', $vendedorId))->select('id'))
-            ->whereIn('tipo', ['nota_credito', 'nota_debito'])
-            ->whereIn('sunat_estado', ['aceptado', 'observado'])
-            ->whereBetween('fecha_emision', [$fechaDesde, $fechaHasta])
-            ->selectRaw('tipo, sum(importe) as total')->groupBy('tipo')->pluck('total', 'tipo');
-        $notasCredito = (float) ($notas['nota_credito'] ?? 0);
-        $notasDebito = (float) ($notas['nota_debito'] ?? 0);
-        $totalVentas = $ventasOriginales - $notasCredito + $notasDebito;
-        $ticketPromedio = $cantidadVentas > 0 ? round($ventasOriginales / $cantidadVentas, 2) : 0.0;
-
-        // Tasa de conversión de cotizaciones en el período
-        // Las cotizaciones en borrador o anuladas no se ofrecieron al cliente.
-        $quotesQuery = Quote::query()->whereBetween('fecha', [$fechaDesde, $fechaHasta])
-            ->whereNotIn('estado', ['borrador', 'anulada'])
-            ->when($vendedorId, fn ($q) => $q->where('vendedor_id', $vendedorId));
-        $totalCotizaciones = (int) $quotesQuery->count();
-        $cotizacionesGanadas = (int) (clone $quotesQuery)->whereIn('estado', ['convertida', 'aceptada'])->count();
-        $tasaConversion = $totalCotizaciones > 0 ? round(($cotizacionesGanadas / $totalCotizaciones) * 100, 1) : 0.0;
-
-        // Desglose por Vendedor
-        $porVendedor = Sale::query()
-            ->where('sales.estado', 'confirmada')
-            ->whereBetween('sales.fecha', [$fechaDesde, $fechaHasta])
-            ->when($vendedorId, fn ($q) => $q->where('sales.vendedor_id', $vendedorId))
-            ->join('users', 'users.id', '=', 'sales.vendedor_id')
-            ->selectRaw('users.name as nombre, count(*) as cantidad, sum(sales.total) as monto')
-            ->groupBy('users.id', 'users.name')
-            ->orderByDesc('monto')
-            ->get()
-            ->map(fn ($r) => [
-                'nombre' => (string) $r->nombre,
-                'cantidad' => (int) $r->cantidad,
-                'monto' => round((float) $r->monto, 2),
-            ])
-            ->all();
-
-        // Top Clientes
-        $topClientes = Sale::query()
-            ->where('sales.estado', 'confirmada')
-            ->whereBetween('sales.fecha', [$fechaDesde, $fechaHasta])
-            ->when($vendedorId, fn ($q) => $q->where('sales.vendedor_id', $vendedorId))
-            ->join('clients', 'clients.id', '=', 'sales.client_id')
-            ->selectRaw('clients.razon_social as cliente, count(*) as cantidad, sum(sales.total) as total')
-            ->groupBy('clients.id', 'clients.razon_social')
-            ->orderByDesc('total')
-            ->limit(10)
-            ->get()
-            ->map(fn ($r) => [
-                'cliente' => (string) $r->cliente,
-                'cantidad' => (int) $r->cantidad,
-                'total' => round((float) $r->total, 2),
-            ])
-            ->all();
-
-        // Top Ítems vendidos
-        $topItems = SaleItem::query()
-            ->with(['product:id,nombre', 'service:id,nombre'])
-            ->whereHas('sale', function ($q) use ($fechaDesde, $fechaHasta, $vendedorId) {
-                $q->where('estado', 'confirmada')
-                    ->whereBetween('fecha', [$fechaDesde, $fechaHasta])
-                    ->when($vendedorId, fn ($sq) => $sq->where('vendedor_id', $vendedorId));
-            })
-            ->get()
-            ->groupBy(fn (SaleItem $i) => $i->product?->nombre ?? $i->service?->nombre ?? 'Ítem')
-            ->map(function ($group, $nombre) {
-                return [
-                    'nombre' => (string) $nombre,
-                    'cantidad' => (int) $group->sum('cantidad'),
-                    'monto' => round((float) $group->sum('subtotal'), 2),
-                ];
-            })
-            ->sortByDesc('monto')
-            ->take(10)
-            ->values()
-            ->all();
-
-        return [
-            'fechaDesde' => $fechaDesde,
-            'fechaHasta' => $fechaHasta,
-            'totalVentas' => round($totalVentas, 2),
-            'ventasOriginales' => round($ventasOriginales, 2),
-            'notasCredito' => round($notasCredito, 2),
-            'notasDebito' => round($notasDebito, 2),
-            'cantidadVentas' => $cantidadVentas,
-            'ticketPromedio' => $ticketPromedio,
-            'tasaConversion' => $tasaConversion,
-            'porVendedor' => $porVendedor,
-            'topClientes' => $topClientes,
-            'topItems' => $topItems,
-        ];
-    }
-
-    /**
-     * Inventario valorizado al COSTO promedio de compra (no al precio de
-     * venta). Los totales salen de la base de datos; la lista se pagina
-     * ahí también (el PDF pide todo el listado).
+     * Inventario valorizado al costo promedio de compra.
      *
      * @return array<string, mixed>
      */
-    protected function getInventarioData(Request $request, bool $paginar = true): array
+    public static function inventarioResumen(?int $sedeId = null): array
     {
-        $sedeId = $request->input('sede_id');
-        $soloBajoMinimo = $request->boolean('solo_bajo_minimo', false);
-
         $sedeNombre = 'Todas las sedes';
         $almacenes = null;
         if ($sedeId) {
-            $sede = Sede::query()->find((int) $sedeId);
+            $sede = Sede::query()->find($sedeId);
             if ($sede) {
                 $sedeNombre = $sede->nombre;
-                // Una tienda vende del stock de su almacén.
                 $almacenes = [$sede->almacenEfectivoId()];
             }
         }
@@ -245,34 +67,31 @@ class ReportController extends Controller
                 COALESCE(SUM(CASE WHEN p.stock_minimo > 0 AND ({$disponible}) <= p.stock_minimo THEN 1 ELSE 0 END), 0) as bajo_minimo")
             ->first();
 
-        $lista = Product::query()
+        $productos = Product::query()
             ->where('activo', true)
             ->conStock($almacenes)
-            ->when($soloBajoMinimo, fn ($q) => $q->bajoMinimo($almacenes))
-            ->orderBy('nombre');
+            ->orderBy('nombre')
+            ->get()
+            ->map(function (Product $producto): array {
+                $stock = $producto->stockDisponible();
+                $minimo = $producto->stock_minimo !== null ? (int) $producto->stock_minimo : null;
+                $costo = $producto->costo_promedio !== null ? (float) $producto->costo_promedio : null;
 
-        $paginador = $paginar ? $lista->paginate(25)->withQueryString() : null;
-        $filas = $paginador !== null ? collect($paginador->items()) : $lista->get();
-        $productos = $filas->map(function (Product $p) {
-            $stock = $p->stockDisponible();
-            $minimo = $p->stock_minimo !== null ? (int) $p->stock_minimo : null;
-            $costo = $p->costo_promedio !== null ? (float) $p->costo_promedio : null;
-
-            return [
-                'id' => $p->id,
-                'codigo' => $p->codigo,
-                'nombre' => $p->nombre,
-                'unidad_medida' => $p->unidad_medida,
-                'precio_venta' => (float) $p->precio_venta,
-                'costo_promedio' => $costo,
-                'sin_costo' => $costo === null && $stock > 0,
-                'serializado' => (bool) $p->serializado,
-                'stock_minimo' => $minimo,
-                'stock_disponible' => $stock,
-                'bajo_minimo' => $minimo !== null && $minimo > 0 && $stock <= $minimo,
-                'valorizacion' => round($stock * ($costo ?? 0), 2),
-            ];
-        })->values()->all();
+                return [
+                    'id' => $producto->id,
+                    'codigo' => $producto->codigo,
+                    'nombre' => $producto->nombre,
+                    'unidad_medida' => $producto->unidad_medida,
+                    'precio_venta' => (float) $producto->precio_venta,
+                    'costo_promedio' => $costo,
+                    'sin_costo' => $costo === null && $stock > 0,
+                    'serializado' => (bool) $producto->serializado,
+                    'stock_minimo' => $minimo,
+                    'stock_disponible' => $stock,
+                    'bajo_minimo' => $minimo !== null && $minimo > 0 && $stock <= $minimo,
+                    'valorizacion' => round($stock * ($costo ?? 0), 2),
+                ];
+            })->values()->all();
 
         return [
             'sedeNombre' => $sedeNombre,
@@ -282,13 +101,13 @@ class ReportController extends Controller
             'totalBajoMinimo' => (int) $totales->bajo_minimo,
             'productosSinCosto' => (int) $totales->sin_costo,
             'productos' => $productos,
-            'paginacion' => $paginador !== null ? [
-                'pagina' => $paginador->currentPage(),
-                'ultima' => $paginador->lastPage(),
-                'total' => $paginador->total(),
-                'anterior' => $paginador->previousPageUrl(),
-                'siguiente' => $paginador->nextPageUrl(),
-            ] : null,
+            'paginacion' => [
+                'pagina' => 1,
+                'ultima' => 1,
+                'total' => count($productos),
+                'anterior' => null,
+                'siguiente' => null,
+            ],
         ];
     }
 }

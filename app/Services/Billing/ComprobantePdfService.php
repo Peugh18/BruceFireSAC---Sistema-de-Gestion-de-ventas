@@ -280,6 +280,8 @@ class ComprobantePdfService
             }
         }
 
+        $detraccion = $snapshot['detraccion'] ?? $this->detraccionCalculator->paraVenta($sale, $document->tipo);
+
         return [
             'document' => $document,
             'sale' => $sale,
@@ -304,7 +306,8 @@ class ComprobantePdfService
             'motivoNota' => $motivoNota,
             'montoEnLetras' => $this->numeroEnLetras->convertir($totalDoc),
             'bankAccounts' => CompanyBankAccount::query()->where('activo', true)->orderBy('orden')->get(),
-            'detraccion' => $snapshot['detraccion'] ?? $this->detraccionCalculator->paraVenta($sale, $document->tipo),
+            'detraccion' => $detraccion,
+            'netoPendiente' => $snapshot['pago']['neto_pendiente'] ?? round($totalDoc - $detraccion['monto'], 2),
         ];
     }
 

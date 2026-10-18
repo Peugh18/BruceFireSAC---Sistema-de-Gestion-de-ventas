@@ -10,9 +10,12 @@ use App\Models\Quote;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Models\User;
 use App\Services\Avisos\AvisosDelVendedor;
 use App\Services\Avisos\ExtintoresPorVencer;
+use App\Services\Cobranzas\CarteraDeCobranzas;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -144,7 +147,7 @@ class DashboardController extends Controller
                 'id' => $orden->id,
                 'codigo' => $orden->codigo,
                 'cliente' => $orden->client->razon_social,
-                'tipo_servicio' => $orden->service->nombre,
+                'tipo_servicio' => $orden->resumenServicios(),
                 'tecnico' => $orden->tecnico?->name,
                 'estado' => $orden->estado,
                 'prioridad' => $orden->prioridad,
@@ -152,6 +155,7 @@ class DashboardController extends Controller
             ->all();
 
         return Inertia::render('vendedor/dashboard', [
+            'graficos' => $this->graficos($user, $cotizacionesMes),
             'ventas_hoy' => $ventasHoy,
             'caja_hoy' => $cajaHoy,
             'cotizaciones_mes' => $cotizacionesMes,
@@ -169,6 +173,41 @@ class DashboardController extends Controller
                 ->values()
                 ->all(),
         ]);
+    }
+
+    /**
+     * @param  array<string, int>  $cotizaciones
+     * @return array<string, mixed>
+     */
+    private function graficos(User $user, array $cotizaciones): array
+    {
+        $ventas = Sale::query()->where('vendedor_id', $user->id)->visiblePara($user)
+            ->where(fn (Builder $query) => $query->where('estado', 'confirmada')->orWhere(fn (Builder $anulada) => $anulada->where('estado', 'anulada')
+                ->whereHas('electronicDocuments', fn ($nota) => $nota->where('tipo', 'nota_credito')->whereIn('sunat_estado', ['aceptado', 'observado']))));
+        $cuotas = Installment::query()->whereIn('estado', CarteraDeCobranzas::DEBEN)
+            ->whereHas('sale', fn ($query) => $query->where('estado', 'confirmada')->where('vendedor_id', $user->id)->visiblePara($user));
+
+        return [
+            'ventas' => collect([now()->startOfMonth()->subMonth(), now()->startOfMonth()])->map(function ($mes) use ($ventas): array {
+                $origen = clone $ventas;
+                $bruto = (float) (clone $origen)->whereBetween('fecha', [$mes->toDateString(), $mes->copy()->endOfMonth()->toDateString()])->sum('total');
+                $notas = ElectronicDocument::query()->whereIn('sale_id', $origen->select('id'))
+                    ->whereIn('sunat_estado', ['aceptado', 'observado'])->whereIn('tipo', ['nota_credito', 'nota_debito'])
+                    ->whereBetween('fecha_emision', [$mes, $mes->copy()->endOfMonth()])
+                    ->selectRaw("COALESCE(SUM(CASE WHEN tipo = 'nota_debito' THEN importe ELSE -importe END), 0) as neto")->toBase()->first();
+
+                return ['nombre' => $mes->format('m/Y'), 'valor' => round($bruto + (float) ($notas->neto ?? 0), 2)];
+            }),
+            'cotizaciones' => [
+                ['nombre' => 'Pendientes', 'valor' => ($cotizaciones['emitida'] ?? 0) + ($cotizaciones['enviada'] ?? 0)],
+                ['nombre' => 'Aceptadas', 'valor' => ($cotizaciones['aceptada'] ?? 0) + ($cotizaciones['convertida'] ?? 0)],
+                ['nombre' => 'Perdidas', 'valor' => ($cotizaciones['rechazada'] ?? 0) + ($cotizaciones['vencida'] ?? 0)],
+            ],
+            'cobranza' => [
+                ['nombre' => 'Por vencer', 'valor' => max(0, CarteraDeCobranzas::saldo((clone $cuotas)->whereDate('fecha_vencimiento', '>=', today())))],
+                ['nombre' => 'Vencida', 'valor' => max(0, CarteraDeCobranzas::saldo((clone $cuotas)->whereDate('fecha_vencimiento', '<', today())))],
+            ],
+        ];
     }
 
     /**

@@ -3,9 +3,7 @@
 namespace App\Actions\Billing;
 
 use App\Models\DispatchGuide;
-use App\Models\InventoryTransfer;
 use App\Models\User;
-use App\Services\Billing\GuiaRemisionPrefill;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -24,14 +22,9 @@ class CreateDispatchGuide
     {
         return DB::transaction(function () use ($datos, $user): DispatchGuide {
             if (! empty($datos['inventory_transfer_id'])) {
-                $traslado = InventoryTransfer::query()->whereKey($datos['inventory_transfer_id'])->lockForUpdate()->firstOrFail();
-                abort_if($user->almacenRestringidoId() !== null && $user->almacenRestringidoId() !== $traslado->origen_sede_id, 403);
-                if ($traslado->estado !== InventoryTransfer::PENDIENTE_GUIA || DispatchGuide::query()->where('inventory_transfer_id', $traslado->id)->whereIn('estado_sunat', [DispatchGuide::BORRADOR, DispatchGuide::ENVIADA, DispatchGuide::ACEPTADA])->exists()) {
-                    throw ValidationException::withMessages(['traslado' => 'El traslado ya tiene una guía vigente o ya fue despachado.']);
-                }
-                $datos = [...$datos, ...app(GuiaRemisionPrefill::class)->desdeTraslado($traslado)];
-                $datos['sale_id'] = null;
-                $datos['service_order_id'] = null;
+                throw ValidationException::withMessages([
+                    'traslado' => 'Los traslados internos se registran en Almacén y no generan GRE.',
+                ]);
             }
             $items = $datos['items'];
             unset($datos['items']);

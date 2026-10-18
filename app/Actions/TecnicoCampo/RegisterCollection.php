@@ -5,6 +5,7 @@ namespace App\Actions\TecnicoCampo;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -83,6 +84,16 @@ class RegisterCollection
                     'fecha_hora' => now()->toIso8601String(),
                 ],
             ]);
+
+            AuditLogger::log(
+                action: 'orden.recojo_confirmado',
+                entity: $serviceOrder,
+                newValues: [
+                    'contacto' => $contactoNombre,
+                    'equipos_recogidos' => $cantidad,
+                ],
+                userId: $user->id,
+            );
 
             return $serviceOrder->refresh();
         });

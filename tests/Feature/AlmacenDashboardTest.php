@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\InventoryMovement;
+use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\Reception;
@@ -46,6 +47,8 @@ test('dashboard de almacen expone los KPIs de unidades disponibles por sede', fu
     $response->assertInertia(fn (Assert $page) => $page
         ->component('almacen/dashboard')
         ->where('stock.total_disponible', 3)
+        ->where('graficos.estados.0.valor', 3)
+        ->has('graficos.movimientos', 8)
         ->has('stock.por_sede', fn (Assert $sedes) => $sedes
             ->each(fn (Assert $sede) => $sede
                 ->hasAll(['sede_id', 'nombre', 'tipo', 'ciudad', 'unidades_disponibles'])
@@ -78,7 +81,38 @@ test('dashboard de almacen cuenta las recepciones de hoy, no los movimientos', f
         ->get(route('almacen.dashboard', ['current_team' => $user->currentTeam]))
         ->assertOk();
 
-    expect($response->viewData('page')['props']['recepciones_hoy'])->toBe(2);
+    expect($response->viewData('page')['props']['recepciones_hoy'])->toBe(2)
+        ->and($response->viewData('page')['props']['recepciones_de_hoy'])->toHaveCount(2)
+        ->and(collect($response->viewData('page')['props']['recepciones_de_hoy'])->pluck('proveedor')->all())->toContain('Proveedor SAC');
+});
+
+test('dashboard de almacen prioriza los traslados por despachar y en transito', function () {
+    $user = almacenUserForDashboardTest();
+    $origen = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
+    $destino = Sede::factory()->create(['tipo' => 'mixta', 'activo' => true]);
+
+    InventoryTransfer::create([
+        'origen_sede_id' => $origen->id,
+        'destino_sede_id' => $destino->id,
+        'user_id' => $user->id,
+        'estado' => InventoryTransfer::PENDIENTE_DESPACHO,
+    ]);
+    InventoryTransfer::create([
+        'origen_sede_id' => $origen->id,
+        'destino_sede_id' => $destino->id,
+        'user_id' => $user->id,
+        'estado' => InventoryTransfer::EN_TRANSITO,
+    ]);
+    InventoryTransfer::create([
+        'origen_sede_id' => $origen->id,
+        'destino_sede_id' => $destino->id,
+        'user_id' => $user->id,
+        'estado' => InventoryTransfer::RECIBIDO,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('almacen.dashboard', ['current_team' => $user->currentTeam]))
+        ->assertInertia(fn (Assert $page) => $page->where('traslados_pendientes', 2));
 });
 
 test('dashboard de almacen expone los ultimos 10 movimientos del Kardex con sus relaciones', function () {

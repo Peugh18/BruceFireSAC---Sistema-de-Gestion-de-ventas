@@ -173,7 +173,9 @@ class StockLookupController extends Controller
             return response()->json([]);
         }
 
+        $almacenId = $request->user()->almacenRestringidoId();
         $units = InventoryUnit::query()
+            ->when($almacenId, fn ($query, $id) => $query->where('sede_almacen_id', $id))
             ->where('numero_serie', 'like', "%{$q}%")
             ->with(['product:id,codigo,nombre', 'sedeAlmacen:id,nombre'])
             ->limit(10)

@@ -237,7 +237,7 @@ test('la pantalla tecnica muestra la ph reutilizada con su numero y vencimiento 
     $this->actingAs($user)->get(route($routeName, ['current_team' => $user->currentTeam, 'service_order' => $order]))
         ->assertInertia(fn ($page) => $page->has($prop, 1)->where("{$prop}.0.numero", 'PH-2024-0001'));
 })->with([
-    'planta' => ['TecnicoPlanta', 'tecnico-planta.ejecucion.show', 'planta', 'certificates'],
+    'planta' => ['TecnicoPlanta', 'tecnico-planta.ordenes.show', 'planta', 'certificados'],
     'mantenimiento campo' => ['TecnicoCampo', 'tecnico-campo.mantenimientos.show', 'campo', 'order.certificates'],
     'inspeccion campo' => ['TecnicoCampo', 'tecnico-campo.inspecciones.show', 'campo', 'order.certificates'],
 ]);

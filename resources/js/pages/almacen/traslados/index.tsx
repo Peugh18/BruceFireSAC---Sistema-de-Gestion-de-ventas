@@ -1,5 +1,7 @@
 import { Pasos } from '@/components/progreso';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { X } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AlmacenLayout from '@/layouts/almacen-layout';
 import { confirmar, despachar, index, store } from '@/routes/almacen/traslados';
-import guias from '@/routes/guias';
 import type { Team } from '@/types';
 import { NativeSelect } from '@/components/ui/native-select';
 
@@ -21,10 +22,7 @@ type EnTransito = {
     bienes: number;
     estado: string;
     puede_despachar: boolean;
-    puede_emitir_guia: boolean;
     puede_confirmar: boolean;
-    guia_aceptada: boolean;
-    tiene_guia: boolean;
 };
 
 export default function Transfers({
@@ -48,8 +46,31 @@ export default function Transfers({
         quantity: 1,
         observation: '',
     });
+    const [serials, setSerials] = useState<string[]>([]);
+    const [scanValue, setScanValue] = useState('');
+    const scanInputRef = useRef<HTMLInputElement | null>(null);
     const teamSlug =
         usePage<{ currentTeam?: Team | null }>().props.currentTeam?.slug ?? '';
+
+    const addSerial = () => {
+        const value = scanValue.trim();
+
+        if (value !== '') {
+            setSerials((current) =>
+                current.includes(value) ? current : [...current, value],
+            );
+        }
+
+        setScanValue('');
+        scanInputRef.current?.focus();
+    };
+
+    const removeSerial = (serialToRemove: string) => {
+        setSerials((current) =>
+            current.filter((serial) => serial !== serialToRemove),
+        );
+        scanInputRef.current?.focus();
+    };
 
     if (!sourceSede) {
         return (
@@ -115,10 +136,8 @@ export default function Transfers({
                         event.preventDefault();
                         form.transform((data) => ({
                             ...data,
-                            serials: data.serials_text
-                                .split(/[,\n]/u)
-                                .map((value) => value.trim())
-                                .filter(Boolean),
+                            serials_text: serials.join('\n'),
+                            serials,
                         }));
                         form.post(store.url(teamSlug), {
                             onError: (errors) =>
@@ -126,7 +145,12 @@ export default function Transfers({
                                     Object.values(errors)[0] ??
                                         'No se pudo completar la acción.',
                                 ),
-                            onSuccess: () => form.reset(),
+                            onSuccess: () => {
+                                form.reset();
+                                setSerials([]);
+                                setScanValue('');
+                                scanInputRef.current?.focus();
+                            },
                         });
                     }}
                 >
@@ -156,17 +180,44 @@ export default function Transfers({
                     </div>
                     <div>
                         <Label htmlFor="almacen-traslados-unidades-bf-eq">
-                            Unidades BF-EQ
+                            Escanea las unidades BF-EQ
                         </Label>
-                        <textarea
+                        <Input
                             id="almacen-traslados-unidades-bf-eq"
-                            value={form.data.serials_text}
+                            ref={scanInputRef}
+                            value={scanValue}
                             onChange={(event) =>
-                                form.setData('serials_text', event.target.value)
+                                setScanValue(event.target.value)
                             }
-                            placeholder="Una serie por línea"
-                            className="border-border bg-background mt-1 min-h-28 w-full rounded-md border p-3"
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    addSerial();
+                                }
+                            }}
+                            placeholder="BF-EQ-000001"
+                            autoComplete="off"
+                            autoFocus
+                            className="border-border bg-background mt-1 font-mono"
                         />
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            {serials.map((serial) => (
+                                <span
+                                    key={serial}
+                                    className="border-border bg-muted/40 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-mono text-xs"
+                                >
+                                    {serial}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeSerial(serial)}
+                                        aria-label={'Quitar ' + serial}
+                                        className="text-muted-foreground hover:text-foreground rounded-full p-0.5 transition-colors"
+                                    >
+                                        <X className="size-3.5" />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
                     </div>
                     <p className="text-muted-foreground text-center text-xs">
                         o, para productos sin serie
@@ -187,18 +238,23 @@ export default function Transfers({
                                 </option>
                             ))}
                         </NativeSelect>
-                        <Input
-                            aria-label="Cantidad a trasladar"
-                            type="number"
-                            min={1}
-                            value={form.data.quantity}
-                            onChange={(event) =>
-                                form.setData(
-                                    'quantity',
-                                    Number(event.target.value),
-                                )
-                            }
-                        />
+                        <div>
+                            <Label htmlFor="almacen-traslados-cantidad">
+                                Cantidad
+                            </Label>
+                            <Input
+                                id="almacen-traslados-cantidad"
+                                type="number"
+                                min={1}
+                                value={form.data.quantity}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'quantity',
+                                        Number(event.target.value),
+                                    )
+                                }
+                            />
+                        </div>
                     </div>
                     <div>
                         <Label htmlFor="almacen-traslados-observacion">
@@ -236,11 +292,9 @@ export default function Transfers({
                         Traslados pendientes y en tránsito
                     </h2>
                     <p className="text-muted-foreground text-sm">
-                        Primero prepara y emite la GRE. Despacha con CDR
-                        aceptado. El stock entra al almacén destino cuando
-                        confirma la llegada. La guía de remisión (motivo 04)
-                        debe tener el CDR aceptado antes de que salga el
-                        vehículo.
+                        Prepara el traslado y despáchalo cuando salga del
+                        almacén. El stock entra al destino cuando se confirma la
+                        llegada.
                     </p>
                     <ul className="divide-border divide-y">
                         {enTransito.map((traslado) => (
@@ -251,14 +305,9 @@ export default function Transfers({
                                 <span className="flex-1">
                                     {traslado.origen} → {traslado.destino} ·{' '}
                                     {traslado.bienes} bienes ·{' '}
-                                    {traslado.estado === 'pendiente_guia'
+                                    {traslado.estado === 'pendiente_despacho'
                                         ? 'por despachar'
                                         : 'en tránsito'}
-                                    {traslado.guia_aceptada
-                                        ? ' · guía lista para trasladar'
-                                        : traslado.tiene_guia
-                                          ? ' · guía pendiente de SUNAT'
-                                          : ' · sin guía'}
                                 </span>
                                 <Pasos
                                     label={`Traslado de ${traslado.origen} a ${traslado.destino}`}
@@ -268,15 +317,6 @@ export default function Transfers({
                                             id: 'preparado',
                                             label: 'Preparado',
                                             estado: 'completado',
-                                        },
-                                        {
-                                            id: 'guia',
-                                            label: traslado.guia_aceptada
-                                                ? 'Guía lista'
-                                                : 'Guía pendiente',
-                                            estado: traslado.guia_aceptada
-                                                ? 'completado'
-                                                : 'actual',
                                         },
                                         {
                                             id: 'transito',
@@ -294,32 +334,9 @@ export default function Transfers({
                                         },
                                     ]}
                                 />
-                                {traslado.puede_emitir_guia ? (
-                                    <Button asChild variant="outline" size="sm">
-                                        <Link
-                                            href={guias.create.url(teamSlug, {
-                                                query: {
-                                                    origen: 'traslado',
-                                                    id: traslado.id,
-                                                },
-                                            })}
-                                        >
-                                            Emitir guía
-                                        </Link>
-                                    </Button>
-                                ) : null}
-                                {traslado.tiene_guia &&
-                                !traslado.guia_aceptada ? (
-                                    <Button asChild variant="outline" size="sm">
-                                        <Link href={guias.index.url(teamSlug)}>
-                                            Enviar / consultar GRE
-                                        </Link>
-                                    </Button>
-                                ) : null}
                                 {traslado.puede_despachar ? (
                                     <Button
                                         size="sm"
-                                        disabled={!traslado.guia_aceptada}
                                         onClick={() =>
                                             router.post(
                                                 despachar.url({

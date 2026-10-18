@@ -120,14 +120,18 @@ class CertificatePdfService
             return $this->diploma($datos, $recursos);
         }
 
+        // Las versiones anteriores a la orientación salen verticales, como siempre.
+        $horizontal = ($datos['tipo']['orientacion'] ?? 'vertical') === 'horizontal';
+
         $pdf = Pdf::setOption('isFontSubsettingEnabled', true)
             ->loadView('pdf.certificado-operatividad', [
                 ...$datos,
                 'recursos' => $recursos,
                 'titulo' => $this->titulo($datos['tipo']),
                 'resultados' => CertificateDocumentData::RESULTADOS,
+                'horizontal' => $horizontal,
             ])
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', $horizontal ? 'landscape' : 'portrait');
 
         $pdf->render();
         $this->pie($pdf, $datos['empresa']);

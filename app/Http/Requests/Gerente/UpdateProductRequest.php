@@ -5,6 +5,7 @@ namespace App\Http\Requests\Gerente;
 use App\Enums\EquipmentType;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Support\CatalogosSunat;
 use App\Support\UnidadMedidaSunat;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,18 +25,15 @@ class UpdateProductRequest extends FormRequest
         $producto = $this->route('producto');
 
         return [
-            'codigo' => [
-                'required',
-                'string',
-                'max:50',
-                Rule::unique('products', 'codigo')->ignore($producto),
-            ],
             // El del fabricante (EAN/UPC): solo letras y números, y no se
             // repite entre productos.
             'codigo_barras' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9-]+$/', Rule::unique('products', 'codigo_barras')->ignore($producto)],
+            // Catálogo 25 (UNSPSC), opcional: va al XML de la factura.
+            'codigo_sunat' => CatalogosSunat::reglaCodigoProducto(),
             'categoria' => ['nullable', 'string', 'max:40', ProductCategory::regla($producto instanceof Product ? $producto->categoria : null)],
             // C1: el agente y la capacidad pasan a la unidad y al equipo vendido.
-            'agente' => ['nullable', Rule::enum(EquipmentType::class)],
+            // De la lista administrable de agentes (la misma que usan los técnicos).
+            'agente' => ['nullable', 'string', Rule::in(EquipmentType::etiquetas())],
             'capacidad' => ['nullable', 'string', 'max:20'],
             // Fase H: el peso unitario alimenta el peso bruto de la guía de remisión.
             'peso_kg' => ['nullable', 'numeric', 'min:0', 'max:99999'],

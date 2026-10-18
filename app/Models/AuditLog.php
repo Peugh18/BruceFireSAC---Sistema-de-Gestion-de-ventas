@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int|null $user_id
  * @property int|null $team_id
+ * @property string|null $actor_role Rol que tenía el actor al registrar el evento.
  * @property string $action
  * @property string|null $auditable_type
  * @property int|null $auditable_id
@@ -32,6 +33,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'user_id',
     'team_id',
+    'actor_role',
     'action',
     'auditable_type',
     'auditable_id',

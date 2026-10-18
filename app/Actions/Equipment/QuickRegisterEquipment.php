@@ -70,8 +70,9 @@ class QuickRegisterEquipment
             }
 
             $line = $this->resolveLine($serviceOrder, $equipment, $data);
-            $service = $line->service;
+            $service = $line?->service;
             $case = 'A_existente';
+            $datosPendientes = (bool) ($data['datos_tecnicos_pendientes'] ?? false);
 
             if ($equipment) {
                 $equipment->update(array_filter([
@@ -87,27 +88,27 @@ class QuickRegisterEquipment
                 $equipment = Equipment::create([
                     'client_id' => $serviceOrder->client_id,
                     'numero_serie' => $this->sequenceGenerator->nextEquipmentSerial(),
-                    'tipo_agente' => $this->valueOrUnreadable($data['tipo_agente'] ?? $this->agentLabel($service)),
-                    'capacidad' => $this->valueOrUnreadable($data['capacidad'] ?? $this->capacityLabel($service)),
+                    'tipo_agente' => $this->valueOrUnreadable($datosPendientes ? null : ($data['tipo_agente'] ?? ($service ? $this->agentLabel($service) : null))),
+                    'capacidad' => $this->valueOrUnreadable($datosPendientes ? null : ($data['capacidad'] ?? ($service ? $this->capacityLabel($service) : null))),
                     'marca' => $this->valueOrUnreadable($data['marca'] ?? null),
                     'serie_fabricante' => $this->valueOrUnreadable($data['serie_fabricante'] ?? null),
                     'anio_fabricacion' => $this->valueOrUnreadable($data['anio_fabricacion'] ?? null),
                     'ubicacion_actual' => 'Planta - Taller',
                     'estado' => 'en_servicio',
-                    'fecha_venta' => now(),
-                    'proxima_fecha_atencion' => now()->addYear(),
-                    'proxima_prueba_hidrostatica' => now()->addYears(5),
+                    'fecha_venta' => $datosPendientes ? null : now(),
+                    'proxima_fecha_atencion' => $datosPendientes ? null : now()->addYear(),
+                    'proxima_prueba_hidrostatica' => $datosPendientes ? null : now()->addYears(5),
                     'notas' => $data['notas'] ?? null,
                 ]);
             }
 
-            if (($incompatibilidad = $service->incompatibilidadConEquipo($equipment)) !== null) {
+            if ($service !== null && ($incompatibilidad = $service->incompatibilidadConEquipo($equipment)) !== null) {
                 throw ValidationException::withMessages(['tipo_agente' => $incompatibilidad]);
             }
 
             $position = ((int) $serviceOrder->equipments()->max('service_order_equipment.posicion')) + 1;
             $serviceOrder->equipments()->attach($equipment->id, [
-                'service_order_line_id' => $line->id,
+                'service_order_line_id' => $line?->id,
                 'posicion' => $position,
                 'recibido' => (bool) ($data['recibido'] ?? false),
                 'observaciones' => $data['observaciones_recepcion'] ?? null,
@@ -122,7 +123,8 @@ class QuickRegisterEquipment
                     'caso' => $case,
                     'equipment_id' => $equipment->id,
                     'numero_serie' => $equipment->numero_serie,
-                    'service_order_line_id' => $line->id,
+                    'service_order_line_id' => $line?->id,
+                    'datos_tecnicos_pendientes' => $datosPendientes,
                 ],
             ]);
 
@@ -145,7 +147,7 @@ class QuickRegisterEquipment
     }
 
     /** @param array<string, mixed> $data */
-    private function resolveLine(ServiceOrder $serviceOrder, ?Equipment $equipment, array $data): ServiceOrderLine
+    private function resolveLine(ServiceOrder $serviceOrder, ?Equipment $equipment, array $data): ?ServiceOrderLine
     {
         $lineId = (int) ($data['service_order_line_id'] ?? 0);
         if ($lineId > 0) {
@@ -160,8 +162,12 @@ class QuickRegisterEquipment
 
         if ((bool) ($data['adicional'] ?? false)) {
             $service = Service::query()->find((int) ($data['service_id'] ?? 0));
-            if (! $service) {
+            if (! $service && $serviceOrder->service_id !== null) {
                 throw ValidationException::withMessages(['service_id' => 'Elige el servicio del extintor adicional.']);
+            }
+
+            if (! $service) {
+                return null;
             }
 
             return $serviceOrder->lines()->create([
@@ -169,6 +175,10 @@ class QuickRegisterEquipment
                 'cantidad' => 1,
                 'adicional' => true,
             ])->load('service');
+        }
+
+        if ($serviceOrder->lines->isEmpty() && $serviceOrder->service_id === null) {
+            return null;
         }
 
         $assignedByLine = DB::table('service_order_equipment')
@@ -184,6 +194,10 @@ class QuickRegisterEquipment
                 && (int) ($assignedByLine[$line->id] ?? 0) < $line->cantidad
                 && ($equipment === null || $line->service->incompatibilidadConEquipo($equipment) === null));
 
+        if (! $line && $serviceOrder->lines->isEmpty() && $serviceOrder->service_id === null) {
+            return null;
+        }
+
         if (! $line) {
             throw ValidationException::withMessages(['numero_serie' => $equipment
                 ? 'No hay un casillero libre para este extintor. Agrégalo como extintor no cotizado.'
@@ -195,7 +209,7 @@ class QuickRegisterEquipment
 
     private function agentLabel(Service $service): string
     {
-        return (EquipmentType::tryFrom((string) $service->agente) ?? EquipmentType::fromDescription($service->nombre))->etiqueta();
+        return EquipmentType::nombreDe($service->agente) ?? EquipmentType::fromDescription($service->nombre)->etiqueta();
     }
 
     private function capacityLabel(Service $service): ?string

@@ -20,6 +20,10 @@ interface Props {
     serie: string;
     esCo2: boolean;
     onCerrar: () => void;
+    /** Sin botón "Cerrar" cuando el checklist es el paso en curso. */
+    cerrable?: boolean;
+    textoBoton?: string;
+    fotoObligatoria?: boolean;
 }
 
 const ETIQUETAS: Record<Estado, string> = {
@@ -35,6 +39,9 @@ export default function ChecklistExtintor({
     serie,
     esCo2,
     onCerrar,
+    cerrable = true,
+    textoBoton = 'Guardar checklist',
+    fotoObligatoria = true,
 }: Props) {
     const inicial = Object.keys(elementos).reduce<Record<string, Item>>(
         (acc, clave) => {
@@ -67,9 +74,11 @@ export default function ChecklistExtintor({
             [clave]: { ...form.data.items[clave], ...cambios },
         });
 
-    const sinFoto = Object.values(form.data.items).some(
-        (i) => i.estado === 'observado' && !i.foto,
-    );
+    const sinFoto =
+        fotoObligatoria &&
+        Object.values(form.data.items).some(
+            (i) => i.estado === 'observado' && !i.foto,
+        );
 
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
@@ -92,13 +101,15 @@ export default function ChecklistExtintor({
         >
             <div className="flex items-center justify-between">
                 <span className="text-xs font-black">Checklist de {serie}</span>
-                <button
-                    type="button"
-                    onClick={onCerrar}
-                    className="min-h-[44px] px-2 text-xs font-bold"
-                >
-                    Cerrar
-                </button>
+                {cerrable && (
+                    <button
+                        type="button"
+                        onClick={onCerrar}
+                        className="min-h-[44px] px-2 text-xs font-bold"
+                    >
+                        Cerrar
+                    </button>
+                )}
             </div>
 
             <label className="border-border bg-card flex min-h-11 items-start gap-3 rounded-lg border p-3 text-sm">
@@ -219,7 +230,11 @@ export default function ChecklistExtintor({
                                 <div className="flex flex-wrap items-center gap-2">
                                     <BotonFoto
                                         archivo={item.foto}
-                                        etiqueta="Tomar foto *"
+                                        etiqueta={
+                                            fotoObligatoria
+                                                ? 'Tomar foto *'
+                                                : 'Tomar foto'
+                                        }
                                         onFoto={(f) =>
                                             cambiar(clave, { foto: f })
                                         }
@@ -227,7 +242,9 @@ export default function ChecklistExtintor({
                                     <span className="text-xs">
                                         {item.foto
                                             ? item.foto.name
-                                            : 'La foto es obligatoria.'}
+                                            : fotoObligatoria
+                                              ? 'La foto es obligatoria.'
+                                              : 'Puedes adjuntar una foto del hallazgo.'}
                                     </span>
                                 </div>
                             </div>
@@ -260,7 +277,7 @@ export default function ChecklistExtintor({
                 disabled={form.processing || sinFoto}
                 className="bg-primary min-h-[48px] w-full rounded-xl text-xs font-bold text-white transition hover:brightness-95 disabled:opacity-50"
             >
-                Guardar checklist
+                {textoBoton}
             </button>
         </form>
     );

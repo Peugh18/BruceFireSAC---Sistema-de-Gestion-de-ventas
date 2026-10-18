@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TeamRole;
+use App\Models\AuditLog;
 use App\Models\Client;
 use App\Models\Deficiency;
 use App\Models\Sede;
@@ -36,7 +37,7 @@ test('tecnico planta can list deficiencias with counters and filter by state', f
     ]);
 
     $this->actingAs($this->tecnicoPlanta)
-        ->get(route('tecnico-planta.deficiencias.index', ['current_team' => $this->team]))
+        ->get(route('tecnico-planta.deficiencias.index', ['current_team' => $this->team, 'estado' => 'todas']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('tecnico-planta/deficiencias/index')
@@ -112,6 +113,13 @@ test('tecnico planta can resolve a deficiency in workshop', function () {
         ->and($deficiency->resolucion)->toContain('Se colocó pasador nuevo');
 
     expect(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'otro')->exists())->toBeTrue();
+
+    expect(AuditLog::query()
+        ->where('action', 'deficiencia.reparada')
+        ->where('auditable_type', $deficiency->getMorphClass())
+        ->where('auditable_id', $deficiency->id)
+        ->where('actor_role', 'Técnico de Planta')
+        ->exists())->toBeTrue();
 });
 
 test('los contadores de deficiencias de planta usan las mismas ordenes atendibles de la lista', function () {
@@ -125,5 +133,5 @@ test('los contadores de deficiencias de planta usan las mismas ordenes atendible
     foreach ([$mia, $anulada, $deOtroTecnico, $ajena] as $orden) {
         Deficiency::factory()->create(['service_order_id' => $orden->id, 'equipment_id' => null, 'estado' => 'esperando_autorizacion']);
     }
-    $this->actingAs($this->tecnicoPlanta)->get(route('tecnico-planta.deficiencias.index', ['current_team' => $this->team]))->assertOk()->assertInertia(fn (Assert $page) => $page->has('deficiencies.data', 1)->where('deficiencies.data.0.orden_id', $mia->id)->where('counts.todas', 1)->where('counts.esperando_autorizacion', 1)->where('counts.autorizada', 0));
+    $this->actingAs($this->tecnicoPlanta)->get(route('tecnico-planta.deficiencias.index', ['current_team' => $this->team, 'estado' => 'todas']))->assertOk()->assertInertia(fn (Assert $page) => $page->has('deficiencies.data', 1)->where('deficiencies.data.0.orden_id', $mia->id)->where('counts.todas', 1)->where('counts.esperando_autorizacion', 1)->where('counts.autorizada', 0));
 });

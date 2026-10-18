@@ -3,6 +3,7 @@
 namespace App\Actions\Cash;
 
 use App\Models\CashRegister;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -23,11 +24,16 @@ class CloseCashRegister
             }
 
             $now = now();
+            $montoEsperadoCalculado = $cashRegister->efectivoEsperado();
+            $diferencia = round($montoContadoCierre - $montoEsperadoCalculado, 2);
 
-            // Efectivo cobrado en el turno menos el devuelto a clientes.
-            $totalEfectivo = $cashRegister->movimientosPorFormaDePago()['efectivo'] ?? 0.0;
-
-            $montoEsperadoCalculado = round((float) $cashRegister->monto_apertura + $totalEfectivo, 2);
+            // Si falta o sobra dinero, el vendedor tiene que decir por qué.
+            if ($diferencia !== 0.0 && blank($observacion)) {
+                throw ValidationException::withMessages([
+                    'observacion' => ($diferencia < 0 ? 'Faltan S/ ' : 'Sobran S/ ')
+                        .number_format(abs($diferencia), 2).'. Explica qué pasó antes de cerrar.',
+                ]);
+            }
 
             $cashRegister->update([
                 'fecha_cierre' => $now,
@@ -36,6 +42,20 @@ class CloseCashRegister
                 'observacion' => $observacion,
                 'estado' => 'cerrado',
             ]);
+
+            if ($diferencia !== 0.0) {
+                AuditLogger::log(
+                    action: 'caja.cierre_con_diferencia',
+                    entity: $cashRegister,
+                    newValues: [
+                        'esperado' => $montoEsperadoCalculado,
+                        'contado' => $montoContadoCierre,
+                        'diferencia' => $diferencia,
+                        'motivo' => $observacion,
+                    ],
+                    userId: $cashRegister->vendedor_id,
+                );
+            }
 
             return $cashRegister->fresh();
         });

@@ -27,7 +27,7 @@ class DeliveryController extends Controller
     public function index(Request $request, Team $current_team): Response
     {
         $tab = $request->query('tab', 'listas');
-        $search = $request->query('q');
+        $search = trim((string) $request->query('q', ''));
 
         $query = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
@@ -173,6 +173,17 @@ class DeliveryController extends Controller
             $serviceOrder->update([
                 'estado' => $debeCerrar ? 'cerrado' : 'entregado',
             ]);
+
+            AuditLogger::log(
+                action: 'orden.entregada',
+                entity: $serviceOrder,
+                newValues: [
+                    'estado' => $debeCerrar ? 'cerrado' : 'entregado',
+                    'receptor' => $validated['receptor_nombre'],
+                    'equipos_entregados' => $serviceOrder->equipments()->count(),
+                ],
+                userId: $request->user()->id,
+            );
 
             // Si el trabajo ya se registró (certificado del taller, inspección o
             // instalación), las fechas ya quedaron como corresponden: entregar no

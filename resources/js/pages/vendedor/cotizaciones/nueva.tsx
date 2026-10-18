@@ -49,6 +49,7 @@ type QuoteItemForm = {
 };
 
 type QuoteFormData = {
+    service_order_id: number | null;
     client_id: number | '';
     destino: 'local_cliente' | 'vehiculo';
     vehicle_id: number | '';
@@ -114,6 +115,7 @@ export default function NuevaCotizacion({
     renovacion: renovacionOriginal = null,
     edicion = null,
     cliente: clientePrecargado = null,
+    ordenOrigen = null,
 }: {
     renovacion?: Renovacion | null;
     edicion?:
@@ -121,8 +123,23 @@ export default function NuevaCotizacion({
         | null;
     // Precarga cuando se llega con ?client_id= desde la ficha del cliente.
     cliente?: ClientFicha | null;
+    ordenOrigen?:
+        | (Omit<Renovacion, 'numero' | 'condicion_pago_propuesta'> & {
+              id: number;
+              codigo: string;
+          })
+        | null;
 }) {
-    const renovacion = edicion ?? renovacionOriginal;
+    const renovacion =
+        edicion ??
+        renovacionOriginal ??
+        (ordenOrigen
+            ? {
+                  ...ordenOrigen,
+                  numero: ordenOrigen.codigo,
+                  condicion_pago_propuesta: 'Contado',
+              }
+            : null);
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ??
@@ -131,6 +148,7 @@ export default function NuevaCotizacion({
             : '');
 
     const form = useForm<QuoteFormData>({
+        service_order_id: ordenOrigen?.id ?? null,
         client_id: renovacion?.client.id ?? clientePrecargado?.id ?? '',
         destino: renovacion?.destino ?? 'local_cliente',
         vehicle_id: renovacion?.vehicle_id ?? '',
@@ -264,11 +282,27 @@ export default function NuevaCotizacion({
             >
                 <div className="flex min-w-0 flex-col gap-4">
                     <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
+                        {ordenOrigen ? (
+                            <p className="text-muted-foreground text-sm">
+                                Cotizando {ordenOrigen.codigo}. Cliente,
+                                ubicación y servicios vienen de la misma orden;
+                                Planta continúa trabajando.
+                            </p>
+                        ) : null}
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
                             <ClientPicker
                                 teamSlug={teamSlug}
                                 value={cliente}
                                 onChange={(ficha) => {
+                                    if (
+                                        ordenOrigen &&
+                                        ficha?.id !== ordenOrigen.client.id
+                                    ) {
+                                        toast.error(
+                                            'Conserva el cliente de la orden. Completa o corrige su ficha existente.',
+                                        );
+                                        return;
+                                    }
                                     setCliente(ficha);
                                     form.setData((data) => ({
                                         ...data,

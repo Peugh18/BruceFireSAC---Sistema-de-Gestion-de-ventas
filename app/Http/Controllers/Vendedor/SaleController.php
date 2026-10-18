@@ -136,6 +136,7 @@ class SaleController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         return Inertia::render('vendedor/ventas/nueva', [
+            'reglasDetraccion' => app(DetraccionCalculator::class)->reglasParaFormulario(),
             'caja_abierta' => CashRegister::query()
                 ->where('vendedor_id', $request->user()->id)
                 ->where('estado', 'abierto')
@@ -187,6 +188,11 @@ class SaleController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         return Inertia::render('vendedor/ventas/nueva', [
+            'reglasDetraccion' => app(DetraccionCalculator::class)->reglasParaFormulario(),
+            'caja_abierta' => CashRegister::query()
+                ->where('vendedor_id', $request->user()->id)
+                ->where('estado', 'abierto')
+                ->exists(),
             'clientesVarios' => Client::clientesVarios()->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             'limiteBoletaSinIdentificar' => Sale::LIMITE_BOLETA_SIN_IDENTIFICAR,
             'sedes' => Sede::query()

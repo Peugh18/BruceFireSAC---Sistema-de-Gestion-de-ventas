@@ -78,7 +78,7 @@ test('el consumo exacto si acredita la linea del mismo producto', function () {
 
     $resultado = app(DetraccionCalculator::class)->paraVenta($sale);
 
-    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022']);
+    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022', 'porcentaje' => 12.0]);
 });
 
 test('un consumo no se reutiliza para justificar dos lineas identicas', function () {
@@ -141,7 +141,7 @@ test('los adicionales cotizados y autorizados siguen funcionando aunque excedan 
 
     $resultado = app(DetraccionCalculator::class)->paraVenta($sale);
 
-    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022']);
+    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022', 'porcentaje' => 12.0]);
 });
 
 test('la relacion ambigua da un mensaje claro y no presume que todo esta instalado', function () {

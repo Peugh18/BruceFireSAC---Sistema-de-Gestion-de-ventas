@@ -2,47 +2,59 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\CompanySetting;
+use App\Enums\EquipmentType;
 use App\Models\Equipment;
 use App\Models\InventoryUnit;
+use App\Models\Product;
 use App\Models\Reception;
 use App\Models\ServiceOrder;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DompdfWrapper;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class StickerPdfService
 {
-    /** Stickers por hoja A4: 4 columnas x 5 filas de 5 x 5 cm. */
-    public const POR_HOJA = 20;
-
     /**
      * Stickers de las unidades con serie recibidas en la recepción (§84.9).
-     * `$inicio` es la posición de la hoja (1 a 20) donde empieza, para
-     * aprovechar una hoja ya usada.
      */
-    public function generate(Reception $reception, int $inicio = 1): DompdfWrapper
+    public function generate(Reception $reception, string $formato = 'rollo'): DompdfWrapper
     {
-        $reception->loadMissing('movements.inventoryUnit');
+        $reception->loadMissing(['movements.inventoryUnit.product', 'movements.product']);
 
-        $series = $reception->movements
+        $stickers = $reception->movements
             ->pluck('inventoryUnit')
-            ->filter()
+            ->filter(fn (mixed $unit): bool => $unit instanceof InventoryUnit)
             ->unique('id')
-            ->map(fn (InventoryUnit $unit) => $unit->numero_serie)
+            ->map(fn (InventoryUnit $unit) => $this->stickerForUnit($unit))
             ->values();
 
-        return $this->render($series, $inicio);
+        $productos = $reception->movements->pluck('product')
+            ->filter(fn (mixed $product): bool => $product instanceof Product && ! $product->serializado)
+            ->unique('id')->map(fn (Product $product): array => $this->stickerForProduct($product))->values();
+
+        return $this->render($stickers->concat($productos), $formato);
+    }
+
+    public function generateForProduct(Product $product, string $formato = 'rollo'): DompdfWrapper
+    {
+        return $this->render(collect([$this->stickerForProduct($product)]), $formato);
+    }
+
+    /** @return array{numero_serie: string, marca: string, kilaje: string, agente: string, producto: string} */
+    protected function stickerForProduct(Product $product): array
+    {
+        return ['numero_serie' => $product->codigo, 'marca' => '', 'kilaje' => '', 'agente' => '', 'producto' => $product->nombre];
     }
 
     /**
      * Reimpresión de un solo sticker.
      */
-    public function generateForUnit(InventoryUnit $unit, int $inicio = 1): DompdfWrapper
+    public function generateForUnit(InventoryUnit $unit, string $formato = 'rollo'): DompdfWrapper
     {
-        return $this->render(collect([$unit->numero_serie]), $inicio);
+        $unit->loadMissing('product');
+
+        return $this->render(collect([$this->stickerForUnit($unit)]), $formato);
     }
 
     /**
@@ -50,42 +62,83 @@ class StickerPdfService
      *
      * @param  iterable<Equipment>  $equipments
      */
-    public function generateForEquipments(iterable $equipments, ?ServiceOrder $serviceOrder = null, int $inicio = 1): DompdfWrapper
+    public function generateForEquipments(iterable $equipments, ?ServiceOrder $serviceOrder = null, string $formato = 'rollo'): DompdfWrapper
     {
-        $series = collect($equipments)->map(fn (Equipment $equipment) => $equipment->numero_serie)->values();
+        $stickers = collect($equipments)->map(function (Equipment $equipment): array {
+            $equipment->loadMissing('product');
 
-        return $this->render($series, $inicio);
+            return $this->stickerForEquipment($equipment);
+        })->values();
+
+        return $this->render($stickers, $formato);
     }
 
     /**
-     * Solo logo, código de barras Code 128 y la serie debajo.
+     * @template T of array{numero_serie: string, marca: string, kilaje: string, agente: string, producto?: string}
      *
-     * @param  Collection<int, string>  $series
+     * @param  Collection<int, T>  $datos
      */
-    protected function render(Collection $series, int $inicio): DompdfWrapper
+    protected function render(Collection $datos, string $formato): DompdfWrapper
     {
         $generator = new BarcodeGeneratorPNG;
-        $stickers = $series->map(fn (string $serie) => [
-            'numero_serie' => $serie,
-            'barcode_base64' => base64_encode($generator->getBarcode($serie, $generator::TYPE_CODE_128, 2, 48)),
-        ]);
+        $stickers = $datos->map(fn (array $sticker) => array_merge($sticker, [
+            'barcode_base64' => base64_encode($generator->getBarcode(
+                $sticker['numero_serie'],
+                $generator::TYPE_CODE_128,
+                2,
+                48,
+            )),
+        ]))->values();
 
-        return Pdf::loadView('pdf.stickers', [
-            'stickers' => $stickers,
-            'inicio' => max(1, min(self::POR_HOJA, $inicio)),
-            'logoBase64' => $this->logoBase64(CompanySetting::current()),
-        ])->setPaper('a4', 'portrait');
+        return Pdf::loadView('pdf.stickers', compact('stickers', 'formato'))
+            ->setPaper($formato === 'a4' ? 'a4' : [0, 0, 226.77, 141.73]);
     }
 
-    protected function logoBase64(?CompanySetting $company): ?string
+    /**
+     * @return array{numero_serie: string, marca: string, kilaje: string, agente: string}
+     */
+    protected function stickerForUnit(InventoryUnit $unit): array
     {
-        if (! $company || ! $company->logo_path || ! Storage::disk('public')->exists($company->logo_path)) {
-            return null;
+        return [
+            'numero_serie' => trim((string) $unit->numero_serie),
+            'marca' => trim((string) $unit->marca),
+            'kilaje' => $this->formatearKilaje($unit->capacidad ?? $unit->product->capacidad),
+            'agente' => trim((string) $unit->agenteParaEquipo()),
+        ];
+    }
+
+    /**
+     * @return array{numero_serie: string, marca: string, kilaje: string, agente: string}
+     */
+    protected function stickerForEquipment(Equipment $equipment): array
+    {
+        return [
+            'numero_serie' => trim((string) $equipment->numero_serie),
+            'marca' => trim((string) $equipment->marca),
+            'kilaje' => $this->formatearKilaje($equipment->capacidad ?? $equipment->product?->capacidad),
+            'agente' => $this->etiquetarAgente($equipment->tipo_agente ?? $equipment->product?->agente),
+        ];
+    }
+
+    protected function formatearKilaje(?string $capacidad): string
+    {
+        $valor = trim((string) $capacidad);
+
+        if ($valor === '') {
+            return '';
         }
 
-        $mime = Storage::disk('public')->mimeType($company->logo_path) ?: 'image/png';
-        $contents = Storage::disk('public')->get($company->logo_path);
+        return is_numeric($valor) ? $valor.' kg' : $valor;
+    }
 
-        return 'data:'.$mime.';base64,'.base64_encode($contents);
+    protected function etiquetarAgente(?string $agente): string
+    {
+        $valor = trim((string) $agente);
+
+        if ($valor === '') {
+            return '';
+        }
+
+        return EquipmentType::tryFrom($valor)?->etiqueta() ?? $valor;
     }
 }

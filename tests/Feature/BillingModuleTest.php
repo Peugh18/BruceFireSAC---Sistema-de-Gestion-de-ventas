@@ -32,6 +32,7 @@ test('detraccion calculator applies only for services above configured minimum',
             'aplica' => true,
             'monto' => 84.12,
             'codigo_bien' => config('billing.detraccion.codigo_bien'),
+            'porcentaje' => 12.0,
         ])
         ->and($calculator->calcular(700, true)['aplica'])->toBeFalse()
         ->and($calculator->calcular(701, false)['aplica'])->toBeFalse();
@@ -135,7 +136,7 @@ test('emit electronic document prints the detraccion legend and bank account whe
 
     $html = app(ComprobantePdfService::class)->html($document, (string) Storage::disk('local')->get($document->xml_path));
 
-    expect($html)->toContain('Sistema de Pago de Obligaciones Tributarias')
+    expect($html)->toContain('Sistema de Pago de Obligaciones Tributarias')->toContain('Porcentaje: 12 %')
         ->and($html)->toContain('00-123-456789');
 });
 

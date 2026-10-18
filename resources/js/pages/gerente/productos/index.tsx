@@ -36,10 +36,14 @@ import ProductosRoutes from '@/routes/gerente/productos';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
+import OpcionesAgente from '@/components/opciones-agente';
+import BotonAgentes from '@/components/agentes-modal';
+import CodigoSunatInput from '@/components/codigo-sunat-input';
 type ProductItem = {
     id: number;
     codigo: string;
     codigo_barras: string | null;
+    codigo_sunat: string | null;
     categoria: string | null;
     agente: string | null;
     capacidad: string | null;
@@ -88,7 +92,6 @@ type PageProps = {
     kpis: ProductKpis;
     categorias: CategoriaItem[];
     unidadesMedida: { codigo: string; nombre: string }[];
-    agentes: { valor: string; etiqueta: string }[];
     siguienteCodigo: string;
     flash?: {
         success?: string;
@@ -106,6 +109,7 @@ function formatCurrency(amount: number): string {
 const emptyProduct = {
     codigo: '',
     codigo_barras: '',
+    codigo_sunat: '',
     categoria: '',
     agente: '',
     capacidad: '',
@@ -135,7 +139,6 @@ export default function ProductosIndex() {
         kpis,
         categorias,
         unidadesMedida,
-        agentes,
         siguienteCodigo,
         flash,
     } = usePage<PageProps>().props;
@@ -145,13 +148,14 @@ export default function ProductosIndex() {
         null,
     );
     const form = useForm(emptyProduct);
-    const [advancedOpen, setAdvancedOpen] = useState(false);
+    const [, setAdvancedOpen] = useState(false);
     const productTrigger = useRef<HTMLElement | null>(null);
-    const inventoryControl = form.data.serializado
-        ? 'serie'
-        : form.data.controla_lote
-          ? 'lote'
-          : 'cantidad';
+    const esExtintor = form.data.serializado;
+    const precioFinal = Number(form.data.precio_venta) || 0;
+    const valorSinIgv =
+        form.data.tipo_afectacion_igv === '10'
+            ? precioFinal / 1.18
+            : precioFinal;
 
     useEffect(() => {
         if (!modalOpen || !form.isDirty) return;
@@ -179,6 +183,7 @@ export default function ProductosIndex() {
         const data = {
             codigo: product.codigo,
             codigo_barras: product.codigo_barras ?? '',
+            codigo_sunat: product.codigo_sunat ?? '',
             categoria: product.categoria ?? '',
             agente: product.agente ?? '',
             capacidad: product.capacidad ?? '',
@@ -271,14 +276,54 @@ export default function ProductosIndex() {
             );
         }
     };
+    const igvCampo = (
+        <div>
+            <label
+                htmlFor="producto-tipo_afectacion_igv"
+                className="mb-1.5 block font-medium"
+            >
+                Tratamiento del IGV *
+            </label>
+            <NativeSelect
+                id="producto-tipo_afectacion_igv"
+                name="tipo_afectacion_igv"
+                required
+                value={form.data.tipo_afectacion_igv}
+                onChange={(e) =>
+                    form.setData((data) => ({
+                        ...data,
+                        tipo_afectacion_igv: e.target.value,
+                        aplica_igv: e.target.value === '10',
+                    }))
+                }
+                className={productControl}
+                aria-invalid={!!form.errors.tipo_afectacion_igv}
+            >
+                <option value="" disabled>
+                    Selecciona el tratamiento
+                </option>
+                <option value="10">Gravado · IGV 18 %</option>
+                <option value="20">Exonerado</option>
+                <option value="30">Inafecto</option>
+            </NativeSelect>
+            {form.errors.tipo_afectacion_igv && (
+                <p
+                    role="alert"
+                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
+                >
+                    {form.errors.tipo_afectacion_igv}
+                </p>
+            )}
+        </div>
+    );
     const productField = (
         name:
             | 'nombre'
-            | 'codigo'
             | 'precio_venta'
             | 'capacidad'
             | 'stock_minimo'
             | 'codigo_barras'
+            | 'codigo_sunat'
             | 'peso_kg'
             | 'unidad_compra'
             | 'factor_compra',
@@ -303,7 +348,7 @@ export default function ProductosIndex() {
                 onChange={(event) =>
                     form.setData(
                         name,
-                        ['codigo', 'unidad_compra'].includes(name)
+                        name === 'unidad_compra'
                             ? event.target.value.toUpperCase()
                             : event.target.value,
                     )
@@ -417,7 +462,7 @@ export default function ProductosIndex() {
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
                         <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
-                            Catálogo de Productos & Repuestos
+                            Productos
                         </h1>
                         <p className="text-muted-foreground mt-1 text-sm">
                             Administración de existencias, precios de venta y
@@ -460,7 +505,7 @@ export default function ProductosIndex() {
                     <div className="border-border bg-card rounded-xl border p-4 shadow-xs">
                         <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span className="font-medium uppercase">
-                                Bajo Stock Mínimo
+                                Por reponer
                             </span>
                             <AlertTriangle className="text-primary-strong size-4" />
                         </div>
@@ -533,7 +578,7 @@ export default function ProductosIndex() {
                             }`}
                         >
                             <AlertTriangle className="size-3.5" />
-                            <span>Solo bajo mínimo</span>
+                            <span>Por reponer</span>
                         </button>
                     </div>
                 </div>
@@ -595,6 +640,10 @@ export default function ProductosIndex() {
                                                     {p.codigo_barras ? (
                                                         <div className="text-muted-foreground text-xs font-normal">
                                                             ▮▮ {p.codigo_barras}
+                                                        </div>
+                                                    ) : !p.serializado ? (
+                                                        <div className="text-warning-strong text-xs font-normal">
+                                                            Sin código de barras
                                                         </div>
                                                     ) : null}
                                                 </TableCell>
@@ -766,15 +815,14 @@ export default function ProductosIndex() {
                             productTrigger.current?.focus();
                         }}
                     >
-                        <DialogHeader className="border-border shrink-0 border-b px-6 py-5 text-left">
+                        <DialogHeader className="border-border shrink-0 border-b px-6 py-4 text-left">
                             <DialogTitle className="pr-8 text-xl">
                                 {editingProduct
                                     ? 'Editar producto'
                                     : 'Registrar producto'}
                             </DialogTitle>
                             <DialogDescription>
-                                Empieza por el nombre y el precio. Los campos
-                                con * son obligatorios.
+                                Los campos con * son obligatorios.
                             </DialogDescription>
                         </DialogHeader>
                         <form
@@ -797,7 +845,7 @@ export default function ProductosIndex() {
                             }}
                             className="flex min-h-0 flex-1 flex-col"
                         >
-                            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-6 py-5 text-sm">
+                            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4 text-sm sm:px-6">
                                 {Object.keys(form.errors).length > 0 && (
                                     <p
                                         role="alert"
@@ -808,661 +856,277 @@ export default function ProductosIndex() {
                                         indicado.
                                     </p>
                                 )}
-                                {!editingProduct && (
-                                    <section
-                                        aria-labelledby="producto-inicio-titulo"
-                                        className="space-y-3 rounded-lg border p-4"
-                                    >
-                                        <h3
-                                            id="producto-inicio-titulo"
-                                            className="font-semibold"
-                                        >
-                                            ¿Qué artículo vas a vender o
-                                            utilizar?
-                                        </h3>
-                                        <p className="text-muted-foreground text-sm">
-                                            Aquí registras el modelo del
-                                            catálogo. Cada extintor físico se
-                                            identifica después en Almacén; los
-                                            equipos que trae un cliente se
-                                            registran desde su orden de
-                                            servicio.
-                                        </p>
-                                        <div className="grid gap-2 sm:grid-cols-3">
-                                            {[
-                                                {
-                                                    value: 'serie',
-                                                    label: 'Extintor nuevo',
-                                                    hint: 'Cada unidad lleva su identificación.',
-                                                },
-                                                {
-                                                    value: 'cantidad',
-                                                    label: 'Repuesto o accesorio',
-                                                    hint: 'Se cuentan unidades iguales.',
-                                                },
-                                                {
-                                                    value: 'lote',
-                                                    label: 'Producto por lote',
-                                                    hint: 'Se registra lote y vencimiento.',
-                                                },
-                                            ].map((profile) => (
-                                                <button
-                                                    key={profile.value}
-                                                    type="button"
-                                                    disabled={form.processing}
-                                                    aria-pressed={
-                                                        inventoryControl ===
-                                                        profile.value
-                                                    }
-                                                    className="border-border aria-pressed:border-primary aria-pressed:bg-primary/5 min-h-11 rounded-lg border p-3 text-left transition hover:brightness-95"
-                                                    onClick={() => {
-                                                        const category =
-                                                            profile.value ===
-                                                            'serie'
-                                                                ? categorias.find(
-                                                                      (item) =>
-                                                                          item.activo &&
-                                                                          item.genera_alertas_vencimiento &&
-                                                                          item.nombre
-                                                                              .toLowerCase()
-                                                                              .includes(
-                                                                                  'extint',
-                                                                              ),
-                                                                  )
-                                                                : categorias.find(
-                                                                      (item) =>
-                                                                          item.activo &&
-                                                                          item.nombre
-                                                                              .toLowerCase()
-                                                                              .includes(
-                                                                                  profile.value ===
-                                                                                      'cantidad'
-                                                                                      ? 'repuesto'
-                                                                                      : 'consum',
-                                                                              ),
-                                                                  );
-                                                        form.setData(
-                                                            (data) => ({
-                                                                ...data,
-                                                                categoria:
-                                                                    category?.clave ??
-                                                                    '',
-                                                                serializado:
-                                                                    profile.value ===
-                                                                    'serie',
-                                                                controla_lote:
-                                                                    profile.value ===
-                                                                    'lote',
-                                                            }),
+
+                                <fieldset>
+                                    <legend className="mb-1.5 font-medium">
+                                        ¿Qué vas a registrar? *
+                                    </legend>
+                                    <div className="bg-muted grid grid-cols-2 gap-1 rounded-lg p-1">
+                                        {[
+                                            {
+                                                extintor: true,
+                                                label: 'Extintor',
+                                            },
+                                            {
+                                                extintor: false,
+                                                label: 'Otro producto',
+                                            },
+                                        ].map((opcion) => (
+                                            <button
+                                                key={opcion.label}
+                                                type="button"
+                                                disabled={form.processing}
+                                                aria-pressed={
+                                                    esExtintor ===
+                                                    opcion.extintor
+                                                }
+                                                className="text-muted-foreground aria-pressed:bg-background aria-pressed:text-foreground focus-visible:outline-primary min-h-10 rounded-md px-3 font-medium transition focus-visible:outline-2 aria-pressed:shadow-sm"
+                                                onClick={() => {
+                                                    const categoria =
+                                                        categorias.find(
+                                                            (item) =>
+                                                                item.activo &&
+                                                                (opcion.extintor
+                                                                    ? item.nombre
+                                                                          .toLowerCase()
+                                                                          .includes(
+                                                                              'extint',
+                                                                          )
+                                                                    : item.clave ===
+                                                                      'repuesto'),
                                                         );
-                                                    }}
-                                                >
-                                                    <span className="block font-medium">
-                                                        {profile.label}
-                                                    </span>
-                                                    <span className="text-muted-foreground mt-1 block text-xs">
-                                                        {profile.hint}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <p className="text-muted-foreground text-xs">
-                                            Estas opciones preparan el control
-                                            de inventario. Puedes ajustar
-                                            categoría y control antes de
-                                            guardar; conservan el nombre, el
-                                            precio y el tratamiento del IGV.
-                                        </p>
-                                    </section>
-                                )}
-                                <section
-                                    aria-labelledby="producto-datos-titulo"
-                                    className="space-y-4"
-                                >
-                                    <h3
-                                        id="producto-datos-titulo"
-                                        className="font-semibold"
-                                    >
-                                        Datos del producto
-                                    </h3>
-                                    {productField(
-                                        'nombre',
-                                        'Nombre del producto',
-                                        {
-                                            required: true,
-                                            maxLength: 255,
-                                            placeholder:
-                                                'Ej. Extintor PQS ABC de 6 kg',
-                                        },
-                                    )}
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        {productField(
-                                            'codigo',
-                                            'Código interno',
-                                            {
-                                                required: true,
-                                                maxLength: 50,
-                                                placeholder: 'Ej. EXT-PQS-6KG',
-                                            },
-                                            'Tu código para identificar el producto en el catálogo.',
-                                        )}
-                                        <div>
-                                            <CategoriaSelect
-                                                value={form.data.categoria}
-                                                onChange={(clave) =>
-                                                    form.setData(
-                                                        'categoria',
-                                                        clave,
-                                                    )
-                                                }
-                                                categorias={categorias}
-                                            />
-                                            {form.errors.categoria && (
-                                                <p
-                                                    role="alert"
-                                                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
-                                                >
-                                                    {form.errors.categoria}
-                                                </p>
-                                            )}
-                                        </div>
-                                        {productField(
-                                            'precio_venta',
-                                            'Precio de venta (S/)',
-                                            {
-                                                type: 'number',
-                                                min: 0,
-                                                step: '0.01',
-                                                inputMode: 'decimal',
-                                                required: true,
-                                                placeholder: 'Ej. 120.00',
-                                            },
-                                            form.data.tipo_afectacion_igv ===
-                                                '10'
-                                                ? 'Precio final al cliente, con IGV incluido.'
-                                                : 'Precio final al cliente.',
-                                        )}
-                                        <div>
-                                            <label
-                                                htmlFor="producto-unidad_medida"
-                                                className="mb-1.5 block font-medium"
+                                                    form.setData((data) => ({
+                                                        ...data,
+                                                        categoria:
+                                                            categoria?.clave ??
+                                                            '',
+                                                        serializado:
+                                                            opcion.extintor,
+                                                        controla_lote: false,
+                                                    }));
+                                                }}
                                             >
-                                                Unidad de venta *
-                                            </label>
-                                            <NativeSelect
-                                                id="producto-unidad_medida"
-                                                name="unidad_medida"
-                                                value={form.data.unidad_medida}
-                                                onChange={(e) =>
-                                                    form.setData(
-                                                        'unidad_medida',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className={productControl}
-                                                aria-invalid={
-                                                    !!form.errors.unidad_medida
-                                                }
-                                                aria-describedby={
-                                                    form.errors.unidad_medida
-                                                        ? 'producto-unidad-error'
-                                                        : 'producto-unidad-ayuda'
-                                                }
-                                            >
-                                                {unidadesMedida.map((u) => (
-                                                    <option
-                                                        key={u.codigo}
-                                                        value={u.codigo}
-                                                    >
-                                                        {u.nombre}
-                                                    </option>
-                                                ))}
-                                            </NativeSelect>
-                                            <p
-                                                id="producto-unidad-ayuda"
-                                                className="text-muted-foreground mt-1.5 text-xs"
-                                            >
-                                                Cómo se vende y se cuenta:
-                                                unidad, par, caja o kilogramo.
-                                            </p>
-                                            {form.errors.unidad_medida && (
-                                                <p
-                                                    id="producto-unidad-error"
-                                                    role="alert"
-                                                    className="text-destructive-strong mt-1 text-sm dark:text-red-300"
-                                                >
-                                                    {form.errors.unidad_medida}
-                                                </p>
-                                            )}
-                                        </div>
+                                                {opcion.label}
+                                            </button>
+                                        ))}
                                     </div>
+                                    <p className="text-muted-foreground mt-1.5 text-xs">
+                                        {esExtintor
+                                            ? 'Almacén le pone su sticker BF-EQ al recibirlo. Código SUNAT 46191601 (se llena solo).'
+                                            : editingProduct?.codigo_barras
+                                              ? `Código de barras ${editingProduct.codigo_barras}, ligado por Almacén.`
+                                              : 'Sin código de barras todavía: Almacén lo liga al escanearlo en la primera recepción.'}
+                                    </p>
+                                </fieldset>
+
+                                {productField('nombre', 'Nombre del producto', {
+                                    required: true,
+                                    maxLength: 255,
+                                    placeholder: esExtintor
+                                        ? 'Ej. Extintor PQS ABC de 6 kg'
+                                        : 'Ej. Soporte metálico para extintor',
+                                })}
+
+                                <div className="grid gap-4 sm:grid-cols-3">
+                                    {productField(
+                                        'precio_venta',
+                                        'Precio final (S/)',
+                                        {
+                                            type: 'number',
+                                            min: 0,
+                                            step: '0.01',
+                                            inputMode: 'decimal',
+                                            required: true,
+                                            placeholder: '118.00',
+                                        },
+                                        form.data.tipo_afectacion_igv === '10'
+                                            ? `Sin IGV S/ ${valorSinIgv.toFixed(2)} + IGV S/ ${(precioFinal - valorSinIgv).toFixed(2)}`
+                                            : 'Sin IGV: es el precio que paga el cliente.',
+                                    )}
                                     <div>
                                         <label
-                                            htmlFor="producto-tipo_afectacion_igv"
+                                            htmlFor="producto-unidad_medida"
                                             className="mb-1.5 block font-medium"
                                         >
-                                            Tratamiento del IGV *
+                                            Unidad *
                                         </label>
                                         <NativeSelect
-                                            id="producto-tipo_afectacion_igv"
-                                            name="tipo_afectacion_igv"
+                                            id="producto-unidad_medida"
                                             required
-                                            value={
-                                                form.data.tipo_afectacion_igv
-                                            }
-                                            onChange={(e) =>
+                                            value={form.data.unidad_medida}
+                                            onChange={(event) =>
                                                 form.setData(
-                                                    'tipo_afectacion_igv',
-                                                    e.target.value,
+                                                    'unidad_medida',
+                                                    event.target.value,
                                                 )
                                             }
                                             className={productControl}
                                             aria-invalid={
-                                                !!form.errors
-                                                    .tipo_afectacion_igv
+                                                !!form.errors.unidad_medida
                                             }
-                                            aria-describedby="producto-igv-ayuda"
                                         >
-                                            <option value="" disabled>
-                                                Selecciona el tratamiento
-                                            </option>
-                                            <option value="10">
-                                                Gravado: el precio incluye IGV
-                                                de 18%
-                                            </option>
-                                            <option value="20">
-                                                Exonerado
-                                            </option>
-                                            <option value="30">Inafecto</option>
+                                            {unidadesMedida.map((unidad) => (
+                                                <option
+                                                    key={unidad.codigo}
+                                                    value={unidad.codigo}
+                                                >
+                                                    {unidad.codigo} ·{' '}
+                                                    {unidad.nombre}
+                                                </option>
+                                            ))}
                                         </NativeSelect>
-                                        <p
-                                            id="producto-igv-ayuda"
-                                            className="text-muted-foreground mt-1.5 text-xs"
-                                        >
-                                            Se usará al facturar este producto.
-                                            Cambia el valor según su
-                                            clasificación tributaria.
-                                        </p>
-                                        {form.errors.tipo_afectacion_igv && (
+                                        {form.errors.unidad_medida && (
                                             <p
                                                 role="alert"
                                                 className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                             >
-                                                {
-                                                    form.errors
-                                                        .tipo_afectacion_igv
-                                                }
+                                                {form.errors.unidad_medida}
                                             </p>
                                         )}
                                     </div>
-                                </section>
-                                {categorias.find(
-                                    (c) => c.clave === form.data.categoria,
-                                )?.genera_alertas_vencimiento && (
-                                    <section
-                                        aria-labelledby="producto-extintor-titulo"
-                                        className="border-border space-y-4 border-t pt-5"
-                                    >
+                                    {igvCampo}
+                                </div>
+
+                                {esExtintor ? (
+                                    <div className="grid gap-4 sm:grid-cols-3">
                                         <div>
-                                            <h3
-                                                id="producto-extintor-titulo"
-                                                className="font-semibold"
+                                            <label
+                                                htmlFor="producto-agente"
+                                                className="mb-1.5 block font-medium"
                                             >
-                                                Datos del extintor
-                                            </h3>
-                                            <p className="text-muted-foreground mt-1 text-sm">
-                                                El agente y la capacidad se
-                                                copian al equipo vendido y a su
-                                                certificado.
-                                            </p>
-                                        </div>
-                                        <div className="grid gap-4 sm:grid-cols-2">
-                                            <div>
-                                                <label
-                                                    htmlFor="producto-agente"
-                                                    className="mb-1.5 block font-medium"
-                                                >
-                                                    Agente extintor
-                                                </label>
+                                                Agente
+                                            </label>
+                                            <div className="flex gap-1.5">
                                                 <NativeSelect
                                                     id="producto-agente"
                                                     name="agente"
                                                     value={form.data.agente}
-                                                    onChange={(e) =>
+                                                    onChange={(event) =>
                                                         form.setData(
                                                             'agente',
-                                                            e.target.value,
+                                                            event.target.value,
                                                         )
                                                     }
-                                                    className={productControl}
+                                                    className={`${productControl} min-w-0 flex-1`}
                                                     aria-invalid={
                                                         !!form.errors.agente
                                                     }
                                                 >
-                                                    <option value="">
-                                                        Sin registrar
-                                                    </option>
-                                                    {agentes.map((a) => (
-                                                        <option
-                                                            key={a.valor}
-                                                            value={a.valor}
-                                                        >
-                                                            {a.etiqueta}
-                                                        </option>
-                                                    ))}
+                                                    <OpcionesAgente vacia="Elige" />
                                                 </NativeSelect>
-                                                <p className="text-muted-foreground mt-1.5 text-xs">
-                                                    Completa el agente para
-                                                    poder emitir el certificado.
-                                                </p>
-                                                {form.errors.agente && (
-                                                    <p
-                                                        role="alert"
-                                                        className="text-destructive-strong mt-1 text-sm dark:text-red-300"
-                                                    >
-                                                        {form.errors.agente}
-                                                    </p>
-                                                )}
+                                                <BotonAgentes />
                                             </div>
-                                            {productField(
-                                                'capacidad',
-                                                'Capacidad',
-                                                {
-                                                    maxLength: 20,
-                                                    placeholder: 'Ej. 6 kg',
-                                                },
-                                            )}
-                                        </div>
-                                    </section>
-                                )}
-                                <section
-                                    aria-labelledby="producto-inventario-titulo"
-                                    className="border-border space-y-4 border-t pt-5"
-                                >
-                                    <div>
-                                        <h3
-                                            id="producto-inventario-titulo"
-                                            className="font-semibold"
-                                        >
-                                            Control de inventario
-                                        </h3>
-                                        <p className="text-muted-foreground mt-1 text-sm">
-                                            Elige cómo identifica Almacén las
-                                            existencias de este producto.
-                                        </p>
-                                    </div>
-                                    <fieldset
-                                        id="producto-serializado"
-                                        className="space-y-2"
-                                        tabIndex={-1}
-                                    >
-                                        <legend className="sr-only">
-                                            Cómo se controla el inventario
-                                        </legend>
-                                        {[
-                                            {
-                                                value: 'cantidad',
-                                                label: 'Por cantidad',
-                                                hint: 'Se cuentan unidades, sin identificar cada una. Ej. válvulas o soportes.',
-                                            },
-                                            {
-                                                value: 'serie',
-                                                label: 'Por número de serie',
-                                                hint: 'Se registra cada unidad por separado. Ej. extintores nuevos.',
-                                            },
-                                            {
-                                                value: 'lote',
-                                                label: 'Por lote y vencimiento',
-                                                hint: 'Se agrupan unidades por lote y fecha de vencimiento. Ej. EPP.',
-                                            },
-                                        ].map((option) => (
-                                            <label
-                                                key={option.value}
-                                                className="border-border hover:bg-muted/40 has-[:checked]:border-primary has-[:checked]:bg-primary/5 flex cursor-pointer items-start gap-3 rounded-lg border p-3"
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="control_inventario"
-                                                    value={option.value}
-                                                    checked={
-                                                        inventoryControl ===
-                                                        option.value
-                                                    }
-                                                    onChange={() =>
-                                                        form.setData(
-                                                            (data) => ({
-                                                                ...data,
-                                                                serializado:
-                                                                    option.value ===
-                                                                    'serie',
-                                                                controla_lote:
-                                                                    option.value ===
-                                                                    'lote',
-                                                            }),
-                                                        )
-                                                    }
-                                                    className="accent-primary mt-1 size-4 shrink-0"
-                                                />
-                                                <span>
-                                                    <span className="block font-medium">
-                                                        {option.label}
-                                                    </span>
-                                                    <span className="text-muted-foreground mt-0.5 block text-xs">
-                                                        {option.hint}
-                                                    </span>
-                                                </span>
-                                            </label>
-                                        ))}
-                                        {(form.errors.serializado ||
-                                            form.errors.controla_lote) && (
-                                            <p
-                                                role="alert"
-                                                className="text-destructive-strong text-sm dark:text-red-300"
-                                            >
-                                                {form.errors.serializado ||
-                                                    form.errors.controla_lote}
-                                            </p>
-                                        )}
-                                    </fieldset>
-                                    {productField(
-                                        'stock_minimo',
-                                        'Avisar cuando queden',
-                                        {
-                                            type: 'number',
-                                            min: 0,
-                                            step: 1,
-                                            inputMode: 'numeric',
-                                            placeholder: 'Ej. 5',
-                                        },
-                                        'Cantidad mínima disponible. Déjalo vacío si no necesitas una alerta.',
-                                    )}
-                                    <p className="bg-muted/50 text-muted-foreground rounded-lg p-3 text-xs">
-                                        <strong className="text-foreground block">
-                                            Así se ingresará al almacén
-                                        </strong>
-                                        {inventoryControl === 'serie'
-                                            ? 'Al recibirlo, Almacén identifica cada unidad por separado. El código del artículo no es la serie del fabricante.'
-                                            : inventoryControl === 'lote'
-                                              ? 'Al recibirlo, Almacén registra cantidad, lote y vencimiento.'
-                                              : 'Almacén registra la cantidad recibida; no necesitas una serie por unidad.'}
-                                        <span className="mt-2 block">
-                                            Registrar el producto no agrega
-                                            stock. Las existencias se ingresan
-                                            desde Recepciones de Almacén.
-                                        </span>
-                                        {form.data.unidad_compra &&
-                                            !form.data.serializado && (
-                                                <span className="mt-2 block">
-                                                    1 {form.data.unidad_compra}{' '}
-                                                    equivale a{' '}
-                                                    {form.data.factor_compra ||
-                                                        '—'}{' '}
-                                                    unidades de venta. La
-                                                    equivalencia se aplica al
-                                                    recibir.
-                                                </span>
-                                            )}
-                                    </p>
-                                </section>
-                                <details
-                                    open={advancedOpen}
-                                    onToggle={(event) =>
-                                        setAdvancedOpen(
-                                            event.currentTarget.open,
-                                        )
-                                    }
-                                    className="border-border rounded-lg border"
-                                >
-                                    <summary className="focus-visible:outline-primary cursor-pointer px-4 py-3 font-medium focus-visible:outline-2">
-                                        Datos adicionales{' '}
-                                        <span className="text-muted-foreground ml-1 font-normal">
-                                            (opcionales)
-                                        </span>
-                                    </summary>
-                                    <div className="border-border space-y-4 border-t p-4">
-                                        <div>
-                                            <label
-                                                htmlFor="producto-descripcion"
-                                                className="mb-1.5 block font-medium"
-                                            >
-                                                Descripción
-                                            </label>
-                                            <textarea
-                                                id="producto-descripcion"
-                                                name="descripcion"
-                                                rows={3}
-                                                maxLength={1000}
-                                                value={form.data.descripcion}
-                                                onChange={(e) =>
-                                                    form.setData(
-                                                        'descripcion',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Ej. Incluye soporte y manómetro"
-                                                className={productControl}
-                                                aria-invalid={
-                                                    !!form.errors.descripcion
-                                                }
-                                            />
-                                            {form.errors.descripcion && (
+                                            {form.errors.agente && (
                                                 <p
                                                     role="alert"
                                                     className="text-destructive-strong mt-1 text-sm dark:text-red-300"
                                                 >
-                                                    {form.errors.descripcion}
+                                                    {form.errors.agente}
                                                 </p>
                                             )}
                                         </div>
                                         {productField(
-                                            'codigo_barras',
-                                            'Código de barras del fabricante',
+                                            'capacidad',
+                                            'Capacidad',
                                             {
-                                                maxLength: 64,
-                                                placeholder:
-                                                    'Escanea o escribe el código',
+                                                placeholder: '6 kg',
                                             },
-                                            'Opcional. Se usa para buscar el producto al recibirlo y venderlo.',
                                         )}
                                         {productField(
-                                            'peso_kg',
-                                            'Peso de cada unidad (kg)',
+                                            'stock_minimo',
+                                            'Avisar cuando queden',
                                             {
                                                 type: 'number',
                                                 min: 0,
-                                                max: 99999,
-                                                step: '0.001',
-                                                inputMode: 'decimal',
-                                                placeholder: 'Ej. 8.500',
+                                                step: 1,
+                                                inputMode: 'numeric',
+                                                placeholder: '5',
                                             },
-                                            'Peso del producto completo para la guía de remisión; puede ser distinto a la capacidad del extintor.',
-                                        )}
-                                        {(!form.data.serializado ||
-                                            form.errors.unidad_compra ||
-                                            form.errors.factor_compra) && (
-                                            <div className="grid gap-4 sm:grid-cols-2">
-                                                {productField(
-                                                    'unidad_compra',
-                                                    'Presentación de compra',
-                                                    {
-                                                        maxLength: 10,
-                                                        placeholder: 'Ej. CAJA',
-                                                    },
-                                                    'Si compras y vendes por la misma unidad, déjalo vacío.',
-                                                )}
-                                                {productField(
-                                                    'factor_compra',
-                                                    'Unidades por presentación',
-                                                    {
-                                                        type: 'number',
-                                                        min: 1,
-                                                        max: 100000,
-                                                        step: 1,
-                                                        inputMode: 'numeric',
-                                                        disabled:
-                                                            !form.data
-                                                                .unidad_compra,
-                                                        placeholder: 'Ej. 100',
-                                                    },
-                                                    'Ej. una caja contiene 100 unidades. Almacén contará las cajas al recibir.',
-                                                )}
-                                            </div>
-                                        )}
-                                        <label className="bg-muted/40 flex cursor-pointer items-start gap-3 rounded-lg p-3">
-                                            <input
-                                                name="activo"
-                                                type="checkbox"
-                                                checked={form.data.activo}
-                                                onChange={(e) =>
-                                                    form.setData(
-                                                        'activo',
-                                                        e.target.checked,
-                                                    )
-                                                }
-                                                className="accent-primary mt-1 size-4"
-                                            />
-                                            <span>
-                                                <span className="block font-medium">
-                                                    Disponible para vender
-                                                </span>
-                                                <span className="text-muted-foreground block text-xs">
-                                                    Al desactivarlo, el producto
-                                                    conserva su stock e
-                                                    historial.
-                                                </span>
-                                            </span>
-                                        </label>
-                                        {form.errors.activo && (
-                                            <p
-                                                role="alert"
-                                                className="text-destructive-strong text-sm dark:text-red-300"
-                                            >
-                                                {form.errors.activo}
-                                            </p>
                                         )}
                                     </div>
-                                </details>
+                                ) : (
+                                    <div className="grid gap-4 sm:grid-cols-3">
+                                        <CategoriaSelect
+                                            value={form.data.categoria}
+                                            onChange={(clave) =>
+                                                form.setData('categoria', clave)
+                                            }
+                                            categorias={categorias}
+                                        />
+                                        <CodigoSunatInput
+                                            id="producto-codigo_sunat"
+                                            tipo="producto"
+                                            teamSlug={currentTeam.slug}
+                                            value={form.data.codigo_sunat}
+                                            onChange={(codigo) =>
+                                                form.setData(
+                                                    'codigo_sunat',
+                                                    codigo,
+                                                )
+                                            }
+                                            error={form.errors.codigo_sunat}
+                                        />
+                                        {productField(
+                                            'stock_minimo',
+                                            'Avisar cuando queden',
+                                            {
+                                                type: 'number',
+                                                min: 0,
+                                                step: 1,
+                                                inputMode: 'numeric',
+                                                placeholder: '5',
+                                            },
+                                        )}
+                                    </div>
+                                )}
+                                <p className="text-muted-foreground text-xs">
+                                    El stock entra cuando Almacén recibe la
+                                    mercadería.
+                                </p>
                             </div>
-                            <div className="border-border bg-card flex shrink-0 items-center justify-end gap-3 border-t px-6 py-4">
-                                <button
-                                    type="button"
-                                    onClick={() => void requestCloseModal()}
-                                    disabled={form.processing}
-                                    className="border-border hover:bg-muted/50 focus-visible:outline-primary min-h-11 rounded-lg border px-4 text-sm font-medium focus-visible:outline-2 disabled:opacity-50"
+                            <div className="border-border bg-card flex shrink-0 flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-6">
+                                <label
+                                    htmlFor="producto-activo"
+                                    className="flex min-h-11 cursor-pointer items-center gap-2"
                                 >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={form.processing}
-                                    className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-primary min-h-11 rounded-lg px-5 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
-                                >
-                                    {form.processing
-                                        ? 'Guardando…'
-                                        : editingProduct
-                                          ? 'Guardar cambios'
-                                          : 'Registrar producto'}
-                                </button>
+                                    <input
+                                        id="producto-activo"
+                                        name="activo"
+                                        type="checkbox"
+                                        checked={form.data.activo}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'activo',
+                                                event.target.checked,
+                                            )
+                                        }
+                                        className="accent-primary size-4"
+                                    />
+                                    <span className="font-medium">
+                                        Disponible para vender
+                                    </span>
+                                </label>
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => void requestCloseModal()}
+                                        disabled={form.processing}
+                                        className="border-border hover:bg-muted/50 focus-visible:outline-primary min-h-11 rounded-lg border px-4 text-sm font-medium focus-visible:outline-2 disabled:opacity-50"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={form.processing}
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-primary min-h-11 rounded-lg px-5 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+                                    >
+                                        {form.processing
+                                            ? 'Guardando…'
+                                            : editingProduct
+                                              ? 'Guardar cambios'
+                                              : 'Registrar producto'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </DialogContent>

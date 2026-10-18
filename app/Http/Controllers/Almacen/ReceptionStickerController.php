@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Almacen;
 
 use App\Http\Controllers\Controller;
 use App\Models\InventoryUnit;
+use App\Models\Product;
 use App\Models\Reception;
 use App\Models\Team;
 use App\Services\Inventory\StickerPdfService;
@@ -19,11 +20,13 @@ class ReceptionStickerController extends Controller
      * Listado de recepciones con unidades serializadas, para imprimir
      * sus stickers de código de barras (§84.9).
      */
-    public function index(Team $current_team): InertiaResponse
+    public function index(Team $current_team, Request $request): InertiaResponse
     {
+        $almacenId = $request->user()->almacenRestringidoId();
         $recepciones = Reception::query()
-            ->whereHas('movements', fn ($q) => $q->whereNotNull('inventory_unit_id'))
-            ->with(['sedeAlmacen:id,nombre'])
+            ->when($almacenId, fn ($q, $id) => $q->where('sede_almacen_id', $id))
+            ->whereHas('movements')
+            ->with(['sedeAlmacen:id,nombre', 'movements.product:id,serializado,codigo,nombre'])
             ->withCount(['movements as unidades_count' => fn ($q) => $q->whereNotNull('inventory_unit_id')])
             ->orderByDesc('id')
             ->paginate(15)
@@ -37,6 +40,7 @@ class ReceptionStickerController extends Controller
                     'nombre' => $reception->sedeAlmacen->nombre,
                 ] : null,
                 'unidades_count' => (int) $reception->unidades_count,
+                'productos_count' => $reception->movements->filter(fn ($movimiento): bool => ! $movimiento->product->serializado)->pluck('product_id')->unique()->count(),
             ]);
 
         return Inertia::render('almacen/stickers/index', [
@@ -45,8 +49,7 @@ class ReceptionStickerController extends Controller
     }
 
     /**
-     * Devuelve el PDF con la grilla de stickers de código de barras
-     * para las unidades recibidas (§84.9).
+     * Devuelve las etiquetas recibidas en rollo o en hojas A4 (§84.9).
      */
     public function show(
         Team $current_team,
@@ -56,7 +59,8 @@ class ReceptionStickerController extends Controller
     ): Response {
         AccesoDeAlmacen::asegurarAlmacen($request, $reception);
 
-        $pdf = $stickerPdfService->generate($reception, $this->posicionInicial($request));
+        $datos = $request->validate(['formato' => ['sometimes', 'required', 'in:rollo,a4']]);
+        $pdf = $stickerPdfService->generate($reception, $datos['formato'] ?? 'rollo');
 
         return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
@@ -69,7 +73,11 @@ class ReceptionStickerController extends Controller
      */
     public function unidad(Team $current_team, StickerPdfService $stickerPdfService, Request $request): Response
     {
-        $serie = trim((string) $request->validate(['serie' => ['required', 'string', 'max:50']])['serie']);
+        $datos = $request->validate([
+            'serie' => ['required', 'string', 'max:50'],
+            'formato' => ['sometimes', 'required', 'in:rollo,a4'],
+        ]);
+        $serie = trim((string) $datos['serie']);
         $almacenId = $request->user()->almacenRestringidoId();
 
         $unidad = InventoryUnit::query()
@@ -78,7 +86,7 @@ class ReceptionStickerController extends Controller
             ->first();
         abort_if($unidad === null, 404, 'No se encontró esa serie en tu almacén.');
 
-        $pdf = $stickerPdfService->generateForUnit($unidad, $this->posicionInicial($request));
+        $pdf = $stickerPdfService->generateForUnit($unidad, $datos['formato'] ?? 'rollo');
 
         return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
@@ -86,15 +94,14 @@ class ReceptionStickerController extends Controller
         ]);
     }
 
-    /**
-     * Posición de la hoja (1 a 20) donde empieza la impresión.
-     */
-    protected function posicionInicial(Request $request): int
+    public function producto(Team $current_team, StickerPdfService $stickerPdfService, Request $request): Response
     {
-        $datos = $request->validate([
-            'inicio' => ['nullable', 'integer', 'min:1', 'max:'.StickerPdfService::POR_HOJA],
-        ]);
+        $datos = $request->validate(['codigo' => ['required', 'string', 'max:50'], 'formato' => ['sometimes', 'required', 'in:rollo,a4']]);
+        $producto = Product::query()->where('codigo', trim($datos['codigo']))->where('serializado', false)->where('activo', true)->firstOrFail();
 
-        return (int) ($datos['inicio'] ?? 1);
+        return response($stickerPdfService->generateForProduct($producto, $datos['formato'] ?? 'rollo')->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="sticker-producto-'.$producto->id.'.pdf"',
+        ]);
     }
 }

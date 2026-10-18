@@ -68,6 +68,52 @@ class ServiceOrderEquipmentController extends Controller
     }
 
     /**
+     * Corrige los datos de un extintor ya registrado (marca, serie, año…)
+     * mientras la orden siga abierta; con el certificado emitido ya no.
+     */
+    public function update(Team $current_team, ServiceOrder $service_order, Equipment $equipment, Request $request): RedirectResponse
+    {
+        $this->asegurarAcceso($service_order, $request);
+        $data = $request->validate([
+            'tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
+            'capacidad' => ['nullable', 'string', 'max:30'],
+            'marca' => ['nullable', 'string', 'max:100'],
+            'serie_fabricante' => ['nullable', 'string', 'max:100'],
+            'anio_fabricacion' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        DB::transaction(function () use ($service_order, $equipment, $data, $request): void {
+            $service_order = ServiceOrder::query()->lockForUpdate()->findOrFail($service_order->id);
+            $this->asegurarEditable($service_order);
+            $pivot = $service_order->equipments()->whereKey($equipment->id)->first()?->pivot;
+            abort_if($pivot === null, 404);
+
+            // Agente y capacidad vacíos se quedan como estaban; marca, serie y
+            // año vacíos quedan «No legible», como en el alta.
+            foreach ($data as $campo => $valor) {
+                $valor = trim((string) $valor);
+                if ($valor === '' && in_array($campo, ['tipo_agente', 'capacidad'], true)) {
+                    continue;
+                }
+                $equipment->{$campo} = $valor === '' ? QuickRegisterEquipment::DEFAULT_UNREADABLE : $valor;
+            }
+            $servicio = $service_order->lines()->with('service')->whereKey($pivot->getAttribute('service_order_line_id'))->first()?->service;
+            if ($servicio && ($motivo = $servicio->incompatibilidadConEquipo($equipment))) {
+                throw ValidationException::withMessages(['tipo_agente' => $motivo]);
+            }
+
+            $cambios = $equipment->getDirty();
+            $equipment->save();
+
+            if ($cambios !== []) {
+                $service_order->events()->create(['tipo' => 'otro', 'user_id' => $request->user()->id, 'equipment_id' => $equipment->id, 'payload' => ['accion' => 'extintor_corregido', 'campos' => array_keys($cambios)]]);
+            }
+        });
+
+        return back()->with('success', "Datos de {$equipment->numero_serie} corregidos.");
+    }
+
+    /**
      * Saca un extintor de la orden (se escaneó por error). Solo mientras la
      * orden se recibe o se trabaja y si aún no tiene checklist en ella.
      */
